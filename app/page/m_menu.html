@@ -1,0 +1,257 @@
+<!doctype html>
+<html>
+  <head>
+    <title>RestoBar</title>    
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8;">
+	<meta http-equiv="Content-Language" content="es"/>
+	<!--meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes"-->				
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<meta name="mobile-web-app-capable" content="yes"/>
+	<!--link rel="stylesheet" href="../../css/load_normalize.css"-->
+	<link rel="stylesheet" href="../../css/load_style.css">
+
+	<!--script src="../../js/jquery.js"></script-->	
+	<link rel="stylesheet" href="../../css/daterangepicker.css">
+	<link rel="stylesheet" href="../../js/jquery-ui.min.11.4.css">	
+	<script src="../../js/jquery_external.js"></script>
+	<script src="../../js/jquery-ui.min.11.4.js"></script>
+
+
+	<!--script src="../../js/perfect-scrollbar.min.js"></script-->	
+
+	<script src="../web_components/webcomponentsjs/webcomponents-lite.js"></script>	
+	<link rel="import" href="../web_components/polymer/polymer.html">
+	<link rel="import" href="../web_components/paper-spinner/paper-spinner.html">
+	<link rel="import" href="../web_components/paper-drawer-panel/paper-drawer-panel.html">	
+	<link rel="import" href="../web_components/paper-scroll-header-panel/paper-scroll-header-panel.html">
+	<link rel="import" href="../web_components/iron-flex-layout/iron-flex-layout.html">
+	<link rel="import" href="../web_components/paper-toolbar/paper-toolbar.html">
+	<link rel="import" href="../web_components/paper-icon-button/paper-icon-button.html">
+	<link rel="import" href="../web_components/iron-icons/iron-icons.html">
+	
+	<link rel="import" href="../web_components/iron-pages/iron-pages.html">
+	<link rel="import" href="../web_components/neon-animation/neon-animated-pages.html">
+	<link rel="import" href="../web_components/neon-animation/neon-animations.html">	
+	<link rel="import" href="../web_components/iron-collapse/iron-collapse.html">
+	<link rel="import" href="../web_components/paper-checkbox/paper-checkbox.html">	
+	<!--link rel="import" href="../web_components/paper-tabs/paper-tabs.html"-->
+	<!--link rel="import" href="../web_components/iron-flex-layout/classes/iron-flex-layout.html">
+	<link rel="import" href="../web_components/neon-animation/neon-animatable-behavior.html">
+	<link rel="import" href="../web_components/neon-animation/animations/slide-from-left-animation.html">
+	<link rel="import" href="../web_components/neon-animation/animations/fade-out-animation.html"-->
+
+	<link rel="import" href="../web_components/x-dialog/x-dialog.html">
+	<link rel="import" href="../web_components/app-router/app-router.html">
+	<link rel="import" href="../web_components/x-router/x-router.html">
+
+
+	<link rel="stylesheet" href="../../css/micss.css">
+	<!--link rel="stylesheet" href="../../css/perfect-scrollbar.css"-->
+	<link type="image/x-icon" href="../../images/ico_app.png" rel="shortcut icon"/>
+
+	<style is="custom-style">
+    	body{ width: 100%; margin:0; padding: 0;background-color: white; }    	
+    	/*paper-scroll-header-panel {
+	      position: absolute;
+	      top: 0;
+	      right: 0;
+	      bottom: 0;
+	      left: 0;
+	      /*background-color: var(--paper-grey-200, #eee);;*/
+	    /*}
+	    /*paper-toolbar {
+	      background-color: var(--google-blue-500, #4285f4);
+	      position: fixed;
+	      top: 0;
+	      right: 0;
+	      bottom: 0;
+	      left: 0;
+	    }*/
+    	paper-toolbar {
+	    	--paper-toolbar-background: #1E88E5;	    		    	
+	    	top:0;
+	    	left: 0;
+	    	right: 0;	    	    		    	    	  
+	    	position: fixed;
+	    	height: 60px;	
+	    	z-index: 2; 
+	    }
+	    .content{
+	    	position:absolute;
+	    	width: 100%;
+    		top: 60px;    		
+	    }
+
+	    paper-drawer-panel {
+	    	/*z-index: 4;*/
+	    	/*position: absolute;
+	    	top:0;
+	    	left: 0;
+	    	right: 0;
+	    	margin 0 0 0 0;
+	    	overflow-y:auto;   */
+	    	position: fixed;	    	
+	    	height: 100%;
+	    	
+		  	--paper-drawer-panel-left-drawer-container: {
+		    	background-color: #303030;
+		    	color: #E0E0E0;
+		    	position: fixed;		    	
+		    	height: 100%;
+	    		overflow-y:auto;
+		    	/*
+		    	top: 0;
+		    	bottom: 0;		    	*/
+		  	};		  	
+		}
+		--paper-drawer-panel-scrim: {
+			    background-color: red;
+			  };		
+		.xHeadertoolbar{
+		  		background-color: #212121;
+		  	}		
+		.xBtnPanel{
+			display:block; text-align: left;margin-bottom: 90px;
+		}
+		.xBtnPanel paper-button{width: 100%;margin-left:0px;  padding: 5px; text-align: left; display: block;}
+		.xBtnPanel paper-button:hover {
+	      background:#383838;
+	    }
+		paper-drawer-panel #navbarmenu1 {
+		    display: none;
+		}
+		.xMarginAlinear{ margin-right: 4%; }
+		#dialog_us{border-radius:5px; width: 250px; position: fixed; top: 10px; right: 10px;}		
+  	</style> 
+
+  	<script type="text/javascript" src="../../js/mifuncion_web.js"></script>
+	<script type="text/javascript" src="../view/item_pedidos.js"></script>			
+	<script type="text/javascript" src="../view/xm_all.js"></script>
+	<script type="text/javascript" src="../view/m_menu.js"></script>
+  </head>
+ 	
+	<body oncontextmenu="return false">	  		
+		<x-dialog id="xLoad"></x-dialog>	
+
+		<div class="wrapper">
+		  <div id="loader-wrapper">
+		    <div id="loader"></div>
+		    <div class="loader-section section-left"></div>
+		    <div class="loader-section section-right"></div>
+		  </div>
+		</div>
+				
+		
+		<paper-drawer-panel force-narrow hasTransform id="PanelDe">
+			<paper-header-panel drawer>
+		   		<paper-toolbar class="xHeadertoolbar">
+		   			<div>SAN CARLOS</div>
+		   		</paper-toolbar>			   	
+			   	<div main class="xBtnPanel ul_menu">
+			   		<br><br><br>
+				      <ul>				         
+				      </ul>				   
+			   	</div>
+			</paper-header-panel>			 
+		</paper-drawer-panel>		         
+		<paper-header-panel main>
+           	<paper-toolbar>
+           		<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDe();"></paper-icon-button>
+				<span class="title" id="xtitulo_bar">RESTOBAR</span>
+				<!--paper-icon-button icon="icons:add" class="xInvisible" title="Adicional" id="btn_add_adicional"></paper-icon-button-->
+				<div class="xIco_MiPedido" onclick="xOpenPageCarta(3)">
+					<span class="xCantPedio_ico xInvisible"></span>									
+					<paper-icon-button icon="content-paste" title="Mi pedido"></paper-icon-button>					
+				</div>
+           	</paper-toolbar>
+	        <div fit layout vertical class="content">
+	            <x-router></x-router>	            
+	            
+	        </div>	        
+       	</paper-header-panel>
+       	
+<!--paper-header-panel main>		  		
+            	<paper-toolbar>
+            		<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
+					<span class="title" id="xtitulo_bar">RESTOBAR</span>		    		    	
+					<paper-icon-button icon="search"></paper-icon-button>
+            	</paper-toolbar>            	            	
+	            <div class="content">
+	                <x-router></x-router>
+	            </div>	            
+       		</paper-header-panel>
+		  </paper-drawer-panel-->
+
+				<!--header>
+				<paper-toolbar>	    	
+					   	<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
+					   	<span class="title" id="xtitulo_bar">RESTOBAR</span>		    			    	
+					   	<paper-icon-button icon="search"></paper-icon-button>
+				</paper-toolbar>				
+				</header>
+				<content>
+				<div id="xContenedoPaginas" main class="content">		
+					<x-router></x-router>
+				</div>	
+				</content-->
+
+
+
+		<!--paper-drawer-panel force-narrow id="PanelDe" drawer>		  
+		    <paper-toolbar class="xHeadertoolbar">
+		    	<div class="title">Opciones</div>
+		    </paper-toolbar>	    
+		    <div class="xContentPaperDrawer" style="height: 100%" id="xContenedorMenuLateral">
+		    	<br>	    	
+		    	<div class="xBtnPanel"></div>
+		    </div>
+		   </paper-drawer-panel-->			    
+		  <!--/paper-header-panel-->		  		  
+		  <!--paper-header-panel main class="fit xContentPaperDrawer" style="height: 100%;" id="xContenedoPaginas">
+		  	<paper-toolbar id="xtolbar_top">	    	
+			   	<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
+			   	<span class="title" id="xtitulo_bar">RESTOBAR</span>		    			    	
+			   	<paper-icon-button icon="search"></paper-icon-button>
+			</paper-toolbar>			
+			<div style="height: 100%;" class="content" main id="xContenedoPaginas">			  		
+				<x-router></x-router>											
+			</div>					
+			</paper-header-panel-->			
+		
+		
+
+	  <!--paper-drawer-panel force-narrow id="PanelDe" drawer>
+		  <paper-header-panel drawer>
+		    <paper-toolbar class="xHeadertoolbar">
+		      <div>Application</div>
+		    </paper-toolbar>
+		    <div class="xContentPaperDrawer" style="height: 100%" id="xContenedorMenuLateral">
+		    	<br>	    	
+		    	<div class="xBtnPanel"></div>
+		    </div>
+		  </paper-header-panel>	
+		  <paper-header-panel main id="xmain">  					
+			<paper-scroll-header-panel main fixed>
+				<header>
+				<div id="header">				
+			    <paper-toolbar id="xtolbar_top">	    	
+				   	<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
+				   	<span class="title" id="xtitulo_bar">RESTOBAR</span>		    			    	
+				   	<paper-icon-button icon="search"></paper-icon-button>
+				</paper-toolbar>				
+				</div>
+				</header>
+				<content>
+				<div id="content">
+				    <x-router></x-router>
+				</div>
+				</content>
+			</paper-header-panel>
+				</paper-scroll-header-panel>
+			
+		</paper-drawer-panel-->		  	
+	
+	</body>
+	
+ </html>

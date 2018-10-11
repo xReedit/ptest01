@@ -1,0 +1,65 @@
+<link rel="import" href="../../web_components/polymer/polymer.html">
+<link rel="import" href="../../web_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../web_components/iron-dropdown/iron-dropdown.html">
+
+
+<dom-module id="x-comp-find-comprobante">
+    <template>        
+        <div>
+          <!-- <paper-dropdown-menu label="Sede" noink no-animations>
+            <paper-menu class="dropdown-content" attr-for-selected="value">
+              <template is="dom-repeat" items="[[listSede]]" as="sede">
+                <paper-item value="[[sede.idsede]]">[[sede.nombre]]</paper-item>
+              </template>
+            </paper-menu>
+          </paper-dropdown-menu> -->
+          <!-- value="{{sede::change}}" -->
+          <select id="compFindListComprobante" class="xTextRow2 xCursor" onchange="selectOptionComprobante()">
+            <template is="dom-repeat" items="{{list}}" as="comprobante">
+              <option value="[[index]]">[[comprobante.descripcion]] </option>
+            </template>
+          </select>
+        </div>
+
+    </template>
+    <script>
+        var xThisComComprobante;
+
+        function getAllComprobantes() {
+            $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=2'})
+	        .done( function (dtValues) {
+                dtValues=$.parseJSON(dtValues);	
+                xThisComComprobante.list=dtValues.datos;
+                xThisComComprobante.comprobantes = xThisComComprobante.list[0];
+            });
+        }
+
+        function selectOptionComprobante() {
+            const index = xThisComComprobante.$.compFindListComprobante.value;
+            xThisComComprobante.comprobantes = xThisComComprobante.list[index];
+        }
+        
+
+        Polymer({
+        is: 'x-comp-find-comprobante',
+        properties: {
+            list: [],
+            comprobantes: {
+                type: Object,
+                reflectToAttribute: true,
+                notify: true,
+                observer: 'userNameChanged'
+            },
+        },
+        userNameChanged: function(comprobante) {
+            return comprobante;
+        },
+    
+        ready: function() {
+            xThisComComprobante=this;	
+            getAllComprobantes();
+        }
+    })
+    </script>
+
+</dom-module>

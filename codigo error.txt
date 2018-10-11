@@ -1,0 +1,2 @@
+01 = token
+02 = num no valido
