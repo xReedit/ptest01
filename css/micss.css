@@ -357,6 +357,22 @@ input.xMiInput:focus{border-bottom:1px solid #2979FF;box-shadow:0 2px 0px 0 rgba
 input{border:1px solid blue;}
 input.xMiInput.invalido{border-bottom:1px solid #E53935;}
 input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
+
+textarea{font-family:'Open Sans';font-style:normal;font-weight:400;}
+textarea.xMiInput{display:inline-block;padding:3px 0 0 3px; position:relative;outline:none;box-shadow:none;width:95%;background:transparent;border:none;border-bottom:1px solid #616161;transition:box-shadow 0.28s;font-weight:400;letter-spacing:0.011em;line-height:20px;}
+textarea.xMiInput[inline]{display:inline;width:auto;}
+textarea.xMiInput[espaciar]{margin:5px;}
+textarea.xMiInput[anchofull]{width: 99.5%;}
+textarea.xMiInput[disabled]{pointer-events:none;opacity:0.33;border-bottom:1px solid #757575;}
+textarea.xMiInput[encendido]{opacity:0.8;border-bottom:1px solid #4E342E;color:#757575;font-weight:600}
+textarea.xMiInput[letrablanco]{color:white;}
+textarea.xMiInput:focus{border-bottom:1px solid #2979FF;box-shadow:0 2px 0px 0 rgba(0, 0, 0, 0.14),
+0 1px 0px 0 rgba(0, 0, 0, 0.12),
+0 3px 0px -2px rgba(0, 0, 0, 0.2);}
+input{border:1px solid blue;}
+input.xMiInput.invalido{border-bottom:1px solid #E53935;}
+input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
+
 .xTxtCierreCajaContenedor{font-family:'Open Sans';font-style:normal;font-weight:400;src:local('Open Sans Light'), local('OpenSans-Light'), url(1.woff) format('woff');display:inline-block;margin-left:25%;width:610px;}
 .xTxtCierreCaja{width:200px;display:inline-block;padding:10px 50px 50px 50px;}
 @keyframes xrequerido{0%{border-bottom:solid 1px red;}

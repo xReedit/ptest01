@@ -2579,7 +2579,7 @@ function xDtUS($op_us){
 			// 	LEFT JOIN sede AS s ON s.idorg=cp.idorg AND s.idsede=cp.idsede
 			// WHERE (cp.idorg=".$_SESSION['ido']." AND cp.idsede=".$_SESSION['idsede'].")";
 			$sql_us="
-			SELECT cp.ip_print, cp.num_copias, cp.pie_pagina, cp.logo, s.nombre AS des_sede, s.eslogan, s.mesas
+			SELECT cp.ip_print, cp.num_copias, cp.pie_pagina, cp.pie_pagina_comprobante, cp.logo, s.nombre AS des_sede, s.eslogan, s.mesas
 			FROM conf_print AS cp
             	INNER JOIN sede AS s ON cp.idsede = s.idsede
 			WHERE (cp.idorg=".$_SESSION['ido']." AND cp.idsede=".$_SESSION['idsede'].")";

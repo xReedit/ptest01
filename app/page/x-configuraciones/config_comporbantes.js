@@ -1,7 +1,12 @@
 var idSedeSel = 0; 
 var idComprobanteSel = 0; 
+var cnf_SedeSel; 
+var cnf_ComprobanteSel; 
+
 
 function config_comprobante_add(){
+    config_comprobante_find_row();
+
     $("#form_emision_comprobante #idsede").val(idSedeSel);
 	$("#form_emision_comprobante #idtipo_comprobante").val(idComprobanteSel);
 	xPopupLoad.xopen();
@@ -13,6 +18,16 @@ function config_comprobante_add(){
 		xPopupLoad.xclose();
 	    config_comprobante_getall();
 	})
+}
+
+function config_comprobante_find_row() {
+    $("#tb_emision_comprobantes .row").each((index, element) => {
+        if (!element.textContent) {return;}
+        if (element.textContent.indexOf(this.cnf_ComprobanteSel.descripcion)>-1 && element.textContent.indexOf(this.cnf_SedeSel.nombre)>-1) {
+            return;
+        }
+    })
+
 }
 
 function config_comprobante_getall() {
@@ -27,9 +42,6 @@ function config_comprobante_getall() {
 
         xdtComprobante=xdtComprobante.datos;
         xdtComprobante.map(x => {
-            // xcadena_sel_sede=String(xcadena_sel_sede+ '<option value='+x[i].idsede+'>'+x[i].dsc_sede+'</option>');
-            // xcadena_sel_comprobante=String(xcadena_sel_comprobante+ '<option value='+x[i].idtipo_comprobante+'>'+x[i].dsc_comprobante+'</option>');
-
             xcadena_tr_comp=String(xcadena_tr_comp+'<tr class="row" data-id="'+x.idtipo_comprobante_serie+'" data-t="tipo_comprobante_serie"><td>'+x.dsc_sede+'</td>'+
                 '<td>'+x.dsc_comprobante+'</td>'+
                 '<td>'+x.serie+'</td>'+
@@ -43,14 +55,29 @@ function config_comprobante_getall() {
 		// $("#tb_emision_comprobantes").html(xcadena_sel_almacen_file).trigger('create');
 
     })
+
+
+    this.config_valoresInicialesComponente();
+    
 }
 
 function _getSede($event) {
-    console.log('llego: ', $event);
+    this.cnf_SedeSel = $event;
     this.idSedeSel = $event.idsede;
 }
 
 function _getComprobante($event) {
-    console.log('llego: ', $event);
+    this.cnf_ComprobanteSel = $event;
     this.idComprobanteSel = $event.idtipo_comprobante;
+}
+
+function config_valoresInicialesComponente() {
+    this.cnf_SedeSel = $("#compFindSede")[0].__data__.sedes; // valores iniciales
+    this.cnf_ComprobanteSel = $("#compFindComprobante")[0].__data__.comprobantes; // valores iniciales
+
+    this.idSedeSel = cnf_SedeSel.idsede;
+    this.idComprobanteSel = cnf_ComprobanteSel.idtipo_comprobante;
+
+    // console.log(this.cnf_SedeSel);
+    // console.log(this.cnf_ComprobanteSel);
 }

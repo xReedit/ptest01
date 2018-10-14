@@ -3,6 +3,8 @@
 // xArraySubTotales ya esta calculado los subtotales
 // xArrayComprobante datos del comprobante : tipodoc , serie correlativo id's
 // xArrayCliente datos del cliente nombre dni ruc direccion
+
+
 var xImpresoraPrint;
 
 function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente,xidDoc){
@@ -16,9 +18,14 @@ function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayCompr
     if(xArrayCuerpo.length==0){return false}
 
     // array encabezado org sede
-    var xArrayEncabezado = xm_log_get('datos_org_sede');
-    
-    
+	var xArrayEncabezado = xm_log_get('datos_org_sede');    
+	
+	// escribir el importe total en letras
+	// siempre ultimo es es el total
+	const index_total = xArraySubTotales.length-1;
+	const total_pagar = xArraySubTotales[index_total].importe;
+	xArraySubTotales[index_total].importe_letras = numeroALetras(total_pagar);
+	
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){
 		if(rpt_print==false){return false;}
 		xPopupLoad.titulo="Imprimiendo...";
@@ -30,6 +37,9 @@ function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayCompr
 
 function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,xArrayComprobante,xArrayCliente,callback){
 	xPopupLoad.titulo="Imprimiendo...";
+
+	
+
 	$.ajax({type: 'POST', url: '../../print/print5.php', 
 			data:{
 				Array_enca:xArrayEncabezado, 
@@ -37,7 +47,7 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 				ArrayItem:xArrayCuerpo, 
 				ArraySubTotales:xArraySubtotal,
 				ArrayComprobante: xArrayComprobante,
-				ArrayCliente: xArrayCliente
+				ArrayCliente: xArrayCliente				
 			}
 		})
 	.done( function (dtPbd) {

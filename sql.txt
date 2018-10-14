@@ -297,3 +297,5 @@ ALTER TABLE `registro_pago` ADD `correlativo` VARCHAR(15) NOT NULL COMMENT 'corr
 ALTER TABLE `registro_pago` CHANGE `idtipo_comprobante` `idtipo_comprobante` INT(10) NOT NULL DEFAULT '0';
 ALTER TABLE `registro_pago` CHANGE `idtipo_comprobante` `idtipo_comprobante_serie` INT(10) NOT NULL DEFAULT '0';
 ALTER TABLE `registro_pago` DROP `serie`;
+
+ALTER TABLE `conf_print` ADD `pie_pagina_comprobante` CHAR(255) NOT NULL COMMENT 'pie de pagina comprobante' AFTER `pie_pagina`;

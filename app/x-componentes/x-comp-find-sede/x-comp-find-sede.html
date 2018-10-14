@@ -23,6 +23,7 @@
                 dtSede=$.parseJSON(dtSede);	
                 xThisComSede.listSede=dtSede.datos;
                 xThisComSede.sedes = xThisComSede.listSede[0];
+                xThisComSede.getValorIncial(xThisComSede.sedes);
             });
         }
 
@@ -38,18 +39,28 @@
             listSede: [],
             sedes: {
                 type: Object,
+                // value : {},
                 reflectToAttribute: true,
-                notify: true,
-                observer: 'userNameChanged'
+                notify: true, 
+                value: function() { return {}; },
+                observer: 'sedeNameChanged'
             },
         },
-        userNameChanged: function(sede) {
-            return sede;
+        listeners: {
+            'onchange': 'getSede'
         },
-    
-        ready: function() {
+        sedeNameChanged: function(sede) {
+            return sede;
+        }, 
+        getSede() {
+            return this.sedes;
+        },
+        attached: function() {
             xThisComSede=this;	
             getAllSedes();
+        },
+        getValorIncial: function(sede) {
+            this.fire('getValorIncial', {sedes: sede});
         }
     })
     </script>

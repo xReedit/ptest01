@@ -255,6 +255,9 @@ while($num_copias>=0){
 			$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 			$printer -> text(new item($des_sbt, $imp_sbt, true));
 			$printer -> selectPrintMode();
+			
+			$printer -> feed(1);
+			$printer -> text("SON: ".$item_sbt['importe_letras']."\n");
 			continue;			
 		}
 		
@@ -262,8 +265,17 @@ while($num_copias>=0){
 	}
 	//
 
+	/* CODIGO QR */	
+	$printer -> feed();
+	$testStr = "www.papaya.com.pe/comprobante/0001254551";
+	$printer -> setJustification(Printer::JUSTIFY_CENTER);
+	$printer -> qrCode($testStr, Printer::QR_ECLEVEL_L, 5);	
+	$printer -> feed();
+
 	/* PIE DE PAGINA */	
-	$printer -> feed(2);
+	$printer -> setJustification(Printer::JUSTIFY_LEFT);
+	$printer -> text($xArray_print[0]['pie_pagina_comprobante']."\n");
+	$printer -> feed();
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
 	$printer -> text($xArray_print[0]['pie_pagina']."\n");
 	$printer -> feed(2);
