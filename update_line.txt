@@ -1,3 +1,0 @@
-UPDATE ie_caja SET cierre=1 WHERE STR_TO_DATE(fecha,'%d/%m/%Y')=STR_TO_DATE('14/01/2017','%d/%m/%Y');
-UPDATE registro_pago SET cierre=1 WHERE STR_TO_DATE(fecha,'%d/%m/%Y')=STR_TO_DATE('14/01/2017','%d/%m/%Y');
-UPDATE pedido SET cierre=1 WHERE STR_TO_DATE(fecha,'%d/%m/%Y')=STR_TO_DATE('14/01/2017','%d/%m/%Y');
