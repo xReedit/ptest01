@@ -36,9 +36,7 @@ function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayCompr
 }
 
 function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,xArrayComprobante,xArrayCliente,callback){
-	xPopupLoad.titulo="Imprimiendo...";
-
-	
+	xPopupLoad.titulo="Imprimiendo...";	
 
 	$.ajax({type: 'POST', url: '../../print/print5.php', 
 			data:{
