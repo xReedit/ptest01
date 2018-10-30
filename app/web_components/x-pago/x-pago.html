@@ -12,7 +12,7 @@
 			</div>
 			<div class="ancho_ini">
 				<br><br>
-				<div class="container-cliente-comprobante" hidden=[[!hidden_container_pago]]>
+				<div class="container-cliente-comprobante" hidden="[[!hidden_container_pago]]">
 					
 					<br>
 					
@@ -43,7 +43,7 @@
 				</div>				
 				
 				<!-- <input type="text" placeholder="[[placeholder_clie]]" onChange="conMayusculas(this)" class="xMiInput xfont18 xPasarEnter2" id="sel_cliente" anchofull autofocus> -->
-				<div id="container-pago" hidden=[[hidden_container_pago]]>					
+				<div id="container-pago" hidden="[[hidden_container_pago]]">					
 					<paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0" class="btnAdd2"></paper-fab>
 					<br>
 					<table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
@@ -71,6 +71,27 @@
 				</div>
 				<br>
 			</div>
+		</div>
+		<div>
+			<div class="xLinea"></div>
+			<br>
+			<div hidden="[[!hidden_container_pago]]">
+				<button class="xBoton2 xPlomo" onclick="xCancelarCerrar();" id="btn_regresar_cuenta">Regresar</button>
+				<button class="xBoton2 xAzul" hidden="[[!modoSoloComprobante]]" disabled="[[!btnDisabledInitModoComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
+					<div>[F10] Listo, imprimir comprobante</div>
+					<!-- <div hidden="[[modoSoloComprobante]]">[F10] Siguente</div> -->
+				</button>
+				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
+					<!-- <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
+					<div>[F10] Siguente</div>
+				</button>
+			</div>
+
+			<div hidden="[[hidden_container_pago]]">
+				<div class="xBoton2 xPlomo" onclick="xThisPago.setVisibleContainerPago();" id="btn_regresar_comprobante">Regresar</div>
+				<button class="xBoton2 xAzul" onclick="xListoRegistraPago();" id="btn_pago" disabled="[[!valid_monto_pago]]">[F10]Listo, registrar pago</button>
+			</div>						
+			<br><br>
 		</div>
 		
 	</template>
@@ -127,7 +148,8 @@ var xIdCliente_pago='';
 var xObjContent;
 var xEnterTxtImporte=0;
 var xDatosValidos = false, // valida los datos si todos son correctos
-	tipoComprovanteSelecionado={}; // el comprobane que selecciona
+	tipoComprovanteSelecionado={}, // el comprobane que selecciona
+	modoSoloComprobante = false, btnDisabledInitModoComprobante = true;
 function xIiniPago(){
 	//xLoadTipoMoneda_TPPago();
 	xtb_tp=$("#tb_tp");
@@ -226,6 +248,24 @@ function xIiniPago(){
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 	});
+
+	$(document).on('keydown', function(e) {	
+		var evt = e;
+		if(evt.keyCode==121){
+			if(!xThisPago.modoSoloComprobante){				
+				if (!xThisPago.hidden_container_pago) {
+					if (xThisPago.valid_monto_pago) { xListoRegistraPago() }
+				} else {					
+					xThisPago.setVisibleContainerPago();
+				}							
+			} else {
+				// xSumarTotales_row(); // para que mande el xSend
+				// xListoRegistraPago()
+				xVerContainerPago();
+			}
+		}
+	});
+	
 
 	// $(document).on('change', '.xsel_tp_doc', function(e) {	
 	// 	var idTipoComprobante = parseInt(this.value);
@@ -374,20 +414,39 @@ function xSelectedTpComprobante(valor) {
 		$("#container-cliente").removeClass('xInvisible');
 	}
 
+	// activa boton para emitir comprobantes si el tpc es !=0 = ninguno	
+	xThisPago.btnDisabledInitModoComprobante = idtipo_comprobante === "0" ? false : true;	
+
+	xThisPago.fire('xSelectTipoComprobante', xThisPago.tipoComprovanteSelecionado);
+
 	EmitirValidacionFormCliente();
 }
 
 function xVerContainerPago() {
-	xThisPago.hidden_container_pago = !xThisPago.hidden_container_pago;
-	if (!xThisPago.hidden_container_pago) {
-		xtb_tp.find('.xmonto:last-child').focus();
+	if (!xThisPago.modoSoloComprobante) {
+		xThisPago.hidden_container_pago = !xThisPago.hidden_container_pago;
+		if (!xThisPago.hidden_container_pago) {
+			xtb_tp.find('.xmonto:last-child').focus();
+		}
+		xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
+	} else {
+		xSumarTotales_row(); // para que dispare xSend
+		xListoRegistraPago();
 	}
-	xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
 }
 
 function EmitirValidacionFormCliente() {
 	var validForm = xThisPago.$.form_pago_cliente.checkValidity();
 	xThisPago.fire('xFormClienteValid', validForm);
+}
+
+function xCancelarCerrar() {
+	xThisPago.fire('xCancelarCerrar', true);
+}
+
+function xListoRegistraPago() {
+	xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
+	xThisPago.fire('xListoRegistraPago', true);
 }
 
 
@@ -424,8 +483,8 @@ function xSumarTotales_row(){
 		$("#pdif").addClass('pdif_rojo');	
 		// EmitirValidacionFormMontoPago(false);	
 	}
-	var xRpts=new Array();
-	var xtipoP=new Array();
+	var xRpts=[];
+	var xtipoP=[];
 
 	$("#tb_tp .row").each(function(index,element){		
 		var id_tp_row=$(element).find(".xsel_tp option:selected").val();
@@ -446,6 +505,14 @@ function xSumarTotales_row(){
 
 	xRpts.push({'ok':xPase, 'valid':xDatosValidos, 'cliente': xThisPago.clienteModel, 'comprobante': xThisPago.tipoComprovanteSelecionado,'idcliente':xIdCliente_pago,'nota_compra':nom_nota,'nomcliente':nom_nota, xtipo_pagos:xtipoP,'paseEnterTxt':xEnterTxtImporte});
 	
+	if(xPase==0){
+			// $("#btn_pago").attr('disabled', true);
+		xThisPago.valid_monto_pago = false;
+	}else{
+		// btn_pago.removeAttribute("disabled")
+		xThisPago.valid_monto_pago = true;		
+	}
+
 	xThisPago.fire('xSend', {xRpts});
 	xThisPago.diferencia=xdif_text;
 
@@ -472,7 +539,6 @@ function xLoadTipoPago(){
 			var xidtp=dtTp[i].idtipo_pago;
 			xSel_tp[xidtp]={'des':dtTp[i].descripcion,'limite':dtTp[i].limite,'visible':true}
 		};
-
 		xAddTipoPago();
 	})
 }
@@ -538,6 +604,14 @@ function xValoresIniciales(){
 
 }
 
+function xSetFocusInit() {
+	setTimeout(() => {			
+			xThisPago.$.sel_cliente.focus();
+			$("#form_pago_cliente #sel_cliente").focus();
+		}, 500);
+		console.log('focus');
+}
+
 
 Polymer({
 	is:'x-pago',
@@ -548,7 +622,11 @@ Polymer({
 		placeholder_clie:{type:String, value:'Cliente | Publico en General'},
 		progres_busca_cliente: boolean = false,
 		hidden_container_pago: boolean = true,
-		ComprobanteRequiereCliente: boolean= false,
+		hidden_container_registro_pago: boolean = false,
+		valid_form_cliente_pago: boolean = false,
+		valid_monto_pago: boolean = false,
+		ComprobanteRequiereCliente: boolean = false,
+		// modoSoloComprobante: boolean = false,
 		_tipo:{type:Number, value:1, notify:true},
 		val:String,
 		dt_tp:Object,
@@ -557,6 +635,7 @@ Polymer({
 	},
 	attached:function(){		
 		//this.total='83.00';
+		this.modoSoloComprobante = false;
 		this.diferencia='--';
 		//this.placeholder_clie='Cliente | Publico en General';		
 		xThisPago=this;					
@@ -595,7 +674,24 @@ Polymer({
     setFocusTxt:function(){    	
     	$(".xmonto:first").focus();
     	xThisPago.$.sel_cliente.value='';
-    },
+	},
+	setFocusIinit:function(){    	
+    	// $("#form_pago_cliente #sel_cliente").focus();
+		// xThisPago.$.sel_cliente.value='';
+		setTimeout(() => {			
+			xThisPago.$.sel_cliente.focus;
+			$("#form_pago_cliente #sel_cliente").focus();
+		}, 500);
+		console.log('focus');
+	},
+	setModoSoloComprobante: function() {
+		// solo para ingresar datos del cliente e imprimir comprabantes
+		// desde registro de pagos, pedido pagado
+		this.modoSoloComprobante = true;
+	},
+	focus: function() { 
+		// if (xThisPago.$.xsel_tp_doc.sele)
+	 },
     xopen:function(){xdialoag_pago.open();},
     xclose:function(){xdialoag_pago.close();}    
 })

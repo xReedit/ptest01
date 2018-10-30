@@ -1,6 +1,5 @@
 <?php
     //log registrar peidod y pago
-    
     session_start();
 	//header("Cache-Control: no-cache,no-store");
 	header('content-type: text/html; charset: utf-8');
@@ -13,13 +12,20 @@
 	
 	$x_from = $_POST['p_from']; // a = registro pedido | d=registro cliente | b=registro pago total | c=registro pago parcial
 	$x_idpedido;
+	$x_correlativo_comprobante;
 	$x_idcliente = '';
 
+	
 	if ( strrpos($x_from, "a") !== false ) { $x_from = str_replace('a','',$x_from); cocinar_pedido(); }
 	if ( strrpos($x_from, "d") !== false ) { $x_from = str_replace('d','',$x_from); cocinar_registro_cliente(); }
 	
 	if ( strrpos($x_from, "b") !== false ) { $x_from = str_replace('b','',$x_from); cocinar_pago_total(); }
 	if ( strrpos($x_from, "c") !== false ) { $x_from = str_replace('c','',$x_from); cocinar_pago_parcial(); }
+	
+	if ( strrpos($x_from, "f") !== false ) { $x_from = str_replace('f','',$x_from); getCorrelativoComprobante(); }
+	if ( strrpos($x_from, "e") !== false ) { $x_from = str_replace('e','',$x_from); setComprobantePagoARegistroPago(); }
+
+	if ( strrpos($x_from, "z") !== false ) { $x_from = str_replace('z','',$x_from); getFechaServer(); }
 	
 	
 	// REGISTRA PEDIDO (a)
@@ -408,6 +414,58 @@
 		$x_idcliente = $idclie;
 		$x_idpedido = $idpedidos;
 		// echo $idclie;
+	}
+
+
+	// devuelve el correlativo del comprobante
+	function getCorrelativoComprobante() {
+		global $bd;
+		global $x_correlativo_comprobante;
+		/// buscamos el ultimo correlativo
+		$x_array_comprobante = $_POST['p_comprobante'];
+		$correlativo_comprobante = 0; 
+		$idtipo_comprobante_serie = $x_array_comprobante['idtipo_comprobante_serie'];
+		if ($x_array_comprobante['idtipo_comprobante'] != "0"){ // 0 = ninguno | no imprimir comprobante
+
+	
+			$sql_doc_correlativo="select (correlativo + 1) as d1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;		
+			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);
+
+			// guardamos el correlativo
+			$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+			$bd->xConsulta_NoReturn($sql_doc_correlativo);
+		} else {
+			$correlativo_comprobante='0';
+		}
+
+		// SI TAMBIEN MODIFICA EN REGISTRO PAGO
+		$x_correlativo_comprobante = $correlativo_comprobante;
+		if ( strrpos($x_from, "e") !== false ) { $x_from = str_replace('e','',$x_from); setComprobantePagoARegistroPago(); }
+
+		print $correlativo_comprobante;
+	}
+
+	// viene desde registro de pagos > imprimir comprobante
+	function setComprobantePagoARegistroPago() {
+		global $bd;		
+		global $x_correlativo_comprobante;
+		$correlatico_comprobante = $x_correlativo_comprobante;
+		$x_array_comprobante = $_POST['p_comprobante'];
+		$id_registro_pago = $_POST['idregistro_pago'];
+
+		$idtipo_comprobante_serie = $x_array_comprobante['idtipo_comprobante_serie'];
+		
+		$sqlrp="update registro_pago set idtipo_comprobante_serie=".$idtipo_comprobante_serie.", correlativo='".$idtipo_comprobante_serie."' where idregistro_pago=".$id_registro_pago;
+		$idregistro_pago=$bd->xConsulta_NoReturn($sqlrp);
+	}
+
+
+	// devolver fecha del servidor // comprobante electronico
+	function getFechaServer() {
+		$fecha_actual=date('y').'-'.date('m').'-'.date('d');
+		$hora_actual=date('H').':'.date('i').':'.date('s');
+
+		print $fecha_actual.'|'.$hora_actual;
 	}
 
     

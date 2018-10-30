@@ -999,12 +999,16 @@
 			$bd->xMultiConsulta($sql);
 			break;
 		case 3042://aumentar stock item anulado // anula de 1 en 1
+			// no aumenta porque borramos el procedimiento almacenado
+			// 19102018 -- estara en la pagina pedido borrados - para restablecer o no stock
 			$arrIE=$_POST['xarr'];
 
 			$tabla_procede=$arrIE['procede'];
 			$idpedido_detalle=$arrIE['idpedido_detalle'];
 			$idpedido=$arrIE['idpedido'];
-			$iditem=$arrIE['idprocede'];
+			// $iditem=$arrIE['idprocede'];
+			$iditem=$arrIE['iditem'];
+			$idcarta_lista=$arrIE['idcarta_lista'];
 			$precio_total_item=$arrIE['precio_total'];
 			$precio_unitario_item=$arrIE['precio_unitario'];
 
@@ -1012,7 +1016,7 @@
 			$sql_pedido_detalle='';
 
 			//registra pedido borrado
-			$sqlpedido_borrado="insert into pedido_borrados (idpedido,idpedido_detalle,iditem,idusuario,idusuario_permiso,importe,fecha,hora,procede_tabla) values(".$idpedido.",".$idpedido_detalle.",".$iditem.",".$_POST["u"].",".$_SESSION['idusuario'].",".$precio_unitario_item.",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),".$tabla_procede."); ";
+			$sqlpedido_borrado="insert into pedido_borrados (idpedido,idpedido_detalle,iditem,idcarta_lista,idusuario,idusuario_permiso,importe,fecha,hora,procede_tabla) values(".$idpedido.",".$idpedido_detalle.",".$iditem.",".$idcarta_lista.",".$_POST["u"].",".$_SESSION['idusuario'].",".$precio_unitario_item.",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),".$tabla_procede."); ";
 
 			//descuenta en pedido_detalle
 			$campo_precio='';
@@ -1529,7 +1533,7 @@
 			}
 
 			//registrar en pedidos_borrados.// en este caso los sub item se borran de los pedidos seleccionados
-			$sqlpedido_borrado="insert into pedido_borrados (idpedido,idpedido_detalle,iditem,idusuario,idusuario_permiso,importe,fecha,hora,procede_tabla) SELECT idpedido,idpedido_detalle,iditem,".$_SESSION["idusuario"].",".$_POST['u'].",IF(ptotal*1=0,ptotal_r,ptotal),DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'), procede_tabla FROM pedido_detalle WHERE ".$condicion_pdb."; ";
+			$sqlpedido_borrado="insert into pedido_borrados (idpedido,idpedido_detalle,iditem,idcarta_lista,idusuario,idusuario_permiso,importe,fecha,hora,procede_tabla) SELECT idpedido,idpedido_detalle,iditem,idcarta_lista,".$_SESSION["idusuario"].",".$_POST['u'].",IF(ptotal*1=0,ptotal_r,ptotal),DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'), procede_tabla FROM pedido_detalle WHERE ".$condicion_pdb."; ";
 
 			//print $sql_todos.$sql_change_de.$sql_pdt.$sqlpedido_borrado.$sql_historial_rp;
 			$bd->xMultiConsulta($sql_todos.$sql_change_de.$sql_pdt.$sqlpedido_borrado.$sql_historial_rp);
@@ -2276,10 +2280,11 @@
 			// ORDER BY rp.idregistro_pago desc
 			// ";
 			$sql = "
-			SELECT rpp.idregistro_pago,GROUP_CONCAT(DISTINCT rpp.idpedido) AS idpedido,SUBSTRING_INDEX(rp.fecha,' ',-1) AS hora,rp.total,rp.estado,rp.cierre,rp.motivo_anular
+			SELECT rpp.idregistro_pago,GROUP_CONCAT(DISTINCT rpp.idpedido) AS idpedido,SUBSTRING_INDEX(rp.fecha,' ',-1) AS hora,rp.total,rp.estado,rp.cierre,rp.motivo_anular,tps.idtipo_comprobante
 					,LPAD(p.nummesa,2,'0') AS nummesa, GROUP_CONCAT(DISTINCT LPAD(p.correlativo_dia,5,'0')) as correlativo_dia, p.referencia, u.usuario, tp.idtipo_comprobante, tp.descripcion as comprobante, tpcs.serie, tpcs.correlativo, IFNULL(c.nombres, 'PUBLICO EN GENERAL') AS cliente
 						FROM registro_pago_pedido AS rpp
 						INNER JOIN registro_pago AS rp ON rpp.idregistro_pago=rp.idregistro_pago
+						INNER JOIN tipo_comprobante_serie as tps on rp.idtipo_comprobante_serie = tps.idtipo_comprobante_serie
 						INNER JOIN pedido AS p ON rpp.idpedido=p.idpedido
 						inner JOIN usuario as u on u.idusuario = rp.idusuario
 						LEFT join cliente as c on c.idcliente = rp.idcliente
@@ -2500,6 +2505,29 @@
 		case 2106:
 			$sql="update impresora set ".$_POST['campo']."='".$_POST['valor']."' where idimpresora=".$_POST['id'];
 			$bd->xConsulta($sql);
+			break;
+		case 2200: //recuperar stock pedidos borrados	
+			$sql = "
+			SELECT pb.*, u.usuario, IFNULL(i.descripcion, '') as dscitem FROM pedido_borrados pb
+				inner join usuario as u using(idusuario)
+				inner join pedido as p using(idpedido)
+				left join item as i on pb.iditem = i.iditem
+			where (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") and pb.estado=0 and pb.fecha_cierre=''
+			order by pb.idpedido_borrados desc		
+			";
+			$bd->xConsulta($sql);
+			break;
+		case 2201: //recuperar stock pedidos borrados al actualizar estado	
+			$arr_recuperar = $_POST['arr_recuperar'];
+			$sql_recuperar = '';
+			foreach ($arr_recuperar as $item) {
+				$sql_recuperar = $sql_recuperar.$item['idpedido_borrados'].',';
+			}
+
+			$sql_recuperar=substr($sql_recuperar, 0, -1);
+			$sql_recuperar = 'update pedido_borrados set estado=2 where idpedido_borrados in ('.$sql_recuperar.')';
+
+			$bd->xConsulta($sql_recuperar);
 			break;
 	}
 

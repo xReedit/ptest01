@@ -10,7 +10,7 @@
 			<br><br> -->
 			<div id="div_pago">
 				<x-pago id="component_pago"></x-pago>
-				<div class="xLinea"></div>
+				<!-- <div class="xLinea"></div>
 				<br>
 
 				<div hidden="[[!hidden_container_registro_pago]]">
@@ -23,7 +23,7 @@
 					<button class="xBoton2 xAzul" onclick="xRegistrarClientePagoVR();" id="btn_pago" disabled="[[!valid_monto_pago]]">[F10]Listo, registrar pago</button>
 				</div>						
 
-				<br><br>
+				<br><br> -->
 			</div>
 		</paper-dialog>
 		<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -49,7 +49,7 @@
 				<div class="xizquierda" style="margin-top:-15px">
 					<paper-input label="MESA" class="xEnLineaTable xtxt_enca" id="txt_mesa" data-val="mesa"style="width:90px"></paper-input>
 					<paper-input label="REFERENCIA" class="xEnLineaTable xtxt_enca" id="txt_ref" data-val="referencia" style="width:280px"></paper-input>
-					<button onclick="xMandarCocinarImpresionComanda()"> imprimir comanda </button>
+					<!-- <button onclick="xMandarCocinarImpresionComanda()"> imprimir comanda </button> -->
 				</div>
 				<!--div class="xDerecha" style="margin-top:-25px; position:fixed; right:9%;">
 					<div class="xMiBoton_icon" style="margin-top:-15px;"><img src="../../images/_print_vr.png"><p>[F6] Imprimir</p></div>
@@ -184,6 +184,8 @@
 <script  type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
+<script  type="text/javascript" src="../view/xJsonSunat.js"></script>
+<script  type="text/javascript" src="../view/deNumALetras.js"></script>
 <script type="text/javascript" src="../../js/keynavigator-min.js"></script>	
 <script>
 var xThisVentaRapida
@@ -378,24 +380,37 @@ function xIniVentaRapida(){
 	xValPago.addEventListener('xSend', function (e) {
 		xRpt_pago=e.detail.xRpts;
 		var p=e.detail.xRpts[0].ok;
-		if(p==0){
-			// $("#btn_pago").attr('disabled', true);
-			xThisVentaRapida.valid_monto_pago = false;
-		}else{
-			// btn_pago.removeAttribute("disabled")
-			xThisVentaRapida.valid_monto_pago = true;
+		// if(p==0){
+		// 	// $("#btn_pago").attr('disabled', true);
+		// 	xThisVentaRapida.valid_monto_pago = false;
+		// }else{
+		// 	// btn_pago.removeAttribute("disabled")
+		// 	xThisVentaRapida.valid_monto_pago = true;
+		// 	if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoVR();}
+		// }
+
+		if(p!==0){
 			if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoVR();}
 		}
 
 	});
 
-	xValPago.addEventListener('xContainerPagoVisible', function (e) {		
-		xThisVentaRapida.hidden_container_registro_pago = e.detail;
+	xValPago.addEventListener('xCancelarCerrar', function (e) {		
+		// xIrPage(0);
+		xValPagoMostrarContainerPago()
+	});
+	
+	xValPago.addEventListener('xListoRegistraPago', function (e) {		
+		xRegistrarClientePagoVR();
 	});
 
-	xValPago.addEventListener('xFormClienteValid', function (e) {		
-		xThisVentaRapida.valid_form_cliente_pago = e.detail;
-	});
+	// xValPago.addEventListener('xContainerPagoVisible', function (e) {		
+	// 	xThisVentaRapida.hidden_container_registro_pago = e.detail;
+	// });
+
+	// xValPago.addEventListener('xFormClienteValid', function (e) {		
+	// 	xThisVentaRapida.valid_form_cliente_pago = e.detail;
+	// });
 
 
 	$("#dialog_pagar").on('iron-overlay-opened',function(){
@@ -446,15 +461,19 @@ function detectEvent(e) {
 		if(evt.keyCode==119){xEnviarACuenta();}
 		if(evt.keyCode==121){
 
-			if ( dialog_pagar.opened ) {
-				if (!xThisVentaRapida.hidden_container_registro_pago) {
-					if (xThisVentaRapida.valid_monto_pago) { xRegistrarClientePagoVR() }
-				} else {
-					xValPago.setVisibleContainerPago();
-				}
-			} else {			
+			if ( !dialog_pagar.opened ) {
+			// 	if (!xThisVentaRapida.hidden_container_registro_pago) {
+			// 		if (xThisVentaRapida.valid_monto_pago) { xRegistrarClientePagoVR() }
+			// 	} else {
+			// 		xValPago.setVisibleContainerPago();
+			// 	}
+			// } else {			
+			
 				xIrARegistrarPago();
-				}
+				evt.stopPropagation();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+			}
 		}
 		return document.defaultAction;
 	}
@@ -625,6 +644,9 @@ function xGuardarPedidoVR(responde){
 	xVerificarImprimirComanda=false;
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj)
 
+	// si no hay referencia obtiene el nombre del cliente
+	xref = xref === '' ? DatosCliente.nombres || '' : '';
+
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
 	xarr_header = {'idclie':xid_cliente_pago ,'referencia':xref, 'idcategoria': xidCategoriaVR, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe}
 	xarr_comprobante = ComprobanteSeleccionado;
@@ -648,7 +670,7 @@ function xGuardarPedidoVR(responde){
 	.done( function (idP) {
 		xIdPedido=idP.split('|');
 		var xrpt_correlativo=xIdPedido[0];
-		var xCorrelativo_dia=xCeroIzq(xIdPedido[3],5);
+		var xCorrelativo_dia=xCeroIzq(xIdPedido[xIdPedido.length-1],5);
 		var xsub_sql_descontar='';
 		
 		xNumPedido=xCeroIzq(xIdPedido[2],5);

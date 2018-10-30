@@ -108,6 +108,7 @@
     table tr td.xtb_pedido_importe{width: 10px; text-align: right;}
 </style>
 
+<script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script>
 var xThis;
@@ -212,7 +213,16 @@ function xLLamarPrintMP(){
 	xArrayEnca.reservar=xReservar;
 	//xPopupLoad.titulo="Enviando...";
 
-	xMandarImprimir(xArrayEnca,xDtPrint,xArrayPedidoObj)
+	// xMandarImprimir(xArrayEnca,xDtPrint,xArrayPedidoObj)
+	xCocinarImprimirComanda(xArrayEnca,xArrayPedidoObj,xLocal_xDtSubTotales, (res)=>{
+		if(!res){ //si no hay error
+			xPopupLoad.xclose();
+			xNuevoPedidoMP();
+		} else {
+			xPopupLoad.xclose();
+			dialog_erro_print.open();
+		}
+	})
 }
 function xReImprimirMP(){
 	dialog_erro_print.close();

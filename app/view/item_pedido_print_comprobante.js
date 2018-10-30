@@ -25,6 +25,13 @@ function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayCompr
 	const index_total = xArraySubTotales.length-1;
 	const total_pagar = xArraySubTotales[index_total].importe;
 	xArraySubTotales[index_total].importe_letras = numeroALetras(total_pagar);
+
+	//comprobante electronico // ponemos el pie de pagina para el comprobante
+	xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante;
+
+	xJsonSunatCocinarDatos (xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente);
+	return true;
+	//
 	
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){
 		if(rpt_print==false){return false;}
@@ -181,6 +188,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[z].var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;
 		xImpresoraPrint[0].local = 0;
+		
 		xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print){
 			if(xArrayImpresoras.length==xCuentaImpresorasEvaluadas && rpt_print==false){//si todas las impresoras fueron evaluadas y no presentaron error termina la funcion
 				// setTimeout( function(){try{xNuevoPedidoMP();}catch(err){return false;}}, 2700); //nuevo pedido en mipedido
@@ -225,9 +233,4 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 		
 		callback(xErrorPrint);
 	});
-}
-
-
-function xLoadSerieCorrelativoComprobante(){
-
 }

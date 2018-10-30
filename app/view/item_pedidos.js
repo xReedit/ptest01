@@ -395,7 +395,7 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 	});
 }
 
-//imprimir otros documentos --- -1 precuenta - -2 factura
+//imprimir otros documentos --- -1 precuenta // - -2 factura // no se usa
 //xArrayCuerpo debe tener estructura de mod impresion, (como sub pedido ::app3_sys_dta_pe)
 // xArraySubTotales ya esta calculado los subtotales
 function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, xArraySubTotales,xidDoc){

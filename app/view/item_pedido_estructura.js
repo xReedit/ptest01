@@ -32,3 +32,57 @@ function xCargarDatosAEstructuraImpresion (_SubItems) {
     return _arrRpt;
 
 }
+
+
+
+/// cocina datos a la estructura de items para impresion de comprobante
+/// junta o agrupa por items en 2 secciones: items y servicios adicionales (si hubiera {taper, delivery etc}) 
+/// _SubItems = xArrayCuerpo; items que se envian en el formato anterior 
+function xEstructuraItemsJsonComprobante(_SubItems){
+
+    let itemsObj = [];
+    
+    // items en una sola lista
+    _SubItems
+        .filter(x => x !== null)
+        .map(items => {
+            
+            Object.keys(items).map(x=>{
+                if ( typeof items[x] === 'object' ) { 
+                    const item = items[x]; 
+                    item.grupo = item.iditem;
+                    itemsObj.push(item); 
+                }
+            })
+        });
+    
+    // agrupa y suma
+    const group = itemsObj
+        .filter(x => x.grupo) 
+        .reduce((rv, x) => {
+            grupo = x.grupo;
+            if (!rv[grupo]) {
+                rv[grupo] = {cantidad: x.cantidad, des: x.des, precio_total: parseFloat(x.precio_total).toFixed(2), seccion: x.des_seccion}
+                return rv
+            }
+
+            rv[grupo].cantidad += x.cantidad;
+            rv[grupo].precio_total += parseFloat(x.precio_total).toFixed(2);
+            return rv;
+        }, []);
+
+    
+    // ordena
+    group
+        .sort((a, b) => (a.des > b.des) - (a.des < b.des) )
+        .sort((a, b) => (a.seccion > b.seccion) - (a.seccion < b.seccion) );
+    
+    
+    // agreagar adicionales si los hay
+    
+    
+    
+
+    
+    console.log(group);
+}
