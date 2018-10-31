@@ -2506,6 +2506,10 @@
 			$sql="update impresora set ".$_POST['campo']."='".$_POST['valor']."' where idimpresora=".$_POST['id'];
 			$bd->xConsulta($sql);
 			break;
+		case 2107: // guarda porcentaje del impues
+			$sql="update conf_print_detalle set porcentaje='".$_POST['valor']."' where idconf_print_detalle=".$_POST['id'];
+			$bd->xConsulta($sql);
+			break;		
 		case 2200: //recuperar stock pedidos borrados	
 			$sql = "
 			SELECT pb.*, u.usuario, IFNULL(i.descripcion, '') as dscitem FROM pedido_borrados pb
@@ -2629,13 +2633,13 @@ function xDtUS($op_us){
 		case 3010: // para calcular monto total // sub totales igv, servicio, otros adicionales taper etc
 			$sql_us="
 			SELECT * FROM(
-				SELECT 'p' as tipo, cpd.idconf_print_detalle as id, cpd.descripcion, cpd.porcentaje as monto, 0 as idtipo_consumo, 0 as idseccion
+				SELECT 'p' as tipo, cpd.idconf_print_detalle as id, cpd.es_impuesto, cpd.descripcion, cpd.porcentaje as monto, 0 as idtipo_consumo, 0 as idseccion
 				FROM conf_print_detalle cpd 
 					INNER JOIN conf_print as c on cpd.idconf_print=c.idconf_print
 				where c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede']." and cpd.estado=0) a 
 				UNION ALL
 				SELECT * FROM(
-				SELECT 'a' as tipo, cpa.idconf_print_adicionales as id, cpa.descripcion, cpa.importe as monto, cpa.idtipo_consumo, cpa.idseccion 
+				SELECT 'a' as tipo, cpa.idconf_print_adicionales as id, 0 as es_impuesto, cpa.descripcion, cpa.importe as monto, cpa.idtipo_consumo, cpa.idseccion 
 				FROM conf_print_adicionales as cpa
 					INNER JOIN conf_print as c on cpa.idconf_print=c.idconf_print
 				where  c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede']." and cpa.estado=0 ) b

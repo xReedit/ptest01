@@ -1,6 +1,7 @@
 /// calcula los subtotales desde el total de la mesa
-/// se utiliza en dashboard
+/// se utiliza en dashboard - control de pedidos
 var xLocal_xDtSubTotales;
+var xLocal_SubTotal_Quitados = '';
 function xArmarSubtotalesFromTotal(itemMesa) {
 	if (!itemMesa) return;
 	
@@ -25,7 +26,8 @@ function xArmarSubtotalesArray(xarr_data_pedido=null, total=0){
 	xarr_data_pedido = xarr_data_pedido || xArrayPedidoObj;
 	
 	xLocal_TotalImporte = total===0 ? xSumaCantArray(xarr_data_pedido) : total;
-    
+	
+	// estructuramos para calcular
     for (var i = 0; i < xarr_data_pedido.length; i++) {
 		if(xarr_data_pedido[i]==null){continue;}
 		$.map(xarr_data_pedido[i], function(n, z) {
@@ -45,18 +47,33 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 	
 	xLocal_xDtSubTotales=[]; // variable global
 
-    xLocal_xDtSubTotales.push({'descripcion':'Sub Total', 'importe':xMoneda(importeTotal), 'visible':true}); 
+    xLocal_xDtSubTotales.push({'descripcion':'Sub Total', 'importe':xMoneda(importeTotal), 'visible':true , 'quitar': false}); 
 
-	// procentajes servicio | igv | etc
+	// procentajes impuestos o servicios | igv | etc
     xSumTotalPorcentaje = 0;
 	xCartaSubtotales
 		.filter(c => c.tipo==='p')
 		.map(c => {
 			porcentaje=parseFloat(parseFloat(c.monto)/100).toFixed(2);		
 			porcentaje=parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2)
-            xSumTotalPorcentaje += parseFloat(porcentaje);
+			
+			// si es impuesto
+			var esImpuesto=false, opQuitar=false, tachado=false;
+			if ( parseInt(c.es_impuesto) === 1 ) {
+				xSumTotalPorcentaje += parseFloat(porcentaje);
+				esImpuesto = true;		
+				opQuitar=false;
+			} else {
+				opQuitar=true
+
+				// verificar si esta habilitado para cobrar (si no fue quitado)				
+				if ( xLocal_SubTotal_Quitados.indexOf(c.descripcion) >= 0 ) { // si no encuentra, suma normal, si esta lo tacha
+					tachado=true;
+				} else {xSumTotalPorcentaje += parseFloat(porcentaje);}
+			}
+			// xSumTotalPorcentaje += parseFloat(porcentaje);
             
-            xLocal_xDtSubTotales.push({'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'visible':true}); 
+            xLocal_xDtSubTotales.push({'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'visible':true, 'quitar': opQuitar, 'tachado': tachado}); 
 		})
 
 	
@@ -99,8 +116,15 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 				.filter(x => x.grupo===c.grupo)
 				.map(x => {
 					const xSumAdicional= (parseFloat((x.cantidad) * parseFloat(c.monto)));
-					xLocal_xDtSubTotales.push({'descripcion':c.descripcion, 'importe':xMoneda(xSumAdicional), 'visible':true}); 
-					xSumCantImporte += parseFloat(xSumAdicional)
+					// xSumCantImporte += parseFloat(xSumAdicional);
+					
+					var tachado=false;
+					// verificar si esta habilitado para cobrar (si no fue quitado)
+					if ( xLocal_SubTotal_Quitados.indexOf(c.descripcion) >= 0 ) { // si no encuentra, suma normal, si esta lo tacha
+						tachado=true;
+					} else {xSumCantImporte += parseFloat(xSumAdicional);}
+
+					xLocal_xDtSubTotales.push({'descripcion':c.descripcion, 'importe':xMoneda(xSumAdicional), 'visible':true, 'quitar': true, 'tachado': tachado}); 
 				})
         })
     

@@ -112,8 +112,9 @@
 		$importe_total=0; // la primera fila es subtotal o total si no hay adicionales
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
+			$tachado = $sub_total['tachado'] ? 1 : 0;  
 			$importe_total = $sub_total['importe'];	
-			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."'),";			
+			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
 		}
 
         //guarda primero pedido para obtener el idpedio
@@ -132,34 +133,34 @@
 			$correlativo_dia++;
 
             // guarda pedido
-            $sql="insert into pedido (idorg, idsede,fecha,hora,fecha_hora,nummesa,numpedido,correlativo_dia,referencia,total,total_r,solo_llevar,idtipo_consumo,idcategoria,reserva,idusuario,estado)
-					values(".$_SESSION['ido'].",".$_SESSION['idsede'].",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),now(),'".$x_array_pedido_header['mesa']."','".$numpedido."','".$correlativo_dia."','".$x_array_pedido_header['referencia']."','".$importe_subtotal."','".$importe_total."',".$solo_llevar.",".$tipo_consumo.",".$x_array_pedido_header['idcategoria'].",".$x_array_pedido_header['reservar'].",".$_SESSION['idusuario'].",".$estado_p.")";
+            $sql="insert into pedido (idorg, idsede,fecha,hora,fecha_hora,nummesa,numpedido,correlativo_dia,referencia,total,total_r,solo_llevar,idtipo_consumo,idcategoria,reserva,idusuario,subtotales_tachados,estado)
+					values(".$_SESSION['ido'].",".$_SESSION['idsede'].",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),now(),'".$x_array_pedido_header['mesa']."','".$numpedido."','".$correlativo_dia."','".$x_array_pedido_header['referencia']."','".$importe_subtotal."','".$importe_total."',".$solo_llevar.",".$tipo_consumo.",".$x_array_pedido_header['idcategoria'].",".$x_array_pedido_header['reservar'].",".$_SESSION['idusuario'].",'". $x_array_pedido_header['subtotales_tachados'] ."',".$estado_p.")";
             $id_pedido=$bd->xConsulta_UltimoId($sql);
                 
 		}else{
 			//actualiza monto
-			$sql="update pedido set total=FORMAT(total+".$xarr['ImporteTotal'].",2) where idpedido=".$id_pedido;
+			$sql="update pedido set total=FORMAT(total+".$xarr['ImporteTotal'].",2), subtotales_tachados = '".$x_array_pedido_header['subtotales_tachados']."' where idpedido=".$id_pedido;
 			$bd->xConsulta_NoReturn($sql);
         }
 
         //armar sql completos
 		//remplazar ? por idpedido
-		$sql_sub_total = str_replace("?", $id_pedido, $sql_sub_total);
+		$sql_subtotales = str_replace("?", $id_pedido, $sql_subtotales);
 		$sql_pedido_detalle = str_replace("?", $id_pedido, $sql_pedido_detalle);
 
 		//saca el ultimo caracter ','
-		$sql_sub_total=substr ($sql_sub_total, 0, -1);
+		$sql_subtotales=substr ($sql_subtotales, 0, -1);
 		$sql_pedido_detalle=substr ($sql_pedido_detalle, 0, -1);
 
 		//pedido_detalle
 		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla) values '.$sql_pedido_detalle;
 		//pedido_subtotales
-		$sql_sub_total='insert into pedido_subtotales (idpedido,descripcion,importe) values '.$sql_sub_total;
+		$sql_subtotales='insert into pedido_subtotales (idpedido,descripcion,importe, tachado) values '.$sql_sub_total;
 
 		//ejecutar
         //$sql_ejecuta=$sql_pedido_detalle.'; '.$sql_sub_total.';'; // guarda pedido detalle y pedido subtotal
         $bd->xConsulta_NoReturn($sql_pedido_detalle.';');
-		$bd->xConsulta_NoReturn($sql_sub_total.';');
+		$bd->xConsulta_NoReturn($sql_subtotales.';');
 		
 		// $x_array_pedido_header['id_pedido'] = $id_pedido; // si viene sin id pedido
 		$x_idpedido = $id_pedido;
@@ -198,8 +199,9 @@
 		$importe_total=0; // la primera fila es subtotal o total si no hay adicionales
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
+			$tachado = $sub_total['tachado'] ? 1 : 0;  
 			$importe_total = $sub_total['importe'];	
-			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."'),";			
+			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
 		}
 
 		/// buscamos el ultimo correlativo
@@ -248,7 +250,7 @@
 		// subtotal // primero se obtiene $idregistro_pago
 		$sql_subtotales = str_replace("?", $idregistro_pago, $sql_subtotales);
 		$sql_subtotales = substr($sql_subtotales,0,-1);
-		$sql_subtotales = 'insert into registro_pago_subtotal (idregistro_pago,idorg,idsede,descripcion,importe) values '.$sql_subtotales.'; '; 
+		$sql_subtotales = 'insert into registro_pago_subtotal (idregistro_pago,idorg,idsede,descripcion,importe,tachado) values '.$sql_subtotales.'; '; 
 	
 
 		// comprobante de pago | datos
@@ -287,8 +289,9 @@
 		$importe_total=0; // la primera fila es subtotal o total si no hay adicionales
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
+			$tachado = $sub_total['tachado'] ? 1 : 0;  
 			$importe_total = $sub_total['importe'];	
-			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."'),";			
+			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
 		}
 
 		/// buscamos el ultimo correlativo
@@ -360,7 +363,7 @@
 		// subtotal // primero se obtiene $idregistro_pago
 		$sql_subtotales = str_replace("?", $idregistro_pago, $sql_subtotales);
 		$sql_subtotales = substr($sql_subtotales,0,-1);
-		$sql_subtotales = 'insert into registro_pago_subtotal (idregistro_pago,idorg,idsede,descripcion,importe) values '.$sql_subtotales.'; '; 
+		$sql_subtotales = 'insert into registro_pago_subtotal (idregistro_pago,idorg,idsede,descripcion,importe,tachado) values '.$sql_subtotales.'; '; 
 	
 
 		// $sql_subtotales = substr($sql_subtotales,0,-1);

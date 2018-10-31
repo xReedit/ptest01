@@ -273,12 +273,36 @@
 							<br>
 							<h3 class="xBold">SUB TOTALES</h3>
 							<br>
-							<h4>PORCENTAJES</h4>
-							<p>Ingrese los subtotales ejemplo: IGV 18% ó Servicio 10%.</p>
+							
+							<h4>IMPUESTOS</h4>
+							<p>Ingrese el porcentaje del I.G.V. en numeros, si esta exonerado coloque cero (0). </p>
 							<div class="xLinea2"></div><br>
 							<br>
-							<form method="post" id="formProcentaje">
-								<table id="tb_porcentaje" class="xtable1" width="50%">
+							<form method="post" id="formProcentaje">								
+								<table id="tb_porcentaje" class="xtable1" width="38%">	
+									<thead>
+										<th>Impuesto</th>
+										<th align="center">Porcentaje</th>
+									</thead>		
+									<tbody></tbody>						
+									<!-- <tr data-id="" class="xSinBorde">
+										<td><input type="text" class="xMiInput" placeholder="Descripcion" onChange="conMayusculas(this)" name="descripcion" id="descripcion" required></td>
+										<td><input type="number" min="0" class="xMiInput" placeholder="porcentaje" pattern="0|[1-9][0-9]*" name="porcentaje" id="porcentaje" required></td> -->
+										<!-- <td><paper-fab icon="add" onclick="xAddPorcentaje()" title="Guardar" tabindex="0"></paper-fab></td> -->
+									<!-- </tr> -->
+								</table>
+								<div class="xInvisible">
+									<input type="text" id="idconf_print" name="idconf_print">
+								</div>
+							</form>
+							<br><br>
+
+							<h3 class="xBold">SERVICIOS NO FACTURABLES</h3>
+							<p>Servicios no facturables como: propinas o donativos, importes que no son percibido por el restaurante. <br> Por ejemplo para cargar el servicio de atencion (propinas) podria configurar: Descripcion: Servicio , Porcentaje: 10. <br> Esto sumaria 10% del total de la cuenta. Que seria percibido por el mozo que atendio el pedido o mesa.</p>
+							<div class="xLinea2"></div><br>
+							<br>
+							<form method="post" id="formProcentajeNoFacturable">
+								<table id="tb_porcentaje_no_facturable" class="xtable1" width="50%">
 									<tr data-id="" class="xSinBorde">
 										<td><input type="text" class="xMiInput" placeholder="Descripcion" onChange="conMayusculas(this)" name="descripcion" id="descripcion" required></td>
 										<td><input type="number" min="0" class="xMiInput" placeholder="porcentaje" pattern="0|[1-9][0-9]*" name="porcentaje" id="porcentaje" required></td>
@@ -290,8 +314,9 @@
 								</div>
 							</form>
 							<br><br>
+							
 							<h4>SERVICIOS ADICIONALES</h4>
-							<p>Ingrese los servicios adicionales que tienen un costo segun tipo de consumo. Ejemplo: Para llevar ó Delivery, Descripcion: Taper, Seccion:Para Llevar, Importe:0.5 (por cada item)</p>
+							<p>Ingrese los servicios adicionales que tienen un costo segun tipo de consumo. Ejemplo: Para llevar ó Delivery, Descripcion: Taper, Tipo de consumo: Para llevar, Seccion:Platos de fondo, Importe:1.00 (por cada item) es decir por cada taper.</p>
 							<div class="xLinea2"></div><br>
 							<br>
 							<form method="post" id="formAdicionales">
@@ -813,6 +838,7 @@ function xLoadImpresorasConf(){
 		});
 	})
 }
+
 function xModRow(obj,tipo){
 	var xvalObj=$(obj).text();
 	if($(obj).find('input').length>0){$(obj).find('input').select();return;}
@@ -822,6 +848,24 @@ function xModRow(obj,tipo){
 function xModBlur(obj,tipo){
 	var xvalObj=$(obj).val(),xtb=$(obj).parents('table'),xrow_obj=$(obj).parent(),xid_row=$(xrow_obj).parents('.row').attr('data-id'),xcampo_row=$(xrow_obj).parent().attr('data-campo');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2106',data:{campo:xcampo_row,valor:xvalObj,id:xid_row}})
+	.done( function (dtPrint) {
+		if(dtPrint.indexOf('Error')!=-1){alert(dtPrint)}
+	})
+}
+
+function xModRowImpuesto(obj){
+	var xvalObj=$(obj).text();
+	if($(obj).find('input').length>0){$(obj).find('input').select();return;}
+	$(obj).html('<input type="number" min="0" class="xMiInput" placeholder="porcentaje" pattern="0|[1-9][0-9]*" onblur="xModBlurImpuesto(this)" value="'+xvalObj+'" select>').trigger('create');
+	$(obj).find('input').select();
+}
+function xModBlurImpuesto(obj){
+	var xvalObj=$(obj).val(),
+		xtb=$(obj).parents('table'),
+		xrow_obj=$(obj).parent(),
+		xid_row=$(xrow_obj).parents('.row').attr('data-id');
+		
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2107',data:{campo:'porcentaje',valor:xvalObj,id:xid_row}})
 	.done( function (dtPrint) {
 		if(dtPrint.indexOf('Error')!=-1){alert(dtPrint)}
 	})
@@ -1052,13 +1096,20 @@ function xLoadPorcentaje(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=407', data:{i:xIdConf}})
 	.done( function (dtPor) {
 		$("#tb_porcentaje .row").remove();
-		var xCadenaPor='';
+		var xCadenaPor='', xCadenaPorNoFacturable = '';
 		var xdtPor=$.parseJSON(dtPor);
 		xdtPor=xdtPor.datos;
+
 		for (var i = 0; i < xdtPor.length; i++) {
-			xCadenaPor=String(xCadenaPor+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td>'+xdtPor[i].porcentaje+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			if ( parseInt(xdtPor[i].es_impuesto) === 1 ) {
+				xCadenaPor = String(xCadenaPor+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td style="width: 25%;"><span onclick="xModRowImpuesto(this);">'+xdtPor[i].porcentaje+'</span></td></tr>');
+			} else {
+				xCadenaPorNoFacturable = String(xCadenaPorNoFacturable+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td>'+xdtPor[i].porcentaje+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			}			
 		};
-		$("#tb_porcentaje").append(xCadenaPor).trigger('create');
+
+		$("#tb_porcentaje tbody").append(xCadenaPor).trigger('create');
+		$("#tb_porcentaje_no_facturable").append(xCadenaPorNoFacturable).trigger('create');
 	});
 }
 function xLoadAdicionales(){
@@ -1079,17 +1130,19 @@ function xLoadAdicionales(){
 }
 function xAddPorcentaje(){
 	xcadena='';
-	xvalidateForm('formProcentaje',function(a){
+	xvalidateForm('formProcentajeNoFacturable',function(a){
 		if(a===false){return;}
-		$("#formProcentaje #idconf_print").val(xIdConf);
-		$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print_detalle",$("#formProcentaje").serialize(),function(xUltimoId){
-			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_detalle" data-id="'+xUltimoId+'"><td>'+$("#formProcentaje #descripcion").val()+'</td><td>'+$("#formProcentaje #porcentaje").val()+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
-			$("#tb_porcentaje").append(xcadena).trigger('create');
-			$('#formProcentaje').reset();
-			$("#formProcentaje #descripcion").focus();
+		$("#formProcentajeNoFacturable #idconf_print").val(xIdConf);
+		$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print_detalle",$("#formProcentajeNoFacturable").serialize(),function(xUltimoId){
+			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_detalle" data-id="'+xUltimoId+'"><td>'+$("#formProcentajeNoFacturable #descripcion").val()+'</td><td>'+$("#formProcentajeNoFacturable #porcentaje").val()+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			$("#tb_porcentaje_no_facturable").append(xcadena).trigger('create');
+			$('#tb_porcentaje_no_facturable').reset();
+			$("#tb_porcentaje_no_facturable #descripcion").focus();
 		});
 	});
 }
+
+
 function xAddAdicional(){
 	xcadena='';
 	xvalidateForm('formAdicionales',function(a){

@@ -235,6 +235,7 @@ while($num_copias>=0){
 	//	
 	foreach ($ArraySubTotales as $item_sbt) {//
 		if($item_sbt['visible']=='false'){continue;}
+		if($item_sbt['tachado']=='true'){continue;}
 		$des_sbt=$item_sbt['descripcion'];//
 		$imp_sbt=$item_sbt['importe'];//
 

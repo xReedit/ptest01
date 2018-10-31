@@ -538,6 +538,8 @@ function xNuevoPedidoVR(){
 	check_reserva.checked=false;
 	$("#txt_bus_item").focus();
 	guardando = false;
+
+	xLocal_SubTotal_Quitados='';
 	//tt_pedido=0;
 }
 
@@ -648,7 +650,7 @@ function xGuardarPedidoVR(responde){
 	xref = xref === '' ? DatosCliente.nombres || '' : '';
 
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
-	xarr_header = {'idclie':xid_cliente_pago ,'referencia':xref, 'idcategoria': xidCategoriaVR, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe}
+	xarr_header = {'idclie':xid_cliente_pago ,'referencia':xref, 'idcategoria': xidCategoriaVR, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe, 'subtotales_tachados': xLocal_SubTotal_Quitados}
 	xarr_comprobante = ComprobanteSeleccionado;
 	xarr_body = xArrayPedidoObj;
 	xarr_subtotales = xLocal_xDtSubTotales;
@@ -932,14 +934,19 @@ function xSumarTotal(){
 	tt_pedido = xArmarSubtotalesArray();
 
 	var htmlSubtotales='';
-	xLocal_xDtSubTotales.forEach(element => {
-		var _fontSize,_fontSizeTitulo, titulo, _style='', _id='', _colorImporte='';
+	xLocal_xDtSubTotales.forEach((element, index) => {
+		var _fontSize,_fontSizeTitulo, titulo, _style='', _id='', _colorImporte='', xBtnQuitar='', classTachado='', textBnQuitar='(-)';
+
+		classTachado = element.tachado ? 'xTachar' : '';
+		textBnQuitar = element.tachado ? 'Add' : 'Quitar';
+		xBtnQuitar = element.quitar ? '<span data-tachado="'+ element.tachado +'" class="xCursor xBold xColorRow_Azul xfont11" title="no cobrar" onclick="quitarSubTotal(this, '+index+')"> '+textBnQuitar+' </span>' : '';
 		if ( element.descripcion.toUpperCase() === "TOTAL" ) {
 			_id='tt_importe_pagar_t';
 			_fontSizeTitulo='';
 			_fontSize='xfont24 xBold';
 			titulo='IMPORTE A PAGAR';
 			xtt_pedidos_det = parseFloat(element.importe);
+			
 		} else {
 			_colorImporte = 'xColorRow_Plomo';
 			_fontSize='xfont15';
@@ -948,8 +955,8 @@ function xSumarTotal(){
 			_style='style="padding-top:1px;padding-bottom:1px;"';
 		}
 		
-		htmlSubtotales = htmlSubtotales + '<tr class="total">'+
-							'<td colspan="3" '+_style+'><p class="'+_fontSizeTitulo+' xColorRow_Plomo">'+titulo+'</p></td>'+
+		htmlSubtotales = htmlSubtotales + '<tr class="total '+classTachado+'">'+
+							'<td colspan="3" '+_style+'><p class="'+_fontSizeTitulo+' xColorRow_Plomo">'+titulo+' '+ xBtnQuitar +'</p></td>'+
 							'<td align="right" '+_style+'><p class="'+_fontSize+' '+ _colorImporte +'" id="'+_id+'">'+element.importe+'</p></td>'+
 						'</tr>';
 	});
@@ -966,6 +973,19 @@ function xSumarTotal(){
 	// $("#xtb_pedido_subtotales").html(rptSum[0].CadenaRow).trigger('create');
 }
 
+function quitarSubTotal(obj, index) {
+	const tachado = $(obj).attr('data-tachado');
+	const descripcion = xLocal_xDtSubTotales[index].descripcion;
+	
+	if ( tachado === "true") {
+		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(descripcion+",",''); 
+	} else {
+		xLocal_SubTotal_Quitados += descripcion + ',';	
+	}
+
+	xSumarTotal();
+
+}
 
 function xTraerDtTipoConsumo(){
 	//xDataLoadTipoConsumo(function(xDtTpC){
