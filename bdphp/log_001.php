@@ -112,7 +112,7 @@
 		$importe_total=0; // la primera fila es subtotal o total si no hay adicionales
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
-			$tachado = $sub_total['tachado'] ? 1 : 0;  
+			$tachado = $sub_total['tachado'] === "true" ? 1 : 0;  
 			$importe_total = $sub_total['importe'];	
 			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
 		}
@@ -155,8 +155,8 @@
 		//pedido_detalle
 		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla) values '.$sql_pedido_detalle;
 		//pedido_subtotales
-		$sql_subtotales='insert into pedido_subtotales (idpedido,descripcion,importe, tachado) values '.$sql_sub_total;
-
+		$sql_subtotales='insert into pedido_subtotales (idpedido,idorg,idsede,descripcion,importe, tachado) values '.$sql_subtotales;
+		// echo $sql_subtotales;
 		//ejecutar
         //$sql_ejecuta=$sql_pedido_detalle.'; '.$sql_sub_total.';'; // guarda pedido detalle y pedido subtotal
         $bd->xConsulta_NoReturn($sql_pedido_detalle.';');
@@ -199,7 +199,7 @@
 		$importe_total=0; // la primera fila es subtotal o total si no hay adicionales
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
-			$tachado = $sub_total['tachado'] ? 1 : 0;  
+			$tachado = $sub_total['tachado'] === "true" ? 1 : 0; 
 			$importe_total = $sub_total['importe'];	
 			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
 		}
@@ -289,7 +289,7 @@
 		$importe_total=0; // la primera fila es subtotal o total si no hay adicionales
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
-			$tachado = $sub_total['tachado'] ? 1 : 0;  
+			$tachado = $sub_total['tachado'] === "true" ? 1 : 0; 
 			$importe_total = $sub_total['importe'];	
 			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
 		}

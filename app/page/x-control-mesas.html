@@ -739,6 +739,7 @@ async function getItemsSeleccionados() {
 			xcantidad_dt_p = $(e).attr('data-cantidadr'),
 			xdes_seccion = $(e).attr('data-des_seccion'),
 			xid_seccion = $(e).attr('data-idseccion'),
+			xsubtotales_tachados = $(e).attr('data-subtotales_tachados'), // para calcular los tachados o quitados - no cobrar
 			xdescripcion = $(e).find("#descripcion_item").text(),
 			xsub_i='';
 			if(xid_pedido_detalle_dt_p.indexOf(',')!==-1){
@@ -757,13 +758,13 @@ async function getItemsSeleccionados() {
 		if(cant_subitem_seleccionados===0){
 			//importe_total_por_pedido=parseFloat(importe_total_por_pedido)+parseFloat(ximporte_dt_p);
 			//xArraySql_dt_p[xid_pedido_dt_p]={'sub_items':xsub_i+xid_pedido_detalle_dt_p+',','tt_x_idpedido':importe_total_por_pedido};
-			xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion, 'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,'idpedido_detalle':xid_pedido_detalle_dt_p,'cantidad':xcantidad_dt_p,'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 'idtipo_consumo': xid_tipo_consumo});
+			xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion, 'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,'idpedido_detalle':xid_pedido_detalle_dt_p,'cantidad':xcantidad_dt_p,'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 'idtipo_consumo': xid_tipo_consumo, 'subtotales_tachados': xsubtotales_tachados});
 		}else{
 			//obtener solo los seleccionados
 			if($(e).hasClass('selected1')){
 				//importe_total_por_pedido=parseFloat(importe_total_por_pedido)+parseFloat(ximporte_dt_p);
 				//xArraySql_dt_p[xid_pedido_dt_p]={'sub_items':xsub_i+xid_pedido_detalle_dt_p+',','tt_x_idpedido':importe_total_por_pedido};
-				xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion,'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,'idpedido_detalle':xid_pedido_detalle_dt_p,'cantidad':xcantidad_dt_p,'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 'idtipo_consumo': xid_tipo_consumo});
+				xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion,'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,'idpedido_detalle':xid_pedido_detalle_dt_p,'cantidad':xcantidad_dt_p,'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 'idtipo_consumo': xid_tipo_consumo, 'subtotales_tachados': xsubtotales_tachados});
 			}
 		}
 	});
@@ -1299,7 +1300,17 @@ function xLoadDetallesPedido (obj){
 		var xcadena_pedido='';
 		var xcount_p=1;
 		for (var i = 0; i < xdtDpedido.length; i++) {
-			xcadena_pedido=String(xcadena_pedido+'<tr class="row selected1 xCursor check_item_p" data-idcategoria="'+xidCategoriaPD+'" data-idpedido="'+xdtDpedido[i].idpedido+'" data-idcat="'+xp_sel_idcategoria+'" data-punitario="'+xdtDpedido[i].punitario+'" data-total="'+xdtDpedido[i].total+'" data-m="'+xdtDpedido[0].nummesa+'" data-idtipoconsumo="'+xdtDpedido[0].idtipo_consumo+'" data-nump="'+xdtDpedido[0].numpedido+'" data-correlativo="'+xdtDpedido[0].correlativo_dia+'" data-ref="'+xdtDpedido[0].referencia+'">'+
+			xcadena_pedido=String(xcadena_pedido+'<tr class="row selected1 xCursor check_item_p" data-idcategoria="'+xidCategoriaPD+
+								'" data-idpedido="'+xdtDpedido[i].idpedido+
+								'" data-idcat="'+xp_sel_idcategoria+
+								'" data-punitario="'+xdtDpedido[i].punitario+
+								'" data-total="'+xdtDpedido[i].total+
+								'" data-m="'+xdtDpedido[0].nummesa+
+								'" data-idtipoconsumo="'+xdtDpedido[0].idtipo_consumo+
+								'" data-nump="'+xdtDpedido[0].numpedido+
+								'" data-correlativo="'+xdtDpedido[0].correlativo_dia+
+								'" data-ref="'+xdtDpedido[0].referencia+'">'+
+								'" data-subtotales_tachados="'+xdtDpedido[0].subtotales_tachados+'">'+
 									'<td><paper-checkbox checked class="check_item"></paper-checkbox>'+xcount_p+'</td>'+
 									'<td>'+xdtDpedido[i].des_pedido+' '+xdtDpedido[i].referencia+'</td>'+
 									'<td>'+xdtDpedido[i].min_transcurridos+' min</td>'+
@@ -1508,9 +1519,23 @@ function xLoadMipedidoBD(dt){
 
 					//seccion
 					if(xArraySeccion[xDtBd[i].idseccion_index]==null){xArraySeccion[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
-					xCadenaItemArray=String('<tr class="row xCursor" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+'" data-idpedido="'+xDtBd[i].idpedido+'" data-punitario="'+xDtBd[i].punitario+'" data-idtipoconsumo="'+xDtBd[i].idtipo_consumo+'" data-idcategoria="'+xDtBd[i].idcategoria+'" data-iditem="'+xDtBd[i].iditem + '" data-idcartalista="'+xDtBd[i].idcarta_lista+'" data-procede="'+xDtBd[i].procede+'" data-descontar="'+xDtBd[i].descontar_en+'" data-iddescontar="'+xDtBd[i].iddescontar+'" data-cant_descontar="'+xDtBd[i].cant_descontar+
-									'" data-idpedidodetaller="'+xDtBd[i].idpedido_detalle_r+'" data-cantidadr="'+xDtBd[i].cantidad_r+'" data-totalr="'+xDtBd[i].total_r+
-									'" data-des_seccion="'+ xNom_seccion +'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+
+					xCadenaItemArray=String('<tr class="row xCursor" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+
+							'" data-idpedido="'+xDtBd[i].idpedido+
+							'" data-punitario="'+xDtBd[i].punitario+
+							'" data-idtipoconsumo="'+xDtBd[i].idtipo_consumo+
+							'" data-idcategoria="'+xDtBd[i].idcategoria+
+							'" data-iditem="'+xDtBd[i].iditem + 
+							'" data-idcartalista="'+xDtBd[i].idcarta_lista+
+							'" data-procede="'+xDtBd[i].procede+
+							'" data-descontar="'+xDtBd[i].descontar_en+
+							'" data-iddescontar="'+xDtBd[i].iddescontar+
+							'" data-cant_descontar="'+xDtBd[i].cant_descontar+
+							'" data-idpedidodetaller="'+xDtBd[i].idpedido_detalle_r+
+							'" data-cantidadr="'+xDtBd[i].cantidad_r+
+							'" data-totalr="'+xDtBd[i].total_r+
+							'" data-des_seccion="'+ xNom_seccion +
+							'" data-subtotales_tachados="'+ xDtBd[i].subtotales_tachados +
+							'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+
 									'<td width="50px" class="click_row_dt_p"><paper-checkbox class="check_item"></paper-checkbox><span id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2)+'</span></td>'+
 									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+xDtBd[i].descripcion+'</td>'+
 									'<td class="click_row_dt_p" align="right" id="td_importe">'+xDtBd[i].ptotal+'</td>'+
@@ -1742,9 +1767,15 @@ async function xSumarTotalPedidos(viene_borrar){
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
 	arrSumSubtTotales = xLocal_xDtSubTotales;
 
-	var htmlSubtotales='';
-	xLocal_xDtSubTotales.forEach(element => {
+	var htmlSubtotales='';	
+	xLocal_xDtSubTotales.forEach((element, index) => {
 		var _fontSize,_fontSizeTitulo, titulo, _style='', _id='';
+		
+		var classTachado = element.tachado ? 'xTachar' : '';
+		var textBnQuitar = element.tachado ? 'Add' : 'Quitar';
+		var importeRow = element.tachado ? element.importe_tachado : element.importe;
+		var xBtnQuitar = element.quitar ? '<span data-tachado="'+ element.tachado +'" class="xCursor xBold xColorRow_Azul xfont11" title="no cobrar" onclick="quitarSubTotal(this, '+index+')"> '+textBnQuitar+' </span>' : '';
+
 		if ( element.descripcion.toUpperCase() === "TOTAL" ) {
 			_id='tt_importe_pagar_t';
 			_fontSizeTitulo='';
@@ -1758,9 +1789,9 @@ async function xSumarTotalPedidos(viene_borrar){
 			_style='style="padding-top:1px;padding-bottom:1px;"';
 		}
 		
-		htmlSubtotales = htmlSubtotales + '<tr class="total">'+
-							'<td colspan="3" '+_style+'><p class="'+_fontSizeTitulo+'">'+titulo+'</p></td>'+
-							'<td align="right" '+_style+'><p class="'+_fontSize+' xColorRow_Azul" id="'+_id+'">'+element.importe+'</p></td>'+
+		htmlSubtotales = htmlSubtotales + '<tr class="total '+classTachado+'">'+
+							'<td colspan="3" '+_style+'><p class="'+_fontSizeTitulo+'">'+titulo+' '+ xBtnQuitar +'</p></td>'+
+							'<td align="right" '+_style+'><p class="'+_fontSize+' xColorRow_Azul" id="'+_id+'">'+importeRow+'</p></td>'+
 						'</tr>';
 	});
 
@@ -1799,6 +1830,21 @@ async function xSumarTotalPedidos(viene_borrar){
 	//xtt_pedidos
 
 }
+
+function quitarSubTotal(obj, index) {
+	const tachado = $(obj).attr('data-tachado');
+	const idQuitar = xLocal_xDtSubTotales[index].id;
+	
+	if ( tachado === "true") {
+		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(idQuitar+",",''); 
+	} else {
+		xLocal_SubTotal_Quitados += idQuitar + ',';	
+	}
+
+	xSumarTotalPedidos();
+
+}
+
 /*function xModificarTotalBD(xid_i,xid_pd,x_importe_i,x_cant_i,x_importe_ipd){
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=505', data:{i:xid_i,ipd:xid_pd,m:x_importe_i,c:x_cant_i,mpd:x_importe_ipd},function(){return false;}})
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=505', data:{i:xid_i,ipd:xid_pd,m:x_importe_i,c:x_cant_i,mpd:x_importe_ipd,icl_de:xid_carta_lista_de,icl_a:xid_carta_lista_a,iddescontar:xIDdescontar_en_item_lista,tabladescontar:xdescontar_en_item_lista}})

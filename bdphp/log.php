@@ -1059,7 +1059,7 @@
 			//idpedido_detalle_r, cantidad_r, total_r // es para control_mesas, para datos de pago
 			$sql="
 			SELECT * FROM(
-				SELECT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index,s.descripcion AS des_seccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede, '0' AS procede_index , IF(cl.cantidad='SP',2,1) AS descontar_en, IF(cl.cantidad='SP',ii.idporcion,pd.idcarta_lista)AS iddescontar, IF(cl.cantidad='SP',ii.cant_porcion,pd.cantidad) AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r
+				SELECT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index,s.descripcion AS des_seccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede, '0' AS procede_index , IF(cl.cantidad='SP',2,1) AS descontar_en, IF(cl.cantidad='SP',ii.idporcion,pd.idcarta_lista)AS iddescontar, IF(cl.cantidad='SP',ii.cant_porcion,pd.cantidad) AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r, p.subtotales_tachados
 				FROM pedido AS p
 					INNER JOIN pedido_detalle AS pd using(idpedido)
 					INNER JOIN seccion AS s using(idseccion)
@@ -1071,7 +1071,7 @@
 			) a
 			UNION all
 				SELECT * FROM(
-				SELECT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion, concat('2',pd.idseccion,'.0') AS idseccion_index, pf.descripcion AS des_desccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede , pf.idproducto_familia AS procede_index, 0 AS descontar_en,pd.iditem AS iddescontar, pd.cantidad AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r
+				SELECT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion, concat('2',pd.idseccion,'.0') AS idseccion_index, pf.descripcion AS des_desccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede , pf.idproducto_familia AS procede_index, 0 AS descontar_en,pd.iditem AS iddescontar, pd.cantidad AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r, p.subtotales_tachados
 				FROM pedido AS p
 					INNER JOIN pedido_detalle AS pd using(idpedido)
 					INNER JOIN tipo_consumo AS tp ON tp.idtipo_consumo=pd.idtipo_consumo
@@ -1347,7 +1347,7 @@
 
 			$sql="
 				SELECT p.idpedido,p.nummesa,p.numpedido,p.correlativo_dia,p.reserva, p.idtipo_consumo,
-					SUBSTRING_INDEX(u.nombres, ' ', 1) AS nom_usuario,p.referencia,
+					SUBSTRING_INDEX(u.nombres, ' ', 1) AS nom_usuario,p.referencia, p.subtotales_tachados,
 					concat('Pedido ',LPAD(p.correlativo_dia,5,'0')) AS des_pedido,TIMESTAMPDIFF(MINUTE , STR_TO_DATE(concat(p.fecha,' ',p.hora),'%d/%m/%Y %H:%i:%s'), CURRENT_TIMESTAMP() ) AS min_transcurridos, p.total
 				FROM pedido AS p
 					INNER JOIN usuario AS u using(idusuario)
@@ -2633,13 +2633,13 @@ function xDtUS($op_us){
 		case 3010: // para calcular monto total // sub totales igv, servicio, otros adicionales taper etc
 			$sql_us="
 			SELECT * FROM(
-				SELECT 'p' as tipo, cpd.idconf_print_detalle as id, cpd.es_impuesto, cpd.descripcion, cpd.porcentaje as monto, 0 as idtipo_consumo, 0 as idseccion
+				SELECT 'p' as tipo, cpd.idconf_print_detalle as id, cpd.es_impuesto, cpd.descripcion, cpd.porcentaje as monto, 0 as idtipo_consumo, 0 as idseccion, 0 as nivel
 				FROM conf_print_detalle cpd 
 					INNER JOIN conf_print as c on cpd.idconf_print=c.idconf_print
 				where c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede']." and cpd.estado=0) a 
 				UNION ALL
 				SELECT * FROM(
-				SELECT 'a' as tipo, cpa.idconf_print_adicionales as id, 0 as es_impuesto, cpa.descripcion, cpa.importe as monto, cpa.idtipo_consumo, cpa.idseccion 
+				SELECT 'a' as tipo, cpa.idconf_print_adicionales as id, 0 as es_impuesto, cpa.descripcion, cpa.importe as monto, cpa.idtipo_consumo, cpa.idseccion, cpa.nivel
 				FROM conf_print_adicionales as cpa
 					INNER JOIN conf_print as c on cpa.idconf_print=c.idconf_print
 				where  c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede']." and cpa.estado=0 ) b

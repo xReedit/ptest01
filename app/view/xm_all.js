@@ -326,7 +326,7 @@ function xVerificarSession(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-104',async: false})
 	.done( function (a) {
 		if(a==1){
-			this.setClearLocalStorage();
+			setClearLocalStorage();
 			// var printL = window.localStorage.getItem('::app3_woIpPrintLo');
 			// window.localStorage.clear();
 
@@ -378,7 +378,7 @@ function xCerrarSessionAll(){
 	$('body').removeClass('loaded');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-103'})
 	.done( function (a) {
-		this.setClearLocalStorage()
+		setClearLocalStorage()
 		// var printL = window.localStorage.getItem('::app3_woIpPrintLo');
 		// window.localStorage.clear();
 

@@ -315,8 +315,11 @@
 							</form>
 							<br><br>
 							
-							<h4>SERVICIOS ADICIONALES</h4>
-							<p>Ingrese los servicios adicionales que tienen un costo segun tipo de consumo. Ejemplo: Para llevar ó Delivery, Descripcion: Taper, Tipo de consumo: Para llevar, Seccion:Platos de fondo, Importe:1.00 (por cada item) es decir por cada taper.</p>
+							<h3 class="xBold">SERVICIOS ADICIONALES</h3>
+							<p>Ingrese los servicios adicionales que tienen un costo segun tipo de consumo. <br>
+								Ejemplo: Para llevar ó Delivery, Descripcion: Taper, Tipo de consumo: Para llevar, Seccion:Platos de fondo, Importe:1.00 <strong>(por cada item)</strong> es decir por cada taper. <br>
+								Tambien puede ingresar servicios fijos que se cobran <strong>por pedido.</strong> Ejemplo: En el servicio de Delivery se suele cobrar un monto fijo por el transporte. Quedando de esta manera: Descripcion: Servicio delivery,  Tipo consumo: Delivery, Por: Pedido, Impore: 3.00.
+							</p>
 							<div class="xLinea2"></div><br>
 							<br>
 							<form method="post" id="formAdicionales">
@@ -325,6 +328,7 @@
 										<td>Activo</td>
 										<td><input type="text" class="xMiInput" placeholder="Descripcion" onChange="conMayusculas(this)" name="descripcion" id="descripcion" required></td>
 										<td><select class="xTextRow2" id="selTPC_adicional" inline></select></td>
+										<td><select class="xTextRow2" id="selNivel_adicional" inline></select></td>
 										<td><select class="xTextRow2" id="selSeccion_adicional" inline></select></td>
 										<td><input type="number" min="0" class="xMiInput" placeholder="Importe" pattern="0|[1-9][0-9]*" name="importe" id="importe" onblur="xRetornaMoneda(this)" required></td>
 										<td><paper-fab icon="add" onclick="xAddAdicional()" title="Guardar" tabindex="0"></paper-fab></td>
@@ -333,6 +337,7 @@
 								<div class="xInvisible">
 									<input type="text" id="idconf_print" name="idconf_print">
 									<input type="text" id="idtipo_consumo" name="idtipo_consumo">
+									<input type="text" id="nivel" name="nivel">
 									<input type="text" id="idseccion" name="idseccion">
 								</div>
 							</form>
@@ -1122,8 +1127,11 @@ function xLoadAdicionales(){
 		dtAd=dtAd.datos;
 		for (var i = 0; i < dtAd.length; i++) {
 			xCheck_ac='';
+			const nivel = parseInt(dtAd[i].nivel) === 0 ? 'POR ITEM' : 'POR PEDIDO';
+
 			if(dtAd[i].estado==0){xCheck_ac='checked';}
-			xCadenaAd=String(xCadenaAd+'<tr class="row" data-t="conf_print_adicionales" data-id="'+dtAd[i].idconf_print_adicionales+'"><td><paper-checkbox class="check_adicional" '+xCheck_ac+'></paper-checkbox></td><td>'+dtAd[i].descripcion+'</td><td>'+dtAd[i].des_tipo_consumo+'</td><td>'+dtAd[i].des_seccion+'</td><td>'+dtAd[i].importe+'</td><td><div class="xDeleteRow" onClick="xBorrarRegistro(this)" title="Borrar"></div></td></tr>');
+			
+			xCadenaAd=String(xCadenaAd+'<tr class="row" data-t="conf_print_adicionales" data-id="'+dtAd[i].idconf_print_adicionales+'"><td><paper-checkbox class="check_adicional" '+xCheck_ac+'></paper-checkbox></td><td>'+dtAd[i].descripcion+'</td><td>'+dtAd[i].des_tipo_consumo+'</td><td>'+nivel+'</td><td>'+dtAd[i].des_seccion+'</td><td>'+dtAd[i].importe+'</td><td><div class="xDeleteRow" onClick="xBorrarRegistro(this)" title="Borrar"></div></td></tr>');
 		};
 		$("#tb_Adicionales").append(xCadenaAd).trigger('create');
 	});
@@ -1150,10 +1158,12 @@ function xAddAdicional(){
 		$("#formAdicionales #idconf_print").val(xIdConf);
 		$("#formAdicionales #idtipo_consumo").val($("#selTPC_adicional").val());
 		$("#formAdicionales #idseccion").val($("#selSeccion_adicional").val());
-		xdes_tpc_sel=selTPC_adicional[selTPC_adicional.selectedIndex].textContent;
-		xdes_ad_seccion=selSeccion_adicional[selSeccion_adicional.selectedIndex].textContent;
+		$("#formAdicionales #nivel").val($("#selNivel_adicional").val());
+		const xdes_tpc_sel=selTPC_adicional[selTPC_adicional.selectedIndex].textContent;
+		const xdes_ad_seccion=selSeccion_adicional[selSeccion_adicional.selectedIndex].textContent;
+		const xdes_nivel_seccion=selNivel_adicional[selNivel_adicional.selectedIndex].textContent;
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print_adicionales",$("#formAdicionales").serialize(),function(xUltimoId){
-			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_adicionales" data-id="'+xUltimoId+'"><td><paper-checkbox class="check_adicional" checked></paper-checkbox></td><td>'+$("#formAdicionales #descripcion").val()+'</td><td>'+xdes_tpc_sel+'</td><td>'+xdes_ad_seccion+'</td><td>'+$("#formAdicionales #importe").val()+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_adicionales" data-id="'+xUltimoId+'"><td><paper-checkbox class="check_adicional" checked></paper-checkbox></td><td>'+$("#formAdicionales #descripcion").val()+'</td><td>'+xdes_tpc_sel+'</td><td>'+xdes_nivel_seccion+'</td><td>'+xdes_ad_seccion+'</td><td>'+$("#formAdicionales #importe").val()+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
 			$("#tb_Adicionales").append(xcadena).trigger('create');
 			$('#formAdicionales').reset();
 			$("#formAdicionales #descripcion").focus();
@@ -1213,6 +1223,14 @@ function xLoadCategoria(){
 		$("#selSeccion_adicional").html(xCadenaCat).trigger('create');
 		$("#selCon").html(xCadenaCat).trigger('create');
 	});
+
+
+	// nivel -- por pedido o por item
+	// si es por item tiene en cuenta la seccion
+	// si es todo el pedido ignora la seccion
+	cadenaSelNivel = '<option value="0">POR ITEM</option><option value="1">POR PEDIDO</option>';
+	$("#selNivel_adicional").html(cadenaSelNivel).trigger('create');
+
 
 
 }
