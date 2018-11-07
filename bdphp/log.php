@@ -1252,7 +1252,7 @@
 			// 	GROUP BY p.idpedido
 			// ";
 			$sql = "
-				SELECT p.idpedido,p.idcategoria, count(p.nummesa) AS num_pedidos ,p.idtipo_consumo, 
+				SELECT p.idpedido,p.idcategoria, count(p.nummesa) AS num_pedidos ,p.idtipo_consumo, p.subtotales_tachados,
 					GROUP_CONCAT(DISTINCT concat(pd.idtipo_consumo,':', pd.idseccion,':', pd.cantidad)) as secciones,p.reserva,p.nummesa, p.numpedido,p.correlativo_dia, p.referencia, sum(pd.ptotal) AS importe, p.hora
 					FROM pedido AS p
 						inner join (
@@ -1263,7 +1263,7 @@
 				WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") and (p.estado=0) and p.nummesa>0
 				GROUP BY p.nummesa
 				UNION ALL
-				SELECT p.idpedido,p.idcategoria, count(p.nummesa) AS num_pedidos ,p.idtipo_consumo, 
+				SELECT p.idpedido,p.idcategoria, count(p.nummesa) AS num_pedidos ,p.idtipo_consumo, p.subtotales_tachados,
 					GROUP_CONCAT(DISTINCT concat(pd.idtipo_consumo,':', pd.idseccion,':', pd.cantidad)) as secciones,p.reserva,p.nummesa, p.numpedido,p.correlativo_dia, p.referencia, sum(pd.ptotal) AS importe, p.hora
 					FROM pedido AS p
 						inner join (

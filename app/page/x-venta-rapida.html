@@ -805,7 +805,21 @@ function xLoadItemsDetalleCartaALL(){
 		xCantidadMax=xGeneralDataCarta[p].cantidad;
 		if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
 		if(xCantidadMax=='ND'){xCantidadMax=1000;}
-		xCadenaItems=String(xCadenaItems+'<li class="noselect" data-idcategoria="'+xidCategoriaVR+'"  data-cat="'+xGeneralDataCarta[p].des_seccion+'" data-idcl="'+xGeneralDataCarta[p].idcarta_lista+'" data-idseccion="'+xGeneralDataCarta[p].idseccion+'" data-idseccionindex="'+xGeneralDataCarta[p].idseccion_index+'" data-iditem="'+xGeneralDataCarta[p].iditem+'" data-punitario="'+xGeneralDataCarta[p].precio+'" data-idimpresora="'+xGeneralDataCarta[p].idimpresora+'" data-idprocede="'+xGeneralDataCarta[p].idprocede+'" data-procede="'+xGeneralDataCarta[p].procede+'" data-procedeindex="'+xGeneralDataCarta[p].procede_index+'" data-ventarapida=1 data-imprimircomanda="'+xGeneralDataCarta[p].imprimir_comanda+'" data-iddescontar="'+xGeneralDataCarta[p].idprocede+'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
+		xCadenaItems=String(xCadenaItems+'<li class="noselect" data-idcategoria="'+xidCategoriaVR+
+												'" data-cat="'+xGeneralDataCarta[p].des_seccion+
+												'" data-idcl="'+xGeneralDataCarta[p].idcarta_lista+
+												'" data-idseccion="'+xGeneralDataCarta[p].idseccion+
+												'" data-idseccionindex="'+xGeneralDataCarta[p].idseccion_index+
+												'" data-iditem="'+xGeneralDataCarta[p].iditem+
+												'" data-punitario="'+xGeneralDataCarta[p].precio+
+												'" data-idimpresora="'+xGeneralDataCarta[p].idimpresora+
+												'" data-idprocede="'+xGeneralDataCarta[p].idprocede+
+												'" data-procede="'+xGeneralDataCarta[p].procede+
+												'" data-procedeindex="'+xGeneralDataCarta[p].procede_index+
+												'" data-ventarapida=1 data-imprimircomanda="'+xGeneralDataCarta[p].imprimir_comanda+
+												'" data-iddescontar="'+xGeneralDataCarta[p].idprocede+
+												'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+
+												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
 															'<div>'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+
 																'<p class="xtitulo_li2 '+xtachar_li+'">'+xGeneralDataCarta[p].des_item+'</p>'+
@@ -986,7 +1000,7 @@ function quitarSubTotal(obj, index) {
 		xLocal_SubTotal_Quitados += idQuitar + ',';	
 	}
 
-	
+	// xDtPedido.map(x => x.)
 
 	xSumarTotal();
 

@@ -7,11 +7,12 @@ function xArmarSubtotalesFromTotal(itemMesa) {
 	if (!itemMesa) return;
 	
 	var dtDetalle = itemMesa.secciones.split(',');
+	var subtotales_tachados_bd = itemMesa.subtotales_tachados; 
 	var arrDt = [];
 
 	dtDetalle.map((d,index) => {
 		var _d = d.split(':');
-		arrDt.push({'tipoconsumo':_d[0], 'seccion': _d[1], 'cantidad': _d[2]});		
+		arrDt.push({'tipoconsumo':_d[0], 'seccion': _d[1], 'cantidad': _d[2], 'subtotales_tachados': subtotales_tachados_bd});		
     });
     
     return xCalcTotalSubArray(arrDt,itemMesa.importe);
@@ -33,7 +34,7 @@ function xArmarSubtotalesArray(xarr_data_pedido=null, total=0){
 		if(xarr_data_pedido[i]==null){continue;}
 		$.map(xarr_data_pedido[i], function(n, z) {
 			if (typeof n=="object"){
-				const  subtotales_tachados = n.subtotales_tachados ? n.subtotales_tachados : '';
+				const  subtotales_tachados = n.subtotales_tachados !== undefined ? n.subtotales_tachados : xLocal_SubTotal_Quitados;
 				const  idpedido = n.idpedido ? n.idpedido : 0;
 				arrDt.push({'tipoconsumo':n.idtipo_consumo, 'seccion': n.idseccion, 'cantidad':n.cantidad, 'subtotales_tachados': subtotales_tachados, 'idpedido': idpedido});
 			}
@@ -181,13 +182,13 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 							// evalua uno por uno
 							importe_tachado = sumItem ;
 
-							if ( x.subtotales_tachados === "" ){ // quiere decir que no hay para procesar o que viene de venta rapida
-								subtotales_tachados_local = xLocal_SubTotal_Quitados;
-								cantidadItemPedido = 1;
-							} else {
+							// if ( x.subtotales_tachados === "" ){ // quiere decir que no hay para procesar o que viene de venta rapida
+							// 	subtotales_tachados_local = xLocal_SubTotal_Quitados;
+							// 	cantidadItemPedido = 1;
+							// } else {
 								subtotales_tachados_local = x.subtotales_tachados;
 								cantidadItemPedido = arrCocinada[x.grupo].cantidad
-							}
+							// }
 
 
 							subtotales_tachados_local.indexOf(id) >=0 ? sumItem = 0 : importe_tachado = 0;
@@ -221,84 +222,84 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 
 	
 
-	// ADICIONALES POR ITEM
-	xCartaSubtotales
-		.filter(c => c.tipo==='a' && parseInt(c.nivel)===0)		
-		.map(c => {c.grupo = c.idtipo_consumo+c.idseccion; return c;})
-		.map(c => {			
-			arrCocinada
-				.filter(x => x.grupo===c.grupo)				
-				.map(x => {
-					const id = c.tipo+c.id; // para quitar					
-					// xSumCantImporte += parseFloat(xSumAdicional);
+	// // ADICIONALES POR ITEM
+	// xCartaSubtotales
+	// 	.filter(c => c.tipo==='a' && parseInt(c.nivel)===0)		
+	// 	.map(c => {c.grupo = c.idtipo_consumo+c.idseccion; return c;})
+	// 	.map(c => {			
+	// 		arrCocinada
+	// 			.filter(x => x.grupo===c.grupo)				
+	// 			.map(x => {
+	// 				const id = c.tipo+c.id; // para quitar					
+	// 				// xSumCantImporte += parseFloat(xSumAdicional);
 										
-					//x.subtotales_tachados.toLowerCase().split("").sort().join("").match(/(.)\1+/g).length;
-					// si el requerimiento viene de control de pedidos cada item tendra "subtotales_tachados"
-					xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
+	// 				//x.subtotales_tachados.toLowerCase().split("").sort().join("").match(/(.)\1+/g).length;
+	// 				// si el requerimiento viene de control de pedidos cada item tendra "subtotales_tachados"
+	// 				xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
 
-					const CountIdTacahdos = xLocal_SubTotal_Quitados.toLowerCase().split(",").sort().filter(x => x===id).length;
-					const xSumAdicional= ((parseFloat((x.cantidad) - parseFloat(CountIdTacahdos)) * parseFloat(c.monto)));
+	// 				const CountIdTacahdos = xLocal_SubTotal_Quitados.toLowerCase().split(",").sort().filter(x => x===id).length;
+	// 				const xSumAdicional= ((parseFloat((x.cantidad) - parseFloat(CountIdTacahdos)) * parseFloat(c.monto)));
 
-					const tachado = checkSubTotalQuitado(countPedidos, id, xSumAdicional);
+	// 				const tachado = checkSubTotalQuitado(countPedidos, id, xSumAdicional);
 					
-					xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(xSumAdicional), 'visible':true, 'quitar': true, 'tachado': tachado}); 
-				})
-		});
+	// 				xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(xSumAdicional), 'visible':true, 'quitar': true, 'tachado': tachado}); 
+	// 			})
+	// 	});
 	
-	// ADICIONALES POR PEDIDO	// COMO SERVICIO DELIVERY 
-	var tipoConsumoAdd = 0;
-	xCartaSubtotales
-		.filter(c => c.tipo==='a' && parseInt(c.nivel)===1)		
-		.map(c => {c.grupo = c.idtipo_consumo; return c;}) // solo mira seccion
-		.map(c => {
-			arrCocinada
-				.filter(x => x.grupoTipoconsumo===c.grupo)
-				.map(x => {
-					const id = c.tipo+c.id; // para quitar
-					if ( tipoConsumoAdd === x.grupoTipoconsumo ) { return;}
+	// // ADICIONALES POR PEDIDO	// COMO SERVICIO DELIVERY 
+	// var tipoConsumoAdd = 0;
+	// xCartaSubtotales
+	// 	.filter(c => c.tipo==='a' && parseInt(c.nivel)===1)		
+	// 	.map(c => {c.grupo = c.idtipo_consumo; return c;}) // solo mira seccion
+	// 	.map(c => {
+	// 		arrCocinada
+	// 			.filter(x => x.grupoTipoconsumo===c.grupo)
+	// 			.map(x => {
+	// 				const id = c.tipo+c.id; // para quitar
+	// 				if ( tipoConsumoAdd === x.grupoTipoconsumo ) { return;}
 
-					const xSumCantImportePorPedio = parseFloat(c.monto);
+	// 				const xSumCantImportePorPedio = parseFloat(c.monto);
 
-					// si el requerimiento viene de control de pedidos cada item tendra "subtotales_tachados"
-					xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
-					const tachado = checkSubTotalQuitado(countPedidos, id, xSumCantImportePorPedio);
+	// 				// si el requerimiento viene de control de pedidos cada item tendra "subtotales_tachados"
+	// 				xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
+	// 				const tachado = checkSubTotalQuitado(countPedidos, id, xSumCantImportePorPedio);
 					
-					xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(xSumCantImportePorPedio), 'visible':true, 'quitar': true, 'tachado': tachado}); 
+	// 				xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(xSumCantImportePorPedio), 'visible':true, 'quitar': true, 'tachado': tachado}); 
 					
-					tipoConsumoAdd = x.grupoTipoconsumo; // solo una vez
-				})
-		});
+	// 				tipoConsumoAdd = x.grupoTipoconsumo; // solo una vez
+	// 			})
+	// 	});
 
 
-	// lo ponemos aca para que tenga en cuenta los subtotales_tachados que pueden venir con los items
-	// procentajes impuestos o servicios | igv | etc
-	xCartaSubtotales
-		.filter(c => c.tipo==='p')
-		.map(c => {
-			const id = c.tipo+c.id; // para quitar			
+	// // lo ponemos aca para que tenga en cuenta los subtotales_tachados que pueden venir con los items
+	// // procentajes impuestos o servicios | igv | etc
+	// xCartaSubtotales
+	// 	.filter(c => c.tipo==='p')
+	// 	.map(c => {
+	// 		const id = c.tipo+c.id; // para quitar			
 
-			porcentaje=parseFloat(parseFloat(c.monto)/100).toFixed(2);		
-			porcentaje=parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2)
+	// 		porcentaje=parseFloat(parseFloat(c.monto)/100).toFixed(2);		
+	// 		porcentaje=parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2)
 			
-			// si es impuesto
-			var esImpuesto=false, opQuitar=false, tachado = false;
-			if ( parseInt(c.es_impuesto) === 1 ) {
-				xSumCantImporte += parseFloat(porcentaje);
-				esImpuesto = true;		
-				opQuitar=false;
-			} else {
-				opQuitar=true;								
-				//xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
-				tachado = checkSubTotalQuitado(countPedidos, id, porcentaje);
-			}			
+	// 		// si es impuesto
+	// 		var esImpuesto=false, opQuitar=false, tachado = false;
+	// 		if ( parseInt(c.es_impuesto) === 1 ) {
+	// 			xSumCantImporte += parseFloat(porcentaje);
+	// 			esImpuesto = true;		
+	// 			opQuitar=false;
+	// 		} else {
+	// 			opQuitar=true;								
+	// 			//xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
+	// 			tachado = checkSubTotalQuitado(countPedidos, id, porcentaje);
+	// 		}			
             
-            xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'visible':true, 'quitar': opQuitar, 'tachado': tachado}); 
-		});
+    //         xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'visible':true, 'quitar': opQuitar, 'tachado': tachado}); 
+	// 	});
 		
 
-    xSumCantImporte = parseFloat(importeTotal) + parseFloat(xSumCantImporte) + parseFloat(xSumTotalPorcentaje);
-    if(xLocal_xDtSubTotales.length==1){xLocal_xDtSubTotales=[];}
-    xLocal_xDtSubTotales.push({'descripcion':'Total', 'importe':xMoneda(xSumCantImporte), 'visible':true});
+    // xSumCantImporte = parseFloat(importeTotal) + parseFloat(xSumCantImporte) + parseFloat(xSumTotalPorcentaje);
+    // if(xLocal_xDtSubTotales.length==1){xLocal_xDtSubTotales=[];}
+    // xLocal_xDtSubTotales.push({'descripcion':'Total', 'importe':xMoneda(xSumCantImporte), 'visible':true});
 
 	 
 	const sumTotal = Object.keys(arrSuma).map(x => arrSuma[x].importe).reduce((a, b) => parseFloat(a) + parseFloat(b));
@@ -309,7 +310,6 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 	xSumCantImporte = sumTotal;
 	// retorna el importe total + subtotales(igv,servio,taper)
 
-	console.log('arrSuma ', arrSuma);
 	return xSumCantImporte;
 }
 
@@ -322,7 +322,7 @@ function checkSubTotalQuitado(countPedidos, id , val) {
 	if (!xLocal_SubTotal_Quitados) { return; }	
 
 	const CountIdTacahdos = xLocal_SubTotal_Quitados.toLowerCase().split(",").sort().filter(x => x===id).length;
-	const hbilitarTachado =  parseInt(CountIdTacahdos) === parseFloat(countPedidos);
+	const hbilitarTachado =  parseInt(CountIdTacahdos) >= parseFloat(countPedidos);
 
 	rpt = xLocal_SubTotal_Quitados.indexOf(id) >=0 ? true : false;
 	if (!rpt) {xSumCantImporte += parseFloat(val);}

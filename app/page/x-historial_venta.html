@@ -345,7 +345,7 @@ function xLoadMipedidoBDHistorial(dt){
 					//seccion
 					if(xArraySeccion_r[xDtBd[i].idseccion_index]==null){xArraySeccion_r[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
 					xCadenaItemArray_h=String('<tr class="row" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+'" data-idpedido="'+xDtBd[i].idpedido+'" data-idtipoconsumo="'+xDtBd[i].idtipo_consumo+'">'+
-									'<td width="50px" class="click_row_dt_p" id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2) +'</td>'+
+									'<td width="7px" class="click_row_dt_p" id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2) +'</td>'+
 									'<td class="click_row_dt_p" width="50%">'+xDtBd[i].descripcion+'</td>'+
 									'<td class="click_row_dt_p" align="right" id="td_importe">'+xMoneda(xDtBd[i].ptotal)+'</td>'+
 									//'<td align="center" class="td_op" data-op="cambiar" data-procede="'+xDtBd[i].procede+'"><img src="../../images/_change.png" title="Cambiar" class="'+xdisabled_procede +' '+xdisabled_btn_cambiar+'"></td>'+
@@ -384,7 +384,8 @@ function xSumarTotalesHis(){
 
 		// console.log(xdt_subt);
 		for (var i = 0; i < xdt_subt.length; i++) {
-			xcadena_total = String(xcadena_total + '<tr><td>'+ xdt_subt[i].descripcion.toUpperCase() +'</td><td align="right">'+xdt_subt[i].importe+'</td></tr>');
+			const classTachado = parseInt(xdt_subt[i].tachado) === 1 ? 'xTachar' : ''; 
+			xcadena_total = String(xcadena_total + '<tr class="'+ classTachado +'"><td>'+ xdt_subt[i].descripcion.toUpperCase() +'</td><td align="right">'+xdt_subt[i].importe+'</td></tr>');
 		}
 		xcadena_total = String(xcadena_total +'<tr><td colspan="2" align="left"><h4>FORMA DE PAGO</h4></td></tr>');
 

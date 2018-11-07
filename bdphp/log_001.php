@@ -113,8 +113,9 @@
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
 			$tachado = $sub_total['tachado'] === "true" ? 1 : 0;  
-			$importe_total = $sub_total['importe'];	
-			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
+			$importe_row = $tachado === 1 ? $sub_total['importe_tachado'] : $sub_total['importe'];
+			$importe_total = $sub_total['importe'];
+			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$importe_row."',".$tachado."),";
 		}
 
         //guarda primero pedido para obtener el idpedio
@@ -200,8 +201,9 @@
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
 			$tachado = $sub_total['tachado'] === "true" ? 1 : 0; 
-			$importe_total = $sub_total['importe'];	
-			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
+			$importe_row = $tachado === 1 ? $sub_total['importe_tachado'] : $sub_total['importe'];
+			$importe_total = $sub_total['importe'];
+			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$importe_row."',".$tachado."),";			
 		}
 
 		/// buscamos el ultimo correlativo
@@ -290,8 +292,9 @@
 		$importe_subtotal = $x_array_subtotales[0]['importe'];
 		foreach ( $x_array_subtotales as $sub_total ) {
 			$tachado = $sub_total['tachado'] === "true" ? 1 : 0; 
-			$importe_total = $sub_total['importe'];	
-			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$sub_total['importe']."',".$tachado."),";			
+			$importe_row = $tachado === 1 ? $sub_total['importe_tachado'] : $sub_total['importe'];
+			$importe_total = $sub_total['importe'];
+			$sql_subtotales = $sql_subtotales."(?,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$sub_total['descripcion']."','".$importe_row."',".$tachado."),";			
 		}
 
 		/// buscamos el ultimo correlativo
