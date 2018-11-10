@@ -157,7 +157,7 @@
 		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla) values '.$sql_pedido_detalle;
 		//pedido_subtotales
 		$sql_subtotales='insert into pedido_subtotales (idpedido,idorg,idsede,descripcion,importe, tachado) values '.$sql_subtotales;
-		// echo $sql_subtotales;
+		echo $sql_pedido_detalle;
 		//ejecutar
         //$sql_ejecuta=$sql_pedido_detalle.'; '.$sql_sub_total.';'; // guarda pedido detalle y pedido subtotal
         $bd->xConsulta_NoReturn($sql_pedido_detalle.';');

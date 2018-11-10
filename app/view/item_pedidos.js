@@ -107,6 +107,7 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		var xcant_max=element_cant_li_sel.attr('data-cantmax');
 		var xli_tipoconsumo=$("#select_ulTPC option:selected").val();
 		var xli_iditem=$(element_li_add__print).attr('data-idcl');
+		
 
 		var xli_des=$(this).parent().parent().find('.xtitulo_li').text();
 		if(xli_des==""){xli_des=$(this).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
@@ -711,9 +712,9 @@ function xGeneralLoadItems(x_rpt){
 }
 
 //mi pedido // solo secciones
-function xGeneralSeccionMiPedido(x_rpt){
+function xGeneralSeccionMiPedido(xidCategoria, x_rpt){
 	if(xGeneralDataSeccion!=undefined){if(x_rpt){return x_rpt(false);}else{return;}}//si ya esta cargado, pasa, tiene que actualizar manual
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2041'})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2041', data:{'idcategoria': xidCategoria}})
 	.done( function (dtSecciones_mp) {
 		var xdtSecciones_mp=$.parseJSON(dtSecciones_mp)
 		if(!xdtSecciones_mp.success){alert(xdtSecciones_mp.error); return;}

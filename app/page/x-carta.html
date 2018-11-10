@@ -59,7 +59,7 @@
 							<span>Colocar <strong>SP (segun porcion)</strong> en catidad para que el sistema actualize las cantidades segun las porciones que existen del ingrediente principal en la receta.</span>
 						</div>
 						<div class="xSubEncanezadoCard xFondoRowPlomo">
-							<select id="SelCarta" class="xTextRow2 xfont18 xColorRow_blanco xCursor" inline></select>
+							<select id="SelCarta" class="SelCarta xTextRow2 xfont18 xColorRow_blanco xCursor" inline></select>
 							<div class="xfont15 xEnLinea">Utlima modificacion: <b><span id="f_uc"></span></b></div>
 						</div>
 						<div class="xContentCard">
@@ -202,6 +202,11 @@ function xInicarta(){
 	        $("#dlg_foto_vista_previa").append(img).trigger('create');
 	        //$("#ctrl_open_file").after(img);
 	    }
+	});
+
+	$('.SelCarta').on('change', (e) => {
+		xidCategoria = e.target.value;
+		xLoadListadoCartaActual();
 	});
 }
 function xPasaEnterClass(){//actualiza controles input para pasa enter
@@ -575,6 +580,7 @@ function xSumarTotal(tb){
 }
 function xLoadListadoCartaActual(){
 	xPopupLoad.xopen();
+	xIdCarta = '';
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2051', data:{i:xidCategoria}})
 	.done( function (dtCAct) {
 		var xListCartaActual='';

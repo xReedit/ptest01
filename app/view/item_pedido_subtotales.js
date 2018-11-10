@@ -203,7 +203,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 								arrSuma[IdExite].importe = nivel === 0 ? parseFloat( importeItem + parseFloat(sumItem)).toFixed(2) : parseFloat(sumItem).toFixed(2);
 								arrSuma[IdExite].importe_tachado = nivel === 0 ? parseFloat(importeTachadoItem + parseFloat(importe_tachado)).toFixed(2) : parseFloat(importe_tachado).toFixed(2);
 							} else {
-								arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe_tachado':xMoneda(importe_tachado), 'importe':xMoneda(sumItem), 'visible':true, 'quitar': true, 'tachado': tachado}); 
+								arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe_tachado':xMoneda(importe_tachado), 'importe':xMoneda(sumItem), 'esImpuesto': 0, 'visible':true, 'quitar': true, 'tachado': tachado}); 
 							}
 		
 						});
@@ -211,10 +211,11 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 
 				case 'p': // todos los porcentajes // que se añaden al total de la cuentas y NO SON QUITABLES
 					const id = c.tipo+c.id;
+					const esImpuesto = c.es_impuesto;					
 					let porcentaje = parseFloat(parseFloat(c.monto)/100).toFixed(2);		
 					porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2)
 					
-					arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'visible':true, 'quitar': false, 'tachado': false}); 
+					arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'esImpuesto': esImpuesto, 'visible':true, 'quitar': false, 'tachado': false}); 
 					break;
 			}	
 		});

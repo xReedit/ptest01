@@ -14,8 +14,18 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
         return hash;   
     }    
 
+    // evalua si I.G.V es = 0 esta exonerado
+    var procentajeIGV = 0;
+    var xCartaSubtotales=xm_log_get('carta_subtotales')    
+    xCartaSubtotales.filter(x => x.descripcion.indexOf('I.G.V')).map(x => procentajeIGV = parseFloat(x.monto));
+    const isExoneradoIGV = procentajeIGV === 0 ? true : false;
 
-    const xxxitems = xEstructuraItemsJsonComprobante(xArrayCuerpo);
+
+
+
+    const xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales);
+    xitems = xJsonSunatCocinarItemDetalle(xitems, procentajeIGV);
+
 
     // array encabezado org sede
 	var xArrayEncabezado = xm_log_get('datos_org_sede'); 
@@ -36,7 +46,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
     const importe_total_pagar = xArraySubTotales[index_total].importe;
     
     //verifica si esta exonerado al igv /*/ caso de la selva u otros ubigeos exonerados del igv
-    const isExoneradoIGV = true;
+    // const isExoneradoIGV = true;
     let total_valor_de_venta_operaciones_gravadas = 0,total_valor_de_venta_operaciones_exoneradas = 0, leyenda = [];
 
     if ( isExoneradoIGV ) {
@@ -50,6 +60,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
     }
 
     //items
+
 
 
 
@@ -100,7 +111,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
                 "tipo_de_documento": "09"
             }],
             "informacion_adicional_gastos_art_37_renta___numero_de_placa_del_vehiculo": "",
-            "items": "?items",
+            "items": xitems,
             "totales": {
                 "total_valor_de_venta_operaciones_gravadas": {
                     "monto": `${total_valor_de_venta_operaciones_gravadas}`
@@ -157,5 +168,74 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
     })
 
 
+}
+
+
+function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
+    var xListItemsRpt =[];
+    const procentaje_IGV = parseFloat(parseFloat(ValorIGV)/100);
+    
+    var valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo  = {"monto_de_valor_referencial_unitario": "01"};
+    if (ValorIGV > 0) {
+        valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = {"monto_de_valor_referencial_unitario": "01", "codigo_de_tipo_de_precio": "02"}
+    }    
+
+    items.map( (x, index) => {
+        index++;
+        const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
+
+        var jsonItem = {
+            "datos_del_detalle_o_item":{
+                "numero_de_orden_del_item":`${index}`,
+                "unidad_de_medida_por_item":"CS",
+                "cantidad_de_unidades_por_item":`${x.cantidad}`,
+                "codigo_producto_de_sunat":`${x.id}`
+            },
+            "informacion_adicional_gastos_art_37_renta":{
+                "descripcion_detallada_del_servicio_prestado_bien_vendido_o_cedido_en_uso_indicando_las_caracteristicas":`${x.des}`,
+                "valor_unitario_por_item":`${x.precio_total}`,
+                "precio_de_venta_unitario_por_item_y_codigo":{
+                    "codigo_de_tipo_de_precio":"01"
+                },
+                "valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo":{
+                    "monto_de_valor_referencial_unitario":"0"
+                },
+                "afectacion_al_igv_por_item":{
+                    "porcentaje_de_igv": ValorIGV,
+                    "monto_de_igv": montoIGVItem,
+                    "afectacion_al_igv":"10"
+                },
+                "sistema_de_isc_por_item":{
+                    "monto_de_isc":"0",
+                    "tipo_de_sistema_de_isc":"02"
+                },
+                "valor_de_venta_por_item":"100",
+                "descuentos_por_item":{
+                    "monto_del_descuento":"0"
+                }
+            },
+            "informacion_adicional_a_nivel_de_item_gastos_intereses_hipotecarios_primera_vivienda":{
+                "nro_de_contrato":"",
+                "fecha_de_otorgamiento_del_credito":""
+            },
+            "propiedades_adicionales": [
+                {
+                    "nombre_concepto_tributario": "",
+                    "codigo_concepto_tributario": "",
+                    "valor_de_propiedad": "",
+                    "periodo_de_usabilidad": {
+                        "fecha_inicio": "",
+                        "fecha_fin": "",
+                        "duracion": ""
+                    }
+                }
+            ]
+        };
+
+        xListItemsRpt.push(jsonItem);
+
+    })
+
+    return xListItemsRpt;
 }
 

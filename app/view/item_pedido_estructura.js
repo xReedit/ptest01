@@ -38,7 +38,7 @@ function xCargarDatosAEstructuraImpresion (_SubItems) {
 /// cocina datos a la estructura de items para impresion de comprobante
 /// junta o agrupa por items en 2 secciones: items y servicios adicionales (si hubiera {taper, delivery etc}) 
 /// _SubItems = xArrayCuerpo; items que se envian en el formato anterior 
-function xEstructuraItemsJsonComprobante(_SubItems){
+function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
 
     let itemsObj = [];
     
@@ -58,11 +58,11 @@ function xEstructuraItemsJsonComprobante(_SubItems){
     
     // agrupa y suma
     const group = itemsObj
-        .filter(x => x.grupo) 
+        .filter(x => x.grupo)
         .reduce((rv, x) => {
             grupo = x.grupo;
             if (!rv[grupo]) {
-                rv[grupo] = {cantidad: x.cantidad, des: x.des, precio_total: parseFloat(x.precio_total).toFixed(2), seccion: x.des_seccion}
+                rv[grupo] = {id: x.iditem, cantidad: x.cantidad, des: x.des, precio_total: parseFloat(x.precio_total).toFixed(2), seccion: x.des_seccion}
                 return rv
             }
 
@@ -79,10 +79,20 @@ function xEstructuraItemsJsonComprobante(_SubItems){
     
     
     // agreagar adicionales si los hay
+    xArraySubTotales.map(x => {
+        if (x.tachado === undefined) { return; }
+        if (x.tachado === true) { return; }
+        if (x.esImpuesto === "1") { return; }
+
+        const seccion = x.id.indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
+        const cantidad = x.cantidad ? x.cantidad : '*';
+
+        group.push({id:x.id, cantidad: cantidad, des: x.descripcion, precio_total: x.importe, seccion: seccion});
+    })
     
     
     
 
     
-    console.log(group);
+    console.log('group: ',group);
 }

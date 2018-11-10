@@ -264,6 +264,7 @@ position: fixed;
 img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 </style>
 
+<script  type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
@@ -734,6 +735,7 @@ async function getItemsSeleccionados() {
 	//obtner todos los subitems
 	tb_pedido_dt.find('.row').each(function(i,e){
 		var xid_pedido_dt_p=$(e).attr('data-idpedido'),
+			xid_iditem=$(e).attr('data-iditem'),
 			xid_pedido_detalle_dt_p=$(e).attr('data-idpedidodetaller'),
 			ximporte_dt_p=$(e).attr('data-totalr'),
 			xcantidad_dt_p = $(e).attr('data-cantidadr'),
@@ -758,13 +760,25 @@ async function getItemsSeleccionados() {
 		if(cant_subitem_seleccionados===0){
 			//importe_total_por_pedido=parseFloat(importe_total_por_pedido)+parseFloat(ximporte_dt_p);
 			//xArraySql_dt_p[xid_pedido_dt_p]={'sub_items':xsub_i+xid_pedido_detalle_dt_p+',','tt_x_idpedido':importe_total_por_pedido};
-			xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion, 'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,'idpedido_detalle':xid_pedido_detalle_dt_p,'cantidad':xcantidad_dt_p,'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 'idtipo_consumo': xid_tipo_consumo, 'subtotales_tachados': xsubtotales_tachados});
+			xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion, 
+								'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,
+								'idpedido_detalle':xid_pedido_detalle_dt_p, 
+								'iditem': xid_iditem, 'cantidad':xcantidad_dt_p,
+								'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 
+								'idtipo_consumo': xid_tipo_consumo, 
+								'subtotales_tachados': xsubtotales_tachados});
 		}else{
 			//obtener solo los seleccionados
 			if($(e).hasClass('selected1')){
 				//importe_total_por_pedido=parseFloat(importe_total_por_pedido)+parseFloat(ximporte_dt_p);
 				//xArraySql_dt_p[xid_pedido_dt_p]={'sub_items':xsub_i+xid_pedido_detalle_dt_p+',','tt_x_idpedido':importe_total_por_pedido};
-				xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion,'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,'idpedido_detalle':xid_pedido_detalle_dt_p,'cantidad':xcantidad_dt_p,'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 'idtipo_consumo': xid_tipo_consumo, 'subtotales_tachados': xsubtotales_tachados});
+				xArraySql_dt_p.push({'des_seccion':xdes_seccion, 'idseccion': xid_seccion,
+									'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,
+									'idpedido_detalle':xid_pedido_detalle_dt_p, 
+									'iditem': xid_iditem, 'cantidad':xcantidad_dt_p,
+									'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 
+									'idtipo_consumo': xid_tipo_consumo, 
+									'subtotales_tachados': xsubtotales_tachados});
 			}
 		}
 	});
@@ -1024,6 +1038,7 @@ function xLoadDataUlAdd(){
 					if(xCantidadMax=='ND'){xCantidadMax=1000}
 					xCadenaBodyUlDt=String(xCadenaBodyUlDt+'<li class="row" data-idcategoria="'+xidCategoriaPD+
 														'" data-cat="'+xArrayEncaUlLi[z].des_seccion+
+														'" data-idcl="'+xGeneralDataCarta[p].idcarta_lista+
 														'" data-idcartalista="'+xGeneralDataCarta[p].idcarta_lista+
 														'" data-idseccion="'+xGeneralDataCarta[p].idseccion+
 														'" data-idseccionindex="'+xGeneralDataCarta[p].idseccion_index+
@@ -1115,7 +1130,7 @@ function xArmarSqlAddLUlI(){
 	// idclie porque no va registrar pago
 	// p_from:'a' porque solo va registrar el pedido
 	// xarr_header = {'idclie':0, 'ImporteTotal': xImporteTotalRowArray ,'referencia':'', 'idcategoria': xidCategoriaPD, 'mesa':xCeroIzq(xli_nummesa,2),'reservar':0, 'tipo_consumo': xli_tipoconsumo}
-	xarr_header = {'idclie':0,'referencia':'', 'idcategoria': xidCategoriaPD, 'mesa':xCeroIzq(xli_nummesa,2),'reservar':0, 'tipo_consumo': xli_tipoconsumo}
+	xarr_header = {'idclie':0,'referencia':'', 'idcategoria': xidCategoriaPD, 'mesa':xCeroIzq(xli_nummesa,2),'reservar':0, 'tipo_consumo': xli_tipoconsumo, 'subtotales_tachados': ''}
 	xarr_body = xArrayPedidoObj;
 	xarr_subtotales = xLocal_xDtSubTotales;
 
@@ -1530,8 +1545,6 @@ function xLoadMipedidoBD(dt){
 					if(xAgrupar_item_activo==true){xdisabled_btn_cambiar="xdisabled";}else{xAgrupar_item_activo='';}
 
 					xNom_seccion=xDtBd[i].des_seccion;
-
-					console.log('xDtBd ',xDtBd);
 
 					//seccion
 					if(xArraySeccion[xDtBd[i].idseccion_index]==null){xArraySeccion[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }

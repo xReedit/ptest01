@@ -29,7 +29,7 @@ function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayCompr
 	//comprobante electronico // ponemos el pie de pagina para el comprobante
 	xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante;
 
-	xJsonSunatCocinarDatos (xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente);
+	xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente);
 	return true;
 	//
 	

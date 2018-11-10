@@ -478,7 +478,7 @@
 					INNER JOIN item AS i using(iditem)
 					INNER JOIN carta AS c using(idcarta)
 					INNER JOIN categoria AS cat using(idcategoria)
-				WHERE (s.idorg=".$_SESSION['ido']." AND s.idsede=".$_SESSION['idsede'].") AND (cat.idcategoria=1) AND s.estado=0
+				WHERE (s.idorg=".$_SESSION['ido']." AND s.idsede=".$_SESSION['idsede'].") AND (cat.idcategoria=".$_POST['idcategoria'].") AND s.estado=0
 				GROUP BY s.idseccion
 				ORDER BY s.sec_orden) a
 				UNION ALL
@@ -499,6 +499,7 @@
 			break;
 		case 2042://submenu items //solo esto no lleva decimal en el sec_index, por que ordena cadena al reves
 			$idCatProcede=$_POST['p'];
+			$idcategoria = $_POST['i'];
 			if($idCatProcede!=0){
 				$sql="
 					SELECT cl.idcarta_lista,s.idseccion,concat('1',s.sec_orden) as idseccion_index,s.descripcion AS des_seccion,s.idimpresora,i.iditem,i.descripcion AS des_item,cl.precio , IF(cl.cantidad='SP',(IFNULL((SELECT FLOOR(p1.stock/i1.cantidad) FROM item_ingrediente AS i1 INNER JOIN porcion AS p1 ON i1.idporcion=p1.idporcion WHERE i1.iditem=cl.iditem GROUP BY i1.iditem ORDER BY i1.iditem_ingrediente),0)),cl.cantidad) AS cantidad,s.sec_orden
@@ -511,7 +512,7 @@
 														FROM item_ingrediente AS ii
 														INNER JOIN porcion AS po ON ii.idporcion=po.idporcion
 														WHERE ii.idporcion!=0 GROUP BY ii.iditem) AS it_p using(iditem)
-					WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") AND cl.estado=0 AND c.idcategoria=1 AND s.idseccion=".$_POST['s']." AND IF(IF(cl.cantidad='SP',(IFNULL((SELECT FLOOR(p1.stock/i1.cantidad) FROM item_ingrediente AS i1 INNER JOIN porcion AS p1 ON i1.idporcion=p1.idporcion WHERE i1.iditem=cl.iditem GROUP BY i1.iditem ORDER BY i1.iditem_ingrediente),0)),cl.cantidad)=0,s.ver_stock_cero,0)=0 ORDER BY i.descripcion
+					WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") AND cl.estado=0 AND c.idcategoria=".$idcategoria." AND s.idseccion=".$_POST['s']." AND IF(IF(cl.cantidad='SP',(IFNULL((SELECT FLOOR(p1.stock/i1.cantidad) FROM item_ingrediente AS i1 INNER JOIN porcion AS p1 ON i1.idporcion=p1.idporcion WHERE i1.iditem=cl.iditem GROUP BY i1.iditem ORDER BY i1.iditem_ingrediente),0)),cl.cantidad)=0,s.ver_stock_cero,0)=0 ORDER BY i.descripcion
 				";
 			}else{
 				$sql="
@@ -694,7 +695,7 @@
 				INNER JOIN carta AS c using(idcarta)
 				INNER JOIN seccion AS s using(idseccion)
 				INNER JOIN item AS i using(iditem)
-				LEFT JOIN (SELECT idorg, idsede, max(idcarta) AS ultima_carta FROM carta ) AS uc ON uc.idorg=c.idorg AND uc.idsede=c.idsede
+				LEFT JOIN ( SELECT idorg, idsede, max(idcarta) AS ultima_carta FROM carta where idcategoria=".$_POST['i']." ) AS uc ON uc.idorg=c.idorg AND uc.idsede=c.idsede
 			WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 AND c.idcarta=uc.ultima_carta AND c.idcategoria=".$_POST['i']." order by s.sec_orden,i.descripcion
 			";
 			$bd->xConsulta($sql);
@@ -807,7 +808,8 @@
 			echo $bd->xDevolverUnDato($sql);
 			break;
 		case 302: //load categoria
-			$sql="SELECT * FROM categoria WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND estado=0";
+			// $sql="SELECT * FROM categoria WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND estado=0";
+			$sql = "SELECT * FROM categoria WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND estado=0 and (time(now()) BETWEEN time(if(hora_ini='',now(),hora_ini)) and time(if(hora_fin = '',now(), hora_fin)))";
 			$bd->xConsulta($sql);
 			break;
 		case 303: //load item carta, mi pedido
