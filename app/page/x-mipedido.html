@@ -6,7 +6,19 @@
       			<img src="../../images/ico_load_3.gif">
       		</div>
     </paper-dialog-->
-    <!--x-dialog id="xPopupLoad_dlg" titulo="Enviando..."></x-dialog-->
+	<!--x-dialog id="xPopupLoad_dlg" titulo="Enviando..."></x-dialog-->
+	<!-- <paper-button raised onclick="dialog_nuevo_pedido.open()">open</paper-button> -->
+	<paper-dialog id="dialog_nuevo_pedido" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<h2>Nuevo Pedido</h2>
+		<p>Tiene un pededido pendiente de confirmacion. Si continua se borrara el pedido actual.</p>
+		<br>
+		<!-- <button class="xBoton2 xRojo" onclick="xNuevoPedidoMP();">Si, nuevo pedido</button> -->
+		<div class="buttons">
+			<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+			<button class="xBoton2 xRojo" onclick="xNuevoPedidoMP();">Nuevo pedido.</button>
+		</div>
+	</paper-dialog>
+
 	<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 		<h4>Error en impresora</h4>
 		<p id="print_error"></p>
@@ -77,8 +89,8 @@
     		</tr>
     		<tr class="xSinBorde">
     			<td>
-    			<!-- <paper-checkbox style="padding:10px; display:block" class="noselect" id="check_reserva">Reservar</paper-checkbox><br> -->
-    			<!-- </td> -->
+    			<paper-checkbox style="padding:10px; display:block" class="noselect" id="check_reserva">Reservar</paper-checkbox><br>
+    			</td> -->
     		<!-- </tr> -->
     	<!-- </table> -->
     	<!--div class="xPedidoTotal">0.00</div-->
@@ -88,7 +100,7 @@
 		<br><br><br><br><br>
 		<footer class="footer_fixed">
 			<div class="xBoton2 xVerde xDerecha" onclick="xAbrirPopupConfirmar()" id="btn_confirmar">Listo, confirmar</div>
-			<div class="xBoton2 xRojo xIzquierda" onclick="xNuevoPedidoMP();">Nuevo pedido</div>
+			<div class="xBoton2 xRojo xIzquierda" onclick="checkNuevoPedido()">Nuevo pedido</div>
 			<!--div class="xBoton2 xRojo xIzquierda" onclick="xLLamarPrintMP();">print</div-->
 		</footer>
 	</template>
@@ -111,25 +123,25 @@
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script>
-var xThis;
 //var xDtPedido;
-var xCadenaTC;
-var xNumMesaPedido;
-var xReferenciaPedido;
-var xRowColapseOpen=null;
-var xidCategoriaSeccion;
-var xHayPedido=0;
-var xArrayRegla=[];
-var xDtPrint=[];
-var xDtSubTotales=[];
-var xArrayEnca=[];
-var xsolo_llevar=0;
-var xReservar=0;
-var xPopupLoad;
-var xNumMesaLoadCuenta;
-var xnum_mesa_valido=false; //valida mesa //numero de mesa valido
-var xNumMesasBd; //numero de mesas de la sede
-var guardandoPedido = false;
+var xThis;
+var xCadenaTC,
+xNumMesaPedido,
+xReferenciaPedido,
+xRowColapseOpen=null,
+xidCategoriaSeccion,
+xHayPedido=0,
+xArrayRegla=[],
+xDtPrint=[],
+xDtSubTotales=[],
+xArrayEnca=[],
+xsolo_llevar=0,
+xReservar=0,
+xPopupLoad,
+xNumMesaLoadCuenta,
+xnum_mesa_valido=false, //valida mesa //numero de mesa valido
+xNumMesasBd, //numero de mesas de la sede
+guardandoPedido = false;
 //var xidTipoConsumo;
 //var xidItem;
 function xAbrirPopupConfirmar(){
@@ -206,6 +218,13 @@ function xIniMiPedido(){
 
 	xPopupLoad=document.getElementById('xLoad');
 
+}
+
+// 131118
+// dialog de confirmacion nuevo pedido si es que existe pedido pendiente
+function checkNuevoPedido() {
+	if ( parseInt(xLocal_xDtSubTotales[0].importe) === 0 ) { xNuevoPedidoMP(); return; }
+	dialog_nuevo_pedido.open()
 }
 
 function xLLamarPrintMP(){
@@ -405,20 +424,22 @@ function xSumarTotal(){
 	// $("#xtb_pedido_subtotales").html(rptSum[0].CadenaRow).trigger('create');
 }
 function xLoadMipedido(){
-	var xTpConsumo='';
-	var xCadenaItemArray;
-	var xEncabezadoCollapse='';
-	var xCadenaCollapse='';
-	var xArraySeccion=[];
-	var xIdColapse='';
-	var xCadenaGrupo='';
-	var xCantItems;
-	var xIndicacionItem='', xid_sec_index;
+	var xTpConsumo='',
+	xCadenaItemArray,
+	xEncabezadoCollapse='',
+	xCadenaCollapse='',
+	xArraySeccion=[],
+	xIdColapse='',
+	xCadenaGrupo='',
+	xCantItems,
+	xIndicacionItem='', xid_sec_index;
 
 	xThis.$.btn_confirmar.hidden=true;
 
 	$("#xBody div").remove();
 	xArrayPedidoObj=$.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));
+	xValidarReglaCarta();
+	
 	for (var i = 0; i < xArrayPedidoObj.length; i++) {
 		xCadenaItemArray='';
 		xEncabezadoCollapse='';
@@ -482,7 +503,7 @@ function xLoadMipedido(){
 	};
 	$("#xBody").html(xCadenaGrupo).trigger('create');
 
-	xValidarReglaCarta();
+	
 
 	if(xRowColapseOpen!=null){
 		try {

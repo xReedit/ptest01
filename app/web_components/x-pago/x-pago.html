@@ -77,8 +77,13 @@
 			<br>
 			<div hidden="[[!hidden_container_pago]]">
 				<button class="xBoton2 xPlomo" onclick="xCancelarCerrar();" id="btn_regresar_cuenta">Regresar</button>
-				<button class="xBoton2 xAzul" hidden="[[!modoSoloComprobante]]" disabled="[[!btnDisabledInitModoComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
-					<div>[F10] Listo, imprimir comprobante</div>
+				<button class="xBoton2 xAzul" 
+					hidden="[[!modoSoloComprobante]]" 
+					disabled="[[!btnDisabledInitModoComprobante]]" 
+					onclick="xThisPago.setVisibleContainerPago();" 
+					id="btn_pago_next" 
+					disabled="[[!valid_form_cliente_pago]]">
+						<div>[F10] Listo, imprimir comprobante</div>
 					<!-- <div hidden="[[modoSoloComprobante]]">[F10] Siguente</div> -->
 				</button>
 				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
@@ -87,9 +92,11 @@
 				</button>
 			</div>
 
+			<!-- deshabilita verificaion de importe para habilitar btn -->
+			<!-- disabled="[[!valid_monto_pago]]" -->
 			<div hidden="[[hidden_container_pago]]">
 				<div class="xBoton2 xPlomo" onclick="xThisPago.setVisibleContainerPago();" id="btn_regresar_comprobante">Regresar</div>
-				<button class="xBoton2 xAzul" onclick="xListoRegistraPago();" id="btn_pago" disabled="[[!valid_monto_pago]]">[F10]Listo, registrar pago</button>
+				<button class="xBoton2 xAzul" onclick="xListoRegistraPago();" id="btn_pago">[F10]Listo, registrar pago</button>
 			</div>						
 			<br><br>
 		</div>
@@ -254,9 +261,11 @@ function xIiniPago(){
 		if(evt.keyCode==121){
 			if(!xThisPago.modoSoloComprobante){				
 				if (!xThisPago.hidden_container_pago) {
-					if (xThisPago.valid_monto_pago) { xListoRegistraPago() }
+					// habilita la opcion de validar importe
+					// if (xThisPago.valid_monto_pago) { xListoRegistraPago() }
+					xListoRegistraPago();
 				} else {					
-					xThisPago.setVisibleContainerPago();
+					xThisPago.setVisibleContainerPago();					
 				}							
 			} else {
 				// xSumarTotales_row(); // para que mande el xSend
@@ -264,6 +273,10 @@ function xIiniPago(){
 				xVerContainerPago();
 			}
 		}
+
+		event.stopPropagation();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
 	});
 	
 
@@ -506,7 +519,7 @@ function xSumarTotales_row(){
 	xRpts.push({'ok':xPase, 'valid':xDatosValidos, 'cliente': xThisPago.clienteModel, 'comprobante': xThisPago.tipoComprovanteSelecionado,'idcliente':xIdCliente_pago,'nota_compra':nom_nota,'nomcliente':nom_nota, xtipo_pagos:xtipoP,'paseEnterTxt':xEnterTxtImporte});
 	
 	if(xPase==0){
-			// $("#btn_pago").attr('disabled', true);
+		// $("#btn_pago").attr('disabled', true);
 		xThisPago.valid_monto_pago = false;
 	}else{
 		// btn_pago.removeAttribute("disabled")

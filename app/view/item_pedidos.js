@@ -701,11 +701,12 @@ function xLoadRegla(){
 // carta lista y boodega
 //para venta_rapida y mipedido se actualiza cada nuevo pedido o cada 60segundos de inactividad
 //para control_pedido cada que lo solicite
-function xGeneralLoadItems(x_rpt){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205'})
+// xidCategoria  obligatorio en venta rapida y control de pedidos 
+function xGeneralLoadItems(xidCategoria, x_rpt){
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205', data:{'idcategoria': xidCategoria}})
 	.done( function (dtCarta) {
 		var xdt_rpt=$.parseJSON(dtCarta)
-		if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
+		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
 		xGeneralDataCarta=xdt_rpt.datos;
 		if(x_rpt){return x_rpt(xGeneralDataCarta);}
 	})
@@ -797,12 +798,13 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 			xCantidadBuscar=xObtnerValSumRowAttr($(xtb),'data-idbus',xSecc_bus,'#cant_descontar')
 			$(xtb).find(".row").each(function (index, element) {
 				if(xCantidadBuscar<=0){return;}
-				var xIdRowTb=$(element).attr('data-idbus');
-				var xIdtb_Item=$(element).attr('data-id');
-				var xIdtb_tpc=$(element).attr('data-idtipocobus');
-				var xCant_item_bus;
-				var xPrecio_item_bus;
-				var xPreciott_item_bus=$(element).find('#ptotal').text();
+				var xIdRowTb=$(element).attr('data-idbus'),
+				xIdtb_Item=$(element).attr('data-id'),
+				xIdtb_tpc=$(element).attr('data-idtipocobus'),
+				xCant_item_bus,
+				xPrecio_item_bus,
+				xPreciott_item_bus=$(element).find('#ptotal').text();
+
 				if(xIdRowTb==xSecc_detalle && parseFloat(xPreciott_item_bus)>0){
 					if($(element).attr('cant_descontado')==undefined){xCant_item_bus=parseInt($(element).find('#cant_descontar').text());}else{xCant_item_bus=$(element).attr('cant_descontado')}
 					if(xCant_item_bus==0){return;}

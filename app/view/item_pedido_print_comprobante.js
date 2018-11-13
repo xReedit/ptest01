@@ -189,7 +189,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;
 		xImpresoraPrint[0].local = 0;
 		
-		xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print){
+		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print){
 			if(xArrayImpresoras.length==xCuentaImpresorasEvaluadas && rpt_print==false){//si todas las impresoras fueron evaluadas y no presentaron error termina la funcion
 				// setTimeout( function(){try{xNuevoPedidoMP();}catch(err){return false;}}, 2700); //nuevo pedido en mipedido
 				if(callback){
@@ -202,7 +202,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		});
 	};
 
-	// if(xcuentaSeccionesImpresas==0){if(callback){callback(true)};}
+	// si no encuentra ninguna impresora pasa como false = no hay error
+	if(xcuentaSeccionesImpresas === 0){if(callback){callback(false)};}
 }
 
 

@@ -1,3 +1,4 @@
+<link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-control-mesas">
 	<template>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
@@ -166,8 +167,11 @@
 							</tr>
 						</table>
 						<div class="xAddItemPedido" style="overflow: hidden;" id="SelAddLuLi">
-								<select class="xMiInput" id="select_ulTPC"></select>
-								<input type="text" class="xMiInput" placeholder="Buscar.." id="txt_bus_item_add">
+								<div>
+									<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria>
+									<select class="xTextRow2 xCursor w-100" id="select_ulTPC"></select>
+									<input type="text" class="xMiInput w-100" placeholder="Buscar.." id="txt_bus_item_add">
+								</div>
 								<br>
 								<ul id="accordion" class="list_add_item noselect">
 									<!--li><li data-cat="gaseosas">
@@ -268,6 +272,7 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 <script  type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
+<script  type="text/javascript" src="../view/manager_storage.js"></script>
 <script  type="text/javascript" src="../view/deNumALetras.js"></script>
 <script>
 // import { xCargarDatosAEstructuraImpresion } from '../view/item_pedido_estructura.js';
@@ -359,12 +364,14 @@ function xIniControlMesa(){
 		xThisCM.xt_idsede=xIdSede;
 		xThisCM.xt_idus=xIdUsuario;
 
-		xCargarCategoriaActual(function(xcat_id){
-			if(xcat_id.length==1){
-				xidCategoriaPD=xcat_id[0].idcategoria;
-				//$("#titulo_categoria").text(xcat_id[0].descripcion);
-			}
-		});
+		// xCargarCategoriaActual(function(xcat_id){
+		// 	if(xcat_id.length==1){
+		// 		xidCategoriaPD=xcat_id[0].idcategoria;
+		// 		//$("#titulo_categoria").text(xcat_id[0].descripcion);
+		// 	}
+		// });
+
+		
 	//})
 	//if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
 	//if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
@@ -679,7 +686,39 @@ function xIniControlMesa(){
 		e.stopImmediatePropagation();
 	})
 
+	
+	compFindCategoria=document.getElementById('compFindCategoria');
+	compFindCategoria.addEventListener('getValorIncial', function (e) {
+
+		let valCategoriaLoalStorage;
+		valCategoriaLoalStorage = e.detail.categorias		
+
+		if ( getLocalStorage('::app3_cat_defualt') ) {
+			valCategoriaLoalStorage = JSON.parse(getLocalStorage('::app3_cat_defualt'));
+			xidCategoriaPD = valCategoriaLoalStorage.idcategoria; // toma el que esta en el storage si hubiera
+			
+			setTimeout(() => {// coloca la categoria antes seleccionada	
+				compFindCategoria.$.compFindListCategoria.value = valCategoriaLoalStorage.index;
+			}, 500);
+		} else {
+			xidCategoriaPD = e.detail.categorias.idcategoria; // toma el que esta en el storage si hubiera
+		}
+				
+		
+		setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));
+		xLoadDataUlAdd();
+		// $("#titulo_categoria").text(e.detail.categorias.descripcion);
+	});
+
 	xPopupLoad=document.getElementById('xLoad');
+}
+
+// 12118 // seleccionar idcarta al hacer pedido desde aca (control de mesas)
+function _getCategoria(categoria) {
+	console.log(categoria);
+	xidCategoriaPD = categoria.idcategoria;
+	setLocalSotrage('::app3_cat_defualt', JSON.stringify(categoria));
+	xLoadDataUlAdd();
 }
 
 ///092018
@@ -1008,7 +1047,7 @@ function xLoadDataUlAdd(){
 
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205'})
 	//.done( function (dtItem) {
-	xGeneralLoadItems(function(){
+	xGeneralLoadItems(xidCategoriaPD, function(){
 		//var xdtItem=$.parseJSON(dtItem);
 		var xArrayEncaUlLi=new Array();
 		var xNom_seccion_ul='';

@@ -179,6 +179,8 @@ table{border-spacing:0px;}th,td{border:1;font-size:1em;padding:.3em 1em;}
     background: white;
 }
 
+.w-100 { width: 100% }
+
 .xContadorSlide{text-align:center;}
 .xContentTitulo{font-weight:500;}
 paper-fab.btnAdd {

@@ -1,5 +1,6 @@
 <link rel="import" href="../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
+<link rel="import" href="../../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 
 <dom-module id="x-configuraciones">
 	<template>
@@ -71,7 +72,7 @@
 		</paper-dialog>
 		<br>
 		<h3>CONFIGURACIONES</h3>
-		<div class="xLinea2"></div>
+		<div class="xLinea2"></div>		
 		<br>
 		<div>
 			<paper-tabs selected="{{selected_conf}}" id="tab_cnf" scrollable>
@@ -550,6 +551,8 @@
 <script type="text/javascript" src="../../shared/config.const.js"></script>
 <script>
 var xThisConfig;
+function _getCategoria(val) { console.log(val);}
+
 function xIniConf(){
 	xPopupLoad=document.getElementById('xLoad');
 	xm_LogChequea(function(){
@@ -566,11 +569,12 @@ function xIniConf(){
 		xLoadCategoria();
 	})
 	
-	// compFindSede=document.getElementById('compFindSede');
+	// compFindSede=document.getElementById('compFindCategoria');
     // compFindSede.addEventListener('getValorIncial', function (e) {
-    //     console.log('event: ', e.detail.sedes); // true
-    //     this.cnf_SedeSel = e.detail.sedes;
-    // });
+    //     console.log('event: ', e.detail.categorias); // true
+	// });
+	
+	
 
 	$("#Titulo_page").text("Configuraciones");
 	xThisConfig.selected_conf=0;

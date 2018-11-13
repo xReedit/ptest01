@@ -1,3 +1,4 @@
+<link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-venta-rapida">		
 	<template>
 		<br>
@@ -36,9 +37,15 @@
 		</paper-dialog>
 
 		<div class="xMiCard xradius" style="width:95%;">
-			<div class="xEncanezadoCard xFondoRowAmarillo2">
-				<p><strong>Venta rapida.</strong> busca el producto por denominacion o codigo de barras.</p>
-				<p class="xDerecha" style="margin-top:-20px;"><strong id="titulo_categoria"></strong></p>
+			<div class="xEncanezadoCard xFondoRowAmarillo2">				
+				<!-- <p class="xDerecha" style="margin-top:-20px;"><strong id="titulo_categoria"></strong></p> -->
+				<div style="width: 150px;">
+					<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria>
+				</div>
+					
+				<div class="xDerecha xEnLinearTop" style="margin-top:-20px;">
+					<p><strong>Venta rapida.</strong> busca el producto por denominacion o codigo de barras.</p>
+				</div>
 				<!--div class="xDerecha" style="margin-top:-20px;">
 					<div class="xEnLinea xIzquierda xpadingLateralDe"><img src="../../images/_print_1_vr.png"></div>
 					<paper-checkbox class="xpadingLateralDe xcheck_print" id="check_no_p"><strong>[F7]</strong> NO Imprimir</paper-checkbox>
@@ -186,6 +193,7 @@
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
 <script  type="text/javascript" src="../view/deNumALetras.js"></script>
+<script  type="text/javascript" src="../view/manager_storage.js"></script>
 <script type="text/javascript" src="../../js/keynavigator-min.js"></script>	
 <script>
 var xThisVentaRapida
@@ -213,6 +221,7 @@ var xThisVentaRapida
 ,xid_cliente_pago = 0, xarr_subtotales=[];
 
 
+
 function xIniVentaRapida(){
 	xm_LogChequea(function(){
 		xm_log_get('ini_us');
@@ -228,15 +237,39 @@ function xIniVentaRapida(){
 		xNumMesasBd=parseInt(xDtPrint[0].mesas);
 
 		xLoadArrayPedido();
-		xLoadCartaVR();
-		xTraerDtTipoConsumo();
+		
+		xTraerDtTipoConsumo();		
 	})
-	xCargarCategoriaActual(function(xcat_id){
-		if(xcat_id.length==1){
-			xidCategoriaVR=xcat_id[0].idcategoria;
-			$("#titulo_categoria").text(xcat_id[0].descripcion);
+
+	compFindCategoria=document.getElementById('compFindCategoria');
+	compFindCategoria.addEventListener('getValorIncial', function (e) {
+
+		let valCategoriaLoalStorage;
+		valCategoriaLoalStorage = e.detail.categorias		
+		
+		if ( getLocalStorage('::app3_cat_defualt') ) {
+			valCategoriaLoalStorage = JSON.parse(getLocalStorage('::app3_cat_defualt'));
+			xidCategoriaVR = valCategoriaLoalStorage.idcategoria; // toma el que esta en el storage si hubiera
+			
+			setTimeout(() => {// coloca la categoria antes seleccionada	
+				compFindCategoria.$.compFindListCategoria.value = valCategoriaLoalStorage.index;
+			}, 500);
+		} else {
+			xidCategoriaVR = e.detail.categorias.idcategoria; // toma el que esta en el storage si hubiera
 		}
+				
+		
+		setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));
+		xLoadCartaVR();
+		// $("#titulo_categoria").text(e.detail.categorias.descripcion);
 	});
+
+	// xCargarCategoriaActual(function(xcat_id){
+	// 	if(xcat_id.length==1){
+	// 		xidCategoriaVR=xcat_id[0].idcategoria;
+	// 		$("#titulo_categoria").text(xcat_id[0].descripcion);
+	// 	}
+	// });
 	/*$xlist_li=$('ul#accordion li').keynavigator({
                       cycle: true,
                       activeClass: 'xitem_seleccionado_li'
@@ -437,6 +470,13 @@ function xIniVentaRapida(){
 	$("#btn_registrar_pago").removeClass('xInvisible');
 	xregistrar_pago=true;
 }*/
+
+function _getCategoria(categoria) {
+	console.log(categoria);
+	xidCategoriaVR = categoria.idcategoria;
+	setLocalSotrage('::app3_cat_defualt', JSON.stringify(categoria));
+	xLoadCartaVR();
+}
 
 //para las funciones del teclado f1-f12
 function empty() {
@@ -728,8 +768,9 @@ function xReImprimir(){
 	xLLamarPrintVR();
 }
 function xLoadCartaVR(){
-	//$(".xMenu_body_vr").html('<div class="spinner xtxtCentro"><paper-spinner active></paper-spinner></div>').trigger('create');
-	xGeneralLoadItems(function(){
+	//$(".xMenu_body_vr").html('<div class="spinner xtxtCentro"><paper-spinner active></paper-spinner></div>').trigger('create');	
+	xGeneralLoadItems(xidCategoriaVR, function(){
+		xPopupLoad.xopen();
 		//var xdtCAct=data_carta;
 		//xThisVentaRapida.xdt_items=xdtCAct;
 		var xCadenaCarta='';
@@ -768,7 +809,10 @@ function xLoadCartaVR(){
 
 		xDisparaEventoLoadItemInactividad()
 		xLoadItemsDetalleCartaALL();
-		xPopupLoad.xclose();
+
+		setTimeout(() => {			
+			xPopupLoad.xclose();
+		}, 300);
 	})
 }
 
@@ -853,6 +897,9 @@ function xVerMipedidoVR(){
 	$("#xBody div").remove();
 	//xDtPedido=$.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));
 	xDtPedido=xArrayPedidoObj;
+
+	xValidarReglaCarta();
+
 	//xArrayPedidoObj=xDtPedido;
 	for (var i = 0; i < xDtPedido.length; i++) {
 		xCadenaItemArray='';
@@ -934,7 +981,7 @@ function xVerMipedidoVR(){
 	};
 	xCadenaGrupo=String('<table width="100%" class="xtb_pedido" data-TablaName="pedido_detalle" id="tb_pedido_detalle">'+xCadenaGrupo+'</table></div></div>');
 	$("#xBody").html(xCadenaGrupo).trigger('create');
-	xValidarReglaCarta();
+	// xValidarReglaCarta();
 }
 
 function xValidarReglaCarta(){

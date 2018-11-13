@@ -93,7 +93,7 @@ function xLoadItems(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2042', data:{i:xidCategoria,s:xidCategoriaSeccion,p:xidCatProcedencia}})
 	.done( function (dtItem) {
 		var xdt_sub_Item=$.parseJSON(dtItem);
-		if(!xdt_sub_Item.success){alert(xdt_sub_Item.error); return;}
+		// if(!xdt_sub_Item.success){alert(xdt_sub_Item.error); return;}
 		var xCadenaItem='';
 		var xCadenaItem_encabezado='';
 		var xCadenaItem_des_foto='';
