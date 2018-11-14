@@ -898,7 +898,7 @@ function xVerMipedidoVR(){
 	//xDtPedido=$.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));
 	xDtPedido=xArrayPedidoObj;
 
-	xValidarReglaCarta();
+	// xValidarReglaCarta();
 
 	//xArrayPedidoObj=xDtPedido;
 	for (var i = 0; i < xDtPedido.length; i++) {
@@ -981,7 +981,7 @@ function xVerMipedidoVR(){
 	};
 	xCadenaGrupo=String('<table width="100%" class="xtb_pedido" data-TablaName="pedido_detalle" id="tb_pedido_detalle">'+xCadenaGrupo+'</table></div></div>');
 	$("#xBody").html(xCadenaGrupo).trigger('create');
-	// xValidarReglaCarta();
+	xValidarReglaCarta();
 }
 
 function xValidarReglaCarta(){

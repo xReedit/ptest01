@@ -328,16 +328,29 @@ function xObtnerValSumArray(xArray,filter){
 	return cuenta;
 }
 
+//obtener la suma del total row segun attr
+//subfind = td donde esta el valor
+function xObtnerValSumTable(tb,BuscarEn,filter,subfind){
+	var cuenta=0;
+	$(tb).find(".row").each(function (index, element) {
+		var xIdRowTb=$(element).attr(BuscarEn);
+		if(xIdRowTb === filter){
+			cuenta=parseFloat(cuenta)+parseFloat($(element).find(subfind).text());
+		}
+    });
+    return parseInt(cuenta);
+}
+
 //sumar del array // precioprint // para totales
 function xSumaCantArray(ArrySum){
 	var suma=0;
 	for (var i = 0; i < ArrySum.length; i++) {
-		if(ArrySum[i]==null){continue;}
+		if(ArrySum[i] == null){continue;}
 		$.map(ArrySum[i], function(n, z) {
-			if (typeof n=="object"){
+			if (typeof n === "object"){
 				var xprecio_p=n.precio_print;
-				if(xprecio_p==""){
-					xprecio_p=n.precio_total;
+				if(xprecio_p === ""){
+					xprecio_p = n.precio_total;
 				}
 				suma=suma+parseFloat(xprecio_p)
 			}
@@ -788,51 +801,52 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 	}
 
 	//xVerificarImprimirComanda=false;
-	if(!esarray){//establa
+	if( !esarray ) {//establa
 		var xtb=$(xObjEvaluar);
 		for (var i = 0; i < xArrayRegla.length; i++) {
 		//if(xSecc_bus!=xArrayRegla[i].idseccion){
 			xSecc_bus=xArrayRegla[i].idseccion;
 			xSecc_detalle=xArrayRegla[i].idseccion_detalle;
 			//buscar
-			xCantidadBuscar=xObtnerValSumRowAttr($(xtb),'data-idbus',xSecc_bus,'#cant_descontar')
+			xCantidadBuscar=xObtnerValSumTable($(xtb),'data-idbus',xSecc_bus,'#cant_descontar');
+			xCantidadBuscarSecc_detalle=xObtnerValSumTable($(xtb),'data-idbus',xSecc_detalle,'#cant_descontar');
+
+			var diferencia = xCantidadBuscar - xCantidadBuscarSecc_detalle;			
+			diferencia = diferencia < 0 ? xCantidadBuscar : diferencia; // no valores negativos 
+
 			$(xtb).find(".row").each(function (index, element) {
-				if(xCantidadBuscar<=0){return;}
+				if(xCantidadBuscar <= 0) {return;}
 				var xIdRowTb=$(element).attr('data-idbus'),
 				xIdtb_Item=$(element).attr('data-id'),
 				xIdtb_tpc=$(element).attr('data-idtipocobus'),
 				xCant_item_bus,
-				xPrecio_item_bus,
-				xPreciott_item_bus=$(element).find('#ptotal').text();
+				xPrecio_item_bus;
+				// xPreciott_item_bus=$(element).find('#ptotal').text();
 
-				if(xIdRowTb==xSecc_detalle && parseFloat(xPreciott_item_bus)>0){
-					if($(element).attr('cant_descontado')==undefined){xCant_item_bus=parseInt($(element).find('#cant_descontar').text());}else{xCant_item_bus=$(element).attr('cant_descontado')}
-					if(xCant_item_bus==0){return;}
-					xPrecio_item_bus=$(element).find('#punitario').text();
+				if (xIdRowTb === xSecc_detalle) {
 
-					if(xCantidadBuscar>xCant_item_bus){
+					if ( xCantidadBuscar >= xCantidadBuscarSecc_detalle) {
 						xPrecio_item_bus='0.00';
-						xCantidadBuscar=xCantidadBuscar-xCant_item_bus;//resta la cantidad que encontro
-						xCant_item_bus=0;
-					}else{
-						xPrecio_item_bus=xMoneda(parseFloat(xPreciott_item_bus)-(xCantidadBuscar*xPrecio_item_bus))
-						xCant_item_bus=xCant_item_bus-xCantidadBuscar;
-						xCantidadBuscar=0; //ya encontro todos
+					} else if ( diferencia >= 0 ){
+						const cant_item = parseInt($(element).find('#cant_descontar').text());
+						const precioUnitario_item=parseFloat($(element).find('#punitario').text());
+
+						xPrecio_item_bus=parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+						xPrecio_item_bus = xPrecio_item_bus < 0 ? '0.00' : xMoneda(xPrecio_item_bus);
+						
+						diferencia = diferencia - cant_item < 0 ? 0 : diferencia - cant_item;													
 					}
 
 					$(element).find('#ptotal').text(xPrecio_item_bus);
 					$(element).attr('cant_descontado',xCant_item_bus)
 
-					///coloca en array precio a imprimir
+					//coloca en array precio a imprimir
 					//xDtPedido[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;
 					xArrayPedidoObj[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;
 
-					//xCantidadBuscar=parseInt(xCantidadBuscar)-parseInt(xCant_item_bus);
-					if(xCantidadBuscar<0){xCantidadBuscar=0}
 				}
-		    });
-		//}
-		};
+			})		
+		}
 	}
 	else{//es array
 		var xSqlTbSave='';
@@ -842,36 +856,36 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 				xSecc_bus=xArrayRegla[xi].idseccion;
 				xSecc_detalle=xArrayRegla[xi].idseccion_detalle;
 				//buscar
-				xCantidadBuscar=xObtnerValSumArray(xArrayEv,xSecc_bus)
+				xCantidadBuscar=xObtnerValSumArray(xArrayEv,xSecc_bus);
+				xCantidadBuscarSecc_detalle=xObtnerValSumArray(xArrayEv,xSecc_detalle);
+
+				var diferencia = xCantidadBuscar - xCantidadBuscarSecc_detalle;			
+				diferencia = diferencia < 0 ? xCantidadBuscar : diferencia; // no valores negativos 
+
 				for (var y = 0; y < xArrayEv.length; y++) {
-					if(xArrayEv[y]==null){continue;}
-					if(xCantidadBuscar<=0){break;}
+					if(xArrayEv[y] == null){continue;}
+					if(xCantidadBuscar <= 0){break;}
 					$.map(xArrayEv[y], function(n, z) {
-						if (typeof n=="object"){
+						if (typeof n ==="object"){
 							var xIdRowTb=n.idseccion;
 							var xIdtb_Item=n.iditem;
 							var xIdtb_tpc=n.idtipo_consumo;
 							var xCant_item_bus;
-							var xCant_cal;
+							// var xCant_cal;
 							var xPrecio_item_bus;
-							var xPreciott_item_bus=n.precio_total;
-							//if(n.imprime_comanda==1){xVerificarImprimirComanda=true;}
+							
+							if(xIdRowTb === xSecc_detalle){
 
-							///coloca en array precio a imprimir
-
-							if(xIdRowTb==xSecc_detalle && parseFloat(xPreciott_item_bus)>0){
-								if(n.cant_descontado==undefined){xCant_item_bus=n.cantidad;}else{xCant_item_bus=n.cant_descontado;}
-								if(xCant_item_bus==0){return;}
-								xPrecio_item_bus=n.precio;
-
-								if(xCantidadBuscar>xCant_item_bus){
+								if ( xCantidadBuscar >= xCantidadBuscarSecc_detalle) {
 									xPrecio_item_bus='0.00';
-									xCantidadBuscar=xCantidadBuscar-xCant_item_bus;//resta la cantidad que encontro
-									xCant_item_bus=0;
-								}else{
-									xPrecio_item_bus=xMoneda(parseFloat(xPreciott_item_bus)-(xCantidadBuscar*xPrecio_item_bus))
-									xCant_item_bus=xCant_item_bus-xCantidadBuscar;
-									xCantidadBuscar=0; //ya encontro todos
+								} else if ( diferencia >= 0 ){
+									const cant_item = n.cantidad;
+									const precioUnitario_item=n.precio;
+									
+									xPrecio_item_bus=parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+									xPrecio_item_bus = xPrecio_item_bus < 0 ? '0.00' : xMoneda(xPrecio_item_bus);
+									
+									diferencia = diferencia - cant_item < 0 ? 0 : diferencia - cant_item;						
 								}
 
 								n.precio_total=xPrecio_item_bus;
@@ -881,14 +895,10 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 								xArrayEv[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;
 								xArrayPedidoObj[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;
 
-
-								//xCantidadBuscar=parseInt(xCantidadBuscar)-parseInt(xCant_item_bus);
-								if(xCantidadBuscar<0){xCantidadBuscar=0}
 							}
 						}
 					});
 				}
-			//}
 		};
 
 		return xArrayEv;
