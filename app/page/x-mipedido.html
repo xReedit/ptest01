@@ -93,7 +93,9 @@
     			</td> -->
     		<!-- </tr> -->
     	<!-- </table> -->
-    	<!--div class="xPedidoTotal">0.00</div-->
+		<!--div class="xPedidoTotal">0.00</div-->
+		
+		<paper-checkbox style="padding:10px; display:block" class="noselect" id="check_reserva">Reservar</paper-checkbox><br>
     </div>
     <br>
 
@@ -301,7 +303,7 @@ function xGuardarPedido(){
 	var xsub_sql_descontar='';
 	xReservar=0;
 
-	// if(check_reserva.checked==true){xmesa='0';$("#nummesa").val(0);xReservar=1;}
+	if(check_reserva.checked==true){xmesa='0';$("#nummesa").val(0);xReservar=1;}
 
 	/*xsolo_llevar=0;
 	var xcount_seccion=0;
@@ -461,7 +463,18 @@ function xLoadMipedido(){
 				if(xArraySeccion[xid_sec_index]==null){xArraySeccion[xid_sec_index]='<tr><td colspan="3" class="xPedidoTitulo xSinBorde xBold">'+n.des_seccion+'</td></tr>';}
 				//idcategoria en pedido
 				xidCategoriaSeccion=n.idcategoria;
-				xCadenaItemArray=String('<tr class="xPedidoItem row" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=0 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'" onclick="xOpenDlgItem(this);">'+
+				xCadenaItemArray=String('<tr class="xPedidoItem row" data-id="'+n.iditem+'" '+
+				'data-idseccion="'+n.idseccion+'" '+
+				'data-seccion="'+n.des_seccion+'" '+
+				'data-idbus="'+n.idseccion+'" '+
+				'data-idtipocobus="'+n.idtipo_consumo+'" '+
+				'data-idprocede="'+n.idprocede+'" '+
+				'data-procede="'+n.procede+'" '+
+				'data-procedeindex="'+n.procede_index+'" '+
+				'data-ventarapida=0 data-imprimircomanda="'+n.imprimir_comanda+'" '+
+				'data-iddescontar="'+n.idprocede+'" '+
+				'data-cant_descontar="'+n.cant_descontar+'" '+
+				'data-idalmacen_items="'+n.idalmacen_items+'" onclick="xOpenDlgItem(this);">'+
 					'<td width="10px" data-ColumName="cantidad" id="cant_descontar">'+xCeroIzq(n.cantidad,2)+'</td>'+
 					'<td>'+n.des+' '+xIndicacionItem+'</td>'+
 					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+
@@ -661,7 +674,23 @@ function xLoadItemMiPedido(xid,xidseccion,xprocede){
 
 		//xCadenaItem=String(xCadenaItem+'<div class="xmenu_item_2 xitem_seleccionado_pedido" data-id="'+xdtItem[0].idcarta_lista+'" data-item="'+xdtItem[0].iditem+'" data-idseccion="'+xdtItem[0].idseccion+'" '+
 
-		xCadenaItem=String(xCadenaItem+'<div class="xmenu_item_2 xitem_seleccionado_pedido" data-id="'+xdtItem[0].idcarta_lista+'" data-item="'+xdtItem[0].iditem+'" data-idseccion="'+xdtItem[0].idseccion+'" data-idseccionindex="'+xdtItem[0].idseccion_index+'" data-idbus="'+xdtItem[0].idseccion+'"  data-idimpresora="'+xdtItem[0].idimpresora+'" data-idprocede="'+xdtItem[0].idprocede+'" data-procede="'+xdtItem[0].procede+'" data-procedeindex="'+xdtItem[0].procede_index+'" data-imprimircomanda="'+xdtItem[0].imprimir_comanda+'" data-iddescontar="'+xdtItem[0].idprocede+'" data-cant_descontar="'+xdtItem[0].cant_descontar+'" data-idalmacen_items="'+xdtItem[0].idalmacen_items+'">'+
+		// el idseccion_index viene '11.1' - esto hace que cree otra seccion al modificar
+		const _idseccionIndex = xdtItem[0].idseccion_index.split('.')[0];
+		
+		xCadenaItem=String(xCadenaItem+'<div class="xmenu_item_2 xitem_seleccionado_pedido" '+ 
+				'data-id="'+xdtItem[0].idcarta_lista+'" '+
+				'data-item="'+xdtItem[0].iditem+'" '+
+				'data-idseccion="'+xdtItem[0].idseccion+'" '+
+				'data-idseccionindex="'+_idseccionIndex+'" '+
+				'data-idbus="'+xdtItem[0].idseccion+'" '+
+				'data-idimpresora="'+xdtItem[0].idimpresora+'" '+
+				'data-idprocede="'+xdtItem[0].idprocede+'" '+
+				'data-procede="'+xdtItem[0].procede+'" '+
+				'data-procedeindex="'+xdtItem[0].procede_index+'" '+
+				'data-imprimircomanda="'+xdtItem[0].imprimir_comanda+'" '+
+				'data-iddescontar="'+xdtItem[0].idprocede+'" '+
+				'data-cant_descontar="'+xdtItem[0].cant_descontar+'" '+
+				'data-idalmacen_items="'+xdtItem[0].idalmacen_items+'">'+
 					xCadenaItem_encabezado+
 					xCadenaItem_Detalle);
 

@@ -319,7 +319,7 @@ function xObtnerValSumArray(xArray,filter){
 		$.map(xArray[i], function(n, z) {
 			if (typeof n=="object"){
 				var xIdRowTb=n.idseccion;
-				if(xIdRowTb==filter){
+				if(xIdRowTb === filter){
 					cuenta=parseFloat(cuenta)+parseFloat(n.cantidad);
 				}
 			}
@@ -533,7 +533,6 @@ function xImprimirAhora(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,xArraySub
 	//cuando se agrega item
 	//xArrayEncabezado.solo_llevar=0;
 	//xArrayEncabezado.reservar=0;
-	debugger
 	xPopupLoad.titulo="Imprimiendo...";
 	$.ajax({type: 'POST', url: '../../print/print3.php', 
 	data:{

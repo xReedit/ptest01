@@ -919,7 +919,8 @@ Polymer({
     	xIniZonaDespacho();
     },
     detached:function(){
-    	clearInterval(xRefresh_tiempo);
+		clearInterval(xRefresh_tiempo);
+		xsourceEvent.close();
     }
 })
 </script>

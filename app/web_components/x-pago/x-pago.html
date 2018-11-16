@@ -96,7 +96,7 @@
 			<!-- disabled="[[!valid_monto_pago]]" -->
 			<div hidden="[[hidden_container_pago]]">
 				<div class="xBoton2 xPlomo" onclick="xThisPago.setVisibleContainerPago();" id="btn_regresar_comprobante">Regresar</div>
-				<button class="xBoton2 xAzul" onclick="xListoRegistraPago();" id="btn_pago">[F10]Listo, registrar pago</button>
+				<button class="xBoton2 xAzul" onclick="xListoRegistraPago();" id="btn_pagoX">[F10]Listo, registrar pago</button>
 			</div>						
 			<br><br>
 		</div>
@@ -263,6 +263,7 @@ function xIiniPago(){
 				if (!xThisPago.hidden_container_pago) {
 					// habilita la opcion de validar importe
 					// if (xThisPago.valid_monto_pago) { xListoRegistraPago() }
+					// xSumarTotales_row();
 					xListoRegistraPago();
 				} else {					
 					xThisPago.setVisibleContainerPago();					
@@ -458,6 +459,7 @@ function xCancelarCerrar() {
 }
 
 function xListoRegistraPago() {
+	xSumarTotales_row();
 	xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
 	xThisPago.fire('xListoRegistraPago', true);
 }
@@ -499,10 +501,14 @@ function xSumarTotales_row(){
 	var xRpts=[];
 	var xtipoP=[];
 
+
 	$("#tb_tp .row").each(function(index,element){		
 		var id_tp_row=$(element).find(".xsel_tp option:selected").val();
 		var val_row=$(element).find("#xmonto_obj_tp").val();
 		if(parseFloat(val_row)>parseFloat(xThisPago.total)){val_row=xThisPago.total}
+
+		if ( parseFloat(val_row) === 0 ) {val_row = xThisPago.total;}
+		
 		xtipoP.push({'id':id_tp_row, 'importe':val_row});
 	})
 

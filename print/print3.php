@@ -236,6 +236,8 @@ while($num_copias>=0){
 	foreach ($ArraySubTotales as $item_sbt) {//
 		if($item_sbt['visible']=='false'){continue;}
 		if($item_sbt['tachado']=='true'){continue;}
+		if($item_sbt['importe']=='0.00'){continue;} // caso de igv si es 0 no muestra
+		
 		$des_sbt=$item_sbt['descripcion'];//
 		$imp_sbt=$item_sbt['importe'];//
 

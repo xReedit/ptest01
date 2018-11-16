@@ -71,7 +71,7 @@ function sheetDataProductos($sheet) {
         $idt=$bdP->xDevolverUnDato($sql);        
         //echo ' | verificar_famimila :'.$sql."  |  rspt".$idt;
         if($idt==''){
-          $sql="insert into producto_familia(descripcion,idorg,idsede)value('".$cell."',".$_SESSION['ido'].",".$_SESSION['idsede'].")";                    
+          $sql="insert into producto_familia(idproducto_familia, descripcion,idorg,idsede)value(0,'".$cell."',".$_SESSION['ido'].",".$_SESSION['idsede'].")";                    
           $idt=$bdP->xConsulta_UltimoId($sql);          
           //echo ' | insert familia :'.$sql."  |  rspt".$idt;
         }

@@ -88,7 +88,7 @@
 				$indicaciones_p=$subitem['indicaciones'];
 				if($indicaciones_p!==""){$indicaciones_p=" (".$indicaciones_p.")";$indicaciones_p=strtolower($indicaciones_p);}
 				
-				$sql_pedido_detalle=$sql_pedido_detalle.'(?,'.$tipo_consumo.','.$categoria.','.$subitem['iditem'].','.$subitem['iditem2'].','.$subitem['idseccion'].',"'.$subitem['cantidad'].'","'.$subitem['cantidad'].'","'.$subitem['precio'].'","'.$precio_total.'","'.$precio_total.'","'.$subitem['des'].$indicaciones_p.'",'.$viene_de_bodega.','.$tabla_procede.'),';                                        
+				$sql_pedido_detalle=$sql_pedido_detalle.'(?,'.$tipo_consumo.','.$categoria.','.$subitem['iditem'].','.$subitem['iditem2'].',"'.$subitem['idseccion'].'","'.$subitem['cantidad'].'","'.$subitem['cantidad'].'","'.$subitem['precio'].'","'.$precio_total.'","'.$precio_total.'","'.$subitem['des'].$indicaciones_p.'",'.$viene_de_bodega.','.$tabla_procede.'),';                                        
 
 			}
 
@@ -341,7 +341,7 @@
 				$idp_d=explode('|',$idp_d);
 				$idp_d=$idp_d[0];
 				$sql_pago_pedido=$sql_pago_pedido."(".$idregistro_pago.",".$sub_item['idpedido'].",".$idp_d.",'".$sub_item['cantidad']."','".$sub_item['total']."'),";
-			}else{
+			}else{ // vienen varios item agrupados
 				$idp_d=explode(",",$idp_d);
 				$cantp_d=explode(",",$sub_item['cantidad']);
 				$totalp_d=explode(",",$sub_item['total']);

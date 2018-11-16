@@ -213,7 +213,9 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 					const id = c.tipo+c.id;
 					const esImpuesto = c.es_impuesto;					
 					let porcentaje = parseFloat(parseFloat(c.monto)/100).toFixed(2);		
-					porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2)
+					porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
+
+					// const esVisible = porcentaje > 0 ? true : false; // ver que implica
 					
 					arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'esImpuesto': esImpuesto, 'visible':true, 'quitar': false, 'tachado': false}); 
 					break;

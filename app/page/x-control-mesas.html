@@ -778,6 +778,8 @@ async function getItemsSeleccionados() {
 			xid_pedido_detalle_dt_p=$(e).attr('data-idpedidodetaller'),
 			ximporte_dt_p=$(e).attr('data-totalr'),
 			xcantidad_dt_p = $(e).attr('data-cantidadr'),
+			ximporte_dt_p_mostrar=$(e).attr('data-total'),
+			xcantidad_dt_p_mostrar = $(e).attr('data-cantidad'),
 			xdes_seccion = $(e).attr('data-des_seccion'),
 			xid_seccion = $(e).attr('data-idseccion'),
 			xsubtotales_tachados = $(e).attr('data-subtotales_tachados'), // para calcular los tachados o quitados - no cobrar
@@ -803,7 +805,7 @@ async function getItemsSeleccionados() {
 								'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,
 								'idpedido_detalle':xid_pedido_detalle_dt_p, 
 								'iditem': xid_iditem, 'cantidad':xcantidad_dt_p,
-								'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 
+								'total':ximporte_dt_p,'ptotal':ximporte_dt_p_mostrar, 
 								'idtipo_consumo': xid_tipo_consumo, 
 								'subtotales_tachados': xsubtotales_tachados});
 		}else{
@@ -815,7 +817,7 @@ async function getItemsSeleccionados() {
 									'descripcion':xdescripcion,'idpedido':xid_pedido_dt_p,
 									'idpedido_detalle':xid_pedido_detalle_dt_p, 
 									'iditem': xid_iditem, 'cantidad':xcantidad_dt_p,
-									'total':ximporte_dt_p,'ptotal':ximporte_dt_p, 
+									'total':ximporte_dt_p,'ptotal':ximporte_dt_p_mostrar, 
 									'idtipo_consumo': xid_tipo_consumo, 
 									'subtotales_tachados': xsubtotales_tachados});
 			}
@@ -1490,6 +1492,9 @@ function xJuntarFilasIguales(){
 			ids_pd='';
 			cant_pd='';
 			xtt_pd='';
+		} else {
+			xcant_item = parseFloat(rv[xi_grupo].cantidad);
+			xptotal_item = parseFloat(rv[xi_grupo].ptotal);
 		}
 
 		i_cantidad = parseFloat(x.cantidad);
@@ -1601,6 +1606,8 @@ function xLoadMipedidoBD(dt){
 							'" data-idpedidodetaller="'+xDtBd[i].idpedido_detalle_r+
 							'" data-cantidadr="'+xDtBd[i].cantidad_r+
 							'" data-totalr="'+xDtBd[i].total_r+
+							'" data-cantidad="'+xDtBd[i].cantidad+
+							'" data-total="'+xDtBd[i].ptotal+
 							'" data-des_seccion="'+ xNom_seccion +
 							'" data-subtotales_tachados="'+ xDtBd[i].subtotales_tachados +
 							'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+

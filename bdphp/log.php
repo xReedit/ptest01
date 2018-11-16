@@ -539,7 +539,7 @@
 						INNER JOIN almacen AS a using(idalmacen)
 						INNER JOIN producto_familia AS pf using(idproducto_familia)
 						LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
-					WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND pf.idproducto_familia=".$_POST['s']." AND a.bodega=1 AND ps.estado=0 AND p.estado=0
+					WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND pf.idproducto_familia=f".$_POST['s']." AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 					GROUP by p.idproducto
 					ORDER BY pf.descripcion, p.descripcion
 				";
@@ -811,7 +811,7 @@
 					INNER JOIN producto AS p using(idproducto)
 					INNER JOIN producto_familia AS pf using(idproducto_familia)
 					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ai.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
-				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") AND pf.idproducto_familia=".$_POST['s']." AND ai.estado=0 AND p.estado=0
+				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") AND pf.idproducto_familia=f".$_POST['s']." AND ai.estado=0 AND p.estado=0
 				GROUP by ai.idproducto
 				ORDER BY pf.descripcion, p.descripcion
 				";
@@ -1116,7 +1116,7 @@
 			//idpedido_detalle_r, cantidad_r, total_r // es para control_mesas, para datos de pago
 			$sql="
 			SELECT * FROM(
-				SELECT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index,s.descripcion AS des_seccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede, '0' AS procede_index , IF(cl.cantidad='SP',2,1) AS descontar_en, IF(cl.cantidad='SP',ii.idporcion,pd.idcarta_lista)AS iddescontar, IF(cl.cantidad='SP',ii.cant_porcion,pd.cantidad) AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r, p.subtotales_tachados
+				SELECT DISTINCT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index,s.descripcion AS des_seccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede, '0' AS procede_index , IF(cl.cantidad='SP',2,1) AS descontar_en, IF(cl.cantidad='SP',ii.idporcion,pd.idcarta_lista)AS iddescontar, IF(cl.cantidad='SP',ii.cant_porcion,pd.cantidad) AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r, p.subtotales_tachados
 				FROM pedido AS p
 					INNER JOIN pedido_detalle AS pd using(idpedido)
 					INNER JOIN seccion AS s using(idseccion)
@@ -1128,7 +1128,7 @@
 			) a
 			UNION all
 				SELECT * FROM(
-				SELECT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion, concat('2',pd.idseccion,'.0') AS idseccion_index, pf.descripcion AS des_desccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede , pf.idproducto_familia AS procede_index, 0 AS descontar_en,pd.iditem AS iddescontar, pd.cantidad AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r, p.subtotales_tachados
+				SELECT DISTINCT p.idpedido, pd.idpedido_detalle,pd.idcarta_lista,pd.idcategoria, p.referencia,pd.idtipo_consumo, tp.descripcion AS des_tp, pd.idseccion, concat('2',pd.idseccion,'.0') AS idseccion_index, pf.descripcion AS des_desccion, pd.iditem, pd.cantidad, pd.punitario, pd.ptotal, pd.descripcion, 0 as visible, pd.procede , pf.idproducto_familia AS procede_index, 0 AS descontar_en,pd.iditem AS iddescontar, pd.cantidad AS cant_descontar, pd.cantidad AS cantidad_r, ptotal AS total_r,concat(pd.idpedido_detalle,'|',pd.idpedido) AS idpedido_detalle_r, p.subtotales_tachados
 				FROM pedido AS p
 					INNER JOIN pedido_detalle AS pd using(idpedido)
 					INNER JOIN tipo_consumo AS tp ON tp.idtipo_consumo=pd.idtipo_consumo
@@ -2057,7 +2057,7 @@
 			$xidFam=$bd->xDevolverUnDato($sql);
 			if($xidFam!=0){print $xidFam;}
 			else{
-				$sql="insert into producto_familia (idorg,idsede,descripcion) values (".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$_POST['f']."')";
+				$sql="insert into producto_familia (idproducto_familia,idorg,idsede,descripcion) values (0,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$_POST['f']."')";
 				print $bd->xConsulta_UltimoId($sql);
 			}
 			break;
