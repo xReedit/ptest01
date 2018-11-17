@@ -15,8 +15,8 @@
 		<div class="xBoton2 xAzul" onclick="xAddRegla();">Agregar Regla</div>
 		<div class="xInvisible">
 			<form id="frm_regla">				
-				<input type="text" name="idorg" id="idorg" value="[[xt_org]]">
-				<input type="text" name="idsede" id="idsede" value="[[xt_idsede]]">
+				<input type="text" name="idorg" id="idorg" value$="[[xt_org]]">
+				<input type="text" name="idsede" id="idsede" value$="[[xt_idsede]]">
 				<input type="text" name="idcategoria" id="idcategoria">
 				<input type="text" name="idseccion" id="idseccion">
 				<input type="text" name="idseccion_detalle" id="idseccion_detalle">
@@ -37,9 +37,11 @@
 var xThis;
 function xIniRegla(){
 	$("#Titulo_page").text('Reglas de la Carta');
-	if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}	
-	if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
+	// if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}	
+	// if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
 	$("#Titulo_page").text("Elaborar Carta");	
+
+	xm_log_get('ini_us');
 	xThis.xt_org=xIdOrg;
 	xThis.xt_idsede=xIdSede;
 	xThis.xt_idus=xIdUsuario;

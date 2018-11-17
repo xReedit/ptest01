@@ -438,7 +438,10 @@ function xm_log_get(seccion){
 	xdt_log=JSON.parse(xdt_log)
 
   switch (seccion) {
-    case 'ini_us':
+	case 'app3_us':
+	xdt_rpt = xdt_log.us;
+	  break;
+	case 'ini_us':
       xIdOrg=xdt_log.us.ido;
       xIdSede=xdt_log.us.idsede;
       xIdUsuario=xdt_log.us.idus;

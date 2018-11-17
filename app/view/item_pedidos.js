@@ -812,9 +812,9 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 
 			var diferencia = xCantidadBuscar - xCantidadBuscarSecc_detalle;			
 			diferencia = diferencia < 0 ? xCantidadBuscar : diferencia; // no valores negativos 
-
+			
 			$(xtb).find(".row").each(function (index, element) {
-				if(xCantidadBuscar <= 0) {return;}
+				// if(xCantidadBuscar <= 0) {return;} // lo dejamos pasar si es cero para que coloque el precio normal a todos los items de lo contrario dejaria con precios del caso anterior
 				var xIdRowTb=$(element).attr('data-idbus'),
 				xIdtb_Item=$(element).attr('data-id'),
 				xIdtb_tpc=$(element).attr('data-idtipocobus'),

@@ -1,5 +1,5 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
-var xMenuOp='',xAcc,xIdAccDirecto;
+var xMenuOp='',xAcc,xIdAccDirecto, verCambioClave=false;
 $(document).on('ready',function(){
 	$("#PanelDe").on('transitionend',function(a){
 		if(this.selected=='main'){
@@ -246,4 +246,24 @@ function xGenerarMenu(op){
 	}
 	$(".xBtnPanel").html(xMenuOp).trigger('create');*/
 
+}
+
+function showCambiarClave(){
+	$("#datosGeneralesUs").addClass('xInvisible');
+	$("#cambioClaveUs").removeClass('xInvisible');
+}
+
+function cambiarClaveUs() {
+	const pa = $("#txtpa")[0].value
+	const pn = $("#txtpn")[0].value
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-304', data:{pa: pa, pn:pn}})
+	.done( function (dtC) {
+		// dtC=JSON.parse(dtC).datos[0].pass;
+		if (dtC === "0") {
+			console.log('clave actual no es correcta');
+		} else {
+			console.log('se guardo ok');
+		}
+	});
 }

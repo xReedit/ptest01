@@ -220,11 +220,12 @@ function xModBlur(obj,tipo){
 			xidcarta_lista=$(obj).parent().attr('data-idcarta_lista'),
 			xiditem=$(obj).parent().attr('data-iditem');
 
-	$(obj).parent().html('<paper-spinner active style="width:15px; height:15px;"></paper-spinner>').trigger('create');
+	$(obj).parent().html('<paper-spinner id="aax" active style="width:15px; height:15px;"></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1901', data:{p:xProcede,idcl:xidcarta_lista,idi:xiditem,c:xvalObj}})
 	.done( function (dtRpt) {
-		$(obj).parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
-		$(obj).remove();
+		
+		$("#aax").parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
+		$("#aax").remove();
 	});
 	xActualizar=0;
 }

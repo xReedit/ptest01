@@ -46,7 +46,7 @@ function config_comprobante_getall() {
                 '<td>'+x.dsc_comprobante+'</td>'+
                 '<td>'+x.serie+'</td>'+
                 '<td>'+x.correlativo+'</td>'+
-                '<td><span class="xDeleteRow" title="Borrar" onclick="xBorrarItem(this);"></span></td>'+
+                '<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td>'+
 				'</tr>')
         })
 

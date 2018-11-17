@@ -17,8 +17,8 @@
 		      				<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>
 		      				<div class="xInvisible">
 		      					<input type="text" id="idusuario" name="idusuario">
-		      					<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
-		      					<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
+		      					<input type="text" id="idorg" name="idorg" value$="{{xt_org}}">
+		      					<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 		      					<input type="text" id="acc" name="acc">
 		      					<input type="text" id="per" name="per">
 		      				</div>
@@ -35,6 +35,7 @@
 							<paper-checkbox class="checkA" data-id='A6,'> Monitoreo del stock</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='A7,'> Registro de pagos</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='A8,'> Zona de Despacho</paper-checkbox><br>
+							<paper-checkbox class="checkA" data-id='A9,'> Recuperar stock de items borrados</paper-checkbox><br>
 							<br>
 							<h4>LOGISTICA</h4>
 							<paper-checkbox class="checkA" data-id='B1,'> Compras</paper-checkbox><br>
@@ -68,7 +69,7 @@
 		<h3>USUARIOS</h3>
 		<div class="xLinea2"></div>
 		<br>
-		<paper-fab icon="add" onclick="dialog_add_us.open();" title="Agregar" tabindex="0" class="btnAdd"></paper-fab>
+		<paper-fab icon="add" onclick="xNuevoUsuario(); dialog_add_us.open();" title="Agregar" tabindex="0" class="btnAdd"></paper-fab>
 		<table id="tb_us" width="100%" class="xtable2">
 			<thead>
 				<th align="left">Nombres</th>
@@ -83,12 +84,22 @@
 <script>
 var xThis;
 function xIniUsuarios(){
-	if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
-	if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
+	// if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
+	// if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
 	$("#Titulo_page").text("Usuarios");
+
+	xm_log_get('ini_us');
+
 	xThis.xt_org=xIdOrg;
 	xThis.xt_idsede=xIdSede;
 	xThis.xt_idus=xIdUsuario;
+
+	if (xIdOrg === "" || xIdOrg == undefined){
+			var _dtUs = xm_log_get('app3_us');
+			xThisConfig.xt_org=_dtUs.ido;
+			xThisConfig.xt_idsede=_dtUs.idsede;
+			xThisConfig.xt_idus=_dtUs.idus;	
+		}
 
 	xLoadUs();
 
@@ -216,6 +227,9 @@ Polymer({
 		xt_org:Number,
 		xt_idsede:Number,
 		xt_idus:Number,
+	},
+	ready: function() {
+		xIniUsuarios();
 	},
 	attached:function(){
 		this.selected_us=0;

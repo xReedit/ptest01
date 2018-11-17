@@ -161,16 +161,28 @@
 
 	<paper-dialog id="dialog_us" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 		<div class="xContent">
-			<div>
-				<img class="xIzquierda xpadingLateralDe xBordeDe" src="../../images/usuario.png">
-				<p class="xColorRow_Plomo xfont12" id="xnomu">Marcel Ramirez</p>
-				<p class="xColorRow_Plomo xfont12" id="xcargou">Administrador</p>
+			<div id="datosGeneralesUs">			
+				<div>
+					<img class="xIzquierda xpadingLateralDe xBordeDe" src="../../images/usuario.png">
+					<p class="xColorRow_Plomo xfont12" id="xnomu">Marcel Ramirez</p>
+					<p class="xColorRow_Plomo xfont12" id="xcargou">Administrador</p>
+				</div>
+				<br>
+				<div class="xLinea2"></div>
+				<br>
+				<a href="#" class="xfont12 xpadingLateralDe" onclick="xCerrarSession();" inline>Cerrar Sesion</a><a href="#" class="xfont12" onclick="showCambiarClave();" inline>Cambiar Clave</a>
+			</div>		
+			<div class="xInvisible" id="cambioClaveUs">
+				<p>Cambio de clave.</p>
+				<br>
+				<input type="password" class="xMiInput" placeholder="Clave actual" id="txtpa"><br><br>
+				<input type="password" class="xMiInput" placeholder="Nueva clave" id="txtpn">
+				<br>
+				<div class="xLinea2"></div>
+				<br>
+				<a href="#" class="xfont12" onclick="cambiarClaveUs();" inline>Cambiar Clave</a>
 			</div>
-			<br>
-			<div class="xLinea2"></div>
-			<br>
-			<a href="#" class="xfont12 xpadingLateralDe" onclick="xCerrarSession();" inline>Cerrar Sesion</a><a href="#" class="xfont12" inline>Cambiar Clave</a>
-		</div>
+	</div>
 	</paper-dialog>
 	<div class="wrapper">
 	  <div id="loader-wrapper">

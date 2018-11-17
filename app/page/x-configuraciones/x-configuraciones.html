@@ -4,6 +4,17 @@
 
 <dom-module id="x-configuraciones">
 	<template>
+		<paper-dialog id="dialog_borrar" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xtxtCentro">
+				<img src="../../../images/_dlg_remove.gif" alt="" width="150px">
+			</div>
+			<p>Esta seguro de querer borrar este registro?</p>
+			<br>
+			<div class="buttons">
+				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+				<button class="xBoton2 xRojo" onclick="xDlgBorrar();">Si, borrar</button>
+			</div>
+		</paper-dialog>
 		<paper-dialog id="dialog_subir_file_alamcen" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h4>Selecciona el almacen donde ingresan los productos:</h4>
@@ -22,7 +33,7 @@
 					<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas" espaciar>
 					<div class="xInvisible">
 						<input type="text" id="idsede" name="idsede">
-						<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
+						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 					</div>
 				</form>
 				<br><br>
@@ -41,8 +52,8 @@
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="HORA INICIO" onChange="conMayusculas(this)" id="hora_ini" name="hora_ini" espaciar>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="HORA FINAL" onChange="conMayusculas(this)" id="hora_fin" name="hora_fin" espaciar>
 					<div class="xInvisible">
-						<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
-						<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
+						<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
+						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 						<input type="text" id="idcategoria" name="idcategoria">
 					</div>
 				</form>
@@ -59,8 +70,8 @@
 				<form id="frm_tpc">
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION" onChange="conMayusculas(this)" id="descripcion" name="descripcion" espaciar required>
 					<div class="xInvisible">
-						<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
-						<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
+						<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
+						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 					</div>
 				</form>
 				<br><br>
@@ -159,8 +170,8 @@
 						<div class="xBoton2 xAzul" onclick="xAddRegla();">Agregar Regla</div>
 						<div class="xInvisible">
 							<form id="frm_regla">
-								<input type="text" name="idorg" id="idorg" value="[[xt_org]]">
-								<input type="text" name="idsede" id="idsede" value="[[xt_idsede]]">
+								<input type="text" name="idorg" id="idorg" value$="[[xt_org]]">
+								<input type="text" name="idsede" id="idsede" value$="[[xt_idsede]]">
 								<input type="text" name="idcategoria" id="idcategoria">
 								<input type="text" name="idseccion" id="idseccion">
 								<input type="text" name="idseccion_detalle" id="idseccion_detalle">
@@ -262,8 +273,8 @@
 									<input type="text" id="var_size_font" name="var_size_font">
 									<input type="text" id="var_margen_iz" name="var_margen_iz">
 
-									<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
-									<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
+									<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
+									<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 									<!--input type="text" id="logo" name="logo"-->
 								</form>
 							</div>
@@ -374,8 +385,8 @@
 							</tr>
 						</table>
 						<div class="xInvisible">
-							<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
-							<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
+							<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
+							<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 						</div>
 						</form>
 						<br>
@@ -458,8 +469,8 @@
 						</table>
 						<div class="xInvisible">
 							<input type="text" id="idimpresora" name="idimpresora">
-							<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
-							<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
+							<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
+							<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 							<input type="text" id="local" name="local" value="1">
 						</div>
 						</form>
@@ -490,8 +501,8 @@
 								<input type="text" id="idalmacen" name="idalmacen">
 								<input type="text" id="bodega" name="bodega">
 								<input type="text" id="imprimir_comanda" name="imprimir_comanda">
-								<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
-								<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
+								<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
+								<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 							</div>
 							<br><br>
 							<div class="xLinea2"></div>
@@ -533,7 +544,7 @@
 							</table>
 							<div class="xInvisible">
 								<input type="text" id="idsede" name="idsede">
-								<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
+								<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 								<input type="text" id="idtipo_comprobante" name="idtipo_comprobante">									
 							</div>
 						</form>
@@ -551,6 +562,7 @@
 <script type="text/javascript" src="../../shared/config.const.js"></script>
 <script>
 var xThisConfig;
+var xObjBorrar = 0; // object contiene informacion de la fila a borrar + tabla e id
 function _getCategoria(val) { console.log(val);}
 
 function xIniConf(){
@@ -564,6 +576,13 @@ function xIniConf(){
 		xThisConfig.xt_org=xIdOrg;
 		xThisConfig.xt_idsede=xIdSede;
 		xThisConfig.xt_idus=xIdUsuario;
+
+		if (xIdOrg === "" || xIdOrg == undefined){
+			var _dtUs = xm_log_get('app3_us');
+			xThisConfig.xt_org=_dtUs.ido;
+			xThisConfig.xt_idsede=_dtUs.idsede;
+			xThisConfig.xt_idus=_dtUs.idus;	
+		}
 
 		xLoadOrg();
 		xLoadCategoria();
@@ -676,6 +695,17 @@ function xIniConf(){
 		return false;
 	})
 }
+// dialog borrar
+function xDialogBorrarObj(obj) {
+	xThisConfig.xObjBorrar = obj;
+	dialog_borrar.open();
+}
+
+function xDlgBorrar() {
+	xBorrarItem(xThisConfig.xObjBorrar);
+	dialog_borrar.close();
+}
+
 ///alamences////
 ///alamences////
 function xSubirFileAlmacen(){
@@ -828,7 +858,7 @@ function xLoadImpresorasConf(){
 
 			xminutos_pedido=xdtImp[i].minutos_pedido;
 			if(xminutos_pedido===""){xminutos_pedido='0';}
-			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'"><td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td><td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td><td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td><td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td><td  data-campo="var_margen_iz"><span onclick="xModRow(this,4);">'+xdtImp[i].var_margen_iz+'</span></td><td><span class="xDeleteRow" title="Borrar" onclick="xBorrarItem(this);"></span></td></tr>')
+			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'"><td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td><td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td><td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td><td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td><td  data-campo="var_margen_iz"><span onclick="xModRow(this,4);">'+xdtImp[i].var_margen_iz+'</span></td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			xcandena_sel_print=xcandena_sel_print+'<option value="'+xdtImp[i].idimpresora+'">'+xdtImp[i].descripcion+'</option>';
 		};
 		$("#tb_impresoras .row").remove();
@@ -988,7 +1018,7 @@ function xloadTPC(){
 		var xCadenaTPC_sel='';
 		xdtTpc=xdtTpc.datos;
 		for (var i = 0; i < xdtTpc.length; i++) {
-			xCadenaTPC=String(xCadenaTPC+'<tr class="row" data-id="'+xdtTpc[i].idtipo_consumo+'" data-t="tipo_consumo"><td>'+xdtTpc[i].descripcion+'</td><td><span class="xDeleteRow" title="Borrar" onclick="xBorrarItem(this);"></span></td></tr>')
+			xCadenaTPC=String(xCadenaTPC+'<tr class="row" data-id="'+xdtTpc[i].idtipo_consumo+'" data-t="tipo_consumo"><td>'+xdtTpc[i].descripcion+'</td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			xCadenaTPC_sel=String(xCadenaTPC_sel+'<option value="'+xdtTpc[i].idtipo_consumo+'">'+xdtTpc[i].descripcion+'</option>');
 		};
 		$("#tb_tpc .row").remove();
@@ -1113,7 +1143,7 @@ function xLoadPorcentaje(){
 			if ( parseInt(xdtPor[i].es_impuesto) === 1 ) {
 				xCadenaPor = String(xCadenaPor+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td style="width: 25%;"><span onclick="xModRowImpuesto(this);">'+xdtPor[i].porcentaje+'</span></td></tr>');
 			} else {
-				xCadenaPorNoFacturable = String(xCadenaPorNoFacturable+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td>'+xdtPor[i].porcentaje+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+				xCadenaPorNoFacturable = String(xCadenaPorNoFacturable+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td>'+xdtPor[i].porcentaje+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
 			}			
 		};
 
@@ -1146,7 +1176,7 @@ function xAddPorcentaje(){
 		if(a===false){return;}
 		$("#formProcentajeNoFacturable #idconf_print").val(xIdConf);
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print_detalle",$("#formProcentajeNoFacturable").serialize(),function(xUltimoId){
-			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_detalle" data-id="'+xUltimoId+'"><td>'+$("#formProcentajeNoFacturable #descripcion").val()+'</td><td>'+$("#formProcentajeNoFacturable #porcentaje").val()+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_detalle" data-id="'+xUltimoId+'"><td>'+$("#formProcentajeNoFacturable #descripcion").val()+'</td><td>'+$("#formProcentajeNoFacturable #porcentaje").val()+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
 			$("#tb_porcentaje_no_facturable").append(xcadena).trigger('create');
 			$('#tb_porcentaje_no_facturable').reset();
 			$("#tb_porcentaje_no_facturable #descripcion").focus();
@@ -1167,7 +1197,7 @@ function xAddAdicional(){
 		const xdes_ad_seccion=selSeccion_adicional[selSeccion_adicional.selectedIndex].textContent;
 		const xdes_nivel_seccion=selNivel_adicional[selNivel_adicional.selectedIndex].textContent;
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print_adicionales",$("#formAdicionales").serialize(),function(xUltimoId){
-			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_adicionales" data-id="'+xUltimoId+'"><td><paper-checkbox class="check_adicional" checked></paper-checkbox></td><td>'+$("#formAdicionales #descripcion").val()+'</td><td>'+xdes_tpc_sel+'</td><td>'+xdes_nivel_seccion+'</td><td>'+xdes_ad_seccion+'</td><td>'+$("#formAdicionales #importe").val()+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_adicionales" data-id="'+xUltimoId+'"><td><paper-checkbox class="check_adicional" checked></paper-checkbox></td><td>'+$("#formAdicionales #descripcion").val()+'</td><td>'+xdes_tpc_sel+'</td><td>'+xdes_nivel_seccion+'</td><td>'+xdes_ad_seccion+'</td><td>'+$("#formAdicionales #importe").val()+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
 			$("#tb_Adicionales").append(xcadena).trigger('create');
 			$('#formAdicionales').reset();
 			$("#formAdicionales #descripcion").focus();
@@ -1247,7 +1277,7 @@ function xLoadReglasCarta(){
 		var xdtRla=$.parseJSON(dtRla);
 		xdtRla=xdtRla.datos;
 		for (var i = 0; i < xdtRla.length; i++) {
-			xCadenaRgl=String(xCadenaRgl+'<tr class="row" data-t="regla_carta" data-id="'+xdtRla[i].idregla_carta+'"><td>'+xdtRla[i].des_categoria+'</td><td>'+xdtRla[i].des_seccion+'</td><td>'+xdtRla[i].des_con+'</td><td><span class="xDeleteRow" title="Borrar" onclick="xBorrarItem(this);"></span></td></tr>');
+			xCadenaRgl=String(xCadenaRgl+'<tr class="row" data-t="regla_carta" data-id="'+xdtRla[i].idregla_carta+'"><td>'+xdtRla[i].des_categoria+'</td><td>'+xdtRla[i].des_seccion+'</td><td>'+xdtRla[i].des_con+'</td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>');
 		};
 		$("#tb_regla .row").remove();
 		$("#tb_regla").append(xCadenaRgl).trigger('create');
@@ -1263,7 +1293,7 @@ function xLoadCategoriaCarta(){
 		xdtCat=xdtCat.datos;
 		xThisConfig.dt_cat=xdtCat;
 		for (var i = 0; i < xdtCat.length; i++) {
-			xcadena_cat=String(xcadena_cat+'<tr class="row" data-index='+i+' data-id="'+xdtCat[i].idcategoria+'" data-t="categoria"><td>'+xdtCat[i].descripcion+'</td><td>'+xdtCat[i].hora_ini+'</td><td>'+xdtCat[i].hora_fin+'</td><td title="Modificar" onClick="xModificarCat(this)"><span class="icon xCursor"><img src="../../images/edit.png"></span></td><td><span class="xDeleteRow" title="Borrar" onclick="xBorrarItem(this);"></span></td></tr>')
+			xcadena_cat=String(xcadena_cat+'<tr class="row" data-index='+i+' data-id="'+xdtCat[i].idcategoria+'" data-t="categoria"><td>'+xdtCat[i].descripcion+'</td><td>'+xdtCat[i].hora_ini+'</td><td>'+xdtCat[i].hora_fin+'</td><td title="Modificar" onClick="xModificarCat(this)"><span class="icon xCursor"><img src="../../images/edit.png"></span></td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 		};
 		$("#tb_cat .row").remove();
 		$("#tb_cat").append(xcadena_cat).trigger('create');

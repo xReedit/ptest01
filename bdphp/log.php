@@ -46,6 +46,18 @@
 		case 100://multiconsulta
 			$bd->xMultiConsulta($_POST['xsql']);
 			break;
+		case -304: // cambiar clave usuario			
+			$sql = "SELECT pass as d1 from usuario where idusuario=".$_SESSION['idusuario'];
+			$passA = $bd->xDevolverUnDato($sql);
+			echo 'passA: '.$passA;
+			if ($passA === $_POST['pa']) {
+				$sql="update usuario set pass = '".$_POST['pn']."' where idusuario=".$_SESSION['idusuario'];
+				$bd->xConsulta_NoReturn($sql);
+				print 1; // ok
+			} else {
+				print 0; // no pasa
+			}
+			break;
 		case -303:// load tipo usuarios
 			$sql="SELECT * FROM usuario_tipo order by idusuario_tipo";
 			$bd->xConsulta($sql);
@@ -2283,7 +2295,7 @@
 			$idcarta_lista=$_POST['idcl'];
 			$iditem=$_POST['idi'];
 			$cant=$_POST['c'];
-			if($procede===1){
+			if($procede==="1"){
 				$sql="update carta_lista set cantidad=".$cant." where idcarta_lista=".$idcarta_lista;
 			}else{
 				$sql="
@@ -2293,6 +2305,7 @@
 					WHERE ii.iditem=".$iditem.";
 				";
 			}
+			echo $sql;
 			$bd->xConsulta($sql);
 			break;
 		case 1902://pedidos por hora // en el intervalo de 60min
