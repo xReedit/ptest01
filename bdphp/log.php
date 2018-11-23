@@ -469,8 +469,8 @@
 			// $sql_ejecuta=$sql_carta_historial.$sql_carta_lista_anterior.$sql_carta_lista;
 			//echo $sql_ejecuta;
 
-			$bd->xMultiConsulta($sql_ejecuta);
-			//print $id;
+			$bd->xMultiConsultaNoReturn($sql_ejecuta);
+			echo $id_carta;
 			break;
 		//MI PEDIDO APP ANFITRION CLIENTE
 		//MI PEDIDO APP ANFITRION CLIENTE
@@ -551,7 +551,7 @@
 						INNER JOIN almacen AS a using(idalmacen)
 						INNER JOIN producto_familia AS pf using(idproducto_familia)
 						LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
-					WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND pf.idproducto_familia=f".$_POST['s']." AND a.bodega=1 AND ps.estado=0 AND p.estado=0
+					WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND pf.idproducto_familia='".$_POST['s']."' AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 					GROUP by p.idproducto
 					ORDER BY pf.descripcion, p.descripcion
 				";
@@ -756,6 +756,16 @@
 			// WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 AND c.idcarta=uc.ultima_carta AND c.idcategoria=".$_POST['i']." order by s.sec_orden,i.descripcion
 			// ";
 
+			// conciderar
+			// $sql = "
+			// SELECT c.idcarta, cl.idcarta_lista,s.idseccion, i.iditem,s.descripcion AS des_seccion, i.descripcion AS des_item, cl.precio, cl.cantidad,s.sec_orden,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir,s.ver_stock_cero
+			// FROM carta_lista AS cl
+			// 	INNER JOIN carta AS c using(idcarta)
+			// 	INNER JOIN seccion AS s using(idseccion)
+			// 	INNER JOIN item AS i using(iditem)                
+			// WHERE (c.idorg=1 AND c.idsede=1) and cl.estado=0 and (c.idcategoria=1) order by s.sec_orden,i.descripcion
+			// ";
+
 			$sql = "
 			SELECT c.idcarta, cl.idcarta_lista,s.idseccion, i.iditem,s.descripcion AS des_seccion, i.descripcion AS des_item, cl.precio, cl.cantidad,s.sec_orden,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir,s.ver_stock_cero
 			FROM carta_lista AS cl
@@ -823,7 +833,7 @@
 					INNER JOIN producto AS p using(idproducto)
 					INNER JOIN producto_familia AS pf using(idproducto_familia)
 					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ai.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
-				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") AND pf.idproducto_familia=f".$_POST['s']." AND ai.estado=0 AND p.estado=0
+				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") AND pf.idproducto_familia='".$_POST['s']."' AND ai.estado=0 AND p.estado=0
 				GROUP by ai.idproducto
 				ORDER BY pf.descripcion, p.descripcion
 				";
@@ -2070,7 +2080,14 @@
 			if($xidFam!=0){print $xidFam;}
 			else{
 				$sql="insert into producto_familia (idproducto_familia,idorg,idsede,descripcion) values (0,".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$_POST['f']."')";
-				print $bd->xConsulta_UltimoId($sql);
+				$bd->xConsulta_NoReturn($sql);
+				// print $bd->xConsulta_UltimoId($sql);
+
+				// idproducto_familia es char -> f1
+				$sql="SELECT idproducto_familia AS d1 FROM producto_familia WHERE descripcion='".$_POST['f']."' and (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND estado=0";
+				$xidFam=$bd->xDevolverUnDato($sql);
+
+				print $xidFam;
 			}
 			break;
 		case 1603://load sel proveedores
@@ -2703,13 +2720,13 @@ function xDtUS($op_us){
 		case 3010: // para calcular monto total // sub totales igv, servicio, otros adicionales taper etc
 			$sql_us="
 			SELECT * FROM(
-				SELECT 'p' as tipo, cpd.idconf_print_detalle as id, cpd.es_impuesto, cpd.descripcion, cpd.porcentaje as monto, 0 as idtipo_consumo, 0 as idseccion, 0 as nivel
+				SELECT 'p' as tipo, cpd.idconf_print_detalle as id, cpd.es_impuesto, cpd.descripcion, cpd.porcentaje as monto, 0 as idtipo_consumo, 0 as idseccion, 0 as nivel, cpd.activo
 				FROM conf_print_detalle cpd 
 					INNER JOIN conf_print as c on cpd.idconf_print=c.idconf_print
 				where c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede']." and cpd.estado=0) a 
 				UNION ALL
 				SELECT * FROM(
-				SELECT 'a' as tipo, cpa.idconf_print_adicionales as id, 0 as es_impuesto, cpa.descripcion, cpa.importe as monto, cpa.idtipo_consumo, cpa.idseccion, cpa.nivel
+				SELECT 'a' as tipo, cpa.idconf_print_adicionales as id, 0 as es_impuesto, cpa.descripcion, cpa.importe as monto, cpa.idtipo_consumo, cpa.idseccion, cpa.nivel, 0 as activo
 				FROM conf_print_adicionales as cpa
 					INNER JOIN conf_print as c on cpa.idconf_print=c.idconf_print
 				where  c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede']." and cpa.estado=0 ) b

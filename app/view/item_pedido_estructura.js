@@ -89,10 +89,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
 
         group.push({id:x.id, cantidad: cantidad, des: x.descripcion, precio_total: x.importe, seccion: seccion});
     })
-    
-    
-    
-
-    
+        
     console.log('group: ',group);
+    return group;
 }

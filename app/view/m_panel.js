@@ -260,10 +260,12 @@ function cambiarClaveUs() {
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-304', data:{pa: pa, pn:pn}})
 	.done( function (dtC) {
 		// dtC=JSON.parse(dtC).datos[0].pass;
+		$("#msj_1").addClass("xInvisible");
+		$("#msj_2").addClass("xInvisible");
 		if (dtC === "0") {
-			console.log('clave actual no es correcta');
+			$("#msj_1").removeClass("xInvisible");			
 		} else {
-			console.log('se guardo ok');
+			$("#msj_2").removeClass("xInvisible");
 		}
 	});
 }

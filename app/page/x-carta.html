@@ -359,6 +359,8 @@ function xGuardarCambios(){
 	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204',data:{idc:xidCategoria,f:xFechaInsert,id_carta_anterior:xIdCartaAnterior,sql_array:xArraySeccionItem}})
 	.done( function (xid) {
+		xIdCartaAnterior = xid;
+		xIdCarta = xid;
 		xPopupLoad.xclose();
 	})
 	//});

@@ -33,7 +33,7 @@ try {
 }
 
 
-$logo_post=$xArray_print[0]['logo'];
+$logo_post="./logo/".$xArray_print[0]['logo'];
 $num_mesa=$ArrayEnca['m'];
 $num_pedido=$ArrayEnca['num_pedido'];
 $correlativo_dia=$ArrayEnca['correlativo_dia'];

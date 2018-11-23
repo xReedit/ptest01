@@ -10,7 +10,7 @@ switch ($op) {
 		$path = '../img/';
 		break;	
 	case '2':
-		$path = '../../print/';
+		$path = '../../print/logo/';
 		break;	
 }
 if (!$contentLength > 0) {

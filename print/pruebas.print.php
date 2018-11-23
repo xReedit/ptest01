@@ -18,7 +18,7 @@ try {
     $printer = new Printer($connector);
 
 
-    $logo = EscposImage::load('11logo_prueba4.jpg', false);
+    $logo = EscposImage::load('./logo/11logo_prueba4.jpg', false);
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
     $printer -> graphics($logo);
     

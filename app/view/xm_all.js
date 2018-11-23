@@ -439,7 +439,7 @@ function xm_log_get(seccion){
 
   switch (seccion) {
 	case 'app3_us':
-	xdt_rpt = xdt_log.us;
+	  xdt_rpt = xdt_log.us;
 	  break;
 	case 'ini_us':
       xIdOrg=xdt_log.us.ido;

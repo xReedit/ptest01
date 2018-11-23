@@ -11,7 +11,7 @@ use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 	
 $ArrayEnca=$_POST['Array_enca'];
 $ip_printer=$ArrayEnca['ip_print'];
-$logo_post=$ArrayEnca['logo'];
+$logo_post="./logo/".$ArrayEnca['logo'];
 $var_size_font=(int)$ArrayEnca['size_font'];
 $var_margen_iz=intLowHigh((int)$ArrayEnca['margen_iz'], 2);
 

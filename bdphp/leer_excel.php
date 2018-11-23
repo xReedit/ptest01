@@ -34,6 +34,10 @@ function sheetDataProductos($sheet) {
   $sqlProductoDetalleUpdate="";
   $sqlProductoUpdateRow='';
   $sqlProductoDetalle='';
+
+  $idorg = $_SESSION['ido'];
+  $idsede = $_SESSION['idsede'];
+
   while($x <= $sheet['numRows']) {      
     $y = 1;
     $re='';
@@ -50,7 +54,7 @@ function sheetDataProductos($sheet) {
       }      
       //verificar producto si existe actualiza, en almacen central
       if($y==1){
-        $sql="select idproducto as d1 from producto where descripcion='".$cell."' and estado=0 and (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].")";        
+        $sql="select idproducto as d1 from producto where descripcion='".$cell."' and estado=0 and (idorg=".$idorg." and idsede=".$idsede.")";        
         $idProNewUp=$bdP->xDevolverUnDato($sql);  
         //echo $y.' | '.$idProNewUp;        
         //nuevo
@@ -67,15 +71,24 @@ function sheetDataProductos($sheet) {
       }      
       //verificar familia
       if($y==2){        
-        $sql="select idproducto_familia as d1 from producto_familia where descripcion='".$cell."' and estado=0 and (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].")";                
+        $sql="select idproducto_familia as d1 from producto_familia where descripcion='".$cell."' and estado=0 and (idorg=".$idorg." and idsede=".$idsede.")";                
         $idt=$bdP->xDevolverUnDato($sql);        
         //echo ' | verificar_famimila :'.$sql."  |  rspt".$idt;
         if($idt==''){
-          $sql="insert into producto_familia(idproducto_familia, descripcion,idorg,idsede)value(0,'".$cell."',".$_SESSION['ido'].",".$_SESSION['idsede'].")";                    
-          $idt=$bdP->xConsulta_UltimoId($sql);          
+          $sql="insert into producto_familia(idproducto_familia, descripcion,idorg,idsede)value(0,'".$cell."',".$idorg.",".$idsede.")";                    
+          $idt=$bdP->xConsulta_NoReturn($sql);     
+          // $idt=$bdP->xConsulta_UltimoId($sql);     
+          
+          // 191118 -- el id es char ej: f1
+          $sql="select idproducto_familia as d1 from producto_familia where descripcion='".$cell."' and estado=0 and (idorg=".$idorg." and idsede=".$idsede.")";                
+          $idt=$bdP->xDevolverUnDato($sql);  
+          
+          $cell = $idt;
           //echo ' | insert familia :'.$sql."  |  rspt".$idt;
+        } else {
+          $cell = $idt;
         }
-        $cell = $idt;
+        
       //echo 'categoria'.$idt;
       }
 
@@ -124,7 +137,7 @@ function sheetDataProductos($sheet) {
     $xrow=substr($xrow, 0, -1);        
     $row_cant_almacem=substr($row_cant_almacem, 0, -1);        
 
-    $re='('.$xrow.','.$_SESSION['ido'].','.$_SESSION['idsede'].')';        
+    $re='('.$xrow.','.$idorg.','.$idsede.')';        
     //guardar producto
     //echo 'new:'.$xrow_producto_new;
     if($xrow_producto_new==0){

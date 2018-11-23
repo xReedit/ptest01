@@ -17,14 +17,16 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
     // evalua si I.G.V es = 0 esta exonerado
     var procentajeIGV = 0;
     var xCartaSubtotales=xm_log_get('carta_subtotales')    
-    xCartaSubtotales.filter(x => x.descripcion.indexOf('I.G.V')).map(x => procentajeIGV = parseFloat(x.monto));
-    const isExoneradoIGV = procentajeIGV === 0 ? true : false;
+    xCartaSubtotales.filter(x => x.descripcion.indexOf('I.G.V') > -1)
+        .map(x => procentajeIGV = x);
+    const valIGV = parseFloat(procentajeIGV.monto);
+    const isExoneradoIGV = procentajeIGV.activo === "1" ? true : false; //1 = desactivado => exonerado
 
 
 
 
-    const xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales);
-    xitems = xJsonSunatCocinarItemDetalle(xitems, procentajeIGV);
+    var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales);
+    xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV);
 
 
     // array encabezado org sede
@@ -34,7 +36,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
 
     const abreviaCo = xArrayComprobante.descripcion.substr(0,1).toUpperCase();
 
-    const xtipo_de_documento_identidad_cliente = xnum_doc_cliente.length === 11 ? 6 : 1;
+    const xtipo_de_documento_identidad_cliente = xnum_doc_cliente.length >= 10 ? 6 : 1;
     const xtipo_de_documento_comprobante = xArrayComprobante.codsunat;
 
 
@@ -44,6 +46,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
     // Importe total a pagar siempre ultimo es es el total
 	const index_total = xArraySubTotales.length-1;
     const importe_total_pagar = xArraySubTotales[index_total].importe;
+    const importe_total_igv = xArraySubTotales.filter(x => x.descripcion === 'I.G.V').map( x => x.importe)[0] || 0;
     
     //verifica si esta exonerado al igv /*/ caso de la selva u otros ubigeos exonerados del igv
     // const isExoneradoIGV = true;
@@ -58,12 +61,6 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
         total_valor_de_venta_operaciones_gravadas = importe_total_pagar;
         leyenda = [];
     }
-
-    //items
-
-
-
-
 
 
     // fecha actual del servidor
@@ -87,7 +84,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
             "datos_del_emisor": {
                 "numero_de_ruc": {
                     "numero_ruc": `${xArrayEncabezado[0].ruc}`,
-                    "tipo_de_documento": `${xtipo_de_documento_comprobante}`
+                    "tipo_de_documento": "6"
                 },
                 "nombre_comercial": `${xArrayEncabezado[0].nombre}`,
                 "apellidos_y_nombres_denominacion_o_razon_social": `${xArrayEncabezado[0].nombre}`
@@ -100,7 +97,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
                     "numero_de_documento": `${xnum_doc_cliente}`,
                     "tipo_de_documento": `${xtipo_de_documento_identidad_cliente}`
                 },
-                "apellidos_y_nombres_denominacion_o_razon_social_del_adquirente_o_usuario": `${xArrayCliente.nombres}`
+                "apellidos_y_nombres_denominacion_o_razon_social_del_adquirente_o_usuario": `${xArrayCliente.nombres === "" ? "PUBLICO EN GENERAL" : xArrayCliente.nombres}`
             },
             "guia_de_remision_relacionada": [{
                 "numero_de_guia": "",
@@ -129,7 +126,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
                     "monto": "0"
                 },
                 "sumatoria_igv": {
-                    "sumatoria_igv_amount": "0"
+                    "sumatoria_igv_amount": importe_total_igv
                 },
                 "sumatoria_isc": {
                     "sumatoria_isc_amount": "0"
@@ -175,9 +172,9 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
     var xListItemsRpt =[];
     const procentaje_IGV = parseFloat(parseFloat(ValorIGV)/100);
     
-    var valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo  = {"monto_de_valor_referencial_unitario": "01"};
-    if (ValorIGV > 0) {
-        valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = {"monto_de_valor_referencial_unitario": "01", "codigo_de_tipo_de_precio": "02"}
+    var valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = {"monto_de_valor_referencial_unitario": "01", "codigo_de_tipo_de_precio": "02"};
+    if (ValorIGV > 0) { // con igv
+        valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo  = {"monto_de_valor_referencial_unitario": "01"}; 
     }    
 
     items.map( (x, index) => {
@@ -209,7 +206,7 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
                     "monto_de_isc":"0",
                     "tipo_de_sistema_de_isc":"02"
                 },
-                "valor_de_venta_por_item":"100",
+                "valor_de_venta_por_item":`${x.precio_total}`,
                 "descuentos_por_item":{
                     "monto_del_descuento":"0"
                 }

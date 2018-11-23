@@ -211,8 +211,9 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 
 				case 'p': // todos los porcentajes // que se añaden al total de la cuentas y NO SON QUITABLES
 					const id = c.tipo+c.id;
-					const esImpuesto = c.es_impuesto;					
-					let porcentaje = parseFloat(parseFloat(c.monto)/100).toFixed(2);		
+					const esImpuesto = c.es_impuesto;
+					const valorImpuesto = c.activo === "0" ? c.monto : 0; // se marca 0=activo o 1=desactivado para obtener el % del impuesto requerido por comprobante electronico			
+					let porcentaje = parseFloat(parseFloat(valorImpuesto)/100).toFixed(2);		
 					porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
 
 					// const esVisible = porcentaje > 0 ? true : false; // ver que implica

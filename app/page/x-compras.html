@@ -28,11 +28,11 @@
 		<paper-dialog modal id="dialog_pago" class="tall xNoScroll" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div id="div_pago">
 				<x-pago id="component_pago_pro"></x-pago>
-				<div class="xLinea"></div>
+				<!-- <div class="xLinea"></div>
 				<br>
 				<div class="xBoton2 xAzul" onclick="xRegistrar_compra();" id="btn_pago">Listo, registrar compra</div>
-				<div class="xBoton2 xPlomo" dialog-dismiss>Regresar</div>
-				<br><br>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Regresar</div> -->
+				<!-- <br><br> -->
 			</div>
 		</paper-dialog>
 		<br>
@@ -174,12 +174,22 @@ function xIniCompras(){
 		xRpt_pago=e.detail.xRpts;
 		var p=e.detail.xRpts[0].ok;
 		if(p==0){
-			$("#btn_pago").attr('disabled', true);
+			// $("#btn_pago").attr('disabled', true);
 
 		}else{
-			btn_pago.removeAttribute("disabled")
-			if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrar_compra();}
+			xRegistrar_compra();
+			// btn_pago.removeAttribute("disabled")
+			// if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrar_compra();}
 		}
+	});
+
+	xValPago.addEventListener('xCancelarCerrar', function (e) {		
+		xThis.$.dialog_pago.close()
+	});
+
+	xValPago.addEventListener('xListoRegistraPago', function (e) {	
+		xRegistrar_compra();	
+		xThis.$.dialog_pago.close()
 	});
 
 	$("#div_proveedor").on('click',function(e){
@@ -197,6 +207,8 @@ function xEnterInInputDlg(e){
 	}
 }
 function xOpenRegistrarPago(){
+	xValPago.setModoSoloProveedor();
+
 	$("#component_pago_pro").focus();component_pago_pro.setVal(xMoneda(xImporte_total_list));
 	dialog_pago.open();
 }
@@ -270,11 +282,13 @@ function xAddItemLista(){
 }
 
 function xRegistrar_compra(){
+	var xTb_items=$("#tb_input");
+	if (xTb_items.find('.row').length===0) { alert('No tiene ningun producto en la lista de compras'); return; }
 	//proveedor
 	var xobj_proveedor=$("#frm_proveedor #descripcion");
 	xsel_almacen=$("#sel_alamcen option:selected").val();
-	xsel_proveedor=xobj_proveedor.attr('data-id');
-	//if(xobj_proveedor.val()!=''){
+	xsel_proveedor=xobj_proveedor.attr('data-id') || 0;
+	if(xobj_proveedor.val()!=''){
 	//	if(xsel_proveedor==''){
 			//nuevo // o modifica
 			xPopupLoad.xopen();
@@ -286,7 +300,7 @@ function xRegistrar_compra(){
 			})
 			//return;
 		//}
-	//}
+	} else { xGuardarRegistroCompra(); }
 	//xGuardarRegistroCompra();
 
 }

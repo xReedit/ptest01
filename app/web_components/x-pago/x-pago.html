@@ -156,7 +156,10 @@ var xObjContent;
 var xEnterTxtImporte=0;
 var xDatosValidos = false, // valida los datos si todos son correctos
 	tipoComprovanteSelecionado={}, // el comprobane que selecciona
-	modoSoloComprobante = false, btnDisabledInitModoComprobante = true;
+	modoSoloComprobante = false, modoSoloProveedor = false, btnDisabledInitModoComprobante = true;
+
+// modoSoloProveedor = solo pantalla de pago
+
 function xIiniPago(){
 	//xLoadTipoMoneda_TPPago();
 	xtb_tp=$("#tb_tp");
@@ -559,6 +562,10 @@ function xLoadTipoPago(){
 			xSel_tp[xidtp]={'des':dtTp[i].descripcion,'limite':dtTp[i].limite,'visible':true}
 		};
 		xAddTipoPago();
+
+		// inicia
+		xThisPago.hidden_container_pago = true;
+		xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
 	})
 }
 
@@ -607,8 +614,8 @@ function xAddTipoPago(){
 	xtb_tp.find('.xmonto:last-child').select();
 	// xSumarTotales_row();
 
-	xThisPago.hidden_container_pago = true;
-	xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
+	// xThisPago.hidden_container_pago = true;
+	// xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);	
 }
 function xValoresIniciales(){		
 	if(xThisPago._tipo==1){//venta // cobrar importe vendido
@@ -684,6 +691,7 @@ Polymer({
     	//xLoadCliente();
     },
 	setVisibleContainerPago: function() {
+		if (this.modoSoloProveedor) { xCancelarCerrar(); return; }
 		xVerContainerPago();
 	},
     setObjConntet:function(objC){
@@ -707,6 +715,11 @@ Polymer({
 		// solo para ingresar datos del cliente e imprimir comprabantes
 		// desde registro de pagos, pedido pagado
 		this.modoSoloComprobante = true;
+	},
+	setModoSoloProveedor: function () {		
+		// solo pantalla de pago, esto se usara en compras y para registrar solo pagos (no tiene en cuenta: cliente o proveedor)
+		this.modoSoloProveedor = true;
+		this.hidden_container_pago = false;
 	},
 	focus: function() { 
 		// if (xThisPago.$.xsel_tp_doc.sele)

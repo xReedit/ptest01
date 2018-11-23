@@ -14,7 +14,7 @@ $ArrayEnca=$_POST['Array_enca'];
 $ip_printer=$ArrayEnca[0]['ip_print'];
 $detalle_cierre=$ArrayEnca[0]['detalle_cierre'];
 
-$logo_post=$ArrayEnca[0]['logo'];
+$logo_post="./logo/".$ArrayEnca[0]['logo'];
 $titulo_document=$ArrayEnca[0]['titulo'];
 
 $logo_cierre_caja='';

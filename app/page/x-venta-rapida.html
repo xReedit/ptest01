@@ -720,14 +720,16 @@ function xGuardarPedidoVR(responde){
 
 		xArrayEnca={'m':xCeroIzq(xmesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xref)), 'num_pedido':xNumPedido,'reservar':0, 'solo_llevar':0,'correlativo_dia':xCorrelativo_dia};
 
+
+		xMandarCocinarImpresionComprobante(xrpt_correlativo);
+		
 		if(xVerificarImprimirComanda==true){
 			xLLamarPrintVR()
 		}else{
 			xPopupLoad.xclose();
 			xNuevoPedidoVR();
 		}
-		
-		xMandarCocinarImpresionComprobante(xrpt_correlativo);
+				
 		
 		responde(true)
 	});
