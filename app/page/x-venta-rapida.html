@@ -710,18 +710,24 @@ function xGuardarPedidoVR(responde){
 	// >>>$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:p_from, p_header:xarr_header, p_body: xarr_body, p_subtotales: xarr_subtotales, p_tipo_pago: xarr_tipo_pago, estado_p:xEstadoPedido}})
 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:p_from, p_cliente:xarr_cliente, p_body: xarr_body, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotales, p_comprobante: xarr_comprobante, estado_p:xEstadoPedido}})
 	.done( function (idP) {
-		xIdPedido=idP.split('|');
-		var xrpt_correlativo=xIdPedido[0];
-		var xCorrelativo_dia=xCeroIzq(xIdPedido[xIdPedido.length-1],5);
-		var xsub_sql_descontar='';
-		
-		xNumPedido=xCeroIzq(xIdPedido[2],5);
-		xIdPedido = xIdPedido[1];
+		const _arrRpt = xm_all_SetResponseLog_001(idP);
+		// xIdPedido=idP.split('|');
+		// var xrpt_correlativo=xIdPedido[0];
+		// var xCorrelativo_dia=xCeroIzq(xIdPedido[xIdPedido.length-1],5);
+		// var xsub_sql_descontar='';
+
+		const xrpt_correlativo=_arrRpt.correlativo_comprobante;
+		const xCorrelativo_dia=xCeroIzq(_arrRpt.correlativo_dia,5);
+		const xsub_sql_descontar='';
+		const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
+
+		xNumPedido=xCeroIzq(_arrRpt.numpedido,5);
+		xIdPedido = _arrRpt.idpedido;
 
 		xArrayEnca={'m':xCeroIzq(xmesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xref)), 'num_pedido':xNumPedido,'reservar':0, 'solo_llevar':0,'correlativo_dia':xCorrelativo_dia};
 
 
-		xMandarCocinarImpresionComprobante(xrpt_correlativo);
+		xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
 		
 		if(xVerificarImprimirComanda==true){
 			xLLamarPrintVR()
@@ -735,12 +741,12 @@ function xGuardarPedidoVR(responde){
 	});
 }
 
-function xMandarCocinarImpresionComprobante(correlativo) {	
+function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
 	var arr_cliente = xRpt_pago[0].cliente;
 	var arr_comprobante = xRpt_pago[0].comprobante;
 	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
 	// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
-	xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente,-2);
+	xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
 }
 
 // function xLLamarPrintVR(){

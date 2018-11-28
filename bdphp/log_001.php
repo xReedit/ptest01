@@ -1,4 +1,6 @@
 <?php
+
+	
     //log registrar peidod y pago
     session_start();
 	//header("Cache-Control: no-cache,no-store");
@@ -14,6 +16,7 @@
 	$x_idpedido;
 	$x_correlativo_comprobante;
 	$x_idcliente = '';
+	
 
 	
 	if ( strrpos($x_from, "a") !== false ) { $x_from = str_replace('a','',$x_from); cocinar_pedido(); }
@@ -26,6 +29,9 @@
 	if ( strrpos($x_from, "e") !== false ) { $x_from = str_replace('e','',$x_from); setComprobantePagoARegistroPago(); }
 
 	if ( strrpos($x_from, "z") !== false ) { $x_from = str_replace('z','',$x_from); getFechaServer(); }
+	if ( strrpos($x_from, "y") !== false ) { $x_from = str_replace('y','',$x_from); setidExternalComprobanteElectronico(); }
+
+	
 	
 	
 	// REGISTRA PEDIDO (a)
@@ -34,6 +40,7 @@
 		global $bd;
 		global $x_from;
 		global $x_idpedido;
+		
 		$x_array_pedido_header = $_POST['p_header'];
     	$x_array_pedido_body = $_POST['p_body'];
 		$x_array_subtotales=$_POST['p_subtotales'];
@@ -169,7 +176,16 @@
 		// SI ES PAGO TOTAL
 		if ( strrpos($x_from, "b") !== false ) { $x_from = str_replace('b','',$x_from); cocinar_pago_total(); }
 
-		print $id_pedido.'|'.$numpedido.'|'.$correlativo_dia;
+		
+		// $x_respuesta->idpedido = $id_pedido; 
+		// $x_respuesta->numpedido = $numpedido; 
+		// $x_respuesta->correlativo_dia = $correlativo_dia; 
+		
+		$x_respuesta = json_encode(array('idpedido' => $id_pedido, 'numpedido' => $numpedido, 'correlativo_dia' => $correlativo_dia));
+		print $x_respuesta.'|';
+		// $x_respuesta = ['idpedido' => $idpedido];
+		// print $id_pedido.'|'.$numpedido.'|'.$correlativo_dia;
+		
 	}
 
 
@@ -182,6 +198,7 @@
 		global $bd;
 		global $x_idpedido;
 		global $x_idcliente;
+		
 		
 		$x_array_pedido_header = $_POST['p_header'];
 		$x_array_tipo_pago = $_POST['p_tipo_pago'];
@@ -264,7 +281,12 @@
 		$bd->xConsulta_NoReturn($cadena_tp);
 		$bd->xConsulta_NoReturn($sql_subtotales);
 		
-		print $correlativo_comprobante."|";
+		// print $correlativo_comprobante."|";
+
+		// $x_respuesta->b = $correlativo_comprobante;
+		// $x_respuesta = ['correlativo_comprobante' => $correlativo_comprobante];
+		$x_respuesta = json_encode(array('correlativo_comprobante' => $correlativo_comprobante, 'idregistro_pago' => $idregistro_pago));
+		print $x_respuesta.'|';
 		//+++++ info+++++++++ el update pedido idregistropago es un triggers en la tabla registro_pago_pedido
 
 	}
@@ -380,7 +402,10 @@
         $bd->xConsulta_NoReturn($sql_pago_pedido);
 		$bd->xConsulta_NoReturn($cadena_tp);
 		$bd->xConsulta_NoReturn($sql_subtotales);
-		print $correlativo_comprobante;
+		// print $correlativo_comprobante;
+
+		$x_respuesta = json_encode(array('correlativo_comprobante' => $correlativo_comprobante, 'idregistro_pago' => $idregistro_pago));
+		print $x_respuesta.'|';
 	}
 
 	//REGISTRAR CLIENTE (d)	
@@ -473,6 +498,20 @@
 
 		print $fecha_actual.'|'.$hora_actual;
 	}
+
+
+	// grabar id_external_comprobante electronico
+	function setidExternalComprobanteElectronico() {
+		global $bd;	
+
+		$idregistro_pago = $_POST['idregistro_pago'];
+		$idexternal = $_POST['idexternal'];
+		$sql= "update registro_pago set external_id_comprobante = '".$idexternal."' where idregistro_pago=".$idregistro_pago;		
+		$bd->xConsulta_NoReturn($sql);
+
+		echo $sql;
+	}
+
 
     
 ?>

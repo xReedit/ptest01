@@ -6,8 +6,8 @@
 
 
 var xImpresoraPrint;
-
-function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente,xidDoc){
+// idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
+async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc){
 	
 	if (xArrayComprobante.idtipo_comprobante === "0") {return;} // ninguno no imprime
 	
@@ -29,8 +29,9 @@ function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayCompr
 	//comprobante electronico // ponemos el pie de pagina para el comprobante
 	xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante;
 
-	xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente);
-	return true;
+	const hash = await xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente, idregistro_pago);
+	console.log(hash);
+	return true; // temporal probamos facturacion electronica
 	//
 	
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){

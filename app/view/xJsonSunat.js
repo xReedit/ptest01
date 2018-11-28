@@ -6,7 +6,7 @@
 // xArrayComprobante datos del comprobante : tipodoc , serie correlativo id's
 // xArrayCliente datos del cliente nombre dni ruc direccion
 
-function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente) {
+async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago) {
     var hash = '';
     const isFacturacionElectronica = true; // si se emiten comprobantes electronicos    
 
@@ -65,7 +65,7 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
 
     // fecha actual del servidor
     // cabecera
-    $.ajax({type: 'POST', url: '../../bdphp/log_001.php', data:{'p_from':'z'}})
+    await $.ajax({type: 'POST', url: '../../bdphp/log_001.php', data:{'p_from':'z'}})
     .done( function (rptDate) {
         rptDate=rptDate.split('|');
         fecha_actual = rptDate[0];
@@ -162,9 +162,12 @@ function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobant
         };
 
         console.log(JSON.stringify(jsonData))
+
+        hash = xSendApiSunat(jsonData, idregistro_pago);        
     })
 
 
+    return hash;
 }
 
 
@@ -234,5 +237,37 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
     })
 
     return xListItemsRpt;
+}
+
+function xSendApiSunat(json_xml, idregistro_pago) {
+    const _url = URL_COMPROBANTE+'/documents';
+    let _headers = HEADERS_COMPROBANTE;
+    _headers.Authorization = xm_log_get('datos_org_sede')[0].authorization_api_comprobante;
+
+
+    var rpt = '';
+    json_xml = JSON.stringify(json_xml);
+    $.ajax({type: 'POST', 
+        url: _url, 
+        headers: _headers, 
+        dataType: 'json', 
+        data: json_xml, 
+        async: false,
+        success: function (data) {            
+            console.log('succes: ', data);
+            rpt = data;
+            // guardar external_id;
+            $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'y', idregistro_pago: idregistro_pago, idexternal: data.data.external_id}})
+            .done( function (res) {
+                console.log(res);
+            });
+
+        },
+        error: function(err) {
+            rpt = err;
+            // return err;
+        }
+    })
+    return rpt;
 }
 

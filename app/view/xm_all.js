@@ -595,3 +595,19 @@ function xRefreshToken(callback) {
 	var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.1tLS4vhIGufCW5H5vJ4bmNxhf43x-Vaik4oRwaDXi7E";
 	callback(token);
 }
+
+
+// recibe los array de respuesta que emite log_001 los convierte a un solo array para poder leerlo
+function xm_all_SetResponseLog_001(response) {
+	const arr = response.split('|');
+	var _concat = {};
+	arr.map(x => {
+		if (x === "") {return;}		
+		const arr_row = JSON.parse(x);
+		Object.keys(arr_row).map(k => {
+			_concat[k] = arr_row[k];			
+		})
+	});
+
+	return _concat;
+}
