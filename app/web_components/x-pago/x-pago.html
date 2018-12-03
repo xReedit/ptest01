@@ -86,7 +86,7 @@
 						<div>[F10] Listo, imprimir comprobante</div>
 					<!-- <div hidden="[[modoSoloComprobante]]">[F10] Siguente</div> -->
 				</button>
-				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
+				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="{{!valid_form_cliente_pago}}">
 					<!-- <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
 					<div>[F10] Siguente</div>
 				</button>
@@ -305,11 +305,23 @@ function xIiniPago(){
 async function xValidarDNIRUC (valor, e) {
 	var servicio = 'ruc';	
 	xThisPago.mensajeErrorDocumento = '';
+	
 	if (!xThisPago.$.sel_cliente.validate()) {
 		xThisPago.$.sel_cliente.invalid = true;
 		xThisPago.mensajeErrorDocumento = 'Solo numeros';
 		return;
 	}
+
+	if (xThisPago.ComprobanteRequiereCliente && e.keyCode !== 13) { 
+		// si requeiere cliente
+		xThisPago.placeholder_clie='Cliente DNI o RUC'; 
+		$("#clie_nombres").val('');
+		$("#clie_direccion").val('');
+		xIdCliente_pago='';
+		EmitirValidacionFormCliente();
+		return;
+	}
+
 	if ( valor.length <= 8 ) {
 		xThisPago.placeholder_clie = "DNI";
 		servicio='dni';
@@ -422,6 +434,8 @@ function xSelectedTpComprobante(valor) {
 	var idtipo_comprobante = $("#xsel_tp_doc option:selected").attr('data-idtipo-comprobante');
 	var option_requiere_cliente = parseInt($("#xsel_tp_doc option:selected").attr('data-requiere-cliente'));
 	xThisPago.ComprobanteRequiereCliente = option_requiere_cliente === 0 ? false : true; //requiere ingresar cliente
+
+	console.log(xThisPago.ComprobanteRequiereCliente);
 	
 	xThisPago.tipoComprovanteSelecionado = {'idtipo_comprobante_serie': valor, 'idtipo_comprobante': idtipo_comprobante, 'codsunat': codsunat, 'serie': serie, 'descripcion': descripcion};	
 
@@ -454,6 +468,7 @@ function xVerContainerPago() {
 
 function EmitirValidacionFormCliente() {
 	var validForm = xThisPago.$.form_pago_cliente.checkValidity();
+	xThisPago.valid_form_cliente_pago = validForm;
 	xThisPago.fire('xFormClienteValid', validForm);
 }
 
@@ -463,7 +478,8 @@ function xCancelarCerrar() {
 
 function xListoRegistraPago() {
 	xSumarTotales_row();
-	xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
+	// xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
+	// xThisPago.setVisiblePanel1();
 	xThisPago.fire('xListoRegistraPago', true);
 }
 
@@ -690,9 +706,13 @@ Polymer({
 		$("#datos_cliente").addClass("xInvisible");
     	//xLoadCliente();
     },
-	setVisibleContainerPago: function() {
+	setVisibleContainerPago: function() {		
 		if (this.modoSoloProveedor) { xCancelarCerrar(); return; }
+		if ( !xThisPago.$.form_pago_cliente.checkValidity() ) {EmitirValidacionFormCliente(); return; } // si el formulario no es valido // si no esta correcto el ruc o si el comprobante exige cliente
 		xVerContainerPago();
+	},
+	setVisiblePanel1: function() { // visible panel 1 = datos comprobante y cliente
+		xThisPago.hidden_container_pago = true;
 	},
     setObjConntet:function(objC){
     	// xLoadCliente();

@@ -194,6 +194,7 @@
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
 <script  type="text/javascript" src="../view/deNumALetras.js"></script>
 <script  type="text/javascript" src="../view/manager_storage.js"></script>
+<script  type="text/javascript" src="../view/cliente.service.js"></script>
 <script type="text/javascript" src="../../js/keynavigator-min.js"></script>	
 <script>
 var xThisVentaRapida
@@ -430,7 +431,9 @@ function xIniVentaRapida(){
 
 	xValPago.addEventListener('xCancelarCerrar', function (e) {		
 		// xIrPage(0);
-		xValPagoMostrarContainerPago()
+		// xValPago.close();
+		dialog_pagar.close();
+		// xValPagoMostrarContainerPago()
 	});
 	
 	xValPago.addEventListener('xListoRegistraPago', function (e) {		
@@ -531,6 +534,8 @@ function xValPagoMostrarContainerPago() {
 
 function xIrARegistrarPago(){
 	if(xregistrar_pago==false){return;}
+	xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
+	
 	//if(xnum_mesa_valido==false){alert('Numero de mesa no es valido.'); return;}
 	xedit_detalle_item=true;
 	xEstadoPedido=2;
@@ -605,6 +610,10 @@ function xRegistrarClientePagoVR(){
 		// xPopupLoad.xclose();
 		dialog_pagar.close();
 		guardando = false;
+
+		// setTimeout(() => {			
+		// 	xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
+		// }, 500);
 	});
 
 	// if (xid_cliente_pago !== '') {
@@ -642,7 +651,7 @@ function xRegistrarPagoVR(xidclie,xidp){
 	});
 }
 
-function xGuardarPedidoVR(responde){
+async function xGuardarPedidoVR(responde){
 	var xmesa=$("#txt_mesa").val();
 	var xref=$("#txt_ref").val();
 	var xtotal=$(".xPedidoTotal").text();
@@ -676,7 +685,7 @@ function xGuardarPedidoVR(responde){
 	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
 	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : [];
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
-	var xid_cliente_pago = DatosCliente.idcliente || 0;
+	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados = '';
 
 
@@ -696,7 +705,7 @@ function xGuardarPedidoVR(responde){
 	xarr_subtotales = xLocal_xDtSubTotales;
 	// xarr_subtotales = xGeneralArraySubTotales;
 	
-	if (xEstadoPedido === 2) { // registra pago total
+	if (xEstadoPedido === 2) { // pago total 
 		xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
 		p_from = 'ab'; // registra pedido y pago
 	} else {

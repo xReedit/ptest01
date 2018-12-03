@@ -40,11 +40,14 @@
 		global $bd;
 		global $x_from;
 		global $x_idpedido;
+		global $x_idcliente;
 		
 		$x_array_pedido_header = $_POST['p_header'];
     	$x_array_pedido_body = $_POST['p_body'];
 		$x_array_subtotales=$_POST['p_subtotales'];
 		
+		$idc=$x_array_pedido_header['idclie'] == '' ? ($x_idcliente == '' ? 0 : $x_idcliente) : $x_array_pedido_header['idclie'];
+		// $idc = cocinar_registro_cliente();
 		// $x_array_pedido_footer = $_POST['p_footer'];
 		// $x_array_tipo_pago = $_POST['p_tipo_pago'];
 
@@ -141,8 +144,8 @@
 			$correlativo_dia++;
 
             // guarda pedido
-            $sql="insert into pedido (idorg, idsede,fecha,hora,fecha_hora,nummesa,numpedido,correlativo_dia,referencia,total,total_r,solo_llevar,idtipo_consumo,idcategoria,reserva,idusuario,subtotales_tachados,estado)
-					values(".$_SESSION['ido'].",".$_SESSION['idsede'].",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),now(),'".$x_array_pedido_header['mesa']."','".$numpedido."','".$correlativo_dia."','".$x_array_pedido_header['referencia']."','".$importe_subtotal."','".$importe_total."',".$solo_llevar.",".$tipo_consumo.",".$x_array_pedido_header['idcategoria'].",".$x_array_pedido_header['reservar'].",".$_SESSION['idusuario'].",'". $x_array_pedido_header['subtotales_tachados'] ."',".$estado_p.")";
+            $sql="insert into pedido (idorg, idsede, idcliente, fecha,hora,fecha_hora,nummesa,numpedido,correlativo_dia,referencia,total,total_r,solo_llevar,idtipo_consumo,idcategoria,reserva,idusuario,subtotales_tachados,estado)
+					values(".$_SESSION['ido'].",".$_SESSION['idsede'].",".$idc.",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),now(),'".$x_array_pedido_header['mesa']."','".$numpedido."','".$correlativo_dia."','".$x_array_pedido_header['referencia']."','".$importe_subtotal."','".$importe_total."',".$solo_llevar.",".$tipo_consumo.",".$x_array_pedido_header['idcategoria'].",".$x_array_pedido_header['reservar'].",".$_SESSION['idusuario'].",'". $x_array_pedido_header['subtotales_tachados'] ."',".$estado_p.")";
             $id_pedido=$bd->xConsulta_UltimoId($sql);
                 
 		}else{
@@ -208,7 +211,7 @@
 		$id_pedido = $x_idpedido;
 
 		$tipo_consumo = $x_array_pedido_header['tipo_consumo'];
-		$idc=$x_array_pedido_header['idclie'] == ''? ($x_idcliente == '' ? 0: $x_idcliente) : $x_array_pedido_header['idclie'];
+		$idc=$x_array_pedido_header['idclie'] == ''? ($x_idcliente == '' ? 0 : $x_idcliente) : $x_array_pedido_header['idclie'];
 		// $tt=$x_array_pedido_header['ImporteTotal'];
 		
 
@@ -417,14 +420,15 @@
 		global $x_idpedido;
 
 		
-		$x_arr_cliente = $_POST['p_cliente'];
-		$datos_cliente = $x_arr_cliente['cliente'];
+		// $x_arr_cliente = $_POST['p_cliente'];
+		// $datos_cliente = $x_arr_cliente['cliente'];
+		$datos_cliente = $_POST['p_cliente'];
 
 		$nomclie=$datos_cliente['nombres'];
 		$idclie=$datos_cliente['idcliente'];
 		$num_doc=$datos_cliente['num_doc'];
 		$direccion=$datos_cliente['direccion'];
-		$idpedidos=$x_arr_cliente['i'];
+		// $idpedidos=$x_arr_cliente['i'] == '' ? $x_idpedido : $x_arr_cliente['i'];
 
 		if($idclie==''){
 			if($nomclie==''){//publico general
@@ -439,11 +443,18 @@
 			$bd->xConsulta_NoReturn($sql);
 		}
 
-		$sql="update pedido set idcliente=".$idclie." where idpedido in (".$idpedidos.")";
-		$bd->xConsulta_NoReturn($sql);
+		// $bd->xConsulta_NoReturn($sql);
+		// $sql="update pedido set idcliente=".$idclie." where idpedido in (".$idpedidos.")";
 		
 		$x_idcliente = $idclie;
 		$x_idpedido = $idpedidos;
+
+		echo $idclie;
+
+		// 031218 // cambio: ahora se graba primero el cliente se devuelve el idcliete, 
+
+		// $GLOBALS['x_idcliente'] = $idclie;
+		// return $x_idcliente;
 		// echo $idclie;
 	}
 

@@ -16,7 +16,7 @@
 </style>
 <script>
 var xThisCategoria;
-var xMenuCategoria=new Array();
+var xMenuCategoria=[];
 function xIniCategoria(){
 	$("#xtitulo_bar").text('');
 	//xVerificarSession();
@@ -32,20 +32,26 @@ function xLoadCategoria(){
 		xdtCat=xdtCat.datos;
 		var xCadenaCartegoria='',xidcategoria_lo;
 		
+		xMenuCategoria=[];
 		xThisCategoria.dt_cat=xdtCat;		
 		for (var i = 0; i < xdtCat.length; i++) {
-			xidcategoria_lo=xdtCat[i].idcategoria
-			xMenuCategoria={'id':xidcategoria_lo, 'des':xdtCat[i].descripcion};
-			window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));	
+			xidcategoria_lo=xdtCat[i].idcategoria			
+			// xMenuCategoria={'id':xidcategoria_lo, 'des':xdtCat[i].descripcion};
+			xMenuCategoria.push({'id':xidcategoria_lo, 'des':xdtCat[i].descripcion});
 			if(xdtCat.length===1){				
+				window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));	
 				xIrCategoria(i);
 				return;
 			}
-			xCadenaCartegoria=String(xCadenaCartegoria+'<div class="xmenu_item xPading15" data-id="'+xidcategoria_lo+'" onclick="xIrCategoria('+i+')">'+
+			xCadenaCartegoria=String(xCadenaCartegoria+'<div class="xmenu_item xPading15" data-id="'+xidcategoria_lo+'" onclick="xIrCategoria('+xidcategoria_lo+')">'+
 						'<p class="xtitulo_item">'+xdtCat[i].descripcion+'</p>'+
 						'<span class="xsub_titulo_item">...</span>'+
 					'</div>')	
 		}
+
+		
+		window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));	
+
 		$('body').addClass('loaded');	
 		$(".xMenu_body div").remove();
 		$(".xMenu_body .spinner").remove();
@@ -53,8 +59,11 @@ function xLoadCategoria(){
 	})
 }
 function xIrCategoria(i){
-	xidCategoria=xThisCategoria.dt_cat[i].idcategoria;
-	window.localStorage.setItem("::app3_sys_descat",xThisCategoria.dt_cat[i].descripcion);	
+	// xidCategoria=xThisCategoria.dt_cat[i].idcategoria;
+	// window.localStorage.setItem("::app3_sys_descat",xThisCategoria.dt_cat[i].descripcion);
+	xidCategoria=i;
+	window.localStorage.setItem("::app3_sys_descat",i);	
+	console.log(xidCategoria);
 	xOpenPageCarta(1);
 	return;
 }
