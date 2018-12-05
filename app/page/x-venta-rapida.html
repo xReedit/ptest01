@@ -688,7 +688,6 @@ async function xGuardarPedidoVR(responde){
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados = '';
 
-
 	xGeneralValidarRegalasCarta(xArrayPedidoObj,true);
 	if(xArmarSubtotalesArray()==0){return}
 

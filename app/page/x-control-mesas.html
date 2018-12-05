@@ -273,6 +273,7 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 <script  type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
 <script  type="text/javascript" src="../view/manager_storage.js"></script>
+<script  type="text/javascript" src="../view/cliente.service.js"></script>
 <script  type="text/javascript" src="../view/deNumALetras.js"></script>
 <script>
 // import { xCargarDatosAEstructuraImpresion } from '../view/item_pedido_estructura.js';
@@ -1252,7 +1253,8 @@ async function xRegistrarClientePagoCP(){
 
 	var DatosCliente = xRpt_pago[0].cliente;
 	var ComprobanteSeleccionado = xRpt_pago[0].comprobante;
-	var xid_cliente_pago=DatosCliente.idcliente;
+	// var xid_cliente_pago=DatosCliente.idcliente;
+	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados='';
 
 	//si todos los pedidos estan seleccionados
@@ -1277,6 +1279,8 @@ async function xRegistrarClientePagoCP(){
 		//registrar pago - ok
 		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'dc', p_items_seleccionados:xarr_items_seleccionados, p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
 		.done( function (xrpt_correlativo) {
+			const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
+			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xLoadDetallesPedido(xObj_miPedido);
 			xMandarCocinarImpresionComprobante(xrpt_correlativo);			

@@ -30,6 +30,7 @@
 
 	if ( strrpos($x_from, "z") !== false ) { $x_from = str_replace('z','',$x_from); getFechaServer(); }
 	if ( strrpos($x_from, "y") !== false ) { $x_from = str_replace('y','',$x_from); setidExternalComprobanteElectronico(); }
+	if ( strrpos($x_from, "x") !== false ) { $x_from = str_replace('x','',$x_from); saveComprobanteElectronicoError(); }
 
 	
 	
@@ -514,13 +515,24 @@
 	// grabar id_external_comprobante electronico
 	function setidExternalComprobanteElectronico() {
 		global $bd;	
-
 		$idregistro_pago = $_POST['idregistro_pago'];
 		$idexternal = $_POST['idexternal'];
 		$sql= "update registro_pago set external_id_comprobante = '".$idexternal."' where idregistro_pago=".$idregistro_pago;		
 		$bd->xConsulta_NoReturn($sql);
 
-		echo $sql;
+		// echo $sql;
+	}
+
+	// guarda los comprobantes electronicos que por algun error no fueron enviados al servicio
+	// puede que la conexion con el servicio fallo o no tiene internet
+	function saveComprobanteElectronicoError() {
+		global $bd;	
+		$idregistro_pago = $_POST['idregistro_pago'];
+		$jsonxml = $_POST['jsonxml'];
+
+		$sql="insert into registro_pago_cpe_error (idregistro_pago, jsonxml) values (".$idregistro_pago.", ".$jsonxml.")";
+		$bd->xConsulta_NoReturn($sql);
+		// echo $sql;
 	}
 
 

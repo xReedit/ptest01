@@ -348,7 +348,7 @@ function xGuardarCambios(){
 				var xCant=$(item).find("#td_cant").text();
 				xIdItemCarList='';
 
-				xIdItemCarList=xIdOrg+xIdSede+xidItem;
+				xIdItemCarList=xidCartaRow+xIdOrg+xIdSede+xidItem;
 				if(xidItem==undefined || xidItem==''){xidItem='';xIdItemCarList=''}
 
 				xArraySeccionItem[index][indexI]={'idcarta': xidCartaRow, 'id_item':xidItem,'id_seccion':xidSeccion,'id_carta_lista':xIdItemCarList,'des_item':xDes, 'precio_item':xprecio,'det_item':xdet,'img_item':ximg, 'cant_item': xCant, 'cant_preparado_item':xCant,'sec_orden':xsec_orden}
@@ -645,8 +645,8 @@ function xLoadListadoCartaActual(){
 			xCadenaNoRow='';
 			for (var i = 0; i < xdtCAct.length; i++) {
 				if(xidSeccionArray!=xdtCAct[i].idseccion){continue;}
-				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
-				'<td data-id="'+xidSeccionArray+'" id="td_des"><span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+
+				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-t="carta_lista" data-idborrar="'+ xdtCAct[i].idcarta_lista +'" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
+				'<td data-id="'+xidSeccionArray+'" id="td_des"><span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xBorrarSeccion(this);"></span>'+
 				'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
 				'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
 				xdtCAct[i].des_item+'</td>'+
@@ -772,11 +772,17 @@ function xCargarEnImputSeccion(){
 }
 function xxxBorrarItemLocal(obj){
 	var xObj=$(obj).parent().parent();
-	var xtb=xObj.parents('table');
+	var xtb=xObj.parents('table');	
 	xObj.fadeTo(550, 0, function () {$(this).remove(); xSumarTotal(xtb);});
 }
 function xBorrarSeccion(obj){
-	$(obj).parent().remove();
+	const xRowObj=obj.parentNode.parentNode;	
+	const xTableRow=$(xRowObj).attr('data-t');
+	const xIdROw=$(xRowObj).attr('data-idborrar');
+
+	xBorrarRegistroFisico(xTableRow,xIdROw);
+
+	$(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
 	$("#Lista_Carta").trigger('create');
 }
 function xItemQuitarFoto(){

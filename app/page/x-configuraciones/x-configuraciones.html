@@ -287,12 +287,13 @@
 							<br>
 							
 							<h4>IMPUESTOS</h4>
-							<p>Ingrese el porcentaje del I.G.V. en numeros, si esta exonerado coloque cero (0). </p>
+							<p>Ingrese el porcentaje del I.G.V. en numeros, si esta exonerado solo quite el check de activo; dejando especificado el porcentaje del impuesto (se utilizara para calcular otras operaciones). </p>
 							<div class="xLinea2"></div><br>
 							<br>
 							<form method="post" id="formProcentaje">								
 								<table id="tb_porcentaje" class="xtable1" width="38%">	
 									<thead>
+										<th>Activo</th>
 										<th>Impuesto</th>
 										<th align="center">Porcentaje</th>
 									</thead>		
@@ -516,6 +517,7 @@
 							<br>
 
 						</form>
+						<br><br>
 					</div>
 
 					<!-- EMISION DE COMPROBANTES -->
@@ -548,6 +550,25 @@
 								<input type="text" id="idtipo_comprobante" name="idtipo_comprobante">									
 							</div>
 						</form>
+
+						<br><br>
+						<h3>Comprobante Electronico.</h3>
+						<p>Para activar la emisión de comprobantes electrónicos necesita un token único y una llave digital que son proporcionados por el equipo de soporte tecnico.</p>
+						<div class="xLinea2"></div><br>
+						<br>
+
+						<table id="tb_comprobante_electronico" class="xtable1">
+							<thead>
+								<th>Sede</th>
+								<th>Token</th>
+								<th>Activo</th>
+							</thead>
+							<tbody>
+
+							</tbody>								
+						</table>
+						
+						<br><br><br>
 
 
 
@@ -628,6 +649,31 @@ function xIniConf(){
 		e.stopImmediatePropagation()
 		return false;
 	})
+
+	$(document).on('click','.check_porcentaje_impuesto',function(e){
+		var xId=$(this).parents('tr').attr('data-id');
+		var xcheck_val=0;
+		if(this.checked==false){xcheck_val=1;}
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=106', data:{id:xId,t:'conf_print_detalle',c:xcheck_val, campo: 'activo'}})
+
+		event.stopPropagation();
+		e.stopPropagation();
+		e.stopImmediatePropagation()
+		return false;
+	})
+
+	$(document).on('click','.check_cpe',function(e){
+		var xId=$(this).parents('tr').attr('data-id');
+		const  xcheck_val= this.checked ? 1 : 0;
+		
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=106', data:{id:xId,t:'sede',c:xcheck_val, campo: 'facturacion_e_activo'}})
+
+		event.stopPropagation();
+		e.stopPropagation();
+		e.stopImmediatePropagation()
+		return false;
+	})
+
 
 	$("#tab_cnf").on('iron-select',function(){
 		switch(xThisConfig.selected_conf){
@@ -1140,8 +1186,9 @@ function xLoadPorcentaje(){
 		xdtPor=xdtPor.datos;
 
 		for (var i = 0; i < xdtPor.length; i++) {
+			const checkActivo = parseInt(xdtPor[i].activo) === 0 ? 'checked' : '';
 			if ( parseInt(xdtPor[i].es_impuesto) === 1 ) {
-				xCadenaPor = String(xCadenaPor+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td style="width: 25%;"><span onclick="xModRowImpuesto(this);">'+xdtPor[i].porcentaje+'</span></td></tr>');
+				xCadenaPor = String(xCadenaPor+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td><paper-checkbox class="check_porcentaje_impuesto" '+ checkActivo +'></paper-checkbox></td><td>'+xdtPor[i].descripcion+'</td><td style="width: 25%;"><span onclick="xModRowImpuesto(this);">'+xdtPor[i].porcentaje+'</span></td></tr>');
 			} else {
 				xCadenaPorNoFacturable = String(xCadenaPorNoFacturable+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td>'+xdtPor[i].porcentaje+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
 			}			

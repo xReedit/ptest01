@@ -414,9 +414,12 @@ function xMandarCocinarImpresionComprobante() {
 	// se envia f = genera el correlativo, e= registra el comprobante en registrodepago
 	//idregistro_pago se envia para update registro
 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'fe', p_comprobante: arr_comprobante, idregistro_pago: xidregistro_pago_sel}})
-	.done( function (xrpt_correlativo) {		
-		arr_comprobante.correlativo = xCeroIzqNumComprobante(xrpt_correlativo);
+	.done( function (xrpt_correlativo) {
+		const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
+		arr_comprobante.correlativo = xCeroIzqNumComprobante(_arrRpt.correlativo_comprobante);
 		xCocinarImprimirComprobante(arrayItems, arrSumSubtTotales, arr_comprobante, arr_cliente,-2);
+		
+		// arr_comprobante.correlativo = xCeroIzqNumComprobante(xrpt_correlativo);
 		
 		// para modificar el estado del boton
 		xThisHistVenta.xYaTieneComprobante = true;

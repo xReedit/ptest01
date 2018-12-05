@@ -31,7 +31,8 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 
 	const hash = await xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente, idregistro_pago);
 	console.log(hash);
-	return true; // temporal probamos facturacion electronica
+	xArrayEncabezado[0].hash = hash;
+	// return true; // temporal probamos facturacion electronica
 	//
 	
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){
@@ -46,6 +47,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,xArrayComprobante,xArrayCliente,callback){
 	xPopupLoad.titulo="Imprimiendo...";	
 
+	const _arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal)); 
 	$.ajax({type: 'POST', url: '../../print/print5.php', 
 			data:{
 				Array_enca:xArrayEncabezado, 

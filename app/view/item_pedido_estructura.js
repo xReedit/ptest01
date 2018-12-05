@@ -93,3 +93,14 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
     console.log('group: ',group);
     return group;
 }
+
+function xEstructuraItemsAgruparPrintJsonComprobante(_SubItems) {
+    return this.groupBy(_SubItems,'seccion');
+}
+
+var groupBy = function(xs, key) {
+	return xs.reduce(function(rv, x) {
+	  (rv[x[key]] = rv[x[key]] || []).push(x);
+	  return rv;
+	}, {});
+  };

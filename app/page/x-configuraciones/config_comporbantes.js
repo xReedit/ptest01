@@ -58,7 +58,35 @@ function config_comprobante_getall() {
 
 
     this.config_valoresInicialesComponente();
+    this.config_comprobante_load_sede_cpe();
     
+}
+
+function config_comprobante_load_sede_cpe() { // load sedes comprobante electronico
+    var _arrSedes = xm_log_get('datos_org_all_sede'); // todas las sedes
+    var cadena_tr = '';
+    _arrSedes.map(x => {
+        checkActivo = x.facturacion_e_activo === "0" ? '' : 'checked';
+        cadena_tr += '<tr class="row" data-t="sede" data-id="'+x.idsede+'">'+
+        '<td>'+x.nombre+'</td>'+
+        '<td data-campo="authorization_api_comprobante"><input type="password" class="xMiInput" onblur="config_comprobante_update_token(this)" value="'+ x.authorization_api_comprobante +'"></td>'+
+        '<td><paper-checkbox class="check_cpe" '+ checkActivo +'></paper-checkbox></td>'+
+        '</tr>' 
+    });
+
+    $("#tb_comprobante_electronico tbody").append(cadena_tr).trigger('create');
+}
+
+function config_comprobante_update_token(obj){
+    // guarda el token del servicio y asi activar facturacion electronica
+    var xvalObj=$(obj).val(),
+        xid_row=$(obj).parents('.row').attr('data-id'),
+        xcampo_row=$(obj).parent().attr('data-campo');
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2108',data:{campo:xcampo_row,valor:xvalObj,id:xid_row}})
+	.done( function (dtPrint) {
+		if(dtPrint.indexOf('Error')!=-1){alert(dtPrint)}
+	})
 }
 
 function _getSede($event) {

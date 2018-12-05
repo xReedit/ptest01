@@ -8,11 +8,12 @@
 
 async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago) {
     var hash = '';
-    const isFacturacionElectronica = true; // si se emiten comprobantes electronicos    
+    var _arrSedes = xm_log_get('datos_org_sede'); // todas las sedes
+    const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
 
     if ( !isFacturacionElectronica ) {
         return hash;   
-    }    
+    }
 
     // evalua si I.G.V es = 0 esta exonerado
     var procentajeIGV = 0;
@@ -239,7 +240,7 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
     return xListItemsRpt;
 }
 
-function xSendApiSunat(json_xml, idregistro_pago) {
+function xSendApiSunat(json_xml, idregistro_pago, guardarError=true) {
     const _url = URL_COMPROBANTE+'/documents';
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = xm_log_get('datos_org_sede')[0].authorization_api_comprobante;
@@ -255,8 +256,8 @@ function xSendApiSunat(json_xml, idregistro_pago) {
         async: false,
         success: function (data) {            
             console.log('succes: ', data);
-            rpt = data;
-            // guardar external_id;
+            rpt = data.data.hash;
+            // guardar external_id en registro pago;
             $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'y', idregistro_pago: idregistro_pago, idexternal: data.data.external_id}})
             .done( function (res) {
                 console.log(res);
@@ -264,10 +265,23 @@ function xSendApiSunat(json_xml, idregistro_pago) {
 
         },
         error: function(err) {
-            rpt = err;
-            // return err;
+            //
+            rpt = 'www.papaya.com.pe'; 
+            if (guardarError) {
+                xSendApiSunatError(json_xml, idregistro_pago);
+            }
+            // guardar en facturas no enviadas o con errores
+
         }
     })
     return rpt;
+}
+
+function xSendApiSunatError(json_xml, idregistro_pago) {
+    json_xml = JSON.stringify(json_xml);
+    $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'x', idregistro_pago: idregistro_pago, jsonxml: json_xml}})
+    .done( function (res) {
+        // console.log(res);
+    });
 }
 

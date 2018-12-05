@@ -40,6 +40,10 @@
 			$sql="update ".$_POST['t']." set estado=".$_POST['c']." where id".$_POST['t']."=".$_POST['id'];
 			$bd->xConsulta($sql);
 			break;
+		case 106://borrado logico en check
+			$sql="update ".$_POST['t']." set ".$_POST['campo']."=".$_POST['c']." where id".$_POST['t']."=".$_POST['id'];
+			$bd->xConsulta($sql);
+			break;
 		//case 104://devuelve el ultimo idgenerado
 		//	$bd->xConsulta_UltimoId($_POST['sql']);
 		//	break;
@@ -447,10 +451,11 @@
 						}
 
 						$id_carta_lista=$item['id_carta_lista'];
-						if($id_carta_lista==""){$id_carta_lista=$_SESSION['ido'].$_SESSION['idsede'].$id_item;}
+						// if($id_carta_lista==""){$id_carta_lista=$_SESSION['ido'].$_SESSION['idsede'].$id_item;}
+						if($id_carta_lista==""){$id_carta_lista=$id_carta.$_SESSION['ido'].$_SESSION['idsede'].$id_item;}
 
 						$sql_carta_lista=$sql_carta_lista."('".$id_carta_lista."',".$id_carta.",".$id_seccion.",".$id_item.",'".$item['precio_item']."','".$item['cant_item']."','".$item['cant_item']."',".$item['sec_orden']."),";
-
+						
 						// idea para no eliminar - pero y si item se elimina?
 						// if ($item['idcarta'] === "undefined") {
 						// } else { // modifica
@@ -463,13 +468,26 @@
 			$sql_carta_lista = substr($sql_carta_lista, 0, -1);
 
 			//$sql_carta_lista="delete from carta_lista where idcarta=".$id_carta."; insert into carta_lista (idcarta_lista,idcarta,idseccion,iditem,precio,cantidad,cant_preparado,sec_orden) values ".$sql_carta_lista.";";
-			$sql_carta_lista="delete from carta_lista where idcarta=".$id_carta."; insert into carta_lista (idcarta_lista,idcarta,idseccion,iditem,precio,cantidad,cant_preparado,sec_orden) values ".$sql_carta_lista.";";
+			$sql_carta_lista_insert_update = "insert into carta_lista (idcarta_lista,idcarta,idseccion,iditem,precio,cantidad,cant_preparado,sec_orden) values ".$sql_carta_lista." ON DUPLICATE KEY UPDATE 
+												idcarta_lista=values(idcarta_lista),
+												idcarta=values(idcarta),
+												idseccion=values(idseccion),
+												iditem=values(iditem),
+												precio=values(precio),
+												cantidad=values(cantidad),
+												cant_preparado=values(cant_preparado),
+												sec_orden=values(sec_orden)";
 
-			$sql_ejecuta=$sql_update_carta.$sql_carta_lista;
+			// $sql_carta_lista="delete from carta_lista where idcarta=".$id_carta."; insert into carta_lista (idcarta_lista,idcarta,idseccion,iditem,precio,cantidad,cant_preparado,sec_orden) values ".$sql_carta_lista.";";
+
+			// $sql_ejecuta=$sql_update_carta.$sql_carta_lista;
+			$sql_ejecuta=$sql_update_carta.$sql_carta_lista_insert_update;
+
 			// $sql_ejecuta=$sql_carta_historial.$sql_carta_lista_anterior.$sql_carta_lista;
 			//echo $sql_ejecuta;
 
 			$bd->xMultiConsultaNoReturn($sql_ejecuta);
+			// echo $sql_carta_lista_insert_update;
 			echo $id_carta;
 			break;
 		//MI PEDIDO APP ANFITRION CLIENTE
@@ -1637,7 +1655,7 @@
 			break;
 		case 603://Load tipo comprobante		
 			// $sql="SELECT * FROM tipo_comprobante where estado=0";
-			$sql = "SELECT tps.idtipo_comprobante_serie, tps.idtipo_comprobante, tp.descripcion, tp.codsunat, tps.serie, tp.requiere_cliente FROM tipo_comprobante_serie tps 
+			$sql = "SELECT tps.idtipo_comprobante_serie, tps.idtipo_comprobante, tp.descripcion, tp.codsunat, tps.serie, tp.requiere_cliente, tp.inicial FROM tipo_comprobante_serie tps 
 				inner join tipo_comprobante as tp using(idtipo_comprobante) 
 				WHERE (tps.idorg=".$_SESSION['ido']." and tps.idsede=".$_SESSION['idsede'].") and tps.estado = 0";
 			$bd->xConsulta($sql);
@@ -2596,6 +2614,10 @@
 		case 2107: // guarda porcentaje del impues
 			$sql="update conf_print_detalle set porcentaje='".$_POST['valor']."' where idconf_print_detalle=".$_POST['id'];
 			$bd->xConsulta($sql);
+			break;
+		case 2108:
+			$sql="update sede set ".$_POST['campo']."='".$_POST['valor']."' where idsede=".$_POST['id'];
+			$bd->xConsulta($sql);
 			break;		
 		case 2200: //recuperar stock pedidos borrados	
 			$sql = "
@@ -2651,7 +2673,8 @@ function encode_dataUS(){
 		'sede'=> [					
 					'otros_datos'=>xDtUS(308),
 					'generales'=> xDtUS(307),
-					'datos_org_sede'=> xDtUS(3012) // datos org y sede // facturacion
+					'datos_org_sede'=> xDtUS(3012), // datos org y sede // facturacion
+					'datos_org_all_sede'=> xDtUS(3013) // datos org y sede // facturacion
 				]];  /*,
 		,
 	];/*
@@ -2733,7 +2756,10 @@ function xDtUS($op_us){
 			";
 			break;
 		case 3012: // load datos del org sede 
-			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante from org as s inner JOIN sede as se on s.idorg = se.idorg where se.idorg = ".$_SESSION['ido']." and se.idsede = ".$_SESSION['idsede'];
+			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.facturacion_e_activo from org as s inner JOIN sede as se on s.idorg = se.idorg where se.idorg = ".$_SESSION['ido']." and se.idsede = ".$_SESSION['idsede'];
+			break;
+		case 3013: // load datos del org sede 
+			$sql_us = "SELECT * from sede where idorg = ".$_SESSION['ido']." and estado=0";
 			break;
 	}
 	$rows = [];

@@ -403,7 +403,12 @@ function xLoadTipoComprobante(){
 		var xcadena_new_row_comprobante = '';
 		xSel_tp_comprobante=[];
 		for (var i = 0; i < dtTpCom.length; i++) {
-			xcadena_new_row_comprobante=xcadena_new_row_comprobante+'<option data-requiere-cliente='+ dtTpCom[i].requiere_cliente +' data-idtipo-comprobante='+ dtTpCom[i].idtipo_comprobante +' data-codigo-sunat='+ dtTpCom[i].codsunat +' data-serie='+ dtTpCom[i].serie +' value='+  dtTpCom[i].idtipo_comprobante_serie +'>'+ dtTpCom[i].descripcion +'</option>';
+			xcadena_new_row_comprobante=xcadena_new_row_comprobante+'<option data-requiere-cliente='+ dtTpCom[i].requiere_cliente +
+			' data-idtipo-comprobante='+ dtTpCom[i].idtipo_comprobante +
+			' data-codigo-sunat='+ dtTpCom[i].codsunat +
+			' data-serie='+ dtTpCom[i].serie +
+			' data-inicial='+ dtTpCom[i].inicial +
+			' value='+  dtTpCom[i].idtipo_comprobante_serie +'>'+ dtTpCom[i].descripcion +'</option>';
 		};
 		xelement_select_tp_doc.find('option').remove();
 		// $("#tb_tp .row").remove();
@@ -427,17 +432,19 @@ function xLoadTipoComprobante(){
 // emitir tipocomprobante
 function xSelectedTpComprobante(valor) {
 	// var idTipoComprobante = parseInt(valor);	
-	valor = $("#xsel_tp_doc option:selected").val();
-	var descripcion = $("#xsel_tp_doc option:selected").text();
-	var codsunat = $("#xsel_tp_doc option:selected").attr('data-codigo-sunat');
-	var serie = $("#xsel_tp_doc option:selected").attr('data-serie');
-	var idtipo_comprobante = $("#xsel_tp_doc option:selected").attr('data-idtipo-comprobante');
-	var option_requiere_cliente = parseInt($("#xsel_tp_doc option:selected").attr('data-requiere-cliente'));
+	const obj_option_select = $("#xsel_tp_doc option:selected");
+	valor = $(obj_option_select).val();
+	var descripcion = $(obj_option_select).text();
+	var codsunat = $(obj_option_select).attr('data-codigo-sunat');
+	var inicial = $(obj_option_select).attr('data-inicial');
+	var serie = $(obj_option_select).attr('data-serie');
+	var idtipo_comprobante = $(obj_option_select).attr('data-idtipo-comprobante');
+	var option_requiere_cliente = parseInt($(obj_option_select).attr('data-requiere-cliente'));
 	xThisPago.ComprobanteRequiereCliente = option_requiere_cliente === 0 ? false : true; //requiere ingresar cliente
 
-	console.log(xThisPago.ComprobanteRequiereCliente);
+	// console.log(xThisPago.ComprobanteRequiereCliente);
 	
-	xThisPago.tipoComprovanteSelecionado = {'idtipo_comprobante_serie': valor, 'idtipo_comprobante': idtipo_comprobante, 'codsunat': codsunat, 'serie': serie, 'descripcion': descripcion};	
+	xThisPago.tipoComprovanteSelecionado = {'idtipo_comprobante_serie': valor, 'idtipo_comprobante': idtipo_comprobante, 'codsunat': codsunat, 'serie': serie, 'descripcion': descripcion, 'inicial': inicial};	
 
 	if ( tipoComprovanteSelecionado.idtipo_comprobante === 0 ) {
 		$("#container-cliente").addClass('xInvisible');

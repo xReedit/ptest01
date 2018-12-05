@@ -727,7 +727,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 //mi pedido // solo secciones
 function xGeneralSeccionMiPedido(xidCategoria, x_rpt){
 	const ultima_categoria_cargada = localStorage.getItem('::app3_sys_last_cat_load');
-	if (ultima_categoria_cargada === xidCategoria) {return; } //1118 //si ya esta cargado, pasa, tiene que actualizar manual // remplaza al de abajo
+	if (ultima_categoria_cargada === xidCategoria && xGeneralDataSeccion !== undefined ) {return x_rpt(false); } //1118 //si ya esta cargado, pasa, tiene que actualizar manual // remplaza al de abajo
 	// if(xGeneralDataSeccion!=undefined){if(x_rpt){return x_rpt(false);}else{return;}}//si ya esta cargado, pasa, tiene que actualizar manual
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2041', data:{'idcategoria': xidCategoria}})
 	.done( function (dtSecciones_mp) {

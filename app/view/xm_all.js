@@ -157,6 +157,9 @@ function xvalidateObjFormInput(obj,responde) {
 }
 
 
+function xBorrarRegistroFisico(tabla,i){
+	$.post('../../bdphp/log.php?op=101', {t:tabla, id:i});
+}
 function xBorrarRegistro(tabla,i){
 	$.post('../../bdphp/log.php?op=103', {t:tabla, id:i});
 }
@@ -482,6 +485,9 @@ function xm_log_get(seccion){
 	  break;
 	case 'datos_org_sede':// datos org y sede para facturacion
       xdt_rpt=xdt_log.sede.datos_org_sede;
+	  break;
+	case 'datos_org_all_sede':// * sedes
+      xdt_rpt=xdt_log.sede.datos_org_all_sede;
 	  break;
 	
 		// xDtUS(3)

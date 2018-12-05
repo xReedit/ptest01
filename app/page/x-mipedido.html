@@ -349,9 +349,14 @@ function xGuardarPedido(){
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=30401', data:{arr:xArrayGuardarPedido}})
 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'a', p_header:xarr_header, p_body: xarr_body, p_subtotales: xarr_subtotales}})
 	.done( function (idP) {
-		xIdPedido=idP.split('|');
-		xNumPedido=xCeroIzq(xIdPedido[1],5);
-		var xCorrelativo_dia=xCeroIzq(xIdPedido[2],5);
+		const _arrRpt = xm_all_SetResponseLog_001(idP);
+		xIdPedido = _arrRpt.idpedido;
+		xNumPedido=xCeroIzq(_arrRpt.numpedido,5);
+		const xCorrelativo_dia=xCeroIzq(_arrRpt.correlativo_dia,5);
+
+		// xIdPedido=idP.split('|');
+		// xNumPedido=xCeroIzq(xIdPedido[1],5);
+		// var xCorrelativo_dia=xCeroIzq(xIdPedido[2],5);
 
 		xArrayEnca={'m':xCeroIzq(xmesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xref)), 'num_pedido':xNumPedido,'reservar':0, 'solo_llevar':0,'correlativo_dia':xCorrelativo_dia};
 

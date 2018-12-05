@@ -49,6 +49,7 @@ $logo_post="./logo/".$xArray_print[0]['logo'];
 // encabezado
 $nom_empresa = $ArrayEnca[0]['nombre'];
 $ruc_empresa = $ArrayEnca[0]['ruc']; 
+$hash = $ArrayEnca[0]['hash'];
 $direccion_empresa = $ArrayEnca[0]['sededireccion'];
 $ciudad_empresa = $ArrayEnca[0]['sedeciudad'];
 $telefono_empresa = $ArrayEnca[0]['sedetelefono'];
@@ -71,6 +72,14 @@ $local = (int)$xArray_print[0]['local'] || 0;
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
 $printer -> setFont($var_size_font);
 //---------------////////////////
+
+// el hash define si es CPE
+$denominacion_comprobante = "COMPROBANTE";
+$incial_comprobante = "";
+if ($hash) {
+	$denominacion_comprobante = "COMPROBANTE ELECTRONICO";
+	$incial_comprobante = $xArrayComprobante['inicial'];
+}
 
 // if($num_mesa=='' || $num_mesa=='00'){$num_mesa='Pedido: '.$correlativo_dia;}else{$num_mesa='MESA: '.$num_mesa;}
 
@@ -112,8 +121,8 @@ while($num_copias>=0){
 	$printer -> selectPrintMode();
 	$printer -> text("------------------------------------------------\n");
     $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-	$printer -> text("COMPROBANTE ELECTRONICO\n");
-	$printer -> text($xArrayComprobante['descripcion']." ".$xArrayComprobante['serie']."-".$xArrayComprobante['correlativo']."\n");
+	$printer -> text($denominacion_comprobante."\n");
+	$printer -> text($xArrayComprobante['descripcion']." ".$incial_comprobante.$xArrayComprobante['serie']."-".$xArrayComprobante['correlativo']."\n");
 	$printer -> selectPrintMode();
     $printer -> text("------------------------------------------------\n");
 	$printer -> feed();
@@ -149,7 +158,7 @@ while($num_copias>=0){
 	foreach ($ArrayItem as $item) {
 		if($item==null){continue;}
 
-		$tipo_consumo=$item["des"];
+		$tipo_consumo=$item["seccion"];
 		/*$printer -> setEmphasis(true);
 		$printer -> text($item["des"]."\n");
 		$printer -> text("------------------------------------------------\n");
@@ -267,15 +276,22 @@ while($num_copias>=0){
 
 	/* CODIGO QR */	
 	$printer -> feed();
-	$testStr = "www.papaya.com.pe/comprobante/0001254551";
-	$printer -> setJustification(Printer::JUSTIFY_CENTER);
-	$printer -> qrCode($testStr, Printer::QR_ECLEVEL_L, 5);	
-	$printer -> feed();
+	if ( $hash !== "" ) { // si hay hash significa que no es factura electronica
+		$testStr = $hash;
+		$printer -> setJustification(Printer::JUSTIFY_CENTER);
+		$printer -> qrCode($testStr, Printer::QR_ECLEVEL_L, 5);	
+		$printer -> feed();
+	
+		/* PIE DE PAGINA */	
+		$printer -> setJustification(Printer::JUSTIFY_LEFT);
+		$printer -> text($xArray_print[0]['pie_pagina_comprobante']."\n");
+		$printer -> feed();
+	}
 
 	/* PIE DE PAGINA */	
-	$printer -> setJustification(Printer::JUSTIFY_LEFT);
-	$printer -> text($xArray_print[0]['pie_pagina_comprobante']."\n");
-	$printer -> feed();
+	// $printer -> setJustification(Printer::JUSTIFY_LEFT);
+	// $printer -> text($xArray_print[0]['pie_pagina_comprobante']."\n");
+	// $printer -> feed();
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
 	$printer -> text($xArray_print[0]['pie_pagina']."\n");
 	$printer -> feed(2);

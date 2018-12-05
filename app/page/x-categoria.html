@@ -40,7 +40,7 @@ function xLoadCategoria(){
 			xMenuCategoria.push({'id':xidcategoria_lo, 'des':xdtCat[i].descripcion});
 			if(xdtCat.length===1){				
 				window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));	
-				xIrCategoria(i);
+				xIrCategoria(xidcategoria_lo);
 				return;
 			}
 			xCadenaCartegoria=String(xCadenaCartegoria+'<div class="xmenu_item xPading15" data-id="'+xidcategoria_lo+'" onclick="xIrCategoria('+xidcategoria_lo+')">'+
