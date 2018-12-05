@@ -345,11 +345,16 @@ function xGuardarCambios(){
 				var xprecio=$(item).find("#td_precio").text();
 				var xdet=$(item).find("#td_detalle").text();
 				var ximg=$(item).find("#td_img").text();
-				var xCant=$(item).find("#td_cant").text();
-				xIdItemCarList='';
+				var xCant=$(item).find("#td_cant").text().toLocaleUpperCase();
+				var _idcarta_lista=$(item).find("#td_idcarta_lista").text();				
+								
+				xIdItemCarList = _idcarta_lista;
+				// xIdItemCarList=_idcarta_lista === '' ? xidCartaRow+xIdOrg+xIdSede+xidItem : _idcarta_lista;
 
-				xIdItemCarList=xidCartaRow+xIdOrg+xIdSede+xidItem;
-				if(xidItem==undefined || xidItem==''){xidItem='';xIdItemCarList=''}
+				// xIdItemCarList=xidCartaRow+xIdOrg+xIdSede+xidItem;
+				if(xidItem==undefined || xidItem==''){
+					xidItem='';
+				}
 
 				xArraySeccionItem[index][indexI]={'idcarta': xidCartaRow, 'id_item':xidItem,'id_seccion':xidSeccion,'id_carta_lista':xIdItemCarList,'des_item':xDes, 'precio_item':xprecio,'det_item':xdet,'img_item':ximg, 'cant_item': xCant, 'cant_preparado_item':xCant,'sec_orden':xsec_orden}
 			})

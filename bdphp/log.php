@@ -451,8 +451,8 @@
 						}
 
 						$id_carta_lista=$item['id_carta_lista'];
-						// if($id_carta_lista==""){$id_carta_lista=$_SESSION['ido'].$_SESSION['idsede'].$id_item;}
-						if($id_carta_lista==""){$id_carta_lista=$id_carta.$_SESSION['ido'].$_SESSION['idsede'].$id_item;}
+						// if($id_carta_lista==""){$id_carta_lista=$_SESSION['ido'].$_SESSION['idsede'].$id_item;}						
+						if($id_carta_lista==""){$id_carta_lista=$_SESSION['ido'].$_SESSION['idsede'].$id_carta.$id_seccion.$id_item;}
 
 						$sql_carta_lista=$sql_carta_lista."('".$id_carta_lista."',".$id_carta.",".$id_seccion.",".$id_item.",'".$item['precio_item']."','".$item['cant_item']."','".$item['cant_item']."',".$item['sec_orden']."),";
 						
