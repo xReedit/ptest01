@@ -124,9 +124,14 @@ function xArmarMenuLateral(op){
 	for (var i = 0; i < xMenuArray.length; i++) {
 		xCadenaMenuL=String(xCadenaMenuL+'<li data-id="'+xMenuArray[i].id+'" onClick="xVerDetalleMenu('+i+','+op+')"><p>'+xMenuArray[i].des+'</p></li>')
 	}
-	xCadenaMenuL='<ul class="noselect xCursor"><li onClick="xOpenPageCarta(1);"><p>INICIO</p></li>'+xCadenaMenuL+'<li onClick="xOpenPageCarta(3);"><p>VER MI PEDIDO</p></li>'+xOpSalirPanel+xCadenadaCerrarSession+'</ul>';
+	xCadenaMenuL='<ul class="noselect xCursor"><li onClick="btn_lateral_inicio();"><p>INICIO</p></li>'+xCadenaMenuL+'<li onClick="xOpenPageCarta(3);"><p>VER MI PEDIDO</p></li>'+xOpSalirPanel+xCadenadaCerrarSession+'</ul>';
 	$(".xBtnPanel ul").remove();
 	$(".xBtnPanel").append(xCadenaMenuL).trigger('create');
+}
+
+function btn_lateral_inicio() {
+	localStorage.removeItem('::app3_sys_descat');
+	xOpenPageCarta(0);
 }
 
 function xVerDetalleMenu(i,op){

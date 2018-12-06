@@ -1,3 +1,5 @@
+<link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+
 <dom-module id="x-monitor-pedidos">
 	<script src="../../js/isotope.pkgd.min.js"></script>
 	<script type="text/javascript" src="../../js/raphael.2.1.0.min.js"></script>
@@ -25,6 +27,9 @@
 			</div>
 			<div class="xAlinearce" style="width:100%;">
 				<div class="xm_at_cont xAlinearce xBordeDe">
+					<h3>Carta: 
+					<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria></h3>
+					<br>
 					<div id="bodyLi" width="400px"></div>
 				</div>
 				<div class="xm_at_cont xAlinearce">
@@ -63,7 +68,8 @@ var xThisMonPe,
 	xdtPxH,
 	xDt_sede_other,
 	source,
-	xValCountPedidos=0;
+	xValCountPedidos=0,
+	idCategoriaSel, cnf_CategoriaSel;
 
 function xIniMonPe(){
 	xPopupLoad=document.getElementById('xLoad');
@@ -76,12 +82,25 @@ function xIniMonPe(){
 		xThisMonPe.xval_pedidos_x_hora=xDt_sede_other[0].maximo_pedidos_x_hora;
 
 		$("#Titulo_page").text("Monitoreo del stock");
-
-		xLoadAllItem();
+		
 		graf_ped_x_hora=null;
 		xRefrecarGrafico(0);
+		config_valoresInicialesComponenteCategoria();
 	})
 }
+function _getCategoria($event) {
+	this.cnf_CategoriaSel = $event;
+	this.idCategoriaSel = $event.idcategoria;
+	xLoadAllItem();
+}
+
+function config_valoresInicialesComponenteCategoria() {
+	this.cnf_CategoriaSel = $("#compFindCategoria")[0].__data__.categorias; // valores iniciales
+	this.idCategoriaSel = cnf_CategoriaSel.idcategoria;
+
+	xLoadAllItem();
+}
+
 function xLogRun_CoutPedido(){
 	if(typeof(EventSource) !== "undefined") {
 	    source = new EventSource("../../bdphp/log_run.php?op=1");
@@ -136,7 +155,7 @@ function xRefrecarGrafico(xval){
 function xLoadAllItem(){
 	xPopupLoad.titulo='Cargando...';
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=19'})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=19', data: {'idcategoria': this.idCategoriaSel}})
 	.done( function (DtItemP) {
 		var xDtItemP=$.parseJSON(DtItemP),
 				xcandena_a='',

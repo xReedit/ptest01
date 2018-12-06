@@ -209,7 +209,7 @@
 		$x_array_subtotales=$_POST['p_subtotales'];
 		$x_array_comprobante=$_POST['p_comprobante'];
 		
-		$id_pedido = $x_idpedido;
+		$id_pedido = $x_idpedido ? $x_idpedido : $x_array_pedido_header['idPedidoSeleccionados'];
 
 		$tipo_consumo = $x_array_pedido_header['tipo_consumo'];
 		$idc=$x_array_pedido_header['idclie'] == ''? ($x_idcliente == '' ? 0 : $x_idcliente) : $x_array_pedido_header['idclie'];
@@ -306,7 +306,8 @@
 		$x_array_subtotales=$_POST['p_subtotales'];
 		$x_array_comprobante=$_POST['p_comprobante'];
 
-		$id_pedido = $x_idpedido;
+		// $id_pedido = $x_idpedido;
+		$id_pedido = $x_idpedido ? $x_idpedido : $x_array_pedido_header['idPedidoSeleccionados']; // de venta rapida el idpedido lo manda elcliente
 
 		$tipo_consumo = $x_array_pedido_header['tipo_consumo'];
 		$idc=$x_array_pedido_header['idclie'] == ''? ($x_idcliente == '' ? 0: $x_idcliente) : $x_array_pedido_header['idclie'];

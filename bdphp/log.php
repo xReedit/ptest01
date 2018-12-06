@@ -2320,7 +2320,7 @@
 						WHERE (p1.idorg=".$_SESSION['ido']." AND p1.idsede=".$_SESSION['idsede'].") AND p1.cierre=0 AND pd1.estado=0
 						GROUP BY pd1.iditem
 						) AS pd_v ON cl.iditem=pd_v.iditem
-				WHERE c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede']."
+				WHERE c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede']." and c.idcategoria=".$_POST['idcategoria']."
 				ORDER BY s.sec_orden
 			";
 			$bd->xConsulta($sql);

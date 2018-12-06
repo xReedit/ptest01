@@ -1268,7 +1268,7 @@ async function xRegistrarClientePagoCP(){
 
 	// xtt_pedidos = total a pagar
 	xarr_cliente = {'cliente':DatosCliente, 'i': xcheckItemsSeleccionados.idPedidosSeleccionados };
-	xarr_header = {'idclie':DatosCliente.idcliente, 'ImporteTotal': xMoneda(xtt_pedidos) , 'tipo_consumo': xcheckItemsSeleccionados.tipoConsumo};
+	xarr_header = {'idclie':DatosCliente.idcliente, 'ImporteTotal': xMoneda(xtt_pedidos) , 'tipo_consumo': xcheckItemsSeleccionados.tipoConsumo, 'idPedidoSeleccionados': xcheckItemsSeleccionados.idPedidosSeleccionados};
 	xarr_comprobante = ComprobanteSeleccionado;
 	// xarr_items_seleccionados = xArraySql_dt_p; // items seleccionados
 	xarr_items_seleccionados = xcheckItemsSeleccionados.arrayPedidosSeleccionados; // items seleccionados
@@ -1277,7 +1277,7 @@ async function xRegistrarClientePagoCP(){
 
 	if(!xcheckItemsSeleccionados.esSeleccionTotal){ //si es pago parcial
 		//registrar pago - ok
-		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'dc', p_items_seleccionados:xarr_items_seleccionados, p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
+		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'c', p_items_seleccionados:xarr_items_seleccionados, p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
 		.done( function (xrpt_correlativo) {
 			const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
@@ -1290,8 +1290,10 @@ async function xRegistrarClientePagoCP(){
 	}else{
 		//paga todo - listo
 		//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=508', data:{idclie:xid_cliente_pago,nom:xnom_cliente_pago,i:xidpedido_seleccionados}})
-		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'db', p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
+		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'b', p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
 		.done( function (xrpt_correlativo) {
+			const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
+			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xRegistrarPagoCM(xCantRow);	
 

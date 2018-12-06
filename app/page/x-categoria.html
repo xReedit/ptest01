@@ -24,7 +24,14 @@ function xIniCategoria(){
 	$('body').removeClass('loaded');
 }
 
-function xLoadCategoria(){	
+function xLoadCategoria(){
+	if (window.localStorage.getItem("::app3_sys_descat")) {
+		//para no estar seleccionando cada vez la carta
+		// al dar en inicio del menu lateral se regresara a seleccionar la categoria
+		const idcat_tmp=window.localStorage.getItem("::app3_sys_descat");
+		xIrCategoria(idcat_tmp);
+		return;
+	}
 	//$(".xMenu_body #xContenedoPaginas").html('<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>').trigger('create');	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=302'})
 	.done( function (dtCat) {
