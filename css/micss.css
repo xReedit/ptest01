@@ -1037,21 +1037,29 @@ ul.list_add_item2 li {
 
 
 
-/*ul#accordion a.heading {
-    background: #F4FFF9;
-    color: #999;
-    display: block;
-    font-size: 18px;
-    line-height: 18px;
-    padding: 10px 5px;
-    text-decoration: none;
+.animated {
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    /* -webkit-animation-fill-mode: both;
+    animation-fill-mode: both; */
 }
-ul#accordion a.heading:hover { background: #00B9D2; color: #fff; }
 
-ul#accordion li ul a { border-bottom: 1px solid #00B9D2; color: #025185; text-decoration: none; }
-ul#accordion li ul a:hover { border-bottom: none; }*/
+.fast {
+    -webkit-animation-duration: 0.3s;
+    animation-duration: 0.3s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
 
-/*.xrow_li *{display:table-cell; vertical-align: middle; color: #424242; width: 100%;}
-.xrow_li .t_item{text-align: left;}
-.xrow_li .content_btn{text-align: right; width: 50px; display: table;}
-.xrow_li:hover{background: #fff59d;}*/
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fadeIn {
+    animation-name: fadeIn;
+}

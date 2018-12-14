@@ -163,8 +163,9 @@ function xInicarta(){
 
 		xIdCarta='';
 		xLoadItemsCategoria();
-		xLoadCarta();
+		xLoadCarta();		
 	});
+
 
 	//xThisCarta.xt_org=xIdOrg;
 	//xThis.xt_idsede=xIdSede;
@@ -340,7 +341,7 @@ function xGuardarCambios(){
 			xArraySeccionItem[index]={'des_seccion':xdes_seccion,'id_seccion':xidSeccion,'sec_orden':xsec_orden}
 			$(element).find('.tb_item tr.row').each(function(indexI, item){
 				var xidItem=$(item).attr('data-id');
-				var xidCartaRow=$(item).attr('data-idcarta');				
+				var xidCartaRow=$(item).attr('data-idcarta') || xIdCarta;				
 				var xDes=$(item).find("#td_des").text();
 				var xprecio=$(item).find("#td_precio").text();
 				var xdet=$(item).find("#td_detalle").text();
@@ -353,14 +354,14 @@ function xGuardarCambios(){
 
 				// xIdItemCarList=xidCartaRow+xIdOrg+xIdSede+xidItem;
 				if(xidItem==undefined || xidItem==''){
-					xidItem='';
+					xidItem='';					
 				}
 
 				xArraySeccionItem[index][indexI]={'idcarta': xidCartaRow, 'id_item':xidItem,'id_seccion':xidSeccion,'id_carta_lista':xIdItemCarList,'des_item':xDes, 'precio_item':xprecio,'det_item':xdet,'img_item':ximg, 'cant_item': xCant, 'cant_preparado_item':xCant,'sec_orden':xsec_orden}
 			})
 		});
 
-	// console.log('xArraySeccionItem ', xArraySeccionItem);
+	console.log('xArraySeccionItem ', xArraySeccionItem);
 	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204',data:{idc:xidCategoria,f:xFechaInsert,id_carta_anterior:xIdCartaAnterior,sql_array:xArraySeccionItem}})
 	.done( function (xid) {

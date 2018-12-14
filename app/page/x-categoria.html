@@ -1,92 +1,113 @@
 <dom-module id="x-categoria">
-	<template>		
-			<div class="xMenu_content" id="CartaDetalle">			
-				<div class="xMenu_Encabezado">
-					<span class="xtitulo">SAN CARLOS</span>
-					<div class="xsub_titulo">TRADICION DESDE 1997. BIENVENIDOS.</div>				
-				</div>				
-				<div class="xMenu_body noselect">					
-					<div class="xAlinearCentro spinner"><paper-spinner active></paper-spinner></div>
-				</div>				
-			</div>								
-	</template>
+  <template>
+    <div class="xMenu_content" id="CartaDetalle">
+      <div class="xMenu_Encabezado">
+        <span class="xtitulo">SAN CARLOS</span>
+        <div class="xsub_titulo">TRADICION DESDE 1997. BIENVENIDOS.</div>
+      </div>
+      <div class="xMenu_body noselect">
+        <div class="xAlinearCentro spinner">
+          <paper-spinner active></paper-spinner>
+        </div>
+      </div>
+    </div>
+  </template>
 </dom-module>
-<style type="text/css">
-	
-</style>
+<style type="text/css"></style>
 <script>
-var xThisCategoria;
-var xMenuCategoria=[];
-function xIniCategoria(){
-	$("#xtitulo_bar").text('');
-	//xVerificarSession();
-	xLoadCategoria();
-	$('body').removeClass('loaded');
-}
+  var xThisCategoria;
+  var xMenuCategoria = [];
+  function xIniCategoria() {
+    $("#xtitulo_bar").text("");
+    //xVerificarSession();
+    xLoadCategoria();
+    $("body").removeClass("loaded");
+  }
 
-function xLoadCategoria(){
-	if (window.localStorage.getItem("::app3_sys_descat")) {
-		//para no estar seleccionando cada vez la carta
-		// al dar en inicio del menu lateral se regresara a seleccionar la categoria
-		const idcat_tmp=window.localStorage.getItem("::app3_sys_descat");
-		xIrCategoria(idcat_tmp);
-		return;
-	}
-	//$(".xMenu_body #xContenedoPaginas").html('<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>').trigger('create');	
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=302'})
-	.done( function (dtCat) {
-		var xdtCat=$.parseJSON(dtCat);
-		xdtCat=xdtCat.datos;
-		var xCadenaCartegoria='',xidcategoria_lo;
-		
-		xMenuCategoria=[];
-		xThisCategoria.dt_cat=xdtCat;		
-		for (var i = 0; i < xdtCat.length; i++) {
-			xidcategoria_lo=xdtCat[i].idcategoria			
-			// xMenuCategoria={'id':xidcategoria_lo, 'des':xdtCat[i].descripcion};
-			xMenuCategoria.push({'id':xidcategoria_lo, 'des':xdtCat[i].descripcion});
-			if(xdtCat.length===1){				
-				window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));	
-				xIrCategoria(xidcategoria_lo);
-				return;
-			}
-			xCadenaCartegoria=String(xCadenaCartegoria+'<div class="xmenu_item xPading15" data-id="'+xidcategoria_lo+'" onclick="xIrCategoria('+xidcategoria_lo+')">'+
-						'<p class="xtitulo_item">'+xdtCat[i].descripcion+'</p>'+
-						'<span class="xsub_titulo_item">...</span>'+
-					'</div>')	
-		}
+  function xLoadCategoria() {
+    if (window.localStorage.getItem("::app3_sys_descat")) {
+      //para no estar seleccionando cada vez la carta
+      // al dar en inicio del menu lateral se regresara a seleccionar la categoria
+      const idcat_tmp = window.localStorage.getItem("::app3_sys_descat");
+      xIrCategoria(idcat_tmp);
+      return;
+    }
+    //$(".xMenu_body #xContenedoPaginas").html('<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>').trigger('create');
+    $.ajax({ type: "POST", url: "../../bdphp/log.php?op=302" }).done(function(
+      dtCat
+    ) {
+      var xdtCat = $.parseJSON(dtCat);
+      xdtCat = xdtCat.datos;
+      var xCadenaCartegoria = "",
+        xidcategoria_lo;
 
-		
-		window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));	
+      xMenuCategoria = [];
+      xThisCategoria.dt_cat = xdtCat;
+      for (var i = 0; i < xdtCat.length; i++) {
+        xidcategoria_lo = xdtCat[i].idcategoria;
+        // xMenuCategoria={'id':xidcategoria_lo, 'des':xdtCat[i].descripcion};
+        xMenuCategoria.push({
+          id: xidcategoria_lo,
+          des: xdtCat[i].descripcion
+        });
+        if (xdtCat.length === 1) {
+          window.localStorage.setItem(
+            "::app3_sys_dt_mlc",
+            JSON.stringify(xMenuCategoria)
+          );
+          xIrCategoria(xidcategoria_lo);
+          return;
+        }
+        xCadenaCartegoria = String(
+          xCadenaCartegoria +
+            '<div class="xmenu_item xPading15" data-id="' +
+            xidcategoria_lo +
+            '" onclick="xIrCategoria(' +
+            xidcategoria_lo +
+            ')">' +
+            '<p class="xtitulo_item">' +
+            xdtCat[i].descripcion +
+            "</p>" +
+            '<span class="xsub_titulo_item">...</span>' +
+            "</div>"
+        );
+      }
 
-		$('body').addClass('loaded');	
-		$(".xMenu_body div").remove();
-		$(".xMenu_body .spinner").remove();
-		$(".xMenu_body").append(xCadenaCartegoria).trigger('create');
-	})
-}
-function xIrCategoria(i){
-	// xidCategoria=xThisCategoria.dt_cat[i].idcategoria;
-	// window.localStorage.setItem("::app3_sys_descat",xThisCategoria.dt_cat[i].descripcion);
-	xidCategoria=i;
-	window.localStorage.setItem("::app3_sys_descat",i);	
-	console.log(xidCategoria);
-	xOpenPageCarta(1);
-	return;
-}
+      window.localStorage.setItem(
+        "::app3_sys_dt_mlc",
+        JSON.stringify(xMenuCategoria)
+      );
 
-Polymer({
-	is:'x-categoria',	
-	properties:{
-		xt_org:Number,
-		xt_idsede:Number,
-		xt_idus:Number,
-		dt_cat:Object		
-	},
-	attached:function(){	
-    	xThisCategoria=this;
-    	//this.selected=0;  
-    	xIniCategoria();    	
-    }    
-})
+      $("body").addClass("loaded");
+      $(".xMenu_body div").remove();
+      $(".xMenu_body .spinner").remove();
+      $(".xMenu_body")
+        .append(xCadenaCartegoria)
+        .trigger("create");
+    });
+  }
+  function xIrCategoria(i) {
+    // xidCategoria=xThisCategoria.dt_cat[i].idcategoria;
+    // window.localStorage.setItem("::app3_sys_descat",xThisCategoria.dt_cat[i].descripcion);
+    xidCategoria = i;
+    window.localStorage.setItem("::app3_sys_descat", i);
+    console.log(xidCategoria);
+    xOpenPageCarta(1);
+    return;
+  }
+
+  Polymer({
+    is: "x-categoria",
+    properties: {
+      xt_org: Number,
+      xt_idsede: Number,
+      xt_idus: Number,
+      dt_cat: Object
+    },
+    attached: function() {
+      xThisCategoria = this;
+      //this.selected=0;
+      xIniCategoria();
+    }
+  });
 </script>

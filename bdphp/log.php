@@ -791,7 +791,7 @@
 				INNER JOIN seccion AS s using(idseccion)
 				INNER JOIN item AS i using(iditem)
                 LEFT JOIN ( SELECT idorg, idsede, idcarta FROM carta where idcategoria=".$_POST['i']." ) AS uc ON uc.idorg=c.idorg AND uc.idsede=c.idsede
-			WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 and (c.idcarta=uc.idcarta) order by s.sec_orden,i.descripcion
+			WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 and (c.idcarta=uc.idcarta) order by s.sec_orden,s.descripcion,i.descripcion
 			";
 			$bd->xConsulta($sql);
 			break;
@@ -922,18 +922,32 @@
 
 			$idCatProcede=$_POST['p'];
 			if($idCatProcede!=0){//'almacen_items'
+				// $sql="
+				// SELECT cl.idcarta_lista,s.idseccion,concat('1',s.sec_orden,'.',s.idseccion) as idseccion_index, i.iditem,s.descripcion AS des_seccion ,s.idimpresora, i.descripcion AS des_item, cl.precio, IF(cl.cantidad='SP',(IFNULL(it_p.stock,0)),cl.cantidad) AS cantidad,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir, IF(cl.cantidad='SP',it_p.idporcion,cl.idcarta_lista) AS idprocede, IF(cl.cantidad='SP',2,1) as procede, '0' AS procede_index, '1' AS imprimir_comanda, IF(cl.cantidad='SP',it_p.cant_porcion,1) AS cant_descontar
+				// FROM carta_lista AS cl
+				// 	INNER JOIN carta AS c using(idcarta)
+				// 	INNER JOIN seccion AS s using(idseccion)
+				// 	INNER JOIN item AS i using(iditem)
+				// 	LEFT JOIN (SELECT idorg, idsede, max(idcarta) AS ultima_carta FROM carta ) AS uc ON uc.idorg=c.idorg AND uc.idsede=c.idsede
+				// 	LEFT JOIN (SELECT ii.iditem, GROUP_CONCAT(ii.idporcion) AS idporcion,GROUP_CONCAT(ii.cantidad) AS cant_porcion,po.stock
+				// 					FROM item_ingrediente AS ii
+				// 					INNER JOIN porcion AS po ON ii.idporcion=po.idporcion
+				// 					WHERE ii.idporcion!=0 GROUP BY ii.iditem) AS it_p using(iditem)
+				// WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 AND c.idcarta=uc.ultima_carta and cl.idcarta_lista='".$_POST['i']."'
+				// ORDER BY i.descripcion
+				// ";
+
 				$sql="
 				SELECT cl.idcarta_lista,s.idseccion,concat('1',s.sec_orden,'.',s.idseccion) as idseccion_index, i.iditem,s.descripcion AS des_seccion ,s.idimpresora, i.descripcion AS des_item, cl.precio, IF(cl.cantidad='SP',(IFNULL(it_p.stock,0)),cl.cantidad) AS cantidad,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir, IF(cl.cantidad='SP',it_p.idporcion,cl.idcarta_lista) AS idprocede, IF(cl.cantidad='SP',2,1) as procede, '0' AS procede_index, '1' AS imprimir_comanda, IF(cl.cantidad='SP',it_p.cant_porcion,1) AS cant_descontar
 				FROM carta_lista AS cl
 					INNER JOIN carta AS c using(idcarta)
 					INNER JOIN seccion AS s using(idseccion)
-					INNER JOIN item AS i using(iditem)
-					LEFT JOIN (SELECT idorg, idsede, max(idcarta) AS ultima_carta FROM carta ) AS uc ON uc.idorg=c.idorg AND uc.idsede=c.idsede
+					INNER JOIN item AS i using(iditem)					
 					LEFT JOIN (SELECT ii.iditem, GROUP_CONCAT(ii.idporcion) AS idporcion,GROUP_CONCAT(ii.cantidad) AS cant_porcion,po.stock
 									FROM item_ingrediente AS ii
 									INNER JOIN porcion AS po ON ii.idporcion=po.idporcion
 									WHERE ii.idporcion!=0 GROUP BY ii.iditem) AS it_p using(iditem)
-				WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 AND c.idcarta=uc.ultima_carta and cl.idcarta_lista='".$_POST['i']."'
+				WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and cl.estado=0 and cl.idcarta_lista='".$_POST['i']."'
 				ORDER BY i.descripcion
 				";
 			}
@@ -2321,7 +2335,7 @@
 						GROUP BY pd1.iditem
 						) AS pd_v ON cl.iditem=pd_v.iditem
 				WHERE c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede']." and c.idcategoria=".$_POST['idcategoria']."
-				ORDER BY s.sec_orden
+				ORDER BY s.sec_orden,s.descripcion,i.descripcion
 			";
 			$bd->xConsulta($sql);
 			break;
