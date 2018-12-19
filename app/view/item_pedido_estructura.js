@@ -57,12 +57,19 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
         });
     
     // agrupa y suma
-    const group = itemsObj
+    let group = itemsObj
         .filter(x => x.grupo)
         .reduce((rv, x) => {
             grupo = x.grupo;
             if (!rv[grupo]) {
-                rv[grupo] = {id: x.iditem, cantidad: x.cantidad, des: x.des, precio_total: parseFloat(x.precio_total).toFixed(2), seccion: x.des_seccion}
+                rv[grupo] = {
+                    id: x.iditem,
+                    cantidad: x.cantidad,
+                    des: x.des,
+                    punitario: x.precio,
+                    precio_total: parseFloat(x.precio_total).toFixed(2),
+                    seccion: x.des_seccion
+                }
                 return rv
             }
 
@@ -77,30 +84,51 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
         .sort((a, b) => (a.des > b.des) - (a.des < b.des) )
         .sort((a, b) => (a.seccion > b.seccion) - (a.seccion < b.seccion) );
     
-    
+    group = Object.values(group);
     // agreagar adicionales si los hay
     xArraySubTotales.map(x => {
-        if (x.tachado === undefined) { return; }
+        if (x.id === undefined) { return; } // id remplaza a tachado es decir no se aceptan subtotales
         if (x.tachado === true) { return; }
         if (x.esImpuesto === "1") { return; }
 
         const seccion = x.id.indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
-        const cantidad = x.cantidad ? x.cantidad : '*';
+        // const cantidad = x.cantidad ? x.cantidad : 1;
+        const cantidad = parseFloat(x.importe / x.punitario).toFixed(2);
+        const index = group.length+1; // en facturacion electronica el id debe ser numero
 
-        group.push({id:x.id, cantidad: cantidad, des: x.descripcion, precio_total: x.importe, seccion: seccion});
+        group.push({
+          id: index.toString(),
+          cantidad: cantidad,
+          des: x.descripcion,
+          punitario: x.punitario,
+          precio_total: x.importe,
+          seccion: seccion
+        });
     })
         
-    console.log('group: ',group);
+    // const aa = xEstructuraItemsGroupFormatoImpresion(group, "seccion");
+    // console.log(aa);
+    // console.log('group: ',group);
     return group;
 }
 
-function xEstructuraItemsAgruparPrintJsonComprobante(_SubItems) {
-    return this.groupBy(_SubItems,'seccion');
+// pasar a estructura de impresion de comprobante donde no se tendra en cuenta el tipo consumo, solo seccion e item
+function xEstructuraItemsAgruparPrintJsonComprobante(items) {
+    return xEstructuraItemsGroupFormatoImpresion(items, "seccion");
 }
 
-var groupBy = function(xs, key) {
-	return xs.reduce(function(rv, x) {
-	  (rv[x[key]] = rv[x[key]] || []).push(x);
-	  return rv;
-	}, {});
-  };
+
+function xEstructuraItemsGroupFormatoImpresion( xs , key) {
+    // const arr_rpt_json =  xs.reduce(function (rv, x) {
+    //     (rv[x[key]] = rv[x[key]] || []).push(x);
+    //     // rv[x[key]].des_seccion = x[key];
+    //     return rv;
+    // }, {});
+
+    const arr_rpt_json = xs;
+    arr_rpt_json.des = '**';
+    let rpt = {}
+    rpt[0] = arr_rpt_json;
+    console.log(rpt);
+    return rpt;
+}

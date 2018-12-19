@@ -47,13 +47,16 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,xArrayComprobante,xArrayCliente,callback){
 	xPopupLoad.titulo="Imprimiendo...";	
 
-	const _arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal)); 
+	// formato de impresion items comprobante donde no se tiene en cuenta el tipo de consumo solo seccion e items
+	let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal);
+	_arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
+
 	$.ajax({type: 'POST', url: '../../print/print5.php', 
 			data:{
-				Array_enca:xArrayEncabezado, 
-				Array_print:xImpresoraPrint, 
-				ArrayItem:xArrayCuerpo, 
-				ArraySubTotales:xArraySubtotal,
+				Array_enca: xArrayEncabezado, 
+				Array_print: xImpresoraPrint, 
+				ArrayItem: _arrBodyComprobante, // xArrayCuerpo 
+				ArraySubTotales: xArraySubtotal,
 				ArrayComprobante: xArrayComprobante,
 				ArrayCliente: xArrayCliente				
 			}

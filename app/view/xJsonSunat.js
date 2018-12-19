@@ -194,7 +194,7 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
             },
             "informacion_adicional_gastos_art_37_renta":{
                 "descripcion_detallada_del_servicio_prestado_bien_vendido_o_cedido_en_uso_indicando_las_caracteristicas":`${x.des}`,
-                "valor_unitario_por_item":`${x.precio_total}`,
+                "valor_unitario_por_item":`${x.punitario}`,
                 "precio_de_venta_unitario_por_item_y_codigo":{
                     "codigo_de_tipo_de_precio":"01"
                 },
@@ -243,7 +243,7 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
 function xSendApiSunat(json_xml, idregistro_pago, guardarError=true) {
     const _url = URL_COMPROBANTE+'/documents';
     let _headers = HEADERS_COMPROBANTE;
-    _headers.Authorization = xm_log_get('datos_org_sede')[0].authorization_api_comprobante;
+    _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
 
     var rpt = '';

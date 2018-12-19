@@ -194,16 +194,23 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 							subtotales_tachados_local.indexOf(id) >=0 ? sumItem = 0 : importe_tachado = 0;
 
 							const tachado = checkSubTotalQuitado(cantidadItemPedido, id, sumItem);
-		
+							
 							var IdExite;
 							arrSuma.map((z, index) => {if (z.id === id) {IdExite = index; return;}} );
+														
+
 							if (IdExite) {
+								// const importeItem = parseFloat(arrSuma[IdExite].importe);
 								const importeItem = parseFloat(arrSuma[IdExite].importe);
 								const importeTachadoItem = parseFloat(arrSuma[IdExite].importe_tachado);
-								arrSuma[IdExite].importe = nivel === 0 ? parseFloat( importeItem + parseFloat(sumItem)).toFixed(2) : parseFloat(sumItem).toFixed(2);
+								arrSuma[IdExite].importe = nivel === 0 ? parseFloat( importeItem + parseFloat(sumItem))
+								.toFixed(2) : parseFloat(sumItem).toFixed(2);
+
+								// arrSuma[IdExite].cantidad++; // con punitario sacamos cantidad
+								
 								arrSuma[IdExite].importe_tachado = nivel === 0 ? parseFloat(importeTachadoItem + parseFloat(importe_tachado)).toFixed(2) : parseFloat(importe_tachado).toFixed(2);
 							} else {
-								arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe_tachado':xMoneda(importe_tachado), 'importe':xMoneda(sumItem), 'esImpuesto': 0, 'visible':true, 'quitar': true, 'tachado': tachado}); 
+								arrSuma.push({ 'id': id, 'descripcion': c.descripcion, 'importe_tachado': xMoneda(importe_tachado), 'importe': xMoneda(sumItem), 'punitario': c.monto, 'esImpuesto': 0, 'visible':true, 'quitar': true, 'tachado': tachado}); 
 							}
 		
 						});

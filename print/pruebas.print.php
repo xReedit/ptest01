@@ -12,7 +12,7 @@ try {
     // $connector = new WindowsPrintConnector("smb://desa1/ticketera");
     //$connector = new WindowsPrintConnector("smb://Guest@computername/Receipt Printer");
     //$connector = new WindowsPrintConnector("smb://FooUser:secret@computername/workgroup/Receipt Printer");
-    $connector = new WindowsPrintConnector("smb://marcelo:182182@desa1/ticketera");
+    $connector = new WindowsPrintConnector("smb://pc:182182@192.168.1.56/ticketera1");
     
     /* Print a "Hello world" receipt" */
     $printer = new Printer($connector);
@@ -73,8 +73,8 @@ try {
 	$printer -> cut();
     $printer -> close();
     
-    $printer -> text("Hello World!\n");
-    $printer -> cut();
+    // $printer -> text("Hello World!\n");
+    // $printer -> cut();
     
     /* Close printer */
     $printer -> close();

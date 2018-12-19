@@ -169,14 +169,14 @@ while($num_copias>=0){
 		$seccion='';
 		$des_part2='';
 		//$sum_total=0;
-		usort($item, "cmp");
+		// usort($item, "cmp");
 
 		//ordena por donde procede 0 de la carta(sigue el orden) !=0 bodega
-		foreach ($item as $key => $row) {
-		    $procede[$key]  = !empty($row['procede_index']) ? $row['procede_index'] : '';
-		    $or_des_seccion[$key]  = !empty($row['des_seccion']) ? $row['des_seccion'] : ''; 
-		}
-		array_multisort($procede, SORT_ASC,$or_des_seccion, SORT_ASC, $item);		
+		// foreach ($item as $key => $row) {
+		//     $procede[$key]  = !empty($row['procede_index']) ? $row['procede_index'] : '';
+		//     $or_des_seccion[$key]  = !empty($row['des_seccion']) ? $row['des_seccion'] : ''; 
+		// }
+		// array_multisort($procede, SORT_ASC,$or_des_seccion, SORT_ASC, $item);		
 		
 		foreach ($item as $subitem) {
 			if(is_array($subitem)==false){continue;}
@@ -200,9 +200,9 @@ while($num_copias>=0){
 			$si_tiene_item=1;
 			$printer -> setJustification(Printer::JUSTIFY_LEFT);
 			$printer -> setEmphasis(true);	
-			if($seccion!=$subitem["des_seccion"]){			
+			if($seccion!=$subitem["seccion"]){			
 				if($cuenta_row>0){$printer -> text("\n");}	
-				$seccion=$subitem["des_seccion"];
+				$seccion=$subitem["seccion"];
 				$printer -> text($seccion."\n");
 				$printer -> text("------------------------------------------------\n");	
 				$printer -> setEmphasis(false);
