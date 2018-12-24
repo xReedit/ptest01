@@ -1,5 +1,11 @@
 <dom-module id="x-caja">
 	<template>
+		<paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div style="text-align: center">
+				<img src="../../../images/_msj_envio_sunat.gif" alt="">
+				<p>Enviando comprobantes electronicos.</p>
+			</div>
+		</paper-dialog>
 		<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<h4>Error en impresora</h4>
 			<p id="print_error"></p>
@@ -411,7 +417,7 @@ function xArmarArrayPrint(){
 													//xArmarSubItems(5,708,function(){
 														xUpdateCerrarCession(function(){
 															xPermisoSupervisor=0;
-															xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);
+															xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);														
 														})
 													//})
 												})
@@ -464,7 +470,10 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 								xErrorPrint=false;
 								xPopupLoad.titulo="Imprimiendo...";
 								xPopupLoad.xopen();
-								setTimeout(function(){ xPopupLoad.xclose()}, 3000);
+								setTimeout(function(){ 
+									xPopupLoad.xclose(); 
+									xCocinarResumenBoletas(); // envia los comprobantes
+								}, 3000);
 								//setTimeout( function(){ xNuevoPedido(); }, 600);
 								//xNuevoPedido()
 								//setTimeout( function(){ xNuevoPedido(); }, 1500);

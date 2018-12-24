@@ -78,7 +78,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "numeracion_conformada_por_serie_y_numero_correlativo": `${abreviaCo}${xArrayComprobante.serie}-${xArrayComprobante.correlativo}`,
                 "fecha_de_emision": `${fecha_actual}`,
                 "hora_de_emision": `${hora_actual}`,
-                "tipo_de_documento": `${xArrayComprobante.codsunat}`,
+                "tipo_de_documento": `${xtipo_de_documento_comprobante}`,
                 "tipo_de_moneda_en_la_cual_se_emite_la_factura_electronica": "PEN",
                 "fecha_de_vencimiento": `${fecha_actual}`
             },
@@ -162,9 +162,9 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             }
         };
 
-        console.log(JSON.stringify(jsonData))
+        console.log(JSON.stringify(jsonData));
 
-        hash = xSendApiSunat(jsonData, idregistro_pago);        
+        hash = xSendApiSunat(jsonData, idregistro_pago, xtipo_de_documento_comprobante);        
     })
 
 
@@ -240,7 +240,8 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
     return xListItemsRpt;
 }
 
-function xSendApiSunat(json_xml, idregistro_pago, guardarError=true) {
+// tipo_documento = 06 > factura se envia de manera individual 
+function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=true) {
     const _url = URL_COMPROBANTE+'/documents';
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
@@ -254,20 +255,27 @@ function xSendApiSunat(json_xml, idregistro_pago, guardarError=true) {
         dataType: 'json', 
         data: json_xml, 
         async: false,
-        success: function (data) {            
+        success: function (data) {// se envio con exito     
             console.log('succes: ', data);
             rpt = data.data.hash;
             // guardar external_id en registro pago;
-            $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'y', idregistro_pago: idregistro_pago, idexternal: data.data.external_id}})
+            const _idexternal = data.data.external_id;
+            const _data = { idregistro_pago: idregistro_pago, idexternal: _idexternal, jsonXml: "", enviado: "1" };
+            $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
             .done( function (res) {
                 console.log(res);
             });
+
+            // envia si es factura
+            if (tipo_documento === '01') { // esto se ejecuta en segundo plano // es decir no espera a que termine
+                xSoapSunat_EnvioIndividual(_idexternal); 
+            }
 
         },
         error: function(err) {
             //
             rpt = 'www.papaya.com.pe'; 
-            if (guardarError) {
+            if (guardarError) {                
                 xSendApiSunatError(json_xml, idregistro_pago);
             }
             // guardar en facturas no enviadas o con errores
@@ -279,7 +287,8 @@ function xSendApiSunat(json_xml, idregistro_pago, guardarError=true) {
 
 function xSendApiSunatError(json_xml, idregistro_pago) {
     json_xml = JSON.stringify(json_xml);
-    $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'x', idregistro_pago: idregistro_pago, jsonxml: json_xml}})
+    const _data = { idregistro_pago: idregistro_pago, idexternal: data.data.external_id, jsonXml: json_xml, enviado: '0' };
+    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
     .done( function (res) {
         // console.log(res);
     });
