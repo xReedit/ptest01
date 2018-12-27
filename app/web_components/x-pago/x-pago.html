@@ -35,7 +35,7 @@
 							<div id="datos_cliente" class="xInvisible">		
 								<paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()" id="clie_nombres" onChange="conMayusculas(this)" class="xPasarEnter2" required="[[ComprobanteRequiereCliente]]" auto-validate></paper-input>
 								<br>
-								<paper-textarea autofocus label="Direccion" max-rows="2" id="clie_direccion" onkeyup="EmitirValidacionFormCliente()" onChange="conMayusculas(this)"  class="xPasarEnter2 clie_direccion" required="[[ComprobanteRequiereCliente]]" auto-validate></paper-textarea>							
+								<paper-textarea autofocus label="Direccion" max-rows="2" id="clie_direccion" onChange="conMayusculas(this)"  class="xPasarEnter2 clie_direccion" ></paper-textarea>							
 							</div>
 						</form>
 					</div>
@@ -86,7 +86,11 @@
 						<div>[F10] Listo, imprimir comprobante</div>
 					<!-- <div hidden="[[modoSoloComprobante]]">[F10] Siguente</div> -->
 				</button>
-				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]" onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next" disabled="{{!valid_form_cliente_pago}}">
+				<button class="xBoton2 xAzul" 
+					hidden="[[modoSoloComprobante]]" 
+					onclick="xThisPago.setVisibleContainerPago();" 
+					id="btn_pago_next" 
+					disabled="[[!valid_form_cliente_pago]]">
 					<!-- <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
 					<div>[F10] Siguente</div>
 				</button>
@@ -314,7 +318,16 @@ async function xValidarDNIRUC (valor, e) {
 
 	if (xThisPago.ComprobanteRequiereCliente && e.keyCode !== 13) { 
 		// si requeiere cliente
-		xThisPago.placeholder_clie='Cliente DNI o RUC'; 
+		if (xThisPago.tipoComprovanteSelecionado.codsunat === '01') {// si es factura acepta solo ruc
+			xThisPago.placeholder_clie = 'Cliente RUC';
+			if (valor.length < 11) {
+				xThisPago.$.sel_cliente.invalid = true;
+				xThisPago.mensajeErrorDocumento = 'Nro de RUC no valido';
+				// return;
+			}
+		} else {
+			xThisPago.placeholder_clie='Cliente DNI o RUC'; 
+		}
 		$("#clie_nombres").val('');
 		$("#clie_direccion").val('');
 		xIdCliente_pago='';
@@ -350,6 +363,16 @@ async function xValidarDNIRUC (valor, e) {
 	if ( e.keyCode === 13 ) { // buscar cliente
 		xThisPago.$.sel_cliente.invalid = false;
 
+		if (xThisPago.tipoComprovanteSelecionado.codsunat === '01' && valor.length < 11) {// si es factura acepta solo ruc
+			xThisPago.$.sel_cliente.invalid = true;
+			xThisPago.mensajeErrorDocumento = 'Nro de RUC no valido';
+			event.stopPropagation();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+
+			return;
+		}
+
 		if (valor.length<8) {
 			xThisPago.$.sel_cliente.invalid = true; 
 			xThisPago.mensajeErrorDocumento = 'N de documento no valido.';  
@@ -373,6 +396,7 @@ async function xValidarDNIRUC (valor, e) {
 					// xThisPago.$.clie_nombres.focus();
 					// var testele = document.getElementById('clie_nombres');
 					setTimeout(() => {
+						xThisPago.mensajeErrorDocumento = '';
 						xThisPago.$.clie_nombres.$.input.focus();
 					}, 100);
 					
@@ -440,8 +464,16 @@ function xSelectedTpComprobante(valor) {
 	var serie = $(obj_option_select).attr('data-serie');
 	var idtipo_comprobante = $(obj_option_select).attr('data-idtipo-comprobante');
 	var option_requiere_cliente = parseInt($(obj_option_select).attr('data-requiere-cliente'));
+
 	xThisPago.ComprobanteRequiereCliente = option_requiere_cliente === 0 ? false : true; //requiere ingresar cliente
 
+	if ( parseFloat(xThisPago.total) > 700 ) {
+		xThisPago.ComprobanteRequiereCliente = true;
+	}
+
+	$("#clie_nombres").val('');
+	$("#clie_direccion").val('');
+	
 	// console.log(xThisPago.ComprobanteRequiereCliente);
 	
 	xThisPago.tipoComprovanteSelecionado = {'idtipo_comprobante_serie': valor, 'idtipo_comprobante': idtipo_comprobante, 'codsunat': codsunat, 'serie': serie, 'descripcion': descripcion, 'inicial': inicial};	
@@ -473,8 +505,10 @@ function xVerContainerPago() {
 	}
 }
 
-function EmitirValidacionFormCliente() {
-	var validForm = xThisPago.$.form_pago_cliente.checkValidity();
+function EmitirValidacionFormCliente() {	
+	console.log(xThisPago.$.form_pago_cliente);
+	// var validForm = xThisPago.$.form_pago_cliente.checkValidity();
+	var validForm = !xThisPago.$.sel_cliente.invalid && xThisPago.$.form_pago_cliente[1].validate()
 	xThisPago.valid_form_cliente_pago = validForm;
 	xThisPago.fire('xFormClienteValid', validForm);
 }
@@ -696,11 +730,16 @@ Polymer({
     },
     setVal:function(val){
     	xThisPago.total=val;    	
+		xThisPago.ComprobanteRequiereCliente = parseFloat(val) > 700 ? true : false;
+		EmitirValidacionFormCliente();
+		
     	$("#tb_tp .row").remove();
     	xResetOpSel();
     	xAddTipoPago();
     	$(".xmonto").val('00');    	
 		xThisPago.$.form_pago_cliente.reset();
+
+		
 
 		xThisPago.placeholder_clie='Cliente DNI o RUC'; 
 		$("#clie_nombres").val('');

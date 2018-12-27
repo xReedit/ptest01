@@ -240,7 +240,7 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
     return xListItemsRpt;
 }
 
-// tipo_documento = 06 > factura se envia de manera individual 
+// tipo_documento = 01 > factura se envia de manera individual 
 function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=true) {
     const _url = URL_COMPROBANTE+'/documents';
     let _headers = HEADERS_COMPROBANTE;
@@ -255,28 +255,29 @@ function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=t
         dataType: 'json', 
         data: json_xml, 
         async: false,
-        success: function (data) {// se envio con exito     
+        success: function (data) {// se registro con exito al servicio / api  
             console.log('succes: ', data);
             rpt = data.data.hash;
             // guardar external_id en registro pago;
             const _idexternal = data.data.external_id;
-            const _data = { idregistro_pago: idregistro_pago, idexternal: _idexternal, jsonXml: "", enviado: "1" };
+            const _data = { idregistro_pago: idregistro_pago, codsunat: tipo_documento, idexternal: _idexternal, jsonXml: "", enviado: "1" };
             $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
             .done( function (res) {
                 console.log(res);
+                
+                // envia si es factura
+                if (tipo_documento === '01') { // esto se ejecuta en segundo plano // es decir no espera a que termine
+                    xSoapSunat_EnvioIndividual(_idexternal); 
+                }
             });
 
-            // envia si es factura
-            if (tipo_documento === '01') { // esto se ejecuta en segundo plano // es decir no espera a que termine
-                xSoapSunat_EnvioIndividual(_idexternal); 
-            }
 
         },
-        error: function(err) {
+        error: function(err) { // si hay algun problema de conexion con el apí
             //
             rpt = 'www.papaya.com.pe'; 
             if (guardarError) {                
-                xSendApiSunatError(json_xml, idregistro_pago);
+                xSendApiSunatError(json_xml, idregistro_pago, tipo_documento);
             }
             // guardar en facturas no enviadas o con errores
 
@@ -285,9 +286,9 @@ function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=t
     return rpt;
 }
 
-function xSendApiSunatError(json_xml, idregistro_pago) {
+function xSendApiSunatError(json_xml, idregistro_pago, tipo_documento) {
     json_xml = JSON.stringify(json_xml);
-    const _data = { idregistro_pago: idregistro_pago, idexternal: data.data.external_id, jsonXml: json_xml, enviado: '0' };
+    const _data = { idregistro_pago: idregistro_pago, idexternal: "", codsunat: tipo_documento, jsonXml: json_xml, enviado: "0" };
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
     .done( function (res) {
         // console.log(res);
