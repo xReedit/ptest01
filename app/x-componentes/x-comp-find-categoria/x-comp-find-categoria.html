@@ -4,7 +4,7 @@
 
 
 <dom-module id="x-comp-find-categoria">
-    <template>        
+    <template is="dom-bind">        
         <div>
           <select id="compFindListCategoria" class="xTextRow2 xCursor" onchange="selectOptionCategoria()">
             <template is="dom-repeat" items="{{list}}" as="categoria">
