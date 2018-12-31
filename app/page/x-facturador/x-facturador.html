@@ -1,3 +1,4 @@
+<link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <dom-module id="x-facturador">
     <template>
         <br>
@@ -6,15 +7,31 @@
                 <p>Emite comprobantes electronicos personalizados. Es decir el concepto y los montos no tienen que ser previamente registrados.</p>
             </div>
             <div class="xContentCard" style="height: 100%;">                
-                <p class="bold">Cliente</p>   
+                <p class="bold">Comprobante</p>   
                 <div class="container-cliente">             
                 <form action="" id="form_pago_cliente" is="iron-form">
-                    <input autofocus type="number" class="xMiInput xPasarEnter2" style="width:250px;" placeholder="RUC Cliente" pattern="[0-9]*" required id="txt_ruc" espaciar>
-                    <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" required id="txt_descripcion" espaciar>
-                    <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" required id="txt_direccion" espaciar>
+                    <div style="width:250px; padding-left: 7px;">
+                        <x-comp-find-comprobante id="compFindComprobante" onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante>
+                    </div>
+                    <br>
+                    <div class="xInvisible" id="contentClie">
+                        <div style="width:260px;">
+                            <input autofocus type="number" class="xMiInput" placeholder="RUC Cliente" pattern="[0-9]*" required id="txt_ruc" onkeyup="validarDocumentoCliente(this.value, event)" espaciar>
+                            <div class="xInvisible" id="progress_cliente">
+                                <paper-progress indeterminate style="width: 100%; float: left; margin-top: -6px"></paper-progress>
+                            </div>
+                            <div>
+                                <span class="xColorRow_Rojo xInvisible" id="txt_msj" style="padding-left: 7px; float: left; margin-top: -3px"></span>
+                            </div>
+                        </div>
+                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" required id="txt_nombres" espaciar readonly>
+                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" required id="txt_direccion" espaciar>
+                    </div>
                 </form>
                 <br>                
                 </div>                
+                <br>                
+                <hr class="xLinea3">
                 <br>
                 <table class="xtable4">
                     <thead>
@@ -50,11 +67,15 @@
 
             <div class="xPieCard">
                 <br>
-                <div class="xBoton2 xAzul" onclick="xOpenRegistrarPago();">Listo, emitir comprobante</div>
+                <button class="xBoton2 xAzul" 
+                    onclick="xOpenRegistrarPago();"
+                    disabled="[[!formValid]]"
+                    >Listo, emitir comprobante</button>
                 <br><br>
             </div>
         </div>
     </template>
+    <script type="text/javascript" src="../../shared/validar.numdoc.js"></script>
     <style type="text/css">
         :root {
             --font-size: 12px;
@@ -73,9 +94,12 @@
     </style>
 </dom-module>
 <script>
-    var xThisFacturador, xPopupLoad, _arrItems = [];
+    var xThisFacturador, xPopupLoad, _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
 
     function xIniFacturador() {
+        xThisFacturador.formValid = false;
+        _listValid = false;
+        _formValid = false;
         xThisFacturador.arrItems = [];
         xThisFacturador.arrTotales = [];
         xPopupLoad = document.getElementById('xLoad');
@@ -114,6 +138,88 @@
                 xAddItem();
             }
         });
+    }
+
+    function _getComprobante($event) {
+        this.cnf_ComprobanteSel = $event;
+        xNuevoCliente();
+        if (this.cnf_ComprobanteSel.codsunat === '0') {
+            $("#contentClie").addClass('xInvisible');
+        } else {            
+            $("#contentClie").removeClass('xInvisible');
+        }
+    
+    }
+
+    function validarDocumentoCliente(valor, e){
+        if (e.keyCode !== 13) return;
+        xNuevoCliente();
+        $("#txt_msj").addClass('xInvisible');        
+
+        const tipoDoc = cnf_ComprobanteSel;
+        const rpt = validarNumDoc_ValidarDNIRUC(tipoDoc, valor);
+
+        if (!rpt.valid) {
+            NumDocNoValid(rpt);            
+            return;
+        };
+        
+        $("#progress_cliente").removeClass("xInvisible");
+        xGetFindCliente(rpt.numdoc, rpt.servicio, (new_rpt) => {
+            if (new_rpt.success) {
+                if ( new_rpt.nombres === "" ) {
+                    rpt.valid = false;
+                    rpt.msj = "No se encontraron registros. Verifique el numero de documento.";                    
+                    $("#progress_cliente").addClass("xInvisible");
+                    
+                    
+                    NumDocNoValid(rpt);
+                    return;
+                }
+
+                rpt.valid = true;
+                rpt.msj = "ok";
+                rpt.cliente = { idcliente: new_rpt.idcliente, nombres: new_rpt.nombres, direccion: new_rpt.direccion };
+
+                _formValid = rpt.valid;
+                xValidarBtnProcesar();
+
+                xIdCliente_pago = new_rpt.idcliente;
+                $("#txt_nombres").val(new_rpt.nombres);
+                $("#txt_direccion").val(new_rpt.direccion);
+            } else {
+                rpt.valid = false;
+                rpt.msj = new_rpt.msg;
+
+                NumDocNoValid(rpt);
+                xNuevoCliente();
+            }
+            
+            $("#progress_cliente").addClass("xInvisible");
+        });
+    }
+
+    function NumDocNoValid(rpt){
+        _formValid = rpt.valid;
+        xValidarBtnProcesar();
+
+        $("#txt_msj").text(rpt.msj)
+        $("#txt_msj").removeClass('xInvisible');
+        $("#txt_ruc").select();
+        $("#txt_ruc").focus();
+    }
+
+    function xNuevoCliente() {
+        _formValid = false;
+        xValidarBtnProcesar();
+
+        xIdCliente_pago = '';
+        $('#txt_nombres').val('');
+        $('#txt_direccion').val('');
+
+        $("#txt_ruc").select();
+        $("#txt_ruc").focus();
+
     }
 
     function xCalcTotal() {
@@ -160,11 +266,19 @@
         $("#cant_item").focus();
     }
 
+    function xValidarBtnProcesar() {    
+        xThisFacturador.formValid = _listValid && _formValid;
+    }
+
     function xCalcularTotal() {
         var xCartaSubtotales = xm_log_get('carta_subtotales');
         var _arrTotal = [];
 
         const SumaLista = this._arrItems.map( x => parseFloat(x.ptotal)).reduce((a,b) => a+b, 0);
+        _listValid = parseInt(SumaLista) === 0 ? false : true;
+        xValidarBtnProcesar();
+
+
         _arrTotal.push({ 'des': 'SUB TOTAL', 'importe': xMoneda(SumaLista) });
 
         xCartaSubtotales.map(x => {
@@ -187,7 +301,8 @@
         is: 'x-facturador',
         properties: {    
             arrItems: [],
-            arrTotales: [],            
+            arrTotales: [],
+            formValid: boolean = false,
         },
         attached: function () {
             xThisFacturador = this;
