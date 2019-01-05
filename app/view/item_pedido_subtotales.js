@@ -24,7 +24,7 @@ function xArmarSubtotalesArray(xarr_data_pedido=null, total=0){
 
 	// si data_pedido es null es decir no indican, es por que viene de nuevo pedido
 	// xmipedido, control mesa o venta rapida 
-	// en ese caso toma xArrayPedidoObj que es la variable global donde se almacena el nuevo pedido  
+	// en ese caso toma xArrayPedidoObj que es la variable global donde se almacena el nuevo pedido 
 	xarr_data_pedido = xarr_data_pedido || xArrayPedidoObj;
 	
 	xLocal_TotalImporte = total===0 ? xSumaCantArray(xarr_data_pedido) : total;
@@ -53,7 +53,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 	var arrSuma = [];
 
 	xLocal_xDtSubTotales.push({'descripcion':'Sub Total', 'importe':xMoneda(importeTotal), 'visible':true , 'quitar': false}); 
-	arrSuma.push({'descripcion':'Sub Total', 'importe':xMoneda(importeTotal), 'visible':true , 'quitar': false}); 
+	arrSuma.push({ 'descripcion': 'Sub Total', 'importe': xMoneda(importeTotal), 'visible': true, 'quitar': false, 'visible_cpe': true}); 
 
 	
 	xSumTotalPorcentaje = 0;
@@ -64,47 +64,6 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 	
 	// adicionales taper | deliver | etc
 	if ( arrTipoConsumo.length === 0  || arrTipoConsumo[0].subtotales_tachados === undefined ) return;
-
-
-
-	// var aa = [];
-	
-	// arrTipoConsumo.map(x => {
-	// 	const ee = x.subtotales_tachados.split(',');
-	// 	ee.map(e => {
-	// 		if ( e && e !== ''){
-	// 			aa[e] = !aa[e] ? {'cant': 1, 'tachado': false} : {'cant': parseInt(aa[e].cant) + 1, 'tachado': false};
-	// 			aa[e].tachado = aa[e] === countPedidos;				
-	// 		}
-	// 	})
-	// })
-
-	// arrVerifySubTotalTachados = aa;
-	// xSumCantImporte = 0
-
-	// var xarr_reduce = arrTipoConsumo.reduce((rv,x) => {
-	// 	(rv[x['tipoconsumo']] = rv[x['tipoconsumo']] || []).push(x);
-	// 	return rv;
-	// });
-
-	// var key = "tipoconsumo";
-	// var xarr_reduce = groupBy(arrTipoConsumo, 'tipoconsumo')
-
-
-	// agrupar por idpedido para habilitar tachado
-	// const arrGroupByIdPedido = groupBy(arrTipoConsumo,'idpedido');
-	// var arrSubtotalesIds = [];
-	// arrGroupByIdPedido.map(x => {
-	// 	x.forEach((element, index) => {
-	// 		if ( index > 1 ) {return;}
-	// 		const arrIdSubtotal = element.subtotales_tachados.split(',')
-	// 		arrIdSubtotal.filter(t => t!=='').map(x => {
-	// 			arrSubtotalesIds[t] = arrSubtotalesIds[t] ? arrSubtotalesIds[t] : 0;
-	// 			arrSubtotalesIds[t] += 1 ; 
-	// 		})
-	// 	});
-	// })
-	// console.log('arrGroupByIdPedido ', arrSubtotalesIds);
 
 	// se agrupa la data y se suma las cantidades	
 	var arrCocinada = arrTipoConsumo				
@@ -137,16 +96,6 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 
 	arrCocinada.all_subtotales_tachados = all_subtotales_tachados;
 
-
-	// var arrGroupPedido = arrTipoConsumo
-	// 	.reduce((obj, val) => {
-	// 		const grupo = val.idpedido;			
-	// 		if (!obj[grupo]) { obj[grupo] = []; }
-	// 		obj[grupo].subtotales_tachados = !obj[grupo].subtotales_tachados ? val.subtotales_tachados : obj[grupo].subtotales_tachados + val.subtotales_tachados;
-	// 	})
-
-
-
 	// CALCULAR RECORRIENDO CADA ITEM UNO X UNO
 	
 	xCartaSubtotales
@@ -176,7 +125,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 							} else { // nivel pedido
 								if (x.tipoconsumo !== c.idtipo_consumo) {return}
 								sumItem = parseFloat(c.monto);						
-							}
+						}
 		
 							// si esta para tachar al item no suma
 							// evalua uno por uno
@@ -210,7 +159,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 								
 								arrSuma[IdExite].importe_tachado = nivel === 0 ? parseFloat(importeTachadoItem + parseFloat(importe_tachado)).toFixed(2) : parseFloat(importe_tachado).toFixed(2);
 							} else {
-								arrSuma.push({ 'id': id, 'descripcion': c.descripcion, 'importe_tachado': xMoneda(importe_tachado), 'importe': xMoneda(sumItem), 'punitario': c.monto, 'esImpuesto': 0, 'visible':true, 'quitar': true, 'tachado': tachado}); 
+								arrSuma.push({ 'id': id, 'descripcion': c.descripcion, 'importe_tachado': xMoneda(importe_tachado), 'importe': xMoneda(sumItem), 'punitario': c.monto, 'esImpuesto': 0, 'visible': true, 'quitar': true, 'tachado': tachado, 'visible_cpe': false}); 
 							}
 		
 						});
@@ -220,102 +169,21 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 					const id = c.tipo+c.id;
 					const esImpuesto = c.es_impuesto;
 					const valorImpuesto = c.activo === "0" ? c.monto : 0; // se marca 0=activo o 1=desactivado para obtener el % del impuesto requerido por comprobante electronico			
+					const visible_cpe = esImpuesto === "1" ? true : false; // indica si se muestra en la facturacion electronica
 					let porcentaje = parseFloat(parseFloat(valorImpuesto)/100).toFixed(2);		
 					porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
 
 					// const esVisible = porcentaje > 0 ? true : false; // ver que implica
 					
-					arrSuma.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'esImpuesto': esImpuesto, 'visible':true, 'quitar': false, 'tachado': false}); 
+					arrSuma.push({ 'id': id, 'descripcion': c.descripcion, 'importe': xMoneda(porcentaje), 'esImpuesto': esImpuesto, 'visible': true, 'quitar': false, 'tachado': false, 'visible_cpe': visible_cpe}); 
 					break;
 			}	
 		});
 
-
-	
-
-	// // ADICIONALES POR ITEM
-	// xCartaSubtotales
-	// 	.filter(c => c.tipo==='a' && parseInt(c.nivel)===0)		
-	// 	.map(c => {c.grupo = c.idtipo_consumo+c.idseccion; return c;})
-	// 	.map(c => {			
-	// 		arrCocinada
-	// 			.filter(x => x.grupo===c.grupo)				
-	// 			.map(x => {
-	// 				const id = c.tipo+c.id; // para quitar					
-	// 				// xSumCantImporte += parseFloat(xSumAdicional);
-										
-	// 				//x.subtotales_tachados.toLowerCase().split("").sort().join("").match(/(.)\1+/g).length;
-	// 				// si el requerimiento viene de control de pedidos cada item tendra "subtotales_tachados"
-	// 				xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
-
-	// 				const CountIdTacahdos = xLocal_SubTotal_Quitados.toLowerCase().split(",").sort().filter(x => x===id).length;
-	// 				const xSumAdicional= ((parseFloat((x.cantidad) - parseFloat(CountIdTacahdos)) * parseFloat(c.monto)));
-
-	// 				const tachado = checkSubTotalQuitado(countPedidos, id, xSumAdicional);
-					
-	// 				xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(xSumAdicional), 'visible':true, 'quitar': true, 'tachado': tachado}); 
-	// 			})
-	// 	});
-	
-	// // ADICIONALES POR PEDIDO	// COMO SERVICIO DELIVERY 
-	// var tipoConsumoAdd = 0;
-	// xCartaSubtotales
-	// 	.filter(c => c.tipo==='a' && parseInt(c.nivel)===1)		
-	// 	.map(c => {c.grupo = c.idtipo_consumo; return c;}) // solo mira seccion
-	// 	.map(c => {
-	// 		arrCocinada
-	// 			.filter(x => x.grupoTipoconsumo===c.grupo)
-	// 			.map(x => {
-	// 				const id = c.tipo+c.id; // para quitar
-	// 				if ( tipoConsumoAdd === x.grupoTipoconsumo ) { return;}
-
-	// 				const xSumCantImportePorPedio = parseFloat(c.monto);
-
-	// 				// si el requerimiento viene de control de pedidos cada item tendra "subtotales_tachados"
-	// 				xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
-	// 				const tachado = checkSubTotalQuitado(countPedidos, id, xSumCantImportePorPedio);
-					
-	// 				xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(xSumCantImportePorPedio), 'visible':true, 'quitar': true, 'tachado': tachado}); 
-					
-	// 				tipoConsumoAdd = x.grupoTipoconsumo; // solo una vez
-	// 			})
-	// 	});
-
-
-	// // lo ponemos aca para que tenga en cuenta los subtotales_tachados que pueden venir con los items
-	// // procentajes impuestos o servicios | igv | etc
-	// xCartaSubtotales
-	// 	.filter(c => c.tipo==='p')
-	// 	.map(c => {
-	// 		const id = c.tipo+c.id; // para quitar			
-
-	// 		porcentaje=parseFloat(parseFloat(c.monto)/100).toFixed(2);		
-	// 		porcentaje=parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2)
-			
-	// 		// si es impuesto
-	// 		var esImpuesto=false, opQuitar=false, tachado = false;
-	// 		if ( parseInt(c.es_impuesto) === 1 ) {
-	// 			xSumCantImporte += parseFloat(porcentaje);
-	// 			esImpuesto = true;		
-	// 			opQuitar=false;
-	// 		} else {
-	// 			opQuitar=true;								
-	// 			//xLocal_SubTotal_Quitados = x.subtotales_tachados != '' ? x.subtotales_tachados : xLocal_SubTotal_Quitados;
-	// 			tachado = checkSubTotalQuitado(countPedidos, id, porcentaje);
-	// 		}			
-            
-    //         xLocal_xDtSubTotales.push({'id': id, 'descripcion':c.descripcion, 'importe':xMoneda(porcentaje), 'visible':true, 'quitar': opQuitar, 'tachado': tachado}); 
-	// 	});
-		
-
-    // xSumCantImporte = parseFloat(importeTotal) + parseFloat(xSumCantImporte) + parseFloat(xSumTotalPorcentaje);
-    // if(xLocal_xDtSubTotales.length==1){xLocal_xDtSubTotales=[];}
-    // xLocal_xDtSubTotales.push({'descripcion':'Total', 'importe':xMoneda(xSumCantImporte), 'visible':true});
-
 	 
 	const sumTotal = Object.keys(arrSuma).map(x => arrSuma[x].importe).reduce((a, b) => parseFloat(a) + parseFloat(b));
 	if(arrSuma.length==1){arrSuma=[];}
-	arrSuma.push({'descripcion':'Total', 'importe':xMoneda(sumTotal), 'visible':true});
+	arrSuma.push({ 'descripcion': 'Total', 'importe': xMoneda(sumTotal), 'visible': true, 'visible_cpe': true});
 
 	xLocal_xDtSubTotales = arrSuma;
 	xSumCantImporte = sumTotal;
@@ -338,14 +206,6 @@ function checkSubTotalQuitado(countPedidos, id , val) {
 	rpt = xLocal_SubTotal_Quitados.indexOf(id) >=0 ? true : false;
 	if (!rpt) {xSumCantImporte += parseFloat(val);}
 	
-	
-	// responde false = no tachar si al menos una coicidencia es false; 
-	//es decir si tengo 2 pedidos que en uno se tacha taper y en otro no, en la suma total en control de pedidos no tachara, caso contario si tachara
-	// if ( arrVerifySubTotalTachados[id] && arrVerifySubTotalTachados[id].tachado === false ) {
-	// 	return arrVerifySubTotalTachados[id].tachado;
-	// }
-
-
 	return hbilitarTachado ? rpt : false; 
 }
 

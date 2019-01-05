@@ -1,3 +1,4 @@
+<!-- comprobantes -->
 <?php
 session_start();
 date_default_timezone_set('America/Lima');	
@@ -257,6 +258,8 @@ while($num_copias>=0){
 	//	
 	foreach ($ArraySubTotales as $item_sbt) {//
 		if($item_sbt['visible']=='false'){continue;}
+		if($item_sbt['visible_cpe']=='false'){continue;}
+		
 		$des_sbt=$item_sbt['descripcion'];//
 		$imp_sbt=$item_sbt['importe'];//
 

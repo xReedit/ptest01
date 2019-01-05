@@ -705,90 +705,34 @@
             //idcategoria en pedido
             xidCategoriaSeccion = n.idcategoria;
             xCadenaItemArray = String(
-              '<tr class="xPedidoItem row" data-id="' +
-              n.iditem +
-              '" ' +
-              'data-idseccion="' +
-              n.idseccion +
-              '" ' +
-              'data-seccion="' +
-              n.des_seccion +
-              '" ' +
-              'data-idbus="' +
-              n.idseccion +
-              '" ' +
-              'data-idtipocobus="' +
-              n.idtipo_consumo +
-              '" ' +
-              'data-idprocede="' +
-              n.idprocede +
-              '" ' +
-              'data-procede="' +
-              n.procede +
-              '" ' +
-              'data-procedeindex="' +
-              n.procede_index +
-              '" ' +
-              'data-ventarapida=0 data-imprimircomanda="' +
-              n.imprimir_comanda +
-              '" ' +
-              'data-iddescontar="' +
-              n.idprocede +
-              '" ' +
-              'data-cant_descontar="' +
-              n.cant_descontar +
-              '" ' +
-              'data-idalmacen_items="' +
-              n.idalmacen_items +
-              '" onclick="xOpenDlgItem(this);">' +
-              '<td width="10px" data-ColumName="cantidad" id="cant_descontar">' +
-              xCeroIzq(n.cantidad, 2) +
-              "</td>" +
-              "<td>" +
-              n.des +
-              " " +
-              xIndicacionItem +
-              "</td>" +
-              '<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">' +
-              n.precio_total +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="punitario" id="punitario">' +
-              n.precio +
-              "</td>" +
-              '<td class="xInvisible" id="td_cant">' +
-              n.cantidad +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="iditem">' +
-              n.iditem2 +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="idcarta_lista" id="id_descontar">' +
-              n.iditem +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="idseccion">' +
-              n.idseccion +
-              "</td>" +
-              '<td class="xInvisible" id="row_idprocede">' +
-              n.idprocede +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="idcategoria">' +
-              n.idcategoria +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="idtipo_consumo">' +
-              xArrayPedidoObj[i].id +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="descripcion">' +
-              n.des +
-              " " +
-              n.indicaciones +
-              "</td>" +
-              '<td class="xInvisible" data-ColumName="procede">' +
-              n.procede_index +
-              "</td>" + //guardar relacion idprocede=idproducto_familia
-              '<td class="xInvisible" id="row_tb_procede">' +
-              n.procede +
-              "</td>" + //tabla de procedencia
-                '<td class="xInvisible" data-ColumName="idpedido">?p</td>' +
-                "</tr>"
+              '<tr class="xPedidoItem row" data-id="' + n.iditem + '" ' +
+                'data-idseccion="' + n.idseccion + '" ' +
+                'data-seccion="' + n.des_seccion + '" ' +
+                'data-idbus="' + n.idseccion + '" ' +
+                'data-idtipocobus="' + n.idtipo_consumo + '" ' +
+                'data-idprocede="' + n.idprocede +'" ' +
+                'data-procede="' + n.procede + '" ' +
+                'data-procedeindex="' + n.procede_index + '" ' +
+                'data-ventarapida=0 data-imprimircomanda="' + n.imprimir_comanda + '" ' +
+                'data-iddescontar="' + n.idprocede + '" ' +
+                'data-cant_descontar="' + n.cant_descontar + '" ' +
+                'data-idalmacen_items="' + n.idalmacen_items + '" onclick="xOpenDlgItem(this);">' +
+              '<td width="10px" data-ColumName="cantidad" id="cant_descontar">' + xCeroIzq(n.cantidad, 2) + "</td>" +
+              "<td>" + n.des + " " + xIndicacionItem + "</td>" +
+              '<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">' + n.precio_total_calc + "</td>" +
+              '<td class="xInvisible" data-ColumName="punitario" id="punitario">' + n.precio + "</td>" +
+              '<td class="xInvisible" id="ptotal_calc">' + n.precio_total_calc + "</td>" +
+              '<td class="xInvisible" id="td_cant">' + n.cantidad + "</td>" +
+              '<td class="xInvisible" data-ColumName="iditem">' + n.iditem2 + "</td>" +
+              '<td class="xInvisible" data-ColumName="idcarta_lista" id="id_descontar">' + n.iditem + "</td>" +
+              '<td class="xInvisible" data-ColumName="idseccion">' + n.idseccion + "</td>" +
+              '<td class="xInvisible" id="row_idprocede">' + n.idprocede + "</td>" +
+              '<td class="xInvisible" data-ColumName="idcategoria">' + n.idcategoria + "</td>" +
+              '<td class="xInvisible" data-ColumName="idtipo_consumo">' + xArrayPedidoObj[i].id + "</td>" +
+              '<td class="xInvisible" data-ColumName="descripcion">' + n.des + " " + n.indicaciones + "</td>" +
+              '<td class="xInvisible" data-ColumName="procede">' + n.procede_index + "</td>" + //guardar relacion idprocede=idproducto_familia
+              '<td class="xInvisible" id="row_tb_procede">' + n.procede + "</td>" + //tabla de procedencia
+              '<td class="xInvisible" data-ColumName="idpedido">?p</td>'+"</tr>"
             );
             xArraySeccion[xid_sec_index] =
               xArraySeccion[xid_sec_index] + xCadenaItemArray;

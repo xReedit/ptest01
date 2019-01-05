@@ -29,18 +29,27 @@ switch($_GET['op'])
 			// ";
 
 			// tambien tiene en cuenta productos de bodega
+			// $sql = "
+			// SELECT p.idpedido FROM pedido AS p
+			// 	INNER JOIN pedido_detalle AS pd using(idpedido)
+			// 	LEFT JOIN seccion AS s using(idseccion)
+			// 	LEFT JOIN producto_familia as pf on pd.idseccion = pf.idproducto_familia
+			// where (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") and p.cierre=0 and (pd.idtipo_consumo in (".$tipo_consumo.") and (s.idimpresora in (".$idseccion.") or pf.idimpresora in (".$idseccion.") ) )
+			// ORDER BY p.idpedido DESC limit 1
+			// ";
+
 			$sql = "
-			SELECT p.idpedido FROM pedido AS p
-				INNER JOIN pedido_detalle AS pd using(idpedido)
-				LEFT JOIN seccion AS s using(idseccion)
-				LEFT JOIN producto_familia as pf on pd.idseccion = pf.idproducto_familia
-			where (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") and p.cierre=0 and (pd.idtipo_consumo in (".$tipo_consumo.") and (s.idimpresora in (".$idseccion.") or pf.idimpresora in (".$idseccion.") ) )
-			ORDER BY p.idpedido DESC limit 1
+			SELECT max(p.idpedido) 
+			FROM pedido AS p
+				inner join pedido_detalle as pd USING (idpedido)
+				left join seccion as s on s.idseccion = pd.idseccion
+				left join producto_familia as pf on pf.idproducto_familia = pd.idseccion
+			where (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") and (pd.idtipo_consumo in (".$tipo_consumo.") and (s.idimpresora in (".$idseccion.") or pf.idimpresora in (".$idseccion.") ) )
 			";
 
 			$numero_pedidos_actual_2=$bd->xDevolverUnDato($sql);
 			$hora=date('H:i:s');
-			echo "retry: 3000\n"."data:".$numero_pedidos_actual_2.",".$hora."\n\n";
+			echo "retry: 4000\n"."data:".$numero_pedidos_actual_2.",".$hora."\n\n";
 			ob_flush();
 			flush();
 			break;

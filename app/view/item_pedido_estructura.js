@@ -13,7 +13,7 @@ function xCargarDatosAEstructuraImpresion (_SubItems) {
         _arrRpt[element.idtipo_consumo]=element
     });
     // _arrRpt=_arrEstructura.slice();
-	_arrRpt=JSON.parse(JSON.stringify(_arrRpt).replace(/descripcion/g,'des'));
+    _arrRpt=JSON.parse(JSON.stringify(_arrRpt).replace(/descripcion/g,'des'));
     
     for (b in _arrEstructura) {
         for (var i in _SubItems) {
@@ -37,11 +37,11 @@ function xCargarDatosAEstructuraImpresion (_SubItems) {
 
 /// cocina datos a la estructura de items para impresion de comprobante
 /// junta o agrupa por items en 2 secciones: items y servicios adicionales (si hubiera {taper, delivery etc}) 
-/// _SubItems = xArrayCuerpo; items que se envian en el formato anterior 
-function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
+/// _SubItems = xArrayCuerpo; items que se envian en el formato anterior
+/// cpe => si es comprobante electronico o no, esto para calcular el subtotal + adicionales
+function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false){
 
     let itemsObj = [];
-    
     // items en una sola lista
     _SubItems
         .filter(x => x !== null)
@@ -67,7 +67,9 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
                     cantidad: x.cantidad,
                     des: x.des,
                     punitario: x.precio,
-                    precio_total: parseFloat(x.precio_total).toFixed(2),
+                    // precio_total: parseFloat(x.precio_total).toFixed(2),
+                    precio_total: parseFloat(x.precio_total_calc).toFixed(2),
+                    precio_print: x.precio_print,
                     seccion: x.des_seccion
                 }
                 return rv
@@ -85,7 +87,9 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
         .sort((a, b) => (a.seccion > b.seccion) - (a.seccion < b.seccion) );
     
     group = Object.values(group);
-    // agreagar adicionales si los hay
+    
+    // agreagar adicionales si los hay y los suma a subtotal
+    let cantAddSubtotal = 0;
     xArraySubTotales.map(x => {
         if (x.id === undefined) { return; } // id remplaza a tachado es decir no se aceptan subtotales
         if (x.tachado === true) { return; }
@@ -93,8 +97,10 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
 
         const seccion = x.id.indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
         // const cantidad = x.cantidad ? x.cantidad : 1;
-        const cantidad = parseFloat(x.importe / x.punitario).toFixed(2);
+        const cantidad = parseInt(x.importe / x.punitario);
         const index = group.length+1; // en facturacion electronica el id debe ser numero
+
+        cantAddSubtotal = x.importe; // para aumentar al subtotal xArraySubTotales
 
         group.push({
           id: index.toString(),
@@ -104,7 +110,12 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales){
           precio_total: x.importe,
           seccion: seccion
         });
-    })
+    });
+
+    if (cpe) { //si es comprobante electronico o no, esto para calcular el subtotal + adicionales
+        cantAddSubtotal = parseFloat(xArraySubTotales[0].importe) + parseFloat(cantAddSubtotal);
+        xArraySubTotales[0].importe = xMoneda(cantAddSubtotal);
+    }
         
     // const aa = xEstructuraItemsGroupFormatoImpresion(group, "seccion");
     // console.log(aa);

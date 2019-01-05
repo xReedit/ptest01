@@ -2560,6 +2560,8 @@
 					ORDER BY p.idpedido,pf.idproducto_familia ,pd.descripcion
 				) b
 			";
+
+			// print $sql;
 			$bd->xConsulta($sql);
 			break;
 		case 2102://guardar como depachado //despacho=0=despachado 1=por defecto

@@ -68,7 +68,7 @@
             <div class="xPieCard">
                 <br>
                 <button class="xBoton2 xAzul" 
-                    onclick="xOpenRegistrarPago();"
+                    onclick="xProcesarComprobante();"
                     disabled="[[!formValid]]"
                     >Listo, emitir comprobante</button>
                 <br><br>
@@ -76,6 +76,14 @@
         </div>
     </template>
     <script type="text/javascript" src="../../shared/validar.numdoc.js"></script>
+    <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
+    <script type="text/javascript" src="../../view/deNumALetras.js"></script>
+    <script type="text/javascript" src="../../view/xJsonSunat.js"></script>
+    <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
+    <script type="text/javascript" src="../../view/item_pedido_estructura.js"></script>
+    <script type="text/javascript" src="../../view/item_pedido_subtotales.js"></script>
+    <script type="text/javascript" src="../../view/manager_storage.js"></script>
+    <script type="text/javascript" src="../../view/cliente.service.js"></script>
     <style type="text/css">
         :root {
             --font-size: 12px;
@@ -94,7 +102,7 @@
     </style>
 </dom-module>
 <script>
-    var xThisFacturador, xPopupLoad, _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
+    var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
 
     function xIniFacturador() {
         xThisFacturador.formValid = false;
@@ -138,12 +146,13 @@
                 xAddItem();
             }
         });
+
     }
 
     function _getComprobante($event) {
-        this.cnf_ComprobanteSel = $event;
+        cnf_ComprobanteSel = $event;
         xNuevoCliente();
-        if (this.cnf_ComprobanteSel.codsunat === '0') {
+        if (cnf_ComprobanteSel.codsunat === '0') {
             $("#contentClie").addClass('xInvisible');
         } else {            
             $("#contentClie").removeClass('xInvisible');
@@ -179,7 +188,8 @@
 
                 rpt.valid = true;
                 rpt.msj = "ok";
-                rpt.cliente = { idcliente: new_rpt.idcliente, nombres: new_rpt.nombres, direccion: new_rpt.direccion };
+                rpt.cliente = { idcliente: new_rpt.idcliente, nombres: new_rpt.nombres, direccion: new_rpt.direccion, num_doc: rpt.numdoc };
+                _arrCliente = rpt.cliente;
 
                 _formValid = rpt.valid;
                 xValidarBtnProcesar();
@@ -214,6 +224,7 @@
         xValidarBtnProcesar();
 
         xIdCliente_pago = '';
+        _arrCliente = [];
         $('#txt_nombres').val('');
         $('#txt_direccion').val('');
 
@@ -240,8 +251,8 @@
         if (xCan_item === '' || xDes_item === '' && xPUnitario === '' && xPTotal === '') { return }
 
 
-
-        const item = {'cantidad': xCan_item, 'descripcion': xDes_item, 'punitario': xPUnitario, 'ptotal': xPTotal};
+        const id = xCeroIzq(_arrItems.length + 1, 3);
+        const item = {'id': id, 'cantidad': xCan_item, 'descripcion': xDes_item, 'punitario': xPUnitario, 'ptotal': xPTotal};
         _arrItems.push(item);
         xThisFacturador.arrItems = JSON.parse(JSON.stringify(_arrItems));
         //arrItems = JSON.parse(JSON.stringify(arrItems));
@@ -272,7 +283,7 @@
 
     function xCalcularTotal() {
         var xCartaSubtotales = xm_log_get('carta_subtotales');
-        var _arrTotal = [];
+        _arrTotal = [];
 
         const SumaLista = this._arrItems.map( x => parseFloat(x.ptotal)).reduce((a,b) => a+b, 0);
         _listValid = parseInt(SumaLista) === 0 ? false : true;
@@ -296,6 +307,22 @@
         xThisFacturador.arrTotales = JSON.parse(JSON.stringify(_arrTotal));
         console.log(_arrTotal);
     }
+
+    function xProcesarComprobante() {
+        // obtiene el correlativo del comprobante        
+        $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data: { p_from:'f', p_comprobante: cnf_ComprobanteSel } })
+        .done(function (comprobante_correlativo) {
+            console.log(comprobante_correlativo);
+            xMandarCocinarImpresionComprobante(comprobante_correlativo, 0);
+        });
+    }
+
+    function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	        
+        var arr_comprobante = cnf_ComprobanteSel;
+        arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+        
+        xCocinarImprimirComprobante(_arrItems, _arrTotal, arr_comprobante, _arrCliente, 0,-2);
+    }   
 
     Polymer({
         is: 'x-facturador',

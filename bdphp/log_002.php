@@ -63,6 +63,26 @@
             ";
             $bd->xConsulta($sql);
             break;
+        case '4' : // guardar cpe y obtener correlativo
+            $x_array_comprobante = $_POST['p_comprobante'];
+            $correlativo_comprobante = 0; 
+            $idtipo_comprobante_serie = $x_array_comprobante['idtipo_comprobante_serie'];
+            if ($x_array_comprobante['idtipo_comprobante'] != "0"){ // 0 = ninguno | no imprimir comprobante
+
+        
+                $sql_doc_correlativo="select (correlativo + 1) as d1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;		
+                $correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);
+
+                // guardamos el correlativo
+                $sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+                $bd->xConsulta_NoReturn($sql_doc_correlativo);
+            } else {
+                $correlativo_comprobante='0';
+            }            
+
+
+            print $correlativo_comprobante;
+            break;
         default:
             # code...
             break;

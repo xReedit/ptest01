@@ -9,7 +9,7 @@ var xImpresoraPrint;
 // idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc){
 	
-	if (xArrayComprobante.idtipo_comprobante === "0") {return;} // ninguno no imprime
+	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") {return;} // ninguno no imprime
 	
     // busca impresora donde imprimir
     if (!xgetComprobanteImpresora(xidDoc)) return false; 
@@ -23,7 +23,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	// escribir el importe total en letras
 	// siempre ultimo es es el total
 	const index_total = xArraySubTotales.length-1;
-	const total_pagar = xArraySubTotales[index_total].importe;
+	const total_pagar = parseFloat(xArraySubTotales[index_total].importe);
 	xArraySubTotales[index_total].importe_letras = numeroALetras(total_pagar);
 
 	//comprobante electronico // ponemos el pie de pagina para el comprobante
@@ -48,7 +48,7 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 	xPopupLoad.titulo="Imprimiendo...";	
 
 	// formato de impresion items comprobante donde no se tiene en cuenta el tipo de consumo solo seccion e items
-	let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal);
+	let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal, true); // cpe = true subtotal + adicional
 	_arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
 
 	$.ajax({type: 'POST', url: '../../print/print5.php', 

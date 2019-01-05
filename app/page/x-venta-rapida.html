@@ -751,11 +751,13 @@ async function xGuardarPedidoVR(responde){
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
-	var arr_cliente = xRpt_pago[0].cliente;
-	var arr_comprobante = xRpt_pago[0].comprobante;
-	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-	// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
-	xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
+	if ( xRpt_pago.length > 0 ) {
+		var arr_cliente = xRpt_pago[0].cliente;
+		var arr_comprobante = xRpt_pago[0].comprobante;
+		arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
+		xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
+	}
 }
 
 // function xLLamarPrintVR(){
@@ -926,6 +928,7 @@ function xVerMipedidoVR(){
 		xArraySeccion=new Array();
 		xCantItems=0;
 		if(xDtPedido[i]==null){continue;}
+
 		xTpConsumo=xDtPedido[i].des;
 		$.map(xDtPedido[i], function(n, z) {
 			if (typeof n=="object"){
@@ -959,6 +962,7 @@ function xVerMipedidoVR(){
 					'<td width="90%">'+xCeroIzq(n.cantidad,2)+' | '+n.des+' '+xIndicacionItem+'</td>'+
 					'<td class="xInvisible" data-ColumName="cantidad" id="cant_descontar">'+xCeroIzq(n.cantidad,2)+'</td>'+
 					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+
+					'<td class="xInvisible" id="ptotal_calc">' + n.precio_total_calc + '</td>' +
 					'<td class="xInvisible" data-ColumName="punitario" id="punitario">'+n.precio+'</td>'+
 					'<td class="xInvisible" id="td_cant">'+n.cantidad+'</td>'+
 					'<td class="xInvisible" data-ColumName="iditem">'+n.iditem2+'</td>'+

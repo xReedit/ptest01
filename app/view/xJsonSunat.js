@@ -24,9 +24,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     const isExoneradoIGV = procentajeIGV.activo === "1" ? true : false; //1 = desactivado => exonerado
 
 
-
-
-    var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales);
+    // cpe = false subtotal + adicional -> lo ponemos en xImprimirComprobanteAhora() // para mostrar en la impresion
+    var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false);
     xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV);
 
 

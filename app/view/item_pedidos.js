@@ -22,6 +22,7 @@ var xNumPedidosBD=0;
 
 var xGeneralArraySubTotales=new Array();
 
+// 'precio_total_calc': para calcular en regalas de carta
 
 $(document).on('click', '.xBtn', function(e) {
 		xCambioCantidad=true;
@@ -82,7 +83,7 @@ $(document).on('click', '.xBtn', function(e) {
 
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
 		xArrayPedidoObj[xidTipoConsumo][xidItem]={'idcategoria':xidCategoria, 'idseccion':xIdSeccionItem, 'idseccion_index':xIdSeccionItem_index, 'des_seccion':xDesSeccion, 'iditem':xidItem, 'idtipo_consumo':xidTipoConsumo, 'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
-			'precio_total':xPrecioTotal,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0};
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal ,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0};
 
 		if(xCantActual<=0){delete xArrayPedidoObj[xidTipoConsumo][xidItem]}
 
@@ -141,10 +142,9 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 			xcant--;
 		}
 
-
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
 		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
-			'precio_total':xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
 
 		element_cant_li_sel.text(xcant);
 		if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem];}else{
@@ -209,7 +209,7 @@ function xBtnSumarRestarKey(xobj,xval){
 
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
 		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
-			'precio_total':xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar,'idalmacen_items':xli_idalmacen_items, 'visible':0};
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar,'idalmacen_items':xli_idalmacen_items, 'visible':0};
 
 		element_cant_li_sel.text(xcant);;
 
@@ -350,7 +350,8 @@ function xSumaCantArray(ArrySum){
 			if (typeof n === "object"){
 				var xprecio_p=n.precio_print;
 				if(xprecio_p === ""){
-					xprecio_p = n.precio_total;
+					// xprecio_p = n.precio_total;
+					xprecio_p = n.precio_total_calc; // cambio para calcular las reglas de carta
 				}
 				suma=suma+parseFloat(xprecio_p)
 			}
@@ -785,6 +786,7 @@ function xGeneralActualizaItemInactividad(){
 	}
 }
 
+// 'precio_total_calc': para calcular en regalas de carta
 function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 	var xArrayRegla=xm_log_get('reglas_de_carta'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
 	var xSecc_bus='';
@@ -799,6 +801,9 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 			$.map(xArrayPedidoObj[y], function(n, z) {
 				if (typeof n=="object"){
 					n.precio_print='';
+					n.precio_total_calc = n.precio_total; // para calcular las reglas de la carta cuando es array reseteamos precio_total_calc
+					// n.precio_total = n.precio * n.cantidad;
+					// n.precio = xMoneda(n.precio_total);
 				}
 			})
 		}
@@ -813,6 +818,9 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 			xSecc_detalle=xArrayRegla[i].idseccion_detalle;
 			//buscar
 			xCantidadBuscar=xObtnerValSumTable($(xtb),'data-idbus',xSecc_bus,'#cant_descontar');
+
+			if (xCantidadBuscar === 0 ) continue; // no hay nada que buscar
+
 			xCantidadBuscarSecc_detalle=xObtnerValSumTable($(xtb),'data-idbus',xSecc_detalle,'#cant_descontar');
 
 			var diferencia = xCantidadBuscar - xCantidadBuscarSecc_detalle;			
@@ -820,33 +828,43 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 			
 			$(xtb).find(".row").each(function (index, element) {
 				// if(xCantidadBuscar <= 0) {return;} // lo dejamos pasar si es cero para que coloque el precio normal a todos los items de lo contrario dejaria con precios del caso anterior
-				var xIdRowTb=$(element).attr('data-idbus'),
-				xIdtb_Item=$(element).attr('data-id'),
-				xIdtb_tpc=$(element).attr('data-idtipocobus'),
-				xCant_item_bus,
-				xPrecio_item_bus;
+				var xIdRowTb = $(element).attr('data-idbus'),
+				xIdtb_Item = $(element).attr('data-id'),
+				xIdtb_tpc = $(element).attr('data-idtipocobus'),
+				xPrecio_mostrado = parseFloat($(element).find('#ptotal').text()),
+				xPrecio_item_bus = xMoneda(xPrecio_mostrado);
+
+				if (xPrecio_mostrado === 0) return; // si es 0 quiere decir que ya fue descontado, continua con el siguiente
+
+				// xPrecio_item_bus = xMoneda(xPrecio_item_bus);
+				// xCant_item_bus,
 				// xPreciott_item_bus=$(element).find('#ptotal').text();
 
 				if (xIdRowTb === xSecc_detalle) {
 
+					const cant_item = parseInt($(element).find('#cant_descontar').text());
+
 					if ( xCantidadBuscar >= xCantidadBuscarSecc_detalle) {
 						xPrecio_item_bus='0.00';
-					} else if ( diferencia >= 0 ){
-						const cant_item = parseInt($(element).find('#cant_descontar').text());
+					} else if ( diferencia > 0 ){
+						// const cant_item = parseInt($(element).find('#cant_descontar').text());
 						const precioUnitario_item=parseFloat($(element).find('#punitario').text());
 
-						xPrecio_item_bus=parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+						// xPrecio_item_bus = parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+						xPrecio_item_bus = parseFloat(parseFloat(diferencia * precioUnitario_item));
+						xPrecio_item_bus = xPrecio_mostrado - xPrecio_item_bus; // descuenta del precio que se muestra en pantalla( precio que ya fue procesado)
 						xPrecio_item_bus = xPrecio_item_bus < 0 ? '0.00' : xMoneda(xPrecio_item_bus);
 						
 						diferencia = diferencia - cant_item < 0 ? 0 : diferencia - cant_item;													
 					}
 
 					$(element).find('#ptotal').text(xPrecio_item_bus);
-					$(element).attr('cant_descontado',xCant_item_bus)
+					// $(element).attr('cant_descontado',xCant_item_bus)
+					$(element).attr('cant_descontado', cant_item);
 
 					//coloca en array precio a imprimir
 					//xDtPedido[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;
-					xArrayPedidoObj[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;
+					xArrayPedidoObj[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;					
 
 				}
 			})		
@@ -874,26 +892,33 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 							var xIdRowTb=n.idseccion;
 							var xIdtb_Item=n.iditem;
 							var xIdtb_tpc=n.idtipo_consumo;
-							var xCant_item_bus;
-							// var xCant_cal;
-							var xPrecio_item_bus;
+							var xPrecio_mostrado = parseFloat(n.precio_total_calc);
+							var xPrecio_item_bus = xMoneda(xPrecio_mostrado);
+
+							if (xPrecio_mostrado === 0) return; // si es 0 quiere decir que ya fue descontado, continua con el siguiente
 							
 							if(xIdRowTb === xSecc_detalle){
 
+								const cant_item = n.cantidad;
 								if ( xCantidadBuscar >= xCantidadBuscarSecc_detalle) {
 									xPrecio_item_bus='0.00';
-								} else if ( diferencia >= 0 ){
-									const cant_item = n.cantidad;
+								} else if ( diferencia > 0 ){
+									// const cant_item = n.cantidad;
 									const precioUnitario_item=n.precio;
 									
-									xPrecio_item_bus=parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+									// xPrecio_item_bus=parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+									xPrecio_item_bus = parseFloat(parseFloat(diferencia * precioUnitario_item));
+									xPrecio_item_bus = xPrecio_mostrado - xPrecio_item_bus; // descuenta del precio que se muestra en pantalla( precio que ya fue procesado)
 									xPrecio_item_bus = xPrecio_item_bus < 0 ? '0.00' : xMoneda(xPrecio_item_bus);
 									
 									diferencia = diferencia - cant_item < 0 ? 0 : diferencia - cant_item;						
 								}
 
-								n.precio_total=xPrecio_item_bus;
-								n.cant_descontado=xCant_item_bus;
+								
+								// n.precio_total = xPrecio_item_bus; // es el que se muestra para calcular la regla de carta
+								n.precio_total_calc = xPrecio_item_bus; //
+								n.precio_print = xPrecio_item_bus; //
+								n.cant_descontado = cant_item;
 
 								///coloca en array precio a imprimir
 								xArrayEv[xIdtb_tpc][xIdtb_Item].precio_print=xPrecio_item_bus;

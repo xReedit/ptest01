@@ -546,13 +546,16 @@ function xDespachado_retirado(obj,op){
 
 function xVerSiPedidos_logrun(){
 	var xrpt_run;
+	console.log(xdata_zona);
 	if(typeof(EventSource) !== "undefined") {
 	    xsourceEvent = new EventSource("../../bdphp/log_run.php?op=2&tp="+xdata_zona.tipo_consumo+"&ids="+xdata_zona.idseccion);
 	    xsourceEvent.onmessage = function(event) {
 	    	xrpt_run=event.data.split(',');
 	    	xhora_actual_serv=xrpt_run[1];
 	        if(xrpt_run[0]!==xValCountPedidosDespacho){
-	        	xValCountPedidosDespacho=xrpt_run[0];xActualizarPedidosZona();
+				xValCountPedidosDespacho=xrpt_run[0];
+				// xUltimoIdPedidoEnZona = xValCountPedidosDespacho;
+				xActualizarPedidosZona();
 	        }
 	    };
 	}
@@ -565,7 +568,15 @@ function xActualizarPedidosZona(){
 
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2101',data:{'id':xUltimoIdPedidoEnZona,'num_pedidos_cola':xNumEnCola,'arr_filtro':xdata_zona}})
 	.done( function (dt_pedidos) {
-		var xdt_pedidos=$.parseJSON(dt_pedidos), xid_p,xid_secc,xid_item,xcadena_enca='',xcadena_secc='',xcadena_tp_c='',xcadena_item='',xcadena_pedido='',xcandena_btn='',xid_tp_c='',xnum_mesa_p=0,xdes_mesa_p="mesa";
+		console.log(dt_pedidos);
+		var xdt_pedidos=$.parseJSON(dt_pedidos), 
+			xid_p,xid_secc,xid_item,xcadena_enca='',
+			xcadena_secc='',xcadena_tp_c='',
+			xcadena_item='',xcadena_pedido='',
+			xcandena_btn='',xid_tp_c='',
+			xnum_mesa_p=0,
+			xdes_mesa_p="mesa";
+
 		xdt_pedidos=xdt_pedidos.datos;
 		xarr_pedido=xElaborarArray(xdt_pedidos);
 
