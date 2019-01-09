@@ -1,13 +1,22 @@
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <dom-module id="x-facturador">
-    <template>
+    <template is="dom-bind">
+        <paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation">
+            <h4>Error en impresora</h4>
+            <p id="print_error"></p>
+            <br>
+            <div class="xBoton2 xVerde" style="margin-left:23px;" onclick="xReImprimirFac();">Intentar Nuevamente</div>
+            <div class="xBoton2 xPlomo" style="margin-left:23px;" dialog-dismiss onclick="xNuevoPedidoVR();">No imprimir</div>
+            <br><br><br>
+        </paper-dialog>
         <br>
         <div class="xMiCard xradius" style="width:85%">
             <div class="xEncanezadoCard xFondoRowAmarillo2">
                 <p>Emite comprobantes electronicos personalizados. Es decir el concepto y los montos no tienen que ser previamente registrados.</p>
             </div>
             <div class="xContentCard" style="height: 100%;">                
-                <p class="bold">Comprobante</p>   
+                <p class="bold xColorRow_Plomo">Comprobante</p>   
                 <div class="container-cliente">             
                 <form action="" id="form_pago_cliente" is="iron-form">
                     <div style="width:250px; padding-left: 7px;">
@@ -66,14 +75,34 @@
             </div>
 
             <div class="xPieCard">
+                <div style="width: 200px;">
+                    <label for="listPrint" class="xColorRow_Plomo"> Impresora: </label>
+                    <select id="listPrint" class="xTextRow2 xCursor" onchange="fact_selectOptionCategoria()">
+                        <template is="dom-repeat" id="listImpresora" items="[[listImpresoras]]" as="impresora">
+                            <option value="[[index]]"> {{ impresora.descripcion }} </option>
+                        </template>
+                    </select>
+                </div>
                 <br>
                 <button class="xBoton2 xAzul" 
                     onclick="xProcesarComprobante();"
                     disabled="[[!formValid]]"
+                    hidden="[[cpe_show]]"
                     >Listo, emitir comprobante</button>
+                
+                <button class="xBoton2 xAzul" 
+                    onclick="xProcesarComprobante();"
+                    hidden="[[!cpe_show]]"
+                    >Volver a imprimir</button>
+
+                <button class="xBoton2 xVerde" 
+                    onclick="xNuevoFac();"
+                    hidden="[[!cpe_show]]"
+                    >Nuevo</button>
                 <br><br>
             </div>
         </div>
+        <br><br>
     </template>
     <script type="text/javascript" src="../../shared/validar.numdoc.js"></script>
     <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
@@ -83,7 +112,7 @@
     <script type="text/javascript" src="../../view/item_pedido_estructura.js"></script>
     <script type="text/javascript" src="../../view/item_pedido_subtotales.js"></script>
     <script type="text/javascript" src="../../view/manager_storage.js"></script>
-    <script type="text/javascript" src="../../view/cliente.service.js"></script>
+    <script type="text/javascript" src="../../view/cliente.service.js"></script>    
     <style type="text/css">
         :root {
             --font-size: 12px;
@@ -103,14 +132,22 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante;
 
     function xIniFacturador() {
+        xPopupLoad = document.getElementById('xLoad');
         xThisFacturador.formValid = false;
         _listValid = false;
         _formValid = false;
         xThisFacturador.arrItems = [];
         xThisFacturador.arrTotales = [];
-        xPopupLoad = document.getElementById('xLoad');
+        xThisFacturador.listImpresoras = [];
+        xThisFacturador.cpe_show = false;
+
+        const arrEstructura = xm_log_get('estructura_pedido');
+        IdTpConsumo = arrEstructura[0].idtipo_consumo;
+
+        fact_getAllImpresoras();
 
         $('.xPasarEnter2').on('keyup', function (e) {
             var code = e.which;
@@ -252,16 +289,25 @@
 
 
         const id = xCeroIzq(_arrItems.length + 1, 3);
-        const item = {'id': id, 'cantidad': xCan_item, 'descripcion': xDes_item, 'punitario': xPUnitario, 'ptotal': xPTotal};
+        const item = {  'id': id, 
+                        'iditem': id, 
+                        'idtipo_consumo': IdTpConsumo,
+                        'des_seccion': 'ITEMS',
+                        'cantidad': xCan_item, 
+                        'descripcion': xDes_item, 
+                        'punitario': xPUnitario, 
+                        'precio': xPUnitario,
+                        'ptotal': xPTotal,
+                        'precio_total_calc': xPTotal
+                    };
         _arrItems.push(item);
         xThisFacturador.arrItems = JSON.parse(JSON.stringify(_arrItems));
         //arrItems = JSON.parse(JSON.stringify(arrItems));
         console.log(xThisFacturador.arrItems);
         xCalcularTotal();
         xNuevoItem();
-
     }
-
+    
     function xBorrarItemLocalArr(obj) {
         const i = obj.parentElement.parentElement.dataValue;
         _arrItems.splice(i,1);
@@ -290,46 +336,133 @@
         xValidarBtnProcesar();
 
 
-        _arrTotal.push({ 'des': 'SUB TOTAL', 'importe': xMoneda(SumaLista) });
+        _arrTotal.push({ 'descripcion': 'Sub Total', 'importe': xMoneda(SumaLista) });
 
         xCartaSubtotales.map(x => {
             if (x.es_impuesto === '1') {
                 const impuesto = parseFloat(x.monto);
                 const importeCalc = x.activo === '0' ? parseFloat(SumaLista * (impuesto / 100)).toFixed(2) : '0.00';
-                _arrTotal.push({'des': x.descripcion, 'importe': importeCalc});
+                _arrTotal.push({'descripcion': x.descripcion, 'importe': importeCalc});
             }
         });
 
 
         const total = _arrTotal.map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
-        _arrTotal.push({ 'des': 'TOTAL', 'importe': xMoneda(total) });
+        _arrTotal.push({ 'descripcion': 'Total', 'importe': xMoneda(total) });
         
         xThisFacturador.arrTotales = JSON.parse(JSON.stringify(_arrTotal));
         console.log(_arrTotal);
     }
 
     function xProcesarComprobante() {
-        // obtiene el correlativo del comprobante        
+        // obtiene el correlativo del comprobante    
+        xPopupLoad.xopen(); 
         $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data: { p_from:'f', p_comprobante: cnf_ComprobanteSel } })
         .done(function (comprobante_correlativo) {
-            console.log(comprobante_correlativo);
             xMandarCocinarImpresionComprobante(comprobante_correlativo, 0);
         });
     }
 
-    function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	        
-        var arr_comprobante = cnf_ComprobanteSel;
-        arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+    async function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	        
         
-        xCocinarImprimirComprobante(_arrItems, _arrTotal, arr_comprobante, _arrCliente, 0,-2);
-    }   
+        if ( !xThisFacturador.cpe_show ) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
+            arr_comprobante = cnf_ComprobanteSel;
+            arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+            
+            // retorna el encabezado del comprobante con hash
+            itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);
+            rptDoc = await xCocinarImprimirComprobante(itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, 0,-2,false)
+        }
+        
+        xThisFacturador.cpe_show = true;
+        if (rptDoc[0].hash === 'www.papaya.com.pe') {// error de conexion o algun  error // no pdf
+            xPopupLoad.xclose();
+            alert('Error con la conexion al servicio de Sunat. Intentelo mas tarde');
+        } else {
+
+            if (impresoraSelect.idimpresora === -1) {// en pdf
+                // llamar servicio del api
+                xSoapSunat_DownloadFile('pdf', rptDoc[0].external_id);           
+                xPopupLoad.xclose();
+                return;
+            }
+
+            xLLamarPrintFac();
+        }
+    }
+
+    function xNuevoFac() {
+        xThisFacturador.cpe_show = false;
+        _arrCliente = [];
+        _arrItems = [];
+        _arrTotal = [];
+
+        xThisFacturador.arrItems = JSON.parse(JSON.stringify(_arrItems));
+        xThisFacturador.arrTotales = JSON.parse(JSON.stringify(_arrTotal));
+
+        xNuevoCliente();
+        $('#contentClie').addClass('xInvisible');
+        $('#form_pago_cliente').reset();
+    }
+
+    function xLLamarPrintFac() {        
+        let xSetImpresora = xm_log_get('sede_generales');
+        xSetImpresora[0].ip_print = impresoraSelect.ip;
+        xSetImpresora[0].var_margen_iz = impresoraSelect.var_margen_iz;
+        xSetImpresora[0].var_size_font = impresoraSelect.var_size_font
+        xSetImpresora[0].local = impresoraSelect.local;
+
+        xImprimirComprobanteAhoraPrintPreSelect(rptDoc, itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, xSetImpresora, function (rpt_print) {
+            if (rpt_print == false) { return false; }
+            xPopupLoad.titulo = "Imprimiendo...";
+            xPopupLoad.xopen();
+            setTimeout(function () { xPopupLoad.xclose() }, 3000);
+
+            xPopupLoad.xclose();
+        });
+    }
+    
+    function xReImprimirFac(){
+        dialog_erro_print.close();
+        xPopupLoad.titulo="Enviando...";
+        xPopupLoad.xopen();
+        
+        
+        xLLamarPrintFac();
+    }
+
+    function fact_selectOptionCategoria() {
+        const index = xThisFacturador.$.listPrint.value;
+        impresoraSelect = xThisFacturador.listImpresoras[index];
+        console.log(impresoraSelect);
+    }
+
+
+    function fact_getAllImpresoras() {
+        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: {op: '5'} })
+            .done(function (dtValues) {
+                var _arrPrint = []
+                dtValues = $.parseJSON(dtValues);
+                _arrPrint.push({idimpresora:-1, descripcion: 'MOSTRAR EN PDF'})
+                dtValues.datos.map(x =>
+                    _arrPrint.push(x)
+                );
+
+                xThisFacturador.listImpresoras = JSON.parse(JSON.stringify(_arrPrint));
+
+                impresoraSelect = _arrPrint[0];
+                console.log(xThisFacturador.listImpresoras);
+            });
+    }
 
     Polymer({
         is: 'x-facturador',
         properties: {    
             arrItems: [],
             arrTotales: [],
+            listImpresoras: [],
             formValid: boolean = false,
+            cpe_show: boolean = false,
         },
         attached: function () {
             xThisFacturador = this;

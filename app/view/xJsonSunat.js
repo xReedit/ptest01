@@ -7,11 +7,14 @@
 // xArrayCliente datos del cliente nombre dni ruc direccion
 
 async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago) {
-    var hash = '';
+    var hash = {};
     var _arrSedes = xm_log_get('datos_org_sede'); // todas las sedes
     const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
 
     if ( !isFacturacionElectronica ) {
+        hash.qr='';
+        hash.hash = '';
+        hash.external_id = "";
         return hash;   
     }
 
@@ -246,7 +249,7 @@ function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=t
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
 
-    var rpt = '';
+    var rpt = {};
     json_xml = JSON.stringify(json_xml);
     $.ajax({type: 'POST', 
         url: _url, 
@@ -256,10 +259,15 @@ function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=t
         async: false,
         success: function (data) {// se registro con exito al servicio / api  
             console.log('succes: ', data);
-            rpt = data.data.hash;
+            
             // guardar external_id en registro pago;
             const _idexternal = data.data.external_id;
             const _data = { idregistro_pago: idregistro_pago, codsunat: tipo_documento, idexternal: _idexternal, jsonXml: "", enviado: "1" };
+
+            rpt.qr = data.data.qr;
+            rpt.hash = data.data.hash;
+            rpt.external_id = _idexternal;
+
             $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
             .done( function (res) {
                 console.log(res);
@@ -274,7 +282,8 @@ function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=t
         },
         error: function(err) { // si hay algun problema de conexion con el apí
             //
-            rpt = 'www.papaya.com.pe'; 
+            
+            rpt.hash = "www.papaya.com.pe";
             if (guardarError) {                
                 xSendApiSunatError(json_xml, idregistro_pago, tipo_documento);
             }

@@ -21,7 +21,7 @@
 					<input type="text" id="stock" name="no_post" placeholder="Stock" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar required><br>
 					<input type="text" id="stock_minimo" name="stock_minimo" placeholder="Stock minimo" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
 					<input type="text" id="precio" name="precio" placeholder="Precio de compra" onblur="xRetornaMoneda(this)" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" required espaciar><br>
-					<input type="text" id="precio_venta" name="precio_venta" placeholder="Precio de venta x unidad" onblur="xRetornaMoneda(this)" class="xMiInput xPasarEnter2 xPrecioAddPro" onChange="conMayusculas(this)" onkeyup="xEnterInInputDlg(event)" required espaciar><br>
+					<input type="text" id="precio_venta" name="precio_venta" placeholder="Precio de venta x unidad" onblur="xRetornaMoneda(this)" class="xMiInput xPasarEnter2 xPrecioAddPro" onChange="conMayusculas(this)" onkeyup="xEnterInInputDlgPP(event)" required espaciar><br>
 					<div class="xInvisible">
 						<input type="text" id="idproducto" name="idproducto">
 						<input type="text" id="idorg" name="idorg">
@@ -31,7 +31,7 @@
 					</div>
 				</form>
 				<br><br>
-				<div class="xBoton2 xAzul" onclick="xGuardarItemPro();">Listo, guardar</div>
+				<div class="xBoton2 xAzul" onclick="xGuardarItemProPP();">Listo, guardar</div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 				<br><br><br>
 			</div>
@@ -181,10 +181,10 @@ function xIniProPor(){
 	})
 
 }
-function xEnterInInputDlg(e){
+function xEnterInInputDlgPP(e){
 	var code=e.which;
 	if ( code==13||code==186 ) {
-		xGuardarItemPro();
+		xGuardarItemProPP();
 	}
 }
 function xGuardarItemPorcion(){
@@ -200,7 +200,7 @@ function xGuardarItemPorcion(){
 		})
 	});
 }
-function xGuardarItemPro(){
+function xGuardarItemProPP(){
 	//guardar familia
 	xvalidateFormInput('frm_item_pro',function(a){
 		if(a===false){return;}
@@ -212,13 +212,13 @@ function xGuardarItemPro(){
 			.done( function (DtIdFamRpt) {
 				$("#frm_item_pro #idproducto_familia").val(DtIdFamRpt);
 				//$("#sel_familia").attr('data-value')=xnom_familia;
-				xGuardarItemProDt();
+				xGuardarItemProDtPP();
 				xLoadFamilias();
 			})
-		}else{xGuardarItemProDt();}
+		}else{ xGuardarItemProDtPP();}
 	});
 }
-function xGuardarItemProDt(){
+function xGuardarItemProDtPP(){
 	//guardar producto
 	xCan_item=$("#frm_item_pro #stock").val();
 	var xPrecio_und_pro=parseFloat(xPrecio_item)/parseFloat(xCan_item);

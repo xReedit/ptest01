@@ -20,7 +20,7 @@
 					</div>
 				</form>
 				<br><br>
-				<div class="xBoton2 xAzul" dialog-confirm  onclick="xGuardarItemPro();">Listo, guardar</div>
+				<div class="xBoton2 xAzul" dialog-confirm  onclick="xGuardarItemProComp();">Listo, guardar</div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 				<br><br><br>
 			</div>
@@ -94,7 +94,7 @@
 					<table id="tb_update_precio" data-TablaName="producto"></table>
 					<table id="tb_compra_items" data-TablaName="compra_items"></table>
 					<table id="tb_compra_pago" data-TablaName="compra_pago"></table>
-					<table id="tb_almacen_items" data-TablaName="almacen_items"></table>
+					<!-- <table id="tb_almacen_items" data-TablaName="almacen_items"></table> -->
 				</div>
 			</div>
 			<div class="xPieCard">
@@ -187,10 +187,10 @@ function xIniCompras(){
 		xThis.$.dialog_pago.close()
 	});
 
-	xValPago.addEventListener('xListoRegistraPago', function (e) {	
-		xRegistrar_compra();	
-		xThis.$.dialog_pago.close()
-	});
+	// xValPago.addEventListener('xListoRegistraPago', function (e) {	
+	// 	xRegistrar_compra();	
+	// 	xThis.$.dialog_pago.close()
+	// });
 
 	$("#div_proveedor").on('click',function(e){
 		$(this).css('height','80px')
@@ -203,7 +203,7 @@ function xIniCompras(){
 function xEnterInInputDlg(e){
 	var code=e.which;
 	if ( code==13||code==186 ) {
-		xGuardarItemPro();
+		xGuardarItemProComp();
 	}
 }
 function xOpenRegistrarPago(){
@@ -266,13 +266,13 @@ function xAddItemLista(){
 	$("#tb_compra_items").append(xrow_pro_compra).trigger('create');
 
 	//almacen items
-	var xrow_pro_almacen='<tr class="row" id="'+xcount_row+'">'+
-				'<td data-ColumName="idalmacen">-almacen</td>'+
-				'<td data-ColumName="idproducto">'+xIdProducto_sel+'</td>'+
-				'<td data-ColumName="stock">'+xCan_item+'</td>'+
-				'<td data-ColumName="f_ingreso">'+xDevolverFecha()+'</td>'+
-				'</tr>';
-	$("#tb_almacen_items").append(xrow_pro_almacen).trigger('create');
+	// var xrow_pro_almacen='<tr class="row" id="'+xcount_row+'">'+
+	// 			'<td data-ColumName="idalmacen">-almacen</td>'+
+	// 			'<td data-ColumName="idproducto">'+xIdProducto_sel+'</td>'+
+	// 			'<td data-ColumName="stock">'+xCan_item+'</td>'+
+	// 			'<td data-ColumName="f_ingreso">'+xDevolverFecha()+'</td>'+
+	// 			'</tr>';
+	// $("#tb_almacen_items").append(xrow_pro_almacen).trigger('create');
 
 	if(xTb_items.find('.row').length==0){
 		xTb_items.append(xrow_pro).trigger('create');
@@ -325,26 +325,27 @@ function xGuardarRegistroCompra(){
 	var sql_historial_precio_pro=xArmarInsertDetalle($("#tb_input"),'','','');
 	var sql_compra_items=xArmarInsertDetalle($("#tb_compra_items"),'','','');
 	var sql_compra_tp=xArmarInsertDetalle($("#tb_compra_pago"),'','','');
-	var sql_almacen=xArmarInsertDetalle($("#tb_almacen_items"),'','','');
+	// var sql_almacen = ''; // ArmarInsertDetalle($("#tb_almacen_items"),'','','');
 	sql_historial_precio_pro=sql_historial_precio_pro.replace(/-proveedor/g,xsel_proveedor)
 
 
 	//guardar datos de la compra
-	$("#frm_compra #idproveedor").val(xsel_proveedor)
-	$("#frm_compra #idalmacen").val(xsel_almacen)
-	$("#frm_compra #f_registro").val(xDevolverFecha())
-	$("#frm_compra #f_compra").val(xDevolverFecha())
-	$("#frm_compra #total").val(xImporte_total_list)
-	$("#frm_compra #idorg").val(xlo_idorg)
-	$("#frm_compra #idsede").val(xlo_idsede)
+	$("#frm_compra #idproveedor").val(xsel_proveedor);
+	$("#frm_compra #idalmacen").val(xsel_almacen);
+	$("#frm_compra #f_registro").val(xDevolverFecha());
+	$("#frm_compra #f_compra").val(xDevolverFecha());
+	$("#frm_compra #total").val(xImporte_total_list);
+	$("#frm_compra #idorg").val(xlo_idorg);
+	$("#frm_compra #idsede").val(xlo_idsede);
 	$("#frm_compra #nota_de_compra").val(xRpt_pago[0].nota_compra);
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=compra",$("#frm_compra").serialize(),function(xUltimo_id_compra){
 		xIdCompra=xUltimo_id_compra;
 		sql_compra_items=sql_compra_items.replace(/-compra/g,xIdCompra)
 		sql_compra_tp=sql_compra_tp.replace(/-compra/g,xIdCompra)
-		sql_almacen=sql_almacen.replace(/-almacen/g,xsel_almacen)
+		// sql_almacen=sql_almacen.replace(/-almacen/g,xsel_almacen)
 
-		var xunion_sql=String(sql_compra_items+'; '+sql_compra_tp+'; '+sql_almacen+'; '+sql_historial_precio_pro+'; '+sql_update_pro)
+		// +sql_almacen
+		var xunion_sql=String(sql_compra_items+'; '+sql_compra_tp+'; '+sql_historial_precio_pro+'; '+sql_update_pro)
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xunion_sql}})
 		.done( function (DtIdFamRpt) {
 			xPopupLoad.xclose();
@@ -357,7 +358,7 @@ function xNuevaCompra(){
 	$("#tb_input tr.row").remove();
 	$("#tb_input tr.tt_row").remove();
 	$("#tb_compra_items tr").remove();
-	$("#tb_almacen_items tr").remove();
+	// $("#tb_almacen_items tr").remove();
 	$("#frm_compra").reset();
 	$("#frm_proveedor").reset();
 	$("#frm_item_pro").reset();
@@ -379,7 +380,12 @@ function xBorrarItemLocalPro(obj){
 	var xtb=xObj.parents('table');
 	var xtb_row_id=xObj.attr('id');
 	//xObj.fadeTo(550, 0, function () {$(this).remove(); xSumarTotal(xtb);});
-	xObj.fadeTo(550, 0, function () {$(this).remove();$('#tb_update_precio #'+xtb_row_id).remove();$('#tb_compra_items #'+xtb_row_id).remove();$('#tb_almacen_items #'+xtb_row_id).remove(); xSumarTotalLista()});
+	xObj.fadeTo(550, 0, function () {
+		$(this).remove();
+		$('#tb_update_precio #'+xtb_row_id).remove();
+		$('#tb_compra_items #'+xtb_row_id).remove();
+		// $('#tb_almacen_items #'+xtb_row_id).remove(); 
+		xSumarTotalLista()});
 }
 function xResetInputPro(){
 	$("#des_item").val('');
@@ -388,7 +394,7 @@ function xResetInputPro(){
 	$("#precio_item").val('');
 	$("#cant_item").focus();
 }
-function xGuardarItemPro(){
+function xGuardarItemProComp(){
 	//guardar familia
 	xPopupLoad.xopen();
 	xnom_familia=$("#sel_familia").val();
@@ -398,12 +404,12 @@ function xGuardarItemPro(){
 		.done( function (DtIdFamRpt) {
 			$("#frm_item_pro #idproducto_familia").val(DtIdFamRpt);
 			//$("#sel_familia").attr('data-value')=xnom_familia;
-			xGuardarItemProDt();
+			xGuardarItemProDtCompra();
 			xLoadFamilias();
 		})
-	}else{xGuardarItemProDt();}
+	}else{ xGuardarItemProDtCompra();}
 }
-function xGuardarItemProDt(){
+function xGuardarItemProDtCompra(){
 	//guardar producto
 	xPrecio_und_pro=parseFloat(xPrecio_item)/parseFloat(xCan_item);
 	$("#frm_item_pro #idorg").val(xlo_idorg)

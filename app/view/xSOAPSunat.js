@@ -237,3 +237,12 @@ function xSoapSunat_cambiarFormatoFecha(input) {
   }
   return input.replace(pattern, "$3/$2/$1");
 }
+
+
+
+/////////// consultas
+
+function xSoapSunat_DownloadFile(tipo, id) {
+    const _url = `${URL_COMPROBANTE_DOWNLOAD_FILE}/${tipo}/${id}`;
+    window.open(_url, "_blank");
+}

@@ -1,4 +1,3 @@
-<!-- comprobantes -->
 <?php
 session_start();
 date_default_timezone_set('America/Lima');	
@@ -282,7 +281,7 @@ while($num_copias>=0){
 	if ( $hash !== "" ) { // si hay hash significa que no es factura electronica
 		$testStr = $hash;
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> qrCode($testStr, Printer::QR_ECLEVEL_L, 5);	
+		$printer -> qrCode($testStr, Printer::QR_ECLEVEL_H, 5);	
 		$printer -> feed();
 	
 		/* PIE DE PAGINA */	

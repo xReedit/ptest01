@@ -7,7 +7,8 @@
 
 var xImpresoraPrint;
 // idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
-async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc){
+// showPrint = true; es false si lo mando desde facturador.
+async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
 	
 	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") {return;} // ninguno no imprime
 	
@@ -31,10 +32,15 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 
 	const hash = await xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente, idregistro_pago);
 	console.log(hash);
-	xArrayEncabezado[0].hash = hash;
+	xArrayEncabezado[0].hash = hash.hash; // que es realidad el qr
+	xArrayEncabezado[0].external_id = hash.external_id;
+	
 	// return true; // temporal probamos facturacion electronica
 	//
-	
+	if (!showPrint) {
+		return xArrayEncabezado;
+	}
+
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){
 		if(rpt_print==false){return false;}
 		xPopupLoad.titulo="Imprimiendo...";
@@ -77,6 +83,43 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 		}
 		return callback(xErrorPrint);
 	});
+}
+
+/// imprimir comprobante con impresora preseleccionada | desde: facturador
+function xImprimirComprobanteAhoraPrintPreSelect(xArrayEncabezado, xArrayCuerpo, xArraySubtotal, xArrayComprobante, xArrayCliente, xArrImpresora, callback) {
+	xPopupLoad.titulo = "Imprimiendo...";
+
+	// formato de impresion items comprobante donde no se tiene en cuenta el tipo de consumo solo seccion e items
+	// let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal, true); // cpe = true subtotal + adicional
+	// _arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
+
+	$.ajax({
+		type: 'POST', url: '../../print/print5.php',
+		data: {
+			Array_enca: xArrayEncabezado,
+			Array_print: xArrImpresora,
+			ArrayItem: xArrayCuerpo, // xArrayCuerpo 
+			ArraySubTotales: xArraySubtotal,
+			ArrayComprobante: xArrayComprobante,
+			ArrayCliente: xArrayCliente
+		}
+	})
+		.done(function (dtPbd) {
+			//xPopupLoad.xclose();
+			if (dtPbd.indexOf('Error') != -1) {
+				xPopupLoad.xclose();
+				$("#print_error").text(dtPbd);
+				xErrorPrint = true;
+				dialog_erro_print.open();
+			} else {
+				//xPopupLoad.titulo='Exito!';
+				xErrorPrint = false;
+				xPopupLoad.titulo = "Imprimiendo...";
+				xPopupLoad.xopen();
+				setTimeout(function () { xPopupLoad.xclose() }, 3000);
+			}
+			return callback(xErrorPrint);
+		});
 }
 
 

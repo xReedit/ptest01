@@ -475,6 +475,13 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 								xErrorPrint=false;
 								xPopupLoad.titulo="Imprimiendo...";
 								xPopupLoad.xopen();
+
+								var _arrSedes = xm_log_get('datos_org_sede');
+								const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
+
+								if (!isFacturacionElectronica) {
+									return;
+								}
 								
 								setTimeout(function(){ 
 									xPopupLoad.xclose(); 

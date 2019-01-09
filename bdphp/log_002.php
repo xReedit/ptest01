@@ -83,6 +83,10 @@
 
             print $correlativo_comprobante;
             break;
+        case '5': // optiene las impresoras habilitadas para seleccionar donde se imprime el comprobante electronico
+            $sql="SELECT * FROM impresora WHERE (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado=0";
+            $bd->xConsulta($sql);
+            break;
         default:
             # code...
             break;

@@ -20,7 +20,7 @@
         case 2:// load comprobantes generales
             // $sql = "SELECT * FROM tipo_comprobante where estado=0";
             $sql = "
-            SELECT tpcs.idtipo_comprobante_serie,tp.*
+            SELECT tpcs.idtipo_comprobante_serie, tpcs.serie, tpcs.correlativo,tp.*
 			from tipo_comprobante_serie tpcs
 				inner join tipo_comprobante tp using(idtipo_comprobante)
 				inner join sede s on s.idsede = tpcs.idsede
