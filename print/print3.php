@@ -5,6 +5,7 @@ date_default_timezone_set('America/Lima');
 require __DIR__ . '/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
+use Mike42\Escpos\ImagickEscposImage;
 use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
@@ -13,6 +14,7 @@ $ArrayItem=$_POST['ArrayItem'];
 $ArrayEnca=$_POST['Array_enca'];
 $xArray_print=$_POST['Array_print'];
 $ip_printer=$xArray_print[0]['ip_print'];
+$printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
 
 if($ip_printer===''){return;}
 try {
@@ -32,16 +34,33 @@ try {
 	return;
 }
 
+$imLogo = "";
+// logo 64
+if ( $printImg64 === "1" ) {
+	$uri=$xArray_print[0]['logo64'];
+	$imageBlob = base64_decode(explode(",", $uri)[1]);
+	$imagick = new Imagick();
+	$imagick->setResourceLimit(6, 1);
+	$imagick->readImageBlob($imageBlob, "input.png");
+	$imLogo = new ImagickEscposImage();
+	$imLogo->readImageFromImagick($imagick);
+}
+else {
+	$imLogo="./logo/".$xArray_print[0]['logo'];
+}
+///
 
-$logo_post="./logo/".$xArray_print[0]['logo'];
+// $logo_post="./logo/".$xArray_print[0]['logo'];
 $num_mesa=$ArrayEnca['m'];
 $num_pedido=$ArrayEnca['num_pedido'];
 $correlativo_dia=$ArrayEnca['correlativo_dia'];
 $referencia=$ArrayEnca['r'];
 $reservar=$ArrayEnca['reservar'];
 $solo_llevar=$ArrayEnca['solo_llevar'];
+$EsDelivery=$ArrayEnca['delivery'];
 $pre_cuenta=!empty($ArrayEnca['precuenta']) ? $ArrayEnca['precuenta'] : '';
 $logo_solo_llevar="_ico_solo_llevar2.png";
+$logo_delivery = "_ico_delivery.png";
 
 $nom_us=explode(' ',$_SESSION['nomUs']);
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
@@ -66,11 +85,19 @@ if($num_mesa=='' || $num_mesa=='00'){$num_mesa='Pedido: '.$correlativo_dia;}else
 $precio='';
 
 while($num_copias>=0){
+	// icono delivery
+	if ( $EsDelivery == 1 ) {
+		$logo_delivery = EscposImage::load($logo_delivery, false);
+		$printer -> setJustification(Printer::JUSTIFY_CENTER);
+		$printer -> graphics($logo_delivery);
+		$printer -> feed();
+	}
 	//icono solo llevar
 	if($solo_llevar==1){
 		$logoLlevar = EscposImage::load($logo_solo_llevar, false);
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
 		$printer -> graphics($logoLlevar);
+		$printer -> feed();
 	}
 	//reservar
 	if($reservar==true){
@@ -110,10 +137,17 @@ while($num_copias>=0){
 	$printer -> text('CO-'.$correlativo_dia."\n");
 	$printer -> setEmphasis(false);
 	/* Print top logo */
-	if($logo_post!=''){
-		$logo = EscposImage::load($logo_post, false);
+	if($imLogo!=''){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> graphics($logo);
+		if ( $printImg64 === "1" ) {
+			$size = Printer::IMG_DEFAULT;
+			$printer->bitImage($imLogo, $size);
+		} else {			
+			$imLogo = EscposImage::load($imLogo, false);
+			$printer -> graphics($imLogo);
+		}
+		
+		$printer -> feed();
 	}	
 
 	/* ENCABEZADO */
@@ -292,7 +326,7 @@ class item
         }
         $left = str_pad($this -> name, $leftCols) ;
 
-        $sign = ($this -> dollarSign ? 'S/. ' : '');
+        $sign = ($this -> dollarSign ? 'S/.' : '');
         $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);
         return "$left$right\n";
     }

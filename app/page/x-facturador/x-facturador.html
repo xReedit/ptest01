@@ -373,22 +373,24 @@
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);
             rptDoc = await xCocinarImprimirComprobante(itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, 0,-2,false)
         }
-        
-        xThisFacturador.cpe_show = true;
-        if (rptDoc[0].hash === 'www.papaya.com.pe') {// error de conexion o algun  error // no pdf
-            xPopupLoad.xclose();
-            alert('Error con la conexion al servicio de Sunat. Intentelo mas tarde');
-        } else {
+                        
+        if (impresoraSelect.idimpresora === -1) {// en pdf
 
-            if (impresoraSelect.idimpresora === -1) {// en pdf
-                // llamar servicio del api
-                xSoapSunat_DownloadFile('pdf', rptDoc[0].external_id);           
+            if (rptDoc[0].hash === 'www.papaya.com.pe') {// error de conexion o algun  error // no pdf(bajar de la web) pero si impresion
                 xPopupLoad.xclose();
+                alert('Error con la conexion al servicio de Sunat. Intentelo mas tarde');
                 return;
             }
-
+        
+            xThisFacturador.cpe_show = true;
+            // llamar servicio del api
+            xSoapSunat_DownloadFile('pdf', rptDoc[0].external_id);           
+            xPopupLoad.xclose();
+            return;
+        } else {
+            xThisFacturador.cpe_show = true;
             xLLamarPrintFac();
-        }
+        }        
     }
 
     function xNuevoFac() {

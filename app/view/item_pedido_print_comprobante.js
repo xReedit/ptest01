@@ -146,6 +146,7 @@ function xgetComprobanteImpresora(xidDoc) {
 		xImpresoraPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xPrintLocal.var_size_font
 		xImpresoraPrint[0].local = 1;
+		xImpresoraPrint[0].img64 = xPrintLocal[z].img64;
 		xpasePrint=true;
 	}else{
 		for (var i = 0; i < xArrayImpresoras.length; i++) {
@@ -156,6 +157,7 @@ function xgetComprobanteImpresora(xidDoc) {
 				xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xImpresoraPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
 				xImpresoraPrint[0].local = 0;
+				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
 				break;
 			}
 		}
@@ -197,6 +199,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xPrintLocal.var_size_font;
 		xImpresoraPrint[0].local = 1;
+		xImpresoraPrint[0].img64 = xPrintLocal[z].img64;
+		if (xPrintLocal[z].img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
 
 		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales,(res)=>{
 			callback(res);
@@ -237,6 +241,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[z].var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;
 		xImpresoraPrint[0].local = 0;
+		xImpresoraPrint[0].img64 = xArrayImpresoras[z].img64;		
+		if (xArrayImpresoras[z].img64 === "0") { xImpresoraPrint[0].logo64 = '';}
 		
 		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print){
 			if(xArrayImpresoras.length==xCuentaImpresorasEvaluadas && rpt_print==false){//si todas las impresoras fueron evaluadas y no presentaron error termina la funcion

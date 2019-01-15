@@ -252,6 +252,7 @@
     xDtSubTotales = [],
     xArrayEnca = [],
     xsolo_llevar = 0,
+    xdelivery = 0,
     xReservar = 0,
     xPopupLoad,
     xNumMesaLoadCuenta,
@@ -265,7 +266,9 @@
     //xVerificarSession();
     var xmesa = $("#nummesa").val();
     xVerificarSiSoloLLevar();
-    if (xsolo_llevar == 0) {
+    if (xsolo_llevar === 1 || xdelivery === 1) {
+      
+    } else {
       //pide mesa
       if (xmesa == "") {
         alert("Indique numero de mesa. Coloque cero(0) si no corresponde");
@@ -368,14 +371,12 @@
 
   function xLLamarPrintMP() {
     xArrayEnca.solo_llevar = xsolo_llevar;
+    xArrayEnca.delivery = xdelivery;
     xArrayEnca.reservar = xReservar;
     //xPopupLoad.titulo="Enviando...";
 
     // xMandarImprimir(xArrayEnca,xDtPrint,xArrayPedidoObj)
-    xCocinarImprimirComanda(
-      xArrayEnca,
-      xArrayPedidoObj,
-      xLocal_xDtSubTotales,
+    xCocinarImprimirComanda(xArrayEnca, xArrayPedidoObj, xLocal_xDtSubTotales,
       res => {
         if (!res) {
           //si no hay error
@@ -420,6 +421,7 @@
   }
   function xVerificarSiSoloLLevar() {
     xsolo_llevar = 0;
+    xdelivery = 0;
     var xcount_seccion = 0;
     $("#xBody .xEncabezadoTpCon").each(function(index, element) {
       xcount_seccion++;
@@ -432,6 +434,9 @@
       if (xIdTpc_pe === "3") {
         xsolo_llevar = 1;
       } // delivery
+
+      if ( $(element).attr("data-colDes").trim().toLowerCase() == "delivery") { xdelivery = 1; }
+
     });
     if (xcount_seccion > 1) {
       xsolo_llevar = 0;
@@ -746,11 +751,9 @@
         xEncabezadoCollapse =
           '<div><div class="xEncabezadoTpCon noselect" data-idtpc="' +
           xArrayPedidoObj[i].id +
-          '" data-col="' +
-          xIdColapse +
-          '" onclick="toggle(this);">' +
-          xArrayPedidoObj[i].des +
-          '<div class="xEncabezadoTpCon_Cant">' +
+          '" data-col="' + xIdColapse +
+          '" data-colDes="' + xArrayPedidoObj[i].des +
+          '" onclick="toggle(this);">' + xArrayPedidoObj[i].des + '<div class="xEncabezadoTpCon_Cant">' +
           xCantItems +
           '</div><input id="optionOther"  class="xcheck_item" type="radio" name="option" value="other"></div>';
 

@@ -237,6 +237,7 @@
 									<td>
 										<input type="text" class="xMiInput" placeholder="Logo" maxlength="200" onclick="xSeleccionarFoto();" id="td_logo" readonly>
 										<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
+										<img id="imgLogo" src="" alt="" width = "450">
 									</td>
 								</tr>
 								<tr>
@@ -272,6 +273,7 @@
 									<input type="text" id="pie_pagina_comprobante" name="pie_pagina_comprobante">
 									<input type="text" id="var_size_font" name="var_size_font">
 									<input type="text" id="var_margen_iz" name="var_margen_iz">
+									<input type="text" id="img64" name="img64">
 
 									<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 									<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
@@ -363,8 +365,9 @@
 						<p>Listado de zonas de despacho e impresoras. Si no utilizara impresoras, especifique solo la zona de despacho. Ej: Cocina, Bar, etc...</p>
 						<div class="xLinea2"></div><br>
 						<p>Antes de agregar impresora se recomienda hacer un test de impresion.</p>
-						<p><strong>Recurso compartido:</strong> la impresora esta conectada a una computadora por usb, compartala y escriba la direccion ejemplo: //mi_pc/impresora_a</p>
+						<p><strong>Recurso compartido:</strong> la impresora esta conectada a una computadora por usb, compartala y escriba la direccion ejemplo: //usuario:clave@ippc/nomimpresora</p>
 						<p><strong>Minutos ':</strong> Tiempo promedio en minutos que toma en despachar un pedido. Ej: En Cocina el tiempo promedio para despachar un pedido es de 15minutos; en Bar es de 3minutos. <strong>(Solo si trabaja con tablets en las zonas de despacho)</strong></p>
+						<p><strong>img64 ':</strong> Indica si la impresora recibira las imagenes en 64bits</p>
 						<br>
 						<form method="post" id="form_impresoras">
 						<table id="tb_impresoras" class="xtable1">
@@ -374,6 +377,7 @@
 								<th><p>Impresora<p>IP / recurso compartido</th>
 								<th><p>.<p>Tamaño de letra</th>
 								<th><p>.<p>Margen Izquierda</th>
+								<th><p>.<p>img64</th>
 								<th><paper-fab icon="add" onclick="xAddImpresora()" title="Agregar" tabindex="0"></paper-fab></th>
 							</thead>
 							<tr data-id="" class="xSinBorde tr_addPrint">
@@ -382,6 +386,7 @@
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Impresora"  name="ip" id="ip" required></td>
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
 								<td><input class="xMiInput"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
+								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="1" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
 								<td><a href="#" onclick="xTestPrint(0)">Test Impresion</a></td>
 							</tr>
 						</table>
@@ -456,6 +461,7 @@
 								<th>IP / recurso compartido</th>
 								<th>Tamaño de letra</th>
 								<th>Margen Izquierda</th>
+								<th>Img64</th>
 								<th><!--paper-fab icon="add" onclick="xAddImpresora_local()" title="Agregar" tabindex="0"></paper-fab></td--></th>
 							</thead>
 							<tr data-id="" class="xSinBorde tr_addPrint_local row" data-t="impresora">
@@ -463,6 +469,7 @@
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Descripcion"  name="ip" id="ip" required></td>
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
 								<td><input class="xMiInput"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
+								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="2" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
 								<td><a href="#" onclick="xAddImpresora_local()">Guardar</a></td>
 								<td><a href="#" onclick="xTestPrint(1)">Test Impresion</a></td>
 								<td><a href="#" onClick="xBorrarItemPrintLocal(this)" id="btn_borrar_print_local" class="xInvisible">Anular</a></td>
@@ -849,6 +856,7 @@ function xAddImpresora(){
 		$("#form_impresoras #ip").val('');
 		$("#form_impresoras #var_margen_iz").val('');
 		$("#form_impresoras #var_size_font").val('');
+		$("#form_impresoras #img64").val('');
 		$("#form_impresoras #descripcion").focus();
 		xPopupLoad.xclose();
 		xLoadImpresorasConf();
@@ -863,11 +871,12 @@ function xAddImpresora_local(){
 	var _des = $(".tr_addPrint_local #descripcion").val();
 	var _margen = $(".tr_addPrint_local #var_margen_iz").val(); 
 	var _font = $(".tr_addPrint_local #var_size_font").val();
+	var _img64 = $(".tr_addPrint_local #img64").val();
 	
 	_margen = _margen === '' ? 0 : _margen;
 	_font = _font === '' ? 0 : _font;
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1061', data:{'ip':_ip,'des':_des,'margen':_margen,'font':_font}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1061', data:{'ip':_ip,'des':_des,'margen':_margen,'font':_font, 'img64': _img64}})
 	.done( function (dtImp) {
 		xPopupLoad.xclose();
 		// document.cookie="app3_print_ID="+$(".tr_addPrint_local #descripcion").val(); 
@@ -897,6 +906,7 @@ function xLoadImpresorasConf(){
 					$(".tr_addPrint_local #ip").val(xdtImp[i].ip);
 					$(".tr_addPrint_local #var_size_font").val(xdtImp[i].var_size_font);
 					$(".tr_addPrint_local #var_margen_iz").val(xdtImp[i].var_margen_iz);
+					$(".tr_addPrint_local #img64").val(xdtImp[i].img64);
 					$("#form_impresora_local #local").val(1)
 					$("#btn_borrar_print_local").removeClass('xInvisible');
 				}
@@ -905,7 +915,10 @@ function xLoadImpresorasConf(){
 
 			xminutos_pedido=xdtImp[i].minutos_pedido;
 			if(xminutos_pedido===""){xminutos_pedido='0';}
-			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'"><td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td><td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td><td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td><td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td><td  data-campo="var_margen_iz"><span onclick="xModRow(this,4);">'+xdtImp[i].var_margen_iz+'</span></td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
+			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'"><td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td><td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td><td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td><td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td>'+ 
+				'<td  data-campo="var_margen_iz"><span onclick="xModRow(this,4);">'+xdtImp[i].var_margen_iz+'</span></td>'+
+				'<td  data-campo="img64"><span onclick="xModRow(this,4);">' + xdtImp[i].img64 + '</span></td>' +
+				'<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			xcandena_sel_print=xcandena_sel_print+'<option value="'+xdtImp[i].idimpresora+'">'+xdtImp[i].descripcion+'</option>';
 		};
 		$("#tb_impresoras .row").remove();
@@ -969,7 +982,7 @@ function xTestPrint(xOpC){
 	var xArrayPasarTest=new Array();
 	var xClasTr='';
 	if(xOpC==0){xClasTr='.tr_addPrint';}else{xClasTr='.tr_addPrint_local';}
-	xArrayPasarTest={'ip_print':$(xClasTr+" #ip").val(),'mum_copias':0,'pie_pagina':xThisConfig.dt_impr[0].pie_pagina,'logo':xThisConfig.dt_impr[0].logo,'size_font':$(xClasTr+" #var_size_font").val(),'margen_iz':$(xClasTr+" #var_margen_iz").val()};
+	xArrayPasarTest={'ip_print':$(xClasTr+" #ip").val(),'mum_copias':0,'pie_pagina':xThisConfig.dt_impr[0].pie_pagina,'logo':xThisConfig.dt_impr[0].logo,'size_font':$(xClasTr+" #var_size_font").val(),'margen_iz':$(xClasTr+" #var_margen_iz").val(), 'margen_iz': $(xClasTr + " #img64").val()};
 	$.ajax({ type: 'POST', url: '../../print/x-test_print.php',data:{Array_enca:xArrayPasarTest}})
 	.done( function (dtPrint) {
 		if(dtPrint.indexOf('Error')!=-1){alert(dtPrint)}
@@ -1095,6 +1108,15 @@ function xIniDatoPrint(){
 			var file = e.originalEvent.srcElement.files[i];
 			$("#td_logo").val(file.name);
 			//$("#ctrl_open_file").after(img);
+
+			if (file) {
+				var reader = new FileReader();
+				reader.onload = function (e) {
+					$('#imgLogo').attr('src', e.target.result);
+				}
+				reader.readAsDataURL(file);
+				xConvertBase64Img();
+			}
 		}
 	});
 }
@@ -1115,6 +1137,7 @@ function xLoadConf(){
 		$("#td_logo").val(xdtPrint[0].logo);
 		$("#td_margen_iz").val(xdtPrint[0].var_margen_iz);
 		$("#td_size_font").val(xdtPrint[0].var_size_font);
+		$("#td_img64").val(xdtPrint[0].var_size_font);
 
 		xLoadPorcentaje();
 		xLoadAdicionales();
@@ -1129,6 +1152,7 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #pie_pagina_comprobante").val($("#td_pie_comprobante").val());
 	$("#frm_conf_print #var_margen_iz").val($("#td_margen_iz").val());
 	$("#frm_conf_print #var_size_font").val($("#td_size_font").val());
+	$("#frm_conf_print #img64").val($("#td_img64").val());
 
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print",$("#frm_conf_print").serialize(),function(a){
 		xPopupLoad.xclose();
@@ -1140,7 +1164,7 @@ function xGuardarCambioPrint(){
 }
 function xPruebaTestPrint(){
 	var xArrayPasarTest=new Array();
-	xArrayPasarTest={'ip_print':$("#td_ip").val(),'mum_copias':$("#td_copia").val(),'pie_pagina':$("#td_pie").val(),'logo':$("#td_logo").val(),'size_font':$("#td_size_font").val(),'margen_iz':$("#td_margen_iz").val()};
+	xArrayPasarTest={'ip_print':$("#td_ip").val(),'mum_copias':$("#td_copia").val(),'pie_pagina':$("#td_pie").val(),'logo':$("#td_logo").val(),'size_font':$("#td_size_font").val(),'margen_iz':$("#td_margen_iz").val(), 'margen_iz': $("#td_margen_iz").val()};
 
 
 	$.ajax({ type: 'POST', url: '../../print/x-test_print.php',data:{Array_enca:xArrayPasarTest}})
@@ -1154,6 +1178,18 @@ function xPruebaTestPrint(){
 function xSeleccionarFoto(){
 	$("#ctrl_open_file").click();
 }
+
+function xConvertBase64Img() {
+	var c = document.createElement('canvas');
+	var img = document.getElementById('imgLogo');
+	c.height = img.naturalHeight;
+	c.width = img.naturalWidth;
+	var ctx = c.getContext('2d');
+
+	ctx.drawImage(img, 0, 0, c.width, c.height, 0, 0, c.width, c.height);
+	return c.toDataURL();
+}
+
 function xItemGuardarFoto(){
 	$(".xobj_subir_foto").each(function(index, element) {
 	if($(this).val()==''){return}
@@ -1167,12 +1203,13 @@ function xItemGuardarFoto(){
 	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 	xhr.setRequestHeader("X-File-Name", file.name);
 	xhr.send(file);
-	})
+	});
 };
 
 function transferenciaCompleta(xfile){
 	xfile=xThisConfig.xt_org+xThisConfig.xt_idsede+xfile;
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=208', data:{i:xIdConf,d:xfile}})
+	const logo64 = xConvertBase64Img();
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=208', data:{i: xIdConf, d: xfile, logo: logo64}})
 	.done( function (a) {
 		$("#td_logo").val(xfile);
 		xPopupLoad.xclose();

@@ -33,7 +33,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
 
     // array encabezado org sede
-	var xArrayEncabezado = xm_log_get('datos_org_sede'); 
+    var xArrayEncabezado = xm_log_get('datos_org_sede');
+    const logo64 = xArrayEncabezado[0].logo64.split("base64,")[1]; 
     var items = [], fecha_actual = '', hora_actual = '';
     var xnum_doc_cliente = xArrayCliente.num_doc;
 
@@ -160,7 +161,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "leyendas": leyenda
             },
             "extras": {
-                "logo": ""
+                "logo": logo64
             }
         };
 

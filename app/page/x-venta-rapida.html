@@ -673,11 +673,13 @@ async function xGuardarPedidoVR(responde){
 	if(check_reserva.checked==true){xmesa='0';$("#txt_mesa").val(0);xReservar=1;}
 
 	xsolo_llevar=0;
+	xdelivery=0;
 	var xcount_seccion=0;
 	$("#xBody .xEncabezadoTpConX").each(function(index,element){
 		xcount_seccion++;
 		if(index==0){xIdTpc_pe=$(element).attr('data-idtpc');}
-		if($(element).text().toLowerCase().indexOf('llevar')>-1){xsolo_llevar=1;}else{}//determina si es solo para "llevar"
+		if($(element).text().toLowerCase().indexOf('llevar')>-1){xsolo_llevar=1;}//determina si es solo para "llevar"
+		if ($(element).text().toLowerCase().indexOf('delivery') > -1) { xdelivery = 1; }//determina si es "delivery"
 	})
 	if(xcount_seccion>1){xsolo_llevar=0;}
 
@@ -733,7 +735,7 @@ async function xGuardarPedidoVR(responde){
 		xNumPedido=xCeroIzq(_arrRpt.numpedido,5);
 		xIdPedido = _arrRpt.idpedido;
 
-		xArrayEnca={'m':xCeroIzq(xmesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xref)), 'num_pedido':xNumPedido,'reservar':0, 'solo_llevar':0,'correlativo_dia':xCorrelativo_dia};
+		xArrayEnca={'m':xCeroIzq(xmesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xref)), 'num_pedido':xNumPedido,'reservar':0, 'solo_llevar':xsolo_llevar,'delivery':xdelivery,'correlativo_dia':xCorrelativo_dia};
 
 
 		xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);

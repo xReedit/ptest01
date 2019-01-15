@@ -1130,6 +1130,7 @@ function xArmarSqlAddLUlI(){
 	var xli_id_pedido;
 	var xli_id_categoria;
 	var xli_tipoconsumo=$("#select_ulTPC option:selected").val();
+	const tpCDes = $("#select_ulTPC option:selected").text().trim().toLowerCase();
 	//var xli_importe_total_pedido=0;
 	//var xli_importe_total_row=0;
 	var xli_nummesa;
@@ -1164,7 +1165,12 @@ function xArmarSqlAddLUlI(){
 
 	if(xArmarSubtotalesArray()==0){return}
 
-	xArrayPrintEncaLi={'m':xCeroIzq(xli_nummesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xli_ref)), 'num_pedido':xCeroIzq(xli_numpedido,5),'reservar':0, 'solo_llevar':0,'correlativo_dia':xli_numcorelativo};
+	var xsolo_llevar="0", xdelivery="0";
+	switch (tpCDes) {
+		case 'para llevar': xsolo_llevar = "1"; break;
+		case 'delivery': xdelivery="1"; break;
+	}
+	xArrayPrintEncaLi={'m':xCeroIzq(xli_nummesa,2), 'r':xMayusculaPrimera(xSoloMinuscula(xli_ref)), 'num_pedido':xCeroIzq(xli_numpedido,5),'reservar':0, 'solo_llevar': xsolo_llevar, 'delivery': xdelivery,'correlativo_dia':xli_numcorelativo};
 	// xArrayGuardarPedido={'idcategoria':xidCategoriaPD ,'mesa':xCeroIzq(xli_nummesa,2),'referencia':'','reservar':0,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
 
 
@@ -1180,6 +1186,7 @@ function xArmarSqlAddLUlI(){
 
 	
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=30401', data:{arr:xArrayGuardarPedido,idpedido:0}})
+	xPopupLoad.xopen();
 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'a', p_header:xarr_header, p_body: xarr_body, p_subtotales: xarr_subtotales, estado_p:0}})
 		.done( function (a) {
 			if(xVerificarImprimirComanda==true){

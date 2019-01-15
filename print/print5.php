@@ -5,6 +5,7 @@ date_default_timezone_set('America/Lima');
 require __DIR__ . '/autoload.php';
 use Mike42\Escpos\Printer;
 use Mike42\Escpos\EscposImage;
+use Mike42\Escpos\ImagickEscposImage;
 use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
@@ -16,6 +17,7 @@ $xArrayComprobante = $_POST['ArrayComprobante'];
 $xArrayCliente = $_POST['ArrayCliente'];
 
 $ip_printer=$xArray_print[0]['ip_print'];
+$printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
 
 if($ip_printer===''){return;}
 try {
@@ -36,15 +38,23 @@ try {
 }
 
 
-$logo_post="./logo/".$xArray_print[0]['logo'];
-// $num_mesa=$ArrayEnca['m'];
-// $num_pedido=$ArrayEnca['num_pedido'];
-// $correlativo_dia=$ArrayEnca['correlativo_dia'];
-// $referencia=$ArrayEnca['r'];
-// $reservar=$ArrayEnca['reservar'];
-// $solo_llevar=$ArrayEnca['solo_llevar'];
-// $pre_cuenta=!empty($ArrayEnca['precuenta']) ? $ArrayEnca['precuenta'] : '';
-// $logo_solo_llevar="_ico_solo_llevar2.png";
+// logo 64
+
+$imLogo = "";
+// logo 64
+if ( $printImg64 === "1" ) {
+	$uri=$xArray_print[0]['logo64'];
+	$imageBlob = base64_decode(explode(",", $uri)[1]);
+	$imagick = new Imagick();
+	$imagick->setResourceLimit(6, 1);
+	$imagick->readImageBlob($imageBlob, "input.png");
+	$imLogo = new ImagickEscposImage();
+	$imLogo->readImageFromImagick($imagick);
+}
+else {
+	$imLogo="./logo/".$xArray_print[0]['logo'];
+}
+
 
 // encabezado
 $nom_empresa = $ArrayEnca[0]['nombre'];
@@ -103,10 +113,18 @@ while($num_copias>=0){
 	// $printer -> text('CO-'.$correlativo_dia."\n");
 	// $printer -> setEmphasis(false);
 	/* Print top logo */
-	if($logo_post!=''){
-		$logo = EscposImage::load($logo_post, false);
+	if($imLogo!=''){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> graphics($logo);
+		
+		if ( $printImg64 === "1" ) {
+			$size = Printer::IMG_DEFAULT;
+			$printer->bitImage($imLogo, $size);
+		} else {			
+			$imLogo = EscposImage::load($imLogo, false);
+			$printer -> graphics($imLogo);
+		}
+		
+		$printer -> feed();
 	}	
 
 	/* ENCABEZADO */
@@ -217,6 +235,7 @@ while($num_copias>=0){
 			$r_subitem=$subitem["cantidad"].' '.$subitem["des"].$indicaciones_item;
 			$des_part2='';
 			$des_part3='';
+			$des_part4='';
 			if(strlen($r_subitem) > 35){
 				$des_part2='  '.substr($r_subitem,35,strlen($r_subitem));
 				$r_subitem=substr($r_subitem,0,35)."-";			
@@ -225,12 +244,17 @@ while($num_copias>=0){
 				$des_part3='  '.substr($des_part2,35,strlen($des_part2));
 				$des_part2=substr($des_part2,0,35)."-";			
 			}
+			if(strlen($des_part3) > 35){
+				$des_part4='  '.substr($des_part3,35,strlen($des_part3));
+				$des_part3=substr($des_part3,0,35)."-";			
+			}
 			//$r_subitem = strlen($r_subitem) > 35 ? substr($r_subitem,0,35)."..." : $r_subitem;
 
 			$sum_total=(float)$sum_total+(float)$precio;
 			$printer -> text(new item($r_subitem, $precio));
 			if($des_part2!=''){$printer -> text(new item($des_part2, ''));}
 			if($des_part3!=''){$printer -> text(new item($des_part3, ''));}
+			if($des_part4!=''){$printer -> text(new item($des_part4, ''));}
 		}	
 	}
 
@@ -332,7 +356,7 @@ class item
         }
         $left = str_pad($this -> name, $leftCols) ;
 
-        $sign = ($this -> dollarSign ? 'S/. ' : '');
+        $sign = ($this -> dollarSign ? 'S/.' : '');
         $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);
         return "$left$right\n";
     }

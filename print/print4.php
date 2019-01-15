@@ -223,7 +223,7 @@ class item
         }
         $left = str_pad($this -> name, $leftCols) ;
 
-        $sign = ($this -> dollarSign ? 'S/. ' : '');
+        $sign = ($this -> dollarSign ? 'S/.' : '');
         $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);
         return "$left$right\n";
     }

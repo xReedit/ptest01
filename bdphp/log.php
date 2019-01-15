@@ -816,7 +816,8 @@
 			break;
 		case 208://guardar logo print
 			$sql="update conf_print set logo='".$_POST['d']."' where idconf_print=".$_POST['i'];
-			$bd->xConsulta($sql);
+			$sqlLogo64 = "; update sede set logo64 = '".$_POST['logo']."' where idsede=".$_SESSION['idsede'];
+			$bd->xMultiConsulta($sql.$sqlLogo64);
 			break;
 		//pedido
 		case 3: //amar array con tipo de consumo
@@ -2737,7 +2738,7 @@ function xDtUS($op_us){
 			// 	LEFT JOIN sede AS s ON s.idorg=cp.idorg AND s.idsede=cp.idsede
 			// WHERE (cp.idorg=".$_SESSION['ido']." AND cp.idsede=".$_SESSION['idsede'].")";
 			$sql_us="
-			SELECT cp.ip_print, cp.num_copias, cp.pie_pagina, cp.pie_pagina_comprobante, cp.logo, s.nombre AS des_sede, s.eslogan, s.mesas
+			SELECT cp.ip_print, cp.num_copias, cp.pie_pagina, cp.pie_pagina_comprobante, cp.logo, s.logo64, s.nombre AS des_sede, s.eslogan, s.mesas
 			FROM conf_print AS cp
             	INNER JOIN sede AS s ON cp.idsede = s.idsede
 			WHERE (cp.idorg=".$_SESSION['ido']." AND cp.idsede=".$_SESSION['idsede'].")";
@@ -2772,7 +2773,10 @@ function xDtUS($op_us){
 			";
 			break;
 		case 3012: // load datos del org sede 
-			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo from org as s inner JOIN sede as se on s.idorg = se.idorg where se.idorg = ".$_SESSION['ido']." and se.idsede = ".$_SESSION['idsede'];
+			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, se.logo64 
+					from org as s 
+					inner JOIN sede as se on s.idorg = se.idorg 
+					where se.idorg = ".$_SESSION['ido']." and se.idsede = ".$_SESSION['idsede'];
 			break;
 		case 3013: // load datos del org sede 
 			$sql_us = "SELECT * from sede where idorg = ".$_SESSION['ido']." and estado=0";
