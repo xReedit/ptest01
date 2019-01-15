@@ -93,6 +93,11 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "nombre_comercial": `${xArrayEncabezado[0].nombre}`,
                 "apellidos_y_nombres_denominacion_o_razon_social": `${xArrayEncabezado[0].nombre}`
             },
+            // agregado para datos de factgura pdf
+            "Emisor":{
+                "Direccion": `${xArrayEncabezado[0].sededireccion}`,
+                "Departamento": `${xArrayEncabezado[0].sedeciudad}`
+            },
             "datos_adicionales_lugar_en_el_que_se_entrega_el_bien_o_se_presta_el_servicio": {
                 "codigo_del_domicilio_fiscal_o_de_local_anexo_del_emisor": "0001"
             },
@@ -101,7 +106,9 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                     "numero_de_documento": `${xnum_doc_cliente}`,
                     "tipo_de_documento": `${xtipo_de_documento_identidad_cliente}`
                 },
-                "apellidos_y_nombres_denominacion_o_razon_social_del_adquirente_o_usuario": `${xArrayCliente.nombres === "" ? "PUBLICO EN GENERAL" : xArrayCliente.nombres}`
+                "apellidos_y_nombres_denominacion_o_razon_social_del_adquirente_o_usuario": `${xArrayCliente.nombres === "" ? "PUBLICO EN GENERAL" : xArrayCliente.nombres}`,
+                // agregado para datos de factgura pdf
+                "direccion_del_adquiriente_o_usuario": xArrayCliente.direccion                
             },
             "guia_de_remision_relacionada": [{
                 "numero_de_guia": "",
