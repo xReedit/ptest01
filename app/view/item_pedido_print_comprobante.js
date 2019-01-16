@@ -129,7 +129,9 @@ function xgetComprobanteImpresora(xidDoc) {
     var xArrayImpresoras=xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
     var xDtTipoDoc=xm_log_get('app3_woIpPrintO');//JSON.parse(window.localStorage.getItem("::app3_woIpPrintO"));
     var xPrintLocal=window.localStorage.getItem("::app3_woIpPrintLo");
-    xImpresoraPrint=xm_log_get('sede_generales');
+	xImpresoraPrint = xm_log_get("sede_generales");
+	
+	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
 
 
     var xIpPrintDoc=xidDoc;
@@ -146,7 +148,9 @@ function xgetComprobanteImpresora(xidDoc) {
 		xImpresoraPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xPrintLocal.var_size_font
 		xImpresoraPrint[0].local = 1;
-		xImpresoraPrint[0].img64 = xPrintLocal[z].img64;
+		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
+		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
+		xImpresoraPrint[0].img64 = xPrintLocal.img64;
 		xpasePrint=true;
 	}else{
 		for (var i = 0; i < xArrayImpresoras.length; i++) {
@@ -157,6 +161,8 @@ function xgetComprobanteImpresora(xidDoc) {
 				xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xImpresoraPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
 				xImpresoraPrint[0].local = 0;
+				xImpresoraPrint[0].num_copias = num_copias_all;
+				xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
 				break;
 			}
@@ -190,6 +196,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	var xImpresoraPrint=xm_log_get('sede_generales');
 	var xcuentaSeccionesImpresas = 0;
 	var xCuentaImpresorasEvaluadas = 0;
+	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
 	
 	//si existe impresora local // saca una copia de todo el pedido
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
@@ -199,8 +206,10 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xPrintLocal.var_size_font;
 		xImpresoraPrint[0].local = 1;
-		xImpresoraPrint[0].img64 = xPrintLocal[z].img64;
-		if (xPrintLocal[z].img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
+		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
+		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
+		xImpresoraPrint[0].img64 = xPrintLocal.img64;
+		if (xPrintLocal.img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
 
 		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales,(res)=>{
 			callback(res);
@@ -240,7 +249,9 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].ip_print=xArrayImpresoras[z].ip;
 		xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[z].var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;
-		xImpresoraPrint[0].local = 0;
+		xImpresoraPrint[0].local = 0;		
+		xImpresoraPrint[0].num_copias = num_copias_all;
+		xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 		xImpresoraPrint[0].img64 = xArrayImpresoras[z].img64;		
 		if (xArrayImpresoras[z].img64 === "0") { xImpresoraPrint[0].logo64 = '';}
 		

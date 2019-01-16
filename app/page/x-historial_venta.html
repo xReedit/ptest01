@@ -177,7 +177,7 @@ function xIniHistVenta(){
 	
 	xValPago.addEventListener('xListoRegistraPago', function (e) {		
 		// console.log('imprimir comprobante');
-		xMandarCocinarImpresionComprobante();
+		xMandarCocinarImpresionComprobante_historial();
 	});
 }
 
@@ -406,7 +406,7 @@ function xSumarTotalesHis(){
 	})
 }
 
-function xMandarCocinarImpresionComprobante() {		
+function xMandarCocinarImpresionComprobante_historial() {		
 	var arr_cliente = xRpt_pago[0].cliente;	
 	var arr_comprobante = xRpt_pago[0].comprobante;
 	const arrayItems = xCargarDatosAEstructuraImpresion(xThisHistVenta.xdtPedDet);

@@ -385,7 +385,7 @@
 								<td><input class="xMiInput xPasarEnter2"  placeholder="" type="number" min="0" max="60" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="minutos_pedido" name="minutos_pedido"></td>
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Impresora"  name="ip" id="ip" required></td>
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
-								<td><input class="xMiInput"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
+								<td><input class="xMiInput"  placeholder="0" type="number" min="0" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
 								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="1" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
 								<td><a href="#" onclick="xTestPrint(0)">Test Impresion</a></td>
 							</tr>
@@ -451,14 +451,17 @@
 						<div class="xLinea2"></div><br>
 						<h3 class="xBold">Impresora Local</h3>
 						<p>Agrega una impresora local que se usara solo con este terminal o con esta computadora.<br>
-						Esto se utiliza en el escenario de que cada caja tenga su impresora, por ejemplo puede tener 2 cajas o mas cada una con su respectiva impresora, el sistema ademas de imprimir el pedido o comanda en las impresoras de despacho o areas correspondientes enviara una copia a la impresora local, para control interno o para el cliente.<br><br>Esto tambien implica que los <strong>"Otros comprobantes"</strong> se enviaran a imprimir a esta impresora.
+						Esto se utiliza en el escenario de que cada caja tenga su impresora, por ejemplo puede tener 2 cajas o mas cada una con su respectiva impresora.<br>Esto tambien implica que los <strong>"Otros comprobantes"</strong> se enviaran a imprimir a esta impresora.
 						</p>
 						<br>
 						<form method="post" id="form_impresora_local">
+							<paper-checkbox id="check_print_copia_local"></paper-checkbox> Imprimir una copia del pedido en la impresora local, para control interno o para el cliente.<br>							
+						<br>
 						<table id="tb_impresora_local" class="xtable1">
 							<thead>
 								<th>Descripcion</th>
 								<th>IP / recurso compartido</th>
+								<th>Copias</th>
 								<th>Tamaño de letra</th>
 								<th>Margen Izquierda</th>
 								<th>Img64</th>
@@ -466,7 +469,8 @@
 							</thead>
 							<tr data-id="" class="xSinBorde tr_addPrint_local row" data-t="impresora">
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Descripcion" name="descripcion" id="descripcion" required></td>
-								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Descripcion"  name="ip" id="ip" required></td>
+								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Descripcion"  name="ip" id="ip" required></td>								
+								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="num_copias" name="num_copias"></td>
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
 								<td><input class="xMiInput"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
 								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="2" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
@@ -872,11 +876,13 @@ function xAddImpresora_local(){
 	var _margen = $(".tr_addPrint_local #var_margen_iz").val(); 
 	var _font = $(".tr_addPrint_local #var_size_font").val();
 	var _img64 = $(".tr_addPrint_local #img64").val();
+	var _imprimirCopia = check_print_copia_local.checked ? 1 : 0; // indica si se imprime una copia del pedido en la impresora local
+	var _numCopias = $(".tr_addPrint_local #num_copias").val(); // indica el numero de copias que se imprime en la impresora local
 	
 	_margen = _margen === '' ? 0 : _margen;
 	_font = _font === '' ? 0 : _font;
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1061', data:{'ip':_ip,'des':_des,'margen':_margen,'font':_font, 'img64': _img64}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1061', data:{'ip':_ip,'des':_des,'margen':_margen,'font':_font, 'img64': _img64, 'copia_local': _imprimirCopia, 'num_copias': _numCopias}})
 	.done( function (dtImp) {
 		xPopupLoad.xclose();
 		// document.cookie="app3_print_ID="+$(".tr_addPrint_local #descripcion").val(); 
@@ -907,8 +913,11 @@ function xLoadImpresorasConf(){
 					$(".tr_addPrint_local #var_size_font").val(xdtImp[i].var_size_font);
 					$(".tr_addPrint_local #var_margen_iz").val(xdtImp[i].var_margen_iz);
 					$(".tr_addPrint_local #img64").val(xdtImp[i].img64);
+					$(".tr_addPrint_local #num_copias").val(xdtImp[i].num_copias);
 					$("#form_impresora_local #local").val(1)
 					$("#btn_borrar_print_local").removeClass('xInvisible');
+
+					check_print_copia_local.checked = xdtImp[i].copia_local === "0" ? false : true;
 				}
 				continue;
 			}

@@ -130,13 +130,15 @@
 			$font=$_POST['font'];
 			$des=$_POST['des'];
 			$ip_p=$_POST['ip'];
+			$copia_local = $_POST['copia_local'];
+			$num_copias = $_POST['num_copias'];
 
 			$sql="SELECT idimpresora as d1 FROM impresora WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND descripcion='".$_POST['des']."' AND local=1";
 			$id_print_bus=$bd->xDevolverUnDato($sql);
 			if($id_print_bus!=''){
-				$sql="UPDATE impresora SET var_margen_iz=".$margen_iz.",var_size_font=".$font.",ip='".$ip_p."', descripcion='".$des."', estado=0 where idimpresora=".$id_print_bus;
+				$sql="UPDATE impresora SET var_margen_iz=".$margen_iz.",var_size_font=".$font.",ip='".$ip_p."', descripcion='".$des."', copia_local=".$copia_local.", num_copias=".$num_copias.", estado=0 where idimpresora=".$id_print_bus;
 			}else{
-				$sql="INSERT INTO impresora (idorg,idsede,ip,descripcion,var_margen_iz,var_size_font,local)VALUES(".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$ip_p."','".$des."',".$margen_iz.",".$font.",'1')";
+				$sql="INSERT INTO impresora (idorg,idsede,ip,descripcion,var_margen_iz,var_size_font,copia_local,num_copias,local)VALUES(".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$ip_p."','".$des."',".$margen_iz.",".$font.",".$copia_local.",".$num_copias.",'1')";
 			}
 			//print $sql;
 			$bd->xConsulta($sql);
@@ -2480,7 +2482,7 @@
 			";*/
 			$sql="
 			SELECT * FROM(
-				SELECT rpp.idpedido, rpp.idpedido_detalle, tp.idtipo_consumo, tp.descripcion AS des_tp,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index,s.descripcion AS des_seccion, pd.idseccion, rpp.cantidad, pd.descripcion,rpp.total AS ptotal
+				SELECT rpp.idpedido, rpp.idpedido_detalle, tp.idtipo_consumo, tp.descripcion AS des_tp,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index,s.descripcion AS des_seccion, pd.idseccion, rpp.cantidad, pd.descripcion,rpp.total AS ptotal, rpp.total, pd.punitario as precio, pd.iditem
 				FROM registro_pago_pedido AS rpp
 					INNER JOIN pedido AS p ON rpp.idpedido=p.idpedido
 					INNER JOIN pedido_detalle AS pd ON rpp.idpedido_detalle=pd.idpedido_detalle
@@ -2489,7 +2491,7 @@
 				WHERE rpp.idregistro_pago=".$_POST['i']." AND pd.procede_tabla!=0) a
 				UNION ALL
 				SELECT * FROM(
-				SELECT rpp.idpedido, rpp.idpedido_detalle, tp.idtipo_consumo, tp.descripcion AS des_tp,concat('2',pd.idseccion,'.0') AS idseccion_index,pf.descripcion AS des_seccion, pd.idseccion, rpp.cantidad, pd.descripcion,rpp.total AS ptotal
+				SELECT rpp.idpedido, rpp.idpedido_detalle, tp.idtipo_consumo, tp.descripcion AS des_tp,concat('2',pd.idseccion,'.0') AS idseccion_index,pf.descripcion AS des_seccion, pd.idseccion, rpp.cantidad, pd.descripcion,rpp.total AS ptotal, rpp.total, pd.punitario as precio, pd.iditem
 				FROM registro_pago_pedido AS rpp
 					INNER JOIN pedido AS p ON rpp.idpedido=p.idpedido
 					INNER JOIN pedido_detalle AS pd ON rpp.idpedido_detalle=pd.idpedido_detalle
@@ -2544,7 +2546,7 @@
 										INNER JOIN pedido_detalle AS pd using(idpedido)
 										INNER JOIN seccion AS s using(idseccion)
 										INNER JOIN tipo_consumo AS tp ON pd.idtipo_consumo=tp.idtipo_consumo
-									WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") ".$condicion." AND (pd.procede_tabla!=0 AND pd.despachado=0 AND p.despachado=0) and (p.cierre=0 and (pd.idtipo_consumo in (".$arr_filtro['tipo_consumo'].") and s.idimpresora in (".$arr_filtro['idseccion'].")))
+									WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede']." and p.cierre=0) ".$condicion." AND (pd.procede_tabla!=0 AND pd.despachado=0 AND p.despachado=0) and ((pd.idtipo_consumo in (".$arr_filtro['tipo_consumo'].") and s.idimpresora in (".$arr_filtro['idseccion'].")))
 									ORDER BY p.idpedido,s.sec_orden,pd.descripcion
 				)a
 				UNION all
@@ -2557,7 +2559,7 @@
 						INNER JOIN pedido_detalle AS pd using(idpedido)
 						INNER JOIN tipo_consumo AS tp ON tp.idtipo_consumo=pd.idtipo_consumo
 						JOIN (SELECT idproducto_familia,descripcion,idimpresora FROM producto_familia WHERE idorg=1 AND idsede=1) AS pf ON pd.idseccion=pf.idproducto_familia
-					WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") ".$condicion." AND (pd.procede_tabla=0 AND pd.despachado=0 AND p.despachado=0) and (p.cierre=0 and (pd.idtipo_consumo in (".$arr_filtro['tipo_consumo'].") and pf.idimpresora in (".$arr_filtro['idseccion'].")))
+					WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede']." and p.cierre=0) ".$condicion." AND (pd.procede_tabla=0 AND pd.despachado=0 AND p.despachado=0) and ((pd.idtipo_consumo in (".$arr_filtro['tipo_consumo'].") and pf.idimpresora in (".$arr_filtro['idseccion'].")))
 					ORDER BY p.idpedido,pf.idproducto_familia ,pd.descripcion
 				) b
 			";

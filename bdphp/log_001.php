@@ -486,7 +486,9 @@
 		$x_correlativo_comprobante = $correlativo_comprobante;
 		if ( strrpos($x_from, "e") !== false ) { $x_from = str_replace('e','',$x_from); setComprobantePagoARegistroPago(); }
 
-		print $correlativo_comprobante;
+		// print $correlativo_comprobante;
+		$x_respuesta = json_encode(array('correlativo_comprobante' => $correlativo_comprobante));
+		print $x_respuesta.'|';
 	}
 
 	// viene desde registro de pagos > imprimir comprobante

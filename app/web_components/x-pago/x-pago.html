@@ -160,7 +160,7 @@ var xObjContent;
 var xEnterTxtImporte=0;
 var xDatosValidos = false, // valida los datos si todos son correctos
 	tipoComprovanteSelecionado={}, // el comprobane que selecciona
-	modoSoloComprobante = false, modoSoloProveedor = false, btnDisabledInitModoComprobante = true;
+	modoSoloComprobante = false, modoSoloProveedor = false, btnDisabledInitModoComprobante = true, registrando=false;
 
 // modoSoloProveedor = solo pantalla de pago
 
@@ -518,10 +518,17 @@ function xCancelarCerrar() {
 }
 
 function xListoRegistraPago() {
+	if (registrando) return;
+	registrando=true;
 	xSumarTotales_row();
 	// xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
 	// xThisPago.setVisiblePanel1();
 	xThisPago.fire('xListoRegistraPago', true);
+
+	/// loading - para no disparar varias veces mientras se esta ejecutando
+	setTimeout(() => {
+		registrando = false;
+	}, 1000);
 }
 
 

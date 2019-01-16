@@ -120,8 +120,8 @@ while($num_copias>=0){
 			$size = Printer::IMG_DEFAULT;
 			$printer->bitImage($imLogo, $size);
 		} else {			
-			$imLogo = EscposImage::load($imLogo, false);
-			$printer -> graphics($imLogo);
+			$logoPic = EscposImage::load($imLogo, false);
+			$printer -> graphics($logoPic);
 		}
 		
 		$printer -> feed();

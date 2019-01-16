@@ -67,7 +67,8 @@
                     </template>                    
                     <template is="dom-repeat" items="{{arrTotales}}" as="total">
                         <tr class="tt_row">
-                            <td colspan="3" class="xSinBorde" align="right"> {{ total.des }} </td>
+                            <td colspan="2" class="xSinBorde"></td>
+                            <td align="right"> {{ total.descripcion }} </td>
                             <td align="right"> {{ total.importe }} </td>
                         </tr>
                     </template>
@@ -359,7 +360,8 @@
         xPopupLoad.xopen(); 
         $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data: { p_from:'f', p_comprobante: cnf_ComprobanteSel } })
         .done(function (comprobante_correlativo) {
-            xMandarCocinarImpresionComprobante(comprobante_correlativo, 0);
+            const _arrRpt = xm_all_SetResponseLog_001(comprobante_correlativo);
+            xMandarCocinarImpresionComprobante(_arrRpt.correlativo_comprobante, 0);
         });
     }
 

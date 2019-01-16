@@ -16,6 +16,13 @@ $xArray_print=$_POST['Array_print'];
 $ip_printer=$xArray_print[0]['ip_print'];
 $printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
 
+// verifica si imprime una copia en la impresora local
+if (array_key_exists('copia_local', $xArray_print[0])){
+	if ($xArray_print[0]['local'] === "1" && $xArray_print[0]['copia_local'] === "0" ) {
+		return;
+	}
+}
+
 if($ip_printer===''){return;}
 try {
 	//por ip o por usb
@@ -143,8 +150,8 @@ while($num_copias>=0){
 			$size = Printer::IMG_DEFAULT;
 			$printer->bitImage($imLogo, $size);
 		} else {			
-			$imLogo = EscposImage::load($imLogo, false);
-			$printer -> graphics($imLogo);
+			$logoPic = EscposImage::load($imLogo, false);
+			$printer -> graphics($logoPic);
 		}
 		
 		$printer -> feed();

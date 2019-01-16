@@ -21,6 +21,9 @@ function xCargarDatosAEstructuraImpresion (_SubItems) {
                     //fue juntado
                     if(_SubItems[i].visible==1){continue;}
                     if(_arrEstructura[b]==null){continue}
+                    // _SubItems[i].punitario = _SubItems[i].precio,
+                    // _SubItems[i].precio_total = parseFloat(_SubItems[i].precio_total_calc).toFixed(2),
+                    // _SubItems[i].precio_print = _SubItems[i].precio_print,
                     _SubItems[i].precio_print=_SubItems[i].ptotal;//coloca precio para impresion
                     _SubItems[i].precio_total=_SubItems[i].ptotal;
                     _SubItems[i].des=_SubItems[i].descripcion;
@@ -67,10 +70,10 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
                     cantidad: x.cantidad,
                     des: x.des,
                     punitario: x.precio,
-                    // precio_total: parseFloat(x.precio_total).toFixed(2),
-                    precio_total: parseFloat(x.precio_total_calc).toFixed(2),
+                    precio_total: parseFloat(x.precio_total_calc || x.total).toFixed(2),
                     precio_print: x.precio_print,
                     seccion: x.des_seccion
+                    // precio_total: parseFloat(x.precio_total).toFixed(2),
                 }
                 return rv
             }
