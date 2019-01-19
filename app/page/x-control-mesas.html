@@ -281,6 +281,7 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 <script type="text/javascript" src="../view/item_pedidos.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
+<script type="text/javascript" src="../view/cliente.service.js"></script>
 <script type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
@@ -1303,10 +1304,11 @@ async function xRegistrarClientePagoCP(){
 		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'c', p_items_seleccionados:xarr_items_seleccionados, p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
 		.done( function (xrpt_correlativo) {
 			const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
+			const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xLoadDetallesPedido(xObj_miPedido);
-			xMandarCocinarImpresionComprobante(xrpt_correlativo);			
+			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);			
 		});
 
 		return
@@ -1316,11 +1318,12 @@ async function xRegistrarClientePagoCP(){
 		$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'b', p_cliente:xarr_cliente, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotal, p_comprobante: xarr_comprobante}})
 		.done( function (xrpt_correlativo) {
 			const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
+			const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xRegistrarPagoCM(xCantRow);	
 
-			xMandarCocinarImpresionComprobante(xrpt_correlativo);				
+			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
 		});
 	}
 }
@@ -1351,12 +1354,12 @@ function xRegistrarPagoCM(xcant_rp){
 	// });
 }
 
-function xMandarCocinarImpresionComprobante(correlativo) {	
+function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago) {	
 	var arr_cliente = xRpt_pago[0].cliente;
 	var arr_comprobante = xRpt_pago[0].comprobante;
 	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
 	xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
-	xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente,-2);
+	xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente, _idregistro_pago,-2);
 }
 ////////////////////
 //////////////////////

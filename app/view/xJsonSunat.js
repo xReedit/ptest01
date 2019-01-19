@@ -11,12 +11,13 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     var _arrSedes = xm_log_get('datos_org_sede'); // todas las sedes
     const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
 
-    if ( !isFacturacionElectronica ) {
+    if (!isFacturacionElectronica || xArrayComprobante.codsunat === "0") { // porque puede ser ticket
+        hash.ok=true;
         hash.qr='';
         hash.hash = '';
         hash.external_id = "";
         return hash;   
-    }
+    }    
 
     // evalua si I.G.V es = 0 esta exonerado
     var procentajeIGV = 0;
@@ -29,7 +30,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
     // cpe = false subtotal + adicional -> lo ponemos en xImprimirComprobanteAhora() // para mostrar en la impresion
     var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false);
-    xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV);
+    xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV, isExoneradoIGV);
 
 
     // array encabezado org sede
@@ -42,6 +43,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
     const xtipo_de_documento_identidad_cliente = xnum_doc_cliente.length >= 10 ? 6 : 1;
     const xtipo_de_documento_comprobante = xArrayComprobante.codsunat;
+    const xidtipo__comprobante_serie = xArrayComprobante.idtipo_comprobante_serie;
 
 
     // si viene dni sin valor '00000000 = publico en general'
@@ -54,16 +56,38 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     
     //verifica si esta exonerado al igv /*/ caso de la selva u otros ubigeos exonerados del igv
     // const isExoneradoIGV = true;
-    let total_valor_de_venta_operaciones_gravadas = 0,total_valor_de_venta_operaciones_exoneradas = 0, leyenda = [];
+    // let total_valor_de_venta_operaciones_gravadas = 0,total_valor_de_venta_operaciones_exoneradas = 0, leyenda = [];
+    let totales = {};
 
-    if ( isExoneradoIGV ) {
-        total_valor_de_venta_operaciones_exoneradas = importe_total_pagar;
-        total_valor_de_venta_operaciones_gravadas = 0;
-        leyenda = [{"codigo_de_la_leyenda": "2001", "descripcion_de_la_leyenda": `${xArrayComprobante.pie_pagina_comprobante}`}]
+    if ( isExoneradoIGV ) { // exonerado del igv
+     
+        //totales
+        totales = {
+            "total_exportacion": 0.00,
+            "total_operaciones_gravadas": 0.00,
+            "total_operaciones_inafectas": 0.00,
+            "total_operaciones_exoneradas": importe_total_pagar,
+            "total_operaciones_gratuitas": 0.00,
+            "total_igv": 0.00,
+            "total_impuestos": 0.00,
+            "total_valor": importe_total_pagar,
+            "total_venta": importe_total_pagar
+        }
     } else {
-        total_valor_de_venta_operaciones_exoneradas = 0;
-        total_valor_de_venta_operaciones_gravadas = importe_total_pagar;
-        leyenda = [];
+
+        const total_operaciones_gravadas = xArraySubTotales[0].importe; // el subtotal
+
+        totales = {
+            "total_exportacion": 0.00,
+            "total_operaciones_gravadas": total_operaciones_gravadas,
+            "total_operaciones_inafectas": 0.00,
+            "total_operaciones_exoneradas": 0.00,
+            "total_operaciones_gratuitas": 0.00,
+            "total_igv": importe_total_igv,
+            "total_impuestos": importe_total_igv,
+            "total_valor": total_operaciones_gravadas,
+            "total_venta": importe_total_pagar
+        }
     }
 
 
@@ -75,106 +99,48 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         fecha_actual = rptDate[0];
         hora_actual = rptDate[1];    
 
-        var jsonData = {
-            "datos_de_la_factura_electronica": {
-                "version_del_ubl": "v21",
-                "numeracion_conformada_por_serie_y_numero_correlativo": `${abreviaCo}${xArrayComprobante.serie}-${xArrayComprobante.correlativo}`,
-                "fecha_de_emision": `${fecha_actual}`,
-                "hora_de_emision": `${hora_actual}`,
-                "tipo_de_documento": `${xtipo_de_documento_comprobante}`,
-                "tipo_de_moneda_en_la_cual_se_emite_la_factura_electronica": "PEN",
-                "fecha_de_vencimiento": `${fecha_actual}`
-            },
+        var jsonData = {                    
+            "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
+            "numero_documento": xArrayComprobante.correlativo,
+            "fecha_de_emision": `${fecha_actual}`,
+            "hora_de_emision": `${hora_actual}`,
+            "codigo_tipo_operacion": "0101",
+            "codigo_tipo_documento": `${xtipo_de_documento_comprobante}`,
+            "codigo_tipo_moneda": "PEN",
+            "fecha_de_vencimiento": `${fecha_actual}`,
+            "numero_orden_de_compra": "",
             "datos_del_emisor": {
-                "numero_de_ruc": {
-                    "numero_ruc": `${xArrayEncabezado[0].ruc}`,
-                    "tipo_de_documento": "6"
-                },
-                "nombre_comercial": `${xArrayEncabezado[0].nombre}`,
-                "apellidos_y_nombres_denominacion_o_razon_social": `${xArrayEncabezado[0].nombre}`
+                "codigo_pais": "PE",
+                "ubigeo": "150101",
+                "direccion": `${xArrayEncabezado[0].sededireccion} | ` + `${xArrayEncabezado[0].sedeciudad}`,
+                "correo_electronico": "",
+                "telefono": `${xArrayEncabezado[0].telefono}`,
+                "codigo_del_domicilio_fiscal": "0001"
             },
-            // agregado para datos de factgura pdf
-            "Emisor":{
-                "Direccion": `${xArrayEncabezado[0].sededireccion}`,
-                "Departamento": `${xArrayEncabezado[0].sedeciudad}`
+            "datos_del_cliente_o_receptor":{
+                "codigo_tipo_documento_identidad": `${xtipo_de_documento_identidad_cliente}`,
+                "numero_documento": `${xnum_doc_cliente}`,
+                "apellidos_y_nombres_o_razon_social": `${xArrayCliente.nombres === "" ? "PUBLICO EN GENERAL" : xArrayCliente.nombres}`,
+                "codigo_pais": "PE",
+                "ubigeo": "150101",
+                "direccion": xArrayCliente.direccion,
+                "correo_electronico": "",
+                "telefono": ""
             },
-            "datos_adicionales_lugar_en_el_que_se_entrega_el_bien_o_se_presta_el_servicio": {
-                "codigo_del_domicilio_fiscal_o_de_local_anexo_del_emisor": "0001"
-            },
-            "datos_del_cliente_o_receptor": {
-                "tipo_y_numero_de_documento_de_identidad_del_adquirente_o_usuario": {                    
-                    "numero_de_documento": `${xnum_doc_cliente}`,
-                    "tipo_de_documento": `${xtipo_de_documento_identidad_cliente}`
-                },
-                "apellidos_y_nombres_denominacion_o_razon_social_del_adquirente_o_usuario": `${xArrayCliente.nombres === "" ? "PUBLICO EN GENERAL" : xArrayCliente.nombres}`,
-                // agregado para datos de factgura pdf
-                "direccion_del_adquiriente_o_usuario": xArrayCliente.direccion                
-            },
-            "guia_de_remision_relacionada": [{
-                "numero_de_guia": "",
-                "tipo_de_documento": "09"
-            }],
-            "otro_documento_relacionado": [{
-                "numero_de_guia": "",
-                "tipo_de_documento": "09"
-            }],
-            "informacion_adicional_gastos_art_37_renta___numero_de_placa_del_vehiculo": "",
+            "totales": totales,
             "items": xitems,
-            "totales": {
-                "total_valor_de_venta_operaciones_gravadas": {
-                    "monto": `${total_valor_de_venta_operaciones_gravadas}`
-                },
-                "total_valor_de_venta_operaciones_inafectas": {
-                    "monto": "0"
-                },
-                "total_valor_de_venta_operaciones_exoneradas": {
-                    "monto": `${total_valor_de_venta_operaciones_exoneradas}`
-                },
-                "total_valor_de_venta_operaciones_gratuitas": {
-                    "total_valor_venta_operaciones_gratuitas": "0"
-                },
-                "total_descuentos": {
-                    "monto": "0"
-                },
-                "sumatoria_igv": {
-                    "sumatoria_igv_amount": importe_total_igv
-                },
-                "sumatoria_isc": {
-                    "sumatoria_isc_amount": "0"
-                },
-                "sumatoria_otros_tributos": {
-                    "sumatoria_otros_tributos_amount": "0"
-                },
-                "descuentos_globales": "0",
-                "sumatoria_otros_cargos": "0",
-                "importe_total_de_la_venta_cesion_en_uso_o_del_servicio_prestado": `${importe_total_pagar}`
-            },
-            "detraccion": {
-                "cuenta_banco_nacion": "",
-                "codigo_producto": "",
-                "porcentaje_detraccion": 0,
-                "monto_detraccion": 0
-            },
-            "informacion_adicional_anticipos": {
-                "informacion_prepagado_o_anticipado": {
-                    "serie_y_numero_de_documento_que_se_realizo_el_anticipo": "123-123",
-                    "tipo_de_comprobante_que_se_realizo_el_anticipo": "",
-                    "tipo_de_documento_del_emisor_del_anticipo": ""
-                },
-                "total_anticipos": "0"
-            },
-            "informacion_adicional": {
-                "tipo_de_operacion": "0101",
-                "leyendas": leyenda
-            },
-            "extras": {
-                "logo": logo64
+            "extras":{
+                "forma_de_pago": "",
+                "observaciones": "",
+                "vendedor": "",
+                "caja": ""
             }
-        };
+
+        }
 
         console.log(JSON.stringify(jsonData));
 
-        hash = xSendApiSunat(jsonData, idregistro_pago, xtipo_de_documento_comprobante);        
+        hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);        
     })
 
 
@@ -182,66 +148,47 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 }
 
 
-function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
+function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
     var xListItemsRpt =[];
     const procentaje_IGV = parseFloat(parseFloat(ValorIGV)/100);
     
-    var valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = {"monto_de_valor_referencial_unitario": "01", "codigo_de_tipo_de_precio": "02"};
-    if (ValorIGV > 0) { // con igv
-        valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo  = {"monto_de_valor_referencial_unitario": "01"}; 
-    }    
+    // var valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = {"monto_de_valor_referencial_unitario": "01", "codigo_de_tipo_de_precio": "02"};
 
     items.map( (x, index) => {
         index++;
-        const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
+        
 
+        let codigo_tipo_afectacion_igv = "20";
+        let total_base_igv = 0;
+        let total_igv = 0;
+        let total_valor_item = x.precio_total;
+        if (!isExoneradoIGV) {// con igv
+        //   valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = { monto_de_valor_referencial_unitario: "01" };
+          codigo_tipo_afectacion_igv = "10";
+          total_igv = parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
+          total_base_igv = parseFloat(x.precio_total) - total_igv;
+          total_valor_item = total_base_igv;
+        } 
+        
+        //const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
         var jsonItem = {
-            "datos_del_detalle_o_item":{
-                "numero_de_orden_del_item":`${index}`,
-                "unidad_de_medida_por_item":"CS",
-                "cantidad_de_unidades_por_item":`${x.cantidad}`,
-                "codigo_producto_de_sunat":`${x.id}`
-            },
-            "informacion_adicional_gastos_art_37_renta":{
-                "descripcion_detallada_del_servicio_prestado_bien_vendido_o_cedido_en_uso_indicando_las_caracteristicas":`${x.des}`,
-                "valor_unitario_por_item":`${x.punitario}`,
-                "precio_de_venta_unitario_por_item_y_codigo":{
-                    "codigo_de_tipo_de_precio":"01"
-                },
-                "valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo":{
-                    "monto_de_valor_referencial_unitario":"0"
-                },
-                "afectacion_al_igv_por_item":{
-                    "porcentaje_de_igv": ValorIGV,
-                    "monto_de_igv": montoIGVItem,
-                    "afectacion_al_igv":"10"
-                },
-                "sistema_de_isc_por_item":{
-                    "monto_de_isc":"0",
-                    "tipo_de_sistema_de_isc":"02"
-                },
-                "valor_de_venta_por_item":`${x.precio_total}`,
-                "descuentos_por_item":{
-                    "monto_del_descuento":"0"
-                }
-            },
-            "informacion_adicional_a_nivel_de_item_gastos_intereses_hipotecarios_primera_vivienda":{
-                "nro_de_contrato":"",
-                "fecha_de_otorgamiento_del_credito":""
-            },
-            "propiedades_adicionales": [
-                {
-                    "nombre_concepto_tributario": "",
-                    "codigo_concepto_tributario": "",
-                    "valor_de_propiedad": "",
-                    "periodo_de_usabilidad": {
-                        "fecha_inicio": "",
-                        "fecha_fin": "",
-                        "duracion": ""
-                    }
-                }
-            ]
-        };
+            "codigo_interno": x.id,
+            "descripcion": x.des,
+            "codigo_producto_sunat": "51121703",
+            "codigo_producto_gsl": "51121703",
+            "unidad_de_medida": "NIU",
+            "cantidad": x.cantidad,
+            "valor_unitario": x.punitario,
+            "codigo_tipo_precio": "01",
+            "precio_unitario": x.punitario,
+            "codigo_tipo_afectacion_igv": codigo_tipo_afectacion_igv,
+            "total_base_igv": total_base_igv,
+            "porcentaje_igv": ValorIGV,
+            "total_igv": total_igv,
+            "total_impuestos": total_igv,
+            "total_valor_item": total_valor_item,
+            "total_item": x.precio_total
+        }
 
         xListItemsRpt.push(jsonItem);
 
@@ -251,63 +198,81 @@ function xJsonSunatCocinarItemDetalle( items, ValorIGV ) {
 }
 
 // tipo_documento = 01 > factura se envia de manera individual 
-function xSendApiSunat(json_xml, idregistro_pago, tipo_documento, guardarError=true) {
+// idtipo_comprobante_serie => guardar el correlativo
+async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie, guardarError=true) {
     const _url = URL_COMPROBANTE+'/documents';
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
-
     var rpt = {};
-    json_xml = JSON.stringify(json_xml);
-    $.ajax({type: 'POST', 
-        url: _url, 
-        headers: _headers, 
-        dataType: 'json', 
-        data: json_xml, 
-        async: false,
-        success: function (data) {// se registro con exito al servicio / api  
-            console.log('succes: ', data);
+    const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
+    json_xml = JSON.stringify(json_xml);   
+
+    const _idregistro_p = typeof idregistro_pago === "object" ? idregistro_pago[1] : idregistro_pago;
+    const _viene_facturador = typeof idregistro_pago === "object" ? 1 : 0; 
+    
+    xPopupLoad.xopen();
+
+    await fetch(_url, {
+        method: 'POST',
+        headers: _headers,
+        body: json_xml,
+    }).then(function (response) {
+        return response.json();
+    }).then(function (res) {
+        console.log(res);
+        if (res.success) {
+            rpt.ok = true;
+            rpt.qr = res.data.qr;
+            rpt.hash = res.data.hash;
+            rpt.external_id = res.data.external_id;
+
+            res.data.numero = numero_comp;
+            res.data.idregistro_pago = _idregistro_p;
+            res.data.viene_facturador = _viene_facturador;
+            res.data.idtipo_comprobante_serie = idtipo_comprobante_serie;
             
-            // guardar external_id en registro pago;
-            const _idexternal = data.data.external_id;
-            const _data = { idregistro_pago: idregistro_pago, codsunat: tipo_documento, idexternal: _idexternal, jsonXml: "", enviado: "1" };
+            CpeInterno_Registrar(res);
 
-            rpt.qr = data.data.qr;
-            rpt.hash = data.data.hash;
-            rpt.external_id = _idexternal;
+        } else { 
+            // error de ingreso de datos / no continua / advierrte al usuario
+            rpt.ok = false;
+            rpt.error = 'Error al ingresar los datos';
+            rpt.msj_error = res.message;
 
-            $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
-            .done( function (res) {
-                console.log(res);
-                
-                // envia si es factura
-                if (tipo_documento === '01') { // esto se ejecuta en segundo plano // es decir no espera a que termine
-                    xSoapSunat_EnvioIndividual(_idexternal); 
-                }
-            });
-
-
-        },
-        error: function(err) { // si hay algun problema de conexion con el apí
-            //
-            
-            rpt.hash = "www.papaya.com.pe";
-            if (guardarError) {                
-                xSendApiSunatError(json_xml, idregistro_pago, tipo_documento);
+            const data = { 
+                numero: numero_comp, 
+                jsonxml: json_xml, 
+                external_id: '',  
+                estado_api: 0,
+                estado_sunat: 1,
+                anulado: 1,
+                msj: res.message,
+                viene_facturador: _viene_facturador,
+                idtipo_comprobante_serie: idtipo_comprobante_serie,                
             }
-            // guardar en facturas no enviadas o con errores
+
+            // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
+            CpeInterno_ErrorValidacionSunat(_idregistro_p, data);
 
         }
-    })
+    }).catch(function (error) { // error de conexion o algo pero imprime
+        rpt.ok = true;
+        rpt.qr = '';
+        rpt.hash = "www.papaya.com.pe";
+        rpt.external_id = '';
+        CpeInterno_Error(json_xml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);
+    });
+    
     return rpt;
 }
 
-function xSendApiSunatError(json_xml, idregistro_pago, tipo_documento) {
-    json_xml = JSON.stringify(json_xml);
-    const _data = { idregistro_pago: idregistro_pago, idexternal: "", codsunat: tipo_documento, jsonXml: json_xml, enviado: "0" };
-    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
-    .done( function (res) {
-        // console.log(res);
-    });
-}
+// function xSendApiSunatError(json_xml, idregistro_pago, tipo_documento) {
+//     json_xml = JSON.stringify(json_xml);
+//     const _data = { idregistro_pago: idregistro_pago, idexternal: "", codsunat: tipo_documento, jsonXml: json_xml, enviado: "0" };
+//     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
+//     .done( function (res) {
+//         // console.log(res);
+//     });
+// }
 

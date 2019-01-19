@@ -2404,6 +2404,7 @@
 			$sql = "
 			SELECT rpp.idregistro_pago,GROUP_CONCAT(DISTINCT rpp.idpedido) AS idpedido,SUBSTRING_INDEX(rp.fecha,' ',-1) AS hora,rp.total,rp.estado,rp.cierre,rp.motivo_anular,tps.idtipo_comprobante
 					,LPAD(p.nummesa,2,'0') AS nummesa, GROUP_CONCAT(DISTINCT LPAD(p.correlativo_dia,5,'0')) as correlativo_dia, p.referencia, u.usuario, tp.idtipo_comprobante, tp.descripcion as comprobante, tpcs.serie, tpcs.correlativo, IFNULL(c.nombres, 'PUBLICO EN GENERAL') AS cliente
+					,rp.idce
 						FROM registro_pago_pedido AS rpp
 						INNER JOIN registro_pago AS rp ON rpp.idregistro_pago=rp.idregistro_pago
 						INNER JOIN tipo_comprobante_serie as tps on rp.idtipo_comprobante_serie = tps.idtipo_comprobante_serie

@@ -31,6 +31,11 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante;
 
 	const hash = await xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente, idregistro_pago);
+	if (!hash.ok) { // si el documento electronico no es valido
+		alert(hash.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
+		return hash;
+	}
+
 	console.log(hash);
 	xArrayEncabezado[0].hash = hash.hash; // que es realidad el qr
 	xArrayEncabezado[0].external_id = hash.external_id;
@@ -281,23 +286,29 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 				Array_print:xImpresoraPrint, 
 				ArrayItem:xArrayCuerpo, 
 				ArraySubTotales:xArraySubtotal				
+			},
+			success: function(dtPbd){
+				if (dtPbd.indexOf('Error') != -1) {
+					xPopupLoad.xclose();
+					$("#print_error").text(dtPbd);
+					xErrorPrint = true;
+					// dialog_erro_print.open();
+				} else {
+					//xPopupLoad.titulo='Exito!';
+					xErrorPrint = false;
+					xPopupLoad.titulo = "Imprimiendo...";
+					xPopupLoad.xopen();
+					setTimeout(function () { xPopupLoad.xclose() }, 3000);
+				}
+
+				callback(xErrorPrint);
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				console.log(errorThrown);				
+				xPopupLoad.xclose();
+				$("#print_error").text("Error, Verifique que la ticketera este prendida y que tenga papel.");
+				xErrorPrint = true;
+				callback(xErrorPrint);
 			}
-		})
-	.done( function (dtPbd) {
-		//xPopupLoad.xclose();
-		if(dtPbd.indexOf('Error')!=-1){
-			xPopupLoad.xclose();
-			$("#print_error").text(dtPbd);
-			xErrorPrint=true;
-			// dialog_erro_print.open();
-		}else{
-			//xPopupLoad.titulo='Exito!';
-			xErrorPrint=false;
-			xPopupLoad.titulo="Imprimiendo...";
-			xPopupLoad.xopen();
-			setTimeout(function(){ xPopupLoad.xclose()}, 3000);
-		}
-		
-		callback(xErrorPrint);
-	});
+		});	
 }

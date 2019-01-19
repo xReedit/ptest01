@@ -478,7 +478,7 @@ function xSelectedTpComprobante(valor) {
 	
 	xThisPago.tipoComprovanteSelecionado = {'idtipo_comprobante_serie': valor, 'idtipo_comprobante': idtipo_comprobante, 'codsunat': codsunat, 'serie': serie, 'descripcion': descripcion, 'inicial': inicial};	
 
-	if ( tipoComprovanteSelecionado.idtipo_comprobante === 0 ) {
+	if ( xThisPago.tipoComprovanteSelecionado.idtipo_comprobante === 0 ) {
 		$("#container-cliente").addClass('xInvisible');
 	} else {
 		$("#container-cliente").removeClass('xInvisible');
@@ -506,7 +506,7 @@ function xVerContainerPago() {
 }
 
 function EmitirValidacionFormCliente() {	
-	console.log(xThisPago.$.form_pago_cliente);
+	// console.log(xThisPago.$.form_pago_cliente);
 	// var validForm = xThisPago.$.form_pago_cliente.checkValidity();
 	var validForm = !xThisPago.$.sel_cliente.invalid && xThisPago.$.form_pago_cliente[1].validate()
 	xThisPago.valid_form_cliente_pago = validForm;
@@ -738,7 +738,7 @@ Polymer({
     setVal:function(val){
     	xThisPago.total=val;    	
 		xThisPago.ComprobanteRequiereCliente = parseFloat(val) > 700 ? true : false;
-		EmitirValidacionFormCliente();
+		// EmitirValidacionFormCliente();
 		
     	$("#tb_tp .row").remove();
     	xResetOpSel();
@@ -757,6 +757,8 @@ Polymer({
 		xThisPago.$.sel_cliente.focus();
 
 		$("#datos_cliente").addClass("xInvisible");
+		EmitirValidacionFormCliente();
+		xSelectedTpComprobante();
     	//xLoadCliente();
     },
 	setVisibleContainerPago: function() {		
@@ -764,8 +766,13 @@ Polymer({
 		if ( !xThisPago.$.form_pago_cliente.checkValidity() ) {EmitirValidacionFormCliente(); return; } // si el formulario no es valido // si no esta correcto el ruc o si el comprobante exige cliente
 		xVerContainerPago();
 	},
-	setVisiblePanel1: function() { // visible panel 1 = datos comprobante y cliente
+	setVisiblePanel1: function() { // visible panel 1 = datos comprobante y cliente //aca
+		xThisPago.$.form_pago_cliente.reset();
+		xSelectedTpComprobante();
+		// xThisPago.valid_form_cliente_pago = false;
+		// xThisPago.fire('xFormClienteValid', false);
 		xThisPago.hidden_container_pago = true;
+
 	},
     setObjConntet:function(objC){
     	// xLoadCliente();

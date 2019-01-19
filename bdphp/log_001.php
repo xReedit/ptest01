@@ -236,10 +236,13 @@
 	
 			$sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
-
-			// guardamos el correlativo
-			$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
-			$bd->xConsulta_NoReturn($sql_doc_correlativo);
+			
+			if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
+				// guardamos el correlativo //
+				$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+				$bd->xConsulta_NoReturn($sql_doc_correlativo);
+			} 
+			// si es factura elctronica guarda despues tigger ce 
 		} else {
 			$correlativo_comprobante='0';
 		}
@@ -333,9 +336,13 @@
 			$sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
 
-			// guardamos el correlativo
-			$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
-			$bd->xConsulta_NoReturn($sql_doc_correlativo);
+			
+			if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
+				// guardamos el correlativo //
+				$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+				$bd->xConsulta_NoReturn($sql_doc_correlativo);
+			} 
+			// si es factura elctronica guarda despues tigger ce 
 		} else {
 			$correlativo_comprobante='0';
 		}
@@ -453,6 +460,9 @@
 
 		echo $idclie;
 
+		// $rptclie = json_encode(array('idcliente' => $idclie));
+		// print $rptclie.'|';
+
 		// 031218 // cambio: ahora se graba primero el cliente se devuelve el idcliete, 
 
 		// $GLOBALS['x_idcliente'] = $idclie;
@@ -475,9 +485,12 @@
 			$sql_doc_correlativo="select (correlativo + 1) as d1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;		
 			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);
 
-			// guardamos el correlativo
-			$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
-			$bd->xConsulta_NoReturn($sql_doc_correlativo);
+			if ($x_array_comprobante['codsunat'] === "0") { // si no es factura electronica
+				// guardamos el correlativo //
+				$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+				$bd->xConsulta_NoReturn($sql_doc_correlativo);
+			} 
+			// si es factura elctronica guarda despues tigger ce 
 		} else {
 			$correlativo_comprobante='0';
 		}
@@ -501,7 +514,7 @@
 
 		$idtipo_comprobante_serie = $x_array_comprobante['idtipo_comprobante_serie'];
 		
-		$sqlrp="update registro_pago set idtipo_comprobante_serie=".$idtipo_comprobante_serie.", correlativo='".$idtipo_comprobante_serie."' where idregistro_pago=".$id_registro_pago;
+		$sqlrp="update registro_pago set idtipo_comprobante_serie=".$idtipo_comprobante_serie." where idregistro_pago=".$id_registro_pago;
 		$idregistro_pago=$bd->xConsulta_NoReturn($sqlrp);
 	}
 

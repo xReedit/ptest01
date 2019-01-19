@@ -106,6 +106,10 @@
 <script  type="text/javascript" src="../view/deNumALetras.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
+<script type="text/javascript" src="../view/config.const.js"></script>
+<script type="text/javascript" src="../view/cpe_interno.js"></script>
+<script type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
+
 
 <style>
 	.verIconFacturado img { visibility: hidden; }
@@ -235,7 +239,7 @@ function xloadHistorial(){
 			if(xdt_h[i].cierre==="1"){ximg_estado='<img src="../../images/candado.png" style="width:10px; heigh:10px; padding-right:2px; padding-top:4px;" class="xIzquierda EnLinea">';}
 			if(xdt_h[i].estado==="1"){xclass_anulado='xrow_anulado';}
 
-			xget_icon_facturado = xdt_h[i].idtipo_comprobante == "0" ? '' : x_icon_facturado;
+			xget_icon_facturado = xdt_h[i].idce === null ? '' : x_icon_facturado;
 
 			xcadena_h=String(xcadena_h+'<tr class="row xCursor  '+xclass_anulado+'" data-index='+ i +' data-id="'+xdt_h[i].idregistro_pago+'" data-idpedidos='+xdt_h[i].idpedido+' data-estado="'+xdt_h[i].estado+'" data-motivoa="'+xdt_h[i].motivo_anular+'" onclick="xloadDetallePago(this);">'+
 				'<td id="row_historial'+ i +'">'+ximg_estado+xCeroIzq(xcount_row,3)+xget_icon_facturado+'</td>'+
@@ -284,7 +288,7 @@ function xloadDetallePago(obj){
 		var comprobanteEmitido = xdt_pdE.comprobante +' '+ (xdt_pdE.serie==="0" ? '' : xdt_pdE.serie || '') + '-'+ (xdt_pdE.correlativo === "0" ? '' : xCeroIzqNumComprobante(xdt_pdE.correlativo) || '');
 		$("#txt_comprobante").text(comprobanteEmitido);
 
-		xThisHistVenta.xYaTieneComprobante = xdt_pdE.idtipo_comprobante==="0" ? false : true; 
+		xThisHistVenta.xYaTieneComprobante = xdt_pdE.idce === null ? false : true; 
 
 		// console.log(xThisHistVenta.xYaTieneComprobante);
 		$("#txt_cliente").text(xdt_pdE.cliente);
@@ -410,14 +414,14 @@ function xMandarCocinarImpresionComprobante_historial() {
 	var arr_cliente = xRpt_pago[0].cliente;	
 	var arr_comprobante = xRpt_pago[0].comprobante;
 	const arrayItems = xCargarDatosAEstructuraImpresion(xThisHistVenta.xdtPedDet);
-	
+	xPopupLoad.xopen();
 	// se envia f = genera el correlativo, e= registra el comprobante en registrodepago
 	//idregistro_pago se envia para update registro
 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'fe', p_comprobante: arr_comprobante, idregistro_pago: xidregistro_pago_sel}})
 	.done( function (xrpt_correlativo) {
 		const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
 		arr_comprobante.correlativo = xCeroIzqNumComprobante(_arrRpt.correlativo_comprobante);
-		xCocinarImprimirComprobante(arrayItems, arrSumSubtTotales, arr_comprobante, arr_cliente,-2);
+		xCocinarImprimirComprobante(arrayItems, arrSumSubtTotales, arr_comprobante, arr_cliente, xidregistro_pago_sel,-2);
 		
 		// arr_comprobante.correlativo = xCeroIzqNumComprobante(xrpt_correlativo);
 		
@@ -426,6 +430,7 @@ function xMandarCocinarImpresionComprobante_historial() {
 		xdt_h[index_historial].idtipo_comprobante = arr_comprobante.idtipo_comprobante;
 		$("#row_historial"+index_historial).append(x_icon_facturado);
 		xThisHistVenta.$.dialog_comprobante.close();
+		xPopupLoad.xclose();
 	})
 		
 }

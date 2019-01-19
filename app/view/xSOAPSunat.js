@@ -163,51 +163,115 @@ function xSoapSunat_EnvioIndividual(idexternal) {
 
 // esto se utiliza al cierre de caja
 // envia al servicio de la api los documentos documentos que no se enviaron por error de conexion u otro
-async function xSoapSunat_EnviarDocumentApi(json_xml, idregistro_pago, tipo_documento) {
+async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
+
     const _url = URL_COMPROBANTE + '/documents';
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
-
-    var rpt = '';
+    var rpt = {};
+    const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
     json_xml = JSON.stringify(json_xml);
-    $.ajax({
-        type: 'POST',
-        url: _url,
+
+    
+    await fetch(_url, {
+        method: 'POST',
         headers: _headers,
-        dataType: 'json',
-        data: json_xml,
-        async: false,
-        success: function (data) {// se registro con exito al servicio / api  
-            console.log('succes: ', data);
-            rpt = { success: true, msj: "ok." };
-            // guardar external_id en registro pago;
-            const _idexternal = data.data.external_id;
-            const _data = { idregistro_pago: idregistro_pago, idexternal: _idexternal, enviado: "1" };
-            $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '101', data: _data } })
-                .done(function (res) {
-                    console.log(res);
-                    
-                    // envia si es factura
-                    if (tipo_documento === '01') { // esto se ejecuta en segundo plano // es decir no espera a que termine
-                        xSoapSunat_EnvioIndividual(_idexternal);
-                    }
-                });
+        body: json_xml,
+    }).then(function (response) {
+        return response.json();
+    }).then(function (res) {
+        console.log(res);
+        if (res.success) {
+            rpt.ok = true;
 
+            let data = {};   
+            data.idce = idce;         
+            data.estado_api = 0; // se registro correctamente
+            data.estado_sunat = 1; // aun no se envia ( si es boleta va en resumen)
+            data.msj = "Registrado";            
+            data.numero = numero_comp;
+            data.external_id = res.data.external_id;
 
-        },
-        error: function (err) { // si hay algun problema de conexion con el apí
-            //
-            console.log(err);
-            rpt = { 'success': false, 'msj': 'Error de conexion con el servicio Sunat: Se intentara enviar nuevamente los comprobantes al proximo cierre.' };
+            if (res.response.length != 0) {
+                data.estado_sunat = res.response.code;
+                data.msj = res.response.description;
+            } 
+
+            CpeInterno_UpdateRegistro(data);
+
+        } else { 
+            // error de ingreso de datos / anula comprobante
+            rpt.ok = false;
+            rpt.error = 'Error al ingresar los datos';
+            rpt.msj_error = res.message;
+
+            const data = {
+                idce: idce,
+                numero: numero_comp,                
+                external_id: '',
+                estado_api: 0,
+                estado_sunat: 1,
+                anulado: 1,
+                msj: res.message,                
+            }
+
+            // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
+            CpeInterno_UpdateRegistro(data);
 
         }
-    }).fail((jqXHR, textStatus) => {
-        console.log(textStatus);
-        rpt = { 'success': false, 'msj': 'Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.' };
+    }).catch(function (error) { // error de conexion
+        rpt.ok = false;
+        rpt.msj = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";        
     });
 
     return rpt;
+
+
+    // const _url = URL_COMPROBANTE + '/documents';
+    // let _headers = HEADERS_COMPROBANTE;
+    // _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
+
+
+    // var rpt = '';
+    // json_xml = JSON.stringify(json_xml);
+    // $.ajax({
+    //     type: 'POST',
+    //     url: _url,
+    //     headers: _headers,
+    //     dataType: 'json',
+    //     data: json_xml,
+    //     async: false,
+    //     success: function (data) {// se registro con exito al servicio / api  
+    //         console.log('succes: ', data);
+    //         rpt = { success: true, msj: "ok." };
+    //         // guardar external_id en registro pago;
+    //         const _idexternal = data.data.external_id;
+    //         const _data = { idregistro_pago: idregistro_pago, idexternal: _idexternal, enviado: "1" };
+    //         $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '101', data: _data } })
+    //             .done(function (res) {
+    //                 console.log(res);
+                    
+    //                 // envia si es factura
+    //                 if (tipo_documento === '01') { // esto se ejecuta en segundo plano // es decir no espera a que termine
+    //                     xSoapSunat_EnvioIndividual(_idexternal);
+    //                 }
+    //             });
+
+
+    //     },
+    //     error: function (err) { // si hay algun problema de conexion con el apí
+    //         //
+    //         console.log(err);
+    //         rpt = { 'success': false, 'msj': 'Error de conexion con el servicio Sunat: Se intentara enviar nuevamente los comprobantes al proximo cierre.' };
+
+    //     }
+    // }).fail((jqXHR, textStatus) => {
+    //     console.log(textStatus);
+    //     rpt = { 'success': false, 'msj': 'Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.' };
+    // });
+
+    // return rpt;
 }
 
 // cambia estado: para error = 0 o  succes = 1 // aceptada, anulada

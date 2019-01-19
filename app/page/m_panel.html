@@ -54,6 +54,7 @@
 	<link rel="import" href="../web_components/paper-toggle-button/paper-toggle-button.html">
 	<link rel="import" href="../web_components/paper-badge/paper-badge.html">
 	<link rel="import" href="../web_components/paper-progress/paper-progress.html">
+	<link rel="import" href="../web_components/paper-toast/paper-toast.html">
 
 	<!--router-->
 	<link rel="import" href="../web_components/iron-icons/maps-icons.html">
@@ -224,7 +225,8 @@
            	</paper-toolbar>
 	        <div fit layout vertical class="content xContent">
 	        	<div class="xInvisible"></div>
-	            <x-router></x-router>
+							<x-router></x-router>
+							<paper-toast id="toast" text="Hello world!"></paper-toast>
 	        </div>
        	</paper-header-panel>
 

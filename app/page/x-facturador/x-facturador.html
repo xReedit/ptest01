@@ -42,7 +42,7 @@
                 <br>                
                 <hr class="xLinea3">
                 <br>
-                <table class="xtable4">
+                <table class="xtable4" width="100%">
                     <thead>
                         <th class="xSinBorde" width="10px">Cant</th>
                         <th class="xSinBorde" width="60%">Descripcion</th>
@@ -114,6 +114,7 @@
     <script type="text/javascript" src="../../view/item_pedido_subtotales.js"></script>
     <script type="text/javascript" src="../../view/manager_storage.js"></script>
     <script type="text/javascript" src="../../view/cliente.service.js"></script>    
+    <script type="text/javascript" src="../../view/cpe_interno.js"></script>
     <style type="text/css">
         :root {
             --font-size: 12px;
@@ -133,7 +134,7 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante;
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro;
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -324,7 +325,15 @@
         $("#cant_item").focus();
     }
 
-    function xValidarBtnProcesar() {    
+    function xValidarBtnProcesar() {
+        // si es boleta y el total no pasa de 700 no requiere cliente
+        if (_arrTotal.length > 0) {
+            if ( cnf_ComprobanteSel.codsunat === "03" && _listValid && parseFloat(_arrTotal[2].importe) <= 700) {
+                xThisFacturador.formValid = true;                
+                return;            
+            }
+        }
+
         xThisFacturador.formValid = _listValid && _formValid;
     }
 
@@ -334,7 +343,7 @@
 
         const SumaLista = this._arrItems.map( x => parseFloat(x.ptotal)).reduce((a,b) => a+b, 0);
         _listValid = parseInt(SumaLista) === 0 ? false : true;
-        xValidarBtnProcesar();
+        
 
 
         _arrTotal.push({ 'descripcion': 'Sub Total', 'importe': xMoneda(SumaLista) });
@@ -352,28 +361,70 @@
         _arrTotal.push({ 'descripcion': 'Total', 'importe': xMoneda(total) });
         
         xThisFacturador.arrTotales = JSON.parse(JSON.stringify(_arrTotal));
-        console.log(_arrTotal);
+
+        xValidarBtnProcesar();
+        // console.log(_arrTotal);
     }
 
-    function xProcesarComprobante() {
-        // obtiene el correlativo del comprobante    
+    async function xProcesarComprobante() {    
+        if (xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
+            xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
+            return;
+        }
+        // registra cliente
         xPopupLoad.xopen(); 
+        arr_comprobante = cnf_ComprobanteSel;
+        
+        if (_arrCliente.length === 0 ){// si no hay cliente
+            _arrCliente.idcliente=0;
+            _arrCliente.num_doc = '00000000';
+            _arrCliente.nombres = 'PUBLICO EN GENERAL';
+            _arrCliente.direccion = '';
+        }else {
+            _arrCliente.direccion = $("#txt_direccion").val();
+            _arrCliente.idcliente = _arrCliente.idcliente === "" ? await ClienteService_Guardar(_arrCliente) : _arrCliente.idcliente;
+        }
+        // obtiene el correlativo del comprobante    
         $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data: { p_from:'f', p_comprobante: cnf_ComprobanteSel } })
         .done(function (comprobante_correlativo) {
             const _arrRpt = xm_all_SetResponseLog_001(comprobante_correlativo);
-            xMandarCocinarImpresionComprobante(_arrRpt.correlativo_comprobante, 0);
-        });
-    }
 
-    async function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	        
+            arr_comprobante.correlativo = xCeroIzqNumComprobante(_arrRpt.correlativo_comprobante);
+            
+            // registrar cpe_facturador                        
+            const arrCpeFac = {
+                idcliente: _arrCliente.idcliente,
+                idcomprobante: arr_comprobante.idtipo_comprobante,
+                num_comprobante: arr_comprobante.correlativo,
+                subtotal: _arrTotal[0].importe,
+                igv: _arrTotal[1].importe,
+                total: _arrTotal[2].importe,
+            }
+
+            $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '102', data: arrCpeFac, arrItems: _arrItems } })
+            .done(function (ultimoIdCpeFac) {                
+                _idregistro = [0, ultimoIdCpeFac]; //evalua si es array entonces sabra que esta yendo desde aca
+                xMandarCocinarImpresionComprobante(_arrRpt.correlativo_comprobante, _idregistro);
+            });
+
+        });
+    }    
+
+    async function xMandarCocinarImpresionComprobante(correlativo, _idregistro) {   
         
-        if ( !xThisFacturador.cpe_show ) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
+        
+        if (!xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
             arr_comprobante = cnf_ComprobanteSel;
             arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-            
+
             // retorna el encabezado del comprobante con hash
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);
-            rptDoc = await xCocinarImprimirComprobante(itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, 0,-2,false)
+            rptDoc = await xCocinarImprimirComprobante(itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, _idregistro, -2, false)
+        }
+
+        if ( rptDoc.ok = false ) {
+            alert(rptDoc.msj);
+            return;
         }
                         
         if (impresoraSelect.idimpresora === -1) {// en pdf

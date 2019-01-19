@@ -273,7 +273,7 @@
 									<input type="text" id="pie_pagina_comprobante" name="pie_pagina_comprobante">
 									<input type="text" id="var_size_font" name="var_size_font">
 									<input type="text" id="var_margen_iz" name="var_margen_iz">
-									<input type="text" id="img64" name="img64">
+									<!-- <input type="text" id="img64" name="img64"> -->
 
 									<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 									<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
@@ -1161,7 +1161,7 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #pie_pagina_comprobante").val($("#td_pie_comprobante").val());
 	$("#frm_conf_print #var_margen_iz").val($("#td_margen_iz").val());
 	$("#frm_conf_print #var_size_font").val($("#td_size_font").val());
-	$("#frm_conf_print #img64").val($("#td_img64").val());
+	// $("#frm_conf_print #img64").val($("#td_img64").val());
 
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print",$("#frm_conf_print").serialize(),function(a){
 		xPopupLoad.xclose();

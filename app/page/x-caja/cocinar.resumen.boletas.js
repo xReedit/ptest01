@@ -11,18 +11,21 @@ async function xCocinarResumenBoletas() {
     }
 
     // cocinar registro faltantes - enviar documnentos que no fueron enviados al servicio api por algun error de conexion
+    // estado_api = 1; //no se subieron al api
     const arrDocNoRegistrado = await xSoapSunat_getArrNoRegistrado();
     let error = false;
     for (const i in arrDocNoRegistrado) {
-        const jsonxml = JSON.parse(arrDocNoRegistrado[i].jsonxml.replace('"{', '{').replace('}"', '}'))
-        const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);        
-        if (!rpt.success) { 
+        const jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml.replace('"{', '{').replace('}"', '}'))
+        // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
+        const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idce);
+        if (!rpt.ok) { 
             $("#xTituloRpt").append('<p style="color: red">' + rpt.msj + "</p>"); 
             error = true; 
             dialog_enviando_sunat.close();
             return; }
     };
 
+    return;// pruebas
     if ( error ) return;
 
     

@@ -191,6 +191,7 @@
 <script type="text/javascript" src="../view/x-views.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
+<script type="text/javascript" src="../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
 <script type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
@@ -198,6 +199,7 @@
 <script type="text/javascript" src="../view/manager_storage.js"></script>
 <script type="text/javascript" src="../view/cliente.service.js"></script>
 <script type="text/javascript" src="../../js/keynavigator-min.js"></script>	
+
 <script>
 var xThisVentaRapida
 ,$li
@@ -715,6 +717,8 @@ async function xGuardarPedidoVR(responde){
 		xarr_tipo_pago = [];
 		p_from = 'a'; //registra solo pedido	
 	}
+
+	xPopupLoad.xopen();
 	// xarr_tipo_pago = xEstadoPedido === 2 ?  xRpt_pago[0].xtipo_pagos : [];
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=304', data:{h:xDevolverHora(),mesa:xmesa,ref:xref,t:xtotal,r:xReservar,sl:xsolo_llevar,idtpc:xIdTpc_pe,idcat:xidCategoriaVR,estado_p:xEstadoPedido,sql_p:xsql_p,sql_p_subt:xsql_p_subt, sql_descontar:xsub_sql_descontar}})
 	//xArrayGuardarPedido={'idcategoria':xidCategoriaVR ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
@@ -758,8 +762,13 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 		var arr_cliente = xRpt_pago[0].cliente;
 		var arr_comprobante = xRpt_pago[0].comprobante;
 		arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		
 		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
 		xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
+		// if (!rpt.ok) { // si el documento electronico no es valido
+		// 	alert(rpt.msj + 'Mande a imprimir desde Registro de pagos');
+		// 	return;
+		// }
 	}
 }
 
