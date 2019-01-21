@@ -9,14 +9,20 @@ var xImpresoraPrint;
 // idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
 // showPrint = true; es false si lo mando desde facturador.
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
-	
-	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") {return;} // ninguno no imprime
+	let rptPrint = {}
+	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = flase; return rptPrint;} // ninguno no imprime
 	
     // busca impresora donde imprimir
-    if (!xgetComprobanteImpresora(xidDoc)) return false; 
+    if (!xgetComprobanteImpresora(xidDoc)) {
+		rptPrint.imprime = flase;
+    	return rptPrint;
+	}
 	// si no viene datos return false
 
-    if(xArrayCuerpo.length==0){return false}
+    if(xArrayCuerpo.length==0){
+		rptPrint.imprime = flase; 		
+		return rptPrint;
+	}
 
     // array encabezado org sede
 	var xArrayEncabezado = xm_log_get('datos_org_sede');    
@@ -30,15 +36,15 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	//comprobante electronico // ponemos el pie de pagina para el comprobante
 	xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante;
 
-	const hash = await xJsonSunatCocinarDatos(xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente, idregistro_pago);
-	if (!hash.ok) { // si el documento electronico no es valido
-		alert(hash.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
-		return hash;
+	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
+	if (!rptPrint.ok) { // si el documento electronico no es valido
+		alert(rptPrint.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
+		return rptPrint;
 	}
 
-	console.log(hash);
-	xArrayEncabezado[0].hash = hash.hash; // que es realidad el qr
-	xArrayEncabezado[0].external_id = hash.external_id;
+	console.log(rptPrint);
+	xArrayEncabezado[0].hash = rptPrint.hash; // que es realidad el qr
+	xArrayEncabezado[0].external_id = rptPrint.external_id;
 	
 	// return true; // temporal probamos facturacion electronica
 	//

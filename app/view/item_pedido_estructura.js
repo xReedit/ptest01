@@ -67,7 +67,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
             if (!rv[grupo]) {
                 rv[grupo] = {
                     id: x.iditem,
-                    cantidad: x.cantidad,
+                    cantidad: parseFloat(x.cantidad),
                     des: x.des,
                     punitario: x.precio,
                     precio_total: parseFloat(x.precio_total_calc || x.total).toFixed(2),
@@ -78,8 +78,9 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
                 return rv
             }
 
-            rv[grupo].cantidad += x.cantidad;
-            rv[grupo].precio_total += parseFloat(x.precio_total).toFixed(2);
+            rv[grupo].cantidad = parseFloat(rv[grupo].cantidad) + parseFloat(x.cantidad);
+            rv[grupo].precio_total = parseFloat( parseFloat(rv[grupo].precio_total) + parseFloat(x.precio_total) ).toFixed(2);
+            rv[grupo].precio_print = rv[grupo].precio_total;
             return rv;
         }, []);
 

@@ -17,8 +17,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         hash.hash = '';
         hash.external_id = "";
         return hash;   
-    }    
-
+    }
+    
     // evalua si I.G.V es = 0 esta exonerado
     var procentajeIGV = 0;
     var xCartaSubtotales=xm_log_get('carta_subtotales')    
@@ -111,11 +111,11 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "numero_orden_de_compra": "",
             "datos_del_emisor": {
                 "codigo_pais": "PE",
-                "ubigeo": "150101",
+                "ubigeo": xArrayEncabezado[0].ubigeo,
                 "direccion": `${xArrayEncabezado[0].sededireccion} | ` + `${xArrayEncabezado[0].sedeciudad}`,
                 "correo_electronico": "",
                 "telefono": `${xArrayEncabezado[0].telefono}`,
-                "codigo_del_domicilio_fiscal": "0001"
+                "codigo_del_domicilio_fiscal": xArrayEncabezado[0].codigo_del_domicilio_fiscal
             },
             "datos_del_cliente_o_receptor":{
                 "codigo_tipo_documento_identidad": `${xtipo_de_documento_identidad_cliente}`,
@@ -133,7 +133,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "forma_de_pago": "",
                 "observaciones": "",
                 "vendedor": "",
-                "caja": ""
+                "caja": "",
+                "idcliente": xArrayCliente.idcliente
             }
 
         }
@@ -142,8 +143,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);        
     })
-
-
+    
     return hash;
 }
 
@@ -161,13 +161,13 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         let codigo_tipo_afectacion_igv = "20";
         let total_base_igv = 0;
         let total_igv = 0;
-        let total_valor_item = x.precio_total;
+        let total_valor_item = parseFloat(x.precio_total).toFixed(2);
         if (!isExoneradoIGV) {// con igv
         //   valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = { monto_de_valor_referencial_unitario: "01" };
           codigo_tipo_afectacion_igv = "10";
           total_igv = parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
           total_base_igv = parseFloat(x.precio_total) - total_igv;
-          total_valor_item = total_base_igv;
+          total_valor_item = parseFloat(total_base_igv);
         } 
         
         //const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
@@ -193,7 +193,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         xListItemsRpt.push(jsonItem);
 
     })
-
+    
     return xListItemsRpt;
 }
 
@@ -206,12 +206,16 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
     var rpt = {};
     const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
+    const nomCliente = json_xml.datos_del_cliente_o_receptor.apellidos_y_nombres_o_razon_social;
+    const idclienteComprobante = json_xml.extras.idcliente;
+    const totalComprobante = json_xml.totales.total_venta;
     json_xml = JSON.stringify(json_xml);   
 
     const _idregistro_p = typeof idregistro_pago === "object" ? idregistro_pago[1] : idregistro_pago;
     const _viene_facturador = typeof idregistro_pago === "object" ? 1 : 0; 
     
-    xPopupLoad.xopen();
+    //xPopupLoad.xopen();
+    xm_all_xToastOpen("Conectando con Sunat...");
 
     await fetch(_url, {
         method: 'POST',
@@ -226,7 +230,10 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             rpt.qr = res.data.qr;
             rpt.hash = res.data.hash;
             rpt.external_id = res.data.external_id;
-
+                        
+            res.data.nomcliente = nomCliente;
+            res.data.idcliente = idclienteComprobante;
+            res.data.total = totalComprobante;
             res.data.numero = numero_comp;
             res.data.idregistro_pago = _idregistro_p;
             res.data.viene_facturador = _viene_facturador;
@@ -240,7 +247,13 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             rpt.error = 'Error al ingresar los datos';
             rpt.msj_error = res.message;
 
-            const data = { 
+            const data = {
+                pdf:'0',
+                cdr: '0',
+                xml: '0',                
+                idcliente: idclienteComprobante,
+                total: totalComprobante,
+                nomcliente: nomCliente,
                 numero: numero_comp, 
                 jsonxml: json_xml, 
                 external_id: '',  
@@ -257,22 +270,34 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
         }
     }).catch(function (error) { // error de conexion o algo pero imprime
-        rpt.ok = true;
+        
+        const data = {
+                pdf:'0',
+                cdr: '0',
+                xml: '0',                
+                idcliente: idclienteComprobante,
+                total: totalComprobante,
+                nomcliente: nomCliente,
+                numero: numero_comp, 
+                jsonxml: json_xml, 
+                external_id: '',  
+                estado_api: 0,
+                estado_sunat: 1,
+                viene_facturador: _viene_facturador,
+                idtipo_comprobante_serie: idtipo_comprobante_serie,                
+            }
+        
+            rpt.ok = true;
         rpt.qr = '';
         rpt.hash = "www.papaya.com.pe";
         rpt.external_id = '';
-        CpeInterno_Error(json_xml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);
+        CpeInterno_Error(data, json_xml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);
     });
+    
+    setTimeout(() => {        
+        xm_all_xToastClose();
+    }, 500);
     
     return rpt;
 }
-
-// function xSendApiSunatError(json_xml, idregistro_pago, tipo_documento) {
-//     json_xml = JSON.stringify(json_xml);
-//     const _data = { idregistro_pago: idregistro_pago, idexternal: "", codsunat: tipo_documento, jsonXml: json_xml, enviado: "0" };
-//     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: _data}})
-//     .done( function (res) {
-//         // console.log(res);
-//     });
-// }
 

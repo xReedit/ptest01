@@ -188,7 +188,6 @@
 
 <script type="text/javascript" src="../view/config.const.js"></script>
 <script type="text/javascript" src="../view/item_pedidos.js"></script>
-<script type="text/javascript" src="../view/x-views.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../view/cpe_interno.js"></script>
@@ -588,6 +587,8 @@ function xNuevoPedidoVR(){
 	$("#txt_bus_item").focus();
 	guardando = false;
 
+	xRpt_pago=[];
+
 	xLocal_SubTotal_Quitados='';
 	//tt_pedido=0;
 }
@@ -701,7 +702,7 @@ async function xGuardarPedidoVR(responde){
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj)
 
 	// si no hay referencia obtiene el nombre del cliente
-	xref = xref === '' ? DatosCliente.nombres || '' : '';
+	xref = xref === '' ? DatosCliente.nombres || '' : xref;
 
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
 	xarr_header = {'idclie':xid_cliente_pago ,'referencia':xref, 'idcategoria': xidCategoriaVR, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe, 'subtotales_tachados': xLocal_SubTotal_Quitados}

@@ -813,6 +813,8 @@ input:checked ~ .xMenuPopup{display: none;}
     animation-name: ini_pedido;
     animation-duration: 2s;
 }
+
+
 /* Safari 4.0 - 8.0 */
 @-webkit-keyframes ini_pedido {
     from {margin-left: 1000px; opacity: .5;}
@@ -1035,6 +1037,8 @@ ul.list_add_item2 li {
 
 .xIndicadorSize1{width: 370px; height: 390px;}
 
+.xzoom-1 { transition: transform .2s; }
+.xzoom-1:hover {transform: scale(1.9); }
 
 
 .animated {

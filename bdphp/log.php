@@ -151,6 +151,11 @@
 			$sql="SELECT * FROM impresora WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") and estado=0";
 			$bd->xConsulta($sql);
 			break;
+		case -1051: //actualiza el copia_local a todas las impresoras locales
+			$copial_local = $_POST['copia_local'];
+			$sql="update impresora set copia_local=".$copial_local." where (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") and local=1 and estado=0";
+			$bd->xConsulta($sql);
+			break;
 		case -104://verificar session
 			//session_start();
 			//session_destroy();
@@ -174,7 +179,7 @@
 			return true;
 			break;
 		case -102://verificar usuario
-			$sql="select idusuario, acc,per from usuario where usuario='".$_POST['u']."' and pass='".$_POST['p']."'";
+			$sql="select idusuario, acc,per from usuario where (idorg=".$_SESSION['ido'].") and usuario='".$_POST['u']."' and pass='".$_POST['p']."' and estado=0";
 			$bd->xConsulta($sql);
 			break;
 		case -101:// devolver datos de session
@@ -1263,10 +1268,10 @@
 			break;
 		case 404:// organizacion
 			$sql="
-				SELECT o.*, s.idsede, s.nombre AS nom_sede, s.direccion as dir_sede,s.eslogan,s.mesas
+				SELECT o.*, s.idsede, s.nombre AS nom_sede, s.direccion as dir_sede,s.eslogan,s.mesas, s.ubigeo, s.codigo_del_domicilio_fiscal
 				FROM org AS o
 					INNER JOIN sede AS s using(idorg)
-				WHERE s.estado=0
+				WHERE (o.idorg=".$_SESSION['ido'].") and s.estado=0
 				";
 			$bd->xConsulta($sql);
 			break;
@@ -2776,7 +2781,7 @@ function xDtUS($op_us){
 			";
 			break;
 		case 3012: // load datos del org sede 
-			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, se.logo64 
+			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, se.logo64, se.ubigeo, se.codigo_del_domicilio_fiscal
 					from org as s 
 					inner JOIN sede as se on s.idorg = se.idorg 
 					where se.idorg = ".$_SESSION['ido']." and se.idsede = ".$_SESSION['idsede'];

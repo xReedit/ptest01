@@ -281,6 +281,7 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 <script type="text/javascript" src="../view/item_pedidos.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
+<script type="text/javascript" src="../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../view/cliente.service.js"></script>
 <script type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
@@ -673,6 +674,7 @@ function xIniControlMesa(){
 			component_pago.setFocusTxt(); }
 	});
 
+	// aca el focus al txt busqueda
 	$(document).keydown(function(e) {
 		if (e.keyCode>=112 || e.keyCode<=123){
 			if(xbuscar_mesa==true){return;}
@@ -1355,11 +1357,16 @@ function xRegistrarPagoCM(xcant_rp){
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago) {	
-	var arr_cliente = xRpt_pago[0].cliente;
-	var arr_comprobante = xRpt_pago[0].comprobante;
-	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-	xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
-	xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente, _idregistro_pago,-2);
+	if (xRpt_pago.length > 0) {
+		xPopupLoad.xclose();
+		var arr_cliente = xRpt_pago[0].cliente;
+		var arr_comprobante = xRpt_pago[0].comprobante;
+		arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
+		xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente, _idregistro_pago,-2);
+		
+	}
+	xRpt_pago=[];
 }
 ////////////////////
 //////////////////////
@@ -1713,13 +1720,14 @@ function xEliminarItemPedido(){
 		if(!xe_rpt.success){alert(e_rpt.error); return;}
 		var xcantidad_remove=parseFloat(xobj_row_item.find('#td_cant').text());
 		var obj_row_mod=xBuscarAttrTbData($('#tb_pedidos'),'data-idpedido',xArrayItemEliminar.idpedido);//importe item
-		var xtd_importe_row=obj_row_mod.find('#td_importe').text();//importe pedido
+		var xtd_importe_row=obj_row_mod.find('#td_importe').text();//importe pedido		
 		var indexRowIem=xobj_row_item.attr('data-i');
 
 		xcantidad_remove--;
 		var xprecio_descontar=parseFloat(xArrayItemEliminar.precio_total);
-		if(xcantidad_remove==0){
-			$(xobj_row_item).fadeTo(550, 0, function () {$(this).remove();});
+		if(xcantidad_remove===0){
+			obj_row_mod.find('#td_importe').text('0');
+			$(xobj_row_item).fadeTo(500, 0, function () {$(this).remove();});
 			xThisCM.xdtPedDet[indexRowIem].visible=1;
 		}
 
@@ -1727,11 +1735,14 @@ function xEliminarItemPedido(){
 			xobj_row_item.find('#td_importe').text(xMoneda(parseFloat(xArrayItemEliminar.precio_total-xArrayItemEliminar.precio_unitario)));
 			xtd_importe_row=parseFloat(xtd_importe_row-xArrayItemEliminar.precio_unitario)
 			obj_row_mod.find('#td_importe').text(xMoneda(parseFloat(xMoneda(xtd_importe_row))));
-			if(xtd_importe_row<=0){$(obj_row_mod).fadeTo(550, 0, function () {$(this).remove();})}
+			if(xtd_importe_row<=0){$(obj_row_mod).fadeTo(500, 0, function () {$(this).remove();})}
 		}
 		//xobj_row_item.find('#td_cant').html('<paper-checkbox  class="check_item"></paper-checkbox>'+xCeroIzq(xcantidad_remove,2))
 		xobj_row_item.find('#td_cant').text(xCeroIzq(xcantidad_remove,2))
-		xSumarTotalPedidos(1);
+		setTimeout(() => {			
+			xSumarTotalPedidos(1);
+		}, 550);
+		// xCheckPedidos();		
 		xPopupLoad.xclose();
 	})
 }
@@ -2299,8 +2310,8 @@ Polymer({
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);
     	clearInterval(xRefreshPermiso);
-    	xThisCM.xsourceEvent.close();
     	xbuscar_mesa=true;
+    	xThisCM.xsourceEvent.close();
     }
 })
 </script>

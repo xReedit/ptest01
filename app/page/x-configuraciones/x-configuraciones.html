@@ -31,6 +31,8 @@
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="ESLOGAN" id="eslogan" name="eslogan" maxlength="100" espaciar>
 					<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas" espaciar>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO DEL DOMICILIO FISCAL" id="codigo_del_domicilio_fiscal" name="codigo_del_domicilio_fiscal" espaciar>
 					<div class="xInvisible">
 						<input type="text" id="idsede" name="idsede">
 						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
@@ -451,11 +453,12 @@
 						<div class="xLinea2"></div><br>
 						<h3 class="xBold">Impresora Local</h3>
 						<p>Agrega una impresora local que se usara solo con este terminal o con esta computadora.<br>
-						Esto se utiliza en el escenario de que cada caja tenga su impresora, por ejemplo puede tener 2 cajas o mas cada una con su respectiva impresora.<br>Esto tambien implica que los <strong>"Otros comprobantes"</strong> se enviaran a imprimir a esta impresora.
+						Esto se utiliza en el escenario de que cada caja tenga su impresora, por ejemplo puede tener 2 cajas o mas cada una con su respectiva impresora.<br>Esto tambien implica que los <strong>"Otros comprobantes"</strong> se enviaran a imprimir a esta impresora. <br>
+						<strong>Img64:</strong> 1 Indica que las imagenes se imprimiran desde un mapa de bits.
 						</p>
 						<br>
 						<form method="post" id="form_impresora_local">
-							<paper-checkbox id="check_print_copia_local"></paper-checkbox> Imprimir una copia del pedido en la impresora local, para control interno o para el cliente.<br>							
+							<paper-checkbox id="check_print_copia_local" onclick="printCopialocalAll()"></paper-checkbox> Imprimir una copia del pedido en la impresora local, para control interno o para el cliente.<br>							
 						<br>
 						<table id="tb_impresora_local" class="xtable1">
 							<thead>
@@ -467,7 +470,7 @@
 								<th>Img64</th>
 								<th><!--paper-fab icon="add" onclick="xAddImpresora_local()" title="Agregar" tabindex="0"></paper-fab></td--></th>
 							</thead>
-							<tr data-id="" class="xSinBorde tr_addPrint_local row" data-t="impresora">
+							<tr data-id="" class="xSinBorde tr_addPrint_local" data-t="impresora">
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Descripcion" name="descripcion" id="descripcion" required></td>
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Descripcion"  name="ip" id="ip" required></td>								
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="num_copias" name="num_copias"></td>
@@ -478,6 +481,7 @@
 								<td><a href="#" onclick="xTestPrint(1)">Test Impresion</a></td>
 								<td><a href="#" onClick="xBorrarItemPrintLocal(this)" id="btn_borrar_print_local" class="xInvisible">Anular</a></td>
 							</tr>
+							
 						</table>
 						<div class="xInvisible">
 							<input type="text" id="idimpresora" name="idimpresora">
@@ -565,6 +569,7 @@
 						<br><br>
 						<h3>Comprobante Electronico.</h3>
 						<p>Para activar la emisión de comprobantes electrónicos necesita un token único y una llave digital que son proporcionados por el equipo de soporte tecnico.</p>
+						<p><strong>Importante: </strong> Para la facturacion electronica, es requerido indicar en la informacion de la sede: El ubigeo y el codigo de domicio fiscal.</p>
 						<div class="xLinea2"></div><br>
 						<br>
 
@@ -594,7 +599,7 @@
 <script type="text/javascript" src="config_comporbantes.js"></script>
 <script type="text/javascript" src="../../shared/config.const.js"></script>
 <script>
-var xThisConfig;
+var xThisConfig, _arrPrintLocal=[];
 var xObjBorrar = 0; // object contiene informacion de la fila a borrar + tabla e id
 function _getCategoria(val) { console.log(val);}
 
@@ -616,6 +621,8 @@ function xIniConf(){
 			xThisConfig.xt_idsede=_dtUs.idsede;
 			xThisConfig.xt_idus=_dtUs.idus;	
 		}
+
+		_arrPrintLocal = [];
 
 		xLoadOrg();
 		xLoadCategoria();
@@ -901,24 +908,27 @@ function xLoadImpresorasConf(){
 		,xCockie_ipID=window.localStorage.getItem('::app3_woIpPrintLoC'),xminutos_pedido='';
 		//getCookie("app3_print_ID")
 
+		_arrPrintLocal=[];
 		xdtImp=xdtImp.datos;
 		$("#btn_borrar_print_local").addClass('xInvisible');
 		for (var i = 0; i < xdtImp.length; i++) {
 			if(xdtImp[i].local==1){// impresora local
-				if(xdtImp[i].descripcion==xCockie_ipID){
-					$(".tr_addPrint_local").attr('data-id',xdtImp[i].idimpresora);
-					$("#form_impresora_local #idimpresora").val(xdtImp[i].idimpresora);
-					$(".tr_addPrint_local #descripcion").val(xdtImp[i].descripcion);
-					$(".tr_addPrint_local #ip").val(xdtImp[i].ip);
-					$(".tr_addPrint_local #var_size_font").val(xdtImp[i].var_size_font);
-					$(".tr_addPrint_local #var_margen_iz").val(xdtImp[i].var_margen_iz);
-					$(".tr_addPrint_local #img64").val(xdtImp[i].img64);
-					$(".tr_addPrint_local #num_copias").val(xdtImp[i].num_copias);
-					$("#form_impresora_local #local").val(1)
-					$("#btn_borrar_print_local").removeClass('xInvisible');
+				// if(xdtImp[i].descripcion==xCockie_ipID){
+				// 	$(".tr_addPrint_local").attr('data-id',xdtImp[i].idimpresora);
+				// 	$("#form_impresora_local #idimpresora").val(xdtImp[i].idimpresora);
+				// 	$(".tr_addPrint_local #descripcion").val(xdtImp[i].descripcion);
+				// 	$(".tr_addPrint_local #ip").val(xdtImp[i].ip);
+				// 	$(".tr_addPrint_local #var_size_font").val(xdtImp[i].var_size_font);
+				// 	$(".tr_addPrint_local #var_margen_iz").val(xdtImp[i].var_margen_iz);
+				// 	$(".tr_addPrint_local #img64").val(xdtImp[i].img64);
+				// 	$(".tr_addPrint_local #num_copias").val(xdtImp[i].num_copias);
+				// 	$("#form_impresora_local #local").val(1)
+				// 	$("#btn_borrar_print_local").removeClass('xInvisible');
 
-					check_print_copia_local.checked = xdtImp[i].copia_local === "0" ? false : true;
-				}
+				// 	check_print_copia_local.checked = xdtImp[i].copia_local === "0" ? false : true;
+				// }
+
+				_arrPrintLocal.push(xdtImp[i]);
 				continue;
 			}
 
@@ -930,6 +940,8 @@ function xLoadImpresorasConf(){
 				'<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			xcandena_sel_print=xcandena_sel_print+'<option value="'+xdtImp[i].idimpresora+'">'+xdtImp[i].descripcion+'</option>';
 		};
+
+		xLoadImpresoraLocal();
 		$("#tb_impresoras .row").remove();
 		$("#tb_impresoras").append(xcadena_impr).trigger('create');
 
@@ -945,6 +957,45 @@ function xLoadImpresorasConf(){
 			xLoadSecciones();
 		});
 	})
+}
+
+function xLoadImpresoraLocal() {
+	var _cadenaPrintLocal='';
+	const cantPrintLocal = _arrPrintLocal.length;
+	
+	const xCockie_ipID = window.localStorage.getItem('::app3_woIpPrintLoC'), xminutos_pedido = '';
+	//si solo hay una impresora registrada lo marca como asignado
+	const estadoIni = cantPrintLocal === 1 ? '<p class="xFondoRowverde"><strong>Asignado</strong></p>' : '<a href="#" class="cursor" onclick="xAsignarPrintLocal(this)" title="Asignar impresora a ESTE equipo">Asingar</a>'; 
+	_arrPrintLocal.map(x => {		
+		const labelAsignado = x.descripcion === xCockie_ipID ? '<p class="xFondoRowverde"><strong>Asignado</strong></p>' : estadoIni;
+		_cadenaPrintLocal += `<tr class="row" data-des="${x.descripcion}" data-id="${x.idimpresora}" data-t="impresora">
+				<td>${x.descripcion}</td>
+				<td>${x.ip}</td>
+				<td>${x.num_copias}</td>
+				<td>${x.var_size_font}</td>
+				<td>${x.var_margen_iz}</td>
+				<td>${x.img64}</td>
+				<td>${labelAsignado}</td>
+				<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td>
+			</tr>`
+	})
+
+
+	$("#tb_impresora_local .row").remove();
+	$("#tb_impresora_local").append(_cadenaPrintLocal).trigger('create');
+}
+
+function xAsignarPrintLocal(obj) {
+	const idPrintLocal = $(obj).parent().parent().attr('data-des');
+	window.localStorage.setItem("::app3_woIpPrintLoC", idPrintLocal);
+	xLoadImpresoraLocal();
+}
+
+// guarda copia_local a todas las impresoras locales
+function printCopialocalAll() {
+	const _imprimirCopia = check_print_copia_local.checked ? 0 : 1;
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1051', data: { copia_local: _imprimirCopia } })
+	
 }
 
 function xModRow(obj,tipo){
@@ -1404,6 +1455,8 @@ function xModificarSede(obj){
 	$("#frm_sede #direccion").val(xThisConfig.dt_sede[xids].dir_sede);
 	$("#frm_sede #eslogan").val(xThisConfig.dt_sede[xids].eslogan);
 	$("#frm_sede #mesas").val(xThisConfig.dt_sede[xids].mesas);
+	$("#frm_sede #ubigeo").val(xThisConfig.dt_sede[xids].ubigeo);
+	$("#frm_sede #codigo_del_domicilio_fiscal").val(xThisConfig.dt_sede[xids].codigo_del_domicilio_fiscal);
 	dialog_add_sede.open();
 
 }

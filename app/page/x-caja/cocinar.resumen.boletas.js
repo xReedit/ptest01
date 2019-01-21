@@ -24,15 +24,14 @@ async function xCocinarResumenBoletas() {
             dialog_enviando_sunat.close();
             return; }
     };
-
-    return;// pruebas
+    
     if ( error ) return;
 
     
     // cocinar resumen
     const arrFechas = await xSoapSunat_getArrFechaBoletasNoAceptadas();
     for (const f in arrFechas) {
-        const rpt = await xSoapSunat_ResumenBoletas(arrFechas[f].fecha);
+        const rpt = await xSoapSunat_ResumenDiario(arrFechas[f].fecha);
         rptSoap = rpt.msj;
         console.log(rpt);        
     }

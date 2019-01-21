@@ -2,8 +2,8 @@
 	<template>
 		<br>
 		<br>
-		<button onclick="enviarCpe()"> ennivar cpe </button>
-		<button onclick="abrirToast()"> abrir toast </button>
+		<!-- <button onclick="enviarCpe()"> ennivar cpe </button>
+		<button onclick="abrirToast()"> abrir toast </button> -->
 		<!--bottom onclick="xUs()">aaaaaaaaaaaa</bottom>
 		<bottom onclick="xUsExtraer()">traer Datos</bottom-->
 		<div id="xBodyOp">
@@ -146,108 +146,9 @@ function xVerificarAcc(){
 
 function abrirToast() {
 	toast = document.getElementById('toast');
-	toast.open();
+	toast.text = "aaaaaaaaaaa";	
+	toast.show();
 }
-	function enviarCpe() {
-		const xjson =
-		{
-			"serie_documento": "B001",
-			"numero_documento": "#",
-			"fecha_de_emision": "2018-10-09",
-			"hora_de_emision": "10:11:11",
-			"codigo_tipo_operacion": "0101",
-			"codigo_tipo_documento": "03",
-			"codigo_tipo_moneda": "PEN",
-			"fecha_de_vencimiento": "2018-08-30",
-			"numero_orden_de_compra": "0045467898",
-			"datos_del_emisor": {
-				"codigo_pais": "PE",
-				"ubigeo": "150101",
-				"direccion": "Av. 2 de Mayo",
-				"correo_electronico": "demo@gmail.com",
-				"telefono": "427-1148",
-				"codigo_del_domicilio_fiscal": "0000"
-			},
-			"datos_del_cliente_o_receptor": {
-				"codigo_tipo_documento_identidad": "6",
-				"numero_documento": "10414711225",
-				"apellidos_y_nombres_o_razon_social": "EMPRESA XYZ S.A.",
-				"codigo_pais": "PE",
-				"ubigeo": "150101",
-				"direccion": "Av. 2 de Mayo",
-				"correo_electronico": "demo@gmail.com",
-				"telefono": "427-1148"
-			},
-			"totales": {
-				"total_exportacion": 0.00,
-				"total_operaciones_gravadas": 0.00,
-				"total_operaciones_inafectas": 0.00,
-				"total_operaciones_exoneradas": 118.00,
-				"total_operaciones_gratuitas": 0.00,
-				"total_igv": 0.00,
-				"total_impuestos": 0.00,
-				"total_valor": 118,
-				"total_venta": 118
-			},
-			"items": [
-				{
-					"codigo_interno": "P0121",
-					"descripcion": "Inca Kola 250 ml",
-					"codigo_producto_sunat": "51121703",
-					"codigo_producto_gsl": "51121703",
-					"unidad_de_medida": "NIU",
-					"cantidad": 2,
-					"valor_unitario": 59,
-					"codigo_tipo_precio": "01",
-					"precio_unitario": 59,
-					"codigo_tipo_afectacion_igv": "20",
-					"total_base_igv": 0.00,
-					"porcentaje_igv": 18,
-					"total_igv": 0.00,
-					"total_impuestos": 0.00,
-					"total_valor_item": 118,
-					"total_item": 118
-				}
-			],
-			"extras": {
-				"forma_de_pago": "Efectivo",
-				"observaciones": "probando",
-				"vendedor": "Juan",
-				"caja": "Caja 1"
-			}
-		}
-
-		const _url = URL_COMPROBANTE + '/documents';
-		let _headers = HEADERS_COMPROBANTE;
-		_headers.Authorization = "Bearer 0SPvP3HY0qVzM00sCWZc40UCXh3DrObQhobGEzEWCrUOKwCyaX";
-
-		const json_xml = JSON.stringify(xjson);
-
-		// var myHeaders = new Headers();
-		// myHeaders.append("X-My-Custom-Header", "some value");
-
-		fetch(_url, {
-			method: 'POST',
-			headers: _headers,
-			body: json_xml,
-		}).then(function (response) {
-			return response.json();
-		}).then(function (json) {
-			console.log(json);
-		});
-
-		// $.ajax({
-		// 	type: "POST",
-		// 	url: _url,
-		// 	headers: _headers,
-		// 	dataType: "json",
-		// 	data: json_xml,		
-		// 	success: function (data) {
-		// 		console.log(data);
-		// 	}
-		// });
-
-	}
 
 Polymer({
 	is:'x-home',

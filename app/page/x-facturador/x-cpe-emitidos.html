@@ -1,0 +1,143 @@
+<dom-module id="x-cpe-emitidos">
+    <template is="dom-bind">
+        <br>
+        <div class="xMiCard xradius" style="width:85%">
+            <div class="xEncanezadoCard xFondoRowAmarillo2">
+                <h4>Comprobantes electronicos.</h4>
+                <span>Estado de los comprobantes electronicos, resumenes diarios y reportes.</span>
+            </div>
+            <div class="xContentCard" style="height: 100%;">
+                <div>
+                    <h4>Comprobantes electronicos emitidos.</h4>
+                    <hr>
+                    <table width="100%" id="tb_list_cpe" class="xtable5">
+                        <thead>
+                            <th>#</th>                            
+                            <th>fecha</th>                            
+                            <th>Comprobante</th>                            
+                            <th>Cliente</th>
+                            <th align="right">Total</th>
+                            <th>Estado</th>   
+                            <th>.</th>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="{{ListCpe}}" as="item">
+                                <tr class="xCursor" id="{{index}}">
+                                    <td>
+                                        <paper-checkbox class="check_item_recuperar" id="{{index}}"></paper-checkbox>
+                                        <span class="xNoVisibleMenos720">{{displayIndex(index)}}</span>
+                                    </td>
+                                    <td class="xNoVisibleMenos720">{{item.fecha}} - {{ item.hora }}</td>
+                                    <td class="xNoVisibleMenos720">{{item.nom_comprobante}} - {{ item.numero }}</td>
+                                    <td>{{item.nomcliente}}</td>
+                                    <td align="right" class="ximporte_row">{{item.total}}</td>
+                                    <td><span class$={{item.class_estado}}>{{item.nom_estado}}</span></td>
+                                    <td>
+                                        <div>
+                                            <img class="xzoom-1" hidden$="{{!item.ico_pdf}}" src="../../../images/001-pdf.png" width="16px" alt="">
+                                            <img class="xzoom-1" hidden$="{{!item.ico_xml}}" src="../../../images/002-xml.png" width="16px" alt="">
+                                            <img class="xzoom-1" hidden$="{{!item.ico_cdr}}" src="../../../images/003-cdr.png" width="16px" alt="">
+
+                                            <!-- reenviar -->
+                                            <!-- <img class="xzoom-1" hidden$="{{!item.btn_enviar}}" title="Reenviar" src="../../../images/004_reenviar.png" width="16px" alt=""> -->
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </template>
+</dom-module>
+
+<script>
+    var xThisCpe, xPopupLoad;
+
+    function xIniCpe() {
+        xThisCpe.ListCpe = [];
+        xLoadCpeEmitidos();
+    }
+
+    function xLoadCpeEmitidos() {
+        xThisCpe.ListCpe = [];
+        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '6'} })
+        .done(function (res) {
+            res = $.parseJSON(res);
+            xThisCpe.ListCpe = res.datos;
+
+            // estado   0 = ok registrado enviado
+            //          1 = registrado no enviado por que es boleta
+            //          2 = no registrado si es boleta y si es factura no enviado
+            //          3 = anulado
+
+            xThisCpe.ListCpe.map (x => {
+                let msj_estado = '';
+                let class_estado = '';
+                const boleta = x.codsunat === '03' ? true : false;
+                const e_api = parseInt(x.estado_api) === 0 ? true : false;
+                const e_sunat = parseInt(x.estado_sunat) === 0 ? true : false;
+                let estado_cpe;
+                let btn_enviar = false;
+
+
+                /*
+                
+                si anulado=0
+                    0 0 = 0 // aceptado
+                    1 1 = 1 // sin registrar
+                    B 0 1 = 2 // boleta registrada
+                    f 0 1 = 3 // boleta no aceptada
+                => 4 // anulado
+
+                */
+
+                if ( parseInt(x.anulado) === 0 ) {                    
+                    if ( e_api && e_sunat ) estado_cpe = 0;
+                    if ( !e_api && !e_sunat ) estado_cpe = 1;
+                    if (boleta && e_api && !e_sunat) estado_cpe = 2;
+                    if (!boleta && e_api && !e_sunat) estado_cpe = 3;
+                } else {
+                    estado_cpe=4;
+                }
+
+
+                switch (parseInt(estado_cpe)) {
+                    case 0: msj_estado = 'Aceptado'; class_estado='xColorRow_verde'; break;
+                    case 1: msj_estado = 'Sin Registrar'; class_estado = 'xColorRow_Amarillo'; btn_enviar=true; break;
+                    case 2: msj_estado = 'Registrado'; class_estado = 'xColorRow_Azul' ; break;
+                    case 3: msj_estado = 'Rechazado'; class_estado = 'xFondoRowRojo'; break;
+                    case 4: msj_estado = 'Anulado'; class_estado = 'xFondoRowRojo'; break;
+                }
+
+                class_estado += ' xBold xfont11';
+                x.ico_pdf = x.pdf === '1' ? true : false;
+                x.ico_xml = x.xml === '1' ? true : false;
+                x.ico_cdr = x.cdr === '1' ? true : false; 
+                x.class_estado = class_estado;
+                x.nom_estado = msj_estado;
+                x.btn_enviar = btn_enviar;
+            })
+
+            console.log('datos', xThisCpe.ListCpe);
+        });
+
+    }
+
+    Polymer({
+        is: 'x-cpe-emitidos',
+        properties: {
+            ListCpe: [],               
+        },
+        attached: function () {
+            xThisCpe = this;
+            xIniCpe();
+        },
+        displayIndex: function (index) {
+            return xCeroIzq(index + 1, 1);
+        },            
+    })
+</script>
+    

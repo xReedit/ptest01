@@ -35,7 +35,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
       border-radius: 2px;
       bottom: 12px;
-      left: 12px;
+      right: 12px;
       font-size: 14px;
       cursor: default;
 
@@ -130,7 +130,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this.fire('iron-announce', {
         text: this.text
       });
-      this.debounce('hide', this.hide, this.duration);
+      if ( this.duration > 0 ) {
+        this.debounce('hide', this.hide, this.duration);
+      }
     },
 
     /**

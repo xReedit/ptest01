@@ -19,10 +19,11 @@
             $ce_anulado = array_key_exists('anulado', $obj) ? $obj['anulado'] : 0; 
             
             $sqlCpe = "
-                insert into ce (external_id, idorg, idsede, idusuario, idtipo_comprobante_serie, numero, fecha, hora, json_xml, estado_api, estado_sunat, viene_facturador, msj, anulado)
+                insert into ce (external_id, idorg, idsede, idusuario, idtipo_comprobante_serie, numero, fecha, hora, json_xml, estado_api, estado_sunat, viene_facturador, msj, anulado, idcliente, nomcliente, total, pdf, xml, cdr)
                 values ('".$obj['external_id']."',".$_SESSION['ido'].",".$_SESSION['idsede'].",".$_SESSION['idusuario'].",".$obj['idtipo_comprobante_serie'].",
-                '".$obj['numero']."', DATE_FORMAT(now(),'%d/%m/%Y'), DATE_FORMAT(now(),'%H:%i:%s'), '".$obj['jsonxml']."', ".$obj['estado_api'].",".$obj['estado_sunat'].",".$obj['viene_facturador'].",'".$obj['msj']."',".$ce_anulado.")";
+                '".$obj['numero']."', DATE_FORMAT(now(),'%d/%m/%Y'), DATE_FORMAT(now(),'%H:%i:%s'), '".$obj['jsonxml']."', ".$obj['estado_api'].",".$obj['estado_sunat'].",".$obj['viene_facturador'].",'".$obj['msj']."',".$ce_anulado.",".$obj['idcliente'].",'".$obj['nomcliente']."','".$obj['total']."',".$obj['pdf'].",".$obj['xml'].",".$obj['cdr'].")";
 
+            echo $sqlCpe;
             $idce = $bd->xConsulta_UltimoId($sqlCpe);
             
             // si el documento no es anulado // por validacion sunat
@@ -65,7 +66,7 @@
 
             print $idcpe_facturador;
             break;
-        case '2': // actualiza el estado del compravante: si fue aceptada = 1 o fue anulada = 1
+        case '2': // actualiza el estado de comprabantes reenviados (desde cierre caja): si fue aceptada = 1 o fue anulada = 1
             $obj = $_POST['data'];
             $ce_anulado = array_key_exists('anulado', $obj) ? $obj['anulado'] : 0; 
 
@@ -73,11 +74,12 @@
             update ce 
                 set estado_api=".$obj['estado_api'].", 
                 estado_sunat=".$obj['estado_sunat'].", 
-                msj=".$obj['msj'].", 
-                external_id=".$obj['external_id'].",
-                numero=".$obj['numero'].",
+                msj='".$obj['msj']."', 
+                external_id='".$obj['external_id']."',
+                numero='".$obj['numero']."',
                 anulado=".$ce_anulado." 
             where idce=".$obj['idce'];
+            
             $bd->xConsulta($sql);
 
             // $objRegistro = $_POST['data'];
@@ -93,24 +95,22 @@
             $sql = $sqlResumen."; ".$sql;         
             $bd->xMultiConsulta($sql);
             break;
+        case '202': //registra resumen diario de boletas
+            $obj = $_POST['data'];
+            
+            $sql = "INSERT INTO ce_resumen
+                    (idorg, idsede, idusuario, fecha_resumen, fecha_envio, ticket, external_id, estado_sunat, msj, estado)
+                    VALUES(".$_SESSION['ido'].", ".$_SESSION['idsede'].", ".$_SESSION['idusuario'].", '".$obj['fecha_resumen']."', DATE_FORMAT(now(),'%d/%m/%Y')
+                    , '".$obj['ticket']."', '".$obj['external_id']."', ".$obj['estado_sunat'].", '".$obj['msj']."', 0);";
+            
+                        
+            $bd->xConsulta($sql);
+            break;
         case '3': // consulta de boletas que fueron registradas pero no aceptadas(por cualquier motivo), devuelve fechas no aceptadas
-            $sql="
-                select DATE_FORMAT(STR_TO_DATE(cpe.fecha, '%d/%m/%Y'), '%Y-%m-%d') as fecha
-                from registro_pago_cpe as cpe
-                    inner join registro_pago as rp on rp.idregistro_pago = cpe.idregistro_pago	
-                where (rp.idorg = ".$_SESSION['ido']." and rp.idsede = ".$_SESSION['idsede'].") and cpe.codsunat = '03' and cpe.aceptado = '0'
-                group by fecha
-                order by fecha
-            ";
+            $sql = "SELECT * from ce where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado_api=0 and estado_sunat = 1 and anulado=0";            
             $bd->xConsulta($sql);
             break;
         case '301': // lista documentos no registrados - documnentos que no fueron enviados al servicio api por algun error de conexion
-            // $sql="
-            //     SELECT cpe.idregistro_pago_cpe, cpe.idregistro_pago, cpe.jsonxml, cpe.codsunat
-            //     from registro_pago_cpe as cpe
-            //         inner join registro_pago as rp on rp.idregistro_pago = cpe.idregistro_pago	
-            //     where (rp.idorg = ".$_SESSION['ido']." and rp.idsede = ".$_SESSION['idsede'].") and cpe.registrado = 0
-            // ";
             $sql = "SELECT * from ce where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado_api = 1 and anulado=0";
             $bd->xConsulta($sql);
             break;
@@ -136,6 +136,20 @@
             break;
         case '5': // optiene las impresoras habilitadas para seleccionar donde se imprime el comprobante electronico
             $sql="SELECT * FROM impresora WHERE (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado=0";
+            $bd->xConsulta($sql);
+            break;
+        case '6': // cpe-emitidos
+
+            // estado   0 = ok registrado enviado
+            //          1 = registrado no enviado por que es boleta
+            //          2 = no registrado si es boleta y si es factura no enviado
+            //          3 = anulado
+            $sql="
+                SELECT tp.descripcion as nom_comprobante, tp.codsunat , c.* from ce as c
+                    inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie=c.idtipo_comprobante_serie
+                    inner join tipo_comprobante as tp on tp.idtipo_comprobante=tps.idtipo_comprobante	
+                where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].")
+            ";
             $bd->xConsulta($sql);
             break;
         default:

@@ -6,6 +6,12 @@ function CpeInterno_Registrar(data) {
     
         dataSave.jsonxml = ''; 
         // datos
+        dataSave.pdf = data.links.pdf != '' ? 1 : 0; 
+        dataSave.cdr = data.links.cdr != '' ? 1 : 0; 
+        dataSave.xml = data.links.xml != '' ? 1 : 0; 
+        dataSave.nomcliente = data.data.nomcliente;
+        dataSave.idcliente = data.data.idcliente;
+        dataSave.total = data.data.total;
         dataSave.numero = data.data.numero;
         dataSave.external_id = data.data.external_id;
         dataSave.hash = data.data.hash;
@@ -34,16 +40,21 @@ function CpeInterno_Registrar(data) {
 // guarda el cpe para volver a enviarlo al cierre
 // registra el jsonxml para ser enviado luego
 // idtipo_comprobante_serie => guardar el correlativo
-function CpeInterno_Error(jsonxml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie) {
+function CpeInterno_Error(data, jsonxml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie) {
   let dataSave = {};
-  dataSave.numero = "";
-  dataSave.jsonxml = jsonxml;
-  dataSave.external_id = "";
+//   dataSave.numero = "";
+//   dataSave.jsonxml = jsonxml;
+//   dataSave.external_id = "";
+//   dataSave.estado_api = 1;
+//   dataSave.estado_sunat = 1;
+//   dataSave.msj = "Sin registrar";
+//   dataSave.viene_facturador = _viene_facturador;
+//   dataSave.idtipo_comprobante_serie = idtipo_comprobante_serie;
+
+  dataSave = data;
   dataSave.estado_api = 1;
   dataSave.estado_sunat = 1;
   dataSave.msj = "Sin registrar";
-  dataSave.viene_facturador = _viene_facturador;
-  dataSave.idtipo_comprobante_serie = idtipo_comprobante_serie;
   if ( _idregistro_p != 0 ) {
       dataSave.idregistro_pago = _idregistro_p;
   }
@@ -70,6 +81,14 @@ function CpeInterno_SaveBD(dataSave) {
 // desde cierre de caja - soapSunat
 function CpeInterno_UpdateRegistro(dataUpdate) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '2', data: dataUpdate } })
+    .done(function (res) {
+        console.log(res);
+    });
+}
+
+
+function CpeInterno_SaveResumenDiario(dataResumen) {
+    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '202', data: dataResumen } })
     .done(function (res) {
         console.log(res);
     });

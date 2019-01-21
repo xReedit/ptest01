@@ -72,8 +72,8 @@
 
 
 
-	<!--link rel="stylesheet" href="../../css/micss.css?v=" + File.GetLastWriteTime(HttpContext.Current.Request.PhysicalApplicationPath + filename).ToString("yyMMddHHHmmss")-->
-  <link rel="stylesheet" href="../../css/micss.css">
+	<!--link rel="stylesheet" href="../../css/micss.css?v=" + File.GetLastWriteTime(HttpContext.Current.Request.PhysicalApplicationPath + filename).ToString("yyMMddHHHmmss")-->	
+	<link rel="stylesheet" href="../../css/micss.css">
 	<!--link rel="stylesheet" href="../../css/perfect-scrollbar.css"-->
 	<link type="image/x-icon" href="../../images/ico_app.png" rel="shortcut icon"/>
 
@@ -226,7 +226,9 @@
 	        <div fit layout vertical class="content xContent">
 	        	<div class="xInvisible"></div>
 							<x-router></x-router>
-							<paper-toast id="toast" text="Hello world!"></paper-toast>
+							<paper-toast id="toast" duration=0 text="Hello world!">
+								<paper-progress id="loading" indeterminate style="width: 100%; float: left;"></paper-progress>
+							</paper-toast>
 	        </div>
        	</paper-header-panel>
 
@@ -276,7 +278,7 @@
 	<script type="text/javascript" src="../../js/justgage.js"></script>
 	<script src="../../js/moment.min.js"></script>
 	<script src="../../js/isotope.pkgd.min.js"></script>
-	<script src="../../js/jquery.daterangepicker.js"></script>
+	<script src="../../js/jquery.daterangepicker.js"></script>	
 	<!--script src="../../js/perfect-scrollbar.min.js"></script-->
 
 

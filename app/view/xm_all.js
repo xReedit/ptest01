@@ -356,16 +356,27 @@ function xLoadImpresoras(){
 		//busca si hay impresora local y si pertenece a este terminal
 
 		//xPrintLocal=getCookie('app3_print_ID');
-		if(xPrintLocal === null){return;}
-		for (var i = 0; i < xDtbdPrint_eval.length; i++) {
-			if(xDtbdPrint_eval[i].local==1){
-				if(xPrintLocal==xDtbdPrint_eval[i].descripcion){//impresora local detec
-					window.localStorage.setItem("::app3_woIpPrintLoC", xDtbdPrint_eval[i].descripcion);// para comparar si existe impresora local
-					window.localStorage.setItem("::app3_woIpPrintLo", JSON.stringify(xDtbdPrint_eval[i]));
-					return;
-				}
+	// const dt_print_local = xDtbdPrint_eval.filter(x => x.local === "1").map(x => x);
+	// const cant_print_local_bd = dt_print_local.length;
+	
+	// verificar si existe alguna impresora registrada en la bd si solo hay una lo registra	
+	// ESTA SOLUCION AFECTARIA A TODOS LOS USUARIOS // EL USUARIO DE CAJA DEBE IR A CONFIGURACION Y ASIGNARSE LA IMPRESORA QUE LE CORRESPONDE
+	// if (xPrintLocal === null && cant_print_local_bd === 1) { // si no co
+	// 	window.localStorage.setItem("::app3_woIpPrintLoC", dt_print_local[0].descripcion);// para comparar si existe impresora local
+	// 	window.localStorage.setItem("::app3_woIpPrintLo", JSON.stringify(dt_print_local[0]));
+	// 	return;
+	// }
+	
+		
+	for (var i = 0; i < xDtbdPrint_eval.length; i++) {		
+		if(xDtbdPrint_eval[i].local==1){
+			if(xPrintLocal === xDtbdPrint_eval[i].descripcion){//impresora local detec
+				window.localStorage.setItem("::app3_woIpPrintLoC", xDtbdPrint_eval[i].descripcion);// para comparar si existe impresora local
+				window.localStorage.setItem("::app3_woIpPrintLo", JSON.stringify(xDtbdPrint_eval[i]));
+				return;
 			}
 		}
+	}
 	//});
 	//load conf_print_otros //precuenta comprobante
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-106',async: false})
@@ -617,3 +628,22 @@ function xm_all_SetResponseLog_001(response) {
 
 	return _concat;
 }
+
+function xm_all_xToastOpen (msj, duracion=0, loading=true) {	
+	msj = msj === null? 'Cargando...': msj;
+	if (!loading) {
+		$("#toast #loading").addClass("xInvisible");
+	} else {
+		$("#toast #loading").removeClass("xInvisible");
+	}
+	toast = document.getElementById("toast");
+	toast.duration = duracion;
+  	toast.text = msj;
+  	toast.show();
+}
+
+function xm_all_xToastClose() {
+	toast = document.getElementById("toast");
+	toast.hide();
+}
+
