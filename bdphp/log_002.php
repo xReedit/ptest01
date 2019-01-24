@@ -77,9 +77,12 @@
                 msj='".$obj['msj']."', 
                 external_id='".$obj['external_id']."',
                 numero='".$obj['numero']."',
-                anulado=".$ce_anulado." 
+                anulado=".$ce_anulado.",
+                pdf=".$obj['pdf'].",
+                xml=".$obj['xml'].",
+                cdr=".$obj['cdr']."
             where idce=".$obj['idce'];
-            
+                        
             $bd->xConsulta($sql);
 
             // $objRegistro = $_POST['data'];
@@ -106,12 +109,48 @@
                         
             $bd->xConsulta($sql);
             break;
+        case '203': // update resumen boleta luego de ser consultado con el ticket
+            $obj = $_POST['data'];
+            $estado_sunat = $obj['estado_sunat'];
+            $sql="update ce_resumen 
+                    set estado_sunat=".$estado_sunat.",
+                    msj='".$obj['msj']."',
+                    xml=".$obj['xml']."
+                    cdr=".$obj['cdr']." 
+                    where ticket=''";
+            echo $sql;
+            $bd->xConsulta($sql);
+
+            // actualizar boletas estado_sunat = 0 -> aceptadas
+            if ( $estado_sunat != "0" ) {
+                $sql_bl = "
+                    UPDATE ce as c
+                        inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie = c.idtipo_comprobante_serie
+                        inner join tipo_comprobante as tp on tp.idtipo_comprobante = tps.idtipo_comprobante
+                    set c.estado_sunat=0
+                    where (c.idorg=1 and c.idsede=1) and c.fecha = '".$obj['fecha_resumen']."' and tp.codsunat='03'";
+
+                echo $sql_bl;
+                $bd->xConsulta_NoReturn($sql_bl);
+            }
+            break;
         case '3': // consulta de boletas que fueron registradas pero no aceptadas(por cualquier motivo), devuelve fechas no aceptadas
             $sql = "SELECT * from ce where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado_api=0 and estado_sunat = 1 and anulado=0";            
             $bd->xConsulta($sql);
             break;
         case '301': // lista documentos no registrados - documnentos que no fueron enviados al servicio api por algun error de conexion
             $sql = "SELECT * from ce where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado_api = 1 and anulado=0";
+            $bd->xConsulta($sql);
+            break;
+        case '302':// resumen de boletas: consulta fecha de boletas no enviadas 
+            $sql="SELECT fecha from ce where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and estado_sunat=1 and (estado=0 and anulado=0) GROUP BY fecha";
+            $bd->xConsulta($sql);
+            break;
+        case '303': // lista de tickets de resumen boleta por confitmar aceptacion // que se generaron un dia anterior
+            $sql= "SELECT fecha_resumen, ticket, external_id 
+                from ce_resumen 
+                where ( idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede']." ) 
+                and (fecha_envio = DATE_FORMAT(now(),'%d/%m/%Y')) and estado_sunat=0 and estado=0";
             $bd->xConsulta($sql);
             break;
         case '4' : // guardar cpe y obtener correlativo
@@ -139,18 +178,38 @@
             $bd->xConsulta($sql);
             break;
         case '6': // cpe-emitidos
+            $pagination = $_POST['pagination'];
+            $fecha = $pagination['pageFecha'];
+            $filtroFecha = $fecha === '' ? '' : " HAVING c.fecha = '".$fecha."'";
+            $filtroFechaCount = $fecha === '' ? '' : " and (c.fecha = '".$fecha."')";
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(c.hora,tp.descripcion,c.numero,c.nomcliente,(
+                if (c.anulado=1,'Anulado',
+						CASE
+							WHEN c.estado_api = 0 and c.estado_sunat = 0 THEN 'Aceptado'
+							WHEN (c.estado_api = 1 and c.estado_sunat = 1) THEN 'Sin registrar'
+							WHEN (tp.codsunat='03' and  c.estado_api = 0 and c.estado_sunat = 1) THEN 'Boleta registrada'
+							WHEN (tp.codsunat!='03' and c.estado_api = 0 and c.estado_sunat = 1) THEN 'Boleta no aceptada'
+						END)
+            )) LIKE '%".$pagination['pageFilter']."%' ";
 
-            // estado   0 = ok registrado enviado
-            //          1 = registrado no enviado por que es boleta
-            //          2 = no registrado si es boleta y si es factura no enviado
-            //          3 = anulado
             $sql="
                 SELECT tp.descripcion as nom_comprobante, tp.codsunat , c.* from ce as c
                     inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie=c.idtipo_comprobante_serie
                     inner join tipo_comprobante as tp on tp.idtipo_comprobante=tps.idtipo_comprobante	
-                where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].")
-            ";
-            $bd->xConsulta($sql);
+                where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].") ".$filtro." ".$filtroFecha." 
+                ORDER BY c.idce desc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];
+                      
+                
+            $sqlCount="
+                SELECT count(c.idce) as d1 from ce as c
+                    inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie=c.idtipo_comprobante_serie
+                    inner join tipo_comprobante as tp on tp.idtipo_comprobante=tps.idtipo_comprobante	
+                where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].") ".$filtro." ".$filtroFechaCount;            
+            
+            $rowCount = $bd->xDevolverUnDato($sqlCount);
+
+            $rpt = $bd->xConsulta($sql);            
+            print $rpt."**".$rowCount;
             break;
         default:
             # code...

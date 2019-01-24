@@ -10,17 +10,17 @@ var xImpresoraPrint;
 // showPrint = true; es false si lo mando desde facturador.
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
 	let rptPrint = {}
-	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = flase; return rptPrint;} // ninguno no imprime
+	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = false; return rptPrint;} // ninguno no imprime
 	
     // busca impresora donde imprimir
     if (!xgetComprobanteImpresora(xidDoc)) {
-		rptPrint.imprime = flase;
+		rptPrint.imprime = false;
     	return rptPrint;
 	}
 	// si no viene datos return false
 
     if(xArrayCuerpo.length==0){
-		rptPrint.imprime = flase; 		
+		rptPrint.imprime = false;
 		return rptPrint;
 	}
 
@@ -39,6 +39,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
 	if (!rptPrint.ok) { // si el documento electronico no es valido
 		alert(rptPrint.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
+		xPopupLoad.close;
 		return rptPrint;
 	}
 

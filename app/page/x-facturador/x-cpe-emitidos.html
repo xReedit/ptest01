@@ -1,15 +1,42 @@
+<link rel="import" href="../../x-componentes/pagination-input/pagination-input.html">
+<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
+
 <dom-module id="x-cpe-emitidos">
     <template is="dom-bind">
+        <paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation">
+            <div style="text-align: center">
+                <img id="dgl_sunat_img" src="../../../images/_msj_envio_sunat.gif" alt="">
+                <p id="dgl_sunat_msj">Enviando comprobantes electronicos.</p>
+                <p id="dgl_sunat_msj2" class="xInvisible xColorRow_Azul">Proceso concluido con exito.</p>
+                <p id="dgl_sunat_msj3" class="center xColorRow_Plomo xfont11">...</p>                
+                <paper-progress id="dgl_sunat_progress" indeterminate style="width: 100%;"></paper-progress>
+                <button dialog-dismiss id="dlg_sunat_btn" class="xBoton2 xVerde xInvisible">Listo</button>
+            </div>
+        </paper-dialog>
         <br>
-        <div class="xMiCard xradius" style="width:85%">
+        <div class="xMiCard xradius" style="width:90%">
             <div class="xEncanezadoCard xFondoRowAmarillo2">
                 <h4>Comprobantes electronicos.</h4>
                 <span>Estado de los comprobantes electronicos, resumenes diarios y reportes.</span>
             </div>
             <div class="xContentCard" style="height: 100%;">
                 <div>
-                    <h4>Comprobantes electronicos emitidos.</h4>
+                    <br>
+                    <div>
+                        <button class="xBoton2 xAzul xDerecha" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>
+                        <h4>Comprobantes electronicos emitidos.</h4>
+                        <p class="xColorRow_Plomo">Al enviar el resumen de boletas, también se procesan y se envían los documentos sin registrar, es decir los documentos
+                        que se emitieron en modo offline ó los que por algún motivo en su momento no se pudo establecer conexión con la Sunat.<br>Este proceso es el mismo que se realiza al cierre de caja.</p>
+                        <p id="xTituloRpt" class="xColorRow_Rojo"></p>
+                    </div>
+                    <br>
                     <hr>
+                    <div>
+                        <input type="date" class="xMiInput xfont17" style="width:200px;" id="txt_fecha" enlinea>
+                        <input type="text" class="xMiInput xfont18" style="width:80%; bottom: -3px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos()" id="txt_buscar" enlinea>
+                    </div>
+                    <br><br>
                     <table width="100%" id="tb_list_cpe" class="xtable5">
                         <thead>
                             <th>#</th>                            
@@ -22,7 +49,7 @@
                         </thead>
                         <tbody>
                             <template is="dom-repeat" items="{{ListCpe}}" as="item">
-                                <tr class="xCursor" id="{{index}}">
+                                <tr class="animated fadeIn fast" id="{{index}}">
                                     <td>
                                         <paper-checkbox class="check_item_recuperar" id="{{index}}"></paper-checkbox>
                                         <span class="xNoVisibleMenos720">{{displayIndex(index)}}</span>
@@ -34,40 +61,101 @@
                                     <td><span class$={{item.class_estado}}>{{item.nom_estado}}</span></td>
                                     <td>
                                         <div>
-                                            <img class="xzoom-1" hidden$="{{!item.ico_pdf}}" src="../../../images/001-pdf.png" width="16px" alt="">
-                                            <img class="xzoom-1" hidden$="{{!item.ico_xml}}" src="../../../images/002-xml.png" width="16px" alt="">
-                                            <img class="xzoom-1" hidden$="{{!item.ico_cdr}}" src="../../../images/003-cdr.png" width="16px" alt="">
+                                            <img class="xzoom-1 xCursor" hidden$="{{!item.ico_pdf}}" src="../../../images/001-pdf.png" width="16px" alt="">
+                                            <img class="xzoom-1 xCursor" hidden$="{{!item.ico_xml}}" src="../../../images/002-xml.png" width="16px" alt="">
+                                            <img class="xzoom-1 xCursor" hidden$="{{!item.ico_cdr}}" src="../../../images/003-cdr.png" width="16px" alt="">
 
                                             <!-- reenviar -->
-                                            <!-- <img class="xzoom-1" hidden$="{{!item.btn_enviar}}" title="Reenviar" src="../../../images/004_reenviar.png" width="16px" alt=""> -->
+                                            <img class="xzoom-1 xCursor" hidden$="{{!item.btn_enviar}}" title="Reenviar" src="../../../images/x_up.png" width="16px" alt="">
                                         </div>
                                     </td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
-
+                    <br>
+                    <div class="xDerecha">
+                        <pagination-input id="paginator" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>
+                    </div>
+                    <br><br>
                 </div>
             </div>
         </div>
+        <br><br>
     </template>
 </dom-module>
-
+<script type="text/javascript" src="./../x-caja/cocinar.resumen.boletas.js"></script>
+<script type="text/javascript" src="../../view/config.const.js"></script>
+<script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
+<script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script>
-    var xThisCpe, xPopupLoad;
+    var xThisCpe, xPopupLoad, p_upadate=true, p_rows=0, p_fecha='', p_filter='', p_desde=0, data_pagination={}, xdebounce, xe_debounce=false;
 
     function xIniCpe() {
         xThisCpe.ListCpe = [];
         xLoadCpeEmitidos();
+        xIniPagination();
+                
+        xThisCpe.$.paginator.addEventListener('page-limit-change', (e) => {
+            console.log('page-limit-change', e.detail.value);
+            data_pagination = e.detail.value; // datos del componente
+            p_desde = data_pagination.pageDesde; // para el # de fila
+            xLoadCpeEmitidos();
+            // if ( p_upadate ) {
+            
+            // } else {
+            //     p_upadate=true;
+            // }
+        }); 
+        
+        $("#txt_fecha").on('change', function () {
+            var d = $(this).val().split('-');            
+            p_fecha = d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
+            xThisCpe.$.paginator.currentPage = 1;            
+            xLoadCpeEmitidos();
+            // xIniPagination();
+        })
+
+    }
+
+    function xIniPagination() {        
+        xThisCpe.$.paginator.currentPage = 1;
+        xThisCpe.$.paginator.pageRows = p_rows;
+        xThisCpe.$.paginator.listRows = [10,20,30,40];
+    }
+
+    function xfiltrarDatos() {
+        if ( xe_debounce ) return;
+        xe_debounce = true;
+        clearTimeout(xdebounce);
+
+        xdebounce = setTimeout(() => {            
+            xLoadCpeEmitidos();
+            // clearTimeout(xdebounce);
+            xe_debounce = false;
+            xThisCpe.$.paginator.currentPage = 1;            
+            // xIniPagination();
+        }, 900);
     }
 
     function xLoadCpeEmitidos() {
         xThisCpe.ListCpe = [];
-        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '6'} })
-        .done(function (res) {
-            res = $.parseJSON(res);
-            xThisCpe.ListCpe = res.datos;
+        p_filter = xThisCpe.$.txt_buscar.value;      
+        // p_fecha  = xThisCpe.$.txt_fecha.value;
+        //p_fecha = p_fecha == "" ? xDevolverFecha() : p_fecha;
+                
+        data_pagination.pageFilter = p_filter;    
+        data_pagination.pageFecha = p_fecha;
+        // console.log(data_pagination);
 
+        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '6', pagination: data_pagination} })
+        .done(function (res) {
+            res = res.split('**');
+            p_rows = res[1];
+            res = $.parseJSON(res[0]);
+            xThisCpe.ListCpe = res.datos;
+            
+            console.log(xThisCpe.ListCpe);
             // estado   0 = ok registrado enviado
             //          1 = registrado no enviado por que es boleta
             //          2 = no registrado si es boleta y si es factura no enviado
@@ -120,11 +208,28 @@
                 x.nom_estado = msj_estado;
                 x.btn_enviar = btn_enviar;
             })
-
+                               
+            p_upadate = false;  // para que no vuelva a llamar esta funcion
+            xThisCpe.$.paginator.pageRows = p_rows;    
+            // xThisCpe.$.paginator.listRows = [10, 20, 30, 40];                 
             console.log('datos', xThisCpe.ListCpe);
         });
 
+    }   
+
+
+    // enviar resumen de boletas
+
+    function xEnviarResumenBoletas() {
+        xPopupLoad.xclose();
+        dialog_enviando_sunat.open();
+        setTimeout(() => {
+            xCocinarResumenBoletas(); // envia los comprobantes
+            // dialog_enviando_sunat.close();
+        }, 1000);
     }
+
+    /// 
 
     Polymer({
         is: 'x-cpe-emitidos',
@@ -136,7 +241,7 @@
             xIniCpe();
         },
         displayIndex: function (index) {
-            return xCeroIzq(index + 1, 1);
+            return xCeroIzq(parseInt( p_desde ) + (index + 1), 1);
         },            
     })
 </script>

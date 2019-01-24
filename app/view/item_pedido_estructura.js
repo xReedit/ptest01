@@ -65,13 +65,24 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
         .reduce((rv, x) => {
             grupo = x.grupo;
             if (!rv[grupo]) {
+                // cuando sepran la cuenta
+                _total = x.precio_total_calc || x.total;
+                _total = _total.toString().indexOf(',') > -1 ? x.precio_total : _total; // cuando juntan la cuenta
+                _total = parseFloat(_total).toFixed(2);
+
+                _cantidad = x.cantidad;
+                if (_cantidad.toString().indexOf(",") > -1 ) { // caso de que se junte los items
+                    __cantidad = _cantidad.split(',');
+                    _cantidad = __cantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
+                }                
+                
                 rv[grupo] = {
                     id: x.iditem,
-                    cantidad: parseFloat(x.cantidad),
+                    cantidad: parseFloat(_cantidad),
                     des: x.des,
                     punitario: x.precio,
-                    precio_total: parseFloat(x.precio_total_calc || x.total).toFixed(2),
-                    precio_print: x.precio_print,
+                    precio_total: _total,
+                    precio_print: parseInt(x.precio_print) != 0 ? _total : x.precio_print,
                     seccion: x.des_seccion
                     // precio_total: parseFloat(x.precio_total).toFixed(2),
                 }

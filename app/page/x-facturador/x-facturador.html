@@ -13,9 +13,10 @@
         <br>
         <div class="xMiCard xradius" style="width:85%">
             <div class="xEncanezadoCard xFondoRowAmarillo2">
-                <p>Emite comprobantes electronicos personalizados. Es decir el concepto y los montos no tienen que ser previamente registrados.</p>
+                <p>Emite comprobantes electronicos personalizados. Es decir el concepto y los montos no tienen que ser previamente registrados. <img ondblclick="xSeeFechaManual()" class="xDerecha" src="../../../images/candado.png" width="16px"></p>                
             </div>
-            <div class="xContentCard" style="height: 100%;">                
+            <div class="xContentCard" style="height: 100%;"> 
+                <input type="date" class="xMiInput xfont17 xDerecha" hidden$="[[!fecha_manual]]" style="width:200px;" id="txt_fecha" enlinea>                
                 <p class="bold xColorRow_Plomo">Comprobante</p>   
                 <div class="container-cliente">             
                 <form action="" id="form_pago_cliente" is="iron-form">
@@ -134,7 +135,7 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro;
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='';
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -145,6 +146,7 @@
         xThisFacturador.arrTotales = [];
         xThisFacturador.listImpresoras = [];
         xThisFacturador.cpe_show = false;
+        xThisFacturador.fecha_manual = false
 
         const arrEstructura = xm_log_get('estructura_pedido');
         IdTpConsumo = arrEstructura[0].idtipo_consumo;
@@ -186,6 +188,16 @@
             }
         });
 
+        $("#txt_fecha").on('change', function () {
+            var d = $(this).val().split('-');
+            txt_fecha_cpe_manual = d[1] === undefined ? '' : $(this).val();                        
+            // xIniPagination();
+        })
+
+    }
+
+    function xSeeFechaManual() {
+        xThisFacturador.fecha_manual = !xThisFacturador.fecha_manual;
     }
 
     function _getComprobante($event) {
@@ -367,7 +379,7 @@
     }
 
     async function xProcesarComprobante() {    
-        if (xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
+        if (xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo                        
             xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
             return;
         }
@@ -414,6 +426,7 @@
         
         
         if (!xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
+            arr_comprobante.fecha_manual = txt_fecha_cpe_manual;
             arr_comprobante = cnf_ComprobanteSel;
             arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
 
@@ -431,7 +444,7 @@
 
             if (rptDoc[0].hash === 'www.papaya.com.pe') {// error de conexion o algun  error // no pdf(bajar de la web) pero si impresion
                 xPopupLoad.xclose();
-                alert('Error con la conexion al servicio de Sunat. Intentelo mas tarde');
+                alert('Error con la conexion al servicio de Sunat. No puede descargar el pdf. Pero si puede imprimirlo. Este comprobante sera enviado a sunat al cerrar caja.');
                 return;
             }
         
@@ -518,6 +531,7 @@
             listImpresoras: [],
             formValid: boolean = false,
             cpe_show: boolean = false,
+            fecha_manual: boolean = false,
         },
         attached: function () {
             xThisFacturador = this;

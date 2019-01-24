@@ -94,9 +94,12 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     // fecha actual del servidor
     // cabecera
     await $.ajax({type: 'POST', url: '../../bdphp/log_001.php', data:{'p_from':'z'}})
-    .done( function (rptDate) {
+    .done( function (rptDate) {        
         rptDate=rptDate.split('|');
-        fecha_actual = rptDate[0];
+
+        const fecha_manual = xArrayComprobante.fecha_manual || null; // para regularizar desde facturador
+
+        fecha_actual = fecha_manual === null ? rptDate[0] : fecha_manual;
         hora_actual = rptDate[1];    
 
         var jsonData = {                    
@@ -174,8 +177,8 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         var jsonItem = {
             "codigo_interno": x.id,
             "descripcion": x.des,
-            "codigo_producto_sunat": "51121703",
-            "codigo_producto_gsl": "51121703",
+            "codigo_producto_sunat": "90101500",
+            "codigo_producto_gsl": "90101500",
             "unidad_de_medida": "NIU",
             "cantidad": x.cantidad,
             "valor_unitario": x.punitario,
@@ -246,6 +249,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             rpt.ok = false;
             rpt.error = 'Error al ingresar los datos';
             rpt.msj_error = res.message;
+            rpt.hash='';            
 
             const data = {
                 pdf:'0',
@@ -287,7 +291,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
                 idtipo_comprobante_serie: idtipo_comprobante_serie,                
             }
         
-            rpt.ok = true;
+        rpt.ok = true;
         rpt.qr = '';
         rpt.hash = "www.papaya.com.pe";
         rpt.external_id = '';

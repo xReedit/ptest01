@@ -237,11 +237,11 @@
 			$sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
 			
-			if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
+			// if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
 				// guardamos el correlativo //
 				$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 				$bd->xConsulta_NoReturn($sql_doc_correlativo);
-			} 
+			// } 
 			// si es factura elctronica guarda despues tigger ce 
 		} else {
 			$correlativo_comprobante='0';
@@ -337,11 +337,11 @@
 			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
 
 			
-			if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
+			// if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
 				// guardamos el correlativo //
 				$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 				$bd->xConsulta_NoReturn($sql_doc_correlativo);
-			} 
+			// } 
 			// si es factura elctronica guarda despues tigger ce 
 		} else {
 			$correlativo_comprobante='0';
@@ -485,11 +485,11 @@
 			$sql_doc_correlativo="select (correlativo + 1) as d1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;		
 			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);
 
-			if ($x_array_comprobante['codsunat'] === "0") { // si no es factura electronica
+			// if ($x_array_comprobante['codsunat'] === "0") { // si no es factura electronica
 				// guardamos el correlativo //
 				$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 				$bd->xConsulta_NoReturn($sql_doc_correlativo);
-			} 
+			// } 
 			// si es factura elctronica guarda despues tigger ce 
 		} else {
 			$correlativo_comprobante='0';

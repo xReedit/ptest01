@@ -1040,6 +1040,8 @@ ul.list_add_item2 li {
 .xzoom-1 { transition: transform .2s; }
 .xzoom-1:hover {transform: scale(1.9); }
 
+.animm-1:hover {transform: scale(1.9); }
+
 
 .animated {
     -webkit-animation-duration: 1s;

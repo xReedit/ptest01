@@ -10,7 +10,7 @@ function CpeInterno_Registrar(data) {
         dataSave.cdr = data.links.cdr != '' ? 1 : 0; 
         dataSave.xml = data.links.xml != '' ? 1 : 0; 
         dataSave.nomcliente = data.data.nomcliente;
-        dataSave.idcliente = data.data.idcliente;
+        dataSave.idcliente = data.data.idcliente === "" ? 0 : data.data.idcliente;
         dataSave.total = data.data.total;
         dataSave.numero = data.data.numero;
         dataSave.external_id = data.data.external_id;
@@ -42,14 +42,6 @@ function CpeInterno_Registrar(data) {
 // idtipo_comprobante_serie => guardar el correlativo
 function CpeInterno_Error(data, jsonxml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie) {
   let dataSave = {};
-//   dataSave.numero = "";
-//   dataSave.jsonxml = jsonxml;
-//   dataSave.external_id = "";
-//   dataSave.estado_api = 1;
-//   dataSave.estado_sunat = 1;
-//   dataSave.msj = "Sin registrar";
-//   dataSave.viene_facturador = _viene_facturador;
-//   dataSave.idtipo_comprobante_serie = idtipo_comprobante_serie;
 
   dataSave = data;
   dataSave.estado_api = 1;
@@ -92,4 +84,15 @@ function CpeInterno_SaveResumenDiario(dataResumen) {
     .done(function (res) {
         console.log(res);
     });
+}
+
+
+// actualiza resumen boletas con la respuesta obtenida
+// ademas si es aceptado cambia el estado de las boletas estado_api=0 -> aceptado
+function CpeInterno_UpdateResumenDiario(data) {
+    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '203', data: dataResumen } })
+    .done(function (res) {
+        console.log(res);
+    });
+
 }

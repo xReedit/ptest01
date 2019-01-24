@@ -5,9 +5,12 @@
 	<template>
 		<paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div style="text-align: center">
-				<img src="../../../images/_msj_envio_sunat.gif" alt="">
-				<p>Enviando comprobantes electronicos.</p>
-				<paper-progress indeterminate style="width: 100%;"></paper-progress>
+				<img id="dgl_sunat_img" src="../../../images/_msj_envio_sunat.gif" alt="">
+				<p id="dgl_sunat_msj">Enviando comprobantes electronicos.</p>
+				<p id="dgl_sunat_msj2" class="xInvisible xColorRow_Azul">Proceso concluido con exito.</p>
+				<p id="dgl_sunat_msj3 xfont11" class="center xColorRow_Plomo">...</p>
+				<paper-progress id="dgl_sunat_progress" indeterminate style="width: 100%;"></paper-progress>
+				<button dialog-dismiss id="dlg_sunat_btn" class="xBoton2 xVerde xInvisible">Listo</button>
 			</div>
 		</paper-dialog>
 		<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">

@@ -69,7 +69,7 @@ async function xSoapSunat_ResumenDiario(fecha) {
 // consulta de boletas que fueron registradas pero aun no son aceptadas(por que son nuevas o por algun error de conxion), devuelve fechas no aceptadas
 async function xSoapSunat_getArrFechaBoletasNoAceptadas() {
     var rpt = [];
-    await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { 'op': '3' } })
+    await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { 'op': '302' } })
         .done(function (rptDate) {
             rptDate = $.parseJSON(rptDate);
             if (!rptDate.success) { alert(rptDate.error); return; }
@@ -78,6 +78,86 @@ async function xSoapSunat_getArrFechaBoletasNoAceptadas() {
 
     return rpt;
 }
+
+/// lista de ticket por consultar si fueron aceptadas
+async function xSoapSunat_getListTicketResumenBoletas() {
+    var rpt = [];
+    await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { 'op': '303' } })
+        .done(function (rptResumen) {
+            rptResumen = $.parseJSON(rptResumen);
+            if (!rptResumen.success) { alert(rptResumen.error); return; }
+            rpt = rptResumen.datos;
+        });
+
+    return rpt;
+}
+
+
+// consulta si el ticket de resumen de boletas fue acpetada
+// actualiza estado_sunat = 0 > aceptada de las boletas
+async function xSoapSunat_ConsultarTicketResumen(ticket) {
+    const _url = URL_COMPROBANTE + "/summaries/status";
+    let _headers = HEADERS_COMPROBANTE;
+    _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
+
+    const _ticket = {
+        "external_id": ticket.external_id,
+        "ticket": ticket.ticket
+    }
+
+    const json_ticket = json_xml = JSON.stringify(_ticket);
+
+
+    let rpt = {};
+
+    await fetch(_url, {
+      method: "POST",
+      headers: _headers,
+      body: json_ticket
+    })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(res) {
+        console.log(res);
+        let data = {};
+
+        if (res.success) {
+          rpt.ok = true;
+          data.cdr = res.links.cdr != "" ? 1 : 0;
+          data.xml = res.links.xml != "" ? 1 : 0;
+          data.fecha_resumen = res.ticket.fecha_resumen; // para actualizar las boletas estado_sunat=0 -> aceptadas
+
+          if (res.response.length != 0) {
+            data.estado_sunat = 1; // aceptado
+            data.msj = res.response.description;
+          }
+
+          CpeInterno_UpdateResumenDiario(data);
+
+        } else {
+          
+          rpt.ok = false;
+          rpt.error = "Error en resumen de boletas";
+          rpt.msj_error = res.message;
+
+          data.cdr = 0;
+          data.xml = 0;
+          data.estado_sunat = 2; // error
+          data.msj = res.message;
+            
+          CpeInterno_UpdateResumenDiario(data);
+        }
+      })
+      .catch(function(error) {
+        // error de conexion
+        rpt.ok = false;
+        rpt.msj = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";
+      });
+
+    return rpt;
+}
+
 
 
 // esto se utiliza al cierre de caja
@@ -88,7 +168,7 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
-    var rpt = {};
+    let rpt = {};
     const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
     json_xml = JSON.stringify(json_xml);
 
@@ -117,6 +197,10 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
                 data.msj = res.response.description;
             }
 
+            data.pdf = res.links.pdf != "" ? 1 : 0;
+            data.cdr = res.links.cdr != "" ? 1 : 0;
+            data.xml = res.links.xml != "" ? 1 : 0; 
+
             CpeInterno_UpdateRegistro(data);
 
         } else {
@@ -133,6 +217,9 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
                 estado_sunat: 1,
                 anulado: 1,
                 msj: res.message,
+                pdf: 0,
+                cdr: 0,
+                xml: 0,
             }
 
             // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
@@ -146,6 +233,7 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
 
     return rpt;
 }
+
 
 // envia el resumen de boletas a la sunat
 // fecha == indica la fecha si no se especifica es la fecha actual
