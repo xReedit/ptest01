@@ -50,7 +50,12 @@
                     <iron-pages selected="{{selected}}">
                         <div id="div_comprobantes">
                             <div>
-                                <button class="xBoton2 xAzul xDerecha" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>
+                                <div class="xDerecha">
+                                    <button class="xBoton2 xAzul xDerecha" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>
+                                    <br>
+                                    <button class="xBoton2 xVerde xDerecha" onclick="xGenerarReporteExcel()" title="Bajar a excel"><img src="../../../images/excel.png" alt=""></button>
+                                </div>     
+                                
                                 <h4>Comprobantes electronicos emitidos.</h4>
                                 <p class="xColorRow_Plomo">Al enviar el resumen de boletas, también se procesan y se envían los documentos sin
                                     registrar, es decir los documentos
@@ -104,9 +109,9 @@
                                     </template>
                                 </tbody>
                             </table>
-                            <br>
-                            <div class="xDerecha">
-                                <pagination-input id="paginator" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>
+                            <br>                            
+                            <div>                                
+                                <pagination-input id="paginator" class="xDerecha" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>                                
                             </div>
                             <br><br>
                         </div>
@@ -115,6 +120,7 @@
                         <div id="div_resuemn">
                             <h4>Resumen de boletas</h4>
                             <p>Todas las boletas emitidas en el dia se envian a la sunat en un unico archivo llamado resumen diario de boletas.</p>
+                            <br>
                             <hr>
                             <div>                                
                                 <input type="text" class="xMiInput xfont18" style="width:100%; bottom: -3px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos_re()"
@@ -159,6 +165,48 @@
             </div>
         </div>
         <br><br>
+
+
+        <!-- reporte comprobantes exportar -> excel -->
+        <!-- <button onclick="xGenerarReporteExcel()">Exportar</button> -->
+        <div id="reporte" class="xInvisible">
+
+            <table id="testTable" width="100%">
+                <caption>
+                    <h1>[[nom_sede]]</h1>
+                    <h2>Reporte de comprobantes emitidos</h2>                    
+                </caption>            
+                <thead>                
+                    <th width="45px">#</th>
+                    <th width="15%">f. Emision</th>
+                    <th width="15%">H. Emision</th>                
+                    <th>Tipo</th>
+                    <th>Numero</th>
+                    <th width="35%">Cliente</th>
+                    <th align="right">Sub total</th>
+                    <th align="right">I.G.V</th>
+                    <th align="right">Total</th>
+                    <th>Estado</th>                
+                </thead>
+                <tbody>
+                    <template is="dom-repeat" items="{{ListReporte}}" as="row">
+                    <tr>
+                        <td>{{displayIndex(index)}}</td>
+                        <td>{{row.fecha}}</td>
+                        <td>{{row.hora}}</td>
+                        <td>{{row.nom_comprobante}}</td>
+                        <td>{{row.numero }}</td>
+                        <td>{{row.nomcliente}}</td>
+                        <td>{{row.subtotal}}</td>
+                        <td>{{row.igv}}</td>
+                        <td>{{row.total}}</td>
+                        <td style$="{{row.style_reporte}}">{{row.nom_estado}}</td>
+                    </tr>
+                    </template>
+                </tbody>
+            </table>
+
+        </div>
     </template>
 </dom-module>
 <script type="text/javascript" src="./list.resumen.boletas.js"></script>
@@ -167,21 +215,28 @@
 <script type="text/javascript" src="../../view/config.const.js"></script>
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
+<script type="text/javascript" src="../../view/export.excel.js"></script>
 
 <script>
     var xThisCpe, lastPos=0, xPopupLoad, p_upadate=true, p_rows_re=0, p_rows=0, p_fecha='', p_filter='', p_desde=0, data_pagination={}, data_pagination_re={}, xdebounce, xe_debounce=false, index_anular;
 
+
+    function xExportarExcel() {
+        tableToExcel('testTable', 'Comprobantes')
+    }
+
     function xIniCpe() {
         xThisCpe.ListCpe = [];
-        xLoadCpeEmitidos();
+        xThisCpe.ListCpeResumen = [];
+        xLoadCpeEmitidos('6');
         xIniPagination();
                 
         xThisCpe.$.paginator.addEventListener('page-limit-change', (e) => {
-            console.log('page-limit-change', e.detail.value);
+            // console.log('page-limit-change', e.detail.value);
             data_pagination = e.detail.value; // datos del componente
             p_desde = data_pagination.pageDesde; // para el # de fila            
             lastPos = $(window).scrollTop();
-            xLoadCpeEmitidos();            
+            xLoadCpeEmitidos('6');            
         }); 
            
         
@@ -189,7 +244,7 @@
             var d = $(this).val().split('-');            
             p_fecha = d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
             xThisCpe.$.paginator.currentPage = 1;            
-            xLoadCpeEmitidos();
+            xLoadCpeEmitidos('6');
             // xIniPagination();
         });
 
@@ -214,12 +269,13 @@
     }
 
     function xfiltrarDatos() {
+        if ( xThisCpe.$.txt_buscar.value.length < 3 ) return;
         if ( xe_debounce ) return;
         xe_debounce = true;
         clearTimeout(xdebounce);
 
         xdebounce = setTimeout(() => {            
-            xLoadCpeEmitidos();
+            xLoadCpeEmitidos('6');
             // clearTimeout(xdebounce);
             xe_debounce = false;
             xThisCpe.$.paginator.currentPage = 1;            
@@ -227,30 +283,31 @@
         }, 900);
     }
 
-    function xLoadCpeEmitidos() {        
-        xThisCpe.ListCpe = [];
+    function xLoadCpeEmitidos(op) {                
         p_filter = xThisCpe.$.txt_buscar.value;      
         // p_fecha  = xThisCpe.$.txt_fecha.value;
         //p_fecha = p_fecha == "" ? xDevolverFecha() : p_fecha;
                 
         data_pagination.pageFilter = p_filter;    
         data_pagination.pageFecha = p_fecha;
+
+        let xDataRes = [];
         // console.log(data_pagination);
 
-        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '6', pagination: data_pagination} })
+        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: op, pagination: data_pagination} })
         .done(function (res) {
             res = res.split('**');
             p_rows = res[1];
             res = $.parseJSON(res[0]);
-            xThisCpe.ListCpe = res.datos;
+            xDataRes = res.datos;
             
-            console.log(xThisCpe.ListCpe);
+            // console.log(xDataRes);
             // estado   0 = ok registrado enviado
             //          1 = registrado no enviado por que es boleta
             //          2 = no registrado si es boleta y si es factura no enviado
             //          3 = anulado
 
-            xThisCpe.ListCpe.map (x => {
+            xDataRes.map (x => {
                 let msj_estado = '';
                 let class_estado = '';
                 const boleta = x.codsunat === '03' ? true : false;
@@ -259,6 +316,7 @@
                 let estado_cpe;
                 let btn_enviar = false;
                 let btn_anular=false; // opcion de anular
+                let style_reporte = '';
 
 
                 /*
@@ -283,11 +341,21 @@
 
 
                 switch (parseInt(estado_cpe)) {
-                    case 0: msj_estado = 'Aceptado'; class_estado='xColorRow_verde'; btn_anular=true; break;
-                    case 1: msj_estado = 'Sin Registrar'; class_estado = 'xColorRow_Amarillo'; btn_enviar=true; break;
-                    case 2: msj_estado = 'Registrado'; class_estado = 'xColorRow_Azul' ; break;
-                    case 3: msj_estado = 'Rechazado'; class_estado = 'xFondoRowRojo'; break;
-                    case 4: msj_estado = 'Anulado'; class_estado = 'xFondoRowRojo'; break;
+                    case 0: msj_estado = 'Aceptado'; class_estado='xColorRow_verde'; btn_anular=true; style_reporte='color: green'; break;
+                    case 1: msj_estado = 'Sin Registrar'; class_estado = 'xColorRow_Amarillo'; btn_enviar=true; style_reporte = 'color: yellow'; break;
+                    case 2: msj_estado = 'Registrado'; class_estado = 'xColorRow_Azul'; style_reporte = 'color: blue'; break;
+                    case 3: msj_estado = 'Rechazado'; class_estado = 'xFondoRowRojo'; style_reporte = 'backcolor:red; color: black';break;
+                    case 4: msj_estado = 'Anulado'; class_estado = 'xFondoRowRojo'; style_reporte = 'color: red';break;
+                }
+
+                // totales json                
+                if ( x.totales_json !== '' && x.totales_json !== null) {
+                    const _totales_json = JSON.parse(x.totales_json.replace('"{', '{').replace('}"', '}'))
+                    x.subtotal = _totales_json.total_valor;
+                    x.igv = _totales_json.total_igv;                    
+                } else {
+                    x.subtotal = x.total;
+                    x.igv = '0.00';       
                 }
 
                 class_estado += ' xBold xfont11';
@@ -298,16 +366,30 @@
                 x.nom_estado = msj_estado;
                 x.btn_enviar = btn_enviar;
                 x.btn_anular = btn_anular;
+                x.style_reporte = style_reporte;
             })
                                
             p_upadate = false;  // para que no vuelva a llamar esta funcion
             xThisCpe.$.paginator.pageRows = p_rows;    
             // xThisCpe.$.paginator.listRows = [10, 20, 30, 40];                 
-            console.log('datos', xThisCpe.ListCpe);
+            // console.log('datos', xDataRes);
 
-            setTimeout(() => {                
-                $(window).scrollTop(lastPos);
-            }, 5);
+            if ( op==='6' ) { 
+                xThisCpe.ListCpe = [];                
+                xThisCpe.ListCpe = xDataRes; 
+                setTimeout(() => {
+                    $(window).scrollTop(lastPos);
+                }, 5);
+
+            } else {  // si es para el reporte
+                xThisCpe.ListCpeResumen = [];
+                xThisCpe.ListReporte = xDataRes; 
+                setTimeout(() => {
+                    xExportarExcel();
+                }, 100);
+            }
+
+            
         });
 
     }   
@@ -321,7 +403,7 @@
         setTimeout(() => {
             const rpt = xCocinarResumenBoletas(); // envia los comprobantes //devuelte '' si se proceso correctamente
             if ( rpt==='' ) {
-                xLoadCpeEmitidos();
+                xLoadCpeEmitidos('6');
             }
             // dialog_enviando_sunat.close();
         }, 1000);
@@ -333,7 +415,7 @@
     function verDocuemnto(tipo, obj) {
         const index = obj.parentElement.dataId;
         const external_id = xThisCpe.ListCpe[index].external_id; 
-        console.log(external_id);
+        // console.log(external_id);
         xSoapSunat_DownloadFile(tipo, external_id)
     }
 
@@ -356,7 +438,7 @@
         if (res) {
             //ver si esto es necesario: si es factura consultar el ticket
             lastPos = $(window).scrollTop();
-            xLoadCpeEmitidos();            
+            xLoadCpeEmitidos('6');            
         }
         xm_all_xToastClose();
 
@@ -364,11 +446,22 @@
     }
 
 
+    // generar reporte export excel 
+    function xGenerarReporteExcel() {
+        const org = xm_log_get('datos_org_sede');
+        // console.log(org);
+        xThisCpe.nom_sede = org[0].sedenombre;
+        xLoadCpeEmitidos('601');
+    }
+
+
     Polymer({
         is: 'x-cpe-emitidos',
         properties: {            
             ListCpe: [],
-            ListCpeResumen: [],               
+            ListCpeResumen: [],
+            ListReporte: [],
+            nom_sede: ''           
         },
         attached: function () {
             this.selected = 0,

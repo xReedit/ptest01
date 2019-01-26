@@ -212,6 +212,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     const nomCliente = json_xml.datos_del_cliente_o_receptor.apellidos_y_nombres_o_razon_social;
     const idclienteComprobante = json_xml.extras.idcliente;
     const totalComprobante = json_xml.totales.total_venta;
+    const totalesJson = JSON.stringify(json_xml.totales);
     json_xml = JSON.stringify(json_xml);   
 
     const _idregistro_p = typeof idregistro_pago === "object" ? idregistro_pago[1] : idregistro_pago;
@@ -237,6 +238,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             res.data.nomcliente = nomCliente;
             res.data.idcliente = idclienteComprobante;
             res.data.total = totalComprobante;
+            res.data.totales_json = totalesJson;
             res.data.numero = numero_comp;
             res.data.idregistro_pago = _idregistro_p;
             res.data.viene_facturador = _viene_facturador;
@@ -257,6 +259,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
                 xml: '0',                
                 idcliente: idclienteComprobante,
                 total: totalComprobante,
+                totales_json: totalesJson,
                 nomcliente: nomCliente,
                 numero: numero_comp, 
                 jsonxml: json_xml, 
@@ -281,6 +284,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
                 xml: '0',                
                 idcliente: idclienteComprobante,
                 total: totalComprobante,
+                totales_json: totalesJson,
                 nomcliente: nomCliente,
                 numero: numero_comp, 
                 jsonxml: json_xml, 

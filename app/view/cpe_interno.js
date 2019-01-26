@@ -12,6 +12,7 @@ function CpeInterno_Registrar(data) {
         dataSave.nomcliente = data.data.nomcliente;
         dataSave.idcliente = data.data.idcliente === "" ? 0 : data.data.idcliente;
         dataSave.total = data.data.total;
+        dataSave.totales_json = data.data.totales_json;
         dataSave.numero = data.data.numero;
         dataSave.external_id = data.data.external_id;
         dataSave.hash = data.data.hash;

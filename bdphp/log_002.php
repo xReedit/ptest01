@@ -17,11 +17,12 @@
             $obj = $_POST['data'];
 
             $ce_anulado = array_key_exists('anulado', $obj) ? $obj['anulado'] : 0; 
+            $ce_totales_json = array_key_exists('totales_json', $obj) ? $obj['totales_json'] : ''; 
             
             $sqlCpe = "
-                insert into ce (external_id, idorg, idsede, idusuario, idtipo_comprobante_serie, numero, fecha, hora, json_xml, estado_api, estado_sunat, viene_facturador, msj, anulado, idcliente, nomcliente, total, pdf, xml, cdr)
+                insert into ce (external_id, idorg, idsede, idusuario, idtipo_comprobante_serie, numero, fecha, hora, json_xml, estado_api, estado_sunat, viene_facturador, msj, anulado, idcliente, nomcliente, total, pdf, xml, cdr, totales_json)
                 values ('".$obj['external_id']."',".$_SESSION['ido'].",".$_SESSION['idsede'].",".$_SESSION['idusuario'].",".$obj['idtipo_comprobante_serie'].",
-                '".$obj['numero']."', DATE_FORMAT(now(),'%d/%m/%Y'), DATE_FORMAT(now(),'%H:%i:%s'), '".$obj['jsonxml']."', ".$obj['estado_api'].",".$obj['estado_sunat'].",".$obj['viene_facturador'].",'".$obj['msj']."',".$ce_anulado.",".$obj['idcliente'].",'".$obj['nomcliente']."','".$obj['total']."',".$obj['pdf'].",".$obj['xml'].",".$obj['cdr'].")";
+                '".$obj['numero']."', DATE_FORMAT(now(),'%d/%m/%Y'), DATE_FORMAT(now(),'%H:%i:%s'), '".$obj['jsonxml']."', ".$obj['estado_api'].",".$obj['estado_sunat'].",".$obj['viene_facturador'].",'".$obj['msj']."',".$ce_anulado.",".$obj['idcliente'].",'".$obj['nomcliente']."','".$obj['total']."',".$obj['pdf'].",".$obj['xml'].",".$obj['cdr'].",'".$ce_totales_json."')";
 
             echo $sqlCpe;
             $idce = $bd->xConsulta_UltimoId($sqlCpe);
@@ -210,6 +211,29 @@
 
             $rpt = $bd->xConsulta($sql);            
             print $rpt."**".$rowCount;
+            break;
+        case '601': // reporte export excel
+            $pagination = $_POST['pagination'];
+            $fecha = $pagination['pageFecha'];
+            $filtroFecha = $fecha === '' ? '' : " HAVING c.fecha = '".$fecha."'";            
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(c.hora,tp.descripcion,c.numero,c.nomcliente,c.fecha,(
+                if (c.anulado=1,'Anulado',
+						CASE
+							WHEN c.estado_api = 0 and c.estado_sunat = 0 THEN 'Aceptado'
+							WHEN (c.estado_api = 1 and c.estado_sunat = 1) THEN 'Sin registrar'
+							WHEN (tp.codsunat='03' and  c.estado_api = 0 and c.estado_sunat = 1) THEN 'Boleta registrada'
+							WHEN (tp.codsunat!='03' and c.estado_api = 0 and c.estado_sunat = 1) THEN 'Boleta no aceptada'
+						END)
+            )) LIKE '%".$pagination['pageFilter']."%' ";
+
+            $sql="
+                SELECT tp.descripcion as nom_comprobante, tp.codsunat , c.* from ce as c
+                    inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie=c.idtipo_comprobante_serie
+                    inner join tipo_comprobante as tp on tp.idtipo_comprobante=tps.idtipo_comprobante	
+                where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].") ".$filtro." ".$filtroFecha." 
+                ORDER BY c.idce desc";
+            
+            $bd->xConsulta($sql);
             break;
         case '7': // resumen de boletas
             $pagination = $_POST['pagination'];
