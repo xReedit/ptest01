@@ -268,6 +268,7 @@ table tr:hover .xIconRow img{opacity:0.8;}
 table tr:hover .xIconTr{opacity:1;}
 table tr:hover .xIconTrNoVisible{visibility:visible;}
 table tr:hover .xDeleteRow{opacity:1;}
+table tr:hover .xDeleteRow2{opacity:1;}
 table tr:hover .xDeleteRowNeutro{opacity:1;}
 table tr:hover .xbtnRow{visibility:visible;}
 table tr:hover .xbtnRowLeft{visibility:visible;}
@@ -325,6 +326,7 @@ tr.xSinBorde>td{border-bottom:0px;}
 .xpie_row1 td:last-child{border-radius: 0px 0px 5px 0px;}
 .xpie_row1 td{ background: #e0e0e0; text-shadow:none; font-weight: 600; padding: 10px;}
 .xDeleteRow{background-image:url('../images/delete.png');background-repeat:no-repeat;background-size:contain;width:22px;height:22px;cursor:pointer;opacity:0.1;float:right;vertical-align:middle;}
+.xDeleteRow2{background-image:url('../images/trash.png');background-repeat:no-repeat;background-size:contain;width:16px;height:16px;cursor:pointer;opacity:0.1;float:right;vertical-align:middle;}
 .xDeleteRowNeutro{background-image:url('../images/delete.png');background-repeat:no-repeat;background-size:contain;width:22px;height:22px;cursor:pointer;opacity:0.1;vertical-align:middle; float: left;}
 .xTextRow{font-size:18px;border:none;border-bottom:solid 2px #42a5f5;width:100px;text-align:center; width: auto;}
 .xTextRow2{border:none;border-bottom:1px solid #616161;display:inline-block;width:100%;text-align:center;background:transparent;outline:none;box-shadow:none;transition:box-shadow 0.28s;}

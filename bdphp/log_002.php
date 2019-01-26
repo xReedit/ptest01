@@ -115,20 +115,20 @@
             $sql="update ce_resumen 
                     set estado_sunat=".$estado_sunat.",
                     msj='".$obj['msj']."',
-                    xml=".$obj['xml']."
+                    xml=".$obj['xml'].",
                     cdr=".$obj['cdr']." 
-                    where ticket=''";
+                    where ticket='".$obj['ticket']."'";
             echo $sql;
             $bd->xConsulta($sql);
 
             // actualizar boletas estado_sunat = 0 -> aceptadas
-            if ( $estado_sunat != "0" ) {
+            if ( $estado_sunat === "1" ) {
                 $sql_bl = "
                     UPDATE ce as c
                         inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie = c.idtipo_comprobante_serie
                         inner join tipo_comprobante as tp on tp.idtipo_comprobante = tps.idtipo_comprobante
                     set c.estado_sunat=0
-                    where (c.idorg=1 and c.idsede=1) and c.fecha = '".$obj['fecha_resumen']."' and tp.codsunat='03'";
+                    where (c.idorg=1 and c.idsede=1) and c.fecha = '".$obj['fecha_resumen']."' and tp.codsunat='03' and c.anulado=0";
 
                 echo $sql_bl;
                 $bd->xConsulta_NoReturn($sql_bl);
@@ -152,7 +152,7 @@
                 where ( idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede']." ) 
                 and (fecha_envio = DATE_FORMAT(now(),'%d/%m/%Y')) and estado_sunat=0 and estado=0";
             $bd->xConsulta($sql);
-            break;
+            break;        
         case '4' : // guardar cpe y obtener correlativo
             $x_array_comprobante = $_POST['p_comprobante'];
             $correlativo_comprobante = 0; 
@@ -182,7 +182,7 @@
             $fecha = $pagination['pageFecha'];
             $filtroFecha = $fecha === '' ? '' : " HAVING c.fecha = '".$fecha."'";
             $filtroFechaCount = $fecha === '' ? '' : " and (c.fecha = '".$fecha."')";
-            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(c.hora,tp.descripcion,c.numero,c.nomcliente,(
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(c.hora,tp.descripcion,c.numero,c.nomcliente,c.fecha,(
                 if (c.anulado=1,'Anulado',
 						CASE
 							WHEN c.estado_api = 0 and c.estado_sunat = 0 THEN 'Aceptado'
@@ -210,6 +210,34 @@
 
             $rpt = $bd->xConsulta($sql);            
             print $rpt."**".$rowCount;
+            break;
+        case '7': // resumen de boletas
+            $pagination = $_POST['pagination'];
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(u.usuario,cr.fecha_envio,ticket,external_id,msj) like '%".$pagination['pageFilter']."%'";
+            $sql="
+                SELECT u.nombres, u.usuario, cr.* 
+                from ce_resumen as cr
+                    inner join usuario as u on u.idusuario=cr.idusuario
+                where (cr.idorg=".$_SESSION['ido']." and cr.idsede=".$_SESSION['idsede'].")".$filtro ." and cr.estado=0 order by cr.idce_resumen desc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];
+            
+            
+            $sqlCount = "
+                SELECT count(cr.idce_resumen) as d1
+                from ce_resumen as cr
+                    inner join usuario as u on u.idusuario=cr.idusuario
+                where (cr.idorg=".$_SESSION['ido']." and cr.idsede=".$_SESSION['idsede'].")".$filtro ." and cr.estado=0
+                ";
+
+            $rowCount = $bd->xDevolverUnDato($sqlCount);
+
+            $rpt = $bd->xConsulta($sql);            
+            print $rpt."**".$rowCount;
+            
+            break;
+        case '8': // anulaciones
+            $obj = $_POST['data'];
+            $sql="update ce set anulado=1, external_id_anulacion='".$obj['external_id_anulacion']."', ticket_anulacion='".$obj['ticket']."', motivo_anulacion='".$obj['motivo']."' where external_id='".$obj['external_id']."'";
+            $bd->xConsulta($sql);
             break;
         default:
             # code...

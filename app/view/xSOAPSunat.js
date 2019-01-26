@@ -124,9 +124,10 @@ async function xSoapSunat_ConsultarTicketResumen(ticket) {
 
         if (res.success) {
           rpt.ok = true;
+          data.ticket = ticket.ticket;
           data.cdr = res.links.cdr != "" ? 1 : 0;
           data.xml = res.links.xml != "" ? 1 : 0;
-          data.fecha_resumen = res.ticket.fecha_resumen; // para actualizar las boletas estado_sunat=0 -> aceptadas
+          data.fecha_resumen = xSoapSunat_cambiarFormatoFechaString2(ticket.fecha_resumen); // para actualizar las boletas estado_sunat=0 -> aceptadas
 
           if (res.response.length != 0) {
             data.estado_sunat = 1; // aceptado
@@ -141,6 +142,7 @@ async function xSoapSunat_ConsultarTicketResumen(ticket) {
           rpt.error = "Error en resumen de boletas";
           rpt.msj_error = res.message;
 
+          data.ticket = ticket.ticket;
           data.cdr = 0;
           data.xml = 0;
           data.estado_sunat = 2; // error
@@ -152,7 +154,7 @@ async function xSoapSunat_ConsultarTicketResumen(ticket) {
       .catch(function(error) {
         // error de conexion
         rpt.ok = false;
-        rpt.msj = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";
+        rpt.msj_error = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";
       });
 
     return rpt;
@@ -229,10 +231,90 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
     }).catch(function (error) { // error de conexion
         rpt.ok = false;
         rpt.msj = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";
+        rpt.msj_error = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";
     });
 
     return rpt;
 }
+
+
+// anulacion de comprobantes
+
+async function xSoapSunat_AnularComprobante(dataAnulacion) {
+    const codsunat = dataAnulacion.codsunat;
+    let _url = URL_COMPROBANTE;
+    let _headers = HEADERS_COMPROBANTE;
+    let evento='';
+    _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
+
+    const fechaDocumento = xSoapSunat_cambiarFormatoFechaString(dataAnulacion.fecha);
+    let json_anulacion = {};
+    let rpt;
+  
+
+    switch (codsunat) {
+        case '01': // factura
+            evento = "voided";
+            json_anulacion = {
+                "fecha_de_emision_de_documentos": fechaDocumento,
+                "documentos": [
+                    {
+                        "external_id": dataAnulacion.external_id,
+                        "motivo_anulacion": dataAnulacion.motivo
+                    }
+                ]
+            }
+            break;
+        case '03': // boleta
+            evento = "summaries";
+            json_anulacion = {
+                "fecha_de_emision_de_documentos": fechaDocumento,
+                "codigo_tipo_proceso": "3",
+                "documentos": [
+                    {
+                        "external_id": dataAnulacion.external_id,
+                        "motivo_anulacion": dataAnulacion.motivo
+                    }
+                ]
+            };
+            break;
+            
+        }
+    
+    _url = _url + '/' + evento;   
+    json_anulacion = JSON.stringify(json_anulacion)
+    await fetch(_url, {
+        method: 'POST',
+        headers: _headers,
+        body: json_anulacion,
+    }).then(function (response) {
+        return response.json();
+    }).then(async function (res) {
+        console.log(res)
+        rpt = res.success;
+        if (rpt) {
+            // actualiza anulado = 1 external_id_anulacion, ticket_anulacion, motivo_anulacion
+                        
+            dataAnulacion.external_id_anulacion = res.data ? res.data.external_id : res.external_id;
+            dataAnulacion.ticket = res.data ? res.data.ticket : res.ticket;
+            const a = await CpeInterno_UpdateAnulacion(dataAnulacion);
+            rpt = a;
+        } else {
+            console.log(res);
+            alert(res.message);
+        }                
+    }).catch(function (error) { // error de conexion
+        rpt = false;
+        console.log(error);                
+        alert('No se pudo establecer conexion con el servicio Sunat');
+    });
+
+    return rpt;
+
+}
+
+
+
 
 
 // envia el resumen de boletas a la sunat
@@ -405,6 +487,11 @@ function xSoapSunat_cambiarFormatoFecha(input) {
 // cambia el formato de fecha dd/mm/yyyy - yyyy-mm-dd
 function xSoapSunat_cambiarFormatoFechaString(sfecha) {    
     return sfecha.split("/").reverse().join("-");
+}
+
+// cambia el formato de fecha yyyy-mm-dd - dd/mm/yyyy
+function xSoapSunat_cambiarFormatoFechaString2(sfecha) {
+    return sfecha.split("-").reverse().join("/");
 }
 
 

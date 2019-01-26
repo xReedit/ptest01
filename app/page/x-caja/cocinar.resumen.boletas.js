@@ -29,7 +29,7 @@ async function xCocinarResumenBoletas() {
     let error = false;
     for (const i in arrDocNoRegistrado) {
         
-        $("#dgl_sunat_msj3").text("Verificando comprobantes..." + xCeroIzq(i) );
+        $("#dgl_sunat_msj3").text("Verificando comprobantes..." + xCeroIzq(i+1) );
         const jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml.replace('"{', '{').replace('}"', '}'))
         // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
         const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idce);
@@ -50,14 +50,14 @@ async function xCocinarResumenBoletas() {
     $("#dgl_sunat_msj3").text('Preparando resumen de boletas...');
     const arrFechas = await xSoapSunat_getArrFechaBoletasNoAceptadas();
     for (const f in arrFechas) {
-        $("#dgl_sunat_msj3").text("Preparando resumen de boletas..." + xCeroIzq(f));
+        $("#dgl_sunat_msj3").text("Preparando resumen de boletas..." + xCeroIzq(f+1));
         const rpt = await xSoapSunat_ResumenDiario(arrFechas[f].fecha);
         if (!rpt.ok) { 
             this.hayError = true;
             rptSoap = rpt.msj_error;
             $("#xTituloRpt").append('<p style="color: red">' + rptSoap + '</p>');            
         }
-        console.log(rpt);        
+        // console.log(rpt);        
     }
     
     // consultamos los ticket de resumen de boletas generados el dia anterior            
@@ -65,14 +65,14 @@ async function xCocinarResumenBoletas() {
     $("#dgl_sunat_msj3").text("Consultando resumen de boletas...");
     const arrTickets = await xSoapSunat_getListTicketResumenBoletas();
     for (const t in arrTickets) {
-        $("#dgl_sunat_msj3").text("Consultando resumen de boletas..." + xCeroIzq(t));
+        $("#dgl_sunat_msj3").text("Consultando resumen de boletas..." + xCeroIzq(t+1));
         const rpt = await xSoapSunat_ConsultarTicketResumen(arrTickets[t]);
         if (!rpt.ok) {
             this.hayError = true;
             rptSoap = rpt.msj_error;
             $("#xTituloRpt").append('<p style="color: red">' + rptSoap + '</p>');
         }
-        console.log(rpt);
+        // console.log(rpt);
     }
 
 
@@ -86,9 +86,12 @@ async function xCocinarResumenBoletas() {
         $("#dgl_sunat_msj").addClass("xInvisible");        
         $("#dgl_sunat_msj2").removeClass("xInvisible");        
         $("#xTituloRpt").append('<p style="color: blue">Proceso concluido con exito!.</p>');
-    } else {                
+        rptSoap = '';
+    } else {
         dialog_enviando_sunat.close();        
     }    
+
+    return rptSoap;
 
 
 }

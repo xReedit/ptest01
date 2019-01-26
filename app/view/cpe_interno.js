@@ -86,11 +86,31 @@ function CpeInterno_SaveResumenDiario(dataResumen) {
     });
 }
 
+async function CpeInterno_UpdateAnulacion(dataAnulacion) {
+    let rpt=false;
+    await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '8', data: dataAnulacion } })
+        .done(function (res) {
+            rpt=true;
+        });
+    
+        return rpt;
+}
+
+
+// al actualiar factura tambien actualiza el cdr y el xml
+function CpeInterno_UpdateAnulacionFactura(dataAnulacion) {
+    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '8', data: dataAnulacion } })
+        .done(function (res) {
+            console.log(res);
+        });
+}
+
+
 
 // actualiza resumen boletas con la respuesta obtenida
 // ademas si es aceptado cambia el estado de las boletas estado_api=0 -> aceptado
-function CpeInterno_UpdateResumenDiario(data) {
-    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '203', data: dataResumen } })
+function CpeInterno_UpdateResumenDiario(dataUpdateResumen) {
+    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '203', data: dataUpdateResumen } })
     .done(function (res) {
         console.log(res);
     });
