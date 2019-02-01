@@ -239,7 +239,7 @@
 
                 rpt.valid = true;
                 rpt.msj = "ok";
-                rpt.cliente = { idcliente: new_rpt.idcliente, nombres: new_rpt.nombres, direccion: new_rpt.direccion, num_doc: rpt.numdoc };
+                rpt.cliente = { idcliente: new_rpt.idcliente, nombres: new_rpt.nombres, direccion: new_rpt.direccion, num_doc: rpt.numdoc, f_nac: new_rpt.f_nac };
                 _arrCliente = rpt.cliente;
 
                 _formValid = rpt.valid;
@@ -442,7 +442,8 @@
                         
         if (impresoraSelect.idimpresora === -1) {// en pdf
 
-            if (rptDoc[0].hash === 'www.papaya.com.pe') {// error de conexion o algun  error // no pdf(bajar de la web) pero si impresion
+            const hash = rptDoc[0] ? rptDoc[0].hash : rptDoc.hash;
+            if (hash === 'www.papaya.com.pe') {// error de conexion o algun  error // no pdf(bajar de la web) pero si impresion
                 xPopupLoad.xclose();
                 alert('Error con la conexion al servicio de Sunat. No puede descargar el pdf. Pero si puede imprimirlo. Este comprobante sera enviado a sunat al cerrar caja.');
                 return;

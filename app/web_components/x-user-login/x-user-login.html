@@ -3,6 +3,7 @@
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
+<!-- <script type="text/javascript" src="../../view/xm_all.js"></script> -->
 
 <dom-module id="x-user-login">
 	<template>	
@@ -12,7 +13,7 @@
 	    </paper-dialog>
 
 		<div class="xContentLogin xCentradoVerticalHorizontal xSombraDiv xTransicion3s">
-			<div class="xrunalogo size1 xCentradoVertical"><span class="xIndicadorVr xDerecha" style="margin-right: -25px;">1M</span></div>
+			<div class="xrunalogo size1 xCentradoVertical"><span class="xIndicadorVr xDerecha" style="margin-right: -25px;">1N</span></div>
 			<div class="xOlvideClaveUser xTransicion3s xInvisible" id="div1">
 				<div class="xCentrado">
 					<h2 class="xTituloUser">Se te olvido tu clave</h2>
@@ -113,7 +114,14 @@ function xPasarA(op,xObjOrigen){
 	});
 }
 
-
+function xvalidateFormLogin(des,responde) {
+	var obj=$('#'+des);
+	var a=true;
+	obj.find('paper-input').each(function(e,element){
+		if(!element.validate()){a=false;}
+	});
+	responde(a);
+}
 
 function xEnviar(xfrm){
 	xRpts=new Array();
@@ -122,7 +130,7 @@ function xEnviar(xfrm){
 	var p2='';
 	var correo='';
 	
-	xvalidateForm(xfrm,function(a){
+	xvalidateFormLogin(xfrm,function(a){
 		if(a===false){return;}		
 		switch (xThis.xop){
 			case 1:

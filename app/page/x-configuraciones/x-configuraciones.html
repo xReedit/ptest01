@@ -31,8 +31,12 @@
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="ESLOGAN" id="eslogan" name="eslogan" maxlength="100" espaciar>
 					<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas" espaciar>
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar>
+										
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar>					
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO DEL DOMICILIO FISCAL" id="codigo_del_domicilio_fiscal" name="codigo_del_domicilio_fiscal" espaciar>
+					<br><br>
+					<label for="ubigeo" class="xColorRow_Plomo">Telefono</label>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" id="telefono" name="telefono" espaciar>
 					<div class="xInvisible">
 						<input type="text" id="idsede" name="idsede">
 						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
@@ -553,7 +557,7 @@
 								</thead>
 								<tr data-id="" class="xSinBorde">
 									<td><x-comp-find-sede  id="compFindSede" onchange="_getSede(sedes)"></x-comp-find-sede></td>
-									<td><x-comp-find-comprobante id="compFindComprobante" onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante></td>
+									<td><x-comp-find-comprobante id="compFindComprobante" op="2" onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante></td>
 									<td><input type="text" autocomplete="off" class="xMiInput" placeholder="Serie" onChange="conMayusculas(this)" name="serie" id="serie" required></td>
 									<td><input class="xMiInput"  placeholder="Correlativo" type="number" min="0" pattern="[0-9]+([\.,][0-9]+)?" step="any" name="correlativo" id="correlativo" required></td>
 									<td><paper-fab icon="add" onclick="config_comprobante_add()" title="Guardar" tabindex="0"></paper-fab></td>
@@ -1455,6 +1459,7 @@ function xModificarSede(obj){
 	$("#frm_sede #direccion").val(xThisConfig.dt_sede[xids].dir_sede);
 	$("#frm_sede #eslogan").val(xThisConfig.dt_sede[xids].eslogan);
 	$("#frm_sede #mesas").val(xThisConfig.dt_sede[xids].mesas);
+	$("#frm_sede #telefono").val(xThisConfig.dt_sede[xids].telefono);
 	$("#frm_sede #ubigeo").val(xThisConfig.dt_sede[xids].ubigeo);
 	$("#frm_sede #codigo_del_domicilio_fiscal").val(xThisConfig.dt_sede[xids].codigo_del_domicilio_fiscal);
 	dialog_add_sede.open();

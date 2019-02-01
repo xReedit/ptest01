@@ -548,16 +548,21 @@ async function xGetFindCliente(valor, servicio, callback) {
 						// responde (JSON.parse(dt));
 						dt = JSON.parse(dt);
 						var nombres='', direccion='';
-						var num_doc = valor
+						var num_doc = valor;
+						var fnacimiento = '';
 
 						if (dt.success) {						
 							if (servicio === 'ruc') {
 								nombres = dt.result.RazonSocial;
 								direccion = dt.result.Direccion;
-							} else {
-								nombres = dt.result.Nombres + ' ' + (dt.result.apellidos || "");
+							} else {								
+								const ap_paterno = dt.result.ApellidoPaterno || '';
+								const ap_materno = dt.result.ApellidoMaterno || '';
+								const apellidos = ap_paterno === '' ? dt.result.apellidos || '' : ap_paterno + ' ' + ap_materno;
+								nombres = dt.result.Nombres + " " + apellidos;
 								nombres = nombres===' '? '' : nombres;
 								direccion = '';
+								fnacimiento = dt.result.FechaNacimiento || '';
 							}
 						} else {
 							if (!esFacturacionElectronica) { // si no esta habilitado para facturacion electronica 
@@ -568,13 +573,13 @@ async function xGetFindCliente(valor, servicio, callback) {
 							}
 						}
 
-						rpt = {success: dt.success, idcliente:'', nombres: nombres, direccion: direccion,num_doc:num_doc, msg: dt.msg};
+						rpt = { success: dt.success, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, msg: dt.msg };
 
 						// responde(rpt);
 						callback(rpt);
 					})
 					.fail((jqXHR, textStatus)=>{
-						rpt = {success: false, idcliente:'', nombres:'', direccion:'',num_doc:num_doc, msg: 'Problemas de conexion. intente nuevamente en un momento.'};
+						rpt = { success: false, idcliente: "", nombres: "", direccion: "", f_nac: "", num_doc: num_doc, msg: "Problemas de conexion. intente nuevamente en un momento." };
 						// responde(rpt); return;
 						// return rpt;
 						callback(rpt);

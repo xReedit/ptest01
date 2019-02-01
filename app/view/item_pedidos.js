@@ -348,7 +348,17 @@ function xSumaCantArray(ArrySum){
 		if(ArrySum[i] == null){continue;}
 		$.map(ArrySum[i], function(n, z) {
 			if (typeof n === "object"){
-				var xprecio_p=n.precio_print;
+				const _xprecio_unitario = parseFloat(n.precio);
+				const _xcantidad = parseFloat(n.cantidad);
+				const importe_calculado_unitario = _xcantidad * _xprecio_unitario;
+
+				let xp_print = isNaN(parseFloat(n.precio_print)) ? 0 : parseFloat(n.precio_print);
+				xp_print = xp_print === 0 ? _xprecio_unitario : xp_print;
+				
+				// si el precio calculado de und * punitario es menor que ptotal quiere decir que viene de desajuntar
+
+				let xprecio_p = xp_print > importe_calculado_unitario ? _xprecio_unitario.toFixed(2) : xp_print.toFixed(2);
+
 				if(xprecio_p === ""){
 					// xprecio_p = n.precio_total;
 					xprecio_p = n.precio_total_calc; // cambio para calcular las reglas de carta

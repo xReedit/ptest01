@@ -17,8 +17,9 @@
     <script>
         var xThisComComprobante;
 
-        function getAllComprobantes() {
-            $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=2'})
+        function getAllComprobantes() {            
+            const _op = xThisComComprobante.op === 1 ? '2' : '201'; // 201=no enlasa con tipo_comprobante_seriie
+            $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op='+_op})
 	        .done( function (dtValues) {
                 dtValues=$.parseJSON(dtValues);	
                 xThisComComprobante.list=dtValues.datos;
@@ -36,6 +37,10 @@
         Polymer({
         is: 'x-comp-find-comprobante',
         properties: {
+            op:{
+                type:Number,
+                value:1
+            },
             list: [],
             comprobantes: {
                 type: Object,

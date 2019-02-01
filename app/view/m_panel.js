@@ -109,6 +109,7 @@ function xOpenPage(xop, parametro){
 		case 23:xruta='/zona_despacho';break;
 		case 24:xruta='/items_borrados';break;
 		case 25: xruta = '/facturador'; break;
+		case 26: xruta = '/c_electronico'; break;
 	}
 	xruta=xruta+parametro;
 	router.go(xruta+parametro);

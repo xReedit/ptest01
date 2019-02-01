@@ -144,9 +144,13 @@
 			$correlativo_dia=$bd->xDevolverUnDato($sql);
 			$correlativo_dia++;
 
+			// si es delivery y si trae datos adjuntos -- json-> direccion telefono forma pago
+			$json_datos_delivery=array_key_exists('arrDatosDelivery', $x_array_pedido_header) ? $x_array_pedido_header['arrDatosDelivery'] : '';
+			
+
             // guarda pedido
-            $sql="insert into pedido (idorg, idsede, idcliente, fecha,hora,fecha_hora,nummesa,numpedido,correlativo_dia,referencia,total,total_r,solo_llevar,idtipo_consumo,idcategoria,reserva,idusuario,subtotales_tachados,estado)
-					values(".$_SESSION['ido'].",".$_SESSION['idsede'].",".$idc.",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),now(),'".$x_array_pedido_header['mesa']."','".$numpedido."','".$correlativo_dia."','".$x_array_pedido_header['referencia']."','".$importe_subtotal."','".$importe_total."',".$solo_llevar.",".$tipo_consumo.",".$x_array_pedido_header['idcategoria'].",".$x_array_pedido_header['reservar'].",".$_SESSION['idusuario'].",'". $x_array_pedido_header['subtotales_tachados'] ."',".$estado_p.")";
+            $sql="insert into pedido (idorg, idsede, idcliente, fecha,hora,fecha_hora,nummesa,numpedido,correlativo_dia,referencia,total,total_r,solo_llevar,idtipo_consumo,idcategoria,reserva,idusuario,subtotales_tachados,estado,json_datos_delivery)
+					values(".$_SESSION['ido'].",".$_SESSION['idsede'].",".$idc.",DATE_FORMAT(now(),'%d/%m/%Y'),DATE_FORMAT(now(),'%H:%i:%s'),now(),'".$x_array_pedido_header['mesa']."','".$numpedido."','".$correlativo_dia."','".$x_array_pedido_header['referencia']."','".$importe_subtotal."','".$importe_total."',".$solo_llevar.",".$tipo_consumo.",".$x_array_pedido_header['idcategoria'].",".$x_array_pedido_header['reservar'].",".$_SESSION['idusuario'].",'". $x_array_pedido_header['subtotales_tachados'] ."',".$estado_p.",'".$json_datos_delivery."')";
             $id_pedido=$bd->xConsulta_UltimoId($sql);
                 
 		}else{
@@ -437,13 +441,14 @@
 		$idclie=$datos_cliente['idcliente'];
 		$num_doc=$datos_cliente['num_doc'];
 		$direccion=$datos_cliente['direccion'];
+		$f_nac=$datos_cliente['f_nac'];
 		// $idpedidos=$x_arr_cliente['i'] == '' ? $x_idpedido : $x_arr_cliente['i'];
 
 		if($idclie==''){
 			if($nomclie==''){//publico general
 				$idclie=0;
 			}else{
-				$sql="insert into cliente (idorg,nombres,direccion,ruc)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$num_doc."')";
+				$sql="insert into cliente (idorg,nombres,direccion,ruc,f_nac)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$num_doc."','".$f_nac."')";
 				$idclie=$bd->xConsulta_UltimoId($sql);
 			}
 		} else {

@@ -12,12 +12,7 @@
     <!--
       <paper-button raised onclick="dialog_nuevo_pedido.open()">open</paper-button>
     -->
-    <paper-dialog
-      id="dialog_nuevo_pedido"
-      entry-animation="scale-up-animation"
-      exit-animation="fade-out-animation"
-      with-backdrop
-    >
+    <paper-dialog id="dialog_nuevo_pedido" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
       <h2>Nuevo Pedido</h2>
       <p>
         Tiene un pededido pendiente de confirmacion. Si continua se borrara el
@@ -35,14 +30,24 @@
       </div>
     </paper-dialog>
 
-    <paper-dialog
-      id="dialog_erro_print"
-      modal
-      style="min-width: 330px;"
-      modal
-      entry-animation="scale-up-animation"
-      exit-animation="fade-out-animation"
-    >
+    <paper-dialog id="dialog_datos_delivery" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+      <h2>Datos adicionales</h2>
+      <span>Para la entrega del delivery</span>
+      <hr>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRE" onChange="conMayusculas(this)" id="txt_delivery_nombre" espaciar required>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="txt_delivery_direccion" espaciar required>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="txt_delivery_telefono" espaciar required>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="PAGA CON" onChange="conMayusculas(this)" id="txt_delivery_paga" espaciar required>
+      <br>
+      <br>
+      <div class="buttons">
+        <button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+        <button class="xBoton2 xVerde" onclick="xAdjuntarDatosDelivery()">Listo, adjuntar</button>
+      </div>
+    </paper-dialog>
+
+
+    <paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
       <h4>Error en impresora</h4>
       <p id="print_error"></p>
       <br />
@@ -218,6 +223,8 @@
       width: 10px;
       text-align: right;
     }
+
+    .btn_apunte_deliver { margin-top: -10px;}
   </style>
 </dom-module>
 <style type="text/css">
@@ -231,6 +238,7 @@
     width: 10px;
     text-align: right;
   }
+  .btn_apunte_deliver { margin-top: -10px;}
 </style>
 
 <script
@@ -258,6 +266,7 @@
     xNumMesaLoadCuenta,
     xnum_mesa_valido = false, //valida mesa //numero de mesa valido
     xNumMesasBd, //numero de mesas de la sede
+    arrDatosAdjuntoDelivery={}, // datos adjunto para delivery
     guardandoPedido = false;
   //var xidTipoConsumo;
   //var xidItem;
@@ -356,6 +365,25 @@
       window.localStorage.setItem("::app3_sys_dta_rp", $(this).val());
     });
 
+    $('.xPasarEnter2').on('keyup', function (e) {
+      var code = e.which;
+      if (code == 13 || code == 186) {
+        var inputs = $('input'); // storage a array of Inputs
+        var a = inputs.index(document.activeElement);
+        if (inputs[a + 1] !== null) {
+          var nextBox = inputs[a + 1];
+          if (nextBox === undefined) { return }
+          if (nextBox.disabled) { nextBox = inputs[a + 2] }
+
+          if (nextBox == undefined) { return; }
+          nextBox.focus();
+          nextBox.select();
+          //event.preventDefault();
+        }
+        return false;
+      }
+    });
+
     xPopupLoad = document.getElementById("xLoad");
   }
 
@@ -407,6 +435,7 @@
   }
   function xNuevoPedidoMP() {
     // window.localStorage.setItem("::app3_sys_descat",'');
+    arrDatosAdjuntoDelivery={};
     window.localStorage.setItem("::app3_sys_dta_nmp", "");
     window.localStorage.setItem("::app3_sys_dta_rp", "");
     window.localStorage.removeItem("::app3_sys_dta_pe");
@@ -470,21 +499,8 @@
       xReservar = 1;
     }
 
-    /*xsolo_llevar=0;
-	var xcount_seccion=0;
-	$("#xBody .xEncabezadoTpCon").each(function(index,element){
-		xcount_seccion++;
-		if(index==0){xIdTpc_pe=$(element).attr('data-idtpc');}
-		if($(element).attr('data-col')=='colapse2'){xsolo_llevar=1;}
-	})
-	if(xcount_seccion>1){xsolo_llevar=0;}*/
     xVerificarSiSoloLLevar();
 
-    /*if(xsolo_llevar==0){//pide mesa
-		if(xmesa==''){alert('Indique numero de mesa. Coloque cero(0) si no corresponde'); xPopupLoad.xclose(); return;}else{
-			if(xnum_mesa_valido==false){alert('Numero de mesa no es valido.');  xPopupLoad.xclose(); return;}
-		}
-	}*/
 
     if (tt_pedido == 0) {
       return;
@@ -515,7 +531,8 @@
       idcategoria: xidCategoriaSeccion,
       mesa: xmesa,
       reservar: xReservar,
-      tipo_consumo: xIdTpc_pe
+      tipo_consumo: xIdTpc_pe,
+      arrDatosDelivery: JSON.stringify(arrDatosAdjuntoDelivery)
     };
     xarr_body = xArrayPedidoObj;
     // xarr_subtotales = xGeneralArraySubTotales;
@@ -547,7 +564,8 @@
         num_pedido: xNumPedido,
         reservar: 0,
         solo_llevar: 0,
-        correlativo_dia: xCorrelativo_dia
+        correlativo_dia: xCorrelativo_dia,
+        arrDatosDelivery: arrDatosAdjuntoDelivery
       };
 
       if (xVerificarImprimirComanda == true) {
@@ -597,6 +615,7 @@
         _style = "",
         _id = "",
         _colorImporte = "";
+      
       if (element.descripcion.toUpperCase() === "TOTAL") {
         _id = "tt_importe_pagar_t";
         _fontSizeTitulo = "";
@@ -611,27 +630,8 @@
         _style = 'style="padding-top:1px;padding-bottom:1px;"';
       }
 
-      htmlSubtotales =
-        htmlSubtotales +
-        '<tr class="total">' +
-        '<td colspan="3" ' +
-        _style +
-        '><p class="' +
-        _fontSizeTitulo +
-        ' xColorRow_Plomo">' +
-        titulo +
-        "</p></td>" +
-        '<td align="right" ' +
-        _style +
-        '><p class="' +
-        _fontSize +
-        " " +
-        _colorImporte +
-        '" id="' +
-        _id +
-        '">' +
-        element.importe +
-        "</p></td>" +
+      htmlSubtotales = htmlSubtotales +'<tr class="total">' +'<td colspan="3" ' + _style +'><p class="' +_fontSizeTitulo +' xColorRow_Plomo">' +titulo +"</p></td>" +
+        '<td align="right" ' +_style +'><p class="' +_fontSize +" " +_colorImporte +'" id="' +_id +'">' +element.importe +"</p></td>" +
         "</tr>";
     });
 
@@ -694,18 +694,12 @@
               return;
             }
             if (n.indicaciones != undefined && n.indicaciones != "") {
-              xIndicacionItem =
-                '<span class="xPedidoItem_indicaciones">(' +
-                n.indicaciones +
-                ")</span>";
+              xIndicacionItem ='<span class="xPedidoItem_indicaciones">(' + n.indicaciones +")</span>";
             }
 
             xid_sec_index = n.idseccion_index;
             if (xArraySeccion[xid_sec_index] == null) {
-              xArraySeccion[xid_sec_index] =
-                '<tr><td colspan="3" class="xPedidoTitulo xSinBorde xBold">' +
-                n.des_seccion +
-                "</td></tr>";
+              xArraySeccion[xid_sec_index] = '<tr><td colspan="3" class="xPedidoTitulo xSinBorde xBold">' + n.des_seccion + "</td></tr>";
             }
             //idcategoria en pedido
             xidCategoriaSeccion = n.idcategoria;
@@ -739,23 +733,23 @@
               '<td class="xInvisible" id="row_tb_procede">' + n.procede + "</td>" + //tabla de procedencia
               '<td class="xInvisible" data-ColumName="idpedido">?p</td>'+"</tr>"
             );
-            xArraySeccion[xid_sec_index] =
-              xArraySeccion[xid_sec_index] + xCadenaItemArray;
+            xArraySeccion[xid_sec_index] = xArraySeccion[xid_sec_index] + xCadenaItemArray;
             xHayPedido = 1;
             xCantItems = parseInt(xCantItems) + parseInt(n.cantidad);
           }
         }
       });
       if (xCadenaItemArray != "") {
+        const isDelivery = xArrayPedidoObj[i].des.toLowerCase() === "delivery" ? true : false;
+        const icoApuntosDelivery = isDelivery ? '<paper-icon-button title="Datos Adicionales" class="xDerecha btn_apunte_deliver" icon="icons:attach-file" onclick="dialog_datos_delivery.open()"></paper-icon-button>' : '';
+
         xIdColapse = "colapse" + xArrayPedidoObj[i].id;
-        xEncabezadoCollapse =
-          '<div><div class="xEncabezadoTpCon noselect" data-idtpc="' +
+        xEncabezadoCollapse = '<div><div class="xEncabezadoTpCon noselect" data-idtpc="' +
           xArrayPedidoObj[i].id +
           '" data-col="' + xIdColapse +
-          '" data-colDes="' + xArrayPedidoObj[i].des +
-          '" onclick="toggle(this);">' + xArrayPedidoObj[i].des + '<div class="xEncabezadoTpCon_Cant">' +
-          xCantItems +
-          '</div><input id="optionOther"  class="xcheck_item" type="radio" name="option" value="other"></div>';
+          '" data-colDes="' + xArrayPedidoObj[i].des + //aca
+          '" onclick="toggle(this);">' + xArrayPedidoObj[i].des +'<div class="xEncabezadoTpCon_Cant">' + xCantItems +
+          '</div>' + icoApuntosDelivery + '<input id="optionOther"  class="xcheck_item" type="radio" name="option" value="other"></div>';
 
         for (a in xArraySeccion) {
           xCadenaCollapse = String(xCadenaCollapse + xArraySeccion[a]);
@@ -1105,6 +1099,18 @@
   }
   function xRecargarPedidoArray() {
     xLoadMipedido();
+  }
+
+
+  function xAdjuntarDatosDelivery() {
+    arrDatosAdjuntoDelivery = {
+      nombre: txt_delivery_nombre.value,
+      direccion: txt_delivery_direccion.value,
+      telefono: txt_delivery_telefono.value,
+      paga_con: txt_delivery_paga.value,
+    }
+
+    dialog_datos_delivery.close();
   }
   //$(obj).parent().parent().addClass('selected').siblings().removeClass("selected");
   Polymer({

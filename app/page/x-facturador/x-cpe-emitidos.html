@@ -123,8 +123,7 @@
                             <br>
                             <hr>
                             <div>                                
-                                <input type="text" class="xMiInput xfont18" style="width:100%; bottom: -3px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos_re()"
-                                    id="txt_buscar_re" enlinea>
+                                <input type="text" class="xMiInput xfont18" style="width:100%; bottom: -3px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos_re()" id="txt_buscar_re" enlinea>
                             </div>
                             <br><br>
                             <table width="100%" id="tb_list_resumen" class="xtable5">
@@ -269,7 +268,7 @@
     }
 
     function xfiltrarDatos() {
-        if ( xThisCpe.$.txt_buscar.value.length < 3 ) return;
+        // if ( xThisCpe.$.txt_buscar.value.length < 3 ) return;
         if ( xe_debounce ) return;
         xe_debounce = true;
         clearTimeout(xdebounce);

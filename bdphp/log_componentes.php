@@ -28,6 +28,10 @@
             ";            
             $bd->xConsulta($sql);
             break;
+        case '201':// solo de tipo_comprobantes
+            $sql="SELECT * from tipo_comprobante where estado=0";
+            $bd->xConsulta($sql);
+            break;
         case 3:// load categoria
             $sql="SELECT idcategoria, descripcion FROM categoria WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND estado=0";
             $bd->xConsulta($sql);

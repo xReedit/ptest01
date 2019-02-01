@@ -3,6 +3,18 @@
 	<script src="../../js/d3.min.js"></script>
 	<script src="../../js/c3.min.js"></script>
 	<template>
+		<paper-dialog id="dialog_despachar"  style="max-width: 350px; z-index: 500;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xtxtCentro">
+				<img src="../../images/_dlg_remove.gif" alt="" width="150px">
+			</div>
+			<p>Se marcara todos los pedidos hasta este momento como despachados. Si tiene pedidos pendientes, no se mostraran en ninguna zona de despacho.</p>
+			<br>
+			<div class="buttons">
+				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+				<button class="xBoton2 xRojo" onclick="xDespacharTodos();">Si, seguro</button>
+			</div>
+		</paper-dialog>
+
 		<paper-dialog id="dialog_detalle_pd" style="border-radius: 5px; padding:0px; width: 320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<paper-dialog-scrollable style="padding:0px; top:0px; left:0px; overflow-y:auto;">
 				<div id="div_pd_detalle">
@@ -70,6 +82,7 @@
 			<div class="xLinea"></div><br>
 			<div class="xpading_15">
 				<div class="xMarginIz xBoton2 xVerde" onclick="xEstablecerFiltroDespachos();"> Listo Aplicar</div>
+				<div class="xMarginIz xBoton2 xRojo" onclick="dialog_despachar.open()"> Despachar todos</div>
 			</div><br>
 			<div class="xLinea"></div>
 			<div class="xpading_15">
@@ -918,6 +931,13 @@ function closeDrawer_de() {
 function xRefreshMarcador(obj){
 	xColorMarcado=$(obj).attr('data-color');
 	dialog_marcar.close();
+}
+
+function xDespacharTodos() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2109'})
+		.done(function (x) {			
+			dialog_despachar.close();
+		});
 }
 
 Polymer({

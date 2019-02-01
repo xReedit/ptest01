@@ -73,7 +73,7 @@ $nom_us=explode(' ',$_SESSION['nomUs']);
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
 $hora_actual=date('H').':'.date('i').':'.date('s');
 $sum_total=0;
-$num_copias=$xArray_print[0]['num_copias'];
+$num_copias=(int)$xArray_print[0]['num_copias'];
 $cuenta_copias=0;
 
 //configuracion de la impresora //margen font
@@ -93,10 +93,10 @@ $precio='';
 
 while($num_copias>=0){
 	// icono delivery
-	if ( $EsDelivery == 1 ) {
-		$logo_delivery = EscposImage::load($logo_delivery, false);
+	if ($EsDelivery==1) {
+		$_logo_delivery = EscposImage::load($logo_delivery, false);
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> graphics($logo_delivery);
+		$printer -> graphics($_logo_delivery);
 		$printer -> feed();
 	}
 	//icono solo llevar
@@ -162,8 +162,27 @@ while($num_copias>=0){
 	$printer -> text($num_mesa."\n");
 	$printer -> selectPrintMode();
 	$printer -> text("------------------------------------------------\n");
-	$printer -> text($referencia."\n");
-	$printer -> feed();
+	if ( $referencia!="" ){
+		$printer -> text($referencia."\n");
+		$printer -> feed();
+	}
+
+	// si es deliver y si viene datos adjuntos (direccion, telefono, paga con)
+	if ($EsDelivery==1) {
+		if (array_key_exists('arrDatosDelivery', $ArrayEnca) ) {
+			$arrDatosDelivery=$ArrayEnca['arrDatosDelivery'];
+			$printer -> setJustification(Printer::JUSTIFY_LEFT);
+			$printer -> setEmphasis(true);						
+			$printer -> text("DATOS ADJUNTOS DEL DELIVERY:"."\n");			
+			$printer -> selectPrintMode();	
+			$printer -> text("Nombre: ".$arrDatosDelivery['nombre']."\n");
+			$printer -> text("Direccion: ".$arrDatosDelivery['direccion']."\n");
+			$printer -> text("Telefono: ".$arrDatosDelivery['telefono']."\n");
+			$printer -> text("Forma pago: ".$arrDatosDelivery['paga_con']."\n");
+			$printer -> text("------------------------------------------------\n");
+			$printer -> feed();
+		}
+	}
 
 	/* CUERPO , ITEMS*/
 	$si_tiene_item=0;
