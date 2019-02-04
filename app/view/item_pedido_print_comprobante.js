@@ -151,7 +151,8 @@ function xgetComprobanteImpresora(xidDoc) {
 
 	for (var i = 0; i < xDtTipoDoc.length; i++) {
 		//pre-cuenta
-		if(xDtTipoDoc[i].idtipo_otro==-1){xIpPrintDoc=xDtTipoDoc[i].idimpresora; break;}
+		// if(xDtTipoDoc[i].idtipo_otro==-1){xIpPrintDoc=xDtTipoDoc[i].idimpresora; break;}
+		if (xDtTipoDoc[i].idtipo_otro == xidDoc){xIpPrintDoc=xDtTipoDoc[i].idimpresora; break;}
 	};
 	//si existe impresora local // imprime todos los otros documentos en esta impresora local.
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
@@ -183,6 +184,56 @@ function xgetComprobanteImpresora(xidDoc) {
 
     // si existe impresora donde imprimir
     return xpasePrint; 
+}
+
+// devuelve una impresora segun idoc
+function xgetImpresora(xidDoc) {
+	var xArrayImpresoras = xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
+	var xDtTipoDoc = xm_log_get('app3_woIpPrintO');//JSON.parse(window.localStorage.getItem("::app3_woIpPrintO"));
+	var xPrintLocal = window.localStorage.getItem("::app3_woIpPrintLo");
+	xImpresoraPrint = xm_log_get("sede_generales");
+
+	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
+
+
+	var xIpPrintDoc = xidDoc;
+	var xpasePrint = false;
+
+	for (var i = 0; i < xDtTipoDoc.length; i++) {
+		//pre-cuenta
+		// if (xDtTipoDoc[i].idtipo_otro == -1) { xIpPrintDoc = xDtTipoDoc[i].idimpresora; break; }
+		if (xDtTipoDoc[i].idtipo_otro == xidDoc) { xIpPrintDoc = xDtTipoDoc[i].idimpresora; break; }
+	};
+	//si existe impresora local // imprime todos los otros documentos en esta impresora local.
+	if (xPrintLocal != undefined && xPrintLocal != '') {
+		xPrintLocal = $.parseJSON(xPrintLocal);
+		xImpresoraPrint[0].ip_print = xPrintLocal.ip;
+		xImpresoraPrint[0].var_margen_iz = xPrintLocal.var_margen_iz;
+		xImpresoraPrint[0].var_size_font = xPrintLocal.var_size_font
+		xImpresoraPrint[0].local = 1;
+		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
+		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
+		xImpresoraPrint[0].img64 = xPrintLocal.img64;
+		xpasePrint = true;
+	} else {
+		for (var i = 0; i < xArrayImpresoras.length; i++) {
+			if (xArrayImpresoras[i].idimpresora == xIpPrintDoc) {
+				xpasePrint = true;
+				xIpPrintDoc = xArrayImpresoras[i].ip;
+				xImpresoraPrint[0].ip_print = xIpPrintDoc;
+				xImpresoraPrint[0].var_margen_iz = xArrayImpresoras[i].var_margen_iz;
+				xImpresoraPrint[0].var_size_font = xArrayImpresoras[i].var_size_font;
+				xImpresoraPrint[0].local = 0;
+				xImpresoraPrint[0].num_copias = num_copias_all;
+				xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
+				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
+				break;
+			}
+		}
+	}
+
+	const print_return = xpasePrint ? xImpresoraPrint : null;
+	return print_return;
 }
 
 

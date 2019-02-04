@@ -443,6 +443,9 @@
 						$sql_seccion="insert into seccion (idorg,idsede,descripcion,sec_orden)values(".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$seccion['des_seccion']."',".$seccion['sec_orden'].")";
 						$id_seccion=$bd->xConsulta_UltimoId($sql_seccion);
 					}
+				} else if ( $seccion['modificado'] ) {
+					$sql_update_seccion = "update seccion set descripcion='".$seccion['des_seccion']."' where idseccion=".$id_seccion;
+					$bd->xConsulta_NoReturn($sql_update_seccion);
 				}
 				// echo $id_seccion.",".$seccion['des_seccion']." * ".$contador_row." | ";
 				
@@ -456,8 +459,8 @@
 						if($id_item==''){
 							//comprueba nombre que coicidan en la bd si no selecciono item con id
 							$sql="select iditem as d1 from item where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and descripcion='".$item['des_item']."'";
-							echo json_encode($item);
-							echo $sql;
+							// echo json_encode($item);
+							// echo $sql;
 							$id_item=$bd->xDevolverUnDato($sql);
 							if($id_item==''){
 								//guarda nuevo item
@@ -467,10 +470,15 @@
 								$id_item=$bd->xConsulta_UltimoId($sql);
 							}
 							else{//actualizar
-								$sql_update_item="update item set detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_carta;
+								$sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item;
+								// echo $sql_update_item;
 								$bd->xConsulta_NoReturn($sql_update_item);
 							}
-						}
+						} else {//actualizar
+								$sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item.";";
+								$bd->xConsulta_NoReturn($sql_update_item);
+								// echo $sql_update_item;
+							}
 
 						$id_carta_lista=$item['id_carta_lista'];
 						// if($id_carta_lista==""){$id_carta_lista=$_SESSION['ido'].$_SESSION['idsede'].$id_item;}						

@@ -210,7 +210,10 @@ function xInicarta(){
 	});
 
 	$(document).change('.txt_modifica_bd', function (e) {		
-		$(e.target.parentElement.parentElement).attr('data-modificado', '1');		
+		$(e.target.parentElement.parentElement).attr('data-modificado', '1');	
+	});
+	$(document).change('.txt_modifica_bd_sec', function (e) {		
+		$(e.target.parentElement).attr('data-modificado', '1');	
 	});
 
 	
@@ -341,13 +344,15 @@ function xGuardarCambios(){
 	//xGuardarCarta(function(xid){
 		//xIdCarta=xid;
 		$(".xSeccion").each(function(index, element){
-			xObjSeccion=$(element).find("#seccion_des");
+			xObjSeccion=$(element).find("#seccion_des");			
 			var xidSeccion=$(xObjSeccion).attr('data-id');
 			var xdes_seccion=xObjSeccion.val();
+			const xseccion_modificado = parseInt(element.dataset.modificado) === 1 ? true : false;
+
 			xsec_orden=index+1;
 
 			if(xidSeccion==undefined){xidSeccion='';}
-			xArraySeccionItem[index]={'des_seccion':xdes_seccion,'id_seccion':xidSeccion,'sec_orden':xsec_orden}
+			xArraySeccionItem[index]={'des_seccion':xdes_seccion,'id_seccion':xidSeccion,'sec_orden':xsec_orden, 'modificado': xseccion_modificado}
 			$(element).find('.tb_item tr.row').each(function(indexI, item){
 				var xidItem=$(item).attr('data-id');
 				const x_se_a_modificado = parseInt($(item).attr('data-modificado')) === 0 ? false : true;
@@ -402,6 +407,7 @@ function xGuardarCambios(){
 		.done( function (xid) {
 			xIdCartaAnterior = xid;
 			xIdCarta = xid;			
+			xLoadCarta();
 		})
 	});
 
@@ -571,10 +577,12 @@ function xAddRowItem(obj){
 		}
 		else{
 			var xCadenaNoRow='<tr class="row nomarcar" data-id="'+xitem_id+'" data-nombus="'+xitem_d+'">'+
-			'<td data-id="'+xseccion_id+'" id="td_des"><span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+
-			'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
-			'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
-			xitem_d+'</td>'+
+			'<td data-id="'+xseccion_id+'" id="td_des" onclick="xModRow(this,3);">'+
+				'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+
+				'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
+				'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
+				xitem_d+
+			'</td>'+
 			'<td align="right" data-ColumName="precio" onclick="xModRow(this,1);" id="td_precio">'+xMoneda(xitem_p)+'</td>'+
 			'<td align="center" data-ColumName="cantidad" class="cantidad_sum" onclick="xModRow(this,2);" id="td_cant">'+xitem_c+'</td>'+
 			'<td class="xInvisible" id="td_detalle"></td>'+
@@ -592,8 +600,9 @@ function xAddRowItem(obj){
 }
 function xModRow(obj,tipo){
 	var xvalObj=$(obj).text();
+	const txt_aling = tipo != 3 ? 'xAlinearDerecha' : '';
 	if($(obj).find('input').length>0){$(obj).find('input').select();return;}
-	$(obj).html('<input type="text" class="xMiInput xPasarEnter2 xAlinearDerecha" onblur="xModBlur(this,'+tipo+')" value="'+xvalObj+'" select>').trigger('create');
+	$(obj).html('<input type="text" class="xMiInput xPasarEnter2 '+ txt_aling +'" onblur="xModBlur(this,'+tipo+')" value="'+xvalObj+'" select>').trigger('create');
 	$(obj).find('input').select();
 }
 function xModBlur(obj,tipo){
@@ -663,8 +672,8 @@ function xLoadListadoCartaActual(){
 			xClassCheckPrint='xImgCheck';
 			if(xSeccionArray[z].print==1){xClassCheckPrint='xImgNoCheck'}
 			if(xSeccionArray[z].ver_stock_cero==1){xClassCheckPrintCero='xImgNoCheck'}
-			xCadenaSeccionList=String('<div class="xSeccion"><br><br>'+
-			'<input type="text" value="'+xSeccionArray[z].des+'" data-dessec="'+ xSeccionArray[z].des+'" tabindex="1" data-id="'+xidSeccionArray+'" data-print="'+xSeccionArray[z].print+'" style="width:100%" class="xMiInput xfont20 xPasarEnter2 des_seccion" placeholder="SECCION" onChange="conMayusculas(this)" id="seccion_des">'+
+			xCadenaSeccionList=String('<div class="xSeccion" data-modificado="0"><br><br>'+
+			'<input type="text" value="'+xSeccionArray[z].des+'" data-dessec="'+ xSeccionArray[z].des+'" tabindex="1" data-id="'+xidSeccionArray+'" data-print="'+xSeccionArray[z].print+'" style="width:100%" class="xMiInput xfont20 xPasarEnter2 des_seccion txt_modifica_bd_sec" placeholder="SECCION" onChange="conMayusculas(this)" id="seccion_des">'+
 			'<br><div class="xCursor xDerecha xfont12">'+
 				'<img src="../../images/_prit_2.png" style="margin-left:7px; margin-top:3px;" class="'+xClassCheckPrint+'" onclick="xCheckImgPrint(this)" title="Mostrar en impresion" id="xseccio_print">'+
 				'<img src="../../images/_see_2.png" style="margin-left:7px; margin-top:3px;" class="'+xClassCheckPrintCero+'" onclick="xVerSiStockCero(this)" title="Mostrar items si su stock es cero" id="xseccio_ver_si_stock_cero">'+
@@ -691,10 +700,12 @@ function xLoadListadoCartaActual(){
 			for (var i = 0; i < xdtCAct.length; i++) {
 				if(xidSeccionArray!=xdtCAct[i].idseccion){continue;}
 				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xdtCAct[i].idcarta_lista +'" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
-				'<td data-id="'+xidSeccionArray+'" id="td_des"><span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xBorrarSeccion(this);"></span>'+
-				'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
-				'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
-				xdtCAct[i].des_item+'</td>'+
+				'<td data-id="'+xidSeccionArray+'" id="td_des" onclick="xModRow(this,3);" class="txt_modifica_bd">'+
+					'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xBorrarSeccion(this);"></span>'+
+					'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
+					'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
+					xdtCAct[i].des_item+
+				'</td>'+
 				'<td align="right" data-ColumName="precio" class="txt_modifica_bd" onclick="xModRow(this,1);" id="td_precio">'+xdtCAct[i].precio+'</td>'+
 				'<td align="center" data-ColumName="cantidad" class="cantidad_sum txt_modifica_bd" onclick="xModRow(this,2);" id="td_cant">'+xdtCAct[i].cantidad+'</td>'+
 				'<td class="xInvisible" id="td_detalle">'+xdtCAct[i].detalle+'</td>'+
@@ -796,6 +807,8 @@ function xCargarEnInputItem(){
 function xCargarEnImputSeccion(){
 	var xdtSec=xThisCarta.dt_seccion;
 	var xObjTxtItemCat=$(".des_seccion:last");
+	const div_sec = $(xObjTxtItemCat).parent();
+
 		xObjTxtItemCat.autocomplete({
 			autoFocus:true,
 			source:xdtSec,
@@ -807,6 +820,8 @@ function xCargarEnImputSeccion(){
 		    },
 		    focus:function(event, ui){return false;},
 		    change:function( event, ui ) {
+				const xseccion_modificado = $(div_sec).attr('data-modificado') !== undefined ? parseInt($(div_sec).attr('data-modificado')) === 1 ? true : false : false; // determina si la seccion es modificada o es nueva
+				if ( xseccion_modificado ) {return false;}
 		    	if(ui.item===null){
 		    		xObjTxtItemCat.attr('data-value',"");
 		    		xObjTxtItemCat.attr('data-id',"");

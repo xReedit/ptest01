@@ -37,6 +37,9 @@ try {
 $connector->write(Printer::GS.'L'.$var_margen_iz);
 $printer -> setFont($var_size_font);
 
+/// tamaño de letra de la comanda
+$size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $xArray_print[0]) ? false : true;
+
 if($logo_post!=''){
 	$logo = EscposImage::load($logo_post, false);
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);

@@ -352,8 +352,14 @@ function xSumaCantArray(ArrySum){
 				const _xcantidad = parseFloat(n.cantidad);
 				const importe_calculado_unitario = _xcantidad * _xprecio_unitario;
 
-				let xp_print = isNaN(parseFloat(n.precio_print)) ? 0 : parseFloat(n.precio_print);
-				xp_print = xp_print === 0 ? _xprecio_unitario : xp_print;
+				// let xp_print;
+				// if (n.precio_print === '') { xp_print = n.precio_total_calc; } // cuando es igual a vacio viene de una regla de carta
+				
+				let xp_print = n.precio_print === '' ? parseFloat(n.precio_total_calc) : parseFloat(n.precio_print);
+				// xp_print = xp_print === 0 ? _xprecio_unitario : xp_print;
+				
+				// let xp_print = isNaN(parseFloat(n.precio_print)) ? 0 : parseFloat(n.precio_print);
+				// xp_print = xp_print === 0 ? _xprecio_unitario : xp_print;
 				
 				// si el precio calculado de und * punitario es menor que ptotal quiere decir que viene de desajuntar
 

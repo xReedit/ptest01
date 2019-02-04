@@ -83,6 +83,10 @@ $var_margen_iz=intLowHigh($var_margen_iz, 2);
 $local = (int)$xArray_print[0]['local'] || 0;
 //			
 
+/// tamaño de letra de la comanda
+$size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $xArray_print[0]) ? false : true;
+
+
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
 $printer -> setFont($var_size_font);
 //---------------////////////////
@@ -220,13 +224,13 @@ while($num_copias>=0){
 			if(is_array($subitem)==false){continue;}
 			if($subitem['cantidad']==0){continue;}			
 			
-			/*titulo tipo consumo*/		
+			/*titulo tipo consumo*/			
 			if($si_tiene_item==0){			
 				$printer -> setJustification(Printer::JUSTIFY_CENTER);								
 				$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 				$printer -> selectPrintMode(Printer::MODE_UNDERLINE);
 				$printer -> setEmphasis(true);			
-				if($cuenta_tpc>0){$printer -> text("\n\n");}
+				if($cuenta_tpc>0){$printer -> text("\n\n");}				
 				$printer -> text("*** ".$tipo_consumo." ***\n");
 				//$printer -> text("------------------------------------------------\n");
 				$printer -> setEmphasis(false);
@@ -236,11 +240,18 @@ while($num_copias>=0){
 
 
 			$si_tiene_item=1;
+
 			$printer -> setJustification(Printer::JUSTIFY_LEFT);
 			$printer -> setEmphasis(true);	
+			
+			if ( $size_font_comanda_tall ) {
+				$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
+				$printer -> setTextSize(2, 1);	
+			}
+			
 			if($seccion!=$subitem["des_seccion"]){			
 				if($cuenta_row>0){$printer -> text("\n");}	
-				$seccion=$subitem["des_seccion"];
+				$seccion=$subitem["des_seccion"];				
 				$printer -> text($seccion."\n");
 				$printer -> text("------------------------------------------------\n");	
 				$printer -> setEmphasis(false);
@@ -256,6 +267,11 @@ while($num_copias>=0){
 			$des_part2='';
 			$des_part3='';
 			if(strlen($r_subitem) > 35){
+
+				// para que corte en el ultimo espacio en blanco
+				// $pos_last_space =  $strrpos
+
+
 				$des_part2='  '.substr($r_subitem,35,strlen($r_subitem));
 				$r_subitem=substr($r_subitem,0,35)."-";			
 			}
@@ -266,9 +282,14 @@ while($num_copias>=0){
 			//$r_subitem = strlen($r_subitem) > 35 ? substr($r_subitem,0,35)."..." : $r_subitem;
 
 			$sum_total=(float)$sum_total+(float)$precio;
-			$printer -> text(new item($r_subitem, $precio));
+			//$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
+			//$printer -> setTextSize(2, 1);		
+			// $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);	
+			$printer -> text(new item($r_subitem, $precio));			
 			if($des_part2!=''){$printer -> text(new item($des_part2, ''));}
 			if($des_part3!=''){$printer -> text(new item($des_part3, ''));}
+			$printer -> selectPrintMode();
+			// $printer -> setTextSize(1, 1);
 		}	
 	}
 

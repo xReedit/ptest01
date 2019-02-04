@@ -97,7 +97,8 @@
 			                 <input type="text" class="xMiInput" data-valor="total" placeholder="Total" id="TxtTotal" disabled encendido>
 			            </div>
 			            <div id="xTituloRpt">
-			            </div>
+						</div>
+						<div id="xTituloRpt2"></div>
 
 			            </form><br>
 			            <div id="btns_cierre">
@@ -142,6 +143,7 @@
 <script type="text/javascript" src="../../view/config.const.js"></script>
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
+<script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
 <script>
 var xThisCaja;
 var xMontoTotalCaja;
@@ -380,21 +382,30 @@ function xIniArraysPrint(){
 	xArrayImpresoras=xm_log_get('app3_woIpPrint');// $.parseJSON(window.localStorage.getItem("::app3_woIpPrint"));
 
 	//obtener impresora para cierre
-	for (a in xDtTipoDoc) {
-		if(xDtTipoDoc[a].idtipo_otro==-3){xIpPrintDoc=xDtTipoDoc[a].idimpresora; break;}
-	};
-	for (b in xArrayImpresoras) {
-		if(xIpPrintDoc==xArrayImpresoras[b].idimpresora){xIpPrintDoc=xArrayImpresoras[b].ip;xidPrint=b;}
-	};
+	// for (a in xDtTipoDoc) {
+	// 	if(xDtTipoDoc[a].idtipo_otro==-3){xIpPrintDoc=xDtTipoDoc[a].idimpresora; break;}
+	// };
+	// for (b in xArrayImpresoras) {
+	// 	if(xIpPrintDoc==xArrayImpresoras[b].idimpresora){xIpPrintDoc=xArrayImpresoras[b].ip;xidPrint=b;}
+	// };
 
-	xArrayEncabezadoCierre.push({'ip_print':xIpPrintDoc, 'logo':xDtPrint[0].logo,'detalle_cierre':xdetall_cierre,'titulo':'CIERRE DE CAJA','var_margen_iz':xArrayImpresoras[xidPrint].var_margen_iz, 'var_size_font':xArrayImpresoras[xidPrint].var_size_font})
+	const impresora = xgetImpresora(-3);
+	if (impresora == null ) {
+		xRpt = '<a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';
+		$('#xTituloRpt2').html(xRpt);
+		alert('No se selecciono ninguna impresora para este documento');
+		return false;
+	}
+	// xArrayEncabezadoCierre.push({'ip_print':xIpPrintDoc, 'logo':xDtPrint[0].logo,'detalle_cierre':xdetall_cierre,'titulo':'CIERRE DE CAJA','var_margen_iz':xArrayImpresoras[xidPrint].var_margen_iz, 'var_size_font':xArrayImpresoras[xidPrint].var_size_font})
+	xArrayEncabezadoCierre.push({ 'ip_print': impresora[0].ip, 'logo': xDtPrint[0].logo, 'detalle_cierre': xdetall_cierre, 'titulo': 'CIERRE DE CAJA', 'var_margen_iz': impresora[0].var_margen_iz, 'var_size_font': impresora[0].var_size_font })
+	return true;
 }
 
 function xArmarArrayPrint(){
 	xPopupLoad.xopen();
 	xPopupLoad.titulo="Obteniendo Datos...";
 
-	xIniArraysPrint()
+	if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
 
 	xArrayCierrePrint=new Array();
 	xArrayCierrePrint.push({'des':'VENTAS', 't1':'', 't2':'','t3':''});
@@ -484,6 +495,7 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 								const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
 
 								if (!isFacturacionElectronica) {
+									xPopupLoad.xclose();
 									return;
 								}
 								
