@@ -12,15 +12,19 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	let rptPrint = {}
 	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = false; return rptPrint;} // ninguno no imprime
 	
-    // busca impresora donde imprimir
-    if (!xgetComprobanteImpresora(xidDoc)) {
-		rptPrint.imprime = false;
-    	return rptPrint;
+	// busca impresora donde imprimir
+	if (showPrint) {
+		if (!xgetComprobanteImpresora(xidDoc)) {
+			rptPrint.imprime = false;			
+			// return rptPrint;
+		}
 	}
 	// si no viene datos return false
 
     if(xArrayCuerpo.length==0){
 		rptPrint.imprime = false;
+		rptPrint.ok = false;
+		rptPrint.msj = 'Los datos del comprobante no son correctos.';
 		return rptPrint;
 	}
 
@@ -34,7 +38,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	xArraySubTotales[index_total].importe_letras = numeroALetras(total_pagar);
 
 	//comprobante electronico // ponemos el pie de pagina para el comprobante
-	xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante;
+	if (showPrint) { xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante; }	
 
 	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
 	if (!rptPrint.ok) { // si el documento electronico no es valido
@@ -260,6 +264,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	var xcuentaSeccionesImpresas = 0;
 	var xCuentaImpresorasEvaluadas = 0;
 	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
+	const var_size_font_tall_comanda = xImpresoraPrint[0].var_size_font_tall_comanda;
 	
 	//si existe impresora local // saca una copia de todo el pedido
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
@@ -314,6 +319,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;
 		xImpresoraPrint[0].local = 0;		
 		xImpresoraPrint[0].num_copias = num_copias_all;
+		xImpresoraPrint[0].var_size_font_tall_comanda = var_size_font_tall_comanda;
 		xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 		xImpresoraPrint[0].img64 = xArrayImpresoras[z].img64;		
 		if (xArrayImpresoras[z].img64 === "0") { xImpresoraPrint[0].logo64 = '';}

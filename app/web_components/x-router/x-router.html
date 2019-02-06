@@ -1,6 +1,10 @@
+<script src="../web_components/webcomponentsjs/webcomponents-lite.js"></script>
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../app-router/app-router.html">
+
 <dom-module is='x-router'>
 	<!--mode="auto|pushstate|hash"-->
-	<link rel="import" href="../polymer/polymer.html">
+	
 	<template>
 		<app-router mode="auto|pushstate|hash">
 			<app-route path="/home" import="x-home.html"></app-route>
@@ -54,6 +58,10 @@ function xIniRouter(){
 
 Polymer({
 	is:'x-router',
+	_go: function(a) {
+		console.log(a);
+		router.go(a);
+	},
 	attached:function(){
     	xIniRouter();
     }

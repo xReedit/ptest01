@@ -1,5 +1,5 @@
 var xh_sys,
-    xLamarVoz=0,
+    // xLamarVoz=0,
     xIdUsuario="",
     xNomU,
     xNomUsario,
@@ -15,6 +15,16 @@ var xh_sys,
 //xTonoLLamada='notifica1',
 //router,
 
+window.onerror = function(error, url, line) {
+  console.log(error);
+  // controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
+};
+window.addEventListener("error", function(e) {
+  console.log(e.error.message, "from", e.error.stack);
+  alert(e.error);
+  // You can send data to your server
+  // sendError(data);
+});
 
 function xGetTT(ctr,t_limite){
 	var xt_porcentaje='';
@@ -266,7 +276,8 @@ function xContarCantRow(tb,nomCol){
 
 function xContarCantRowVisible(tb,nomCol){
 	var cuenta=0;
-	cuenta=$(tb).find(nomCol).filter(":visible").size();
+	// cuenta=$(tb).find(nomCol).filter(":visible").size();
+	cuenta = $(tb).find(nomCol).filter(":visible").length;
 	/*$(tb).find(nomCol).each(function(index, element){
 		if($(element).is(':hidden')){return};
 		cuenta++;
@@ -551,11 +562,12 @@ async function xGetFindCliente(valor, servicio, callback) {
 						var num_doc = valor;
 						var fnacimiento = '';
 
-						if (dt.success) {						
+						if (dt.success && dt.haydatos) {				
 							if (servicio === 'ruc') {
 								nombres = dt.result.RazonSocial;
 								direccion = dt.result.Direccion;
-							} else {								
+							} else {
+								
 								const ap_paterno = dt.result.ApellidoPaterno || '';
 								const ap_materno = dt.result.ApellidoMaterno || '';
 								const apellidos = ap_paterno === '' ? dt.result.apellidos || '' : ap_paterno + ' ' + ap_materno;
@@ -573,7 +585,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 							}
 						}
 
-						rpt = { success: dt.success, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, msg: dt.msg };
+						rpt = { success: dt.haydatos, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, msg: dt.msg };
 
 						// responde(rpt);
 						callback(rpt);

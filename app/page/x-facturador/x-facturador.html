@@ -34,7 +34,8 @@
                                 <span class="xColorRow_Rojo xInvisible" id="txt_msj" style="padding-left: 7px; float: left; margin-top: -3px"></span>
                             </div>
                         </div>
-                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" required id="txt_nombres" espaciar readonly>
+                        <!-- <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" required="[[!formValid]]" id="txt_nombres" espaciar> -->
+                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
                         <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" required id="txt_direccion" espaciar>
                     </div>
                 </form>
@@ -134,7 +135,7 @@
     </style>
 </dom-module>
 <script>
-    var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false;
+    var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
     var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='';
 
     function xIniFacturador() {
@@ -142,6 +143,7 @@
         xThisFacturador.formValid = false;
         _listValid = false;
         _formValid = false;
+        xThisFacturador.modificarCliente = false;
         xThisFacturador.arrItems = [];
         xThisFacturador.arrTotales = [];
         xThisFacturador.listImpresoras = [];
@@ -208,6 +210,8 @@
         } else {            
             $("#contentClie").removeClass('xInvisible');
         }
+
+        xThisFacturador.modificarCliente = cnf_ComprobanteSel.codsunat === '01' ? false : true; // si es factura no se puede modificar cliente
     
     }
 
@@ -243,6 +247,7 @@
                 _arrCliente = rpt.cliente;
 
                 _formValid = rpt.valid;
+                xThisFacturador.modificarCliente = false; // no se puede modificar cliente luego que valido
                 xValidarBtnProcesar();
 
                 xIdCliente_pago = new_rpt.idcliente;
@@ -252,6 +257,7 @@
                 rpt.valid = false;
                 rpt.msj = new_rpt.msg;
 
+                xThisFacturador.modificarCliente = true; // si no valida se puede modificar
                 NumDocNoValid(rpt);
                 xNuevoCliente();
             }
@@ -274,6 +280,7 @@
         _formValid = false;
         xValidarBtnProcesar();
 
+        xThisFacturador.modificarCliente = true;
         xIdCliente_pago = '';
         _arrCliente = [];
         $('#txt_nombres').val('');
@@ -341,7 +348,8 @@
         // si es boleta y el total no pasa de 700 no requiere cliente
         if (_arrTotal.length > 0) {
             if ( cnf_ComprobanteSel.codsunat === "03" && _listValid && parseFloat(_arrTotal[2].importe) <= 700) {
-                xThisFacturador.formValid = true;                
+                xThisFacturador.formValid = true;
+                xThisFacturador.modificarCliente = true; // si se pude modificar cliente           
                 return;            
             }
         }
@@ -388,10 +396,15 @@
         arr_comprobante = cnf_ComprobanteSel;
         
         if (_arrCliente.length === 0 ){// si no hay cliente
+            const nombres_cliente = $("#txt_nombres").val();
+            const direccion_cliente = $("#txt_direccion").val();
+            _arrCliente = {};
             _arrCliente.idcliente=0;
             _arrCliente.num_doc = '00000000';
-            _arrCliente.nombres = 'PUBLICO EN GENERAL';
-            _arrCliente.direccion = '';
+            // _arrCliente.nombres = 'PUBLICO EN GENERAL';
+            // _arrCliente.direccion = '';
+            _arrCliente.nombres = nombres_cliente === '' ? 'PUBLICO EN GENERAL' : nombres_cliente;
+            _arrCliente.direccion = direccion_cliente;            
         }else {
             _arrCliente.direccion = $("#txt_direccion").val();
             _arrCliente.idcliente = _arrCliente.idcliente === "" ? await ClienteService_Guardar(_arrCliente) : _arrCliente.idcliente;
@@ -531,6 +544,7 @@
             arrTotales: [],
             listImpresoras: [],
             formValid: boolean = false,
+            modificarCliente: boolean = false,
             cpe_show: boolean = false,
             fecha_manual: boolean = false,
         },

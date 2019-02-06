@@ -146,9 +146,10 @@ while($num_copias>=0){
 	$printer -> feed();
 
 	// cliente, fecha
-	$cliente_nombres = $xArrayCliente['nombres'] === "" ? "PUBLICO EN GENERAL" : $xArrayCliente['nombres'];
+	$cliente_nombres = $xArrayCliente['nombres']=='' ? 'PUBLICO EN GENERAL' : $xArrayCliente['nombres'];
+	// $cliente_nombres = $xArrayCliente['nombres'];
 	$cliente_direcicon = $xArrayCliente['direccion'];
-	$cliente_num_doc = $xArrayCliente['num_doc'];
+	$cliente_num_doc = $xArrayCliente['num_doc']=='0000000' && $cliente_nombres != 'PUBLICO EN GENERAL' ? '' : $xArrayCliente['num_doc'];
 	$cliente_documento = strlen($cliente_num_doc) > 8 ? 'RUC' : 'DNI';
 
 	$printer -> setJustification(Printer::JUSTIFY_LEFT);
@@ -156,8 +157,8 @@ while($num_copias>=0){
 	$printer -> text("FECHA DE EMISION: ".$fecha_actual.' | '.$hora_actual. "\n");
 	
 	$printer -> text("CLIENTE: ".$cliente_nombres. "\n");	
-	if ($cliente_num_doc.trim() !== ""){ $printer -> text($cliente_documento.": ".$cliente_num_doc. "\n"); }	
-	if ($cliente_direcicon.trim() !== ""){ $printer -> text("DIRECCION: ".$cliente_direcicon. "\n"); }	
+	if ($cliente_num_doc.trim()!=''){ $printer -> text($cliente_documento.": ".$cliente_num_doc. "\n"); }	
+	if ($cliente_direcicon.trim()!=''){ $printer -> text("DIRECCION: ".$cliente_direcicon. "\n"); }	
 	
 	$printer -> selectPrintMode();
 	$printer -> text("------------------------------------------------\n");

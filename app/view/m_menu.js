@@ -11,17 +11,61 @@ var xidCatProcedencia = 0; //0  procede de la carta !=0 procede bodega
 var xPopupLoad;
 var xOnlyAccPedido;
 var xCount_cant_ico = 0;
-$(document).one("ready", function() {
-  xIniMenu();
+
+window.addEventListener("error", function (e) {
+  // console.log(e.error.message, "from", e.error.stack);
+  alert(e.error + ' ->' + e.error.stack);
+  // You can send data to your server
+  // sendError(data);
+})
+
+// $(document).one("ready", function() {
+//   xIniMenu();
+//   $("#PanelDe").on("transitionend", function(a) {
+//     if (this.selected == "main") {
+//       $("#PanelDe").css("z-index", "0");
+//     }
+//   });
+// });
+
+$(document).ready(function () {  
   $("#PanelDe").on("transitionend", function(a) {
     if (this.selected == "main") {
       $("#PanelDe").css("z-index", "0");
     }
   });
+
+  // setTimeout(() => {  
+  //   xIniMenAAA();  
+  // }, 1500);
 });
 
+document.addEventListener("WebComponentsReady", function componentsReady() {
+  $("#PanelDe").on("transitionend", function (a) {
+    if (this.selected == "main") {
+      $("#PanelDe").css("z-index", "0");
+    }
+  });
+
+  xIniMenAAA();  
+});
+
+// window.addEventListener('DOMContentLoaded', function () {
+//   $("#PanelDe").on("transitionend", function (a) {
+//     if (this.selected == "main") {
+//       $("#PanelDe").css("z-index", "0");
+//     }
+//   });
+//   // setInterval(() => {
+    
+//   // }, 500);
+//   xIniMenAAA();
+// })
+
+
+
 //window.onload = function(){setTimeout( function(){ xIniMenu(); }, 600); };
-function xIniMenu() {
+function xIniMenAAA() {
   //session activa
   xVerificarSession();
   setInterval(function() {
@@ -73,7 +117,8 @@ function xOpenPageCarta(xop, parametro) {
       return;
       break;
   }
-  x_router_menu = document.querySelector("app-router");
+  // x_router_menu = document.querySelector("app-router");
+  // x_router_menu = document.querySelector("x-router");
 
   xruta = xruta + parametro;
 
@@ -81,7 +126,14 @@ function xOpenPageCarta(xop, parametro) {
   window.localStorage.setItem("::app3_sys_scroll_pos", $(window).scrollTop());
 
   //setTimeout( function(){ router.go(xruta); }, 50);
-  x_router_menu.go(xruta);
+  // x_router_menu._go(xruta);
+  // router.go(xruta);
+  // setTimeout(() => {
+  //   router.go(xruta);
+  // }, 2000);
+
+  router.go(xruta);
+  
   PanelDe.closeDrawer();
 }
 

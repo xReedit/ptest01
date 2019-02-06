@@ -2,7 +2,13 @@ var xIdOrg;
 var xIdSede;
 var xNomU;
 var xPopupLoad;
-window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
+
+// window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
+
+document.addEventListener("WebComponentsReady", function componentsReady() {
+	xIniControlPedido();
+});
+
 function xIniControlPedido(){
 	xVerificarSession();
 	//setInterval(function(){ xVerificarSession(); }, 5000); // constantemente actualiza
@@ -15,7 +21,12 @@ function xIniControlPedido(){
 		$("#en_nom_us").text(xNomUsario);
 
 		xLoadTipoConsumoX();
-		xOpenPage(2,'?f1=1?df1=LOCAL')
+		// setTimeout(() => {
+		// 	xOpenPage(2, '?f1=1?df1=LOCAL');
+		// }, 2500);
+
+		xOpenPage(2, "?f1=1?df1=LOCAL");
+		
 	})
 	//if(xIdUsuario==''){	xIdUsuario=window.localStorage.getItem('::app3_woU');}
 
@@ -45,8 +56,22 @@ function xOpenPage(xop, parametro){
 		case 22:xruta='/resumen_caja';break;
 	}
 	xruta=xruta+parametro
-	setTimeout( function(){ document.querySelector('app-router').go(xruta); }, 50);
+	// setTimeout( function(){
+	// 	if (router != undefined) {
+	// 		router.go(xruta); 
+	// 	} else {
+	// 		setTimeout(() => {
+	// 			router.go(xruta); 
+	// 		}, 4000);
+	// 	}
+	// }, 50);
 
+	// setTimeout(() => {
+	// 	router.go(xruta);
+	// }, 2000);
+
+
+	router.go(xruta);
 }
 function xLoadTipoConsumoX(){
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3'})

@@ -1,9 +1,9 @@
 <dom-module id="x-categoria">
   <template>
     <div class="xMenu_content" id="CartaDetalle">
-      <div class="xMenu_Encabezado">
-        <span class="xtitulo">SAN CARLOS</span>
-        <div class="xsub_titulo">TRADICION DESDE 1997. BIENVENIDOS.</div>
+      <div class="xMenu_Encabezado">        
+        <span class="xtitulo">[[xt_nombre_sede]]</span>
+        <div class="xsub_titulo">[[xt_eslogan]]</div>
       </div>
       <div class="xMenu_body noselect">
         <div class="xAlinearCentro spinner">
@@ -17,11 +17,17 @@
 <script>
   var xThisCategoria;
   var xMenuCategoria = [];
+
   function xIniCategoria() {
     $("#xtitulo_bar").text("");
     //xVerificarSession();
+    // $('body').addClass('loaded');
     xLoadCategoria();
     $("body").removeClass("loaded");
+    
+    const xDatos_p = xm_log_get("sede_generales");
+    xThisCategoria.xt_nombre_sede = xDatos_p[0].des_sede;
+    xThisCategoria.xt_eslogan = xDatos_p[0].eslogan;
   }
 
   function xLoadCategoria() {
@@ -102,7 +108,9 @@
       xt_org: Number,
       xt_idsede: Number,
       xt_idus: Number,
-      dt_cat: Object
+      dt_cat: Object,
+      xt_nombre_sede: String,
+      xt_eslogan: String
     },
     attached: function() {
       xThisCategoria = this;

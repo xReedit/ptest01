@@ -13,6 +13,12 @@ $ip_printer=$ArrayEnca['ip_print'];
 $logo_post="./logo/".$ArrayEnca['logo'];
 $var_size_font=(int)$ArrayEnca['size_font'];
 $var_margen_iz=intLowHigh((int)$ArrayEnca['margen_iz'], 2);
+/// tamaño de letra de la comanda
+$val_size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $ArrayEnca) ? $ArrayEnca['var_size_font_tall_comanda'] : "0";
+// $size_font_comanda_tall = $val_size_font_comanda_tall == "0" ? false : true;
+
+$size_font_comanda_tall = (int)$val_size_font_comanda_tall===0 ? false : true;
+$val_size_font_comanda_tall++; //tamaño de letra,1+1>2 2+1>3
 
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
 $hora_actual=date('H').':'.date('i').':'.date('s');
@@ -37,9 +43,6 @@ try {
 $connector->write(Printer::GS.'L'.$var_margen_iz);
 $printer -> setFont($var_size_font);
 
-/// tamaño de letra de la comanda
-$size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $xArray_print[0]) ? false : true;
-
 if($logo_post!=''){
 	$logo = EscposImage::load($logo_post, false);
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
@@ -62,6 +65,11 @@ if($logo_post!=''){
 	$printer -> selectPrintMode();
 
 	//SECCION 1
+	if ( $size_font_comanda_tall ) {
+		$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
+		$printer -> setTextSize($val_size_font_comanda_tall, 1);	
+	}
+
 	$printer -> setJustification(Printer::JUSTIFY_LEFT);
 	$printer -> setEmphasis(true);				
 	$printer -> text('ENTRADAS'."\n");

@@ -180,13 +180,14 @@ function xInicarta(){
 
 	xPasaEnterClass();
 
-	$(document).scroll(function() {
-	if ($(this).scrollTop() > ($("#Lista_Carta").offset().top+100)){
-	    $("#opPersiste").addClass("xHeaderPersiste");
-	  }
-	  else{
-	    $('#opPersiste').removeClass("xHeaderPersiste");
-	  }
+	$(xThisCarta).scroll(function() {
+		
+			if ($(this).scrollTop() > ($("#Lista_Carta").offset().top+100)){
+				$("#opPersiste").addClass("xHeaderPersiste");
+			  }
+			  else{
+				$('#opPersiste').removeClass("xHeaderPersiste");
+			  }			  
 	});
 
 	$("#ctrl_open_file").change(function(e) {

@@ -771,21 +771,14 @@
         btn_confirmar.hidden = false;
       }
     }
-    $("#xBody")
-      .html(xCadenaGrupo)
-      .trigger("create");
+    $("#xBody").html(xCadenaGrupo).trigger("create");
 
     if (xRowColapseOpen != null) {
       try {
         var obj = document.querySelector(xRowColapseOpen);
         obj.toggle();
-        $(obj)
-          .parent()
-          .find(".xEncabezadoTpCon .xcheck_item").checked = true;
-        $(obj)
-          .parent()
-          .find(".xEncabezadoTpCon")
-          .addClass("xEnca_seleccionado");
+        $(obj).parent().find(".xEncabezadoTpCon .xcheck_item").checked = true;
+        $(obj).parent().find(".xEncabezadoTpCon").addClass("xEnca_seleccionado");
       } catch (err) {
         return false;
       }

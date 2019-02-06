@@ -92,7 +92,7 @@ $(document).on('click', '.xBtn', function(e) {
 		window.localStorage.setItem("::app3_sys_dta_count_ico",xCount_cant_ico);
 		if(xCount_cant_ico>0){$(".xIco_MiPedido .xCantPedio_ico").text(xCeroIzq(xCount_cant_ico,2));$(".xIco_MiPedido .xCantPedio_ico").removeClass('xInvisible');}else{$(".xIco_MiPedido .xCantPedio_ico").addClass('xInvisible');}
 
-		event.stopPropagation();
+		// event.stopPropagation();
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 		return false;
@@ -156,7 +156,7 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 			xVerMipedidoVR();
 		}
 
-		event.stopPropagation();
+		// event.stopPropagation();
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 	})
@@ -226,7 +226,7 @@ $(document).on('keyup', '.xMiTextReferencia', function(e) {
 		xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones=$(this).val();
 		window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
 
-		event.stopPropagation();
+		// event.stopPropagation();
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 		return false;
@@ -436,9 +436,12 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 	var xIpPrintDoc=xidDoc;
 	var xpasePrint=false;
 
+	// no es comanda
+	xArrayDatosPrint[0].var_size_font_tall_comanda = 0; //default
+
 	for (var i = 0; i < xDtTipoDoc.length; i++) {
 		//pre-cuenta
-		if(xDtTipoDoc[i].idtipo_otro==-1){xIpPrintDoc=xDtTipoDoc[i].idimpresora; break;}
+		if (xDtTipoDoc[i].idtipo_otro == xidDoc){xIpPrintDoc=xDtTipoDoc[i].idimpresora; break;}
 	};
 	//si existe impresora local // imprime todos los otros documentos en esta impresora local.
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
@@ -742,7 +745,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 }
 
 //mi pedido // solo secciones
-function xGeneralSeccionMiPedido(xidCategoria, x_rpt){
+function xGeneralSeccionMiPedido(xidCategoria, x_rpt){	
 	const ultima_categoria_cargada = localStorage.getItem('::app3_sys_last_cat_load');
 	if (ultima_categoria_cargada === xidCategoria && xGeneralDataSeccion !== undefined ) {return x_rpt(false); } //1118 //si ya esta cargado, pasa, tiene que actualizar manual // remplaza al de abajo
 	// if(xGeneralDataSeccion!=undefined){if(x_rpt){return x_rpt(false);}else{return;}}//si ya esta cargado, pasa, tiene que actualizar manual

@@ -140,7 +140,7 @@
 </style>
 
 <script type="text/javascript" src="./cocinar.resumen.boletas.js"></script>
-<script type="text/javascript" src="../../view/config.const.js"></script>
+<!-- <script type="text/javascript" src="../../view/config.const.js"></script> -->
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
@@ -397,7 +397,7 @@ function xIniArraysPrint(){
 		return false;
 	}
 	// xArrayEncabezadoCierre.push({'ip_print':xIpPrintDoc, 'logo':xDtPrint[0].logo,'detalle_cierre':xdetall_cierre,'titulo':'CIERRE DE CAJA','var_margen_iz':xArrayImpresoras[xidPrint].var_margen_iz, 'var_size_font':xArrayImpresoras[xidPrint].var_size_font})
-	xArrayEncabezadoCierre.push({ 'ip_print': impresora[0].ip, 'logo': xDtPrint[0].logo, 'detalle_cierre': xdetall_cierre, 'titulo': 'CIERRE DE CAJA', 'var_margen_iz': impresora[0].var_margen_iz, 'var_size_font': impresora[0].var_size_font })
+	xArrayEncabezadoCierre.push({ 'ip_print': impresora[0].ip_print, 'logo': xDtPrint[0].logo, 'detalle_cierre': xdetall_cierre, 'titulo': 'CIERRE DE CAJA', 'var_margen_iz': impresora[0].var_margen_iz, 'var_size_font': impresora[0].var_size_font })
 	return true;
 }
 

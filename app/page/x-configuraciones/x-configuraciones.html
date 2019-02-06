@@ -273,6 +273,7 @@
 										<select class="xTextRow2 xCursor" name="sel_size_font_comanda" id="sel_size_font_comanda">
 											<option value="0">Default</option>
 											<option value="1">Grande</option>
+											<option value="2">Extra</option>
 										</select>
 									</td>
 								</tr>
@@ -1215,6 +1216,7 @@ function xLoadConf(){
 		$("#td_margen_iz").val(xdtPrint[0].var_margen_iz);
 		$("#td_size_font").val(xdtPrint[0].var_size_font);
 		$("#td_img64").val(xdtPrint[0].var_size_font);
+		$("#sel_size_font_comanda").val(xdtPrint[0].var_size_font_tall_comanda).change();
 
 		xLoadPorcentaje();
 		xLoadAdicionales();
@@ -1242,7 +1244,15 @@ function xGuardarCambioPrint(){
 }
 function xPruebaTestPrint(){
 	var xArrayPasarTest=new Array();
-	xArrayPasarTest={'ip_print':$("#td_ip").val(),'mum_copias':$("#td_copia").val(),'pie_pagina':$("#td_pie").val(),'logo':$("#td_logo").val(),'size_font':$("#td_size_font").val(),'margen_iz':$("#td_margen_iz").val(), 'margen_iz': $("#td_margen_iz").val()};
+	xArrayPasarTest={
+		'ip_print':$("#td_ip").val(),
+		'mum_copias':$("#td_copia").val(),
+		'pie_pagina':$("#td_pie").val(),
+		'logo':$("#td_logo").val(),
+		'size_font':$("#td_size_font").val(),
+		'margen_iz':$("#td_margen_iz").val(), 
+		'margen_iz': $("#td_margen_iz").val(),
+		'var_size_font_tall_comanda': $("#sel_size_font_comanda").val()};
 
 
 	$.ajax({ type: 'POST', url: '../../print/x-test_print.php',data:{Array_enca:xArrayPasarTest}})

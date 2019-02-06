@@ -40,6 +40,7 @@
     xm_LogChequea(function() {
       xm_log_get("ini_us");
       $("body").addClass("loaded");
+      
       $("#xtitulo_bar").text("");
       var xDatos_p = xm_log_get("sede_generales"); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
       xCount_cant_ico = window.localStorage.getItem("::app3_sys_dta_count_ico");
@@ -71,14 +72,14 @@
     //var xParamU='?c='+xidCategoria+'?it='+xidt;
     xOpenPageCarta(2);
   }
-  function xLoadCarta() {
+  async function xLoadCarta() {
     xidCategoria = localStorage.getItem("::app3_sys_descat");
     //$(".xMenu_body #xContenedoPaginas").html('<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>').trigger('create');
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205', data:{i:xidCategoria},cache:true})
     //.done( function (dtCAct) {
     //if(xGeneralNumPedidosActual!=0){xLoadDesdeCache();return;}
     //xGeneralLoadItems(function(){
-    xGeneralSeccionMiPedido(xidCategoria, function(xrpt) {
+    await xGeneralSeccionMiPedido(xidCategoria, function(xrpt) {
       //var xdtCAct=$.parseJSON(dtCAct);
       //xdtCAct=xdtCAct.datos;
 

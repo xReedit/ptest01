@@ -1,20 +1,40 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
-var xMenuOp='',xAcc,xIdAccDirecto, verCambioClave=false;
-$(document).on('ready',function(){
-	$("#PanelDe").on('transitionend',function(a){
-		if(this.selected=='main'){
-			$("#PanelDe").css('z-index','0');
+var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
+// $(document).on('ready',function(){
+$(document).ready(function() {
+  $("#PanelDe").on("transitionend", function(a) {
+    if (this.selected == "main") {
+      $("#PanelDe").css("z-index", "0");
+    }
+  });
+
+	// xIniDocument();
+});
+
+window.addEventListener("error", function (e) {
+	console.log(e.error.message, "from", e.error.stack);
+	alert(e.error);
+	// You can send data to your server
+	// sendError(data);
+});
+
+// xxx();
+document.addEventListener("WebComponentsReady", function componentsReady() {
+	$("#PanelDe").on("transitionend", function (a) {
+		if (this.selected == "main") {
+			$("#PanelDe").css("z-index", "0");
 		}
-	})
-})
+	});
+	xIniDocument();
+});
 
 //window.onload = function(){xIniDocument();}
 window.addEventListener('WebComponentsReady', function(e) {
 	xIniDocument();
-})
+});
 //window.onload = function(){$("#nom_sede").text('SAN CARLOS'); setTimeout( function(){ xIniDocument(); }, 1600); };
 function xIniDocument(){
-	///router=document.querySelector('app-router');
+	// router = document.querySelector("app-router");
 
 	//session activa
 	xVerificarSession();

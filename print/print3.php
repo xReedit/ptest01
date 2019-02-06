@@ -84,8 +84,9 @@ $local = (int)$xArray_print[0]['local'] || 0;
 //			
 
 /// tamaño de letra de la comanda
-$size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $xArray_print[0]) ? false : true;
-
+$val_size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $xArray_print[0]) ? $xArray_print[0]['var_size_font_tall_comanda'] : "0";
+$size_font_comanda_tall = (int)$val_size_font_comanda_tall===0 ? false : true;
+$val_size_font_comanda_tall++; //tamaño de letra,1+1>2 2+1>3
 
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
 $printer -> setFont($var_size_font);
@@ -140,7 +141,7 @@ while($num_copias>=0){
 		$printer -> text("***** PRE-CUENTA *****\n");
 		$printer -> selectPrintMode();
 	}
-
+	
 	/*num pedido*/
 	$printer -> selectPrintMode();	
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
@@ -161,15 +162,20 @@ while($num_copias>=0){
 		$printer -> feed();
 	}	
 
+	// if ( $size_font_comanda_tall === true ) {
+	// 	$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
+	// 	$printer -> setTextSize(2, 1);	
+	// }
+
 	/* ENCABEZADO */
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 	$printer -> text($num_mesa."\n");
 	$printer -> selectPrintMode();
-	$printer -> text("------------------------------------------------\n");
+	$printer -> text("------------------------------------------------\n");		
 	if ( $referencia!="" ){
-		$printer -> text($referencia."\n");
-		$printer -> feed();
+		$printer -> text($referencia."\n");		
 	}
+	$printer -> feed();
 
 	// si es deliver y si viene datos adjuntos (direccion, telefono, paga con)
 	if ($EsDelivery==1) {
@@ -216,13 +222,19 @@ while($num_copias>=0){
 		//ordena por donde procede 0 de la carta(sigue el orden) !=0 bodega
 		foreach ($item as $key => $row) {
 		    $procede[$key]  = !empty($row['procede_index']) ? $row['procede_index'] : '';
-		    $or_des_seccion[$key]  = !empty($row['des_seccion']) ? $row['des_seccion'] : ''; 
+			// $or_des_seccion[$key]  = !empty($row['des_seccion']) ? $row['des_seccion'] : '';
+			$or_des_seccion[$key]  = !empty($row['sec_orden']) ? $row['sec_orden'] : ''; 
 		}
 		array_multisort($procede, SORT_ASC,$or_des_seccion, SORT_ASC, $item);		
 		
 		foreach ($item as $subitem) {
 			if(is_array($subitem)==false){continue;}
 			if($subitem['cantidad']==0){continue;}			
+			
+			if ( $size_font_comanda_tall === true ) {
+				$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
+				$printer -> setTextSize($val_size_font_comanda_tall, 1);	
+			}
 			
 			/*titulo tipo consumo*/			
 			if($si_tiene_item==0){			
@@ -244,9 +256,9 @@ while($num_copias>=0){
 			$printer -> setJustification(Printer::JUSTIFY_LEFT);
 			$printer -> setEmphasis(true);	
 			
-			if ( $size_font_comanda_tall ) {
+			if ( $size_font_comanda_tall === true ) {
 				$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
-				$printer -> setTextSize(2, 1);	
+				$printer -> setTextSize($val_size_font_comanda_tall, 1);	
 			}
 			
 			if($seccion!=$subitem["des_seccion"]){			

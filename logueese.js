@@ -1,5 +1,11 @@
 var xul;
 var xdialog;
+
+window.onerror = function (error, url, line) {
+	console.log(error);
+	// controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
+};
+
 $(this).one('pageshow',function(){
 	//$('body').addClass('loaded');
 	xdialog = document.querySelector('x-dialog');
@@ -24,7 +30,7 @@ $(this).one('pageshow',function(){
 	/////////
 
 	var t = setTimeout(function(){
-		$('body').addClass('loaded')
+		$('body').addClass('loaded');
 	},1000);
 
 	xul.addEventListener('xSend', function (e) {

@@ -33,8 +33,14 @@
 								<paper-progress  indeterminate style="width: 100%; float: left; margin-top: -19px"></paper-progress>
 							</div>
 							<div id="datos_cliente" class="xInvisible">		
-								<paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()" id="clie_nombres" onChange="conMayusculas(this)" class="xPasarEnter2" required="[[ComprobanteRequiereCliente]]" auto-validate></paper-input>
+								<paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()" 
+									id="clie_nombres" 
+									onChange="conMayusculas(this)" 
+									class="xPasarEnter2" 
+									required="[[ComprobanteRequiereCliente]]"									
+									auto-validate></paper-input>
 								<br>
+								<!-- readonly="[[!ModificarCliente]]" -->
 								<paper-textarea autofocus label="Direccion" max-rows="2" id="clie_direccion" onChange="conMayusculas(this)"  class="xPasarEnter2 clie_direccion" ></paper-textarea>							
 							</div>
 						</form>
@@ -90,7 +96,7 @@
 					hidden="[[modoSoloComprobante]]" 
 					onclick="xThisPago.setVisibleContainerPago();" 
 					id="btn_pago_next" 
-					disabled="[[!valid_form_cliente_pago]]">
+					disabled$="[[!valid_form_cliente_pago]]">
 					<!-- <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
 					<div>[F10] Siguente</div>
 				</button>
@@ -167,6 +173,7 @@ var xDatosValidos = false, // valida los datos si todos son correctos
 function xIiniPago(){
 	//xLoadTipoMoneda_TPPago();
 	xtb_tp=$("#tb_tp");
+	// xThisPago.$.sel_cliente.invalid = true;
 	// xLoadCliente();
 	xLoadTipoPago();
 	xLoadTipoComprobante();
@@ -467,8 +474,10 @@ function xSelectedTpComprobante(valor) {
 
 	xThisPago.ComprobanteRequiereCliente = option_requiere_cliente === 0 ? false : true; //requiere ingresar cliente
 
+	xThisPago.ModificarCliente = true;
 	if ( parseFloat(xThisPago.total) > 700 ) {
 		xThisPago.ComprobanteRequiereCliente = true;
+		xThisPago.ModificarCliente=false;
 	}
 
 	$("#clie_nombres").val('');
@@ -479,9 +488,14 @@ function xSelectedTpComprobante(valor) {
 	xThisPago.tipoComprovanteSelecionado = {'idtipo_comprobante_serie': valor, 'idtipo_comprobante': idtipo_comprobante, 'codsunat': codsunat, 'serie': serie, 'descripcion': descripcion, 'inicial': inicial};	
 
 	if ( xThisPago.tipoComprovanteSelecionado.idtipo_comprobante === 0 ) {
-		$("#container-cliente").addClass('xInvisible');
+		$("#container-cliente").addClass('xInvisible');		
 	} else {
 		$("#container-cliente").removeClass('xInvisible');
+	}
+
+	$("#datos_cliente").addClass('xInvisible');
+	if ( codsunat === '03') {
+		$("#datos_cliente").removeClass('xInvisible');
 	}
 
 	// activa boton para emitir comprobantes si el tpc es !=0 = ninguno	
@@ -508,7 +522,7 @@ function xVerContainerPago() {
 function EmitirValidacionFormCliente() {	
 	// console.log(xThisPago.$.form_pago_cliente);
 	// var validForm = xThisPago.$.form_pago_cliente.checkValidity();
-	var validForm = !xThisPago.$.sel_cliente.invalid && xThisPago.$.form_pago_cliente[1].validate()
+	var validForm = !xThisPago.$.sel_cliente.invalid && xThisPago.$.form_pago_cliente[1].validate();
 	xThisPago.valid_form_cliente_pago = validForm;
 	xThisPago.fire('xFormClienteValid', validForm);
 }
@@ -716,6 +730,7 @@ Polymer({
 		valid_form_cliente_pago: boolean = false,
 		valid_monto_pago: boolean = false,
 		ComprobanteRequiereCliente: boolean = false,
+		ModificarCliente: boolean = false,
 		// modoSoloComprobante: boolean = false,
 		_tipo:{type:Number, value:1, notify:true},
 		val:String,
@@ -738,6 +753,7 @@ Polymer({
     setVal:function(val){
     	xThisPago.total=val;    	
 		xThisPago.ComprobanteRequiereCliente = parseFloat(val) > 700 ? true : false;
+		xThisPago.$.sel_cliente.invalid = xThisPago.ComprobanteRequiereCliente;
 		// EmitirValidacionFormCliente();
 		
     	$("#tb_tp .row").remove();
