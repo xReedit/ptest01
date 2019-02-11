@@ -1,5 +1,5 @@
 <dom-module id="x-submenu">
-  <script type="text/javascript" src="../view/item_pedidos.js"></script>
+  <script type="text/javascript" src="../../view/item_pedidos.js"></script>
   <template>
     <div>
       <div class="xMenu_body">
@@ -24,6 +24,12 @@
   var xidItem_selected;
   var xreloj_update_subItem_sel;
   var xobj_row_selected;
+
+  function xxaa() {
+    // alert('aaaaaaaaaa');
+    // truco para que funcione en iphone // otro dia investigamos porque
+  }
+
   function xIniSubMenu() {
     //xVerificarSession();
     xArrayPedidoObj = $.parseJSON(
@@ -34,8 +40,11 @@
     xCadenaTC = xArmarTipoConsumo();
     xLoadItems();
 
-    
+    $(document).on('ontouchstart', '.xmenu_item_2', function (e) {
+      alert('on toucj');
+    });
     $(document).on('click', '.xmenu_item_2', function(e) {
+      // alert('on click');
     // $(document).click(function (e) {
       //$('.xmenu_item_2').click(function() {      
       xobj_row_selected = $(this);
@@ -51,6 +60,7 @@
       var xCantArray;
       var xindicaciones = "";
       var xidTipoConsumoItem;
+      xTituloDet = $(this).attr("data-desseccion"); 
       xidItem = $(this).attr("data-id");
       xidItem_selected = xidItem;
       $(this)
@@ -187,7 +197,7 @@
 
         xCadenaItem = String(
           xCadenaItem +
-            '<div class="xmenu_item_2 xPading10 ' +
+            '<div onclick="xxaa();" class="xmenu_item_2 xPading10 ' +
             xClassEstado +
             '" data-id="' +
             xdt_sub_Item[i].idcarta_lista +
@@ -197,6 +207,7 @@
             xdt_sub_Item[i].idseccion +
             '" data-idseccionindex="' +
             xdt_sub_Item[i].idseccion_index +
+            '" data-desseccion="' + xdt_sub_Item[i].des_seccion +
             '"  data-idimpresora="' +
             xdt_sub_Item[i].idimpresora +
             '" data-idprocede="' +
@@ -228,6 +239,7 @@
       );
     });
   }
+  
   function xUpdateStockSubItem_selected() {
     if (xidCatProcedencia == "almacen_items") {
       xidItem_selected = $(xobj_row_selected).attr("data-idalmacen_items");

@@ -41,7 +41,7 @@
 			</div>
 		</paper-dialog>
 		<br>
-		<div class="xContent">
+		<div class="xContent" id="content_carta">
 			<paper-tabs selected="{{selected}}">
 				<paper-tab>CARTA ACTUAL</paper-tab>
       			<paper-tab>ITEMS</paper-tab>
@@ -180,14 +180,17 @@ function xInicarta(){
 
 	xPasaEnterClass();
 
-	$(xThisCarta).scroll(function() {
-		
+	$(document).scroll(function() {
+		try {			
 			if ($(this).scrollTop() > ($("#Lista_Carta").offset().top+100)){
 				$("#opPersiste").addClass("xHeaderPersiste");
 			  }
 			  else{
 				$('#opPersiste').removeClass("xHeaderPersiste");
 			  }			  
+		} catch (error) {
+			
+		}
 	});
 
 	$("#ctrl_open_file").change(function(e) {
@@ -340,6 +343,10 @@ function xGuardarCambios(){
 	var contador_row=0;
 	xPopupLoad.xopen();
 
+	// get primera impresora
+	const _arrImpresoras = xm_log_get('app3_woIpPrint'); 
+	const xIdPrimeraImpresora = _arrImpresoras[0].idimpresora;
+
 	xidCategoria=$("#SelCarta option:selected").val();
 	xIdCartaAnterior=xIdCarta;//carta borrar de carta_lista
 	//xGuardarCarta(function(xid){
@@ -353,7 +360,10 @@ function xGuardarCambios(){
 			xsec_orden=index+1;
 
 			if(xidSeccion==undefined){xidSeccion='';}
-			xArraySeccionItem[index]={'des_seccion':xdes_seccion,'id_seccion':xidSeccion,'sec_orden':xsec_orden, 'modificado': xseccion_modificado}
+
+			// 'idimpresora' cuando es nueva seccion asigna la primera impresora
+			xArraySeccionItem[index]={'des_seccion':xdes_seccion,'id_seccion':xidSeccion,'sec_orden':xsec_orden, 'modificado': xseccion_modificado, 'idimpresora': xIdPrimeraImpresora }
+
 			$(element).find('.tb_item tr.row').each(function(indexI, item){
 				var xidItem=$(item).attr('data-id');
 				const x_se_a_modificado = parseInt($(item).attr('data-modificado')) === 0 ? false : true;

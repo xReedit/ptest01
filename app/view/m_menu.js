@@ -13,8 +13,8 @@ var xOnlyAccPedido;
 var xCount_cant_ico = 0;
 
 window.addEventListener("error", function (e) {
-  // console.log(e.error.message, "from", e.error.stack);
-  alert(e.error + ' ->' + e.error.stack);
+  console.log(e.error.message, "from", e.error.stack);
+  // alert(e.error + ' ->' + e.error.stack);
   // You can send data to your server
   // sendError(data);
 })
@@ -35,6 +35,8 @@ $(document).ready(function () {
     }
   });
 
+  
+
   // setTimeout(() => {  
   //   xIniMenAAA();  
   // }, 1500);
@@ -48,6 +50,12 @@ document.addEventListener("WebComponentsReady", function componentsReady() {
   });
 
   xIniMenAAA();  
+  // inactivityTime();
+  setGalleta();
+  listenCookieChange(function() {
+    dialog_inactividad.open();
+  });
+  
 });
 
 // window.addEventListener('DOMContentLoaded', function () {
@@ -115,7 +123,9 @@ function xOpenPageCarta(xop, parametro) {
     case 4:
       document.location.href = "m_panel.html";
       return;
-      break;
+    case 5:
+      xruta = "/buscar_item_menu";
+      break;      
   }
   // x_router_menu = document.querySelector("app-router");
   // x_router_menu = document.querySelector("x-router");
@@ -271,9 +281,8 @@ function xVerDetalleMenu(i, op) {
 }
 function xCerrarSession() {
   $("body").removeClass("loaded");
-  $.ajax({ type: "POST", url: "../../bdphp/log.php?op=-103" }).done(function(
-    a
-  ) {
+  $.ajax({ type: "POST", url: "../../bdphp/log.php?op=-103" })
+  .done(function(a) {
     setClearLocalStorage();
     // var printL = window.localStorage.getItem('::app3_woIpPrintLo');
     // window.localStorage.clear();
@@ -286,3 +295,39 @@ function xCerrarSession() {
 function goBack() {
   window.history.back();
 }
+
+// var inactivityTime = function () {
+//   // alert("You are now logged out.");
+//   var t;
+//   // window.onload = resetTimer;
+//   resetTimer;
+//   // DOM Events
+//   document.onmousemove = resetTimer;
+//   document.onkeypress = resetTimer;
+//   document.ontouchstart = resetTimer;
+//   document.onclick = resetTimer;     // touchpad clicks
+//   document.onscroll = resetTimer; 
+
+//   function logout() {
+//     dialog_inactividad.open();
+//     // alert("You are now logged out.");
+//     //location.href = 'logout.php'
+//   }
+
+//   function resetTimer() {
+//     clearTimeout(t);
+//     t = setTimeout(logout, 3000)
+//     // 1000 milisec = 1 sec
+//   }
+  
+// };
+
+function xMantenerSession() {
+  restaurarGalleta();
+  dialog_inactividad.close();
+  xOpenPageCarta(1);
+}
+
+
+
+

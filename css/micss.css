@@ -525,7 +525,7 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xFondoColorAmarillo{background: #FFA000; color: #fff;}
 .xFondoColorRojo{background: #D50000; color: #fff;}
 
-.xmenu_item_2{border-bottom:1px solid #ddd; height: auto;}
+.xmenu_item_2{border-bottom:1px solid #ddd; height: auto; transition: transform .5s;}
 .xmenu_item_2 .xcheck_item{display: none;}
 .xmenu_item_2.xPading15{ padding: 15px;}
 .xmenu_item_2.xPading10{ padding: 12px; }
@@ -558,7 +558,11 @@ input:checked ~ .xsub_titulo_item{color: #9E9E9E;}*/
 .xmenu_item_2.xitem_seleccionado span{color: #9E9E9E;}
 .xmenu_item_2.xitem_seleccionado .xsub_titulo_item{color: #9E9E9E; }
 .xmenu_item_2.xitem_seleccionado .xstock_item span{color: #fff;}
-.xmenu_item_2.xitem_seleccionado{ background: #424242; max-height: 500px; border-left:none;}
+.xmenu_item_2.xitem_seleccionado{ background: #424242; max-height: 500px; border-left:none; z-index: 1 !important;
+    position: relative !important;
+    transform: scale(1.01);    
+    /* display: inline-block !important; */
+}
 
 /*desde mi pedido*/
 

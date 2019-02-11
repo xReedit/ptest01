@@ -2,15 +2,15 @@
 <dom-module id="x-venta-rapida">		
 	<template>
 		<br>
-		<paper-dialog id="dialog_pagar" class="dialog_redondo" modal  entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+		<paper-dialog id="dialog_pagar_vr" class="dialog_redondo" modal  entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<!-- <x-pago id="component_pago" _tipo></x-pago>
 			<div class="xLinea"></div>
 			<br>
 			<div class="xBoton2 xAzul" onclick="xRegistrarClientePagoVR();" id="btn_pago">Listo, registrar pago</div>
 			<div class="xBoton2 xPlomo" dialog-dismiss onclick="xedit_detalle_item=false;">Cancelar</div>
 			<br><br> -->
-			<div id="div_pago">
-				<x-pago id="component_pago"></x-pago>
+			<div id="div_pago_vr">
+				<x-pago id="component_pago_vr"></x-pago>
 				<!-- <div class="xLinea"></div>
 				<br>
 
@@ -323,7 +323,7 @@ function xIniVentaRapida(){
 		$(this).parent().find('#xinput_li').css('display','inline-block');
 		$(this).parent().find('#xinput_li').focus();
 		xedit_detalle_item=true;
-		event.stopPropagation();
+		e.stopPropagation();
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 	});
@@ -392,7 +392,7 @@ function xIniVentaRapida(){
 				scrollTo.offset().top + (container.scrollTop()-container.offset().top)-100
     			)
 
-		    event.stopPropagation();
+		    
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		    return false;
@@ -406,14 +406,14 @@ function xIniVentaRapida(){
 			//window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
 			xVerMipedidoVR();
 
-			event.stopPropagation();
+			
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		}
 	})
 
-	xValPago=document.getElementById('component_pago');
-	xValPago.setObjConntet($("#dialog_pagar"))
+	xValPago=document.getElementById('component_pago_vr');
+	xValPago.setObjConntet($("#dialog_pagar_vr"))
 	xValPago.addEventListener('xSend', function (e) {
 		xRpt_pago=e.detail.xRpts;
 		var p=e.detail.xRpts[0].ok;
@@ -435,7 +435,7 @@ function xIniVentaRapida(){
 	xValPago.addEventListener('xCancelarCerrar', function (e) {		
 		// xIrPage(0);
 		// xValPago.close();
-		dialog_pagar.close();
+		xThisVentaRapida.$.dialog_pagar_vr.close();
 		// xValPagoMostrarContainerPago()
 	});
 	
@@ -452,8 +452,8 @@ function xIniVentaRapida(){
 	// });
 
 
-	$("#dialog_pagar").on('iron-overlay-opened',function(){
-		component_pago.setFocusTxt();
+	$("#dialog_pagar_vr").on('iron-overlay-opened',function(){
+		component_pago_vr.setFocusTxt();
 		$("#btn_pago").attr('disabled', true);
 		// btn_pago.hidden=false;
 	})
@@ -500,14 +500,14 @@ function detectEvent(e) {
 		}else{xkey_control=false;}
 	*/
 	if(evt.ctrlKey && evt.keyCode==77){txt_mesa.$.input.focus();}//acceso rapido a num mesa
-	if(evt.keyCode==27){if(dialog_pagar.opened){dialog_pagar.close(); $("#txt_bus_item").focus();xedit_detalle_item=false; return;}}
+	if(evt.keyCode==27){if(dialog_pagar_vr.opened){ xThisVentaRapida.$.dialog_pagar_vr.close(); $("#txt_bus_item").focus();xedit_detalle_item=false; return;}}
 	if (evt.keyCode>=116 && evt.keyCode<=123) {
 		//alert('charCode is ' + evt.charCode);
 		//return document.defaultAction;
 		if(evt.keyCode==119){xEnviarACuenta();}
 		if(evt.keyCode==121){
 
-			if ( !dialog_pagar.opened ) {
+			if ( !dialog_pagar_vr.opened ) {
 			// 	if (!xThisVentaRapida.hidden_container_registro_pago) {
 			// 		if (xThisVentaRapida.valid_monto_pago) { xRegistrarClientePagoVR() }
 			// 	} else {
@@ -542,8 +542,9 @@ function xIrARegistrarPago(){
 	//if(xnum_mesa_valido==false){alert('Numero de mesa no es valido.'); return;}
 	xedit_detalle_item=true;
 	xEstadoPedido=2;
-	dialog_pagar.open();
-	$("#component_pago").focus(); component_pago.setVal(xMoneda(tt_pedido));
+	// dialog_pagar_vr.open();
+	xThisVentaRapida.$.dialog_pagar_vr.open()
+	$("#component_pago_vr").focus(); component_pago_vr.setVal(xMoneda(tt_pedido));
 }
 function xEnviarACuenta(){
 	if(xenviar_cuenta==true){
@@ -613,7 +614,7 @@ function xRegistrarClientePagoVR(){
 
 	xGuardarPedidoVR(function(){
 		// xPopupLoad.xclose();
-		dialog_pagar.close();
+		dialog_pagar_vt.close();
 		guardando = false;
 
 		// setTimeout(() => {			
@@ -651,7 +652,7 @@ function xRegistrarPagoVR(xidclie,xidp){
 		if(!xidC.success){alert(xidC.error); return;}
 		//if(xidC.indexOf('error')!=-1){xPopupLoad.xclose(); alert(xidC); return;}
 		xPopupLoad.xclose();
-		dialog_pagar.close();
+		xThisVentaRapida.$.dialog_pagar_vr.close();
 		//xNuevoPedidoVR();
 	});
 }

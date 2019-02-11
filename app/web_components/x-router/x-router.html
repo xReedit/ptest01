@@ -9,10 +9,11 @@
 		<app-router mode="auto|pushstate|hash">
 			<app-route path="/home" import="x-home.html"></app-route>
 			<app-route path="/elaborar_carta" import="x-carta.html"></app-route>
-			<app-route path="/menu" import="x-menu.html"></app-route>
-			<app-route path="/sub_menu" import="x-submenu.html"></app-route>
-			<app-route path="/categoria" import="x-categoria.html"></app-route>
-			<app-route path="/mipedido" import="x-mipedido.html"></app-route>
+			<app-route path="/menu" import="x-app-menu/x-menu.html"></app-route>
+			<app-route path="/sub_menu" import="x-app-menu/x-submenu.html"></app-route>
+			<app-route path="/categoria" import="x-app-menu/x-categoria.html"></app-route>
+			<app-route path="/mipedido" import="x-app-menu/x-mipedido.html"></app-route>
+			<app-route path="/buscar_item_menu" import="x-app-menu/x-buscar.submenu.html"></app-route>
 			<!--app-route path="/reglas" import="x-reglas-carta.html"></app-route-->
 			<!--app-route path="/datos_print" import="x-datos-print.html"></app-route-->
 			<app-route path="/usuarios" import="x-usuarios.html"></app-route>

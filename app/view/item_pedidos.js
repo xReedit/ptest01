@@ -38,7 +38,7 @@ $(document).on('click', '.xBtn', function(e) {
 		var xCantActual=parseInt(objCant.text());
 		var xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]["cantidad"]);
 		var xCantTotalItem=0;
-		var xDesSeccion=xTituloDet;
+		var xDesSeccion = xTituloDet;
 		var xIdSeccionItem=$(this).parents('.xmenu_item_2').attr('data-idseccion');
 		var xIdSeccionItem_index=$(this).parents('.xmenu_item_2').attr('data-idseccionindex');
 		var xRowidimpresora=$(this).parents('.xmenu_item_2').attr('data-idimpresora');

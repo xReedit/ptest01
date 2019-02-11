@@ -13,7 +13,7 @@ $(document).ready(function() {
 
 window.addEventListener("error", function (e) {
 	console.log(e.error.message, "from", e.error.stack);
-	alert(e.error);
+	// alert(e.error);
 	// You can send data to your server
 	// sendError(data);
 });

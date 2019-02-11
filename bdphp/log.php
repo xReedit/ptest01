@@ -1,5 +1,9 @@
 <?php
-	session_start();
+	session_set_cookie_params('4000'); // 1 hour
+	session_regenerate_id(true); 
+	session_start([
+    	'cookie_lifetime' => 4000,
+	]);	
 	//header("Cache-Control: no-cache,no-store");
 	header('content-type: text/html; charset: utf-8');
 	header('Content-Type: text/event-stream');
@@ -440,7 +444,7 @@
 					$id_seccion=$bd->xDevolverUnDato($sql);
 					if($id_seccion==''){
 						//nuevo seccion
-						$sql_seccion="insert into seccion (idorg,idsede,descripcion,sec_orden)values(".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$seccion['des_seccion']."',".$seccion['sec_orden'].")";
+						$sql_seccion="insert into seccion (idorg,idsede,descripcion,sec_orden,idimpresora)values(".$_SESSION['ido'].",".$_SESSION['idsede'].",'".$seccion['des_seccion']."',".$seccion['sec_orden'].",".$seccion['idimpresora'].")";
 						$id_seccion=$bd->xConsulta_UltimoId($sql_seccion);
 					}
 				} else if ( $seccion['modificado'] ) {
@@ -880,6 +884,39 @@
 				GROUP BY pds.descripcion
 				ORDER BY sum(importe) desc
 			";
+			$bd->xConsulta($sql);
+			break;
+		case 2053: // cargar items de carta lista para busqueda submenu mi pedido
+			$parametro = $_POST['parametro'];
+			$sql="
+			SELECT * FROM(
+				SELECT cl.idcarta_lista,s.idseccion,concat('1',s.sec_orden) AS idseccion_index, i.iditem,s.descripcion AS des_seccion,s.idimpresora, i.descripcion AS des_item, cl.precio, IF(cl.cantidad='SP',(IFNULL((SELECT FLOOR(p1.stock/i1.cantidad) FROM item_ingrediente AS i1 INNER JOIN porcion AS p1 ON i1.idporcion=p1.idporcion WHERE i1.iditem=cl.iditem GROUP BY i1.iditem ORDER BY i1.iditem_ingrediente),0)),cl.cantidad) AS cantidad,s.sec_orden,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir,IF(cl.cantidad='SP',it_p.idporcion,cl.idcarta_lista) AS idprocede, IF(cl.cantidad='SP',2,1) AS procede, '0' AS procede_index,'1' AS imprimir_comanda,'' as codigo_barra, IF(cl.cantidad='SP',it_p.cant_porcion,1) AS cant_descontar, '0' AS idalmacen_items
+				FROM carta_lista AS cl
+					INNER JOIN carta AS c using(idcarta)
+					INNER JOIN seccion AS s using(idseccion)
+					INNER JOIN item AS i using(iditem)						
+					LEFT JOIN (SELECT ii.iditem, GROUP_CONCAT(ii.idporcion) AS idporcion,GROUP_CONCAT(ii.cantidad) AS cant_porcion,po.stock
+								FROM item_ingrediente AS ii
+								INNER JOIN porcion AS po ON ii.idporcion=po.idporcion
+								WHERE ii.idporcion!=0 GROUP BY ii.iditem) AS it_p using(iditem)					
+				WHERE (c.idorg=".$_SESSION['ido']." AND c.idsede=".$_SESSION['idsede'].") and (c.idcategoria=".$_POST['i']." and cl.estado=0 and CONCAT(s.descripcion,i.descripcion) like '%".$parametro."%') AND IF(IF(cl.cantidad='SP',(IFNULL((SELECT FLOOR(p1.stock/i1.cantidad) FROM item_ingrediente AS i1 INNER JOIN porcion AS p1 ON i1.idporcion=p1.idporcion WHERE i1.iditem=cl.iditem GROUP BY i1.iditem ORDER BY i1.iditem_ingrediente),0)),cl.cantidad)=0,s.ver_stock_cero,0)=0
+				order by  cl.count_seleccionado desc, i.descripcion limit 15
+			) a
+			UNION ALL
+				SELECT * FROM(
+				SELECT ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia AS idseccion, concat('2',pf.idproducto_familia) AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, cp.idimpresora
+					,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, ps.stock AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, ps.stock AS cant_preparado,'' as f_ingreso, 0 AS imprimir,p.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,p.codigo_barra,1 AS cant_descontar,ps.idproducto_stock AS idalmacen_items
+				FROM producto AS p
+					INNER JOIN producto_stock AS ps using(idproducto)
+					INNER JOIN almacen AS a using(idalmacen)
+					INNER JOIN producto_familia AS pf using(idproducto_familia)
+					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") and CONCAT(pf.descripcion,p.descripcion) like '%".$parametro."%' AND a.bodega=1 AND ps.estado=0 AND p.estado=0
+				GROUP by p.idproducto
+				ORDER BY pf.idproducto_familia, p.descripcion limit 6
+				) b
+			";
+
 			$bd->xConsulta($sql);
 			break;
 		case 206://guardar detalleitem

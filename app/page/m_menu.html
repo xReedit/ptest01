@@ -226,7 +226,18 @@
       <app-route path="/categoria" import="x-categoria.html"></app-route>
       <app-route path="/mipedido" import="x-mipedido.html"></app-route>
     </app-router> -->
-
+    <paper-dialog id="dialog_inactividad" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation"
+      with-backdrop>      
+      <p>
+        Mucho tiempo de inactividad.
+        Desea continuar?
+      </p>
+      <br />      
+      <div class="buttons">
+        <button class="xBoton2 xRojo" dialog-dismiss onclick="xCerrarSession();">Cerrar session.</button>
+        <button class="xBoton2 xVerde" dialog-dismiss onclick="xMantenerSession()">Si, continuar</button>
+      </div>
+    </paper-dialog>
 
 
     <div class="wrapper">
@@ -250,6 +261,7 @@
     </paper-drawer-panel>
     <paper-header-panel main>
       <paper-toolbar>
+        
         <paper-icon-button
           paper-drawer-toggle
           icon="menu"
@@ -258,12 +270,10 @@
         <span class="title" id="xtitulo_bar">RESTOBAR</span>
         <!--
           paper-icon-button icon="icons:add" class="xInvisible" title="Adicional" id="btn_add_adicional"></paper-icon-button
-        -->
-        <paper-icon-button
-          onclick="goBack()"
-          icon="arrow-back"
-          title="Regresar"
-        ></paper-icon-button>
+        -->        
+        <paper-icon-button onclick="goBack()" icon="arrow-back" title="Regresar"></paper-icon-button>
+        <paper-icon-button onclick="xOpenPageCarta(5)" icon="search" title="Buscar"></paper-icon-button>
+        
         <div class="xIco_MiPedido" onclick="xOpenPageCarta(3)">
           <span class="xCantPedio_ico xInvisible"></span>
           <paper-icon-button
@@ -369,5 +379,6 @@
     <script type="text/javascript" src="../view/item_pedidos.js"></script>
     <script type="text/javascript" src="../view/xm_all.js"></script>
     <script type="text/javascript" src="../view/m_menu.js"></script>
+    <script type="text/javascript" src="../view/onGalleta.js"></script>
   </body>
 </html>

@@ -1,8 +1,12 @@
 <?php
 
 	
-    //log registrar peidod y pago
-    session_start();
+	//log registrar peidod y pago
+	session_set_cookie_params('4000'); // 1 hour
+	session_regenerate_id(true); 
+    session_start([
+    	'cookie_lifetime' => 4000,
+	]);	
 	//header("Cache-Control: no-cache,no-store");
 	header('content-type: text/html; charset: utf-8');
 	header('Content-Type: text/event-stream');

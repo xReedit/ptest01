@@ -1,5 +1,7 @@
 <?php
-session_start();
+session_start([
+	'cookie_lifetime' => 4000,
+]);	
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
 date_default_timezone_set('America/Lima');
@@ -19,24 +21,6 @@ switch($_GET['op'])
 		case 2: //	verifica si existe pedido nuevo || zona de despacho
 			$tipo_consumo=$_GET["tp"];
 			$idseccion=$_GET["ids"];
-			// $sql="
-			// 	SELECT p.idpedido
-			// 	FROM pedido AS p
-			// 		INNER JOIN pedido_detalle AS pd using(idpedido)
-			// 		INNER JOIN seccion AS s using(idseccion)
-			// 	where (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") and p.cierre=0 and (pd.idtipo_consumo in (".$tipo_consumo.") and s.idimpresora in (".$idseccion."))
-			// 	ORDER BY p.idpedido DESC limit 1
-			// ";
-
-			// tambien tiene en cuenta productos de bodega
-			// $sql = "
-			// SELECT p.idpedido FROM pedido AS p
-			// 	INNER JOIN pedido_detalle AS pd using(idpedido)
-			// 	LEFT JOIN seccion AS s using(idseccion)
-			// 	LEFT JOIN producto_familia as pf on pd.idseccion = pf.idproducto_familia
-			// where (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") and p.cierre=0 and (pd.idtipo_consumo in (".$tipo_consumo.") and (s.idimpresora in (".$idseccion.") or pf.idimpresora in (".$idseccion.") ) )
-			// ORDER BY p.idpedido DESC limit 1
-			// ";
 
 			$sql = "
 			SELECT max(p.idpedido) 
@@ -53,6 +37,11 @@ switch($_GET['op'])
 			ob_flush();
 			flush();
 			break;
+		case 3://restablecer session
+			$_session_restart = '5c61d036ca8b1';// $_COOKIE['PHPSESSID'];
+			session_start($_session_restart);
+			echo($_session_restart);
+			break;		
 	}
 
 /*$time = date('r');

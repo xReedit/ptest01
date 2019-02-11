@@ -86,6 +86,8 @@ $local = (int)$xArray_print[0]['local'] || 0;
 /// tamaño de letra de la comanda
 $val_size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $xArray_print[0]) ? $xArray_print[0]['var_size_font_tall_comanda'] : "0";
 $size_font_comanda_tall = (int)$val_size_font_comanda_tall===0 ? false : true;
+
+$val_size_font_comanda_tall_rigth = (int)$val_size_font_comanda_tall;
 $val_size_font_comanda_tall++; //tamaño de letra,1+1>2 2+1>3
 
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
@@ -169,6 +171,11 @@ while($num_copias>=0){
 
 	/* ENCABEZADO */
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+	if ( $size_font_comanda_tall === true ) {
+		$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
+		$printer -> setTextSize($val_size_font_comanda_tall, $val_size_font_comanda_tall_rigth);	
+	}
+
 	$printer -> text($num_mesa."\n");
 	$printer -> selectPrintMode();
 	$printer -> text("------------------------------------------------\n");		
@@ -233,7 +240,7 @@ while($num_copias>=0){
 			
 			if ( $size_font_comanda_tall === true ) {
 				$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
-				$printer -> setTextSize($val_size_font_comanda_tall, 1);	
+				$printer -> setTextSize($val_size_font_comanda_tall, $val_size_font_comanda_tall_rigth);	
 			}
 			
 			/*titulo tipo consumo*/			
@@ -258,7 +265,7 @@ while($num_copias>=0){
 			
 			if ( $size_font_comanda_tall === true ) {
 				$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
-				$printer -> setTextSize($val_size_font_comanda_tall, 1);	
+				$printer -> setTextSize($val_size_font_comanda_tall, $val_size_font_comanda_tall_rigth);	
 			}
 			
 			if($seccion!=$subitem["des_seccion"]){			

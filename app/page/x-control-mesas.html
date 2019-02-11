@@ -334,7 +334,7 @@ var xThisCM,
 	xSelAllPedidos=false,
 	xbuscar_mesa=false,
 	xkey_f10=true,
-	xidCategoriaPD=''
+	xidCategoriaPD='',
 	xArrayItemEliminar=[],
 	xCountTotalPedidos=0, //cuenta la cantidad total de pedidos, si es diferente actualiza
 	xValCountPedidos=0,
@@ -345,7 +345,7 @@ var xThisCM,
 	ImporteDiferencia = 0, // la diferencia por pagar, para saber si es una seleccion total o parcial 
 	xImporteTotalSeleccionados = 0;  // obtiene el total de los pedidos seleccionados
 
-var xsourceEvent;
+var xsourceEvent, EstadoLoadMesas=false;
 function xIniControlMesa(){
 	$( "#accordion" ).accordion({
 		heightStyle: "content",
@@ -2015,6 +2015,9 @@ function xFiltroPedidos(obj){
 }
 */
 function xLoadMesas(){
+	// if(EstadoLoadMesas) return;
+	// EstadoLoadMesas=true;
+
 	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5'})
 	.done( function (NumMesa) {
@@ -2110,6 +2113,7 @@ function xLoadMesas(){
 		});
 
 		xLogRun_CuentaNumeroPedidos();
+		// EstadoLoadMesas = false;
 	});
 }
 function xLogRun_CuentaNumeroPedidos(){
@@ -2300,11 +2304,13 @@ Polymer({
 		// valid_form_cliente_pago: boolean = false,
 		// valid_monto_pago: boolean = false
 	},
-	attached:function(){
-    	xThisCM=this;
-    	xThisCM.select_page=0;
-    	xIniControlMesa();
-    	xbuscar_mesa=false;
+	attached:function(){		
+		xThisCM = this;
+		xThisCM.select_page = 0;
+		xIniControlMesa();
+		xbuscar_mesa = false;
+		// if ( xThisCM ) {return}
+    	
     },
     detached:function(){
     	//clearInterval(xRefreshPedidos);

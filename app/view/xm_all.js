@@ -15,13 +15,13 @@ var xh_sys,
 //xTonoLLamada='notifica1',
 //router,
 
-window.onerror = function(error, url, line) {
-  console.log(error);
-  // controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
-};
+// window.onerror = function(error, url, line) {
+//   console.log(error);
+//   // controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
+// };
 window.addEventListener("error", function(e) {
   console.log(e.error.message, "from", e.error.stack);
-  alert(e.error);
+//   alert(e.error);
   // You can send data to your server
   // sendError(data);
 });
@@ -664,3 +664,13 @@ function xm_all_xToastClose() {
 	toast.hide();
 }
 
+function delay(callback, ms) {
+	var timer = 0;
+	return function () {
+		var context = this, args = arguments;
+		clearTimeout(timer);
+		timer = setTimeout(function () {
+			callback.apply(context, args);
+		}, ms || 0);
+	};
+}

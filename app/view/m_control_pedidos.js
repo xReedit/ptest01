@@ -5,7 +5,7 @@ var xPopupLoad;
 
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
-document.addEventListener("WebComponentsReady", function componentsReady() {
+document.addEventListener("DOMContentLoaded", function componentsReady() {
 	xIniControlPedido();
 });
 
