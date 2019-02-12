@@ -36,12 +36,7 @@ switch($_GET['op'])
 			echo "retry: 4000\n"."data:".$numero_pedidos_actual_2.",".$hora."\n\n";
 			ob_flush();
 			flush();
-			break;
-		case 3://restablecer session
-			$_session_restart = '5c61d036ca8b1';// $_COOKIE['PHPSESSID'];
-			session_start($_session_restart);
-			echo($_session_restart);
-			break;		
+			break;			
 	}
 
 /*$time = date('r');

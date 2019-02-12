@@ -349,7 +349,17 @@ function xSumaCantArray(ArrySum){
 		$.map(ArrySum[i], function(n, z) {
 			if (typeof n === "object"){
 				const _xprecio_unitario = parseFloat(n.precio);
-				const _xcantidad = parseFloat(n.cantidad);
+				
+				// _total = x.precio_total_calc || x.total;
+				// _total = _total.toString().indexOf(',') > -1 ? x.precio_total : _total; // cuando juntan la cuenta
+				// _total = parseFloat(_total).toFixed(2);
+				
+				let _xcantidad = n.cantidad;				
+				if (_xcantidad.toString().indexOf(",") > -1) { // caso de que se junte los items
+					_xcantidad = _xcantidad.split(',');
+					_xcantidad = _xcantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
+				} 
+				
 				const importe_calculado_unitario = _xcantidad * _xprecio_unitario;
 
 				// let xp_print;

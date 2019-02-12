@@ -237,7 +237,7 @@
 		<br>
 		<div class="xContent">
 			<!--button onclick="xGeneralActualizaItemInactivo();">aaa</button-->
-			<div class="grid">
+			<div class="grid" id="_gridCM">
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
 					<p class="tipo">Mesa</p>
 					<h3 class="numero xBold">01</h3>
@@ -248,6 +248,8 @@
 		</div>
 	</template>
 </dom-module>
+
+<script src="../../js/isotope.pkgd.min.js"></script>
 <style type="text/css">
 	.grid:after {
   content: '';
@@ -297,7 +299,7 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 var xThisCM,
 	xRefreshPedidos,
 	xRefreshHora,
-	xIdFiltro1,
+	xIdFiltro1='',
 	xCronometro_us=0,
 	xPermisoSupervisor=0,
 	xRefreshPermiso,
@@ -333,6 +335,7 @@ var xThisCM,
 	xidpedid_txt_change='',//par cambiar mesa
 	xSelAllPedidos=false,
 	xbuscar_mesa=false,
+	iIniIsotope=false,
 	xkey_f10=true,
 	xidCategoriaPD='',
 	xArrayItemEliminar=[],
@@ -1269,7 +1272,8 @@ async function xRegistrarClientePagoCP(){
 	//xCheckPedidos()
 	//btn_pago.hidden=true;
 	
-	$("#btn_pago").attr('disabled', true);
+	$("#btn_pagoX").attr('disabled', true);
+	btn_pagoX.disabled = true;
 	// btn_pago.hidden=true;
 	if (enProcesoGuardarPago) {return;}
 	enProcesoGuardarPago = true;
@@ -1981,13 +1985,13 @@ function quitarSubTotal(obj, index) {
 function xOrdenPedido(op){
 	switch(op){
 		case 0:
-			var $grid = $('.grid').isotope({
+			$('.grid').isotope({
   				sortBy: [ 'tpc','numero', 'estado' ]
 			});
 
 			break;
 		case 1:
-			var $grid = $('.grid').isotope({
+			$('.grid').isotope({
 			  sortBy: [ 'tpc','estado', 'numero' ]
 			});
 			break;
@@ -2002,8 +2006,23 @@ function xFiltroPedidos(obj){
 		xOpenPage(2,'?f1='+xIdFiltro1+'?df1='+xDesFiltro1)
 	}
 	xIdFiltro1='.tpc'+xIdFiltro1;
-	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);
-	$('.grid').isotope({filter:xIdFiltro1});
+	
+	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
+	
+	if ( iIniIsotope ) {
+		$('.grid').isotope({ filter: xIdFiltro1 });
+	} else {
+		xLoadMesas();
+	}
+
+	iIniIsotope = true;
+	// if ( xIdFiltro1 != _xIdFiltro1 ) {
+			
+	// 	xLoadMesas();
+	// }
+	// xIdFiltro1 = _xIdFiltro1;
+	// 
+	
 }
 
 /*function xVerDetallePedido(obj){
@@ -2014,10 +2033,18 @@ function xFiltroPedidos(obj){
 	xOpenPage(10,xparam);
 }
 */
-function xLoadMesas(){
+function xLoadMesas(){	
 	// if(EstadoLoadMesas) return;
 	// EstadoLoadMesas=true;
 
+
+	// var container_grid = $('#_gridCM');	
+	// $container.isotope( 'remove', 'xMiCardPedido' );
+	// $(".grid").isotope({		
+	// 	layoutMode: 'fitRows',		
+	// });
+	
+	// $('.grid').remove('.xMiCardPedido').trigger('create');
 	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5'})
 	.done( function (NumMesa) {
@@ -2095,9 +2122,9 @@ function xLoadMesas(){
 
 			};
 
-			xIdFiltro1='.tpc'+xIdFiltro1;
+			xIdFiltro1 = xIdFiltro1.indexOf('tpc')>-1 ? xIdFiltro1 : '.tpc' + xIdFiltro1;
 
-			$(".grid").html($(xCadenaNumMesa)).trigger('create').isotope({
+			$('.grid').html($(xCadenaNumMesa)).trigger('create').isotope({
 			  itemSelector: '.xMiCardPedido',
 			  layoutMode: 'fitRows',
 			  getSortData: {
@@ -2108,6 +2135,17 @@ function xLoadMesas(){
 			  sortBy: [ 'tpc','numero','estado' ],
 			  filter: xIdFiltro1
 			});
+
+			iIniIsotope = true;
+
+			// $grid.isotope('updateSortData');
+
+			// $('.grid').isotope('reloadItems');
+			// $grid.isotope('reloadItems');
+			// $grid.isotope('reLayout');
+			// $grid.isotope('layout');
+			// $grid.isotope('layout');
+			
 
 			xCadenaNumMesa='';
 		});
@@ -2304,9 +2342,12 @@ Polymer({
 		// valid_form_cliente_pago: boolean = false,
 		// valid_monto_pago: boolean = false
 	},
-	attached:function(){		
+	attached:function(){				
 		xThisCM = this;
-		xThisCM.select_page = 0;
+		xThisCM.select_page = 0;		
+
+		iIniIsotope = false;
+
 		xIniControlMesa();
 		xbuscar_mesa = false;
 		// if ( xThisCM ) {return}
@@ -2316,8 +2357,7 @@ Polymer({
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);
     	clearInterval(xRefreshPermiso);
-    	xbuscar_mesa=true;
-    	// xsourceEvent.close();
+			xbuscar_mesa=true;					
     }
 })
 </script>

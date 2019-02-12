@@ -1,5 +1,4 @@
 var cookieRegistry = [];
-var galletaRestaurada=false;
 function setGalleta() {
 	const galleta = readCookie("PHPSESSID");
 	window.localStorage.setItem('::app3_sys_sess', galleta);
@@ -10,8 +9,7 @@ function getGalleta() {
 }
 
 function restaurarGalleta() {
-	const galleta = getGalleta();
-	galletaRestaurada = true;
+	const galleta = getGalleta();	
 	createCookie("PHPSESSID", galleta, 1);
 }
 
@@ -41,13 +39,14 @@ function eraseCookie(name) {
 }
 
 function listenCookieChange(callback) {
-	if (galletaRestaurada) {galletaRestaurada=false; return;}
+	const galleta = getGalleta();	
 	cookieName = "PHPSESSID";
 	setInterval(function () {
 		if (cookieRegistry[cookieName]) {
-			if (readCookie(cookieName) != cookieRegistry[cookieName]) {
+			if (readCookie(cookieName) != cookieRegistry[cookieName]) {				
 				// update registry so we dont get triggered again
 				cookieRegistry[cookieName] = readCookie(cookieName);
+				if (galleta === readCookie(cookieName)) { return; }
 				return callback();
 			}
 		} else {
