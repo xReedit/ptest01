@@ -533,7 +533,10 @@ function xCancelarCerrar() {
 
 function xListoRegistraPago() {
 	if (registrando) return;
+	if ( btn_pagoX.disabled ) return;
+	
 	registrando=true;
+	btn_pagoX.disabled = true;
 	xSumarTotales_row();
 	// xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
 	// xThisPago.setVisiblePanel1();
@@ -542,6 +545,7 @@ function xListoRegistraPago() {
 	/// loading - para no disparar varias veces mientras se esta ejecutando
 	setTimeout(() => {
 		registrando = false;
+		btn_pagoX.disabled = false;
 	}, 1000);
 }
 

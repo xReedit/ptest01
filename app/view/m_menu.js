@@ -13,7 +13,8 @@ var xOnlyAccPedido;
 var xCount_cant_ico = 0;
 
 window.addEventListener("error", function (e) {
-  console.log(e.error.message, "from", e.error.stack);
+  if (!e) {return}
+  console.log(e);
   // alert(e.error + ' ->' + e.error.stack);
   // You can send data to your server
   // sendError(data);
@@ -28,19 +29,19 @@ window.addEventListener("error", function (e) {
 //   });
 // });
 
-$(document).ready(function () {  
-  $("#PanelDe").on("transitionend", function(a) {
-    if (this.selected == "main") {
-      $("#PanelDe").css("z-index", "0");
-    }
-  });
+// $(document).ready(function () {  
+//   $("#PanelDe").on("transitionend", function(a) {
+//     if (this.selected == "main") {
+//       $("#PanelDe").css("z-index", "0");
+//     }
+//   });
 
   
 
   // setTimeout(() => {  
   //   xIniMenAAA();  
   // }, 1500);
-});
+// });
 
 document.addEventListener("WebComponentsReady", function componentsReady() {
   $("#PanelDe").on("transitionend", function (a) {
@@ -226,6 +227,9 @@ function xArmarMenuLateral(op) {
       );
       break;
   }
+
+  if (xMenuArray===null) {return;}
+
   for (var i = 0; i < xMenuArray.length; i++) {
     xCadenaMenuL = String(
       xCadenaMenuL +

@@ -130,6 +130,8 @@ function xOpenPage(xop, parametro){
 		case 24:xruta='/items_borrados';break;
 		case 25: xruta = '/facturador'; break;
 		case 26: xruta = '/c_electronico'; break;
+		case 27: window.open('192.168.1.64/print-server/print-server.html', "Venta rapida"); return; // desarrollo
+		// case 27: window.open('www.appresto.papaya.com.pe/print-server/print-server.html', "Venta rapida"); return; // produccion
 	}
 	xruta=xruta+parametro;
 	router.go(xruta+parametro);
@@ -201,45 +203,6 @@ function xOpenPanelDe(){
 	//PanelDe.openDrawer();
 	$("#PanelDe").css('z-index','20');
 }
-/*// >>> xm_log_get
-function xLoadRegla(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=306', data:{i:xidCategoria}})
-	.done( function (DtR) {
-		var xDtR=$.parseJSON(DtR);
-		xDtR=xDtR.datos;
-		window.localStorage.setItem("::app3_sys_dta_rec",JSON.stringify(xDtR))
-	})
-}*/
-/*// >>> xm_log_get
-function xLoadDtPrint(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=307'})
-	.done( function (DtPrint) {
-		var xDtPrint=$.parseJSON(DtPrint);
-		xDtPrint=xDtPrint.datos;
-		window.localStorage.setItem("::app3_sys_dta_prt",JSON.stringify(xDtPrint))
-	});
-}
-*/
-/*// >>> xm_log_get
-function xLoadOtherDatosSede(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=308'})
-	.done( function (dtOther) {
-		var xdtOther=$.parseJSON(dtOther);
-		xdtOther=xdtOther.datos;
-		window.localStorage.setItem("::app3_sys_dta_other",JSON.stringify(xdtOther))
-	});
-}
-*/
-/*// >>> xm_log_get
-function xLoadNumMesaSede(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=307'})
-	.done( function (DtPrint) {
-		var xDtPrint=$.parseJSON(DtPrint);
-		xDtPrint=xDtPrint.datos;
-		window.localStorage.setItem("::app3_sys_dta_prt",JSON.stringify(xDtPrint))
-	});
-}
-*/
 
 
 function xGenerarMenu(op){

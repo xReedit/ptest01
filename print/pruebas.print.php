@@ -6,14 +6,30 @@ use Mike42\Escpos\ImagickEscposImage;
 use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
 
+header('Access-Control-Allow-Origin: *');  
+
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
 $hora_actual=date('H').':'.date('i').':'.date('s');
+
+//$ip_printer=isset ($_POST['ip_print']) ? $_POST['ip_print'] : "smb://pc:182182@192.168.1.56/ticketera1";
+$ip_printer="smb://pc:182182@192.168.1.56/ticketera1";
+
+
 try {
     // Enter the share name for your printer here, as a smb:// url format
     // $connector = new WindowsPrintConnector("smb://desa1/ticketera");
     //$connector = new WindowsPrintConnector("smb://Guest@computername/Receipt Printer");
     //$connector = new WindowsPrintConnector("smb://FooUser:secret@computername/workgroup/Receipt Printer");
-    $connector = new WindowsPrintConnector("smb://pc:182182@192.168.1.56/ticketera1");
+    //$connector = new WindowsPrintConnector("smb://pc:182182@192.168.1.56/ticketera1");
+	
+	$impresora_print=$ip_printer;	
+	$pos_print=strrpos($ip_printer,'//');		
+	if($pos_print===false){
+		$connector = new NetworkPrintConnector($impresora_print);
+	}else{						
+		$impresora_print=$impresora_print;		
+		$connector = new WindowsPrintConnector($impresora_print);
+	}
     
     /* Print a "Hello world" receipt" */
     $printer = new Printer($connector);
@@ -41,6 +57,7 @@ try {
     // // $connector = new FilePrintConnector("php://output");
     // // $printer = new Printer($connector);
     // $printer->bitImage($im);
+
 
     $imagick = new Imagick();
     $imagick->setResourceLimit(6, 1);

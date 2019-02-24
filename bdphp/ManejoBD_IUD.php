@@ -1,9 +1,7 @@
 <?php
-session_set_cookie_params('4000'); // 1 hour
-session_regenerate_id(true); 
-session_start([
-    	'cookie_lifetime' => 4000,
-	]);	
+//session_set_cookie_params('4000'); // 1 hour
+//session_regenerate_id(true); 
+session_start();	
 //$NomTabla=$_SESSION['Tabla'];
 //$IdUs=$_SESSION['IdUs'];
 

@@ -344,6 +344,16 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 
 function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xArraySubtotal,callback){
 	xPopupLoad.titulo="Imprimiendo...";
+	
+	const _data = {
+		Array_enca: xArrayEncabezado,
+		Array_print: xImpresoraPrint,
+		ArrayItem: xArrayCuerpo,
+		ArraySubTotales: xArraySubtotal	
+	}
+	xSendDataPrintServer(_data,1,'comanda');
+
+
 	$.ajax({type: 'POST', url: '../../print/print3.php', 
 			data:{
 				Array_enca:xArrayEncabezado, 
@@ -375,4 +385,25 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 				callback(xErrorPrint);
 			}
 		});	
+}
+
+
+
+/// enviar a print server
+function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
+	// _data = JSON.stringify(JSON.stringify(_data));
+	_data = JSON.stringify(_data);
+
+	$.ajax({
+		url: '../../bdphp/log_003.php?op=1',
+		type: 'POST',		
+		data: {			
+			datos: _data,
+			idprint_server_estructura: _idprint_server_estructura,
+			tipo: _tipo
+		}
+	})
+	.done((x)=> {	
+		console.log(x);
+	});	
 }

@@ -16,6 +16,16 @@ $xArray_print=$_POST['Array_print'];
 $ip_printer=$xArray_print[0]['ip_print'];
 $printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
 
+//////*** para la estructura */
+// $data = $_POST['data'];
+// $ArraySubTotales=$data['ArraySubTotales'];
+// $ArrayItem=$data['ArrayItem'];
+// $ArrayEnca=$data['Array_enca'];
+// $xArray_print=$data['Array_print'];
+// $ip_printer=$xArray_print[0]['ip_print'];
+// $printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
+///// ***
+
 // verifica si imprime una copia en la impresora local
 if (array_key_exists('copia_local', $xArray_print[0])){
 	if ($xArray_print[0]['local'] === "1" && $xArray_print[0]['copia_local'] === "0" ) {
@@ -164,11 +174,6 @@ while($num_copias>=0){
 		$printer -> feed();
 	}	
 
-	// if ( $size_font_comanda_tall === true ) {
-	// 	$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
-	// 	$printer -> setTextSize(2, 1);	
-	// }
-
 	/* ENCABEZADO */
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 	if ( $size_font_comanda_tall === true ) {
@@ -214,10 +219,6 @@ while($num_copias>=0){
 		if($item==null){continue;}
 
 		$tipo_consumo=$item["des"];
-		/*$printer -> setEmphasis(true);
-		$printer -> text($item["des"]."\n");
-		$printer -> text("------------------------------------------------\n");
-		$printer -> setEmphasis(false);*/
 		
 		$si_tiene_item=0;
 		$cuenta_row=0;
@@ -301,9 +302,7 @@ while($num_copias>=0){
 			//$r_subitem = strlen($r_subitem) > 35 ? substr($r_subitem,0,35)."..." : $r_subitem;
 
 			$sum_total=(float)$sum_total+(float)$precio;
-			//$printer -> selectPrintMode(Printer::MODE_EMPHASIZED);
-			//$printer -> setTextSize(2, 1);		
-			// $printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);	
+		
 			$printer -> text(new item($r_subitem, $precio));			
 			if($des_part2!=''){$printer -> text(new item($des_part2, ''));}
 			if($des_part3!=''){$printer -> text(new item($des_part3, ''));}
@@ -317,22 +316,7 @@ while($num_copias>=0){
 	$printer -> text("------------------------------------------------\n");
 	$printer -> setEmphasis(true);
 	$r_subt_t=0;		
-	/*foreach ($xArray_print as $item) {
-		if($item['des_detalle']==''){continue;}
-		$r_subt=$item['porcentaje']/100;
-		$r_subt=$sum_total*$r_subt;
-		$r_subt_t=$r_subt_t+$r_subt;
-		$r_subt=number_format($r_subt, 2, ".", "");
-		$printer -> text(new item($r_subitem, $r_subt));
-	}
-	$sum_total=$sum_total+$r_subt_t;
-	$sum_total=number_format($sum_total, 2, ".", "");
-
-	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-	$printer -> text(new item('Total', $sum_total, true));
-	$printer -> selectPrintMode();*/
 	
-	//	
 	foreach ($ArraySubTotales as $item_sbt) {//
 		if($item_sbt['visible']=='false'){continue;}
 		if($item_sbt['tachado']=='true'){continue;}

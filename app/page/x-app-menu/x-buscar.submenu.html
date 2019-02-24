@@ -68,6 +68,7 @@
 			xTituloDet = $(this).attr("data-desseccion"); 
 			xidItem = $(this).attr("data-id");
 			xidCatProcedencia = $(this).attr("data-idprocede");
+			_xcantidad = $(this).attr("data-cantidad");
 			xidItem_selected = xidItem;
 			$(this)
 				.find(".xpedir_row")
@@ -93,6 +94,8 @@
 			e.stopImmediatePropagation();
 			e.preventDefault()
 
+			if (_xcantidad === 'ND') return;
+			
 			clearInterval(xreloj_update_subItem_sel);
 			//if(xidCatProcedencia=='almacen_items'){return;}
 			_Busqueda_xUpdateStockSubItem_selected();
@@ -189,6 +192,7 @@
 					'" data-idseccion="' + xdt_sub_Item[i].idseccion +
 					'" data-idseccionindex="' + xdt_sub_Item[i].idseccion_index +
 					'" data-desseccion="' + xdt_sub_Item[i].des_seccion +
+					'" data-cantidad="' + xdt_sub_Item[i].cantidad +
 					'" data-idimpresora="' + xdt_sub_Item[i].idimpresora +
 					'" data-idprocede="' + xdt_sub_Item[i].idprocede +
 					'" data-procede="' + xdt_sub_Item[i].procede +

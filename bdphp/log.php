@@ -1,9 +1,7 @@
 <?php
-	session_set_cookie_params('4000'); // 1 hour
-	session_regenerate_id(true); 
-	session_start([
-    	'cookie_lifetime' => 4000,
-	]);	
+	// session_set_cookie_params('4000'); // 1 hour
+	// session_regenerate_id(true); 
+	session_start();	
 	//header("Cache-Control: no-cache,no-store");
 	header('content-type: text/html; charset: utf-8');
 	header('Content-Type: text/event-stream');
@@ -596,6 +594,9 @@
 				GROUP by pf.idproducto_familia
 				ORDER BY pf.descripcion)b
 			";*/
+
+			$idcategoria = isset($_POST['idcategoria']) ? $_POST['idcategoria'] : 1;
+			if ($idcategoria=='undefined' || $idcategoria==null) {$idcategoria=1;}
 			$sql="
 				SELECT * FROM(
 				SELECT lcase(GROUP_CONCAT(i.descripcion ORDER BY i.descripcion)) AS all_items, s.idseccion,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index, s.descripcion AS des_seccion,s.idimpresora, IF(cl.cantidad='SP',2,1) AS procede
@@ -604,7 +605,7 @@
 					INNER JOIN item AS i using(iditem)
 					INNER JOIN carta AS c using(idcarta)
 					INNER JOIN categoria AS cat using(idcategoria)
-				WHERE (s.idorg=".$_SESSION['ido']." AND s.idsede=".$_SESSION['idsede'].") AND (cat.idcategoria=".$_POST['idcategoria'].") AND s.estado=0
+				WHERE (s.idorg=".$_SESSION['ido']." AND s.idsede=".$_SESSION['idsede'].") AND (cat.idcategoria=".$idcategoria.") AND s.estado=0
 				GROUP BY s.idseccion
 				ORDER BY s.sec_orden) a
 				UNION ALL

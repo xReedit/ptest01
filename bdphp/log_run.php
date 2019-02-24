@@ -1,7 +1,5 @@
 <?php
-session_start([
-	'cookie_lifetime' => 4000,
-]);	
+session_start();	
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
 date_default_timezone_set('America/Lima');

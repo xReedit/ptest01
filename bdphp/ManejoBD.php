@@ -5,7 +5,7 @@ class xManejoBD extends mysqli //extends SQLite3
     function xManejoBD($BaseDatos)
     {
 		//$this->bd = new Sqlite3($BaseDatos) or die('no se pudo conectar');
-		$this->bd = new mysqli('localhost', 'adm_restobar', '159159159', $BaseDatos);
+		$this->bd = new mysqli('127.0.0.1', 'adm_restobar', '159159159', $BaseDatos);
 		if (mysqli_connect_errno()) {
 			printf("Fallo la conexión: %s\n", mysqli_connect_error());
 			exit();

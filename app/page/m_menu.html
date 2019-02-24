@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta http-equiv="cache-control" content="max-age=31536000" />
+    <meta http-equiv="Pragma" content="max-age=31536000">
     
     <!--
       meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes"
@@ -15,10 +17,10 @@
     <link rel="stylesheet" href="../../css/load_style.css" />
 
     <!-- script src="../../js/jquery.js"></script -->
-    <link rel="stylesheet" href="../../css/daterangepicker.css" />
-    <link rel="stylesheet" href="../../js/jquery-ui.min.11.4.css" />
-    <script src="../../js/jquery_external.js"></script>
-    <script src="../../js/jquery-ui.min.11.4.js"></script>
+    <!-- <link rel="stylesheet" href="../../css/daterangepicker.css" /> -->
+    <!-- <link rel="stylesheet" href="../../js/jquery-ui.min.11.4.css" /> -->
+    <!-- <script src="../../js/jquery_external.js"></script> -->
+    <!-- <script src="../../js/jquery-ui.min.11.4.js"></script> -->
 
     
     <!-- script src="../../js/perfect-scrollbar.min.js"></script -->
@@ -287,98 +289,11 @@
       </div>
     </paper-header-panel>
 
-    <!--
-      paper-header-panel main>
-              	<paper-toolbar>
-              		<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
-      	<span class="title" id="xtitulo_bar">RESTOBAR</span>
-      	<paper-icon-button icon="search"></paper-icon-button>
-              	</paper-toolbar>
-               <div class="content">
-                   <x-router></x-router>
-               </div>
-         		</paper-header-panel>
-      </paper-drawer-panel
-    -->
-
-    <!--
-      header>
-      <paper-toolbar>
-      	   	<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
-      	   	<span class="title" id="xtitulo_bar">RESTOBAR</span>
-      	   	<paper-icon-button icon="search"></paper-icon-button>
-      </paper-toolbar>
-      </header>
-      <content>
-      <div id="xContenedoPaginas" main class="content">
-      	<x-router></x-router>
-      </div>
-      </content
-    -->
-
-    <!--
-      paper-drawer-panel force-narrow id="PanelDe" drawer>
-       <paper-toolbar class="xHeadertoolbar">
-       	<div class="title">Opciones</div>
-       </paper-toolbar>
-       <div class="xContentPaperDrawer" style="height: 100%" id="xContenedorMenuLateral">
-       	<br>
-       	<div class="xBtnPanel"></div>
-       </div>
-      </paper-drawer-panel
-    -->
-    <!-- /paper-header-panel -->
-    <!--
-      paper-header-panel main class="fit xContentPaperDrawer" style="height: 100%;" id="xContenedoPaginas">
-       	<paper-toolbar id="xtolbar_top">
-         	<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
-         	<span class="title" id="xtitulo_bar">RESTOBAR</span>
-         	<paper-icon-button icon="search"></paper-icon-button>
-      </paper-toolbar>
-      <div style="height: 100%;" class="content" main id="xContenedoPaginas">
-      	<x-router></x-router>
-      </div>
-      </paper-header-panel
-    -->
-
-    <!--
-      paper-drawer-panel force-narrow id="PanelDe" drawer>
-        <paper-header-panel drawer>
-          <paper-toolbar class="xHeadertoolbar">
-            <div>Application</div>
-          </paper-toolbar>
-          <div class="xContentPaperDrawer" style="height: 100%" id="xContenedorMenuLateral">
-          	<br>
-          	<div class="xBtnPanel"></div>
-          </div>
-        </paper-header-panel>
-        <paper-header-panel main id="xmain">
-      	<paper-scroll-header-panel main fixed>
-      		<header>
-      		<div id="header">
-      	    <paper-toolbar id="xtolbar_top">
-      		   	<paper-icon-button paper-drawer-toggle icon="menu"></paper-icon-button>
-      		   	<span class="title" id="xtitulo_bar">RESTOBAR</span>
-      		   	<paper-icon-button icon="search"></paper-icon-button>
-      		</paper-toolbar>
-      		</div>
-      		</header>
-      		<content>
-      		<div id="content">
-      		    <x-router></x-router>
-      		</div>
-      		</content>
-      	</paper-header-panel>
-      		</paper-scroll-header-panel>
-
-      </paper-drawer-panel
-    -->
-
-    
-    <script type="text/javascript" src="../../js/mifuncion_web.js"></script>
-    <script type="text/javascript" src="../view/item_pedidos.js"></script>
-    <script type="text/javascript" src="../view/xm_all.js"></script>
-    <script type="text/javascript" src="../view/m_menu.js"></script>
-    <script type="text/javascript" src="../view/onGalleta.js"></script>
+    <script src="../../js/jquery_external.js" async></script>
+    <script type="text/javascript" src="../view/xm_all.js" async></script>
+    <script type="text/javascript" src="../view/m_menu.js" async></script>
+    <script type="text/javascript" src="../view/item_pedidos.js" async></script>
+    <script type="text/javascript" src="../../js/mifuncion_web.js" async></script>
+    <script type="text/javascript" src="../view/onGalleta.js" async></script>
   </body>
 </html>

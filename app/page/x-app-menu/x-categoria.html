@@ -39,9 +39,8 @@
       return;
     }
     //$(".xMenu_body #xContenedoPaginas").html('<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>').trigger('create');
-    $.ajax({ type: "POST", url: "../../bdphp/log.php?op=302" }).done(function(
-      dtCat
-    ) {
+    $.ajax({ type: "POST", url: "../../bdphp/log.php?op=302" })
+    .done(function(dtCat) {
       var xdtCat = $.parseJSON(dtCat);
       xdtCat = xdtCat.datos;
       var xCadenaCartegoria = "",
@@ -90,6 +89,11 @@
       $(".xMenu_body")
         .append(xCadenaCartegoria)
         .trigger("create");
+    }).fail(function (jqXHR, textStatus) {
+      if (textStatus == 'timeout') {
+          $.ajax(this);
+        return;
+      }
     });
   }
   function xIrCategoria(i) {

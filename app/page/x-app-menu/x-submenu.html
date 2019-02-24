@@ -40,9 +40,7 @@
     xCadenaTC = xArmarTipoConsumo();
     xLoadItems();
 
-    $(document).on('ontouchstart', '.xmenu_item_2', function (e) {
-      alert('on toucj');
-    });
+   
     $(document).on('click', '.xmenu_item_2', function(e) {
       // alert('on click');
     // $(document).click(function (e) {
@@ -62,6 +60,7 @@
       var xidTipoConsumoItem;
       xTituloDet = $(this).attr("data-desseccion"); 
       xidItem = $(this).attr("data-id");
+      _xcantidad = $(this).attr("data-cantidad");
       xidItem_selected = xidItem;
       $(this)
         .find(".xpedir_row")
@@ -86,12 +85,18 @@
       e.stopImmediatePropagation();
       e.preventDefault()
 
-      clearInterval(xreloj_update_subItem_sel);
+      
+      // clearInterval(xreloj_update_subItem_sel);
+      if (_xcantidad === 'ND') {return false;};
+
       //if(xidCatProcedencia=='almacen_items'){return;}
-      xUpdateStockSubItem_selected();
-      xreloj_update_subItem_sel = setInterval(function() {
-        xUpdateStockSubItem_selected();
-      }, 5000);
+
+      xUpdateStockSubItem_selected();      
+      // considerar si esto es necesario
+      // xreloj_update_subItem_sel = setInterval(function() {
+      //   xUpdateStockSubItem_selected();
+      // }, 5000);
+      
       return false;
     });
   }
@@ -208,6 +213,7 @@
             '" data-idseccionindex="' +
             xdt_sub_Item[i].idseccion_index +
             '" data-desseccion="' + xdt_sub_Item[i].des_seccion +
+            '" data-cantidad="' + xdt_sub_Item[i].cantidad +
             '"  data-idimpresora="' +
             xdt_sub_Item[i].idimpresora +
             '" data-idprocede="' +
@@ -335,7 +341,7 @@
       xIniSubMenu();
     },
     detached: function() {
-      clearInterval(xreloj_update_subItem_sel);
+      // clearInterval(xreloj_update_subItem_sel);
     }
   });
 </script>

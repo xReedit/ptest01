@@ -1,5 +1,6 @@
 // JavaScript Document
-$(document).bind("pageshow", function(){
+// $(document).bind("pageshow", function(){
+document.addEventListener("WebComponentsReady", function componentsReady() {
 	$('.xPasarEnter').on('keyup',function(e){
 		var code=e.which;
 		if ( code==13||code==186 ) {var xIndexTxt=$('input:text').index(this)+1;  $('input:text')[xIndexTxt].focus();}

@@ -20,7 +20,8 @@ var xh_sys,
 //   // controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
 // };
 window.addEventListener("error", function(e) {
-  console.log(e.error.message, "from", e.error.stack);
+	if (!e) { return }
+  console.log(e);
 //   alert(e.error);
   // You can send data to your server
   // sendError(data);
@@ -458,9 +459,15 @@ function xm_LogChequea(responde){
 		})
 }
 function xm_log_get(seccion){
-  var xdt_log=window.localStorage.getItem("::app3_woDUS"),xdt_rpt;
-	xdt_log=window.atob(xdt_log);
-	xdt_log=JSON.parse(xdt_log)
+	var xdt_log=window.localStorage.getItem("::app3_woDUS"),xdt_rpt;
+	try {
+		xdt_log=window.atob(xdt_log);
+		xdt_log=JSON.parse(xdt_log)
+		
+	} catch (error) {
+		console.log(error);
+		return;
+	}
 
   switch (seccion) {
 	case 'app3_us':

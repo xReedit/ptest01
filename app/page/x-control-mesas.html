@@ -106,66 +106,68 @@
 						</div>
 						<div class="xLinea"></div>
 						<br>
-						<table width="100%" class="xtable4">
-							<tr class="xSinBorde_tr" valign="top">
-								<td width="40%" style="padding-right:10px;">
-									<div class="xtd_derecha">
-									<table width="100%" id="tb_pedidos" class="xRowPading4">
-										<thead><th colspan="4" align="left">Pedidos</th></thead>
-										<tr class="row selected1 xCursor check_item_p" data-idpedido="1">
-											<td><paper-checkbox checked class="check_item"></paper-checkbox>1</td>
-											<td>Pedido 00102</td>
-											<td>13:15:02</td>
-											<td align="right" class="td_importe" id="td_importe">120.00</td>
-										</tr>
-										<tr class="row selected1 xCursor check_item_p" data-idpedido="2">
-											<td><paper-checkbox checked class="check_item"></paper-checkbox>2</td>
-											<td>Pedido 00102</td>
-											<td>13:15:02</td>
-											<td align="right" class="td_importe" id="td_importe">120.00</td>
-										</tr>
-										<tr class="row selected1 xCursor check_item_p" data-idpedido="3">
-											<td><paper-checkbox checked class="check_item"></paper-checkbox>3</td>
-											<td>Pedido 00102</td>
-											<td>13:15:02</td>
-											<td align="right" class="td_importe" id="td_importe">120.00</td>
-										</tr>
-									</table>
-									</div>
-								</td>
-								<td class="xBordeIzq" style="padding-left:10px;">
-									<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor" style="position:absolute; right:78px;"  title="Unir items">
-									<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor" style="padding-left:10px; position:absolute; right:40px;" title="Separar items">
-									<div class="xtd_derecha" id="xBody">
-									<div>
-									<table width="100%" id="tb_det_pedidos" class="xRowPading4">
-										<!--thead><th colspan="6" align="left">Detalle del pedido | <div class="xBoton_flat xPlomo"> (2)</div><div class="xBoton_flat xPlomo">Para LLevar (3)</div></th></thead-->
-										<tr>
-											<td colspan="5" class="xFondoRowPlomo">CONSUMIR EN EL LOCAL</td>
-										</tr>
-										<tr>
-											<td colspan="5"><h4>ENTRADAS</h4></td>
-										</tr>
-										<tr class="row xCursor" data-idpedidodetalle="1" data-idpedido="1" data-punitario="1.00" data-idtipoconsumo="1" data-idcategoria="1" data-idcartalista="117422605116">
-											<td width="50px" class="click_row_dt_p" id="td_cant"><paper-checkbox  class="check_item"></paper-checkbox>03</td>
-											<td class="click_row_dt_p">COCO RALLADO</td>
-											<td class="click_row_dt_p" align="right" id="td_importe">0.00</td>
-											<td align="center" class="td_op" data-op="cambiar"><img src="../../images/_change.png" title="Cambiar"></td>
-											<td align="center" class="td_op" data-op="borrar"><img src="../../images/_delete3.png" title="Borrar"></td>
-										</tr>
-										<tr class="row xCursor" data-idpedidodetalle="2" data-idpedido="1" data-punitario="2.00" data-idtipoconsumo="1" data-idcategoria="1" data-idcartalista="11122605116">
-											<td width="50px" class="click_row_dt_p" id="td_cant"><paper-checkbox  class="check_item"></paper-checkbox>02</td>
-											<td class="click_row_dt_p">GELATINA</td>
-											<td class="click_row_dt_p" align="right" id="td_importe">2.00</td>
-											<td align="center" class="td_op" data-op="cambiar"><img src="../../images/_change.png" title="Cambiar"></td>
-											<td align="center" class="td_op" data-op="borrar"><img src="../../images/_delete3.png" title="Borrar"></td>
-										</tr>
-									</table>
-									</div>
-									</div>
-								</td>
-							</tr>
-						</table>
+						<div class="content-pedido">
+							<table width="100%" class="xtable4">
+								<tr class="xSinBorde_tr" valign="top">
+									<td width="40%" style="padding-right:10px;">
+										<div class="xtd_derecha">
+										<table width="100%" id="tb_pedidos" class="xRowPading4">
+											<thead><th colspan="4" align="left">Pedidos</th></thead>
+											<tr class="row selected1 xCursor check_item_p" data-idpedido="1">
+												<td><paper-checkbox checked class="check_item"></paper-checkbox>1</td>
+												<td>Pedido 00102</td>
+												<td>13:15:02</td>
+												<td align="right" class="td_importe" id="td_importe">120.00</td>
+											</tr>
+											<tr class="row selected1 xCursor check_item_p" data-idpedido="2">
+												<td><paper-checkbox checked class="check_item"></paper-checkbox>2</td>
+												<td>Pedido 00102</td>
+												<td>13:15:02</td>
+												<td align="right" class="td_importe" id="td_importe">120.00</td>
+											</tr>
+											<tr class="row selected1 xCursor check_item_p" data-idpedido="3">
+												<td><paper-checkbox checked class="check_item"></paper-checkbox>3</td>
+												<td>Pedido 00102</td>
+												<td>13:15:02</td>
+												<td align="right" class="td_importe" id="td_importe">120.00</td>
+											</tr>
+										</table>
+										</div>
+									</td>
+									<td class="xBordeIzq" style="padding-left:10px;">
+										<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor" style="position:absolute; right:78px;"  title="Unir items">
+										<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor" style="padding-left:10px; position:absolute; right:40px;" title="Separar items">
+										<div class="xtd_derecha" id="xBody">
+										<div>
+										<table width="100%" id="tb_det_pedidos" class="xRowPading4">
+											<!--thead><th colspan="6" align="left">Detalle del pedido | <div class="xBoton_flat xPlomo"> (2)</div><div class="xBoton_flat xPlomo">Para LLevar (3)</div></th></thead-->
+											<tr>
+												<td colspan="5" class="xFondoRowPlomo">CONSUMIR EN EL LOCAL</td>
+											</tr>
+											<tr>
+												<td colspan="5"><h4>ENTRADAS</h4></td>
+											</tr>
+											<tr class="row xCursor" data-idpedidodetalle="1" data-idpedido="1" data-punitario="1.00" data-idtipoconsumo="1" data-idcategoria="1" data-idcartalista="117422605116">
+												<td width="50px" class="click_row_dt_p" id="td_cant"><paper-checkbox  class="check_item"></paper-checkbox>03</td>
+												<td class="click_row_dt_p">COCO RALLADO</td>
+												<td class="click_row_dt_p" align="right" id="td_importe">0.00</td>
+												<td align="center" class="td_op" data-op="cambiar"><img src="../../images/_change.png" title="Cambiar"></td>
+												<td align="center" class="td_op" data-op="borrar"><img src="../../images/_delete3.png" title="Borrar"></td>
+											</tr>
+											<tr class="row xCursor" data-idpedidodetalle="2" data-idpedido="1" data-punitario="2.00" data-idtipoconsumo="1" data-idcategoria="1" data-idcartalista="11122605116">
+												<td width="50px" class="click_row_dt_p" id="td_cant"><paper-checkbox  class="check_item"></paper-checkbox>02</td>
+												<td class="click_row_dt_p">GELATINA</td>
+												<td class="click_row_dt_p" align="right" id="td_importe">2.00</td>
+												<td align="center" class="td_op" data-op="cambiar"><img src="../../images/_change.png" title="Cambiar"></td>
+												<td align="center" class="td_op" data-op="borrar"><img src="../../images/_delete3.png" title="Borrar"></td>
+											</tr>
+										</table>
+										</div>
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>
 						<div class="xAddItemPedido" style="overflow: hidden;" id="SelAddLuLi">
 								<div>
 									<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria>
@@ -190,7 +192,7 @@
 									</li-->
 								</ul>
 								<br>
-								<div class="footer_dialog">
+								<div class="footer_dialog xFondoRowPlomo3">
 									<div class="xLinea"></div>
 									<br>
 									<div class="xBoton2 xVerde" onclick="xArmarSqlAddLUlI();">F9 | Confirmar</div>
@@ -200,12 +202,14 @@
 
 								<div class="xInvisible"><table data-TablaName="pedido_detalle" id="xli_tb_pedido_ad"></table></div>
 						</div>
-						<div class="footer_dialog xAlinearce">
+						<div class="footer_dialog xAlinearce xFondoRowBlanco2">
 							<div class="xLinea"></div>
 							<br>
-							<div class="xMiBoton_icon_lateral xDerecha" style="margin-top:-15px;" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div>
-							<div class="xMiBoton_icon_lateral xDerecha" style="margin-top:-15px;" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p>Cambiar de mesa</p></div>
-							<div class="xMiBoton_icon_lateral xDerecha" style="margin-top:-15px;" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div>
+							<div class="xDerecha" style="margin-top: 12px;display: inline-flex;">
+								<div class="xMiBoton_icon_lateral" style="margin-top:-15px;" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div>
+								<div class="xMiBoton_icon_lateral" style="margin-top:-15px;" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p>Cambiar de mesa</p></div>
+								<div class="xMiBoton_icon_lateral" style="margin-top:-15px;" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div>
+							</div>
 							<button class="xBoton2 xAzul" id="btn_registrar_pago" onclick="xIrPage(1);">F10 | Listo, pagar</button>
 							<button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
 
@@ -266,8 +270,9 @@ position: fixed;
   min-height: 50vh;
 }
 #dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
-.xtd_derecha{min-height: 60vh; max-height:75vh; bottom: 0;  overflow-y:auto;}
+.xtd_derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
 img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
+
 </style>
 
 <!-- <script  type="text/javascript" src="../view/config.const.js"></script>
@@ -379,7 +384,7 @@ function xIniControlMesa(){
 		$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);
 		document.title ="Control de Pedidos";
 
-		$("#div_filtro_header").html('<input type="text" class="xMiInput" placeholder="mesa" style="width:80px; margin-right:5px;" letrablanco id="txt_bus_mesa"><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
+		$("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" placeholder="mesa" style="width:80px; margin-right:5px;" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
 		xThisCM.xt_org=xIdOrg;
 		xThisCM.xt_idsede=xIdSede;
 		xThisCM.xt_idus=xIdUsuario;
@@ -1272,8 +1277,8 @@ async function xRegistrarClientePagoCP(){
 	//xCheckPedidos()
 	//btn_pago.hidden=true;
 	
-	$("#btn_pagoX").attr('disabled', true);
-	btn_pagoX.disabled = true;
+	// $("#btn_pagoX").attr('disabled', true);
+	// btn_pagoX.disabled = true;
 	// btn_pago.hidden=true;
 	if (enProcesoGuardarPago) {return;}
 	enProcesoGuardarPago = true;
@@ -1314,7 +1319,8 @@ async function xRegistrarClientePagoCP(){
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xLoadDetallesPedido(xObj_miPedido);
-			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);			
+			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
+
 		});
 
 		return
@@ -1361,6 +1367,7 @@ function xRegistrarPagoCM(xcant_rp){
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago) {	
+
 	if (xRpt_pago.length > 0) {
 		xPopupLoad.xclose();
 		var arr_cliente = xRpt_pago[0].cliente;
@@ -2009,19 +2016,20 @@ function xFiltroPedidos(obj){
 	
 	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
 	
-	if ( iIniIsotope ) {
-		$('.grid').isotope({ filter: xIdFiltro1 });
-	} else {
-		xLoadMesas();
-	}
 
-	iIniIsotope = true;
-	// if ( xIdFiltro1 != _xIdFiltro1 ) {
-			
-	// 	xLoadMesas();
-	// }
-	// xIdFiltro1 = _xIdFiltro1;
-	// 
+	if (iIniIsotope) {
+		$('.grid').isotope({ filter: xIdFiltro1 });
+	} else {		
+		iIniIsotope = true;
+	}
+		
+	// setTimeout(() => {
+	// 	if (iIniIsotope) {
+	// 		$('.grid').isotope({ filter: xIdFiltro1 });
+	// 	} else {
+	// 		xLoadMesas();
+	// 	}		
+	// }, 1000);	
 	
 }
 
@@ -2357,7 +2365,9 @@ Polymer({
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);
     	clearInterval(xRefreshPermiso);
-			xbuscar_mesa=true;					
+			xbuscar_mesa=true;		
+
+			xsourceEvent.close();			
     }
 })
 </script>
