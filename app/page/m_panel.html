@@ -65,6 +65,7 @@
 	<link rel="import" href="../web_components/x-router/x-router.html">
 	<link rel="import" href="../web_components/x-pass/x-pass.html">
 	<link rel="import" href="../web_components/x-pago/x-pago.html">
+	<link rel="import" href="../x-componentes/x-comp-sede-toolbar/x-comp-sede-toolbar.html">
 
 	<!--router-->
 
@@ -211,18 +212,21 @@
 			</paper-header-panel>
 		 </paper-drawer-panel-->
 		<paper-header-panel main>
-           	<paper-toolbar id="panel_toolbar">
-           		<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDe();"></paper-icon-button>
-				<span class="title xtitulo_bar" id="xtitulo_bar">RESTOBAR</span>
-				<div class="xIzquierda">
-	    			<h2 class="xboldEncabezado xNoVisibleMenos920" id="Titulo_page"></h2>
-	    		</div>
-	    		<div class="xAlinearce">
-		    		<div class="xAlinearce">
-		    			<paper-icon-button id="BtnUs" icon="account-box" title="Usuario" onclick="xAbrirDialogUs(this)"></paper-icon-button>
-		    		</div>
-		    	</div>
-           	</paper-toolbar>
+          <paper-toolbar id="panel_toolbar">
+						<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDe();"></paper-icon-button>
+						<x-comp-sede-toolbar class="xtitulo_bar text_puntos_2" id="xtitulo_bar"></x-comp-sede-toolbar>
+						<span class="title xtitulo_bar" id="xtitulo_bar"></span>						
+
+						
+						<div class="xIzquierda">
+							<h2 class="xboldEncabezado xNoVisibleMenos920" id="Titulo_page"></h2>
+						</div>
+						<div class="xAlinearce">
+							<div class="xAlinearce">
+								<paper-icon-button id="BtnUs" icon="account-box" title="Usuario" onclick="xAbrirDialogUs(this)"></paper-icon-button>
+							</div>
+						</div>
+          </paper-toolbar>
 	        <div fit layout vertical class="content xContent">
 	        	<div class="xInvisible"></div>
 							<x-router></x-router>
@@ -233,7 +237,7 @@
        	</paper-header-panel>
 
 	
-  <script src="../view/xm_all.js"></script>
+  <script src="../view/xm_all.js" async></script>
 
 	<!--script type="text/javascript" src="../../js/d3.min.js"></script-->
 	<!--script type="text/javascript" src="../../js/crossfilter.min.js"></script-->

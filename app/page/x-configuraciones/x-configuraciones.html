@@ -28,7 +28,8 @@
 				<h4>DATOS DE SEDE</h4>
 				<form id="frm_sede">
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION" onChange="conMayusculas(this)" id="nombre" name="nombre" espaciar required>
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required>
+					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required> -->
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="ciudad" name="ciudad" espaciar required>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="ESLOGAN" id="eslogan" name="eslogan" maxlength="100" espaciar>
 					<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas" espaciar>
 										
@@ -767,7 +768,7 @@ function xIniConf(){
 		return false;
 	})
 	$(document).on('change',".xsel_otros_print",function(e){
-		var xid_secc_row=$(this).attr('data-id');
+		var xid_secc_row=$(this).attr('data-id');//==='0' ? '' : $(this).attr('data-id');
 		var xid_secc_print=this.value;
 		var xid_doc_print=$(this).parents('tr').attr('data-id');
 		xGuardarCambiosConfOtrosDoc(xid_doc_print,xid_secc_row,xid_secc_print);
@@ -1133,13 +1134,17 @@ function xLoadConfOtrosDoc(){
 		//si esta vacio //nuevp
 		if(xdtCf_od.length==0){
 			$("#tb_otros_dic .row").each(function(index,element){
-				$(element).find('.td_sel_ot_print').html('<select data-id="" class="xsel_otros_print">'+$("#sel_impr_Sec")[0].innerHTML+'</select>').trigger('create');
+				$(element).find('.td_sel_ot_print').html('<select data-id class="xsel_otros_print">'+$("#sel_impr_Sec")[0].innerHTML+'</select>').trigger('create');
 			})
 		}
 	})
 }
 function xGuardarCambiosConfOtrosDoc(id_doc,id_row,id_print){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4012',data:{iddoc:id_doc,ids:id_row,idp:id_print}})
+	.done((res)=> {
+		console.log(res);
+	});
+	
 }
 ////////////////////
 ////////////////////
@@ -1547,13 +1552,13 @@ function xLoadOrg(){
 
 		$("#frm_org #idorg").val(xdtOrg[0].idorg);
 		$("#frm_org #nombre").val(xdtOrg[0].nombre);
-		$("#frm_org #direccion").val(xdtOrg[0].direccion);
+		$("#frm_org #ciudad").val(xdtOrg[0].ciudad);
 		$("#frm_org #ruc").val(xdtOrg[0].ruc);
 		$("#frm_org #telefono").val(xdtOrg[0].telefono);
 		$("#frm_org #email").val(xdtOrg[0].email);
 
 		for (var i = 0; i < xdtOrg.length; i++) {
-			xcadena_org=String(xcadena_org+'<tr class="row" data-id='+i+'><td>'+xdtOrg[i].nom_sede+'</td><td>'+xdtOrg[i].dir_sede+'</td><td title="Modificar" onClick="xModificarSede(this)"><span class="icon xCursor"><img src="../../images/edit.png"></span></td></tr>')
+			xcadena_org=String(xcadena_org+'<tr class="row" data-id='+i+'><td>'+xdtOrg[i].nom_sede+'</td><td>'+xdtOrg[i].ciudad+'</td><td title="Modificar" onClick="xModificarSede(this)"><span class="icon xCursor"><img src="../../images/edit.png"></span></td></tr>')
 		};
 		$("#tb_org .row").remove();
 		$("#tb_org").append(xcadena_org).trigger('create');

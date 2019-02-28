@@ -58,6 +58,15 @@ else {
 }
 ///
 
+$imLogo = "";
+$uri=$uriLogo64;
+$imageBlob = base64_decode(explode(",", $uri)[1]);
+$imagick = new Imagick();
+$imagick->setResourceLimit(6, 1);
+$imagick->readImageBlob($imageBlob, "input.png");
+$imLogo = new ImagickEscposImage();
+$imLogo->readImageFromImagick($imagick);
+
 
 // $logo_post="./logo/".$xArray_print[0]['logo'];
 $num_mesa=$ArrayEnca['m'];
@@ -74,7 +83,7 @@ $logo_delivery = "_ico_delivery.png";
 
 //$nom_us=explode(' ',$_SESSION['nomUs']);
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
-$hora_actual=date('H').':'.date('i').':'.date('s');
+//$hora_actual=date('H').':'.date('i').':'.date('s');
 $sum_total=0;
 $num_copias=(int)$xArray_print[0]['num_copias'];
 $cuenta_copias=0;
@@ -165,13 +174,8 @@ while($num_copias>=0){
 	/* Print top logo */
 	if($imLogo!=''){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		if ( $printImg64 === "1" ) {
-			$size = Printer::IMG_DEFAULT;
-			$printer->bitImage($imLogo, $size);
-		} else {			
-			$logoPic = EscposImage::load($imLogo, false);
-			$printer -> graphics($logoPic);
-		}
+		$size = Printer::IMG_DEFAULT;
+		$printer->bitImage($imLogo, $size);
 		
 		$printer -> feed();
 	}	
@@ -343,7 +347,7 @@ while($num_copias>=0){
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
 	$printer -> text($xArray_print[0]['pie_pagina']."\n");
 	$printer -> feed(2);
-	$printer -> text("Atendido por:".$nom_us[0]."\n");
+	$printer -> text("Atendido por:".$nom_us."\n");
 	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
 
 	$printer -> text("www.papaya.com.pe\n");

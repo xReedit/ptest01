@@ -242,16 +242,7 @@
 			else{//si no hay session activa
 				$rpt="0"; //mandar a cargar //inicia
 			}
-			//if(!isset($_SESSION['dataUs'])){$dataUs=$_SESSION['dataUs'];}
-			/*if($dataUs===""){
-				$rpt="0"; //mandar a cargar //inicia
-			}else{
-				if($dataUs===$data){
-					$rpt="1";//nada normal sigue
-				}else{
-					$rpt=$dataUs;//vuelve a cargar con el dato original
-				}
-			}*/
+			
 			echo $rpt;
 			break;
 		case -1111://pruebas logg //encode // log ini
@@ -280,6 +271,9 @@
 					}
 			//};
 			break;
+		case -1001://cambiar sede
+			$_SESSION['idsede'] = $_POST['i'];
+			break;
 		case 0://ruta1 uid utipo unom unomcompleto udireccion uemail departamento costo_envio(precio envio) importe_minimo(para envio)
 			//$_SESSION['uPromoDirigidoA']=$bd->xDevolverUnDato("select tipous as d1 from webpromocion as wp where now() between wp.fini and wp.ffin and wp.estado=0 limit 1");
 			if(!isset($_SESSION['uid'])){$_SESSION['uid']='';}
@@ -292,7 +286,7 @@
 			if(!isset($_SESSION['ucostoenvio'])){$_SESSION['ucostoenvio']='';}
 			if(!isset($_SESSION['uPromoDirigidoA'])){$_SESSION['uPromoDirigidoA']=$bd->xDevolverUnDato("select tipous as d1 from webpromocion as wp where now() between wp.fini and wp.ffin and wp.estado=0 limit 1");}
 
-			echo 'http://www.viudanegra.com.pe/tienda/viuda/app/file/|'.$_SESSION['uid'].'|'.$_SESSION['utipo'].'|'.$_SESSION['unom'].'|'.$_SESSION['unomCompleto'].'|'.$_SESSION['udireccion'].'|'.$_SESSION['uemail'].'|'.$_SESSION['udepartamento'].'|'.$_SESSION['ucostoenvio'].'|'.$_SESSION['uPromoDirigidoA'];
+			// echo 'http://www.viudanegra.com.pe/tienda/viuda/app/file/|'.$_SESSION['uid'].'|'.$_SESSION['utipo'].'|'.$_SESSION['unom'].'|'.$_SESSION['unomCompleto'].'|'.$_SESSION['udireccion'].'|'.$_SESSION['uemail'].'|'.$_SESSION['udepartamento'].'|'.$_SESSION['ucostoenvio'].'|'.$_SESSION['uPromoDirigidoA'];
 			break;
 
 
@@ -1375,7 +1369,7 @@
 			break;
 		case 404:// organizacion
 			$sql="
-				SELECT o.*, s.idsede, s.nombre AS nom_sede, s.direccion as dir_sede,s.eslogan,s.mesas, s.ubigeo, s.codigo_del_domicilio_fiscal
+				SELECT o.*, s.idsede, s.nombre AS nom_sede, s.direccion as dir_sede, s.ciudad,s.eslogan,s.mesas, s.ubigeo, s.codigo_del_domicilio_fiscal
 				FROM org AS o
 					INNER JOIN sede AS s using(idorg)
 				WHERE (o.idorg=".$_SESSION['ido'].") and s.estado=0
@@ -1407,7 +1401,8 @@
 			$bd->xConsulta($sql);
 			break;
 		case 407://load conf print detalle
-			$sql="select * from conf_print_detalle where idconf_print=".$_POST['i']." and estado=0";
+			// $sql="select * from conf_print_detalle where idconf_print=".$_POST['i']." and estado=0";
+			$sql="select * from conf_print_detalle where idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede']." and estado=0";
 			$bd->xConsulta($sql);
 			break;
 		case 408://load conf print adicionales
@@ -1445,14 +1440,25 @@
 			$bd->xConsulta($sql);
 			break;
 		case 4011://load config otros documentos
-			$sql="SELECT s.conf_print_otros, s.idtipo_otro, ifnull(i.idimpresora,0)AS idimpresora,ifnull(i.descripcion,'Ninguno') as descripcion FROM conf_print_otros AS s left JOIN impresora AS i using(idimpresora) WHERE (s.idorg=".$_SESSION['ido']." AND s.idsede=".$_SESSION['idsede'].") AND s.idtipo_otro<0";
+			// $sql="SELECT s.conf_print_otros, s.idtipo_otro, ifnull(i.idimpresora,0)AS idimpresora,ifnull(i.descripcion,'Ninguno') as descripcion FROM conf_print_otros AS s left JOIN impresora AS i using(idimpresora) WHERE (s.idorg=".$_SESSION['ido']." AND s.idsede=".$_SESSION['idsede'].") AND s.idtipo_otro<0";
+			$sql="
+				SELECT ifnull(conf.conf_print_otros,0) as conf_print_otros, tpo.idtipo_otro, tpo.descripcion as nomdoc, ifnull(conf.idimpresora,0)AS idimpresora,ifnull(conf.descripcion,'Ninguno') as descripcion
+				from tipo_otro as tpo
+					left join (
+						SELECT cpo.conf_print_otros, cpo.idtipo_otro, i.idimpresora, i.descripcion
+						from conf_print_otros as cpo
+							left join impresora as i on cpo.idimpresora=i.idimpresora
+						where (cpo.idorg=".$_SESSION['ido']." and cpo.idsede=".$_SESSION['idsede'].") and cpo.estado=0
+					) as conf on conf.idtipo_otro = tpo.idtipo_otro
+				ORDER BY tpo.idtipo_otro DESC
+			";
 			$bd->xConsulta($sql);
 			break;
 		case 4012://guardar config otros documentos
 			$id_conf_otro_doc=$_POST['ids'];
-			$id_doc==$_POST['iddoc'];
+			$id_doc=$_POST['iddoc'];			
 			$id_print=$_POST['idp'];
-			if($id_conf_otro_doc==''){//nuevo
+			if($id_conf_otro_doc=='0'){//nuevo
 				$sql="insert into conf_print_otros(idorg,idsede,idtipo_otro,idimpresora) values (".$_SESSION['ido'].",".$_SESSION['idsede'].",".$id_doc.",".$id_print.")";
 			}else{
 				$sql="update conf_print_otros set idimpresora=".$id_print." where conf_print_otros=".$id_conf_otro_doc;

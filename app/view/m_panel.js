@@ -38,7 +38,7 @@ function xIniDocument(){
 
 	//session activa
 	xVerificarSession();
-	setInterval(function(){ xVerificarSession(); }, 1080000);
+	// setInterval(function(){ xVerificarSession(); }, 1080000);
 	//setInterval(function(){ xVerificarSession(); }, 5000);
 
  	xPopupLoad=document.getElementById('xLoad');
@@ -135,19 +135,7 @@ function xOpenPage(xop, parametro){
 	}
 	xruta=xruta+parametro;
 	router.go(xruta+parametro);
-	/*debugger
-	var router = document.querySelector('app-router');
-	router.go(xruta+parametro);
-	debugger
-	router.addEventListener('state-change', function(event) {
-		debugger
-      event.type; // 'state-change'
-      event.detail.path; // parsed URL path
-      event.preventDefault(); // cancel the new route
-    });
 
-	aa=document.querySelector('app-router');
-	*/
 	xScrolUp(0);
 	//PanelDe.closeDrawer();
 }

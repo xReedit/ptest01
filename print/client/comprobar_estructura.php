@@ -1,5 +1,4 @@
-<?php
-	// falta descargar el logo
+<?php	
 	// version de estructura cliente
     $listEstructuras = $_POST['arrEstructura'];
     $pase = true;
@@ -55,6 +54,25 @@
                 }
 
             }
+        }
+    }
+
+
+    // descarga logo
+    $logo = $_POST['logo'];
+    $nomFileLogo = "logo.txt";
+    if(file_exists($nomFileLogo)) {
+        echo "modifica logo ".$nomFileLogo;
+        //modificamos escribimos nueva version                
+        file_put_contents($nomFileLogo, $logo);
+        
+    } else {            
+        //creamos nuevo archivo
+        echo "crea logo ".$nomFileLogo;
+        if($archivo = fopen($nomFileLogo, "a")) {
+            fwrite($archivo, $logo);
+            fclose($archivo);
+        
         }
     }
 
