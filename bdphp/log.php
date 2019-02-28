@@ -222,6 +222,8 @@
 										$_SESSION['nomUs']=$obj["us"]->nombre;
 										$_SESSION['cargoU']=$obj["us"]->cargo;
 										$_SESSION['nom_sede']=$obj["us"]->nom_sede;
+										$_SESSION['rol']=$obj["us"]->rol;
+										$_SESSION['ciudad']=$obj["us"]->ciudad;										
 										$_SESSION['dataUs']=$data_cliente;
 										$rpt="1";
 									}
@@ -263,6 +265,8 @@
 						$_SESSION['nomUs']=$obj[0]->nombres;
 						$_SESSION['cargoU']=$obj[0]->cargo;
 						$_SESSION['nom_sede']=$obj[0]->nom_sede;
+						$_SESSION['rol']=$obj[0]->rol;
+						$_SESSION['ciudad']=$obj[0]->ciudad;
 						$_SESSION['dataUs']="";
 						//session_start();
 						print 1;
@@ -273,6 +277,9 @@
 			break;
 		case -1001://cambiar sede
 			$_SESSION['idsede'] = $_POST['i'];
+			break;
+		case -1002: // obtener sede y rol antes de cargar componentes
+			echo $_SESSION['idsede'].','.$_SESSION['rol'];
 			break;
 		case 0://ruta1 uid utipo unom unomcompleto udireccion uemail departamento costo_envio(precio envio) importe_minimo(para envio)
 			//$_SESSION['uPromoDirigidoA']=$bd->xDevolverUnDato("select tipous as d1 from webpromocion as wp where now() between wp.fini and wp.ffin and wp.estado=0 limit 1");
@@ -1485,23 +1492,27 @@
 			// ";
 			$sql = "
 				SELECT p.idpedido,p.idcategoria, count(p.nummesa) AS num_pedidos ,p.idtipo_consumo, p.subtotales_tachados,
-					GROUP_CONCAT(DISTINCT concat(pd.idtipo_consumo,':', pd.idseccion,':', pd.cantidad)) as secciones,p.reserva,p.nummesa, p.numpedido,p.correlativo_dia, p.referencia, sum(pd.ptotal) AS importe, p.hora
+					GROUP_CONCAT(DISTINCT concat(pd.idtipo_consumo,':', pd.idseccion,':', pd.cantidad)) as secciones,p.reserva,p.nummesa, p.numpedido,p.correlativo_dia, p.referencia, sum(pd.ptotal) AS importe, p.hora,
+					if (POSITION('0' in GROUP_CONCAT(p.despachado))=0,1,0) as despachado, tpc.titulo as tipo_consumo_titulo
 					FROM pedido AS p
+						inner join tipo_consumo as tpc on p.idtipo_consumo = tpc.idtipo_consumo
 						inner join (
 									SELECT pdt.idpedido, pdt.idtipo_consumo, pdt.idseccion, sum(pdt.cantidad) as cantidad, sum(pdt.ptotal) as ptotal
 									from pedido_detalle as pdt where pdt.pagado=0 and pdt.estado=0 
-									GROUP BY pdt.idpedido, pdt.idtipo_consumo, pdt.idseccion
+									GROUP BY pdt.idpedido, pdt.idtipo_consumo, pdt.idseccion order by pdt.idpedido desc
 									) as pd on p.idpedido=pd.idpedido
 				WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") and (p.estado=0) and p.nummesa>0
 				GROUP BY p.nummesa
 				UNION ALL
 				SELECT p.idpedido,p.idcategoria, count(p.nummesa) AS num_pedidos ,p.idtipo_consumo, p.subtotales_tachados,
-					GROUP_CONCAT(DISTINCT concat(pd.idtipo_consumo,':', pd.idseccion,':', pd.cantidad)) as secciones,p.reserva,p.nummesa, p.numpedido,p.correlativo_dia, p.referencia, sum(pd.ptotal) AS importe, p.hora
+					GROUP_CONCAT(DISTINCT concat(pd.idtipo_consumo,':', pd.idseccion,':', pd.cantidad)) as secciones,p.reserva,p.nummesa, p.numpedido,p.correlativo_dia, p.referencia, sum(pd.ptotal) AS importe, p.hora,
+					if (POSITION('0' in GROUP_CONCAT(p.despachado))=0,1,0) as despachado, tpc.titulo as tipo_consumo_titulo
 					FROM pedido AS p
+						inner join tipo_consumo as tpc on p.idtipo_consumo = tpc.idtipo_consumo
 						inner join (
 									SELECT pdt.idpedido, pdt.idtipo_consumo, pdt.idseccion, sum(pdt.cantidad) as cantidad, sum(pdt.ptotal) as ptotal
 									from pedido_detalle as pdt where pdt.pagado=0 and pdt.estado=0 
-									GROUP BY pdt.idpedido, pdt.idtipo_consumo, pdt.idseccion
+									GROUP BY pdt.idpedido, pdt.idtipo_consumo, pdt.idseccion order by pdt.idpedido desc
 									) as pd on p.idpedido=pd.idpedido
 				WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") and (p.estado=0) and p.nummesa=0
 				GROUP BY p.idpedido
@@ -2790,15 +2801,17 @@
 function encode_dataUS(){
 	$data = [
 		'us' => [
-							'ido'=>$_SESSION['ido'],
-							'idsede'=>$_SESSION['idsede'],
-							'idus'=>$_SESSION['idusuario'],
-							'acc'=>$_SESSION['acc'],
-							'nombre'=>$_SESSION['nomU'],
-							'cargo'=>$_SESSION['cargoU'],
-							'nomus'=>$_SESSION['nomUs'],
-							'nom_sede'=>$_SESSION['nom_sede']
-						],
+				'ido'=>$_SESSION['ido'],
+				'idsede'=>$_SESSION['idsede'],
+				'idus'=>$_SESSION['idusuario'],
+				'acc'=>$_SESSION['acc'],
+				'nombre'=>$_SESSION['nomU'],
+				'cargo'=>$_SESSION['cargoU'],
+				'nomus'=>$_SESSION['nomUs'],
+				'nom_sede'=>$_SESSION['nom_sede'],
+				'ciudad'=>$_SESSION['ciudad'],
+				'rol'=>$_SESSION['rol']
+			],
 		'dispositivos'=>[
 				'dispositivo'=>xDtUS(3011),
 				'otros_print_doc'=>xDtUS(301) //otras impresoras para otros documentos boleta, factura
@@ -2863,7 +2876,7 @@ function xDtUS($op_us){
 			// 	LEFT JOIN sede AS s ON s.idorg=cp.idorg AND s.idsede=cp.idsede
 			// WHERE (cp.idorg=".$_SESSION['ido']." AND cp.idsede=".$_SESSION['idsede'].")";
 			$sql_us="
-			SELECT cp.var_size_font_tall_comanda, cp.ip_print, cp.num_copias, cp.pie_pagina, cp.pie_pagina_comprobante, cp.logo, s.logo64, s.nombre AS des_sede, s.eslogan, s.mesas
+			SELECT cp.var_size_font_tall_comanda, cp.ip_print, cp.num_copias, cp.pie_pagina, cp.pie_pagina_comprobante, cp.logo, s.logo64, s.nombre AS des_sede, s.eslogan, s.mesas, s.ciudad
 			FROM conf_print AS cp
             	INNER JOIN sede AS s ON cp.idsede = s.idsede
 			WHERE (cp.idorg=".$_SESSION['ido']." AND cp.idsede=".$_SESSION['idsede'].")";

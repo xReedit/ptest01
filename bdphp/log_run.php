@@ -10,7 +10,7 @@ $bd=new xManejoBD("restobar");
 switch($_GET['op'])
 	{
 		case 1://verifica si existe o se añado algun pedido para actualiza, monitor de pedidos
-			$sql="SELECT sum(total) as d1 FROM pedido where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and cierre=0";
+			$sql="SELECT (sum(total) + sum(despachado)) as d1 FROM pedido where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and cierre=0";
 			$numero_pedidos_actual=$bd->xDevolverUnDato($sql);
 			echo "retry: 6000\n"."data:".$numero_pedidos_actual."\n\n";
 			ob_flush();

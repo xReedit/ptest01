@@ -57,6 +57,12 @@
 					VALUES(".$idorg.", ".$idsede.", 'COCINA', 0, 0, 0);
 				INSERT INTO almacen (idorg, idsede, descripcion, bodega, imprimir_comanda, estado)
 					VALUES(".$idorg.", ".$idsede.", 'BODEGA', 1, 0, 0);
+
+				INSERT INTO conf_print (idorg, idsede, ip_print, num_copias) VALUES(".$idorg.", ".$idsede.", '', 0);
+
+				INSERT INTO tipo_consumo (idorg, idsede, descripcion, titulo, estado)
+						VALUES(".$idorg.", ".$idsede.", 'CONSUMIR EN EL LOCAL', 'LOCAL', 0), (".$idorg.", ".$idsede.", 'PARA LLEVAR', '', 0);
+
 			";
 			
 			$bd->xMultiConsulta($sql);

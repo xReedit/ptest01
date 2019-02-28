@@ -180,7 +180,7 @@ class xManejoBD extends mysqli //extends SQLite3
 
 
 	function loguear_us($user,$password,&$result){
-		$Consulta="SELECT s.idsede, s.nombre AS nom_sede, u.* FROM usuario as u INNER JOIN sede AS s using(idsede) WHERE u.estado=0 and u.usuario = '".$user."' and u.pass = '".$password."'";
+		$Consulta="SELECT s.idsede, s.nombre AS nom_sede, s.ciudad, u.* FROM usuario as u INNER JOIN sede AS s using(idsede) WHERE u.estado=0 and u.usuario = '".$user."' and u.pass = '".$password."'";
 		$count=1;
 		$result = $this->bd->query($Consulta);
         $count = 0;

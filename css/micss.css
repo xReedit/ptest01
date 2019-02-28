@@ -463,6 +463,7 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xMiCardPedido.xNeutro{background: #f3e5f5}
 .xMiCardPedido.xDisponible{background: #b2ff59}
 .xMiCardPedido.xOcupado{background: #9c27b0; color: #fff;}
+.xMiCardPedido.xDespachado{background: #00897b; color: #fff;}
 .xMiCardPedido:hover{transition: transform .07s ease-in-out; transform: scale(1.08); z-index: 10;border: 1px solid rgba(33,33,33,0.8);-webkit-box-shadow:1px 1px 1px -1px rgba(125,125,125,1);-moz-box-shadow:1px 1px 1px -1px rgba(125,125,125,1);box-shadow:1px 1px 1px -1px rgba(125,125,125,1);}
 
 .xdivEnLinea2 {
@@ -510,6 +511,11 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
     white-space:nowrap;
     text-overflow: ellipsis;  
 }
+.clickSelToolSede{
+    transition: transform .2s; /* Animation */
+    color: #ffffff;
+}
+.clickSelToolSede:hover {transform: scale(1.1); color: #ffff8d;}
 
 .xColorDegrade1{color:#FFF;background:#606c88;background:-moz-linear-gradient(top, #606c88 0%, #3f4c6b 100%);background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,#606c88), color-stop(100%,#3f4c6b));background:-webkit-linear-gradient(top, #606c88 0%,#3f4c6b 100%);background:-o-linear-gradient(top, #606c88 0%,#3f4c6b 100%);background:-ms-linear-gradient(top, #606c88 0%,#3f4c6b 100%);background:linear-gradient(to bottom, #606c88 0%,#3f4c6b 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#606c88', endColorstr='#3f4c6b',GradientType=0);}
 .xColorDegrade2{color:#333;background:#f5f6f6;background:-moz-linear-gradient(top, #f5f6f6 0%, #dbdce2 7%, #b8bac6 49%, #dddfe3 97%, #f5f6f6 100%);background:-webkit-gradient(linear, left top, left bottom, color-stop(0%,#f5f6f6), color-stop(7%,#dbdce2), color-stop(49%,#b8bac6), color-stop(97%,#dddfe3), color-stop(100%,#f5f6f6));background:-webkit-linear-gradient(top, #f5f6f6 0%,#dbdce2 7%,#b8bac6 49%,#dddfe3 97%,#f5f6f6 100%);background:-o-linear-gradient(top, #f5f6f6 0%,#dbdce2 7%,#b8bac6 49%,#dddfe3 97%,#f5f6f6 100%);background:-ms-linear-gradient(top, #f5f6f6 0%,#dbdce2 7%,#b8bac6 49%,#dddfe3 97%,#f5f6f6 100%);background:linear-gradient(to bottom, #f5f6f6 0%,#dbdce2 7%,#b8bac6 49%,#dddfe3 97%,#f5f6f6 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#f5f6f6', endColorstr='#f5f6f6',GradientType=0);}

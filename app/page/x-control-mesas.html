@@ -720,7 +720,13 @@ function xIniControlMesa(){
 		valCategoriaLoalStorage = e.detail.categorias		
 
 		if ( getLocalStorage('::app3_cat_defualt') ) {
-			valCategoriaLoalStorage = JSON.parse(getLocalStorage('::app3_cat_defualt'));
+			const _valCategoriaLoalStorage = JSON.parse(getLocalStorage('::app3_cat_defualt'));			
+			if (_valCategoriaLoalStorage.idcategoria != valCategoriaLoalStorage.idcategoria) {
+				setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));				
+			} else {
+				valCategoriaLoalStorage = _valCategoriaLoalStorage;
+			}
+
 			xidCategoriaPD = valCategoriaLoalStorage.idcategoria; // toma el que esta en el storage si hubiera
 			
 			setTimeout(() => {// coloca la categoria antes seleccionada	
@@ -959,6 +965,7 @@ function xAnularPedido(){
 		//xLoadMesas()
 		if(xSelAllPedidos==true){
 			$(xObj_miPedido).removeClass('xOcupado');
+			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
 			$(xObj_miPedido).find(".importe").text('.');
 			$(xObj_miPedido).find(".tiempo").text('disponible');
@@ -992,6 +999,7 @@ function xCambiarMesa(){
 
 		if($("#dialog_cambiar_mesa #titulo_cambiar_mesa").text().indexOf('todos')<0){return;}
 		$(xObj_miPedido).removeClass('xOcupado');
+		$(xObj_miPedido).removeClass('xDespachado');
 		$(xObj_miPedido).addClass('xNeutro');
 		$(xObj_miPedido).find(".importe").text('.');
 		$(xObj_miPedido).find(".tiempo").text('disponible');
@@ -1051,7 +1059,8 @@ function xTraerDtTipoConsumo(){
 function xOpenLULI(){
 	xopen_add_item=true;
 	$("#SelAddLuLi").css('display','inline-block');
-	$("#select_ulTPC").val(1);
+	// $("#select_ulTPC").val(1);
+	$("#select_ulTPC").val($("#select_ulTPC option:first").val());
 	xLoadDataUlAdd();
 }
 function xCloseLULI(){
@@ -1232,6 +1241,10 @@ function xArmarSqlAddLUlI(){
 				xCloseLULI();
 			}
 		});
+
+		// regresa xocupado
+		$(xObj_miPedido).removeClass('xDespachado');
+		// xLoadMesas();// actualiza el estado
 }
 
 function xLLamarPrintAddLUlI() {
@@ -1348,6 +1361,7 @@ function xRegistrarPagoCM(xcant_rp){
 		if(xcant_rp==0){
 			if(xnum_mesa_obj!=0){
 				$(xObj_miPedido).removeClass('xOcupado');
+				$(xObj_miPedido).removeClass('xDespachado');
 				$(xObj_miPedido).addClass('xNeutro');
 				$(xObj_miPedido).find(".importe").text('.');
 				$(xObj_miPedido).find(".tiempo").text('disponible');
@@ -1941,6 +1955,7 @@ async function xSumarTotalPedidos(viene_borrar){
 	if(viene_borrar==1){//si viene de borrar items y ya no queda mas items = mesa disponible
 		if(xtt_pedidos==0){//cierra pedido
 			$(xObj_miPedido).removeClass('xOcupado');
+			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
 			$(xObj_miPedido).find(".importe").text('.');
 			$(xObj_miPedido).find(".tiempo").text('disponible');
@@ -2041,7 +2056,7 @@ function xFiltroPedidos(obj){
 	xOpenPage(10,xparam);
 }
 */
-function xLoadMesas(){	
+async function xLoadMesas(){	
 	// if(EstadoLoadMesas) return;
 	// EstadoLoadMesas=true;
 
@@ -2053,27 +2068,38 @@ function xLoadMesas(){
 	// });
 	
 	// $('.grid').remove('.xMiCardPedido').trigger('create');
+
+	// get selector tipo consumo local
+	const selector_tpc_local_id = await xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x => x.idtipo_consumo)[0];
+	const selector_tpc_local = 'tpc' + selector_tpc_local_id;
+	xIdFiltro1 = selector_tpc_local_id;
+
 	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5'})
 	.done( function (NumMesa) {
 		var xCadenaNumMesa='';
 		var xCadenaPedidoOtros='';
-		var xidtipo_c='tpc1';
+		var xidtipo_c='tpc1';		
+
+		
+
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501'})
 		.done( function (dtPe) {
 			if($(".grid .xMiCardPedido").length>0){return;}
+			
 			var xdtPe=$.parseJSON(dtPe);
 			var xCadenaTPC='';
 			xdtPe=xdtPe.datos;
 
 			var xcont_mesa=1;
 			var xindex;
-			var xtxtEstado='';
+			var xtxtEstado='', xtxtEstadoDespachado='';
 			var xtxtHora='', xtxt_subtota_total=0;
 			xCadenaNumMesa='';
 			for (var i = 0; i < NumMesa; i++) {
 				xindex=-1;
 				xtxtEstado='';
+				xtxtEstadoDespachado = ''
 				xtxtHora='';
 				for (var z = 0; z < xdtPe.length; z++) {
 					// consumir en el local
@@ -2081,13 +2107,15 @@ function xLoadMesas(){
 					//if(xdtPe[z].solo_llevar==0){
 						xindex=z;
 						xtxtEstado='xOcupado';
+						xtxtEstadoDespachado = parseInt(xdtPe[z].despachado) === 0 ? '' : 'xDespachado';
 						xtxtHora=xdtPe[z].hora;
 					//}
 					break;
 				};
+
 				if(xindex==-1){
 					xtxtEstado='xNeutro';
-					xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xNeutro '+xidtipo_c+'" data-estado="b" data-tpc="tpc1" data-abrir-detalle=0>'+
+					xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xNeutro '+ selector_tpc_local+'" data-estado="b" data-tpc="'+ selector_tpc_local+'" data-abrir-detalle=0>'+
 						'<p class="tipo">Mesa</p>'+
 					    '<h3 class="numero xBold">'+xCeroIzq(xcont_mesa,2)+'</h3>'+
 					    '<p class="tiempo xfont11">disponible</p>'+
@@ -2098,7 +2126,7 @@ function xLoadMesas(){
 				else{
 					// retorna el total + subtotales
 					xtxt_subtota_total = xArmarSubtotalesFromTotal(xdtPe[xindex]);
-					xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xOcupado '+xidtipo_c+' xCursor" data-estado="a" data-tpc="tpc1" data-hora="'+xdtPe[xindex].hora+'" data-p="'+xdtPe[xindex].idpedido+'" data-nummesa="'+xdtPe[xindex].nummesa+'" data-correlativo="'+xdtPe[xindex].correlativo_dia+'"  data-numpedido="'+xdtPe[xindex].numpedido+'" data-idcat="'+xdtPe[xindex].idcategoria+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
+					xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xOcupado '+ xtxtEstadoDespachado+' '+ selector_tpc_local+' xCursor" data-estado="a" data-tpc="'+ selector_tpc_local+'" data-hora="'+xdtPe[xindex].hora+'" data-p="'+xdtPe[xindex].idpedido+'" data-nummesa="'+xdtPe[xindex].nummesa+'" data-correlativo="'+xdtPe[xindex].correlativo_dia+'"  data-numpedido="'+xdtPe[xindex].numpedido+'" data-idcat="'+xdtPe[xindex].idcategoria+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
 						'<p class="tipo">Mesa</p>'+
 					    '<h3 class="numero xBold">'+xCeroIzq(xcont_mesa,2)+'</h3>'+
 					    '<p class="tiempo xfont11">-</p>'+
@@ -2117,7 +2145,10 @@ function xLoadMesas(){
 					xidtipo_c='99';
 					xref_reserva='<p class="ref_reserva xfont12">'+xdtPe[q].referencia+'</p>';
 				}
-				else{if(xidtipo_c==1){continue;}}
+				else{
+					// if(xidtipo_c===1){continue;}
+					if (xdtPe[q].tipo_consumo_titulo === 'LOCAL') { continue; }
+				}
 				xidtipo_c='tpc'+xidtipo_c;
 
 				xtxt_subtota_total = xArmarSubtotalesFromTotal(xdtPe[q]);
@@ -2190,7 +2221,7 @@ function xActualizarItems(){
 			var xupdate=0;
 			var xidtpc_item_up='';
 			var xref_reserva='';
-			var xCadenaNewItem='', xtxt_subtota_total=0;
+			var xCadenaNewItem='', xtxt_subtota_total=0, xdespachado_class='';
 			xdtPe=xdtPe.datos;
 
 			for (var i = 0; i < xdtPe.length; i++) {
@@ -2198,17 +2229,21 @@ function xActualizarItems(){
 				var xactualiza=false;
 				xnum_mesa_item=xCeroIzq(xdtPe[i].nummesa,2);
 				if(xdtPe[i].nummesa==0){xnum_mesa_item=xCeroIzq(xdtPe[i].correlativo_dia,4);}
+				xdespachado_class = parseInt(xdtPe[i].despachado) === 0 ? '' : 'xDespachado'; 
 
 				xtxt_subtota_total = xArmarSubtotalesFromTotal(xdtPe[i]);
 
 				$(".xMiCardPedido .numero").each(function(index,element){
 					if(xnum_mesa_item==$(element).text()){
-						if(xdtPe[i].nummesa!=0 && xdtPe[i].idtipo_consumo==1){
+						// if(xdtPe[i].nummesa!=0 && xdtPe[i].idtipo_consumo==1){
+						if (xdtPe[i].nummesa != 0 && xdtPe[i].tipo_consumo_titulo === 'LOCAL') {
 							xidtpc_item_up='tpc'+xdtPe[i].idtipo_consumo;							
 
 							$(element).parent().removeClass('xNeutro');
 							$(element).parent().addClass('xOcupado');
 							$(element).parent().addClass('xCursor');
+							$(element).parent().addClass(xdespachado_class);
+
 							$(element).parent().addClass(xidtpc_item_up);
 							$(element).parent().find(".importe").text('S/. '+xMoneda(xtxt_subtota_total))
 							$(element).parent().attr('data-hora',xdtPe[i].hora);

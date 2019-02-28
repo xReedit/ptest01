@@ -123,7 +123,7 @@
 							</form>
 						</div>
 						<div class="xm_at_cont xAlinearce">
-							<paper-fab icon="add" onclick="dialog_add_sede.open()" data-dialog="dialog_sede" title="" tabindex="0" class="verde btnAdd" id="BtnAddSede"></paper-fab>
+							<!-- <paper-fab icon="add" onclick="dialog_add_sede.open()" data-dialog="dialog_sede" title="" tabindex="0" class="verde btnAdd" id="BtnAddSede"></paper-fab> -->
 							<table width="100%" class="xtable2" id="tb_org">
 								<thead>
 									<th>SEDE</th>
@@ -1485,7 +1485,7 @@ function xModificarSede(obj){
 	var xids=$(obj).parents('tr').attr('data-id');
 	$("#frm_sede #idsede").val(xThisConfig.dt_sede[xids].idsede);
 	$("#frm_sede #nombre").val(xThisConfig.dt_sede[xids].nom_sede);
-	$("#frm_sede #direccion").val(xThisConfig.dt_sede[xids].dir_sede);
+	$("#frm_sede #ciudad").val(xThisConfig.dt_sede[xids].ciudad);
 	$("#frm_sede #eslogan").val(xThisConfig.dt_sede[xids].eslogan);
 	$("#frm_sede #mesas").val(xThisConfig.dt_sede[xids].mesas);
 	$("#frm_sede #telefono").val(xThisConfig.dt_sede[xids].telefono);
@@ -1552,7 +1552,7 @@ function xLoadOrg(){
 
 		$("#frm_org #idorg").val(xdtOrg[0].idorg);
 		$("#frm_org #nombre").val(xdtOrg[0].nombre);
-		$("#frm_org #ciudad").val(xdtOrg[0].ciudad);
+		$("#frm_org #direccion").val(xdtOrg[0].direccion);
 		$("#frm_org #ruc").val(xdtOrg[0].ruc);
 		$("#frm_org #telefono").val(xdtOrg[0].telefono);
 		$("#frm_org #email").val(xdtOrg[0].email);

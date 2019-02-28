@@ -18,6 +18,7 @@ function xIniControlPedido(){
 		xm_log_get('ini_us');
 		var xDatos_p=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 		$("#en_nom_sede").text(xDatos_p[0].des_sede);
+		$("#en_nom_ciudad").text(xDatos_p[0].ciudad);
 		$("#en_nom_us").text(xNomUsario);
 
 		xLoadTipoConsumoX();
