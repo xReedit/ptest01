@@ -1591,7 +1591,8 @@
 			$sql="
 				SELECT p.idpedido,p.nummesa,p.numpedido,p.correlativo_dia,p.reserva, p.idtipo_consumo,
 					SUBSTRING_INDEX(u.nombres, ' ', 1) AS nom_usuario,p.referencia, p.subtotales_tachados,
-					concat('Pedido ',LPAD(p.correlativo_dia,5,'0')) AS des_pedido,TIMESTAMPDIFF(MINUTE , STR_TO_DATE(concat(p.fecha,' ',p.hora),'%d/%m/%Y %H:%i:%s'), CURRENT_TIMESTAMP() ) AS min_transcurridos, p.total
+					concat('P',LPAD(p.correlativo_dia,5,'0')) AS des_pedido,TIMESTAMPDIFF(MINUTE , STR_TO_DATE(concat(p.fecha,' ',p.hora),'%d/%m/%Y %H:%i:%s'), CURRENT_TIMESTAMP() ) AS min_transcurridos
+					, p.tiempo_atencion, p.val_color_despachado, p.total
 				FROM pedido AS p
 					INNER JOIN usuario AS u using(idusuario)
 				WHERE ".$condicion." and (p.idorg=".$_SESSION['ido']." and p.idsede=".$_SESSION['idsede'].") AND p.estado IN(0,1)
@@ -2698,18 +2699,24 @@
 			$bd->xConsulta($sql);
 			break;
 		case 2102://guardar como depachado //despacho=0=despachado 1=por defecto
+			$sql_pedido = "";
 			if($_POST['op']==0){//depachado
 				$hora=date('H:i:s');
 				$despachado_hora=$_POST['td'];
+				$valEstado=$_POST['valEstado'];
 				$sql="
 					UPDATE pedido_detalle
 						set despachado=1, despachado_hora='".$hora."' , despachado_tiempo='".$despachado_hora."'
-					WHERE idpedido_detalle in (".$_POST['id_pd'].")";
+					WHERE idpedido_detalle in (".$_POST['id_pd'].");";
+				
+				// color del estado al despahcar 1=verde 2=ambar 3=alertado
+				$sql_pedido=" update pedido set val_color_despachado='".$valEstado."' where idpedido=".$_POST['idp'].";";
+
 			}else{ //retirado
 				//$sql="update pedido set estado=4 where idpedido=".$_POST['idp'];
 				$sql="update pedido set despachado=2 where idpedido=".$_POST['idp'];
 			}
-			$bd->xConsulta($sql);
+			$bd->xMultiConsulta($sql.$sql_pedido);
 			break;
 		case 2103://ver pedidos despachados
 			$sql="

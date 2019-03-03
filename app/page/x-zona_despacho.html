@@ -242,12 +242,12 @@ function xIniZonaDespacho(){
 		}else{
 			$(this).addClass(xColorMarcado+' xmarcado');
 		}
-		event.stopPropagation();e.stopPropagation();e.stopImmediatePropagation();
+		e.stopPropagation();e.stopImmediatePropagation();
 	})
 
 	$(document).on('click', '.xBtnDespacho', function(e) {
-		if($(this).text()==="Enviar a despacho"){$(this).text('Confirmar envio');event.stopPropagation();e.stopPropagation();e.stopImmediatePropagation(); return;}
-		if($(this).text()==="Listo"){$(this).text('Confirmar'); event.stopPropagation();e.stopPropagation();e.stopImmediatePropagation();return;}
+		if($(this).text()==="Enviar a despacho"){$(this).text('Confirmar envio');e.stopPropagation();e.stopImmediatePropagation(); return;}
+		if($(this).text()==="Listo"){$(this).text('Confirmar'); e.stopPropagation();e.stopImmediatePropagation();return;}
 		if($(this).text()==="Confirmar"){
 			xObjPedido=$(this).parents('.xmarco_zd_pedido');
 			xDespachado_retirado(xObjPedido,0);
@@ -259,7 +259,7 @@ function xIniZonaDespacho(){
 			xEnviarReservaDespacho(xObjPedido)
 		}
 
-		event.stopPropagation();e.stopPropagation();e.stopImmediatePropagation();
+		e.stopPropagation();e.stopImmediatePropagation();
 	})
 
 	$(document).on('click', '.xBtnDespacho_retirar', function(e) {
@@ -270,8 +270,7 @@ function xIniZonaDespacho(){
 			//setTimeout(function(){xObjPedido.remove(); xObjPedido.empty();xResumenPedidosItem();},2000)
 
 		}
-		event.preventDefault();
-		event.stopPropagation();
+		e.preventDefault();		
 		e.stopPropagation();
 		e.stopImmediatePropagation();
 	})
@@ -544,9 +543,16 @@ function xDespachado_retirado(obj,op){
 	$(obj).find('.row_item').each(function(i,e){
 		xid_pd=xid_pd+$(e).attr('data-id')+',';
 	})
-	xid_pd=xid_pd.slice(0,-1)
+	xid_pd=xid_pd.slice(0,-1);
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2102',data:{'idp':xid_p, 'id_pd':xid_pd,'op':op,'td':xtimepo_despacho}})
+	// estado del pedido -> 1 verde, 2 ambar, 3 alertado
+	const objColor = $(obj).find(".encabezado");
+	let valEstado = 0;
+	valEstado = objColor.hasClass('xFondoRowverde') ? 1 : valEstado; 
+	valEstado = objColor.hasClass('xFondoRowAmarillo_estado_pedido') ? 2 : valEstado;
+	valEstado = objColor.hasClass('xFondoRowRojo_estado_pedido') ? 3 : valEstado;
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2102',data:{'idp':xid_p, 'id_pd':xid_pd,'op':op,'td':xtimepo_despacho, 'valEstado': valEstado}})
 	.done( function (dt_rp) {
 		dt_rp=$.parseJSON(dt_rp)
 		//if(!dt_rp.success){alert(dt_rp.error);xPopupLoad.xclose(); xDespachado(obj);}
@@ -581,7 +587,7 @@ function xActualizarPedidosZona(){
 
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2101',data:{'id':xUltimoIdPedidoEnZona,'num_pedidos_cola':xNumEnCola,'arr_filtro':xdata_zona}})
 	.done( function (dt_pedidos) {
-		console.log(dt_pedidos);
+		// console.log(dt_pedidos);
 		var xdt_pedidos=$.parseJSON(dt_pedidos), 
 			xid_p,xid_secc,xid_item,xcadena_enca='',
 			xcadena_secc='',xcadena_tp_c='',

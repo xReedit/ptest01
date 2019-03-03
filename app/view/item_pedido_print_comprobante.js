@@ -392,6 +392,8 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 /// enviar a print server
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	// _data = JSON.stringify(JSON.stringify(_data));
+	if (_data.Array_print[0].ip_print==='') return;
+	
 	_data = JSON.stringify(_data);
 
 	$.ajax({

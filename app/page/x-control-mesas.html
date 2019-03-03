@@ -112,7 +112,7 @@
 									<td width="40%" style="padding-right:10px;">
 										<div class="xtd_derecha">
 										<table width="100%" id="tb_pedidos" class="xRowPading4">
-											<thead><th colspan="4" align="left">Pedidos</th></thead>
+											<thead><th colspan="5" align="left">PEDIDOS</th></thead>
 											<tr class="row selected1 xCursor check_item_p" data-idpedido="1">
 												<td><paper-checkbox checked class="check_item"></paper-checkbox>1</td>
 												<td>Pedido 00102</td>
@@ -1434,6 +1434,17 @@ function xLoadDetallesPedido (obj){
 		var xcadena_pedido='';
 		var xcount_p=1;
 		for (var i = 0; i < xdtDpedido.length; i++) {
+			let xcolor_tiempo_despacho='';
+
+			switch (xdtDpedido[i].val_color_despachado) {
+				case '1':xcolor_tiempo_despacho='xColorRow_verde'; break;
+				case '2':xcolor_tiempo_despacho='xColorRow_Ambar'; break;
+				case '3':xcolor_tiempo_despacho='xColorRow_Rojo'; break;
+			}
+			
+			const xClassColorMin = xcolor_tiempo_despacho === '' ? 'xColorRow_Plomo' : xcolor_tiempo_despacho;
+			const td_tiempo_atencion = xdtDpedido[i].tiempo_atencion.length > 0 ? '<td class="'+ xcolor_tiempo_despacho +'">' + xdtDpedido[i].tiempo_atencion + ' <span class="xfont11 '+ xClassColorMin +'">min</span></td>' : '<td></td>';
+
 			xcadena_pedido=String(xcadena_pedido+'<tr class="row selected1 xCursor check_item_p" data-idcategoria="'+xidCategoriaPD+
 								'" data-idpedido="'+xdtDpedido[i].idpedido+
 								'" data-idcat="'+xp_sel_idcategoria+
@@ -1446,8 +1457,9 @@ function xLoadDetallesPedido (obj){
 								'" data-ref="'+xdtDpedido[0].referencia+'">'+
 								'" data-subtotales_tachados="'+xdtDpedido[0].subtotales_tachados+'">'+
 									'<td><paper-checkbox checked class="check_item"></paper-checkbox>'+xcount_p+'</td>'+
-									'<td>'+xdtDpedido[i].des_pedido+' '+xdtDpedido[i].referencia+'</td>'+
-									'<td>'+xdtDpedido[i].min_transcurridos+' min</td>'+
+									'<td>'+xdtDpedido[i].des_pedido+' <span class="xfont10 xColorRow_Plomo">'+xdtDpedido[i].referencia+'</span></td>'+
+									'<td>'+xdtDpedido[i].min_transcurridos+' <span class="xfont11 xColorRow_Plomo">min</span></td>'+
+									td_tiempo_atencion +
 									'<td align="right" class="td_importe" id="td_importe">'+xMoneda(xdtDpedido[i].total)+'</td>'+
 								'</tr>');
 			xcount_p++;
@@ -1933,19 +1945,19 @@ async function xSumarTotalPedidos(viene_borrar){
 		}
 		
 		htmlSubtotales = htmlSubtotales + '<tr class="total '+classTachado+'">'+
-							'<td colspan="3" '+_style+'><p class="'+_fontSizeTitulo+'">'+titulo+' '+ xBtnQuitar +'</p></td>'+
+							'<td colspan="4" '+_style+'><p class="'+_fontSizeTitulo+'">'+titulo+' '+ xBtnQuitar +'</p></td>'+
 							'<td align="right" '+_style+'><p class="'+_fontSize+' xColorRow_Azul" id="'+_id+'">'+importeRow+'</p></td>'+
 						'</tr>';
 	});
 
 
-	xcadena_pe=String(xcadena_pe+'<tr class="total"><td colspan="3">CONSUMO TOTAL</><td align="right"><P class="xfont18" id="tt_consumo_t"><b>'+xMoneda(xtt_pedidos)+'</b></p></td></tr>');
+	xcadena_pe=String(xcadena_pe+'<tr class="total"><td colspan="4">CONSUMO TOTAL</><td align="right"><P class="xfont18" id="tt_consumo_t"><b>'+xMoneda(xtt_pedidos)+'</b></p></td></tr>');
 
 	xtt_dif=parseFloat(xImporteTotalSeleccionados)-parseFloat(xtt_pedidos_det);
 	ImporteDiferencia = xtt_dif;
 
 	
-	xcadena_pe=String(xcadena_pe+htmlSubtotales+'<tr class="total"><td colspan="3">DIFERENCIA</><td align="right"><P class="xfont18 xColorRow_Rojo"><b>'+xMoneda(xtt_dif)+'</b></p></td></tr>');
+	xcadena_pe=String(xcadena_pe+htmlSubtotales+'<tr class="total"><td colspan="4">DIFERENCIA</><td align="right"><P class="xfont18 xColorRow_Rojo"><b>'+xMoneda(xtt_dif)+'</b></p></td></tr>');
 
 	$("#tb_pedidos").append(xcadena_pe).trigger('create');
 	xtt_pedidos=xtt_pedidos_det;
