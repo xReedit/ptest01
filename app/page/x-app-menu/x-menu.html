@@ -68,14 +68,14 @@
   }
   function xPasarDetalle(obj) {
     // alert('menu');
-    var xdt = $(obj)
-      .find(".xtitulo_item")
-      .text();
+    var xdt = $(obj).find(".xtitulo_item").text();
     //var xidt=$(obj).attr('data-id');
     //xidCategoriaSeccion=$(obj).attr('data-id');
     xidCategoriaSeccion = $(obj).attr("data-id");
     xidCatProcedencia = $(obj).attr("data-procede");
     window.localStorage.setItem("::app3_sys_dt_c", xdt);
+    
+    xRegDataLoadBack();
     //var xParamU='?c='+xidCategoria+'?it='+xidt;
     xOpenPageCarta(2);
   }

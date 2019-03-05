@@ -115,7 +115,7 @@ function xOpenPageCarta(xop, parametro) {
     case 1:
       xruta = "/menu";
       break;
-    case 2:
+    case 2:      
       xruta = "/sub_menu";
       break;
     case 3:
@@ -276,6 +276,8 @@ function xVerDetalleMenu(i, op) {
   if (xPos != -1) {
     if (op == 2) {
       PanelDe.closeDrawer();
+
+      xRegDataLoadBack();
       xLoadItems();
     }
     return;
@@ -283,6 +285,13 @@ function xVerDetalleMenu(i, op) {
   //var xParamU='?c='+xidCategoria+'?it='+xidt;
   xOpenPageCarta(op);
 }
+
+function xRegDataLoadBack() {
+  // al back a submenu get
+  const _DataLoadBack = { i: xidCategoria, s: xidCategoriaSeccion, p: xidCatProcedencia }
+  window.localStorage.setItem("::app3_sys_dt_back", JSON.stringify(_DataLoadBack));
+}
+
 function xCerrarSession() {
   $("body").removeClass("loaded");
   $.ajax({ type: "POST", url: "../../bdphp/log.php?op=-103" })
