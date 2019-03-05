@@ -31,6 +31,9 @@
   }
 
   function xLoadCategoria() {
+    // reset carga carta
+    window.localStorage.removeItem("::app3_sys_dt_mlm");
+
     if (window.localStorage.getItem("::app3_sys_descat")) {
       //para no estar seleccionando cada vez la carta
       // al dar en inicio del menu lateral se regresara a seleccionar la categoria

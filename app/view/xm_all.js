@@ -458,7 +458,7 @@ function xm_LogChequea(responde){
       //if(rpt==="1"){xm_LogIni(function(a){if(a){responde(true)}});}else{window.localStorage.setItem("::app3_woDUS",rpt); return responde(false);}
 		})
 }
-function xm_log_get(seccion){
+function xm_log_get(seccion){	
 	var xdt_log=window.localStorage.getItem("::app3_woDUS"),xdt_rpt;
 	try {
 		xdt_log=window.atob(xdt_log);
@@ -484,7 +484,10 @@ function xm_log_get(seccion){
       break;
     case 'app3_Us_home':
       xdt_rpt=xdt_log.sistema.url ;
-      break;
+			break;
+		case 'app3_sys_const':		
+			xdt_rpt = xdt_log.sistema.constantes;
+			break;
     case 'app3_woA':
       xdt_rpt=xdt_log.us.acc;
       break;

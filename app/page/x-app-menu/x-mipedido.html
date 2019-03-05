@@ -291,6 +291,7 @@
     btn_dlg_confirm.hidden = false;
     dialog_msj_confirma_pedido.open();
   }
+
   function xIniMiPedido() {
     xPopupLoad = document.getElementById("xLoad");
     xHayPedido = 0;
@@ -300,7 +301,7 @@
 
     $(window).trigger("resize");
 
-    xm_LogChequea(function() {
+    // xm_LogChequea(function() {
       xm_log_get("ini_us");
 
       var xDatos_p = xm_log_get("sede_generales"); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
@@ -327,7 +328,7 @@
       $("#referencia_pedido").val(xReferenciaPedido);
 
       xCadenaTC = xArmarTipoConsumo();
-    });
+    // });
     $(document).on("click", ".xEncabezadoTpCon", function() {
       $(this).find("input:radio")[0].checked = true;
       xVerificarCheckEnca();
