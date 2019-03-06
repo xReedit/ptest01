@@ -298,6 +298,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 			if(xArrayCuerpo[i]==null){continue;}
 			$.map(xArrayCuerpo[i], function(xn_p, z) {
 				if (typeof xn_p=="object"){
+					if (xn_p.imprimir_comanda==='0') return;// si no se muestra en comanda
 					if(xIdPrint==xn_p.idimpresora){
 						//if(xArrayBodyPrint.length==0){
 						if(xArrayBodyPrint[i]===undefined){
@@ -344,14 +345,24 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 
 function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xArraySubtotal,callback){
 	xPopupLoad.titulo="Imprimiendo...";
-	
+
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	xArrayEncabezado.nom_us = xm_log_get('app3_us').nomus;
+
 	const _data = {
 		Array_enca: xArrayEncabezado,
 		Array_print: xImpresoraPrint,
 		ArrayItem: xArrayCuerpo,
 		ArraySubTotales: xArraySubtotal	
 	}
-	xSendDataPrintServer(_data,1,'comanda');
+
+	if (_sys_local === 1) {
+		xSendDataPrintServer(_data,1,'comanda');
+		setTimeout(() => {			
+			callback(false);
+		}, 300);
+		return;
+	}
 
 
 	$.ajax({type: 'POST', url: '../../print/print3.php', 

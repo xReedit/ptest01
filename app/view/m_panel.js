@@ -131,8 +131,12 @@ function xOpenPage(xop, parametro){
 		case 25: xruta = '/facturador'; break;
 		case 26: xruta = '/c_electronico'; break;
 		case 28: xruta = '/adm_dashboard'; break;
-		case 27: window.open('http://192.168.1.64/restobar-print-server/print-server.html', "Serrvidor de Impresion"); return; // desarrollo
-		// case 27: window.open('http://appx.papaya.com.pe/print-server/print-server.html', "Serrvidor de Impresion"); return; // produccion
+		case 27: 
+			const _xdataOrg = {o: xIdOrg, s: xIdSede}
+			const _xr = btoa(JSON.stringify(_xdataOrg));
+			window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+			//window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
+			return; 		
 	}
 	xruta=xruta+parametro;
 	router.go(xruta+parametro);
