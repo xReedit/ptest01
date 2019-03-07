@@ -73,6 +73,29 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 	let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal, true); // cpe = true subtotal + adicional
 	_arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
 
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
+
+	const _data = {
+		Array_enca: xArrayEncabezado,
+		Array_print: xImpresoraPrint,
+		ArrayItem: _arrBodyComprobante, // xArrayCuerpo 
+		ArraySubTotales: xArraySubtotal,
+		ArrayComprobante: xArrayComprobante,
+		ArrayCliente: xArrayCliente
+	}
+
+	if (_sys_local === 1) {
+		xPopupLoad.xopen();
+		xSendDataPrintServer(_data, 2, 'comprobante');
+		setTimeout(() => {
+			xPopupLoad.xclose();
+			callback(false);
+		}, 1000);
+		return;
+	}
+
+
 	$.ajax({type: 'POST', url: '../../print/print5.php', 
 			data:{
 				Array_enca: xArrayEncabezado, 
@@ -404,6 +427,10 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	// _data = JSON.stringify(JSON.stringify(_data));
 	if (_data.Array_print[0].ip_print==='') return;
+
+	// quitar logo64 si trae
+	_data.Array_print[0].logo64 = '';
+	_data.Array_print[0].logo = '';
 	
 	_data = JSON.stringify(_data);
 

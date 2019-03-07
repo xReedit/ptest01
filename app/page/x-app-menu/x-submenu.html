@@ -40,13 +40,13 @@
 
   function xIniSubMenu() {
     //xVerificarSession();
-    xArrayPedidoObj = $.parseJSON(
-      window.localStorage.getItem("::app3_sys_dta_pe")
-    );
+    xArrayPedidoObj = $.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));
     xArmarMenuLateral(2);
 
     xCadenaTC = xArmarTipoConsumo();
-    xLoadItems();
+    setTimeout(() => {      
+      xLoadItems();
+    }, 100);
 
    
     $(document).on('click', '.xmenu_item_2', function(e) {
@@ -122,14 +122,14 @@
     });
   }
 
-  function xLoadItems() {
+  async function xLoadItems() {
     $(".xMenu_body").html('<div class="xAlinearCentro spinner"><paper-spinner active></paper-spinner></div>').trigger("create");
     xTituloDet = window.localStorage.getItem("::app3_sys_dt_c");
     $("#xtitulo_bar").text(xTituloDet);
 
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=301', data:{i:xidCategoria,s:xidCategoriaSeccion,p:xidCatProcedencia}})
     //.done( function (dtItem) {
-    const _DataLoadBack = JSON.parse(window.localStorage.getItem("::app3_sys_dt_back"));
+    const _DataLoadBack = JSON.parse(window.localStorage.getItem("::app3_sys_dt_back"));    
 
     $.ajax({
       type: "POST",

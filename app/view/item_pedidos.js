@@ -564,9 +564,34 @@ function xImprimirAhora(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,xArraySub
 	//xArrayEncabezado.solo_llevar=0;
 	//xArrayEncabezado.reservar=0;
 	xPopupLoad.titulo="Imprimiendo...";
+
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	xArrayEncabezado.nom_us = xm_log_get('app3_us').nomus;
+
+	const _data = {
+		Array_enca: xArrayEncabezado,
+		Array_print: xArrayDatosPrint,
+		ArrayItem: xArrayCuerpo,
+		ArraySubTotales: xArraySubtotal
+	}
+
+	if (_sys_local === 1) {
+			xPopupLoad.xopen();
+			xSendDataPrintServer(_data, 1, 'pre cuenta');
+			setTimeout(() => {
+				xPopupLoad.xclose();
+				return responde(false);
+			}, 1000);
+			return;
+	}
+
 	$.ajax({type: 'POST', url: '../../print/print3.php', 
 	data:{
-		Array_enca:xArrayEncabezado, Array_print:xArrayDatosPrint, ArrayItem:xArrayCuerpo, ArraySubTotales:xArraySubtotal}})
+		Array_enca:xArrayEncabezado, 
+		Array_print:xArrayDatosPrint, 
+		ArrayItem:xArrayCuerpo, 
+		ArraySubTotales:xArraySubtotal
+	}})
 	.done( function (dtPbd) {
 		//xPopupLoad.xclose();
 		if(dtPbd.indexOf('Error')!=-1){

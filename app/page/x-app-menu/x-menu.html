@@ -75,7 +75,9 @@
     xidCatProcedencia = $(obj).attr("data-procede");
     window.localStorage.setItem("::app3_sys_dt_c", xdt);
     
-    xRegDataLoadBack();
+    // xRegDataLoadBack();
+    const _DataLoadBack = { i: xidCategoria, s: xidCategoriaSeccion, p: xidCatProcedencia }
+    window.localStorage.setItem("::app3_sys_dt_back", JSON.stringify(_DataLoadBack));
     //var xParamU='?c='+xidCategoria+'?it='+xidt;
     xOpenPageCarta(2);
   }

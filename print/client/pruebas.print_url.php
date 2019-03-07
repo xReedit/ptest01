@@ -1,7 +1,7 @@
 <?php
 date_default_timezone_set('America/Lima');	
 
-// header('Access-Control-Allow-Origin: *');  
+header('Access-Control-Allow-Origin: *');  
 
 //require_once('https://papaya.com.pe/p.php'); 
 //$file = file_get_contents('pruebas2.txt'); 
