@@ -617,6 +617,7 @@
 
 <script type="text/javascript" src="config_comporbantes.js"></script>
 <script type="text/javascript" src="../../shared/config.const.js"></script>
+<script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
 <script>
 var xThisConfig, _arrPrintLocal=[];
 var xObjBorrar = 0; // object contiene informacion de la fila a borrar + tabla e id
@@ -1062,6 +1063,23 @@ function xTestPrint(xOpC){
 	var xClasTr='';
 	if(xOpC==0){xClasTr='.tr_addPrint';}else{xClasTr='.tr_addPrint_local';}
 	xArrayPasarTest={'ip_print':$(xClasTr+" #ip").val(),'mum_copias':0,'pie_pagina':xThisConfig.dt_impr[0].pie_pagina,'logo':xThisConfig.dt_impr[0].logo,'size_font':$(xClasTr+" #var_size_font").val(),'margen_iz':$(xClasTr+" #var_margen_iz").val(), 'margen_iz': $(xClasTr + " #img64").val()};
+
+	// si eta en la web
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	const _data = {
+		Array_enca:xArrayPasarTest
+	}
+
+	if (_sys_local === 1) {
+		xPopupLoad.xopen();
+		xSendDataPrintServer(_data, 3, 'prueba');
+		setTimeout(() => {
+			xPopupLoad.xclose();			
+		}, 1000);
+		return;
+	}
+	///
+	
 	$.ajax({ type: 'POST', url: '../../print/x-test_print.php',data:{Array_enca:xArrayPasarTest}})
 	.done( function (dtPrint) {
 		if(dtPrint.indexOf('Error')!=-1){alert(dtPrint)}
@@ -1258,6 +1276,22 @@ function xPruebaTestPrint(){
 		'margen_iz':$("#td_margen_iz").val(), 
 		'margen_iz': $("#td_margen_iz").val(),
 		'var_size_font_tall_comanda': $("#sel_size_font_comanda").val()};
+
+	// si eta en la web
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	const _data = {
+		Array_enca:xArrayPasarTest
+	}
+
+	if (_sys_local === 1) {
+		xPopupLoad.xopen();
+		xSendDataPrintServer(_data, 3, 'prueba');
+		setTimeout(() => {
+			xPopupLoad.xclose();			
+		}, 1000);
+		return;
+	}
+	///
 
 
 	$.ajax({ type: 'POST', url: '../../print/x-test_print.php',data:{Array_enca:xArrayPasarTest}})

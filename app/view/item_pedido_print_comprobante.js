@@ -425,12 +425,14 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 
 /// enviar a print server
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
-	// _data = JSON.stringify(JSON.stringify(_data));
-	if (_data.Array_print[0].ip_print==='') return;
-
-	// quitar logo64 si trae
-	_data.Array_print[0].logo64 = '';
-	_data.Array_print[0].logo = '';
+	// _data = JSON.stringify(JSON.stringify(_data)); si no es prueba
+	if (_idprint_server_estructura != 3){
+		if (_data.Array_print[0].ip_print === '') return;
+	
+		// quitar logo64 si trae
+		_data.Array_print[0].logo64 = '';
+		_data.Array_print[0].logo = '';
+	}
 	
 	_data = JSON.stringify(_data);
 
