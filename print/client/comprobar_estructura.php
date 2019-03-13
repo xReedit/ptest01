@@ -76,8 +76,8 @@
         //creamos nuevo archivo
         echo "crea logo ".$nomFileLogo;
         if($archivo = fopen($nomFileLogo, "a")) {
-            fwrite($archivo, $logo);
-            fclose($archivo);
+            fwrite($nomFileLogo, $logo);
+            fclose($nomFileLogo);
         
         }
     }

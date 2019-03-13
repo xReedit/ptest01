@@ -1110,7 +1110,7 @@ function xLoadDataUlAdd(){
 			for (var p = 0; p < xGeneralDataCarta.length; p++) {
 				if(xIdUlIl==xGeneralDataCarta[p].idseccion_index){
 					xtachar_li='';
-					xCantidadMax=xGeneralDataCarta[p].cantidad;
+					xCantidadMax=xGeneralDataCarta[p].cantidad; //stock actual
 					if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
 					if(xCantidadMax=='ND'){xCantidadMax=1000}
 					xCadenaBodyUlDt=String(xCadenaBodyUlDt+'<li class="row" data-idcategoria="'+xidCategoriaPD+
@@ -1128,6 +1128,7 @@ function xLoadDataUlAdd(){
 														'" data-imprimircomanda="'+xGeneralDataCarta[p].imprimir_comanda+
 														'" data-iddescontar="'+xGeneralDataCarta[p].idprocede+
 														'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+
+														'" data-stock_actual="'+xGeneralDataCarta[p].cantidad+
 														'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
 															'<div>'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+

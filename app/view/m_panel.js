@@ -57,10 +57,13 @@ function xIniDocument(){
  		//xGenerarMenu(acc);
 		xm_log_get('ini_us');
 		xLoadImpresoras();
- 		xDatosUs();
-
-		//si solo realizar pedido
-		if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{xOpenPage(1);}
+		xDatosUs();
+		xNewUs(); // verifica si es usuario nuevo
+		// if (!xNewUs()) { 
+		// 	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{xOpenPage(1);}
+		// } 
+		
+		//si solo realizar pedido		
 
 		//xSoloAccPedido();
  		/*debugger
@@ -132,8 +135,13 @@ function xOpenPage(xop, parametro){
 		case 26: xruta = '/c_electronico'; break;
 		case 28: xruta = '/adm_dashboard'; break;
 		case 27: 
-			const _xdataOrg = {o: xIdOrg, s: xIdSede}
+			if (window.location.href.indexOf('demo')>-1) {
+				demo='d'
+			}
+			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
+			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
+			
 			window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
 			//window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
 			return; 		
@@ -246,4 +254,44 @@ function cambiarClaveUs() {
 			$("#msj_2").removeClass("xInvisible");
 		}
 	});
+}
+
+function changePass() {
+	const p1 = pass1.value;
+	const p2 = pass2.value;	
+
+	if ( p1 != p2 ) {msj_pass_clave.textContent = "Las claves no son iguales"; return;}
+	if ( p1 === "123456" ) {msj_pass_clave.textContent = "La clave no puede ser la que pusiste."; return;}
+
+	$.ajax({
+			type: 'POST',
+			url: '../../bdphp/log.php?op=-3041',
+			data: {pn: p2}
+		})
+		.done(function (dtC) {
+			msj_pass_clave.textContent = '';
+			dialog_requiere_cambio_pas.close();
+			localStorage.setItem('::app3_woUSN', 1);
+			xPasarAMenuAcc();
+		});
+}
+
+function xNewUs() {
+	// var xNuevoUs=false;
+	if ( !localStorage.getItem('::app3_woUSN') ) {
+		const xNuevo = parseInt(xm_log_get('app3_us').nuevo);
+		if (xNuevo === 0) {
+			xNuevoUs = true; 
+			$('body').addClass('loaded');
+			dialog_requiere_cambio_pas.open();			
+		} else {
+			xPasarAMenuAcc();
+		}
+	}
+
+	// return xNuevoUs;
+}
+
+function xPasarAMenuAcc() {
+	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{xOpenPage(1);}
 }

@@ -144,6 +144,7 @@
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
+<script type="text/javascript" src="../../view/xm_all.js"></script>
 <script>
 var xThisCaja;
 var xMontoTotalCaja;
@@ -477,6 +478,22 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 		xArrayEncabezadoCierre[0].var_size_font=xPrintLocal.var_size_font
 	}
 
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	xArrayEncabezadoCierre[0].nom_us = xm_log_get('app3_us').nomus;
+
+	const _data = {Array_enca:xArrayEncabezadoCierre, ArrayItem:xArrayCierrePrint};
+
+	if (_sys_local === 1) {
+		xPopupLoad.xopen();
+		xSendDataPrintServer(_data, 4, 'cuadre-caja');
+		setTimeout(() => {
+			xPopupLoad.xclose();
+			xVerificaSiFacturacionE();			
+		}, 1000);
+		return;
+	}
+
+
 	$.ajax({type: 'POST', url: '../../print/print4.php', data:{Array_enca:xArrayEncabezadoCierre, ArrayItem:xArrayCierrePrint}})
 						.done( function (dtPbd) {
 							//xPopupLoad.xclose();
@@ -489,29 +506,31 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 								//xPopupLoad.titulo='Exito!';
 								xErrorPrint=false;
 								xPopupLoad.titulo="Imprimiendo...";
-								xPopupLoad.xopen();
-
-								var _arrSedes = xm_log_get('datos_org_sede');
-								const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
-
-								if (!isFacturacionElectronica) {
-									xPopupLoad.xclose();
-									return;
-								}
-								
-								setTimeout(function(){ 
-									xPopupLoad.xclose(); 
-									dialog_enviando_sunat.open();
-									setTimeout(() => {										
-										xCocinarResumenBoletas(); // envia los comprobantes
-									}, 1000);
-								}, 1500);
+								xPopupLoad.xopen();								
 								//setTimeout( function(){ xNuevoPedido(); }, 600);
 								//xNuevoPedido()
 								//setTimeout( function(){ xNuevoPedido(); }, 1500);
-
+								xVerificaSiFacturacionE();
 							}
 						});
+}
+
+function xVerificaSiFacturacionE() {
+	const _arrSedes = xm_log_get('datos_org_sede');
+	const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos
+
+	if (!isFacturacionElectronica) {
+		xPopupLoad.xclose();
+		return;
+	}
+
+	setTimeout(function(){
+		xPopupLoad.xclose();
+		dialog_enviando_sunat.open();
+		setTimeout(() => {
+			xCocinarResumenBoletas(); // envia los comprobantes
+			}, 1000);
+		}, 1500);
 }
 
 function xPreparaReport(){

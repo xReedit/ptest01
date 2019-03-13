@@ -229,9 +229,10 @@
             )) LIKE '%".$pagination['pageFilter']."%' ";
 
             $sql="
-                SELECT tp.descripcion as nom_comprobante, tp.codsunat , c.* from ce as c
+                SELECT ifnull(clie.ruc,'') as ruc, tp.descripcion as nom_comprobante, tp.codsunat , c.* from ce as c
                     inner join tipo_comprobante_serie as tps on tps.idtipo_comprobante_serie=c.idtipo_comprobante_serie
                     inner join tipo_comprobante as tp on tp.idtipo_comprobante=tps.idtipo_comprobante	
+                    left join cliente as clie on c.nomcliente=clie.nombres
                 where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].") ".$filtro." ".$filtroFecha." 
                 ORDER BY c.idce desc";
             

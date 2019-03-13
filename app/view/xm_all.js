@@ -562,7 +562,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 					}
 			
 					token = t;
-					_url_servicio = "http://consulta.viudanegra.com.pe/"+servicio+"/api/service.php?"+label_num+"="+valor+"&token="+token;
+					_url_servicio = "../../consulta/"+servicio+"/api/service.php?"+label_num+"="+valor+"&token="+token;
 								
 					$.ajax({ type: 'POST', url: _url_servicio})
 					.done( function (dt) {
@@ -617,7 +617,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 //1
 function xValidarToken(token, callback) {
 	var _token = token;
-	var _url_servicio = "http://consulta.viudanegra.com.pe/dni/api/validar.php?token="+_token;
+	var _url_servicio = "../../consulta/dni/api/validar.php?token=" + _token;
 	$.ajax({ type: 'POST', url: _url_servicio, timeout:3000})
 	.done( function (ValRpt) {
 		ValRpt = JSON.parse(ValRpt);

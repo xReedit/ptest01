@@ -1,3 +1,4 @@
+<link rel="import" href="../x-componentes/pagination-input/pagination-input.html">
 <dom-module id="x-historial_venta">
 	<template>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
@@ -47,10 +48,13 @@
 							</thead>
 						</table>
 						<br>
+						<div>                                
+                            <pagination-input id="paginator" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>
+                        </div>
 						<br>
 					</div>
 					<br>
-					<div class="itemsDiv xpadingLateralDe xpadingLateralIz" style="width:90%;">
+					<div class="itemsDiv xpadingLateralDe xpadingLateralIz" style="width:75%;">
 						<br><br>
 						<div class="xDerecha">
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div></paper-button>
@@ -83,7 +87,7 @@
 							</div>
 							<div>
 							<label for="txt_correlativo" class="xfont10">Correlativo:</label>
-							<p id="txt_correlativo" class="xfont20">CO-0005</p>
+							<p id="txt_correlativo" class="xfont20" style="white-space: pre-wrap; width: 50px;">CO-0005</p>
 							</div>
 							<div>
 							<label for="txt_tpc" class="xfont10">Tiempo de atencion:</label>
@@ -125,7 +129,16 @@ var xTotalItemSel;
 var xidregistro_pago_sel;
 var xDtPrint,xPSupervisor,xEstado_registro_pago=0,xhtml_anulado='', xdt_h=[],
 	arrSumSubtTotales = [], xRpt_pago = [], index_historial, x_icon_facturado; // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
-function xIniHistVenta(){
+
+var data_pagination={}, p_rows=0, p_fecha='';
+
+	function xIniPagination() {
+		xThisHistVenta.$.paginator.currentPage = 1;
+		xThisHistVenta.$.paginator.pageRows = p_rows;
+		xThisHistVenta.$.paginator.listRows = [30,60,90,120];
+	}
+
+	function xIniHistVenta(){
 	xPopupLoad=document.getElementById('xLoad');
 
 	x_icon_facturado = '<img src="../../images/_comprobante.png" title="se emitio comprobante" width="16px">';
@@ -139,12 +152,22 @@ function xIniHistVenta(){
 
 		xDtPrint=xm_log_get('sede_generales');
 		//xLoadDtPrint();
-		xloadHistorial();
+		xloadHistorial();        
 	})
+
+	xIniPagination();
+
+	xThisHistVenta.$.paginator.addEventListener('page-limit-change', (e) => {
+		data_pagination = e.detail.value; // datos del componente		
+		p_desde = data_pagination.pageDesde; // para el # de fila		
+		xloadHistorial();
+	});
 
 	$("#txt_fecha").on('change',function(){
 		var d = $(this).val().split('-');
 		xfecha_historial=d[2]+'/'+d[1]+'/'+d[0];
+		p_fecha = xfecha_historial; //d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
+        xThisHistVenta.$.paginator.currentPage = 1;        
 		xloadHistorial();
 	})
 	$("#dialog_motivo_anular_historial").on('iron-overlay-closed',function(){
@@ -224,8 +247,59 @@ function xAnularPedidoHistorial(){
 function xloadHistorial(){
 	xPopupLoad.titulo='Cargando...';
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20', data:{f:xfecha_historial}})
+
+	// paginacion    
+    data_pagination.pageFecha = p_fecha;
+	let xDataRes = [];
+	//
+
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20', data:{f:xfecha_historial}})
+	
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20001', data:{pagination:data_pagination}})
+	.done( function (res) {
+		res = res.split('**');
+		p_rows = res[1];
+		res = $.parseJSON(res[0]);
+		
+		xdt_h=res;
+		var xcadena_h='',ximg_estado,xclass_anulado,xget_icon_facturado;
+		if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}
+		xdt_h=xdt_h.datos;
+
+		var xcount_row=0;
+		for (var i = 0; i < xdt_h.length; i++) {
+			xcount_row++;
+			ximg_estado='';xclass_anulado='';
+
+			if(xdt_h[i].cierre==="1"){ximg_estado='<img src="../../images/candado.png" style="width:10px; heigh:10px; padding-right:2px; padding-top:4px;" class="xIzquierda EnLinea">';}
+			if(xdt_h[i].estado==="1"){xclass_anulado='xrow_anulado';}
+
+			xget_icon_facturado = xdt_h[i].idce === null ? '' : x_icon_facturado;
+
+			xcadena_h=String(xcadena_h+'<tr class="row xCursor  '+xclass_anulado+'" data-index='+ i +' data-id="'+xdt_h[i].idregistro_pago+'" data-idpedidos='+xdt_h[i].idpedido+' data-estado="'+xdt_h[i].estado+'" data-motivoa="'+xdt_h[i].motivo_anular+'" onclick="xloadDetallePago(this);">'+
+				'<td id="row_historial'+ i +'">'+ximg_estado+xCeroIzq(xcount_row,3)+xget_icon_facturado+'</td>'+
+				// '<td><img src="../../images/factura-check.png" width="16px"></td>'+
+				'<td>'+xdt_h[i].hora+'</td><td align="right" class="td_total">'+xdt_h[i].total+'</td>'+
+				'</tr>');
+		};
+
+		p_upadate = false;  // para que no vuelva a llamar esta funcion
+        xThisHistVenta.$.paginator.pageRows = p_rows;   
+
+		$("#tb_historial .row").remove();
+		$("#tb_historial").append(xcadena_h).trigger('create');
+
+		xPopupLoad.xclose();
+		//xloadHistorialTotal();
+	});
+	
+	
+	
+	/*$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20001', data:{pagination:data_pagination, }})
 	.done( function (dt_h) {
+		res = res.split('**');
+		p_rows = res[1];
+		
 		xdt_h=$.parseJSON(dt_h);
 		var xcadena_h='',ximg_estado,xclass_anulado,xget_icon_facturado;
 		if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}
@@ -253,19 +327,20 @@ function xloadHistorial(){
 
 		xPopupLoad.xclose();
 		//xloadHistorialTotal();
-	})
+	})*/
 }
 
 function xloadDetallePago(obj){
 	$("#tb_historial tr").removeClass('xitem_seleccionado_li');
 	$(obj).addClass('xitem_seleccionado_li');
 	index_historial=$(obj).attr('data-index');
-	var xIdpedidos=$(obj).attr('data-idpedidos');
-	var xnon_clie=$(obj).attr('data-cliente');
+	// var xIdpedidos=$(obj).attr('data-idpedidos');
+	// var xnon_clie=$(obj).attr('data-cliente');
+	// xmotio_anular=$(obj).attr('data-motivoa');
 	xidregistro_pago_sel=$(obj).attr('data-id');
 	xEstado_registro_pago=parseInt($(obj).attr('data-estado'));
-	xmotio_anular=$(obj).attr('data-motivoa');
 	xTotalItemSel=$(obj).find('.td_total').text();
+
 
 	
 	xThisHistVenta.$.component_pago.setVal(xMoneda(xTotalItemSel));
@@ -279,13 +354,14 @@ function xloadDetallePago(obj){
 	}
 
 	// encabezado del pedido
-	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2002', data:{i:xIdpedidos}})
-	// .done( function (dt_pdE) {
-	// 	var xdt_pdE=$.parseJSON(dt_pdE);
-	// 	if(!xdt_pdE.success){xPopupLoad.xclose();alert(xdt_pdE.error);return;}
-	// 	xdt_pdE=xdt_pdE.datos;
-		var xdt_pdE = xdt_h[index_historial];
-		var comprobanteEmitido = xdt_pdE.comprobante +' '+ (xdt_pdE.serie==="0" ? '' : xdt_pdE.serie || '') + '-'+ (xdt_pdE.correlativo === "0" ? '' : xCeroIzqNumComprobante(xdt_pdE.correlativo) || '');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20002', data:{i:xidregistro_pago_sel}})
+	.done( function (dt_pdE) {
+		var xdt_pdE=$.parseJSON(dt_pdE);
+		if(!xdt_pdE.success){xPopupLoad.xclose();alert(xdt_pdE.error);return;}
+		xdt_pdE=xdt_pdE.datos[0];
+		// var xdt_pdE = xdt_h[index_historial];
+		// var comprobanteEmitido = xdt_pdE.comprobante +' '+ (xdt_pdE.serie==="0" ? '' : xdt_pdE.serie || '') + '-'+ (xdt_pdE.correlativo === "0" ? '' : xCeroIzqNumComprobante(xdt_pdE.correlativo) || '');
+		var comprobanteEmitido = xdt_pdE.num_comprobante;
 		$("#txt_comprobante").text(comprobanteEmitido);
 
 		xThisHistVenta.xYaTieneComprobante = xdt_pdE.idce === null ? false : true; 
@@ -295,6 +371,7 @@ function xloadDetallePago(obj){
 		$("#txt_mesa").text(xdt_pdE.nummesa);
 		$("#txt_mozo").text(xdt_pdE.usuario);
 		$("#txt_correlativo").text(xdt_pdE.correlativo_dia);
+		
 		
 
 		$("#xBody div").remove();
@@ -308,7 +385,7 @@ function xloadDetallePago(obj){
 			xThisHistVenta.xdtPedDet=xArrayDtOrdenFiltro;
 			xLoadMipedidoBDHistorial(xArrayDtOrdenFiltro)
 		})
-	// })
+	})
 }
 function xLoadMipedidoBDHistorial(dt){
 	var xTpConsumo='';

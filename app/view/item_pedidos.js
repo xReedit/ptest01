@@ -82,7 +82,7 @@ $(document).on('click', '.xBtn', function(e) {
 
 
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
-		xArrayPedidoObj[xidTipoConsumo][xidItem]={'idcategoria':xidCategoria, 'idseccion':xIdSeccionItem, 'idseccion_index':xIdSeccionItem_index, 'des_seccion':xDesSeccion, 'iditem':xidItem, 'idtipo_consumo':xidTipoConsumo, 'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
+		xArrayPedidoObj[xidTipoConsumo][xidItem]={'idcategoria':xidCategoria, 'idseccion':xIdSeccionItem, 'idseccion_index':xIdSeccionItem_index, 'des_seccion':xDesSeccion, 'iditem':xidItem, 'idtipo_consumo':xidTipoConsumo, 'stock_actual': xStockActual, 'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal ,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0};
 
 		if(xCantActual<=0){delete xArrayPedidoObj[xidTipoConsumo][xidItem]}
@@ -109,6 +109,7 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		var xli_tipoconsumo=$("#select_ulTPC option:selected").val();
 		var xli_iditem=$(element_li_add__print).attr('data-idcl');
 		
+		
 
 		var xli_des=$(this).parent().parent().find('.xtitulo_li').text();
 		if(xli_des==""){xli_des=$(this).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
@@ -124,6 +125,7 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		var xcant_descontar=$(element_li_add__print).attr('data-cant_descontar'); //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
 		var xidcategoria=$(element_li_add__print).attr('data-idcategoria');
 		var xli_idalmacen_items=$(element_li_add__print).attr('data-idalmacen_items');
+		var xStockActual = $(element_li_add__print).attr('data-stock_actual');
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
@@ -143,7 +145,7 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		}
 
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
-		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
+		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
 
 		element_cant_li_sel.text(xcant);
@@ -1203,4 +1205,51 @@ function xArmarTipoConsumo(){
 	}
 	xcadenaTC='<div class="xpedir_item">'+xcadenaTC+'</div>';
 	return xcadenaTC;
+}
+
+// verifica stock de los items si el stock es menor o igual a 5
+async function xVerificarStockItemPedidoBefore() {
+	var _rpt = false;
+	var _rptList = [];
+	const _arrItems = xEstructuraItemsJsonComprobante(xArrayPedidoObj, [])
+										.filter(x => x.stock_actual != 'ND')
+										.filter(x => parseInt(x.stock_actual) <= 5);
+										
+	const _arrItemsCartaLista = _arrItems.filter(x => parseInt(x.procede) === 1).map(x => x.id).join(',');
+	const _arrItemsProducto = _arrItems.filter(x => parseInt(x.procede) === 0 ).map(x => x.id).join(',');
+
+	if (_arrItemsCartaLista.length === 0 && _arrItemsProducto.length === 0) return _rpt=true;
+	await $.ajax({
+			type: "POST",
+			url: "../../bdphp/log.php?op=3031",
+			data: {i: _arrItemsCartaLista,p: _arrItemsProducto}
+	})
+	.done(function (res) {
+		let _res = $.parseJSON(res);
+		_res = _res.datos;
+		
+		// comparar el stock con la lista _arrItems
+		_res.map(x => {
+			const idFilter = x.idcarta_lista;
+			_item = _arrItems.filter(i => i.id === idFilter).map(i => i);
+			if (parseFloat(_item[0].stock_actual) > parseFloat(x.cantidad)) {
+				// lista a mostrar
+				_item[0].stock_actual = parseFloat(x.cantidad);
+				_rptList.push(_item[0]);
+				console.log('item', _item[0].des);
+			}
+		});
+	});
+	
+	return _rptList;
+}
+
+function xUpdateItemNoStock(op, items) {
+	$.ajax({
+		type: "POST",
+		url: "../../bdphp/log_001.php?op=3032",
+		data: {p_from: op, i: items}})
+		.done(x => {
+			console.log(x);
+		})
 }

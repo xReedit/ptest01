@@ -302,13 +302,15 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].img64 = xPrintLocal.img64;
 		if (xPrintLocal.img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
 
-		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales,(res)=>{
-			callback(res);
-			// if(rpt_print==false){callback(rpt_print); return;}
-			// xPopupLoad.titulo="Imprimiendo...";
-			// xPopupLoad.xopen();
-			// setTimeout(function(){ xPopupLoad.xclose()}, 3000);
-		});
+		if (parseInt(xPrintLocal.num_copias != 0)){ //
+			xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales,(res)=>{
+				callback(res);
+				// if(rpt_print==false){callback(rpt_print); return;}
+				// xPopupLoad.titulo="Imprimiendo...";
+				// xPopupLoad.xopen();
+				// setTimeout(function(){ xPopupLoad.xclose()}, 3000);
+			});
+		}
 	}
 
 	//evalua impresoras y secciones, despachos o areas, la seccion en que impresora se imprime
@@ -426,12 +428,17 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 /// enviar a print server
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	// _data = JSON.stringify(JSON.stringify(_data)); si no es prueba
-	if (_idprint_server_estructura != 3){
-		if (_data.Array_print[0].ip_print === '') return;
-	
-		// quitar logo64 si trae
-		_data.Array_print[0].logo64 = '';
-		_data.Array_print[0].logo = '';
+	switch (_idprint_server_estructura) {
+		case 3: //pruebas
+			break;
+		case 4: // cuadre de caja
+			if (_data.Array_enca[0].ip_print === '') return;
+			break;
+		default:
+			if (_data.Array_print[0].ip_print === '') return;
+			_data.Array_print[0].logo64 = '';
+			_data.Array_print[0].logo = '';
+			break;
 	}
 	
 	_data = JSON.stringify(_data);

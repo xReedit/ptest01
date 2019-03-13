@@ -83,7 +83,11 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
                     punitario: x.precio,
                     precio_total: _total,
                     precio_print: parseInt(x.precio_print) != 0 ? _total : x.precio_print,
-                    seccion: x.des_seccion
+                    seccion: x.des_seccion,
+                    tipo_consumo: x.idtipo_consumo,
+                    procede: x.procede,
+                    idprocede: x.idprocede,
+                    stock_actual: x.stock_actual
                     // precio_total: parseFloat(x.precio_total).toFixed(2),
                 }
                 return rv

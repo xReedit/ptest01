@@ -182,6 +182,7 @@
                     <th>Tipo</th>
                     <th>Numero</th>
                     <th width="35%">Cliente</th>
+                    <th width="15%">RUC/DNI</th>
                     <th align="right">Sub total</th>
                     <th align="right">I.G.V</th>
                     <th align="right">Total</th>
@@ -196,6 +197,7 @@
                         <td>{{row.nom_comprobante}}</td>
                         <td>{{row.numero }}</td>
                         <td>{{row.nomcliente}}</td>
+                        <td>{{row.ruc}}</td>
                         <td>{{row.subtotal}}</td>
                         <td>{{row.igv}}</td>
                         <td>{{row.total}}</td>
@@ -357,6 +359,7 @@
                     x.igv = '0.00';       
                 }
 
+                
                 class_estado += ' xBold xfont11';
                 x.ico_pdf = x.pdf === '1' ? true : false;
                 x.ico_xml = x.xml === '1' ? true : false;

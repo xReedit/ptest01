@@ -68,24 +68,12 @@
       <br /><br /><br />
     </paper-dialog>
 
-    <paper-dialog
-      id="dialog_item"
-      class="xDlgItem_mipedido"
-      modal
-      entry-animation="scale-up-animation"
-      exit-animation="fade-out-animation"
-      with-backdrop
-    >
+    <paper-dialog id="dialog_item" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
       <div class="xdlgBody">
         <div class="spinner"><paper-spinner active></paper-spinner></div>
       </div>
       <br />
-      <div
-        class="xBoton2 xPlomo xInvisible"
-        id="dlgBtn"
-        style="margin-left:23px;"
-        onclick="xListoDlg();"
-      >
+      <div class="xBoton2 xPlomo xInvisible" id="dlgBtn" style="margin-left:23px;" onclick="xListoDlg();">
         Cerrar
       </div>
       <br /><br />
@@ -114,6 +102,24 @@
         <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
       </div>
     </paper-dialog>
+
+    <paper-dialog id="dialog_item_sin_stock" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+      <div class="xCentrado">        
+        <h3>CAMBIAR</h3>
+        <h4>No hay stock requerido para:</h4>
+      </div>
+      <hr>
+      <div>
+        <table width="100%">
+          <tbody id="body_item_sin_stock"></tbody>
+        </table>
+      </div>
+      <br>
+      <hr>
+      <button class="xBoton2 xPlomo xCentrado" dialog-dismiss>Listo</button>
+      <br>
+    </paper-dialog>
+
     <!--
       paper-dialog id="dialog_adicional" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
       	<h3>Adicional</h3>
@@ -240,7 +246,7 @@
   }
   .btn_apunte_deliver { margin-top: -10px;}
 </style>
-
+<script type="text/javascript" src="../../view/item_pedido_estructura.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_subtotales.js"></script>
 <script>
@@ -267,7 +273,7 @@
     guardandoPedido = false;
   //var xidTipoConsumo;
   //var xidItem;
-  function xAbrirPopupConfirmar() {
+  async function xAbrirPopupConfirmar() {
     //if(xnum_mesa_valido==false){alert('Numero de mesa no es valido.'); return;}
     //xVerificarSession();
     var xmesa = $("#nummesa").val();
@@ -288,6 +294,44 @@
         }
       }
     }
+
+    // antes de enviar verificar si aun existe stock item x item
+    const _arrNoStockItem = await xVerificarStockItemPedidoBefore();
+    if ( _arrNoStockItem.length > 0 ) {
+      //body_item_sin_stock
+      var msj_sin_stock = '';
+      _arrNoStockItem.map(x => {
+        // mostrar msj
+        msj_sin_stock += '<tr><td>'+ xCeroIzq( x.stock_actual,1 ) +'</td><td>'+ x.des +'</td></tr>'        
+
+        // update cantidad en vista
+        // elimina de la lista
+        if ( x.stock_actual === 0 ) {delete xArrayPedidoObj[x.tipo_consumo][x.id];}
+        
+        xArrayPedidoObj[x.tipo_consumo][x.id].cantidad = x.stock_actual;        
+        xArrayPedidoObj[x.tipo_consumo][x.id].update_stock = true;
+        x.stock_modificado = true;        
+        
+      });
+      
+      // update en bd -> reserva
+      const _itemReservar = _arrNoStockItem.filter(x => x.stock_modificado).map(x => {
+                              return {id: x.id, procede: x.procede, stock: x.stock_actual}
+                            });
+
+      //xUpdateItemNoStock('re-resta', _itemReservar);
+
+      // vista
+      xLoadMipedido();
+      
+      ///
+
+      xArrayPedidoObj[x.tipo_consumo][x.id].cantidad = 
+      $("#body_item_sin_stock").html(msj_sin_stock).trigger('create');
+      dialog_item_sin_stock.open();      
+      return;
+    }
+
     btn_dlg_confirm.hidden = false;
     dialog_msj_confirma_pedido.open();
   }
@@ -446,6 +490,7 @@
     tt_pedido = 0;
     guardandoPedido = false;
   }
+
   function xVerificarSiSoloLLevar() {
     xsolo_llevar = 0;
     xdelivery = 0;
@@ -469,10 +514,16 @@
       xsolo_llevar = 0;
     }
   }
-  function xGuardarPedido() {
+
+
+
+  async function xGuardarPedido() {
     if (guardandoPedido === true) {
       return;
     }
+
+    
+    //
     guardandoPedido = true;
 
     xPopupLoad.titulo = "Enviando...";
