@@ -134,10 +134,7 @@ function xOpenPage(xop, parametro){
 		case 25: xruta = '/facturador'; break;
 		case 26: xruta = '/c_electronico'; break;
 		case 28: xruta = '/adm_dashboard'; break;
-		case 27: 
-			if (window.location.href.indexOf('demo')>-1) {
-				demo='d'
-			}
+		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
