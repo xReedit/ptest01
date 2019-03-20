@@ -257,6 +257,7 @@ function changePass() {
 	const p1 = pass1.value;
 	const p2 = pass2.value;	
 
+	if ( p1 === '') {msj_pass_clave.textContent = "Tiene que ingresar una clave"; return;}
 	if ( p1 != p2 ) {msj_pass_clave.textContent = "Las claves no son iguales"; return;}
 	if ( p1 === "123456" ) {msj_pass_clave.textContent = "La clave no puede ser la que pusiste."; return;}
 

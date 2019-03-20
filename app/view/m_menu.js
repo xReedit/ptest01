@@ -122,6 +122,7 @@ function xOpenPageCarta(xop, parametro) {
       xruta = "/mipedido";
       break;
     case 4:
+      window.localStorage.removeItem("::app3_sys_first_load");
       document.location.href = "m_panel.html";
       return;
     case 5:
@@ -148,6 +149,7 @@ function xOpenPageCarta(xop, parametro) {
   PanelDe.closeDrawer();
 }
 
+
 function xLoadArrayPedidoAquiMenuJS() {
   xArrayPedido = JSON.parse(window.localStorage.getItem("::app3_sys_dta_pe"));
   if (xArrayPedido === null) {
@@ -171,15 +173,29 @@ function xLoadArrayPedidoAquiMenuJS() {
       titulo: xDtArray[i].titulo
     });
   }
-  window.localStorage.setItem(
-    "::app3_sys_dta_pe",
-    JSON.stringify(xArrayPedido)
-  );
-
+  
   //window.localStorage.removeItem("::app3_sys_dta_tct");
   //window.localStorage.setItem("::app3_sys_dta_tct",JSON.stringify(xArrayDesTipoConsumo))
 
-  xOpenPageCarta(0);
+  // si screen mayor a 720 entonces solo resetea valores y queda en la vista actual submenu o cunsuta de lo contrario la vista es menu la primera pantalla
+    const _sys_first_load = window.localStorage.getItem("::app3_sys_first_load");
+  if (screen.width < 720 || _sys_first_load === null) {
+    xOpenPageCarta(0);
+  } else {
+    $("body").removeClass("loaded");
+    setTimeout(() => {
+      $("body").addClass("loaded");
+      // si no es la primera carga
+      goBack();      
+            
+      
+      xLoadMipedido();      
+    }, 500);
+  }
+
+  window.localStorage.setItem("::app3_sys_first_load", 1);
+  window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedido));
+  
   //})
 }
 function xScrolUp(xelement) {
@@ -307,8 +323,8 @@ function xCerrarSession() {
   });
 }
 
-function goBack() {
-  window.history.back();
+function goBack() {  
+  window.history.back();  
 }
 
 // var inactivityTime = function () {

@@ -219,12 +219,17 @@
     </footer>
   </template>
   <style is="custom-style">
+    
+
     paper-checkbox.check_red {
       background: #bdbdbd;
     }
     .content_collapse {
-      padding: 0px;
+      padding: 0px;  
+      transition: none !important;    
     }
+
+/* iron-collapse { --iron-collapse-transition-duration: 0ms; } */
     table tr td.xtb_pedido_importe {
       width: 10px;
       text-align: right;
@@ -238,7 +243,8 @@
     background: #bdbdbd;
   }
   .content_collapse {
-    padding: 0px;
+    padding: 0px;    
+transition: none !important;
   }
   table tr td.xtb_pedido_importe {
     width: 10px;
@@ -486,7 +492,7 @@
     xCount_cant_ico = 0;
     xRowColapseOpen = null;
     xGeneralActualizarLoadItemCambioBd();
-    xLoadArrayPedidoAquiMenuJS();
+    xLoadArrayPedidoAquiMenuJS(false);
     tt_pedido = 0;
     guardandoPedido = false;
   }
@@ -497,15 +503,18 @@
     var xcount_seccion = 0;
     $("#xBody .xEncabezadoTpCon").each(function(index, element) {
       xcount_seccion++;
+      const textColapse = element.textContent.toUpperCase();
       if (index == 0) {
         xIdTpc_pe = $(element).attr("data-idtpc");
       }
-      if ($(element).attr("data-col") == "colapse2") {
-        xsolo_llevar = 1;
-      } // para llevar
-      if (xIdTpc_pe === "3") {
-        xsolo_llevar = 1;
-      } // delivery
+      // if ($(element).attr("data-col") == "colapse2") {
+      //   xsolo_llevar = 1;
+      // } // para llevar
+      if ( textColapse.indexOf('PARA LLEVAR')>-1 ){xsolo_llevar = 1;}
+      if ( textColapse.indexOf('DELIVERY')>-1 ){xsolo_llevar = 1;}
+      // if (xIdTpc_pe === "3") {
+      //   xsolo_llevar = 1;
+      // } // delivery
 
       if ( $(element).attr("data-colDes").trim().toLowerCase() == "delivery") { xdelivery = 1; }
 
@@ -805,10 +814,10 @@
         }
 
         xCadenaCollapse = String(
-          '<iron-collapse id="' +
+          '<iron-collapse noAnimation="true" id="' +
             xIdColapse +
             '" tabindex="0" class="xcolapse">' +
-            '<div class="content_collapse noselect">' +
+            '<div class="content_collapse  collapsing noselect">' +
             '<table width="100%" class="xtb_pedido" data-TablaName="pedido_detalle" id="tb_pedido_detalle">' +
             xCadenaCollapse +
             "</table></div></iron-collapse></div>"
@@ -826,6 +835,8 @@
       try {
         var obj = document.querySelector(xRowColapseOpen);
         obj.toggle();
+        obj.enableTransition(false);
+
         $(obj).parent().find(".xEncabezadoTpCon .xcheck_item").checked = true;
         $(obj).parent().find(".xEncabezadoTpCon").addClass("xEnca_seleccionado");
       } catch (err) {
@@ -923,10 +934,10 @@
       }
 
       xCadenaCollapse = String(
-        '<iron-collapse id="' +
+        '<iron-collapse noAnimation="true" id="' +
           xIdColapse +
           '" tabindex="0" class="xcolapse">' +
-          '<div class="content_collapse noselect">' +
+          '<div class="content_collapse collapsing noselect">' +
           '<table width="100%" class="xtb_pedido">' +
           xCadenaCollapse +
           "</table></div></iron-collapse></div>"
@@ -950,6 +961,7 @@
       .trigger("create");
     xSumarTotal();
   }
+
   function toggle(xobj) {
     var xselector = "#" + $(xobj).attr("data-col");
     var obj = document.querySelector(xselector);
@@ -960,11 +972,14 @@
           return;
         }
         element.toggle();
+        // element.enableTransition(false);
       }
     });
 
     if (obj.className.indexOf("opened") == -1) {
       obj.toggle();
+      // obj.enableTransition(false);
+      // obj.animate = false;
     }
   }
   function xOpenDlgItem(obj) {
@@ -1065,9 +1080,8 @@
           'data-item="' +
           xdtItem[0].iditem +
           '" ' +
-          'data-idseccion="' +
-          xdtItem[0].idseccion +
-          '" ' +
+          'data-idseccion="' + xdtItem[0].idseccion +'" ' +
+          'data-desseccion="' + xdtItem[0].des_seccion +'" ' +
           'data-idseccionindex="' +
           _idseccionIndex +
           '" ' +
@@ -1161,6 +1175,9 @@
       xt_org: Number,
       xt_idsede: Number,
       xt_idus: Number
+    },
+    _outLoadPedido() {
+      xLoadMipedido();
     },
     attached: function() {
       xThis = this;

@@ -475,11 +475,13 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 		xPrintLocal=$.parseJSON(xPrintLocal);
 		xArrayEncabezadoCierre[0].ip_print=xPrintLocal.ip;
 		xArrayEncabezadoCierre[0].var_margen_iz=xPrintLocal.var_margen_iz;
-		xArrayEncabezadoCierre[0].var_size_font=xPrintLocal.var_size_font
+		xArrayEncabezadoCierre[0].var_size_font=xPrintLocal.var_size_font;
+		xArrayEncabezadoCierre[0].papel_size=xPrintLocal.papel_size;
 	}
 
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	xArrayEncabezadoCierre[0].nom_us = xm_log_get('app3_us').nomus;
+	xArrayEncabezadoCierre[0].nom_sede = xm_log_get('datos_org_sede')[0].sedenombre;
 
 	const _data = {Array_enca:xArrayEncabezadoCierre, ArrayItem:xArrayCierrePrint};
 

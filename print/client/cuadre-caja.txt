@@ -10,6 +10,8 @@ $ArrayItem=$data['ArrayItem'];
 $ArrayEnca=$data['Array_enca'];
 $ip_printer=$ArrayEnca[0]['ip_print'];
 $detalle_cierre=$ArrayEnca[0]['detalle_cierre'];
+$nom_us = $ArrayEnca[0]['nom_us'];
+$nom_sede = $ArrayEnca[0]['nom_sede'];
 
 $titulo_document=$ArrayEnca[0]['titulo'];
 
@@ -41,14 +43,28 @@ $var_size_font=(int)$ArrayEnca[0]['var_size_font'];
 $var_margen_iz=intLowHigh($var_margen_iz, 2);
 //			
 
-$imLogo = "";
-$uri=$uriLogo64;
-$imageBlob = base64_decode(explode(",", $uri)[1]);
-$imagick = new Imagick();
-$imagick->setResourceLimit(6, 1);
-$imagick->readImageBlob($imageBlob, "input.png");
-$imLogo = new ImagickEscposImage();
-$imLogo->readImageFromImagick($imagick);
+$imLogo = "logo.png";
+
+// tamaño de papel
+// 0 = 80mm 1 = 58mm
+$papel_size = (int)$ArrayEnca[0]['papel_size'];
+
+// lineas hr - divisor
+$linea_hr = '';
+$linea_titulo = '';
+$GLOBALS['leftCols'] = 38;
+switch ($papel_size) {
+	case '0': // 80mm
+		$linea_hr = "------------------------------------------------\n";
+		$linea_titulo = '******';
+		$GLOBALS['leftCols'] = 30;
+		break;
+	case '1': // 58mm
+		$linea_hr = "------------------------------------------\n";
+		$linea_titulo = '***';
+		$GLOBALS['leftCols'] = 24;
+		break;	
+}
 
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
 $printer -> setFont($var_size_font);
@@ -61,14 +77,14 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 	if($logo_cierre_caja!=''){
 		$logo_cierre_caja = EscposImage::load($logo_cierre_caja, false);
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> graphics($logo_cierre_caja);
+		$printer -> bitImage($logo_cierre_caja);
 	}
+	
 	/* Print top logo */
 	if($imLogo!=''){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$size = Printer::IMG_DEFAULT;
-		$printer->bitImage($imLogo, $size);
-		$printer -> feed();
+		$logo = EscposImage::load($imLogo, false);
+		$printer -> bitImage($logo);
 	}
 	$printer -> feed();
 	//encabezado
@@ -81,17 +97,17 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 	$printer -> selectPrintMode(Printer::MODE_UNDERLINE);
 	$printer -> setEmphasis(true);
-	$printer -> text($_SESSION['nom_sede']."\n");	
+	$printer -> text($nom_sede."\n");	
 	$printer -> selectPrintMode();	
 	$printer -> setEmphasis(false);
-	$printer -> text($detalle_cierre."\n");
+	if ( $detalle_cierre != '' ){$printer -> text($detalle_cierre."\n");}
 	
 	$printer -> selectPrintMode();	
 	$printer -> setEmphasis(true);
 	$printer -> text($nom_us."\n");
 	$printer -> text($fecha_actual.' | '.$hora_actual."\n");	
 	$printer -> setEmphasis(true);	
-	$printer -> text("------------------------------------------------\n");
+	$printer -> text($linea_hr);
 	$printer -> setEmphasis(true);
 	$printer -> feed();
 
@@ -113,7 +129,7 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 		$printer -> setEmphasis(true);
 		//$printer -> text($des_seccion."\n");
 		$printer -> text(new item2($des_seccion,$item["t1"], $item["t2"], $item["t3"]));
-		$printer -> text("------------------------------------------------\n");	
+		$printer -> text($linea_hr);	
 		$printer -> setEmphasis(false);
 
 		//ordenar si es LISTADO DE COMPRAS
@@ -178,7 +194,7 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 
 		if($es_moneda==1){$sum_t3=number_format($sum_t3,2);}		
 		//$sum_t1=$sum_t1;
-		$printer -> text("------------------------------------------------\n");
+		$printer -> text($linea_hr);
 		$printer -> setEmphasis(true);
 		$printer -> text(new item2('',$sum_t1,$sum_t2, $sum_t3));
 		$printer -> feed();
@@ -201,6 +217,8 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 	$cuenta_copias++;*/
 	
 	$printer -> text("www.papaya.com.pe\n");
+	$printer -> feed(2);
+	
 	$printer -> cut();
 	$printer -> pulse();
 
@@ -252,7 +270,7 @@ class item2
     public function __toString()
     {
         $rightCols = 10;
-        $leftCols = 30;        
+        $leftCols = $GLOBALS['leftCols'];     
 
         $left = str_pad($this -> name, $leftCols) ;
 

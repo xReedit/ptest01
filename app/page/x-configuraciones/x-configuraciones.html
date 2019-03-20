@@ -294,6 +294,7 @@
 									<input type="text" id="var_size_font" name="var_size_font">
 									<input type="text" id="var_margen_iz" name="var_margen_iz">
 									<input type="text" id="var_size_font_tall_comanda" name="var_size_font_tall_comanda">
+									<input type="text" id="papel_size" name="papel_size">
 									<!-- <input type="text" id="img64" name="img64"> -->
 
 									<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
@@ -399,6 +400,7 @@
 								<th><p>.<p>Tamaño de letra</th>
 								<th><p>.<p>Margen Izquierda</th>
 								<th><p>.<p>img64</th>
+								<th><p>.<p>Papel</th>
 								<th><paper-fab icon="add" onclick="xAddImpresora()" title="Agregar" tabindex="0"></paper-fab></th>
 							</thead>
 							<tr data-id="" class="xSinBorde tr_addPrint">
@@ -408,6 +410,12 @@
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
 								<td><input class="xMiInput"  placeholder="0" type="number" min="0" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
 								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="1" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
+								<td>
+									<select id="select_papel_zona">
+										<option value="0">80 mm</option>
+										<option value="1">58 mm</option>
+									</select>
+								</td>
 								<td><a href="#" onclick="xTestPrint(0)">Test Impresion</a></td>
 							</tr>
 						</table>
@@ -487,6 +495,7 @@
 								<th>Tamaño de letra</th>
 								<th>Margen Izquierda</th>
 								<th>Img64</th>
+								<th>Papel</th>
 								<th><!--paper-fab icon="add" onclick="xAddImpresora_local()" title="Agregar" tabindex="0"></paper-fab></td--></th>
 							</thead>
 							<tr data-id="" class="xSinBorde tr_addPrint_local" data-t="impresora">
@@ -496,8 +505,14 @@
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
 								<td><input class="xMiInput"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
 								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="2" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
+								<td>
+									<select id="select_papel_caja">
+										<option value="0">80 mm</option>
+										<option value="1">58 mm</option>
+									</select>
+								</td>
 								<td><a href="#" onclick="xAddImpresora_local()">Guardar</a></td>
-								<td><a href="#" onclick="xTestPrint(1)">Test Impresion</a></td>
+								<td><a href="#" onclick="xTestPrint(1)">Test Impresion</a></td>								
 								<td><a href="#" onClick="xBorrarItemPrintLocal(this)" id="btn_borrar_print_local" class="xInvisible">Anular</a></td>
 							</tr>
 							
@@ -757,7 +772,19 @@ function xIniConf(){
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 		return false;
-	})
+	});
+
+	$(document).on('change',".xsel_sec_print_papel",function(e){
+		var xid_print = $(this).attr('data-id');
+		var xid_papel_value = this.value;
+		xGuardarCambiosSeccionPrintPapel(xid_print,xid_papel_value,0);
+
+		event.stopPropagation();
+		e.stopPropagation();
+		e.stopImmediatePropagation()
+		return false;
+	});
+
 	$(document).on('change',".xsel_sec_print_bodega",function(e){
 		var xid_secc_row=$(this).attr('data-id');
 		var xid_secc_print=this.value;
@@ -905,11 +932,12 @@ function xAddImpresora_local(){
 	var _img64 = $(".tr_addPrint_local #img64").val();
 	var _imprimirCopia = check_print_copia_local.checked ? 1 : 0; // indica si se imprime una copia del pedido en la impresora local
 	var _numCopias = $(".tr_addPrint_local #num_copias").val(); // indica el numero de copias que se imprime en la impresora local
+	var _papel_size = $(".tr_addPrint_local #select_papel_caja").val();
 	
 	_margen = _margen === '' ? 0 : _margen;
 	_font = _font === '' ? 0 : _font;
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1061', data:{'ip':_ip,'des':_des,'margen':_margen,'font':_font, 'img64': _img64, 'copia_local': _imprimirCopia, 'num_copias': _numCopias}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1061', data:{'ip':_ip,'des':_des,'margen':_margen,'font':_font, 'img64': _img64, 'copia_local': _imprimirCopia, 'num_copias': _numCopias, 'papel_size': _papel_size}})
 	.done( function (dtImp) {
 		xPopupLoad.xclose();
 		// document.cookie="app3_print_ID="+$(".tr_addPrint_local #descripcion").val(); 
@@ -954,11 +982,20 @@ function xLoadImpresorasConf(){
 
 			xminutos_pedido=xdtImp[i].minutos_pedido;
 			if(xminutos_pedido===""){xminutos_pedido='0';}
+
+			//papel 
+			$("#select_papel_zona  option[value="+xdtImp[i].papel_size+"]").attr('selected','selected');			
+
 			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'"><td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td><td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td><td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td><td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td>'+ 
 				'<td  data-campo="var_margen_iz"><span onclick="xModRow(this,4);">'+xdtImp[i].var_margen_iz+'</span></td>'+
 				'<td  data-campo="img64"><span onclick="xModRow(this,4);">' + xdtImp[i].img64 + '</span></td>' +
+				'<td  data-papel="papel" data-id="'+xdtImp[i].idimpresora+'">'+
+					'<select class="xsel_sec_print_papel" data-id="'+xdtImp[i].idimpresora+'">'+$("#select_papel_zona")[0].innerHTML + '</select>'+
+				'</td>'+
 				'<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			xcandena_sel_print=xcandena_sel_print+'<option value="'+xdtImp[i].idimpresora+'">'+xdtImp[i].descripcion+'</option>';
+
+			$("#select_papel_zona  option[value="+xdtImp[i].papel_size+"]").attr('selected',false);
 		};
 
 		xLoadImpresoraLocal();
@@ -985,8 +1022,9 @@ function xLoadImpresoraLocal() {
 	
 	const xCockie_ipID = window.localStorage.getItem('::app3_woIpPrintLoC'), xminutos_pedido = '';
 	//si solo hay una impresora registrada lo marca como asignado
-	const estadoIni = cantPrintLocal === 1 ? '<p class="xFondoRowverde"><strong>Asignado</strong></p>' : '<a href="#" class="cursor" onclick="xAsignarPrintLocal(this)" title="Asignar impresora a ESTE equipo">Asingar</a>'; 
+	const estadoIni = cantPrintLocal === 1 ? '<p class="xFondoRowverde"><strong>Asignado</strong></p>' : '<a href="#" class="cursor" onclick="xAsignarPrintLocal(this)" title="Asignar impresora a ESTE equipo">Asingar</a>'; 	
 	_arrPrintLocal.map(x => {		
+		$("#select_papel_caja  option[value="+x.papel_size+"]").attr('selected','selected');
 		const labelAsignado = x.descripcion === xCockie_ipID ? '<p class="xFondoRowverde"><strong>Asignado</strong></p>' : estadoIni;
 		_cadenaPrintLocal += `<tr class="row" data-des="${x.descripcion}" data-id="${x.idimpresora}" data-t="impresora">
 				<td>${x.descripcion}</td>
@@ -995,10 +1033,15 @@ function xLoadImpresoraLocal() {
 				<td>${x.var_size_font}</td>
 				<td>${x.var_margen_iz}</td>
 				<td>${x.img64}</td>
+				<td  data-papel="papel" data-id="${x.idimpresora}">
+					<select class="xsel_sec_print_papel" data-id="${x.idimpresora}">'${ $("#select_papel_caja")[0].innerHTML}'</select>
+				</td>
 				<td>${labelAsignado}</td>
 				<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td>
-			</tr>`
-	})
+			</tr>`;
+
+		$("#select_papel_caja  option[value="+x.papel_size+"]").attr('selected',false);
+	});
 
 
 	$("#tb_impresora_local .row").remove();
@@ -1060,9 +1103,18 @@ function xBorrarItemPrintLocal(obj){
 }
 function xTestPrint(xOpC){
 	var xArrayPasarTest=new Array();
-	var xClasTr='';
-	if(xOpC==0){xClasTr='.tr_addPrint';}else{xClasTr='.tr_addPrint_local';}
-	xArrayPasarTest={'ip_print':$(xClasTr+" #ip").val(),'mum_copias':0,'pie_pagina':xThisConfig.dt_impr[0].pie_pagina,'logo':xThisConfig.dt_impr[0].logo,'size_font':$(xClasTr+" #var_size_font").val(),'margen_iz':$(xClasTr+" #var_margen_iz").val(), 'margen_iz': $(xClasTr + " #img64").val()};
+	var xClasTr='', sel_papel='';
+	if(xOpC==0){xClasTr='.tr_addPrint';sel_papel=' #select_papel_zona';}else{xClasTr='.tr_addPrint_local';sel_papel=' #select_papel_caja';}
+	xArrayPasarTest={
+		'ip_print':$(xClasTr+" #ip").val(),
+		'mum_copias':0,
+		'pie_pagina':xThisConfig.dt_impr[0].pie_pagina,
+		'logo':xThisConfig.dt_impr[0].logo,
+		'size_font':$(xClasTr+" #var_size_font").val(),
+		'margen_iz':$(xClasTr+" #var_margen_iz").val(), 
+		// 'img64': $(xClasTr + " #img64").val(),
+		'papel_size': $(xClasTr + sel_papel).val()
+	};
 
 	// si eta en la web
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
@@ -1097,9 +1149,9 @@ function xLoadSecciones(){
 			//sel_impr_Sec.value=xdtSec[i].idimpresora;
 			//$("#sel_impr_Sec > option")[0].css('checked','true')
 			//sel_impr_Sec.options[xdtSec[i].idimpresora].selected=true;
-			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected')
+			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected');
 			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'"><td>'+xdtSec[i].plato+'</td><td><select class="xsel_sec_print" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec")[0].innerHTML+'</select></td></tr>')
-			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected',false)
+			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected',false);
 		};
 		$("#tb_sec_impr .row").remove();
 		$("#tb_sec_impr").append(xCadena_sec).trigger('create');
@@ -1137,6 +1189,10 @@ function xGuardarCambiosSeccionPrint(id_row,id_print,xes_bodega){
 	var xnum_op;
 	if(xes_bodega===1){xnum_op='40101';}else{xnum_op='4010';}
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op='+xnum_op,data:{ids:id_row,idp:id_print}})
+}
+
+function xGuardarCambiosSeccionPrintPapel(_id_print,_papel){
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=40102',data:{id:_id_print,papel:_papel}})	
 }
 
 function xLoadConfOtrosDoc(){
@@ -1255,6 +1311,7 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #var_margen_iz").val($("#td_margen_iz").val());
 	$("#frm_conf_print #var_size_font").val($("#td_size_font").val());
 	$("#frm_conf_print #var_size_font_tall_comanda").val($("#sel_size_font_comanda").val());
+	// $("#frm_conf_print #papel_size").val($("#select_papel_caja").val());
 	// $("#frm_conf_print #img64").val($("#td_img64").val());
 
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print",$("#frm_conf_print").serialize(),function(a){
@@ -1275,7 +1332,9 @@ function xPruebaTestPrint(){
 		'size_font':$("#td_size_font").val(),
 		'margen_iz':$("#td_margen_iz").val(), 
 		'margen_iz': $("#td_margen_iz").val(),
-		'var_size_font_tall_comanda': $("#sel_size_font_comanda").val()};
+		'var_size_font_tall_comanda': $("#sel_size_font_comanda").val(),
+		// 'papel_size': $("#select_papel_caja").val()
+	};
 
 	// si eta en la web
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);

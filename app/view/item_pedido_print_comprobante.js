@@ -128,6 +128,28 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 function xImprimirComprobanteAhoraPrintPreSelect(xArrayEncabezado, xArrayCuerpo, xArraySubtotal, xArrayComprobante, xArrayCliente, xArrImpresora, callback) {
 	xPopupLoad.titulo = "Imprimiendo...";
 
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
+
+	const _data = {
+		Array_enca: xArrayEncabezado,
+		Array_print: xArrImpresora,
+		ArrayItem: xArrayCuerpo, // xArrayCuerpo 
+		ArraySubTotales: xArraySubtotal,
+		ArrayComprobante: xArrayComprobante,
+		ArrayCliente: xArrayCliente
+	}
+
+	if (_sys_local === 1) {
+		xPopupLoad.xopen();
+		xSendDataPrintServer(_data, 2, 'comprobante');
+		setTimeout(() => {
+			xPopupLoad.xclose();
+			callback(false);
+		}, 1000);
+		return;
+	}
+
 	// formato de impresion items comprobante donde no se tiene en cuenta el tipo de consumo solo seccion e items
 	// let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal, true); // cpe = true subtotal + adicional
 	// _arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
@@ -191,6 +213,7 @@ function xgetComprobanteImpresora(xidDoc) {
 		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
 		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
 		xImpresoraPrint[0].img64 = xPrintLocal.img64;
+		xImpresoraPrint[0].papel_size = xPrintLocal.papel_size;
 		xpasePrint=true;
 	}else{
 		for (var i = 0; i < xArrayImpresoras.length; i++) {
@@ -204,6 +227,7 @@ function xgetComprobanteImpresora(xidDoc) {
 				xImpresoraPrint[0].num_copias = num_copias_all;
 				xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
+				xImpresoraPrint[0].papel_size = xArrayImpresoras[i].papel_size;
 				break;
 			}
 		}
@@ -221,6 +245,7 @@ function xgetImpresora(xidDoc) {
 	xImpresoraPrint = xm_log_get("sede_generales");
 
 	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
+	const papel_size = xImpresoraPrint[0].papel_size; // numero de copias para las demas impresoras -local
 
 
 	var xIpPrintDoc = xidDoc;
@@ -241,6 +266,7 @@ function xgetImpresora(xidDoc) {
 		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
 		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
 		xImpresoraPrint[0].img64 = xPrintLocal.img64;
+		xImpresoraPrint[0].papel_size = xPrintLocal.papel_size;
 		xpasePrint = true;
 	} else {
 		for (var i = 0; i < xArrayImpresoras.length; i++) {
@@ -254,6 +280,7 @@ function xgetImpresora(xidDoc) {
 				xImpresoraPrint[0].num_copias = num_copias_all;
 				xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
+				xImpresoraPrint[0].papel_size = xArrayImpresoras[i].papel_size;
 				break;
 			}
 		}
@@ -300,6 +327,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
 		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
 		xImpresoraPrint[0].img64 = xPrintLocal.img64;
+		xImpresoraPrint[0].papel_size = xPrintLocal.papel_size;
 		if (xPrintLocal.img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
 
 		if (parseInt(xPrintLocal.num_copias != 0)){ //
@@ -347,7 +375,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].num_copias = num_copias_all;
 		xImpresoraPrint[0].var_size_font_tall_comanda = var_size_font_tall_comanda;
 		xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
-		xImpresoraPrint[0].img64 = xArrayImpresoras[z].img64;		
+		xImpresoraPrint[0].img64 = xArrayImpresoras[z].img64;
+		xImpresoraPrint[0].papel_size = xArrayImpresoras[z].papel_size;
 		if (xArrayImpresoras[z].img64 === "0") { xImpresoraPrint[0].logo64 = '';}
 		
 		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print){

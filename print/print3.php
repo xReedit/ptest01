@@ -100,6 +100,29 @@ $size_font_comanda_tall = (int)$val_size_font_comanda_tall===0 ? false : true;
 $val_size_font_comanda_tall_rigth = (int)$val_size_font_comanda_tall;
 $val_size_font_comanda_tall++; //tamaño de letra,1+1>2 2+1>3
 
+
+// tamaño de papel
+// 0 = 80mm 1 = 58mm
+$papel_size = (int)$xArray_print[0]['papel_size'];
+
+// lineas hr - divisor
+$linea_hr = '';
+$linea_titulo = '';
+$GLOBALS['leftCols'] = 38;
+switch ($papel_size) {
+	case '0': // 80mm
+		$linea_hr = "------------------------------------------------\n";
+		$linea_titulo = '******';
+		$GLOBALS['leftCols'] = 38;
+		break;
+	case '1': // 58mm
+		$linea_hr = "------------------------------------------\n";
+		$linea_titulo = '***';
+		$GLOBALS['leftCols'] = 32;
+		break;	
+}
+
+
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
 $printer -> setFont($var_size_font);
 //---------------////////////////
@@ -113,14 +136,14 @@ while($num_copias>=0){
 	if ($EsDelivery==1) {
 		$_logo_delivery = EscposImage::load($logo_delivery, false);
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> graphics($_logo_delivery);
+		$printer -> bitImage($_logo_delivery);
 		$printer -> feed();
 	}
 	//icono solo llevar
 	if($solo_llevar==1){
 		$logoLlevar = EscposImage::load($logo_solo_llevar, false);
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> graphics($logoLlevar);
+		$printer -> bitImage($logoLlevar);
 		$printer -> feed();
 	}
 	//reservar
@@ -136,21 +159,21 @@ while($num_copias>=0){
 	if ($local>0 && $pre_cuenta!=true) {
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
 		$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-		$printer -> text("****** COPIA ******\n");
+		$printer -> text($linea_titulo." COPIA ".$linea_titulo."\n");
 		$printer -> selectPrintMode();	
 	}
 
 	if($cuenta_copias>0 && $pre_cuenta!=true){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
 		$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-		$printer -> text("****** COPIA ******\n");
+		$printer -> text($linea_titulo." COPIA ".$linea_titulo."\n");
 		$printer -> selectPrintMode();
 	}
 
 	if($pre_cuenta==true){		
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
 		$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);		
-		$printer -> text("***** PRE-CUENTA *****\n");
+		$printer -> text($linea_titulo." PRE-CUENTA ".$linea_titulo."\n");
 		$printer -> selectPrintMode();
 	}
 	
@@ -168,7 +191,7 @@ while($num_copias>=0){
 			$printer->bitImage($imLogo, $size);
 		} else {			
 			$logoPic = EscposImage::load($imLogo, false);
-			$printer -> graphics($logoPic);
+			$printer -> bitImage($logoPic);
 		}
 		
 		$printer -> feed();
@@ -183,7 +206,7 @@ while($num_copias>=0){
 
 	$printer -> text($num_mesa."\n");
 	$printer -> selectPrintMode();
-	$printer -> text("------------------------------------------------\n");		
+	$printer -> text($linea_hr);		
 	if ( $referencia!="" ){
 		$printer -> text($referencia."\n");		
 	}
@@ -201,7 +224,7 @@ while($num_copias>=0){
 			$printer -> text("Direccion: ".$arrDatosDelivery['direccion']."\n");
 			$printer -> text("Telefono: ".$arrDatosDelivery['telefono']."\n");
 			$printer -> text("Forma pago: ".$arrDatosDelivery['paga_con']."\n");
-			$printer -> text("------------------------------------------------\n");
+			$printer -> text($linea_hr);
 			$printer -> feed();
 		}
 	}
@@ -252,7 +275,7 @@ while($num_copias>=0){
 				$printer -> setEmphasis(true);			
 				if($cuenta_tpc>0){$printer -> text("\n\n");}				
 				$printer -> text("*** ".$tipo_consumo." ***\n");
-				//$printer -> text("------------------------------------------------\n");
+				//$printer -> text($linea_hr);
 				$printer -> setEmphasis(false);
 				$printer -> selectPrintMode();
 				$cuenta_tpc++;
@@ -273,7 +296,7 @@ while($num_copias>=0){
 				if($cuenta_row>0){$printer -> text("\n");}	
 				$seccion=$subitem["des_seccion"];				
 				$printer -> text($seccion."\n");
-				$printer -> text("------------------------------------------------\n");	
+				$printer -> text($linea_hr);	
 				$printer -> setEmphasis(false);
 				$cuenta_row++;
 			}		
@@ -313,7 +336,7 @@ while($num_copias>=0){
 
 	/* TOTALES */
 	$printer -> feed();
-	$printer -> text("------------------------------------------------\n");
+	$printer -> text($linea_hr);
 	$printer -> setEmphasis(true);
 	$r_subt_t=0;		
 	
@@ -345,6 +368,8 @@ while($num_copias>=0){
 	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
 
 	$printer -> text("www.papaya.com.pe\n");
+	$printer -> feed(2);
+
 	$printer -> cut();
 	$printer -> pulse();
 
@@ -370,7 +395,8 @@ class item
     public function __toString()
     {
         $rightCols = 10;
-        $leftCols = 38;
+		// $leftCols = 38;
+		$leftCols = $GLOBALS['leftCols'];
         if ($this -> dollarSign) {
             $leftCols = $leftCols / 2 - $rightCols / 2;
         }

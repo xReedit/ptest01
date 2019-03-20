@@ -64,6 +64,8 @@ table{border-spacing:0px;}th,td{border:1;font-size:1em;padding:.3em 1em;}
 .x_div_linea .xitem1:first-child{border-left:0px solid #CCC;}
 .xBordeDe{border-right:solid rgba(0,0,0,.15) 1px;margin-right:10px; }
 .xBordeIz{border-left:solid rgba(0,0,0,.15) 1px;margin-left:10px;}
+.xBordeDe2{border-right:solid rgba(0,0,0,.25) 0.25em; }
+.xBordeIz2{border-left:solid rgba(0,0,0,.25) 0.25em;}
 .xAlinearce{display:inline-block;}
 .xEnLinea{display:inline;}
 .xEnLineaTable{display:inline-block;}
@@ -482,6 +484,11 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 	-webkit-transition:all 0.3s ease;-o-transition:all 0.3s ease;-ms-transition:all 0.3s ease;-moz-transition:all 0.3s ease;transition:all 0.3s ease;
 }
 
+/*para el menu tablet mi pedido*/
+.div_submenu_p {
+    position: relative; width: 60%; height: calc(100vh - 60px); overflow-y: auto
+}
+
 @media screen and (max-width:1020px){.xNoVisibleMenos1020{display:none;visibility:hidden;}}
 @media screen and (max-width:920px){
 .xNoVisibleMenos920{display:none;visibility:hidden;}
@@ -491,6 +498,7 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xVisible920{display:inline-block !important;visibility:visible;}
 }
 @media screen and (max-width:720px){
+    .div_submenu_p{width:100%;}
 	.xm_at_cont{width:100%;}
 	.xancho_centro{width:90%;}
 	.xNoVisibleMenos720{display:none;visibility:hidden;}
@@ -528,6 +536,20 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xMenu_Encabezado{background: #1E88E5; color: #FFFFFF; height: 40vh; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px;}
 .xMenu_Encabezado .xtitulo{font-size: 30px; line-height: 25px; }
 .xMenu_Encabezado .xsub_titulo{font-size: 9px; line-height: 25px; opacity: 0.8; z-index: 0;}
+
+.xMenu_Encabezado_small {
+    background: #e0e0e0;
+    color: #333;
+    text-align: center;
+    /* display: flex; */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 5px;
+}
+.xMenu_Encabezado_small .xtitulo{font-size: 30px; line-height: 25px; }
+.xMenu_Encabezado_small .xsub_titulo{font-size: 9px; line-height: 25px; opacity: 0.8; z-index: 0;}
+
 .xmenu_item{border-bottom:1px solid #ddd; white-space: nowrap;overflow: hidden; text-overflow: ellipsis;}
 .xmenu_item.xPading15{ padding: 15px;}
 .xmenu_item.xPading10{ padding: 12px; }

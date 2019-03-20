@@ -4,10 +4,12 @@
       neon-animated-pages id="pages" class="flex" selected="[[selected]]" entry-animation="slide-up-animation" exit-animation="slide-from-bottom-animation"
     -->
     <div class="xMenu_content" id="CartaDetalle">
-      <div class="xMenu_Encabezado">
+      <div class="xMenu_Encabezado" id="Encabezado_menu_m">
         <span class="xtitulo" id="r_titulo">{{xt_nombre_sede}}</span>
         <div class="xsub_titulo" id="r_subtitulo">[[xt_eslogan]]</div>
       </div>
+      <div class="xLineaSombra xInvisible" id="line_sombra"></div>
+      
       <div class="xMenu_body noselect">
         <div class="xAlinearCentro spinner">
           <paper-spinner active></paper-spinner>
@@ -251,12 +253,25 @@ function xColocarUrl(xpath){
       xt_idsede: Number,
       xt_idus: Number,
       xt_nombre_sede: String,
-      xt_eslogan: String
+      xt_eslogan: String,
+      smallPage: {
+            type: Boolean,
+            notify: true,  
+            value: false,                    
+          },
+    },
+    _changeClassTitulo() {
+      
     },
     attached: function() {
       xThisMenu = this;
       //this.selected=0;
       xIniMenu();
+      if ( this.smallPage ) {
+        Encabezado_menu_m.classList.remove('xMenu_Encabezado');
+        Encabezado_menu_m.classList.add('xMenu_Encabezado_small');        
+        line_sombra.classList.remove('xInvisible');
+      }
     }
   });
 </script>

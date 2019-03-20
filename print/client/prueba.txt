@@ -37,34 +37,50 @@ try {
 	return;
 }
 
+// tamaño de papel
+// 0 = 80mm 1 = 58mm
+$papel_size = (int)$ArrayEnca['papel_size'];
+
+// lineas hr - divisor
+$linea_hr = '';
+$GLOBALS['leftCols'] = 38;
+switch ($papel_size) {
+	case '0': // 80mm
+		$linea_hr = "------------------------------------------------\n";
+		$GLOBALS['leftCols'] = 38;
+		break;
+	case '1': // 58mm
+		$linea_hr = "------------------------------------------\n";
+		$GLOBALS['leftCols'] = 32;
+		break;	
+}
 
 $connector->write(Printer::GS.'L'.$var_margen_iz);
 $printer -> setFont($var_size_font);
 
 
-$imLogo = "";
-$uri=$uriLogo64;
-$imageBlob = base64_decode(explode(",", $uri)[1]);
-$imagick = new Imagick();
-$imagick->setResourceLimit(6, 1);
-$imagick->readImageBlob($imageBlob, "input.png");
-$imLogo = new ImagickEscposImage();
-$imLogo->readImageFromImagick($imagick);
+$imLogo = "logo.png";
+//$uri=$uriLogo64;
+//$imageBlob = base64_decode(explode(",", $uri)[1]);
+//$imagick = new Imagick();
+//$imagick->setResourceLimit(6, 1);
+//$imagick->readImageBlob($imageBlob, "input.png");
+//$imLogo = new ImagickEscposImage();
+//$imLogo->readImageFromImagick($imagick);
 
 
 /* Print top logo */
 if($imLogo!=''){
 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
-	$size = Printer::IMG_DEFAULT;
-	$printer->bitImage($imLogo, $size);
-	$printer -> feed();
+	$logo = EscposImage::load($imLogo, false);
+	$printer -> bitImage($logo);
 }
 	
 /* ENCABEZADO */
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 	$printer -> text('MESA 01'."\n");
 	$printer -> selectPrintMode();
-	$printer -> text("------------------------------------------------\n");
+	$printer -> text($linea_hr);
 	$printer -> text('Referencia del pedido ej: Sr. Perez'."\n");
 	$printer -> feed();
 
@@ -85,7 +101,7 @@ if($imLogo!=''){
 	$printer -> setJustification(Printer::JUSTIFY_LEFT);
 	$printer -> setEmphasis(true);				
 	$printer -> text('ENTRADAS'."\n");
-	$printer -> text("------------------------------------------------\n");	
+	$printer -> text($linea_hr);	
 	$printer -> setEmphasis(false);
 
 	//destalles
@@ -100,7 +116,7 @@ if($imLogo!=''){
 	$printer -> setJustification(Printer::JUSTIFY_LEFT);
 	$printer -> setEmphasis(true);				
 	$printer -> text('PLATOS DE FONDO'."\n");
-	$printer -> text("------------------------------------------------\n");	
+	$printer -> text($linea_hr);	
 	$printer -> setEmphasis(false);
 
 	//destalles
@@ -111,7 +127,7 @@ if($imLogo!=''){
 	
 	/* TOTALES */
 	$printer -> feed();
-	$printer -> text("------------------------------------------------\n");
+	$printer -> text($linea_hr);
 	$printer -> setEmphasis(true);
 	
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);	
@@ -127,6 +143,7 @@ if($imLogo!=''){
 	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
 
 	$printer -> text("www.papaya.com.pe\n");
+	$printer -> feed(2);
 
 	$printer -> cut();
 	$printer -> close();
@@ -149,7 +166,7 @@ class item
     public function __toString()
     {
         $rightCols = 10;
-        $leftCols = 38;
+        $leftCols = $GLOBALS['leftCols'];
         if ($this -> dollarSign) {
             $leftCols = $leftCols / 2 - $rightCols / 2;
         }

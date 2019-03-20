@@ -38,7 +38,7 @@ $(document).on('click', '.xBtn', function(e) {
 		var xCantActual=parseInt(objCant.text());
 		var xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]["cantidad"]);
 		var xCantTotalItem=0;
-		var xDesSeccion = xTituloDet;
+		var xDesSeccion = xTituloDet || $(this).parents('.xmenu_item_2').attr('data-desseccion');
 		var xIdSeccionItem=$(this).parents('.xmenu_item_2').attr('data-idseccion');
 		var xIdSeccionItem_index=$(this).parents('.xmenu_item_2').attr('data-idseccionindex');
 		var xRowidimpresora=$(this).parents('.xmenu_item_2').attr('data-idimpresora');
@@ -91,6 +91,13 @@ $(document).on('click', '.xBtn', function(e) {
 
 		window.localStorage.setItem("::app3_sys_dta_count_ico",xCount_cant_ico);
 		if(xCount_cant_ico>0){$(".xIco_MiPedido .xCantPedio_ico").text(xCeroIzq(xCount_cant_ico,2));$(".xIco_MiPedido .xCantPedio_ico").removeClass('xInvisible');}else{$(".xIco_MiPedido .xCantPedio_ico").addClass('xInvisible');}
+
+		
+		// si esta en modo vista pantalla tablet, update x-mipedido
+		const xVistaMiPedido = document.getElementById('mipedido-view');
+		xVistaMiPedido._outLoadPedido();
+
+		//
 
 		// event.stopPropagation();
 		e.stopPropagation();
@@ -409,7 +416,8 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 		xPrintLocal=$.parseJSON(xPrintLocal);
 		xArrayDatosPrint[0].ip_print=xPrintLocal.ip;
 		xArrayDatosPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
-		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font
+		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font;
+		xArrayDatosPrint[0].papel_size = xPrintLocal.papel_size;
 		xArrayDatosPrint[0].local = 1;
 		xpasePrint=true;
 	}else{
@@ -420,6 +428,7 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 				xArrayDatosPrint[0].ip_print=xIpPrintDoc;
 				xArrayDatosPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xArrayDatosPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
+				xArrayDatosPrint[0].papel_size = xArrayImpresoras[i].papel_size
 				xArrayDatosPrint[0].local = 0;
 				break;
 			}
@@ -460,7 +469,8 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 		xPrintLocal=$.parseJSON(xPrintLocal);
 		xArrayDatosPrint[0].ip_print=xPrintLocal.ip;
 		xArrayDatosPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
-		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font
+		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font;
+		xArrayDatosPrint[0].papel_size = xPrintLocal.papel_size;
 		xArrayDatosPrint[0].local = 1;
 		xpasePrint=true;
 	}else{
@@ -471,6 +481,7 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 				xArrayDatosPrint[0].ip_print=xIpPrintDoc;
 				xArrayDatosPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xArrayDatosPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
+				xArrayDatosPrint[0].papel_size = xArrayImpresoras[i].papel_size;
 				xArrayDatosPrint[0].local = 0;
 				break;
 			}

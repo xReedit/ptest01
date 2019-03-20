@@ -66,21 +66,27 @@
 
     // descarga logo
     $logo = $_POST['logo'];
-    $nomFileLogo = "logo.txt";
-    if(file_exists($nomFileLogo)) {
-        echo "modifica logo ".$nomFileLogo;
-        //modificamos escribimos nueva version                
-        file_put_contents($nomFileLogo, $logo);
+    // to png
+    $data_logo = $logo;
+    $data_logo = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $data_logo));
+    file_put_contents('logo.png', $data_logo);
+    echo "modifica logo";
+
+    // $nomFileLogo = "logo.txt";
+    // if(file_exists($nomFileLogo)) {
+    //     echo "modifica logo ".$nomFileLogo;
+    //     //modificamos escribimos nueva version                
+    //     file_put_contents($nomFileLogo, $logo);
         
-    } else {            
-        //creamos nuevo archivo
-        echo "crea logo ".$nomFileLogo;
-        if($archivo = fopen($nomFileLogo, "a")) {
-            fwrite($nomFileLogo, $logo);
-            fclose($nomFileLogo);
+    // } else {            
+    //     //creamos nuevo archivo
+    //     echo "crea logo ".$nomFileLogo;
+    //     if($archivo = fopen($nomFileLogo, "a")) {
+    //         fwrite($nomFileLogo, $logo);
+    //         fclose($nomFileLogo);
         
-        }
-    }
+    //     }
+    // }
 
     echo $mensaje;
 

@@ -1,11 +1,32 @@
+<link rel="import" href="x-mipedido.html">
+<link rel="import" href="x-menu.html">
 <dom-module id="x-submenu">
   <script type="text/javascript" src="../../view/item_pedidos.js"></script>
   <template>
-    <div>
-      <div class="xMenu_body">
-        <div class="xAlinearCentro spinner">
-          <paper-spinner active></paper-spinner>
+    <div id="contenedor-x" style="display: flex;">
+      <!-- menu -->
+      <div class="xBordeDe2 xNoVisibleMenos720" style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto">
+        <x-menu small-page="true"></x-menu>
+        <div class="xNoVisibleMenos920">
+          <br><br><br>
         </div>
+      </div>
+      
+      <!-- sub menu -->
+      <div class="div_submenu_p">
+        <div class="xSubMenu_body">
+          <div class="xAlinearCentro spinner">
+            <paper-spinner active></paper-spinner>
+          </div>
+        </div>
+        <div class="xNoVisibleMenos920">
+          <br><br><br>
+        </div>
+      </div>
+
+      <!-- mi pedido -->
+      <div class="xBordeIz2 xNoVisibleMenos720 xNoVisibleMenos920" style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto">
+        <x-mipedido id="mipedido-view"></x-mipedido>
       </div>
     </div>
   </template>
@@ -32,11 +53,23 @@
 
   // window.addEventListener('popstate', function (e) {
   //     if(window.location.hash === "#/sub_menu") {
-  //       if ( $(".xMenu_body .xmenu_item_2").length === 0 ) {
+  //       if ( $(".xSubMenu_body .xmenu_item_2").length === 0 ) {
   //         xLoadItems();
   //       }
   //     }
   //   });
+
+  // window.onresize = function(event) {
+  //   if ( screen.width >= 920 ) {
+  //     const xVistaMiPedido = document.getElementById('mipedido-view');
+  //     xVistaMiPedido._outLoadPedido();
+  //     console.log('ok size');
+  //   }
+  // };
+
+  function xCallMiPedidoSize() {
+
+  }
 
   function xIniSubMenu() {
     //xVerificarSession();
@@ -47,12 +80,13 @@
     setTimeout(() => {      
       xLoadItems();
     }, 100);
+    
 
-   
     $(document).on('click', '.xmenu_item_2', function(e) {
       // alert('on click');
     // $(document).click(function (e) {
-      //$('.xmenu_item_2').click(function() {      
+      //$('.xmenu_item_2').click(function() {  
+              
       xobj_row_selected = $(this);
       if ($(this).find("input:radio")[0].disabled == true) {
         // e.stopPropagation();
@@ -123,7 +157,7 @@
   }
 
   async function xLoadItems() {
-    $(".xMenu_body").html('<div class="xAlinearCentro spinner"><paper-spinner active></paper-spinner></div>').trigger("create");
+    $(".xSubMenu_body").html('<div class="xAlinearCentro spinner"><paper-spinner active></paper-spinner></div>').trigger("create");
     xTituloDet = window.localStorage.getItem("::app3_sys_dt_c");
     $("#xtitulo_bar").text(xTituloDet);
 
@@ -242,9 +276,9 @@
             xCadenaItem_Detalle
         );
       }
-      $(".xMenu_body div").remove();
-      $(".xMenu_body .spinner").remove();
-      $(".xMenu_body").append(xCadenaItem).trigger("create");
+      $(".xSubMenu_body div").remove();
+      $(".xSubMenu_body .spinner").remove();
+      $(".xSubMenu_body").append(xCadenaItem).trigger("create");
 
       // al cargar ir a la posicion de donde vino
       $(window).scrollTop(
@@ -275,7 +309,7 @@
     });
   }
   /*function xLoadItems(){
-	$(".xMenu_body").html('<div class="xAlinearCentro spinner"><paper-spinner active></paper-spinner></div>').trigger('create');
+	$(".xSubMenu_body").html('<div class="xAlinearCentro spinner"><paper-spinner active></paper-spinner></div>').trigger('create');
 	xTituloDet=window.localStorage.getItem("::app3_sys_dt_c")
 	$("#xtitulo_bar").text(xTituloDet);
 
@@ -329,9 +363,9 @@
 					xCadenaItem_Detalle);
 
 		};
-		$(".xMenu_body div").remove();
-		$(".xMenu_body .spinner").remove();
-		$(".xMenu_body").append(xCadenaItem).trigger('create');
+		$(".xSubMenu_body div").remove();
+		$(".xSubMenu_body .spinner").remove();
+		$(".xSubMenu_body").append(xCadenaItem).trigger('create');
 	});
 }
 */

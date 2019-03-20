@@ -22,7 +22,9 @@
 		      					<input type="text" id="acc" name="acc">
 		      					<input type="text" id="per" name="per">
 		      				</div>
-	      				</form>
+								</form>
+								<br>
+								<a href="#" onclick="xResetearClave()"> Resetear clave</a>
 	      			</div>
 	      			<div id="acc_us" class="" style="max-height: 70vh;">
 	      				<div style="overflow-y:auto;overflow-x:none; max-height: 60vh;">
@@ -126,6 +128,17 @@ function xIniUsuarios(){
   		}
 	});
 }
+
+function xResetearClave() {
+	const idUsReset = $("#frm_us #idusuario")[0].value;
+	if ( idUsReset === '') return;
+	xPopupLoad.xopen();
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4031', data:{i:idUsReset}})
+	setTimeout(() => {
+		xPopupLoad.xclose();
+	}, 200);
+}
+
 function xModificarUs(obj){
 	xNuevoUsuario();
 	xPopupLoad.xopen();
