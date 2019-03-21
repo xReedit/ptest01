@@ -171,7 +171,12 @@ function xvalidateObjFormInput(obj,responde) {
 function xBorrarRegistroFisico(tabla,i){
 	$.post('../../bdphp/log.php?op=101', {t:tabla, id:i});
 }
-function xBorrarRegistro(tabla,i){
+
+function xBorrarRegistroFisico2(tabla,i,nomcampo){
+	$.post('../../bdphp/log.php?op=10101', { t: tabla, id: i, campo: nomcampo});
+}
+
+function xBorrarRegistro(tabla,i){ //borrado logico
 	$.post('../../bdphp/log.php?op=103', {t:tabla, id:i});
 }
 function xBorrarRegistroEnAnulado(tabla,i){

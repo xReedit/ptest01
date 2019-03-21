@@ -178,16 +178,15 @@ function xLoadArrayPedidoAquiMenuJS() {
   //window.localStorage.setItem("::app3_sys_dta_tct",JSON.stringify(xArrayDesTipoConsumo))
 
   // si screen mayor a 720 entonces solo resetea valores y queda en la vista actual submenu o cunsuta de lo contrario la vista es menu la primera pantalla
-    const _sys_first_load = window.localStorage.getItem("::app3_sys_first_load");
+  const _sys_first_load = window.localStorage.getItem("::app3_sys_first_load");
   if (screen.width < 720 || _sys_first_load === null) {
     xOpenPageCarta(0);
   } else {
     $("body").removeClass("loaded");
     setTimeout(() => {
-      $("body").addClass("loaded");
       // si no es la primera carga
-      goBack();      
-            
+      if (window.location.href.indexOf('sub_menu') > -1) {xLoadItems();} else { goBack(); }
+      $("body").addClass("loaded");
       
       xLoadMipedido();      
     }, 500);

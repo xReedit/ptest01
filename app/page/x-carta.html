@@ -494,13 +494,13 @@ function xImprimirCarta(){
 	ImprBoletaConCSS('xdiv_print','');
 }
 function xAddNewSeccion(){
-	var xCadenaNewSeccion='<div class="xSeccion"><br><br>'+
+	var xCadenaNewSeccion='<div class="xSeccion" data-t="carta_lista"><br><br>'+
 		'<input type="text" tabindex="1" data-id="" style="width:100%;" class="xMiInput xfont20 xPasarEnter2 des_seccion" placeholder="SECCION" onChange="conMayusculas(this)" id="seccion_des" data-print="0">'+
 		'<br><div class="xCursor xDerecha xfont12" style="margin-left:7px; margin-top:3px;">'+
 			'<img src="../../images/_prit_2.png" class="xImgCheck" onclick="xCheckImgPrint(this)" title="Mostrar en impresion" id="xseccio_print">'+
 			'<img src="../../images/_see_2.png" class="xImgCheck" onclick="xVerSiStockCero(this)" title="Ver si el stock es cero" id="xseccio_ver_si_stock_cero">'+
 		'</div>'+
-		'<a class="xfont12 xColorRow_Azul xCursor xDerecha" onclick="xBorrarSeccion(this);">Borrar Seccion</a>'+
+		'<a class="xfont12 xColorRow_Azul xCursor xDerecha" onclick="xBorrarSeccionLocal(this);">Borrar Seccion</a>'+
 		'<br><br>'+
 		'<table class="xtable3 xpadingLateralDe tb_item" width="100%" data-TablaName="carta_lista">'+
 			'<thead>'+
@@ -683,7 +683,7 @@ function xLoadListadoCartaActual(){
 			xClassCheckPrint='xImgCheck';
 			if(xSeccionArray[z].print==1){xClassCheckPrint='xImgNoCheck'}
 			if(xSeccionArray[z].ver_stock_cero==1){xClassCheckPrintCero='xImgNoCheck'}
-			xCadenaSeccionList=String('<div class="xSeccion" data-modificado="0"><br><br>'+
+			xCadenaSeccionList=String('<div class="xSeccion" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xidSeccionArray +'"><br><br>'+
 			'<input type="text" value="'+xSeccionArray[z].des+'" data-dessec="'+ xSeccionArray[z].des+'" tabindex="1" data-id="'+xidSeccionArray+'" data-print="'+xSeccionArray[z].print+'" style="width:100%" class="xMiInput xfont20 xPasarEnter2 des_seccion txt_modifica_bd_sec" placeholder="SECCION" onChange="conMayusculas(this)" id="seccion_des">'+
 			'<br><div class="xCursor xDerecha xfont12">'+
 				'<img src="../../images/_prit_2.png" style="margin-left:7px; margin-top:3px;" class="'+xClassCheckPrint+'" onclick="xCheckImgPrint(this)" title="Mostrar en impresion" id="xseccio_print">'+
@@ -712,7 +712,7 @@ function xLoadListadoCartaActual(){
 				if(xidSeccionArray!=xdtCAct[i].idseccion){continue;}
 				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xdtCAct[i].idcarta_lista +'" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
 				'<td data-id="'+xidSeccionArray+'" id="td_des" onclick="xModRow(this,3);" class="txt_modifica_bd">'+
-					'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xBorrarSeccion(this);"></span>'+
+					'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocalBD(this);"></span>'+
 					'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
 					'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
 					xdtCAct[i].des_item+
@@ -844,18 +844,41 @@ function xCargarEnImputSeccion(){
 function xxxBorrarItemLocal(obj){
 	var xObj=$(obj).parent().parent();
 	var xtb=xObj.parents('table');	
-	xObj.fadeTo(550, 0, function () {$(this).remove(); xSumarTotal(xtb);});
+	$(xObj).fadeTo(550, 0, function () {$(this).remove(); xSumarTotal(xtb);});
 }
+
+// borrar item ya guardado en bd
+function xxxBorrarItemLocalBD(obj){
+	const xRowObj = obj.parentNode.parentNode;
+	const xTableRow = $(xRowObj).attr('data-t');
+	const xIdROw = $(xRowObj).attr('data-idborrar');
+
+	xBorrarRegistroFisico(xTableRow, xIdROw);
+
+	$(xRowObj).fadeTo(550, 0, function () { $(this).remove(); });
+	$("#Lista_Carta").trigger('create');
+}
+
+function xBorrarSeccionLocal(obj){
+	var xObj = obj.parentNode;	
+	// var xtb=xObj.parents('table');	
+	$(xObj).fadeTo(550, 0, function () {$(this).remove();});
+}
+
 function xBorrarSeccion(obj){
-	const xRowObj=obj.parentNode.parentNode;	
+	// const xRowObj=obj.parentNode.parentNode;
+	const xRowObj= obj.parentNode;	
 	const xTableRow=$(xRowObj).attr('data-t');
 	const xIdROw=$(xRowObj).attr('data-idborrar');
 
-	xBorrarRegistroFisico(xTableRow,xIdROw);
+	xBorrarRegistroFisico2(xTableRow,xIdROw, 'idseccion');
 
 	$(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
 	$("#Lista_Carta").trigger('create');
 }
+
+
+
 function xItemQuitarFoto(){
 	xPopupLoad.xopen();
 	$(".div_foto img").remove();

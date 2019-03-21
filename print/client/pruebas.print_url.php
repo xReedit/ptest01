@@ -7,7 +7,7 @@ header('Access-Control-Allow-Origin: *');
 //$file = file_get_contents('pruebas2.txt'); 
 //echo $file;
 
-$uriLogo64 = file_get_contents("logo.txt");
+// $uriLogo64 = file_get_contents("logo.txt");
 
 // $arrData = $_POST['arrData'];
 $item = $_POST['arrData'];

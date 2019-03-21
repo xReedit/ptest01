@@ -49,6 +49,7 @@ function xOpenPage(xop, parametro){
 		case 3:	xruta='/caja';break;
 		case 4:	document.location.href='m_panel.html';return;break;
 		case 5:
+			window.localStorage.removeItem("::app3_sys_first_load");
 			h = window.screen.availHeight-100;
 			var myWindow = window.open('m_menu.html', "Carta", "width=400,height="+h);	return;break;
 		case 6:	xruta='/pedido_detalle';break;

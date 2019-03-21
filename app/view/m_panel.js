@@ -96,7 +96,9 @@ function xOpenPage(xop, parametro){
 	switch(xop){
 		case 1:	xruta='/home';break;
 		case 2:	xruta='/elaborar_carta';break;
-		case 3:	document.location.href='m_menu.html';return;break;
+		case 3:	
+			window.localStorage.removeItem("::app3_sys_first_load");
+			document.location.href='m_menu.html';return;break;
 		//case 4:	xruta='/menu'; break;
 		//case 4:	xruta='/reglas';break;
 		//case 5:	xruta='/datos_print';break;
@@ -107,6 +109,7 @@ function xOpenPage(xop, parametro){
 		case 9:	document.location.href='m_control_pedidos.html';return;break;
 		case 10:xruta='/detalle_pedido';break;
 		case 11:
+			window.localStorage.removeItem("::app3_sys_first_load");
 			h = window.screen.availHeight-100;
 			var myWindow = window.open('m_menu.html', "Carta", "width=400,height="+h);	return;break;
 		case 12:xruta='/compras';break;

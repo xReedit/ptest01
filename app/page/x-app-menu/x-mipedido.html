@@ -491,8 +491,15 @@ transition: none !important;
     window.localStorage.removeItem("::app3_sys_dta_count_ico");
     xCount_cant_ico = 0;
     xRowColapseOpen = null;
+
+    nummesa.value = '';
+    referencia_pedido.value = '';
+
+    $(".xIco_MiPedido .xCantPedio_ico").text('');
+    $(".xIco_MiPedido .xCantPedio_ico").addClass('xInvisible');
+
     xGeneralActualizarLoadItemCambioBd();
-    xLoadArrayPedidoAquiMenuJS(false);
+    xLoadArrayPedidoAquiMenuJS();
     tt_pedido = 0;
     guardandoPedido = false;
   }
@@ -516,7 +523,7 @@ transition: none !important;
       //   xsolo_llevar = 1;
       // } // delivery
 
-      if ( $(element).attr("data-colDes").trim().toLowerCase() == "delivery") { xdelivery = 1; }
+      if ( $(element).attr("data-colDes").toLowerCase().indexOf("delivery") > -1 ) { xdelivery = 1; }
 
     });
     if (xcount_seccion > 1) {
