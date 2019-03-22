@@ -66,6 +66,11 @@
 							<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO DEL DOMICILIO FISCAL" id="codigo_del_domicilio_fiscal" name="codigo_del_domicilio_fiscal" espaciar>
 							
 							<br><br>
+							<p><strong>Sufijo para creacion de usuarios:</strong></p>							
+							<input type="text" class="xMiInput xPasarEnter2" id="sufijo" name="sufijo" placeholder="SUFIJO" onChange="conMayusculas(this)" onblur="xAdmNewValidarSufijo(this);" espaciar required>
+							<span class="xColorRow_verde xInvisible" id="labelSufijoValido">Sufijo Valido</span>
+
+							<br><br>
 							<p><strong>Habilitar facturacion electronica</strong></p>
 							<label for="authorization_api_comprobante">Token</label>
 							<input type="password" class="xMiInput xPasarEnter2" id="authorization_api_comprobante" name="authorization_api_comprobante" espaciar>
@@ -121,6 +126,8 @@
 	function xAdmGuardarSede() {		
 		xPopupLoad.xopen();
 		const selTipoVal=selTipo.value;
+
+		// if ( !xThisAdminNew.xAdmNewValidarSufijo ) return;
 
 		$("#frm_sede #idorg").val(xThisAdminNew.xIdOrg);
 		$("#frm_sede #idsede").val(xThisAdminNew.xIdSede);
@@ -189,6 +196,7 @@
 		$("#frm_sede #ubigeo").val(dataSede.ubigeo);
 		$("#frm_sede #codigo_del_domicilio_fiscal").val(dataSede.codigo_del_domicilio_fiscal);
 		$("#frm_sede #authorization_api_comprobante").val(dataSede.authorization_api_comprobante);
+		$("#frm_sede #sufijo").val(dataSede.sufijo);
 		$("#frm_sede #id_api_comprobante").val(dataSede.id_api_comprobante);
 		$("#frm_sede #sys_local").val(dataSede.sys_local);
 		$("#frm_sede #ip_server_local").val(dataSede.ip_server_local);
@@ -228,6 +236,30 @@
 		});
 	}
 
+	function xAdmNewValidarSufijo(obj) {
+		const _u = obj.value.toUpperCase();		
+		if ( _u === '' ) return;
+
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=202', data: { u: _u } })
+		.done((res) => {
+			xThisAdminNew.formValidSufijo = res.length === 0 ? true : false;
+			var msj_us_valido = 'Sufijo Valido';
+			var msj_us_valido_class = 'xRojo';
+			$("#labelSufijoValido").removeClass('xInvisible');
+			if ( res.length === 0 ) {
+				$("#labelSufijoValido").removeClass('xColorRow_Rojo');
+				$("#labelSufijoValido").addClass('xColorRow_verde');
+			} else {
+				msj_us_valido='Sufijo ya existe';
+				$("#labelSufijoValido").addClass('xColorRow_Rojo');
+				$("#labelSufijoValido").removeClass('xColorRow_verde')
+			}
+
+			$("#labelSufijoValido").text(msj_us_valido);
+						
+		});
+	}
+
 
 	// crea variables del nuevo org
 	function xAddNewConfigNewOrg(_idorg, _idsede) {
@@ -242,6 +274,7 @@
 		properties: {
 			formValid: boolean = false,
 			formValidUsuario: boolean = false,
+			formValidSufijo: boolean = false,
 			xIdOrg: {type: String, value:''},
 			xIdSede: { type: String, value: '' },
 			ListSedesPorOrg: []

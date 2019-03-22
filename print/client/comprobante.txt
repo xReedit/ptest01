@@ -33,25 +33,6 @@ try {
 	return;
 }
 
-
-// logo 64
-
-$imLogo = "";
-// logo 64
-//if ( $printImg64 === "1" ) {
-	//$uri=$xArray_print[0]['logo64'];
-	//$imageBlob = base64_decode(explode(",", $uri)[1]);
-	//$imagick = new Imagick();
-	//$imagick->setResourceLimit(6, 1);
-	//$imagick->readImageBlob($imageBlob, "input.png");
-	//$imLogo = new ImagickEscposImage();
-	//$imLogo->readImageFromImagick($imagick);
-//}
-//else {
-	//$imLogo="./logo/".$xArray_print[0]['logo'];
-//}
-//
-
 $imLogo = "logo.png";
 
 // tamaño de papel
@@ -119,22 +100,7 @@ $precio='';
 
 while($num_copias>=0){
 
-	// if($cuenta_copias>0 && $pre_cuenta!=true){
-	// 	$printer -> setJustification(Printer::JUSTIFY_CENTER);
-	// 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-	// 	$printer -> text("****** COPIA ******\n");
-	// 	$printer -> selectPrintMode();
-	// }
 
-	
-
-	/*num pedido*/
-	// $printer -> selectPrintMode();	
-	// $printer -> setJustification(Printer::JUSTIFY_CENTER);
-	// $printer -> setEmphasis(true);
-	// $printer -> text('CO-'.$correlativo_dia."\n");
-	// $printer -> setEmphasis(false);
-	
 	/* Print top logo */
 	if($imLogo!=''){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);

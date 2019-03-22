@@ -13,8 +13,13 @@
 	      				<form id="frm_us">
 		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRES" onChange="conMayusculas(this)" id="nombres" name="nombres" espaciar required>
 		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="CARGO" onChange="conMayusculas(this)" id="cargo" name="cargo" espaciar required>
-		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO"  id="usuario" name="usuario" espaciar required>
-		      				<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>
+									
+									<div style="display: flex;margin-left: 5px;">
+										<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO" id="txt_sufijo" value$="[[xt_sufijo]]" style="width: 50px;" enLinea readonly>
+										<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO"  id="usuario" name="usuario" enLinea required>
+									</div>
+									
+									<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>
 		      				<div class="xInvisible">
 		      					<input type="text" id="idusuario" name="idusuario">
 		      					<input type="text" id="idorg" name="idorg" value$="{{xt_org}}">
@@ -94,10 +99,12 @@ function xIniUsuarios(){
 	$("#Titulo_page").text("Usuarios");
 
 	xm_log_get('ini_us');
-
+	const sufijoSede = xm_log_get('datos_org_all_sede')[0].sufijo;
+	
 	xThis.xt_org=xIdOrg;
 	xThis.xt_idsede=xIdSede;
 	xThis.xt_idus=xIdUsuario;
+	xThis.xt_sufijo = sufijoSede;
 
 	if (xIdOrg === "" || xIdOrg == undefined){
 			var _dtUs = xm_log_get('app3_us');
@@ -157,7 +164,7 @@ function xModificarUs(obj){
 		$("#frm_us #idsede").val(xThis.xt_idsede);
 		$("#frm_us #cargo").val(xdtLoadUs[0].cargo);
 		$("#frm_us #nombres").val(xdtLoadUs[0].nombres);
-		$("#frm_us #usuario").val(xdtLoadUs[0].usuario);
+		$("#frm_us #usuario").val(xdtLoadUs[0].usuario.replace(xThis.xt_sufijo, ''));
 		$("#frm_us #pass").val(xdtLoadUs[0].pass);
 		$("#frm_us #acc").val(xacc_bd);
 		$("#frm_us #per").val(xper_bd);
@@ -198,6 +205,9 @@ function xGuardarUs(){
 	});
 	$("#frm_us #acc").val(xCadena_a);
 	$("#frm_us #per").val(xCadena_p);
+
+	const _usuario = xThis.xt_sufijo + usuario.value;
+	$("#frm_us #usuario").val(_usuario);
 
 	xvalidateFormInput('frm_us',function(a){
 		if(a===false){xThis.selected_us=0; return;}
@@ -243,6 +253,7 @@ Polymer({
 		xt_org:Number,
 		xt_idsede:Number,
 		xt_idus:Number,
+		xt_sufijo:String,
 	},
 	ready: function() {
 		xIniUsuarios();

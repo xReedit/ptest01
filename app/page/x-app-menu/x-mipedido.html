@@ -498,6 +498,8 @@ transition: none !important;
     $(".xIco_MiPedido .xCantPedio_ico").text('');
     $(".xIco_MiPedido .xCantPedio_ico").addClass('xInvisible');
 
+    dialog_nuevo_pedido.close();
+
     xGeneralActualizarLoadItemCambioBd();
     xLoadArrayPedidoAquiMenuJS();
     tt_pedido = 0;
