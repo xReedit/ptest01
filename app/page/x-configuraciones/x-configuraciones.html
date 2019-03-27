@@ -294,7 +294,7 @@
 									<input type="text" id="var_size_font" name="var_size_font">
 									<input type="text" id="var_margen_iz" name="var_margen_iz">
 									<input type="text" id="var_size_font_tall_comanda" name="var_size_font_tall_comanda">
-									<input type="text" id="papel_size" name="papel_size">
+									<!-- <input type="text" id="papel_size" name="papel_size"> -->
 									<!-- <input type="text" id="img64" name="img64"> -->
 
 									<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
@@ -1311,6 +1311,8 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #var_margen_iz").val($("#td_margen_iz").val());
 	$("#frm_conf_print #var_size_font").val($("#td_size_font").val());
 	$("#frm_conf_print #var_size_font_tall_comanda").val($("#sel_size_font_comanda").val());
+	$("#frm_conf_print #idsede").val(xThisConfig.xt_idsede);
+	$("#frm_conf_print #idorg").val(xThisConfig.xt_org);
 	// $("#frm_conf_print #papel_size").val($("#select_papel_caja").val());
 	// $("#frm_conf_print #img64").val($("#td_img64").val());
 
@@ -1319,7 +1321,7 @@ function xGuardarCambioPrint(){
 		xIdConf=a;
 		xItemGuardarFoto();
 		//xLoadReglasCarta();
-	})
+	});
 
 }
 function xPruebaTestPrint(){

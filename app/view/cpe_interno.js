@@ -4,7 +4,7 @@ function CpeInterno_Registrar(data) {
         
         let dataSave = {}
     
-        dataSave.jsonxml = ''; 
+        dataSave.jsonxml = data.data.jsonxml;
         // datos
         dataSave.pdf = data.links.pdf != '' ? 1 : 0; 
         dataSave.cdr = data.links.cdr != '' ? 1 : 0; 
@@ -27,7 +27,12 @@ function CpeInterno_Registrar(data) {
         dataSave.msj_error = '';
         
         if ( data.response.length != 0 ) {
-            dataSave.estado_sunat = data.response.code;
+            //cuando es boleta debe ir 1 de todas maneras porque boleta se envia despues
+            // si es factura debemos ver si hay error entonces 1 = se envia luego, de lo contrario 0 = envio a sunat ok
+            const _estado_sunat = data.response.error_soap && dataSave.numero.indexOf('F') > -1 ? 1 : data.response.code ? data.response.code : 0;
+            
+            // dataSave.estado_sunat = data.response.error_soap ? data.response.code : 0; // si no hay error quiere decir que si registro
+            dataSave.estado_sunat = _estado_sunat;
             dataSave.msj = data.response.description; 
         } 
 
@@ -66,7 +71,7 @@ function CpeInterno_ErrorValidacionSunat(_idregistro_p, dataSave) {
 function CpeInterno_SaveBD(dataSave) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: dataSave}})
     .done( function (res) {
-        console.log(res);
+        // console.log(res);
     });
 }
 
@@ -75,7 +80,7 @@ function CpeInterno_SaveBD(dataSave) {
 function CpeInterno_UpdateRegistro(dataUpdate) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '2', data: dataUpdate } })
     .done(function (res) {
-        console.log(res);
+        // console.log(res);
     });
 }
 
@@ -83,7 +88,7 @@ function CpeInterno_UpdateRegistro(dataUpdate) {
 function CpeInterno_SaveResumenDiario(dataResumen) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '202', data: dataResumen } })
     .done(function (res) {
-        console.log(res);
+        // console.log(res);
     });
 }
 
@@ -102,7 +107,7 @@ async function CpeInterno_UpdateAnulacion(dataAnulacion) {
 function CpeInterno_UpdateAnulacionFactura(dataAnulacion) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '8', data: dataAnulacion } })
         .done(function (res) {
-            console.log(res);
+            // console.log(res);
         });
 }
 
@@ -113,7 +118,7 @@ function CpeInterno_UpdateAnulacionFactura(dataAnulacion) {
 function CpeInterno_UpdateResumenDiario(dataUpdateResumen) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '203', data: dataUpdateResumen } })
     .done(function (res) {
-        console.log(res);
+        // console.log(res);
     });
 
 }

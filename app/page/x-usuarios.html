@@ -11,6 +11,13 @@
 	      		<iron-pages selected="{{selected_us}}">
 	      			<div id="datos_us" >
 	      				<form id="frm_us">
+									<select class="xTextRow2" id="select_rol">
+										<option value="0">COLABORADOR</option>
+										<option value="1">ADMINISTRADOR</option>
+										<option value="2">CONTADOR</option>
+									</select>
+									<br><br>
+
 		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRES" onChange="conMayusculas(this)" id="nombres" name="nombres" espaciar required>
 		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="CARGO" onChange="conMayusculas(this)" id="cargo" name="cargo" espaciar required>
 									
@@ -19,17 +26,18 @@
 										<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO"  id="usuario" name="usuario" enLinea required>
 									</div>
 									
-									<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>
+									<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>									
+									
 		      				<div class="xInvisible">
 		      					<input type="text" id="idusuario" name="idusuario">
 		      					<input type="text" id="idorg" name="idorg" value$="{{xt_org}}">
 		      					<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 		      					<input type="text" id="acc" name="acc">
-		      					<input type="text" id="per" name="per">
+										<input type="text" id="per" name="per">
+										<input type="text" id="rol" name="rol">
 		      				</div>
 								</form>
-								<br>
-								<a href="#" onclick="xResetearClave()"> Resetear clave</a>
+								
 	      			</div>
 	      			<div id="acc_us" class="" style="max-height: 70vh;">
 	      				<div style="overflow-y:auto;overflow-x:none; max-height: 60vh;">
@@ -68,11 +76,12 @@
 	      				</div>
 	      			</div>
 	      		</iron-pages>
-	      		<br><br>
-	      		<div class="xLinea2"></div>
-	      		<br><br>
-	      		<div class="xBoton2 xAzul" onclick="xGuardarUs();">Guardar</div>
-	      		<div class="xBoton2 xPlomo" onclick="dialog_add_us.close();">Cancelar</div>
+	      		<br>						
+						<br>   		
+						<a href="#" onclick="xResetearClave()"> Resetear clave</a>
+						<br><br>						
+	      		<button class="xBoton2 xAzul" onclick="xGuardarUs();">Guardar</button>
+	      		<button class="xBoton2 xPlomo" onclick="dialog_add_us.close();">Cancelar</button>
 	      	</div>
 		</paper-dialog>
 		<br>
@@ -168,6 +177,7 @@ function xModificarUs(obj){
 		$("#frm_us #pass").val(xdtLoadUs[0].pass);
 		$("#frm_us #acc").val(xacc_bd);
 		$("#frm_us #per").val(xper_bd);
+		select_rol.value = xdtLoadUs[0].rol;
 
 		var xBus='';
 		var xCharFind='';
@@ -205,6 +215,8 @@ function xGuardarUs(){
 	});
 	$("#frm_us #acc").val(xCadena_a);
 	$("#frm_us #per").val(xCadena_p);
+
+	$("#frm_us #rol").val(select_rol.value);
 
 	const _usuario = xThis.xt_sufijo + usuario.value;
 	$("#frm_us #usuario").val(_usuario);

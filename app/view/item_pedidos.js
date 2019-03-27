@@ -1258,7 +1258,7 @@ async function xVerificarStockItemPedidoBefore() {
 function xUpdateItemNoStock(op, items) {
 	$.ajax({
 		type: "POST",
-		url: "../../bdphp/log_001.php?op=3032",
+		url: "../../bdphp/log.php?op=2301",
 		data: {p_from: op, i: items}})
 		.done(x => {
 			console.log(x);

@@ -228,10 +228,11 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         body: json_xml,
     }).then(function (response) {
         return response.json();
-    }).then(function (res) {
+    }).then(function (res) { 
         console.log(res);
-        if (res.success) {
-            rpt.ok = true;
+        const errSoap = res.response ? res.response.error_soap : false;
+        // if (res.success || !errSoap) { // respuesta ok
+            rpt.ok = true; 
             rpt.qr = res.data.qr;
             rpt.hash = res.data.hash;
             rpt.external_id = res.data.external_id;
@@ -244,39 +245,61 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             res.data.idregistro_pago = _idregistro_p;
             res.data.viene_facturador = _viene_facturador;
             res.data.idtipo_comprobante_serie = idtipo_comprobante_serie;
+            res.data.jsonxml = errSoap ? json_xml : ''; // si hay un error al enviar a sunat guarda jsonxml para enviarlo luego
             
             CpeInterno_Registrar(res);
 
-        } else { 
-            // error de ingreso de datos / no continua / advierrte al usuario
-            rpt.ok = false;
-            rpt.error = 'Error al ingresar los datos';
-            rpt.msj_error = res.message;
-            rpt.hash='';            
+            // es lo mismo
+        // } else { 
+        //     // error de ingreso de datos / no continua / advierrte al usuario
+        //     // marca como registrado en la api, no anula y manda estado_sunat=0 para volver a intentar enviarlo
+        //     // la anulacion va ha ser explicita desde cpe emitidos
+            
+        //     // rpt.ok = false;
+        //     // rpt.error = 'Error al ingresar los datos';
+        //     // rpt.msj_error = res.message;
+        //     // rpt.hash='';
+            
+        //     // rpt.ok = true;
+        //     // rpt.qr = '';
+        //     // rpt.hash = "www.papaya.com.pe";
+        //     // rpt.external_id = res.data ? res.data.external_id : '' || '';
 
-            const data = {
-                pdf:'0',
-                cdr: '0',
-                xml: '0',                
-                idcliente: idclienteComprobante,
-                total: totalComprobante,
-                totales_json: totalesJson,
-                nomcliente: nomCliente,
-                numero: numero_comp, 
-                jsonxml: json_xml, 
-                external_id: '',  
-                estado_api: 0,
-                estado_sunat: 1,
-                anulado: 1,
-                msj: res.message,
-                viene_facturador: _viene_facturador,
-                idtipo_comprobante_serie: idtipo_comprobante_serie,                
-            }
+        //     rpt.ok = true;
+        //     rpt.qr = res.data.qr || '';
+        //     rpt.hash = res.data.hash || 'www.papaya.com.pe';
+        //     rpt.external_id = res.data ? res.data.external_id : '' || '';
 
-            // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
-            CpeInterno_ErrorValidacionSunat(_idregistro_p, data);
+        //     const msj_error = res.response.message;
 
-        }
+        //     const data = {
+        //         pdf: res.links.pdf != '' ? 1 : 0,
+        //         cdr: res.links.cdr != '' ? 1 : 0,
+        //         xml: res.links.xml != '' ? 1 : 0,
+        //         idcliente: idclienteComprobante,
+        //         total: totalComprobante,
+        //         totales_json: totalesJson,
+        //         nomcliente: nomCliente,
+        //         numero: numero_comp, 
+        //         jsonxml: json_xml, 
+        //         external_id: rpt.external_id,
+        //         // external_id: '',
+        //         // estado_api: 0,
+        //         // estado_sunat: 1,
+        //         // anulado: 1,    
+        //         estado_api: 0, // se registro correctamente              
+        //         estado_sunat: 1,// aun no se envia ( si es boleta va en resumen)
+        //         // msj: res.message,
+        //         msj: msj_error,
+        //         viene_facturador: _viene_facturador,
+        //         idtipo_comprobante_serie: idtipo_comprobante_serie,                
+        //     }
+
+        //     // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
+        //     // tambien puede que el servicio de sunat tenga problemas // o la api(si es local - aunque dificil)
+        //     CpeInterno_ErrorValidacionSunat(_idregistro_p, data);            
+
+        // }
     }).catch(function (error) { // error de conexion o algo pero imprime
         
         const data = {

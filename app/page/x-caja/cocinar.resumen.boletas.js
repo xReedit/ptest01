@@ -29,7 +29,7 @@ async function xCocinarResumenBoletas() {
     let error = false;
     for (const i in arrDocNoRegistrado) {
         
-        $("#dgl_sunat_msj3").text("Verificando comprobantes..." + xCeroIzq(i) );
+        $("#dgl_sunat_msj3").text("Verificando comprobantes B..." + xCeroIzq(i) );
         const jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml.replace('"{', '{').replace('}"', '}'))
         // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
         const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idce);
@@ -44,6 +44,28 @@ async function xCocinarResumenBoletas() {
     };
     
     if ( error ) return;
+
+
+    // consulta los comprobantes que fueron registrados pero no enviados a la sunat x problemas de conexion con el servicio. o offline
+    const arrDocNoRegistradoSunat = await xSoapSunat_getArrNoRegistradoSunat();
+    error = false;
+    for (const i in arrDocNoRegistradoSunat) {
+
+        $("#dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
+        const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
+        // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
+        const rpt = await xSoapSunat_SendSunat(jsonxml, arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);
+        if (!rpt.ok) {
+            // continuar con el siguiente
+            this.hayError = true;
+            $("#xTituloRpt").append('<p style="color: red">' + rpt.msj_error + "</p>");
+            //error = true; 
+            //dialog_enviando_sunat.close();
+            //return; 
+        }
+    };
+
+    if (error) return;
 
     
     // cocinar resumen

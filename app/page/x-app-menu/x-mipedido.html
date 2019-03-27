@@ -104,9 +104,9 @@
     </paper-dialog>
 
     <paper-dialog id="dialog_item_sin_stock" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-      <div class="xCentrado">        
-        <h3>CAMBIAR</h3>
-        <h4>No hay stock requerido para:</h4>
+      <div class="xCentrado xColorRow_Rojo">        
+        <h3>CAMBIAR PEDIDO</h3>
+        <h4>Solo queda:</h4>
       </div>
       <hr>
       <div>
@@ -115,8 +115,8 @@
         </table>
       </div>
       <br>
-      <hr>
-      <button class="xBoton2 xPlomo xCentrado" dialog-dismiss>Listo</button>
+      <hr>      
+      <button class="xBoton2 xPlomo" dialog-dismiss>Listo</button>      
       <br>
     </paper-dialog>
 
@@ -301,42 +301,46 @@ transition: none !important;
       }
     }
 
+    // lo haremos con socketes
     // antes de enviar verificar si aun existe stock item x item
-    const _arrNoStockItem = await xVerificarStockItemPedidoBefore();
-    if ( _arrNoStockItem.length > 0 ) {
-      //body_item_sin_stock
-      var msj_sin_stock = '';
-      _arrNoStockItem.map(x => {
-        // mostrar msj
-        msj_sin_stock += '<tr><td>'+ xCeroIzq( x.stock_actual,1 ) +'</td><td>'+ x.des +'</td></tr>'        
+    // const _arrNoStockItem = await xVerificarStockItemPedidoBefore();
+    // if ( _arrNoStockItem.length > 0 ) {
+    //   //body_item_sin_stock
+    //   var msj_sin_stock = '';
+    //   _arrNoStockItem.map(x => {
+    //     // mostrar msj
+    //     msj_sin_stock += '<tr><td>'+ xCeroIzq( x.stock_actual,1 ) +'</td><td>'+ x.des +'</td></tr>'        
 
-        // update cantidad en vista
-        // elimina de la lista
-        if ( x.stock_actual === 0 ) {delete xArrayPedidoObj[x.tipo_consumo][x.id];}
+    //     // update cantidad en vista
+    //     // elimina de la lista
+    //     if ( x.stock_actual === 0 ) {
+    //       delete xArrayPedidoObj[x.tipo_consumo][x.id];
+    //     } else {
+    //       xArrayPedidoObj[x.tipo_consumo][x.id].cantidad = x.stock_actual;        
+    //       xArrayPedidoObj[x.tipo_consumo][x.id].update_stock = true;
+    //       x.stock_modificado = true;        
+    //     }
         
-        xArrayPedidoObj[x.tipo_consumo][x.id].cantidad = x.stock_actual;        
-        xArrayPedidoObj[x.tipo_consumo][x.id].update_stock = true;
-        x.stock_modificado = true;        
         
-      });
+    //   });
+
+    //   // update en bd -> reserva el stock que hay
+    //   const _itemReservar = _arrNoStockItem.filter(x => x.stock_modificado).map(x => {
+    //                           return {id: x.id, procede: x.procede, stock: x.stock_actual}
+    //                         });
+
+    //   xUpdateItemNoStock('re-resta', _itemReservar); ///y si ya no quiere esos platos? mejor con sockets
+
+    //   // vista
+    //   window.localStorage.setItem("::app3_sys_dta_pe", JSON.stringify(xArrayPedidoObj));
+    //   xLoadMipedido();
       
-      // update en bd -> reserva
-      const _itemReservar = _arrNoStockItem.filter(x => x.stock_modificado).map(x => {
-                              return {id: x.id, procede: x.procede, stock: x.stock_actual}
-                            });
+    //   ///
 
-      //xUpdateItemNoStock('re-resta', _itemReservar);
-
-      // vista
-      xLoadMipedido();
-      
-      ///
-
-      xArrayPedidoObj[x.tipo_consumo][x.id].cantidad = 
-      $("#body_item_sin_stock").html(msj_sin_stock).trigger('create');
-      dialog_item_sin_stock.open();      
-      return;
-    }
+    //   $("#body_item_sin_stock").html(msj_sin_stock).trigger('create');
+    //   dialog_item_sin_stock.open();      
+    //   return;
+    // }
 
     btn_dlg_confirm.hidden = false;
     dialog_msj_confirma_pedido.open();
@@ -520,7 +524,10 @@ transition: none !important;
       //   xsolo_llevar = 1;
       // } // para llevar
       if ( textColapse.indexOf('PARA LLEVAR')>-1 ){xsolo_llevar = 1;}
-      if ( textColapse.indexOf('DELIVERY')>-1 ){xsolo_llevar = 1;}
+      if ( textColapse.indexOf('DELIVERY')>-1 ){
+        xsolo_llevar = 1;
+        xdelivery = 1;
+      }
       // if (xIdTpc_pe === "3") {
       //   xsolo_llevar = 1;
       // } // delivery

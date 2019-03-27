@@ -112,8 +112,17 @@ function xVerificarAcc(){
 		xper_bd=xper_bd.split(',')
 		for (var i = 0; i < xper_bd.length; i++) {
 			xCharFind=xper_bd[i];
+		
+
+			// verificar solo tiene un permiso entonces lleva a ese permiso son mostrar panel principal - caso contador			
+			if (xper_bd.length === 2 ) { 
+				const _codOne = xArray_us_home.filter(x => x.codigo === xCharFind).map( x => x.num_opcion)[0];
+				xOpenPage(_codOne); 				
+				return; 
+			}
+
 			for (var z = 0; z < xArray_us_home.length; z++) {
-				if(xArray_us_home[z].codigo==xCharFind){
+				if(xArray_us_home[z].codigo==xCharFind){					
 					xidGrupoBd=xArray_us_home[z].idgrupo
 					if(xOpView[xidGrupoBd]==undefined){
 						switch(xidGrupoBd){
