@@ -255,13 +255,13 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {
 
 // esto se utiliza al cierre de caja
 // envia al servicio de la api los documentos documentos que no se enviaron por error de conexion u otro
-async function xSoapSunat_SendSunat(json_xml, external_id, idce) {
+async function xSoapSunat_SendSunat(external_id, idce) {
     const _url = URL_COMPROBANTE + '/send';
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
     let rpt = {};
-    const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
+    // const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
     const _json = {
         "external_id": external_id
     }
@@ -286,7 +286,7 @@ async function xSoapSunat_SendSunat(json_xml, external_id, idce) {
             data.estado_api = 0; // se registro correctamente
             data.estado_sunat = 0; // aun no se envia ( si es boleta va en resumen)
             data.msj = "Aceptada";
-            data.numero = numero_comp;
+            // data.numero = numero_comp;
             data.external_id = external_id;
 
             if (res.response.length != 0) {

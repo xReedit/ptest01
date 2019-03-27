@@ -52,9 +52,9 @@ async function xCocinarResumenBoletas() {
     for (const i in arrDocNoRegistradoSunat) {
 
         $("#dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
-        const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
+        // const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
         // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
-        const rpt = await xSoapSunat_SendSunat(jsonxml, arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);
+        const rpt = await xSoapSunat_SendSunat(arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);
         if (!rpt.ok) {
             // continuar con el siguiente
             this.hayError = true;
