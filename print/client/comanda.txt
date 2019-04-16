@@ -131,8 +131,8 @@ while($num_copias>=0){
 	//reservar
 	if($reservar==true){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-		$printer -> selectPrintMode(Printer::MODE_UNDERLINE);
+		//$printer -> selectPrintMode(Printer::MODE_UNDERLINE);		
+		$printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_EMPHASIZED | Printer::MODE_DOUBLE_WIDTH);
 		$printer -> text("RESERVAR\n");
 		$printer -> selectPrintMode();
 	}

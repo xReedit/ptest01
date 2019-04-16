@@ -1,3 +1,4 @@
+<link rel="import" href="../../web_components/paper-progress/paper-progress.html">
 <dom-module id="x-mipedido">
   <template>
     <!--
@@ -34,10 +35,18 @@
       <h2>Datos adicionales</h2>
       <span>Para la entrega del delivery</span>
       <hr>
+        <form id="frm_cliente">
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="DNI"
+            autofocus onkeyup="xValidarDNIRUC(this.value, event)"
+            onChange="conMayusculas(this)" id="txt_delivery_dni" espaciar required>
+          <div class="xInvisible" id="progress_cliente" style="width: calc(100% - 30px);margin: 0;padding: 0;margin-top: -16px;margin-left: 5px;">
+            <paper-progress indeterminate style="width: 100%;"></paper-progress>
+          </div>
           <input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRE" onChange="conMayusculas(this)" id="txt_delivery_nombre" espaciar required>
           <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="txt_delivery_direccion" espaciar required>
           <input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="txt_delivery_telefono" espaciar required>
           <input type="text" class="xMiInput xPasarEnter2" placeholder="PAGA CON" onChange="conMayusculas(this)" id="txt_delivery_paga" espaciar required>
+        </form>
       <br>
       <br>
       <div class="buttons">
@@ -255,6 +264,7 @@ transition: none !important;
 <script type="text/javascript" src="../../view/item_pedido_estructura.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_subtotales.js"></script>
+<script type="text/javascript" src="../../view/cliente.service.js"></script>
 <script>
   //var xDtPedido;
   var xThis;
@@ -276,7 +286,8 @@ transition: none !important;
     xnum_mesa_valido = false, //valida mesa //numero de mesa valido
     xNumMesasBd, //numero de mesas de la sede
     arrDatosAdjuntoDelivery={}, // datos adjunto para delivery
-    guardandoPedido = false;
+    guardandoPedido = false,
+    xIdCliente_pedido = '', xClientePedidoFnac='';
   //var xidTipoConsumo;
   //var xidItem;
   async function xAbrirPopupConfirmar() {
@@ -499,6 +510,13 @@ transition: none !important;
     nummesa.value = '';
     referencia_pedido.value = '';
 
+    frm_cliente.reset();
+    // arrDatosDelivery = {};
+    check_reserva.checked = false;
+    xReservar = 0;
+    xsolo_llevar = 0;
+    xdelivery = 0;
+
     $(".xIco_MiPedido .xCantPedio_ico").text('');
     $(".xIco_MiPedido .xCantPedio_ico").addClass('xInvisible');
 
@@ -523,11 +541,8 @@ transition: none !important;
       // if ($(element).attr("data-col") == "colapse2") {
       //   xsolo_llevar = 1;
       // } // para llevar
-      if ( textColapse.indexOf('PARA LLEVAR')>-1 ){xsolo_llevar = 1;}
-      if ( textColapse.indexOf('DELIVERY')>-1 ){
-        xsolo_llevar = 1;
-        xdelivery = 1;
-      }
+      if ( textColapse.indexOf('PARA LLEVAR')>-1 ){xsolo_llevar = 1; }
+      if ( textColapse.indexOf('DELIVERY')>-1 ){ xdelivery = 1; }
       // if (xIdTpc_pe === "3") {
       //   xsolo_llevar = 1;
       // } // delivery
@@ -597,16 +612,17 @@ transition: none !important;
     // var xArrayGuardarPedido=new Array();
     // xArrayGuardarPedido={'idcategoria':xidCategoriaSeccion ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
 
+    var xid_cliente_pago = arrDatosAdjuntoDelivery != {} ? await ClienteService_Guardar(JSON.parse(arrDatosAdjuntoDelivery)) : xIdCliente_pedido;
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=304', data:{h:xDevolverHora(),mesa:xmesa,ref:xref,t:xtotal,r:xReservar,sl:xsolo_llevar,idtpc:xIdTpc_pe,idcat:xidCategoriaSeccion,sql_p:xsql_p,sql_p_subt:xsql_p_subt, sql_descontar:xsub_sql_descontar}})
     // xarr_header = {'idclie':'', 'ImporteTotal': parseFloat(tt_pedido).toFixed(2) ,'referencia':xref, 'idcategoria': xidCategoriaSeccion, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe}
     xarr_header = {
-      idclie: "",
+      idclie: xid_cliente_pago,
       referencia: xref,
       idcategoria: xidCategoriaSeccion,
       mesa: xmesa,
       reservar: xReservar,
       tipo_consumo: xIdTpc_pe,
-      arrDatosDelivery: JSON.stringify(arrDatosAdjuntoDelivery)
+      arrDatosDelivery: arrDatosAdjuntoDelivery
     };
     xarr_body = xArrayPedidoObj;
     // xarr_subtotales = xGeneralArraySubTotales;
@@ -1176,14 +1192,38 @@ transition: none !important;
 
   function xAdjuntarDatosDelivery() {
     arrDatosAdjuntoDelivery = {
+      idcliente: xIdCliente_pedido,
+      num_doc: txt_delivery_dni.value,
       nombre: txt_delivery_nombre.value,
       direccion: txt_delivery_direccion.value,
       telefono: txt_delivery_telefono.value,
       paga_con: txt_delivery_paga.value,
+      f_nac: xClientePedidoFnac
     }
+
+    arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
 
     dialog_datos_delivery.close();
   }
+
+  function xValidarDNIRUC(valor, e) {    
+    if ( e.keyCode === 13 ) { // buscar cliente
+      xIdCliente_pedido = '';
+      $("#progress_cliente").removeClass("xInvisible");
+      xGetFindCliente(valor, 'dni', (rpt)=>{
+        if (rpt.success) {
+          xIdCliente_pedido=rpt.idcliente;
+          xClientePedidoFnac=rpt.f_nac;
+          $("#txt_delivery_nombre").val(rpt.nombres);
+          $("#txt_delivery_direccion").val(rpt.direccion);
+          $("#txt_delivery_telefono").val(rpt.telefono);
+        }
+        $("#progress_cliente").addClass("xInvisible");
+      });
+    }
+  }
+
+
   //$(obj).parent().parent().addClass('selected').siblings().removeClass("selected");
   Polymer({
     is: "x-mipedido",

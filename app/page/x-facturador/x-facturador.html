@@ -493,6 +493,7 @@
         xSetImpresora[0].var_margen_iz = impresoraSelect.var_margen_iz;
         xSetImpresora[0].var_size_font = impresoraSelect.var_size_font
         xSetImpresora[0].local = impresoraSelect.local;
+        xSetImpresora[0].num_copias = impresoraSelect.num_copias;
 
         xImprimirComprobanteAhoraPrintPreSelect(rptDoc, itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, xSetImpresora, function (rpt_print) {
             if (rpt_print == false) { return false; }

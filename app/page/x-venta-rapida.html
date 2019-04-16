@@ -1,7 +1,33 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+<link rel="import" href="../web_components/paper-progress/paper-progress.html">
 <dom-module id="x-venta-rapida">		
 	<template>
 		<br>
+
+		<paper-dialog id="dialog_datos_delivery" style="max-width: 520px" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+      <h2>Datos adicionales</h2>
+      <span>Para la entrega del delivery</span>
+      <hr>
+        <form id="frm_cliente">
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="DNI"
+            autofocus onkeyup="xValidarDNIRUC(this.value, event)"
+            onChange="conMayusculas(this)" id="txt_delivery_dni" espaciar required>
+          <div class="xInvisible" id="progress_cliente" style="width: calc(100% - 30px);margin: 0;padding: 0;margin-top: -16px;margin-left: 5px;">
+            <paper-progress indeterminate style="width: 100%;"></paper-progress>
+          </div>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRE" onChange="conMayusculas(this)" id="txt_delivery_nombre" espaciar required>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="txt_delivery_direccion" espaciar required>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="txt_delivery_telefono" espaciar required>
+          <input type="text" class="xMiInput xPasarEnter2" placeholder="PAGA CON" onChange="conMayusculas(this)" id="txt_delivery_paga" espaciar required>
+        </form>
+      <br>
+      <br>
+      <div class="buttons">
+        <button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+        <button class="xBoton2 xVerde" onclick="xAdjuntarDatosDelivery()">Listo, adjuntar</button>
+      </div>
+    </paper-dialog>
+
 		<paper-dialog id="dialog_pagar_vr" class="dialog_redondo" modal  entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<!-- <x-pago id="component_pago" _tipo></x-pago>
 			<div class="xLinea"></div>
@@ -104,7 +130,15 @@
 				  			<h4>PEDIDO</h4>
 				  		</div><br>
 				  		<div class="xCentradoDiv">
-				  			<select class="xMiInput" id="select_ulTPC"></select>
+								<select class="xMiInput" id="select_ulTPC"></select>
+								<div id="div_btn_data_delivery" class="EnLinea xInvisible" style="text-align: center;">
+									<paper-button onclick="dialog_datos_delivery.open()">
+										<iron-icon title="Datos Adicionales" class="btn_apunte_deliver EnLinea"
+											icon="icons:attach-file">Datos
+										</iron-icon>
+										Datos Adjuntos
+									</paper-button>
+								</div>
 				  		</div>
 				  		<br>
 				  		<!--Pedido-->
@@ -222,7 +256,11 @@ var xThisVentaRapida
 ,xarr_tipo_pago = []
 ,xRpt_pago=[]
 ,guardando = false
-,xid_cliente_pago = 0, xarr_subtotales=[];
+,xdelivery = 0
+,xReservar = 0
+,xsolo_llevar = 0
+,xid_cliente_pago = 0,
+ xarr_subtotales=[], arrDatosAdjuntoDelivery={}, xIdCliente_pedido = '', xClientePedidoFnac='';
 
 
 
@@ -243,6 +281,15 @@ function xIniVentaRapida(){
 		xLoadArrayPedido();
 		
 		xTraerDtTipoConsumo();		
+
+		$(document).on('change', '#select_ulTPC', function(e) {
+			$('#div_btn_data_delivery').addClass('xInvisible');
+			xdelivery = 0; 
+			if ($('#select_ulTPC :selected').text().toLowerCase() === "delivery") {
+				$('#div_btn_data_delivery').removeClass('xInvisible');
+				xdelivery = 1;
+			}
+		})
 	})
 
 	compFindCategoria=document.getElementById('compFindCategoria');
@@ -548,7 +595,7 @@ function xIrARegistrarPago(){
 }
 function xEnviarACuenta(){
 	if(xenviar_cuenta==true){
-		if(xnum_mesa_valido==false){alert('Numero de mesa no es valido.'); return;}
+		if(xnum_mesa_valido==false && xdelivery === 0){alert('Numero de mesa no es valido.'); return;}
 		xEstadoPedido=0;
 
 		if ( guardando === true ) {return;}
@@ -575,7 +622,7 @@ function xNuevoPedidoVR(){
 
 	$("#xtb_pedido_subtotales tr").remove();
 	$("#tb_pedido_detalle").remove();
-	$(".xcheck_print").attr('checked',false)
+	$(".xcheck_print").attr('checked',false);
 	xregistrar_pago=false;
 	xenviar_cuenta=false;
 	xid_cliente_pago=0;
@@ -589,6 +636,12 @@ function xNuevoPedidoVR(){
 	guardando = false;
 
 	xRpt_pago=[];
+
+	arrDatosAdjuntoDelivery = {};
+	frm_cliente.reset();	
+	// xReservar = 0;
+	// xsolo_llevar = 0;
+	// xdelivery = 0;
 
 	xLocal_SubTotal_Quitados='';
 	//tt_pedido=0;
@@ -680,18 +733,24 @@ async function xGuardarPedidoVR(responde){
 	xsolo_llevar=0;
 	xdelivery=0;
 	var xcount_seccion=0;
+	
 	$("#xBody .xEncabezadoTpConX").each(function(index,element){
+		$("#btn_enviar_cuenta").addClass('xInvisible');
 		xcount_seccion++;
 		if(index==0){xIdTpc_pe=$(element).attr('data-idtpc');}
 		if($(element).text().toLowerCase().indexOf('llevar')>-1){xsolo_llevar=1;}//determina si es solo para "llevar"
-		if ($(element).text().toLowerCase().indexOf('delivery') > -1) { xdelivery = 1; }//determina si es "delivery"
+		if ($(element).text().toLowerCase().indexOf('delivery') > -1) { 
+			xdelivery = 1; 
+			xenviar_cuenta=true;
+			$("#btn_enviar_cuenta").removeClass('xInvisible');
+		}//determina si es "delivery"
 	})
 	if(xcount_seccion>1){xsolo_llevar=0;}
 
 	// xPopupLoad.titulo="Enviando...";
 	// xPopupLoad.xopen();
 	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
-	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : [];
+	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados = '';
@@ -703,7 +762,7 @@ async function xGuardarPedidoVR(responde){
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj)
 
 	// si no hay referencia obtiene el nombre del cliente
-	xref = xref === '' ? DatosCliente.nombres || '' : xref;
+	xref = xref === '' ? DatosCliente.nombres ? DatosCliente.nombres : DatosCliente.nombre || '' : xref;
 
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
 	xarr_header = {'idclie':xid_cliente_pago ,'referencia':xref, 'idcategoria': xidCategoriaVR, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe, 'subtotales_tachados': xLocal_SubTotal_Quitados}
@@ -1066,8 +1125,8 @@ function xSumarTotal(){
 		$("#btn_registrar_pago").addClass('xInvisible'); xregistrar_pago=false;
 		$("#btn_enviar_cuenta").addClass('xInvisible'); xenviar_cuenta=false;
 	}else{
-		$("#btn_registrar_pago").removeClass('xInvisible'); xregistrar_pago=true
-		if($("#txt_mesa").val()!=''){$("#btn_enviar_cuenta").removeClass('xInvisible'); xenviar_cuenta=true}
+		$("#btn_registrar_pago").removeClass('xInvisible'); xregistrar_pago=true;
+		if($("#txt_mesa").val()!='' || xdelivery === 1){$("#btn_enviar_cuenta").removeClass('xInvisible'); xenviar_cuenta=true}
 	}
 	// $("#xtb_pedido_subtotales").html(rptSum[0].CadenaRow).trigger('create');
 }
@@ -1098,6 +1157,40 @@ function xTraerDtTipoConsumo(){
 		$("#select_ulTPC").html(xCadenaSelectUlTPC).trigger('create');
 	//});
 }
+
+
+function xAdjuntarDatosDelivery() {
+    arrDatosAdjuntoDelivery = {
+      idcliente: xIdCliente_pedido,
+      num_doc: txt_delivery_dni.value,
+      nombre: txt_delivery_nombre.value,
+      direccion: txt_delivery_direccion.value,
+      telefono: txt_delivery_telefono.value,
+      paga_con: txt_delivery_paga.value,
+      f_nac: xClientePedidoFnac
+    }
+
+    arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
+
+    dialog_datos_delivery.close();
+  }
+
+  function xValidarDNIRUC(valor, e) {    
+    if ( e.keyCode === 13 ) { // buscar cliente
+      xIdCliente_pedido = '';
+      $("#progress_cliente").removeClass("xInvisible");
+      xGetFindCliente(valor, 'dni', (rpt)=>{
+        if (rpt.success) {
+          xIdCliente_pedido=rpt.idcliente;
+          xClientePedidoFnac=rpt.f_nac;
+          $("#txt_delivery_nombre").val(rpt.nombres);
+          $("#txt_delivery_direccion").val(rpt.direccion);
+          $("#txt_delivery_telefono").val(rpt.telefono);
+        }
+        $("#progress_cliente").addClass("xInvisible");
+      });
+    }
+  }
 
 Polymer({
 	is:'x-venta-rapida',

@@ -546,7 +546,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 			dt = JSON.parse(dt);			
 			if (dt.datos.length > 0) { // si tiene los datos en el local
 				dt = dt.datos[0];
-				rpt = {success: true, idcliente:dt.idcliente, nombres: dt.nombres, direccion: dt.direccion, num_doc: dt.ruc, msg: 'ok'};
+				rpt = {success: true, idcliente:dt.idcliente, nombres: dt.nombres, direccion: dt.direccion, num_doc: dt.ruc, telefono: dt.telefono, msg: 'ok'};
 				// responde(rpt); 
 				callback(rpt);
 				// return rpt;
@@ -555,10 +555,10 @@ async function xGetFindCliente(valor, servicio, callback) {
 				xValidarToken(token, (t)=> {
 					if (t==="error"){ // algo paso con el servicio
 						if (!esFacturacionElectronica) { // si no esta habilitado para facturacion electronica 
-							rpt = {success: true, idcliente:'', nombres:'', direccion:'',num_doc:'', msg: 'ok'};
+							rpt = {success: true, idcliente:'', nombres:'', direccion:'',num_doc:'', telefono: '', msg: 'ok'};
 							// responde(rpt); return;							
 						} else {
-							rpt = {success: false, idcliente:'', nombres:'', direccion:'',num_doc:'', msg: 'Problemas de conexion. intente nuevamente en un momento.'};
+							rpt = {success: false, idcliente:'', nombres:'', direccion:'',num_doc:'', telefono: '', msg: 'Problemas de conexion. intente nuevamente en un momento.'};
 							// responde(rpt); return;
 						}
 						
@@ -573,11 +573,11 @@ async function xGetFindCliente(valor, servicio, callback) {
 					.done( function (dt) {
 						// responde (JSON.parse(dt));
 						dt = JSON.parse(dt);
-						var nombres='', direccion='';
+						var nombres='', direccion='', telefono='';
 						var num_doc = valor;
 						var fnacimiento = '';
 
-						if (dt.success && dt.haydatos) {				
+						if (dt.success && dt.haydatos) {			
 							if (servicio === 'ruc') {
 								nombres = dt.result.RazonSocial;
 								direccion = dt.result.Direccion;
@@ -588,25 +588,25 @@ async function xGetFindCliente(valor, servicio, callback) {
 								const apellidos = ap_paterno === '' ? dt.result.apellidos || '' : ap_paterno + ' ' + ap_materno;
 								nombres = dt.result.Nombres + " " + apellidos;
 								nombres = nombres===' '? '' : nombres;
-								direccion = '';
+								direccion = '';								
 								fnacimiento = dt.result.FechaNacimiento || '';
 							}
 						} else {
 							if (!esFacturacionElectronica) { // si no esta habilitado para facturacion electronica 
-								rpt = {success: true, idcliente:'', nombres:'', direccion:'',num_doc:num_doc, msg: 'ok'};
+								rpt = {success: true, idcliente:'', nombres:'', direccion:'',num_doc:num_doc, telefono: telefono, msg: 'ok'};
 								// responde(rpt); return;
 								// return rpt;
 								callback(rpt);
 							}
 						}
 
-						rpt = { success: dt.haydatos, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, msg: dt.msg };
+						rpt = { success: dt.haydatos, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, telefono: telefono, msg: dt.msg };
 
 						// responde(rpt);
 						callback(rpt);
 					})
 					.fail((jqXHR, textStatus)=>{
-						rpt = { success: false, idcliente: "", nombres: "", direccion: "", f_nac: "", num_doc: num_doc, msg: "Problemas de conexion. intente nuevamente en un momento." };
+						rpt = { success: false, idcliente: "", nombres: "", direccion: "", f_nac: "", num_doc: num_doc, telefono: "", msg: "Problemas de conexion. intente nuevamente en un momento." };
 						// responde(rpt); return;
 						// return rpt;
 						callback(rpt);
