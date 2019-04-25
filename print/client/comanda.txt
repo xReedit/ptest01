@@ -336,10 +336,14 @@ while($num_copias>=0){
 	//
 
 	/* PIE DE PAGINA */	
-	$printer -> feed(2);
-	$printer -> setJustification(Printer::JUSTIFY_CENTER);
-	$printer -> text($xArray_print[0]['pie_pagina']."\n");
-	$printer -> feed(2);
+	$pie_pagina = $xArray_print[0]['pie_pagina'];
+	if ( $pie_pagina != '' ){
+		$printer -> feed();
+		$printer -> setJustification(Printer::JUSTIFY_CENTER);
+		$printer -> text($xArray_print[0]['pie_pagina']."\n");
+	}
+	$printer -> feed();
+
 	$printer -> text("Atendido por:".$nom_us."\n");
 	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
 

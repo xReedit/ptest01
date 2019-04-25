@@ -63,7 +63,7 @@ function xLoadDataCierre(){
 									xArmarDataItems(5,70010,function(){
 										xArrayCierrePrint.push({'des':'PORCIONES', 't1':'', 't2':'ven','t3':'queda'});
 										xArmarDataItems(5,707,function(){
-											xArrayCierrePrint.push({'des':'PRODUCTOS VENDIDOS', 't1':'', 't2':'ven','t3':'qda'});
+											xArrayCierrePrint.push({'des':'PRODUCTOS VENDIDOS', 't1':'ven', 't2':'qda','t3':'importe'});
 											xArmarDataItems(5,705,function(){
 												xArrayCierrePrint.push({'des':'VENDIDO X BODEGA', 't1':'', 't2':'vend','t3':'queda'});
 												xArmarDataItems(5,706,function(){
@@ -102,11 +102,14 @@ function xArmarDataItems(xx,numBD,reponde){
 		var xDtImpr=$.parseJSON(dtT), sum_t1=0,sum_t2=0,sum_t3=0;
 		xDtImpr=xDtImpr.datos;
 
+		const t3_is_importe = xArrayCierrePrint[indexAr].t3==="importe" ? true : false;
+
 		for (var i = 0; i < xDtImpr.length; i++) {
+			// const t3_val = t3_is_importe ? xMoneda(xDtImpr[i].t3) : xCeroIzq(xDtImpr[i].t3,2);
 			sum_t1+=isNaN(parseFloat(xDtImpr[i].t1)) ? 0 : parseFloat(xDtImpr[i].t1.replace(',', ''));
 			sum_t2+=isNaN(parseFloat(xDtImpr[i].t2)) ? 0 : parseFloat(xDtImpr[i].t2.replace(',', ''));
 			sum_t3+=isNaN(parseFloat(xDtImpr[i].t3)) ? 0 : parseFloat(xDtImpr[i].t3.replace(',', ''));
-			xArrayCierrePrint[indexAr][i]={'des':xDtImpr[i].descripcion, 't1':xDtImpr[i].t1, 't2':xDtImpr[i].t2, 't3':xDtImpr[i].t3, }
+			xArrayCierrePrint[indexAr][i]={'des':xDtImpr[i].descripcion, 't1':xDtImpr[i].t1, 't2':xDtImpr[i].t2, 't3':xDtImpr[i].t3 }
 		}
 		sum_t1=sum_t1===0 ? '' : (xArrayCierrePrint[indexAr].t1==="importe" ? xMoneda(sum_t1) : xCeroIzq(sum_t1,2));
 		sum_t2=sum_t2===0 ? '' : (xArrayCierrePrint[indexAr].t2==="importe" ? xMoneda(sum_t2) : xCeroIzq(sum_t2,2));

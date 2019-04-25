@@ -330,7 +330,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].papel_size = xPrintLocal.papel_size;
 		if (xPrintLocal.img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
 
-		if (parseInt(xPrintLocal.num_copias != 0)){ //
+		if (parseInt(xPrintLocal.num_copias) != 0 || parseInt(xPrintLocal.copia_local) != 0 ){ //
 			xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales,(res)=>{
 				callback(res);
 				// if(rpt_print==false){callback(rpt_print); return;}

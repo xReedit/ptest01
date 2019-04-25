@@ -36,9 +36,18 @@
       <span>Para la entrega del delivery</span>
       <hr>
         <form id="frm_cliente">
-          <input type="text" class="xMiInput xPasarEnter2" placeholder="DNI"
+          <div style="display: flex;">
+
+            <input type="text" class="xMiInput xPasarEnter2" placeholder="DNI" autofocus
+              onkeyup="xValidarDNIRUC(this.value, event, true)" onChange="conMayusculas(this)" id="txt_delivery_dni"
+              espaciar required>
+            <paper-icon-button icon="icons:search" title="Buscar DNI"
+              onclick="xValidarDNIRUC(txt_delivery_dni.value, event, false)"
+              style="position: absolute; right: 38px; margin-top: -5px;"></paper-icon-button>
+          </div>
+          <!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="DNI"
             autofocus onkeyup="xValidarDNIRUC(this.value, event)"
-            onChange="conMayusculas(this)" id="txt_delivery_dni" espaciar required>
+            onChange="conMayusculas(this)" id="txt_delivery_dni" espaciar required> -->
           <div class="xInvisible" id="progress_cliente" style="width: calc(100% - 30px);margin: 0;padding: 0;margin-top: -16px;margin-left: 5px;">
             <paper-progress indeterminate style="width: 100%;"></paper-progress>
           </div>
@@ -611,8 +620,9 @@ transition: none !important;
     xPopupLoad.xopen();
     // var xArrayGuardarPedido=new Array();
     // xArrayGuardarPedido={'idcategoria':xidCategoriaSeccion ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
-
-    var xid_cliente_pago = arrDatosAdjuntoDelivery != {} ? await ClienteService_Guardar(JSON.parse(arrDatosAdjuntoDelivery)) : xIdCliente_pedido;
+    const data_cliente_delivery = arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
+    var xid_cliente_pago = arrDatosAdjuntoDelivery != {} ? await ClienteService_Guardar(data_cliente_delivery) : xIdCliente_pedido;
+    
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=304', data:{h:xDevolverHora(),mesa:xmesa,ref:xref,t:xtotal,r:xReservar,sl:xsolo_llevar,idtpc:xIdTpc_pe,idcat:xidCategoriaSeccion,sql_p:xsql_p,sql_p_subt:xsql_p_subt, sql_descontar:xsub_sql_descontar}})
     // xarr_header = {'idclie':'', 'ImporteTotal': parseFloat(tt_pedido).toFixed(2) ,'referencia':xref, 'idcategoria': xidCategoriaSeccion, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe}
     xarr_header = {
@@ -1206,8 +1216,9 @@ transition: none !important;
     dialog_datos_delivery.close();
   }
 
-  function xValidarDNIRUC(valor, e) {    
-    if ( e.keyCode === 13 ) { // buscar cliente
+  function xValidarDNIRUC(valor, e, tecla) {
+    if ( valor.length < 8 ) return;
+    if ( e.keyCode === 13 || !tecla) { // buscar cliente
       xIdCliente_pedido = '';
       $("#progress_cliente").removeClass("xInvisible");
       xGetFindCliente(valor, 'dni', (rpt)=>{
