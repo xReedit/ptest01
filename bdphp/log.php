@@ -264,8 +264,28 @@
 			break;
 		case -1://log
 			//if(($_SESSION['uid']==''))
-			//{
-					if($bd->loguear_us($_POST['u'],$_POST['p'],$result) == 1)
+			//{			
+				// echo file_get_contents( 'php://input' );
+
+				if (!empty($_u = $_POST['u'])) {
+					$_u = $_POST['u'];
+					$_p = $_POST['p'];
+				} else {					
+					$payload = $_POST['sys_data'];
+					// $data  =  json_decode ($payload); 
+					// echo var_dump($data);
+					echo "ini ". $payload;
+					// $data = $data->_sys_id;
+					
+					// echo $payload;
+
+					$_sys_id = base64_decode($payload);
+					echo "decodificado ".$_sys_id;
+					$_sys_id = explode(':', $_sys_id);
+					$_u = $_sys_id[1];
+					$_p = $_sys_id[2];
+				}
+					if($bd->loguear_us($_u,$_p,$result) == 1)
 					{
 						$obj = json_decode($result);
 						$_SESSION['ido']=$obj[0]->idorg;
@@ -279,7 +299,9 @@
 						$_SESSION['rol']=$obj[0]->rol;
 						$_SESSION['ciudad']=$obj[0]->ciudad;
 						$_SESSION['nuevo']=$obj[0]->nuevo;
+						$_SESSION['_sys_PHPSESSID']=base64_encode('XZCfnb-o@:'.$_u.':'.$_p); // restaurar
 						$_SESSION['dataUs']="";
+
 						//session_start();
 						print 1;
 					}else{
@@ -606,6 +628,8 @@
 				WHERE (pf.idorg=".$_SESSION['ido']." AND pf.idsede=".$_SESSION['ido'].") AND a.bodega=1 AND pf.estado=0
 				GROUP by pf.idproducto_familia
 				ORDER BY pf.descripcion)b
+
+				LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
 			";*/
 
 			$idcategoria = isset($_POST['idcategoria']) ? $_POST['idcategoria'] : 1;
@@ -623,12 +647,11 @@
 				ORDER BY s.sec_orden) a
 				UNION ALL
 				SELECT * FROM(
-				SELECT '' as all_items, pf.idproducto_familia, concat('2',pf.idproducto_familia,'.0') AS idseccion_index, pf.descripcion AS des_seccion, cp.idimpresora,0 AS procede
+				SELECT '' as all_items, pf.idproducto_familia, concat('2',pf.idproducto_familia,'.0') AS idseccion_index, pf.descripcion AS des_seccion, pf.idimpresora,0 AS procede
 				FROM producto_familia AS pf
 					INNER JOIN producto AS p using(idproducto_familia)
 					INNER JOIN producto_stock AS ps using(idproducto)
-					INNER JOIN almacen AS a using(idalmacen)
-					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+					INNER JOIN almacen AS a using(idalmacen)					
 				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 				GROUP by pf.idproducto_familia
 				ORDER BY pf.descripcion)b
@@ -656,13 +679,12 @@
 				";
 			}else{
 				$sql="
-					SELECT '' as all_items, ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia,pf.idproducto_familia as idseccion, concat('2',pf.idproducto_familia) AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, cp.idimpresora
+					SELECT '' as all_items, ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia,pf.idproducto_familia as idseccion, concat('2',pf.idproducto_familia) AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, pf.idimpresora
 						,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, ps.stock AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, ps.stock AS cant_preparado, 0 AS imprimir,p.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,p.codigo_barra,1 AS cant_descontar,ps.idproducto_stock AS idalmacen_items
 					FROM producto AS p
 						INNER JOIN producto_stock AS ps using(idproducto)
 						INNER JOIN almacen AS a using(idalmacen)
-						INNER JOIN producto_familia AS pf using(idproducto_familia)
-						LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+						INNER JOIN producto_familia AS pf using(idproducto_familia)						
 					WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND pf.idproducto_familia='".$_POST['s']."' AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 					GROUP by p.idproducto
 					ORDER BY pf.descripcion, p.descripcion
@@ -725,6 +747,8 @@
 			// 		ORDER BY pf.descripcion, p.descripcion
 			// 		) b
 			// ";
+
+			//LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
 			$sql = "
 			SELECT * FROM(
 				SELECT lcase(ii_detalle.descripcion) AS all_items,cl.idcarta_lista,s.idseccion,concat('1',s.sec_orden,'.',s.idseccion) AS idseccion_index, i.iditem,s.descripcion AS des_seccion,s.idimpresora, i.descripcion AS des_item, cl.precio, IF(cl.cantidad='SP',(IFNULL((SELECT FLOOR(p1.stock/i1.cantidad) FROM item_ingrediente AS i1 INNER JOIN porcion AS p1 ON i1.idporcion=p1.idporcion WHERE i1.iditem=cl.iditem GROUP BY i1.iditem ORDER BY i1.iditem_ingrediente),0)),cl.cantidad) AS cantidad,s.sec_orden,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir,IF(cl.cantidad='SP',it_p.idporcion,cl.idcarta_lista) AS idprocede, IF(cl.cantidad='SP',2,1) AS procede, '0' AS procede_index,'1' AS imprimir_comanda,'' as codigo_barra, IF(cl.cantidad='SP',it_p.cant_porcion,1) AS cant_descontar, '0' AS idalmacen_items
@@ -742,13 +766,12 @@
 			) a
 			UNION ALL
 				SELECT * FROM(
-				SELECT '' as all_items, ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia AS idseccion, concat('2',pf.idproducto_familia,'.0') AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, cp.idimpresora
+				SELECT '' as all_items, ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia AS idseccion, concat('2',pf.idproducto_familia,'.0') AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, pf.idimpresora
 					,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, ps.stock AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, ps.stock AS cant_preparado,'' as f_ingreso, 0 AS imprimir,p.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,p.codigo_barra,1 AS cant_descontar,ps.idproducto_stock AS idalmacen_items
 				FROM producto AS p
 					INNER JOIN producto_stock AS ps using(idproducto)
 					INNER JOIN almacen AS a using(idalmacen)
-					INNER JOIN producto_familia AS pf using(idproducto_familia)
-					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+					INNER JOIN producto_familia AS pf using(idproducto_familia)					
 				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 				GROUP by p.idproducto
 				ORDER BY pf.descripcion, p.descripcion
@@ -901,6 +924,7 @@
 			$bd->xConsulta($sql);
 			break;
 		case 2053: // cargar items de carta lista para busqueda submenu mi pedido
+		// LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
 			$parametro = $_POST['parametro'];
 			$sql="
 			SELECT * FROM(
@@ -918,13 +942,12 @@
 			) a
 			UNION ALL
 				SELECT * FROM(
-				SELECT ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia AS idseccion, concat('2',pf.idproducto_familia) AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, cp.idimpresora
+				SELECT ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia AS idseccion, concat('2',pf.idproducto_familia) AS idseccion_index, p.idproducto AS iditem, pf.descripcion AS des_seccion, pf.idimpresora
 					,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, ps.stock AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, ps.stock AS cant_preparado,'' as f_ingreso, 0 AS imprimir,p.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,p.codigo_barra,1 AS cant_descontar,ps.idproducto_stock AS idalmacen_items
 				FROM producto AS p
 					INNER JOIN producto_stock AS ps using(idproducto)
 					INNER JOIN almacen AS a using(idalmacen)
-					INNER JOIN producto_familia AS pf using(idproducto_familia)
-					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+					INNER JOIN producto_familia AS pf using(idproducto_familia)					
 				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['idsede'].") and CONCAT(pf.descripcion,p.descripcion) like '%".$parametro."%' AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 				GROUP by p.idproducto
 				ORDER BY pf.idproducto_familia, p.descripcion limit 6
@@ -972,13 +995,12 @@
 			}
 			else{
 				$sql="
-				SELECT ai.idalmacen_items AS idcarta_lista, pf.idproducto_familia AS idseccion,concat('2',pf.idproducto_familia,'.0') AS idseccion_index, ai.idproducto AS iditem, pf.descripcion AS des_seccion, cp.idimpresora
+				SELECT ai.idalmacen_items AS idcarta_lista, pf.idproducto_familia AS idseccion,concat('2',pf.idproducto_familia,'.0') AS idseccion_index, ai.idproducto AS iditem, pf.descripcion AS des_seccion, pf.idimpresora
 					,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, sum(ai.stock) AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, sum(ai.stock) AS cant_preparado, ai.f_ingreso, 0 AS imprimir,ai.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,1 AS cant_descontar
 				FROM almacen_items AS ai
 					INNER JOIN almacen AS a using(idalmacen)
 					INNER JOIN producto AS p using(idproducto)
-					INNER JOIN producto_familia AS pf using(idproducto_familia)
-					LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ai.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+					INNER JOIN producto_familia AS pf using(idproducto_familia)					
 				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") AND pf.idproducto_familia='".$_POST['s']."' AND ai.estado=0 AND p.estado=0
 				GROUP by ai.idproducto
 				ORDER BY pf.descripcion, p.descripcion
@@ -1091,15 +1113,16 @@
 				WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") and cl.idcarta_lista='".$_POST['i']."' AND ai.estado=0 AND p.estado=0
 				GROUP by ai.idproducto
 				ORDER BY pf.descripcion, p.descripcion
-				";*/
+				";
+				LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+				*/
 
 				$sql="
-					SELECT ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia as idseccion,concat('2',pf.idproducto_familia) AS idseccion_index,p.idproducto AS iditem, pf.descripcion AS des_seccion, cp.idimpresora,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, ps.stock AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, ps.stock AS cant_preparado, 0 AS imprimir,p.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,1 AS cant_descontar,ps.idproducto_stock AS idalmacen_items
+					SELECT ps.idproducto_stock AS idcarta_lista,pf.idproducto_familia as idseccion,concat('2',pf.idproducto_familia) AS idseccion_index,p.idproducto AS iditem, pf.descripcion AS des_seccion, pf.idimpresora,p.descripcion AS des_item, format(p.precio_venta,2) AS precio, ps.stock AS cantidad, 0 AS sec_orden,'' AS detalle,'' AS img, ps.stock AS cant_preparado, 0 AS imprimir,p.idproducto AS idprocede, 0 AS procede, pf.idproducto_familia AS procede_index,a.imprimir_comanda,1 AS cant_descontar,ps.idproducto_stock AS idalmacen_items
 					FROM producto AS p
 						INNER JOIN producto_stock AS ps using(idproducto)
 						INNER JOIN almacen AS a using(idalmacen)
-						INNER JOIN producto_familia AS pf using(idproducto_familia)
-						LEFT JOIN (SELECT idorg, idsede, idtipo_otro, idimpresora FROM conf_print_otros WHERE esalmacen=1) AS cp ON idtipo_otro=ps.idalmacen AND (cp.idorg=a.idorg AND cp.idsede=a.idsede)
+						INNER JOIN producto_familia AS pf using(idproducto_familia)						
 					WHERE (a.idorg=".$_SESSION['ido']." AND a.idsede=".$_SESSION['ido'].") AND ps.idproducto_stock='".$_POST['i']."' AND a.bodega=1 AND ps.estado=0 AND p.estado=0
 					GROUP by p.idproducto
 					ORDER BY pf.descripcion, p.descripcion
@@ -1509,7 +1532,7 @@
 			$bd->xConsulta($sql);
 			break;
 		case 40101://guardar seccion impresora bodega
-			$sql="update producto_familia set idimpresora=".$_POST['idp']." where idproducto_familia=".$_POST['ids'];
+			$sql="update producto_familia set idimpresora=".$_POST['idp']." where idproducto_familia='".$_POST['ids']."'";
 			$bd->xConsulta($sql);
 			break;
 		case 40102://guardar papel_size de impresora
@@ -2950,6 +2973,7 @@ function encode_dataUS(){
 				'ciudad'=>$_SESSION['ciudad'],
 				'rol'=>$_SESSION['rol'],
 				'nuevo'=>$_SESSION['nuevo'],
+				'_sys_sessid'=>$_SESSION['_sys_PHPSESSID'],
 			],
 		'dispositivos'=>[
 				'dispositivo'=>xDtUS(3011),

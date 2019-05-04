@@ -39,6 +39,8 @@
 		</div-->
 	</template>
 </dom-module>
+<!-- <script type="text/javascript" src="../view/verifyConnection.js"></script> -->
+
 <script>
 var xThis;
 var xArray_us_home;
@@ -74,8 +76,7 @@ function xIniHome(){
 	$(document).on('click','.xMiBoton_icon',function(e){
 		var xop=$(this).attr('data-op');
 		xOpenPage(xop);
-
-		event.stopPropagation();
+		
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 		return false;

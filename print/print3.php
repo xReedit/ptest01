@@ -26,6 +26,7 @@ $printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
 // $printImg64=$xArray_print[0]['img64']; // si imprime el logo en 64btis
 ///// ***
 
+
 // verifica si imprime una copia en la impresora local
 if (array_key_exists('copia_local', $xArray_print[0])){
 	if ($xArray_print[0]['local'] === "1" && $xArray_print[0]['copia_local'] === "0" ) {
@@ -51,23 +52,11 @@ try {
 	return;
 }
 
-$imLogo = "";
-// logo 64
-if ( $printImg64 === "1" ) {
-	$uri=$xArray_print[0]['logo64'];
-	$imageBlob = base64_decode(explode(",", $uri)[1]);
-	$imagick = new Imagick();
-	$imagick->setResourceLimit(6, 1);
-	$imagick->readImageBlob($imageBlob, "input.png");
-	$imLogo = new ImagickEscposImage();
-	$imLogo->readImageFromImagick($imagick);
-}
-else {
-	$imLogo="./logo/".$xArray_print[0]['logo'];
-}
-///
 
-// $logo_post="./logo/".$xArray_print[0]['logo'];
+// $imLogo = "logo.png";
+
+$imLogo="./logo/".$xArray_print[0]['logo'];
+
 $num_mesa=$ArrayEnca['m'];
 $num_pedido=$ArrayEnca['num_pedido'];
 $correlativo_dia=$ArrayEnca['correlativo_dia'];
@@ -75,13 +64,15 @@ $referencia=$ArrayEnca['r'];
 $reservar=$ArrayEnca['reservar'];
 $solo_llevar=$ArrayEnca['solo_llevar'];
 $EsDelivery=$ArrayEnca['delivery'];
+$nom_us=$ArrayEnca['nom_us'];
 $pre_cuenta=!empty($ArrayEnca['precuenta']) ? $ArrayEnca['precuenta'] : '';
 $logo_solo_llevar="_ico_solo_llevar2.png";
 $logo_delivery = "_ico_delivery.png";
 
 $nom_us=explode(' ',$_SESSION['nomUs']);
+
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
-$hora_actual=date('H').':'.date('i').':'.date('s');
+//$hora_actual=date('H').':'.date('i').':'.date('s');
 $sum_total=0;
 $num_copias=(int)$xArray_print[0]['num_copias'];
 $cuenta_copias=0;
@@ -122,7 +113,6 @@ switch ($papel_size) {
 		break;	
 }
 
-
 $connector->write(Printer::GS.'L'.$var_margen_iz);			
 $printer -> setFont($var_size_font);
 //---------------////////////////
@@ -149,8 +139,8 @@ while($num_copias>=0){
 	//reservar
 	if($reservar==true){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-		$printer -> selectPrintMode(Printer::MODE_UNDERLINE);
+		//$printer -> selectPrintMode(Printer::MODE_UNDERLINE);		
+		$printer -> selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_EMPHASIZED | Printer::MODE_DOUBLE_WIDTH);
 		$printer -> text("RESERVAR\n");
 		$printer -> selectPrintMode();
 	}
@@ -183,19 +173,13 @@ while($num_copias>=0){
 	$printer -> setEmphasis(true);
 	$printer -> text('CO-'.$correlativo_dia."\n");
 	$printer -> setEmphasis(false);
+	
 	/* Print top logo */
 	if($imLogo!=''){
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		if ( $printImg64 === "1" ) {
-			$size = Printer::IMG_DEFAULT;
-			$printer->bitImage($imLogo, $size);
-		} else {			
-			$logoPic = EscposImage::load($imLogo, false);
-			$printer -> bitImage($logoPic);
-		}
-		
-		$printer -> feed();
-	}	
+		$logo = EscposImage::load($imLogo, false);
+		$printer -> bitImage($logo);
+	}
 
 	/* ENCABEZADO */
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
@@ -360,16 +344,20 @@ while($num_copias>=0){
 	//
 
 	/* PIE DE PAGINA */	
-	$printer -> feed(2);
-	$printer -> setJustification(Printer::JUSTIFY_CENTER);
-	$printer -> text($xArray_print[0]['pie_pagina']."\n");
-	$printer -> feed(2);
+	$pie_pagina = $xArray_print[0]['pie_pagina'];
+	if ( $pie_pagina != '' ){
+		$printer -> feed();
+		$printer -> setJustification(Printer::JUSTIFY_CENTER);
+		$printer -> text($xArray_print[0]['pie_pagina']."\n");
+	}
+	$printer -> feed();
+
 	$printer -> text("Atendido por:".$nom_us[0]."\n");
 	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
 
 	$printer -> text("www.papaya.com.pe\n");
 	$printer -> feed(2);
-
+	
 	$printer -> cut();
 	$printer -> pulse();
 
@@ -395,8 +383,7 @@ class item
     public function __toString()
     {
         $rightCols = 10;
-		// $leftCols = 38;
-		$leftCols = $GLOBALS['leftCols'];
+        $leftCols = $GLOBALS['leftCols'];
         if ($this -> dollarSign) {
             $leftCols = $leftCols / 2 - $rightCols / 2;
         }

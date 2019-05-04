@@ -10,11 +10,12 @@ $bd=new xManejoBD("restobar");
 switch($_GET['op'])
 	{
 		case 1://verifica si existe o se añado algun pedido para actualiza, monitor de pedidos
-			$sql="SELECT (sum(total) + sum(despachado)) as d1 FROM pedido where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") and cierre=0";
+			$sql="SELECT (sum(total) + sum(despachado)) as d1 FROM pedido where cierre=0 and (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].")";
 			$numero_pedidos_actual=$bd->xDevolverUnDato($sql);
-			echo "retry: 6000\n"."data:".$numero_pedidos_actual."\n\n";
+			echo "retry: 8000\n"."data:".$numero_pedidos_actual."\n\n";
 			ob_flush();
 			flush();
+			// ob_end_clean();
 			break;
 		case 2: //	verifica si existe pedido nuevo || zona de despacho
 			$tipo_consumo=$_GET["tp"];
@@ -34,7 +35,10 @@ switch($_GET['op'])
 			echo "retry: 4000\n"."data:".$numero_pedidos_actual_2.",".$hora."\n\n";
 			ob_flush();
 			flush();
-			break;			
+			break;
+		case 3: // comprobar conexion
+			echo true; 
+			break;
 	}
 
 /*$time = date('r');

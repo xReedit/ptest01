@@ -2,7 +2,7 @@ var xIdOrg;
 var xIdSede;
 var xNomU;
 var xPopupLoad;
-
+var xRouterTime_cp = false;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
 document.addEventListener("DOMContentLoaded", function componentsReady() {
@@ -38,7 +38,17 @@ function xIniControlPedido(){
 	$("#en_nom_sede").text(xDatos_p[0].des_sede);
 	$("#en_nom_us").text(window.localStorage.getItem('::app3_woNus').toLowerCase());*/
 }
+// var axxx = 0;
 function xOpenPage(xop, parametro){
+	if (xRouterTime_cp) return;
+	xRouterTime_cp = true;
+	setTimeout(() => {
+		xRouterTime_cp = false;
+	}, 1000);
+
+	// axxx++;
+	// console.log('control pedidos router run ', axxx);
+
 	if(parametro==null){parametro='';}
 	var xruta='';
 	switch(xop){

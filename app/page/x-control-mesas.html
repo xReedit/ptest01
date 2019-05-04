@@ -302,6 +302,7 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 // import { xCargarDatosAEstructuraImpresion } from '../view/item_pedido_estructura.js';
 
 var xThisCM,
+	xsourceEvent,
 	xRefreshPedidos,
 	xRefreshHora,
 	xIdFiltro1='',
@@ -353,7 +354,7 @@ var xThisCM,
 	ImporteDiferencia = 0, // la diferencia por pagar, para saber si es una seleccion total o parcial 
 	xImporteTotalSeleccionados = 0;  // obtiene el total de los pedidos seleccionados
 
-var xsourceEvent, EstadoLoadMesas=false;
+var EstadoLoadMesas=false;
 function xIniControlMesa(){
 	$( "#accordion" ).accordion({
 		heightStyle: "content",

@@ -1,5 +1,6 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
 var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
+var xparam_time_ruter = false;
 // $(document).on('ready',function(){
 $(document).ready(function() {
   $("#PanelDe").on("transitionend", function(a) {
@@ -89,8 +90,63 @@ function xIniDocument(){
 		//if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}
 	//})
 //}
-function xOpenPage(xop, parametro){
-	xop=parseInt(xop);
+var aapasa = 0;
+
+window.onhashchange = function () {
+	xLiberarRouter();
+}
+
+function xLiberarRouter() {
+	// libera router
+	setLocalSotrage('::app3_sys_route', 0);
+	xparam_time_ruter = false;
+	console.log('time router ', 0);
+}
+
+function xOpenPage(xop, parametro){	
+	var _route_count = getLocalStorage('::app3_sys_route') || 0;
+	
+	if (parseInt(_route_count) === 1) {	
+		if (xparam_time_ruter) return
+		xparam_time_ruter = true;
+		setTimeout(() => {
+			xLiberarRouter();
+		}, 1000);		
+		return;
+	}
+
+	setLocalSotrage('::app3_sys_route', 1);
+
+	// var _route_count = getLocalStorage('::app3_sys_route') || 0;
+	// setLocalSotrage('::app3_sys_route', 1);
+	// if (parseInt(_route_count) === 1) {
+	// 	if (xparam_time_ruter) return;
+	// 	xparam_time_ruter = true;
+	// 	setLocalSotrage('::app3_sys_route', _route_count);
+	// 	setTimeout(() => {			
+	// 		setLocalSotrage('::app3_sys_route', 0);
+	// 		xparam_time_ruter = false;
+	// 	}, 4000);
+	// 	setLocalSotrage('::app3_sys_route', 0);
+	// 	return;
+	// }
+	// if (parseInt(_route_count) > 1) return;
+
+	// _route_count = 1;
+	
+	aapasa++;
+	// xparam_router = parseInt(getLocalStorage('::app3_sys_route')) || 0;
+	// if (xparam_router === xop) return;
+	// xparam_router = xop;
+	// setLocalSotrage('::app3_sys_route', xparam_router);
+	// const _route_count = getLocalStorage('::app3_sys_route') || xop;	
+	// if (parseInt(_route_count) === parseInt(xop)) {
+	//  	// removeLocalStorage('::app3_sys_route');
+	// 	return;
+	// }
+	// setLocalSotrage('::app3_sys_route', _route_count);
+	console.log('paso el router ', aapasa);
+	xop = parseInt(xop);
 	if(parametro==null){parametro='';}
 	var xruta='';
 	switch(xop){
@@ -98,7 +154,9 @@ function xOpenPage(xop, parametro){
 		case 2:	xruta='/elaborar_carta';break;
 		case 3:	
 			window.localStorage.removeItem("::app3_sys_first_load");
-			document.location.href='m_menu.html';return;break;
+			document.location.href='m_menu.html';
+			
+			return;break;
 		//case 4:	xruta='/menu'; break;
 		//case 4:	xruta='/reglas';break;
 		//case 5:	xruta='/datos_print';break;
@@ -106,12 +164,16 @@ function xOpenPage(xop, parametro){
 		case 7:	xruta='/configuraciones';break;
 		case 8:	xruta='/caja';break;
 		//case 9:	xruta='/control_pedidos';break;
-		case 9:	document.location.href='m_control_pedidos.html';return;break;
+		case 9:	document.location.href='m_control_pedidos.html';
+			xLiberarRouter();
+			return;break;
 		case 10:xruta='/detalle_pedido';break;
 		case 11:
 			window.localStorage.removeItem("::app3_sys_first_load");
 			h = window.screen.availHeight-100;
-			var myWindow = window.open('m_menu.html', "Carta", "width=400,height="+h);	return;break;
+			window.open('m_menu.html', "Carta", "width=400,height="+h);	
+			xLiberarRouter();
+			return;break;
 		case 12:xruta='/compras';break;
 		case 13:xruta='/distribuicion';break;
 		case 14:xruta='/porcionar';break;
@@ -122,7 +184,7 @@ function xOpenPage(xop, parametro){
 			if(window.innerWidth<=850){
 				xruta='/venta_rapida';
 			}else{
-				var myWindow = window.open('#/venta_rapida', "Venta rapida");return;
+				window.open('#/venta_rapida', "Venta rapida");return;
 			}
 			console.log(window.innerWidth);
 			break;

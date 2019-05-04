@@ -785,7 +785,7 @@ function xIniConf(){
 		return false;
 	});
 
-	$(document).on('change',".xsel_sec_print_bodega",function(e){
+	$(document).on('change',".xsel_sec_print_bodega",function(e){		
 		var xid_secc_row=$(this).attr('data-id');
 		var xid_secc_print=this.value;
 		xGuardarCambiosSeccionPrint(xid_secc_row,xid_secc_print,1);

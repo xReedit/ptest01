@@ -25,7 +25,7 @@
     
     <!-- script src="../../js/perfect-scrollbar.min.js"></script -->
     
-    <script rel="preload" src="../web_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script rel="preload" src="../web_components/webcomponentsjs/webcomponents.min.js"></script>
     <link rel="import" href="../web_components/polymer/polymer.html">
     <link rel="import" href="../web_components/paper-button/paper-button.html">
     <link rel="import" href="../web_components/paper-input/paper-input.html">
@@ -56,6 +56,7 @@
     <link rel="import" href="../web_components/paper-toggle-button/paper-toggle-button.html">
     <!-- <link rel="import" href="../web_components/paper-badge/paper-badge.html"> -->
     <!-- <link rel="import" href="../web_components/paper-progress/paper-progress.html"> -->
+    <link rel="import" href="../web_components/paper-progress/paper-progress.html">
     <link rel="import" href="../web_components/paper-toast/paper-toast.html">
     <link rel="import" href="../web_components/iron-collapse/iron-collapse.html" />
     <!--router-->
@@ -286,14 +287,23 @@
       </paper-toolbar>
       <div fit layout vertical class="content">
         <x-router></x-router>
+        <paper-toast id="toast" duration=0 text="." style="z-index: 1000;">
+          <paper-progress id="loading" indeterminate style="width: 100%; float: left;"></paper-progress>
+        </paper-toast>
       </div>
     </paper-header-panel>
 
     <script src="../../js/jquery_external.js" async></script>
+    
     <script type="text/javascript" src="../view/xm_all.js" async></script>
+    
+    <script type="text/javascript" src="../view/onGalleta.js"></script>
+    <script type="text/javascript" src="../view/manager_storage.js"></script>
+    <script type="text/javascript" src="../view/verifyConnection.js" async></script>
+
     <script type="text/javascript" src="../view/m_menu.js" async></script>
     <script type="text/javascript" src="../view/item_pedidos.js" async></script>
     <script type="text/javascript" src="../../js/mifuncion_web.js" async></script>
-    <script type="text/javascript" src="../view/onGalleta.js" async></script>
+    <!-- <script type="text/javascript" src="../view/onGalleta.js" async></script> -->
   </body>
 </html>

@@ -11,6 +11,7 @@ var xidCatProcedencia = 0; //0  procede de la carta !=0 procede bodega
 var xPopupLoad;
 var xOnlyAccPedido;
 var xCount_cant_ico = 0;
+var xRouterTime_Carta = false;
 
 window.addEventListener("error", function (e) {
   if (!e) {return}
@@ -104,6 +105,13 @@ function xIniMenAAA() {
 	if(xOnlyAccPedido==null){xOnlyAccPedido=1;}else{xOnlyAccPedido=0;}*/
 }
 function xOpenPageCarta(xop, parametro) {
+
+  if (xRouterTime_Carta) return;
+  xRouterTime_Carta = true;
+  setTimeout(() => {
+    xRouterTime_Carta = false;
+  }, 1000);
+
   if (parametro == null) {
     parametro = "";
   }
