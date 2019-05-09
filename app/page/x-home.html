@@ -118,7 +118,7 @@ function xVerificarAcc(){
 			// verificar solo tiene un permiso entonces lleva a ese permiso son mostrar panel principal - caso contador			
 			if (xper_bd.length === 2 ) { 
 				const _codOne = xArray_us_home.filter(x => x.codigo === xCharFind).map( x => x.num_opcion)[0];
-				xOpenPage(_codOne); 				
+				xOneOptionPage(_codOne);
 				return; 
 			}
 

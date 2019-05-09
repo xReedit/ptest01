@@ -11,7 +11,7 @@ var xidCatProcedencia = 0; //0  procede de la carta !=0 procede bodega
 var xPopupLoad;
 var xOnlyAccPedido;
 var xCount_cant_ico = 0;
-var xRouterTime_Carta = false;
+// var xRouterTime_Carta = false;
 
 window.addEventListener("error", function (e) {
   if (!e) {return}
@@ -78,9 +78,9 @@ document.addEventListener("WebComponentsReady", function componentsReady() {
 function xIniMenAAA() {
   //session activa
   xVerificarSession();
-  setInterval(function() {
-    xVerificarSession();
-  }, 1080000);
+  // setInterval(function() {
+  //   xVerificarSession();
+  // }, 1080000);
 
   xPopupLoad = document.getElementById("xLoad");
   xm_LogChequea(function() {
@@ -105,12 +105,12 @@ function xIniMenAAA() {
 	if(xOnlyAccPedido==null){xOnlyAccPedido=1;}else{xOnlyAccPedido=0;}*/
 }
 function xOpenPageCarta(xop, parametro) {
-
-  if (xRouterTime_Carta) return;
-  xRouterTime_Carta = true;
-  setTimeout(() => {
-    xRouterTime_Carta = false;
-  }, 1000);
+// debugger
+  // if (xRouterTime_Carta) return;
+  // xRouterTime_Carta = true;
+  // setTimeout(() => {
+  //   xRouterTime_Carta = false;
+  // }, 1000);
 
   if (parametro == null) {
     parametro = "";
@@ -158,7 +158,7 @@ function xOpenPageCarta(xop, parametro) {
 }
 
 
-function xLoadArrayPedidoAquiMenuJS() {
+function xLoadArrayPedidoAquiMenuJS() {  
   xArrayPedido = JSON.parse(window.localStorage.getItem("::app3_sys_dta_pe"));
   if (xArrayPedido === null) {
     xArrayPedido = [];
@@ -193,7 +193,10 @@ function xLoadArrayPedidoAquiMenuJS() {
     $("body").removeClass("loaded");
     setTimeout(() => {
       // si no es la primera carga
-      if (window.location.href.indexOf('sub_menu') > -1) {xLoadItems();} else {  goBack(); }
+      if (window.location.href.indexOf('sub_menu') > -1) {xLoadItems();} else {  
+        if (window.location.href.indexOf('menu') > -1) return;
+        goBack(); 
+      }
         // if (window.innerWidth < 520) { // si esta un celular
         //   xOpenPageCarta(0);
         // } else {

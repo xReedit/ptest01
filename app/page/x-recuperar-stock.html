@@ -56,6 +56,7 @@ var xThisRecuperarStock, xPopupLoad, arrRestaurar=[], hayDatosRestaurar=true;
     function xIniRecuperarStock() {
         xPopupLoad=document.getElementById('xLoad');
         xLoadPedidosBorradosData();
+        $('body').addClass('loaded');
 
 
         $(document).on('click', '#tb_pedidos_borrados tr', function(e) {

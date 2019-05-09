@@ -149,6 +149,7 @@ var data_pagination={}, p_rows=0, p_fecha='';
 		//if(xIdSede=='' || xIdSede==undefined){xIdSede=window.localStorage.getItem('::app3_woS');}
 		//if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
 		$("#Titulo_page").text("Registro de pagos");
+		$('body').addClass('loaded');
 
 		xDtPrint=xm_log_get('sede_generales');
 		//xLoadDtPrint();

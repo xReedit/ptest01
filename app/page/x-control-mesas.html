@@ -1530,18 +1530,35 @@ function xDesJuntarItem(){
 	var xcant,tr,punitario,idpd_r;
 	$("#tb_det_pedidos .row").each(function(i,e){
 		xcant=parseInt($(e).find('#td_cant').text());
-		punitario=parseFloat($(e).find('#td_importe').text())/xcant;
+		// punitario=parseFloat($(e).find('#td_importe').text())/xcant;
+		punitario = parseFloat($(e).attr('data-punitario'));
+		p_total=parseFloat($(e).find('#td_importe').text()); // precio total
 		idpd_r=$(e).attr('data-idpedidodetalle');
-		while(xcant>1){
-			$(e).attr('data-cantidadr',1);
-			$(e).attr('data-totalr',punitario);
-			$(e).attr('data-idpedidodetaller',idpd_r);
-			$(e).find('#td_cant').text('01').trigger('create');
-			$(e).find('#td_importe').text(xMoneda(punitario));
-			xhtml_strung=$(this).clone(true)
-			$(xhtml_strung).find("#checkboxLabel").empty();//duplica checkbox, remove
-			$(this).after(xhtml_strung);
+
+		var _tr_clone=$(e);
+		var _count_cant = 0;
+		while(xcant>0){
+			if ( _count_cant > 0 ){
+				_tr_clone=$(e).clone(true);
+				$(_tr_clone).find("#checkboxLabel").empty();//duplica checkbox, remove
+			}
+			p_total = p_total - punitario;
+			
+			
+			$(_tr_clone).attr('data-totalr',punitario);
+			$(_tr_clone).attr('data-total',punitario);
+			$(_tr_clone).attr('data-cantidadr',1);
+			$(_tr_clone).attr('data-idpedidodetaller',idpd_r);
+			$(_tr_clone).find('#td_cant').text('01').trigger('create');
+			$(_tr_clone).find('#td_importe').text(xMoneda(punitario));
+			// xhtml_strung=$(this).clone(true);
+			// $(xhtml_strung).find("#checkboxLabel").empty();//duplica checkbox, remove
+			if ( _count_cant > 0 ){				
+				$(this).after(_tr_clone);
+			}
 			//$("#tb_det_pedidos").append(e.innerHTML).trigger('create');
+			punitario = p_total <= 0 ? 0 : punitario;
+			_count_cant++;
 			xcant--;
 		}
 	});

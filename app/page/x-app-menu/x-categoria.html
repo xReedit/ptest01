@@ -19,6 +19,7 @@
   var xMenuCategoria = [];
 
   function xIniCategoria() {
+    window.localStorage.removeItem("::app3_sys_first_load");
     $("#xtitulo_bar").text("");
     //xVerificarSession();
     // $('body').addClass('loaded');
@@ -80,7 +81,10 @@
 
       window.localStorage.setItem("::app3_sys_dt_mlc",JSON.stringify(xMenuCategoria));
 
-      $("body").addClass("loaded");
+      setTimeout(() => {        
+        $("body").addClass("loaded");
+      }, 500);
+
       $(".xMenu_body div").remove();
       $(".xMenu_body .spinner").remove();
       $(".xMenu_body")

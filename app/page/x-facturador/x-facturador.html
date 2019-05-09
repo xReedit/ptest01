@@ -154,6 +154,7 @@
         IdTpConsumo = arrEstructura[0].idtipo_consumo;
 
         fact_getAllImpresoras();
+        $('body').addClass('loaded');
 
         $('.xPasarEnter2').on('keyup', function (e) {
             var code = e.which;

@@ -65,7 +65,7 @@
 
       setTimeout(() => {        
         $("body").addClass("loaded");
-      }, 500);
+      }, 700);
     // });
   }
   function xPasarDetalle(obj) {
@@ -184,7 +184,7 @@
       $(".xMenu_body .spinner").remove();
       $(".xMenu_body").append(xCadenaCarta).trigger("create");
 
-      $("body").addClass("loaded");
+      // $("body").addClass("loaded");
       $(window).scrollTop(window.localStorage.getItem("::app3_sys_scroll_pos") || 0);
   }
 

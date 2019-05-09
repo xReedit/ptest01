@@ -203,7 +203,7 @@
 </style>
 <script>
 var xThisZonaDespacho;
-var xdata_zona=[], xIdZonaSeccion='',xIdTp='', des_despacho='',xValCountPedidosDespacho=0, xUltimoIdPedidoEnZona, xColorMarcado='xNaranja',xObjPedido,xRefresh_tiempo, xelem_tt_p_cola,xhora_actual_serv;
+var xdata_zona=[], xIdZonaSeccion='',xIdTp='', des_despacho='',xValCountPedidosDespacho=0, xUltimoIdPedidoEnZona=0, xColorMarcado='xNaranja',xObjPedido,xRefresh_tiempo, xelem_tt_p_cola,xhora_actual_serv;
 var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido;
 
 function pruebaAddPedido(){
@@ -225,6 +225,7 @@ function xIniZonaDespacho(){
 		$("#Titulo_page").text("Zona de despacho");
 		$("#panel_toolbar").hide();
 		xLoadZonaDespacho();
+		$('body').addClass('loaded');
 
 		xelem_tt_p_cola=$("#tt_pedidos_cola");
 		element_sonido=document.getElementById('sonido_notifica_despacho');

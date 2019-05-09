@@ -1,6 +1,8 @@
 <link rel="import" href="../../web_components/paper-progress/paper-progress.html">
+<link rel="import" href="../../x-componentes/x-comp-datos-delivery/x-comp-datos-delivery.html">
 <dom-module id="x-mipedido">
   <template>
+    <x-comp-datos-delivery id="component_datos_delivery"></x-comp-datos-delivery>
     <!--
       paper-dialog id="xdialog_loaded">
         		<h2>{{titulo_load}}</h2>
@@ -31,7 +33,8 @@
       </div>
     </paper-dialog>
 
-    <paper-dialog id="dialog_datos_delivery" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+    
+    <!-- <paper-dialog id="dialog_datos_delivery" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
       <h2>Datos adicionales</h2>
       <span>Para la entrega del delivery</span>
       <hr>
@@ -45,9 +48,7 @@
               onclick="xValidarDNIRUC(txt_delivery_dni.value, event, false)"
               style="position: absolute; right: 38px; margin-top: -5px;"></paper-icon-button>
           </div>
-          <!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="DNI"
-            autofocus onkeyup="xValidarDNIRUC(this.value, event)"
-            onChange="conMayusculas(this)" id="txt_delivery_dni" espaciar required> -->
+          
           <div class="xInvisible" id="progress_cliente" style="width: calc(100% - 30px);margin: 0;padding: 0;margin-top: -16px;margin-left: 5px;">
             <paper-progress indeterminate style="width: 100%;"></paper-progress>
           </div>
@@ -62,7 +63,7 @@
         <button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
         <button class="xBoton2 xVerde" onclick="xAdjuntarDatosDelivery()">Listo, adjuntar</button>
       </div>
-    </paper-dialog>
+    </paper-dialog> -->
 
 
     <paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -294,9 +295,9 @@ transition: none !important;
     xNumMesaLoadCuenta,
     xnum_mesa_valido = false, //valida mesa //numero de mesa valido
     xNumMesasBd, //numero de mesas de la sede
-    arrDatosAdjuntoDelivery={}, // datos adjunto para delivery
+    arrDatosAdjuntoDelivery=[], // datos adjunto para delivery
     guardandoPedido = false,
-    xIdCliente_pedido = '', xClientePedidoFnac='';
+    xIdCliente_pedido = '', xClientePedidoFnac='', isRunNuevoPedido=false;
   //var xidTipoConsumo;
   //var xidItem;
   async function xAbrirPopupConfirmar() {
@@ -361,6 +362,8 @@ transition: none !important;
     //   dialog_item_sin_stock.open();      
     //   return;
     // }
+
+    
 
     btn_dlg_confirm.hidden = false;
     dialog_msj_confirma_pedido.open();
@@ -456,13 +459,18 @@ transition: none !important;
       }
     });
 
+    xCompDatosDelivery=document.getElementById('component_datos_delivery');
+    xCompDatosDelivery.addEventListener('xGetDatosDelivery', function (e) {
+      arrDatosAdjuntoDelivery = e.detail.datos;
+    });
+
     xPopupLoad = document.getElementById("xLoad");
   }
 
   // 131118
   // dialog de confirmacion nuevo pedido si es que existe pedido pendiente
   function checkNuevoPedido() {
-    if (parseInt(xLocal_xDtSubTotales[0].importe) === 0) {
+    if (parseInt(xLocal_xDtSubTotales[0].importe) === 0) {      
       xNuevoPedidoMP();
       return;
     }
@@ -475,24 +483,35 @@ transition: none !important;
     xArrayEnca.reservar = xReservar;
     //xPopupLoad.titulo="Enviando...";
 
-    // xMandarImprimir(xArrayEnca,xDtPrint,xArrayPedidoObj)
-    xCocinarImprimirComanda(xArrayEnca, xArrayPedidoObj, xLocal_xDtSubTotales,
-      res => {
-        if (!res) {
+    // xMandarImprimir(xArrayEnca,xDtPrint,xArrayPedidoObj)    
+    xCocinarImprimirComanda(xArrayEnca, xArrayPedidoObj, xLocal_xDtSubTotales, function(res) {
+      if (!res) {
           //si no hay error
-          xPopupLoad.xclose();
+          xPopupLoad.xclose();          
           xNuevoPedidoMP();
         } else {
           xPopupLoad.xclose();
           dialog_erro_print.open();
         }
-      }
-    );
+    });
+    //   res => {
+    //     if (!res) {
+    //       //si no hay error
+    //       xPopupLoad.xclose();
+    //       console.log('desde xLLamarPrintMP xCocinarImprimirComanda');
+    //       xNuevoPedidoMP();
+    //     } else {
+    //       xPopupLoad.xclose();
+    //       dialog_erro_print.open();
+    //     }
+    //   }
+    // );
   }
   function xReImprimirMP() {
     dialog_erro_print.close();
     xPopupLoad.titulo = "Enviando...";
     xPopupLoad.xopen();
+    console.log('call xLLamarPrintMP -> xReImprimirMP');
     xLLamarPrintMP();
   }
   function xBuscarPedidoEnBD(xnum_m) {
@@ -506,11 +525,15 @@ transition: none !important;
     });
   }
   function xNuevoPedidoMP() {
+    if ( isRunNuevoPedido ) return;
+    isRunNuevoPedido = true;    
     // window.localStorage.setItem("::app3_sys_descat",'');
-    arrDatosAdjuntoDelivery={};
+    arrDatosAdjuntoDelivery=[];
     window.localStorage.setItem("::app3_sys_dta_nmp", "");
     window.localStorage.setItem("::app3_sys_dta_rp", "");
     window.localStorage.removeItem("::app3_sys_dta_pe");
+    xLoadArrayPedido();
+    // xCadenaTC = xArmarTipoConsumo();
     window.localStorage.removeItem("::app3_sys_dta_tct");
     window.localStorage.removeItem("::app3_sys_dta_count_ico");
     xCount_cant_ico = 0;
@@ -535,6 +558,9 @@ transition: none !important;
     xLoadArrayPedidoAquiMenuJS();
     tt_pedido = 0;
     guardandoPedido = false;
+    setTimeout(() => {
+      isRunNuevoPedido = false;
+    }, 2000);
   }
 
   function xVerificarSiSoloLLevar() {
@@ -620,8 +646,11 @@ transition: none !important;
     xPopupLoad.xopen();
     // var xArrayGuardarPedido=new Array();
     // xArrayGuardarPedido={'idcategoria':xidCategoriaSeccion ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
-    const data_cliente_delivery = arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
-    var xid_cliente_pago = arrDatosAdjuntoDelivery != {} ? await ClienteService_Guardar(data_cliente_delivery) : xIdCliente_pedido;
+    
+    // const data_cliente_delivery = arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
+    const data_cliente_delivery = arrDatosAdjuntoDelivery.length != 0 ? arrDatosAdjuntoDelivery : [];
+    // var xid_cliente_pago = arrDatosAdjuntoDelivery != {} ? await ClienteService_Guardar(data_cliente_delivery) : xIdCliente_pedido;
+    var xid_cliente_pago = arrDatosAdjuntoDelivery.length != 0 ? await ClienteService_Guardar(data_cliente_delivery) : xIdCliente_pedido;
     
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=304', data:{h:xDevolverHora(),mesa:xmesa,ref:xref,t:xtotal,r:xReservar,sl:xsolo_llevar,idtpc:xIdTpc_pe,idcat:xidCategoriaSeccion,sql_p:xsql_p,sql_p_subt:xsql_p_subt, sql_descontar:xsub_sql_descontar}})
     // xarr_header = {'idclie':'', 'ImporteTotal': parseFloat(tt_pedido).toFixed(2) ,'referencia':xref, 'idcategoria': xidCategoriaSeccion, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe}
@@ -668,10 +697,10 @@ transition: none !important;
         arrDatosDelivery: arrDatosAdjuntoDelivery
       };
 
-      if (xVerificarImprimirComanda == true) {
+      if (xVerificarImprimirComanda == true) {        
         xLLamarPrintMP();
       } else {
-        xPopupLoad.xclose();
+        xPopupLoad.xclose();        
         xNuevoPedidoMP();
       }
     });
@@ -1200,39 +1229,39 @@ transition: none !important;
   }
 
 
-  function xAdjuntarDatosDelivery() {
-    arrDatosAdjuntoDelivery = {
-      idcliente: xIdCliente_pedido,
-      num_doc: txt_delivery_dni.value,
-      nombre: txt_delivery_nombre.value,
-      direccion: txt_delivery_direccion.value,
-      telefono: txt_delivery_telefono.value,
-      paga_con: txt_delivery_paga.value,
-      f_nac: xClientePedidoFnac
-    }
+  // function xAdjuntarDatosDelivery() {
+  //   arrDatosAdjuntoDelivery = {
+  //     idcliente: xIdCliente_pedido,
+  //     num_doc: txt_delivery_dni.value,
+  //     nombre: txt_delivery_nombre.value,
+  //     direccion: txt_delivery_direccion.value,
+  //     telefono: txt_delivery_telefono.value,
+  //     paga_con: txt_delivery_paga.value,
+  //     f_nac: xClientePedidoFnac
+  //   }
 
-    arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
+  //   arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
 
-    dialog_datos_delivery.close();
-  }
+  //   dialog_datos_delivery.close();
+  // }
 
-  function xValidarDNIRUC(valor, e, tecla) {
-    if ( valor.length < 8 ) return;
-    if ( e.keyCode === 13 || !tecla) { // buscar cliente
-      xIdCliente_pedido = '';
-      $("#progress_cliente").removeClass("xInvisible");
-      xGetFindCliente(valor, 'dni', (rpt)=>{
-        if (rpt.success) {
-          xIdCliente_pedido=rpt.idcliente;
-          xClientePedidoFnac=rpt.f_nac;
-          $("#txt_delivery_nombre").val(rpt.nombres);
-          $("#txt_delivery_direccion").val(rpt.direccion);
-          $("#txt_delivery_telefono").val(rpt.telefono);
-        }
-        $("#progress_cliente").addClass("xInvisible");
-      });
-    }
-  }
+  // function xValidarDNIRUC(valor, e, tecla) {
+  //   if ( valor.length < 8 ) return;
+  //   if ( e.keyCode === 13 || !tecla) { // buscar cliente
+  //     xIdCliente_pedido = '';
+  //     $("#progress_cliente").removeClass("xInvisible");
+  //     xGetFindCliente(valor, 'dni', (rpt)=>{
+  //       if (rpt.success) {
+  //         xIdCliente_pedido=rpt.idcliente;
+  //         xClientePedidoFnac=rpt.f_nac;
+  //         $("#txt_delivery_nombre").val(rpt.nombres);
+  //         $("#txt_delivery_direccion").val(rpt.direccion);
+  //         $("#txt_delivery_telefono").val(rpt.telefono);
+  //       }
+  //       $("#progress_cliente").addClass("xInvisible");
+  //     });
+  //   }
+  // }
 
 
   //$(obj).parent().parent().addClass('selected').siblings().removeClass("selected");

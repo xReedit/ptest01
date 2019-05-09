@@ -90,8 +90,6 @@ function xIniDocument(){
 		//if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}
 	//})
 //}
-var aapasa = 0;
-
 window.onhashchange = function () {
 	xLiberarRouter();
 }
@@ -103,6 +101,12 @@ function xLiberarRouter() {
 	console.log('time router ', 0);
 }
 
+function xOneOptionPage(_codOne) {
+	xLiberarRouter();
+	xOpenPage(_codOne);
+}
+
+var aapasa=0;
 function xOpenPage(xop, parametro){	
 	var _route_count = getLocalStorage('::app3_sys_route') || 0;
 	
@@ -155,7 +159,7 @@ function xOpenPage(xop, parametro){
 		case 3:	
 			window.localStorage.removeItem("::app3_sys_first_load");
 			document.location.href='m_menu.html';
-			
+			xLiberarRouter();
 			return;break;
 		//case 4:	xruta='/menu'; break;
 		//case 4:	xruta='/reglas';break;
@@ -164,12 +168,13 @@ function xOpenPage(xop, parametro){
 		case 7:	xruta='/configuraciones';break;
 		case 8:	xruta='/caja';break;
 		//case 9:	xruta='/control_pedidos';break;
-		case 9:	document.location.href='m_control_pedidos.html';
+		case 9:	
+			document.location.href='m_control_pedidos.html';
 			xLiberarRouter();
 			return;break;
 		case 10:xruta='/detalle_pedido';break;
 		case 11:
-			window.localStorage.removeItem("::app3_sys_first_load");
+			// window.localStorage.removeItem("::app3_sys_first_load");
 			h = window.screen.availHeight-100;
 			window.open('m_menu.html', "Carta", "width=400,height="+h);	
 			xLiberarRouter();
@@ -198,7 +203,8 @@ function xOpenPage(xop, parametro){
 		case 24:xruta='/items_borrados';break;
 		case 25: xruta = '/facturador'; break;
 		case 26: xruta = '/c_electronico'; break;
-		case 28: xruta = '/adm_dashboard'; break;
+		case 28: xruta = '/adm_dashboard'; break
+		case 29: xruta = '/us_contador'; break
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}

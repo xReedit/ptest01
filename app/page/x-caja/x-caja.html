@@ -166,6 +166,7 @@ function xIniCaja(){
 	if(xIdSede=='' || xIdSede==undefined){	xIdSede=window.localStorage.getItem('::app3_woS');}*/
 	xm_LogChequea(function(){
 		xm_log_get('ini_us');
+		$('body').addClass('loaded');
 
 
 		xThisCaja.xt_org=xIdOrg;

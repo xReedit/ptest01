@@ -14,7 +14,7 @@
 									<select class="xTextRow2" id="select_rol">
 										<option value="0">COLABORADOR</option>
 										<option value="1">ADMINISTRADOR</option>
-										<option value="2">CONTADOR</option>
+										<!-- <option value="2">CONTADOR</option> -->
 									</select>
 									<br><br>
 
@@ -108,6 +108,7 @@ function xIniUsuarios(){
 	$("#Titulo_page").text("Usuarios");
 
 	xm_log_get('ini_us');
+	$('body').addClass('loaded');
 	const sufijoSede = xm_log_get('datos_org_all_sede')[0].sufijo;
 	
 	xThis.xt_org=xIdOrg;
@@ -123,6 +124,7 @@ function xIniUsuarios(){
 		}
 
 	xLoadUs();
+	// $('body').addClass('loaded');
 
 	$('.xPasarEnter2').on('keyup',function(e){
 		var code=e.which;
@@ -267,9 +269,9 @@ Polymer({
 		xt_idus:Number,
 		xt_sufijo:String,
 	},
-	ready: function() {
-		xIniUsuarios();
-	},
+	// ready: function() {
+	// 	xIniUsuarios();
+	// },
 	attached:function(){
 		this.selected_us=0;
     	xThis=this;

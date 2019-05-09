@@ -36,7 +36,16 @@
         <div class="xMiCard xradius" style="width:90%">
             <div class="xEncanezadoCard xFondoRowAmarillo2">
                 <h4>Comprobantes electronicos.</h4>
-                <span>Estado de los comprobantes electronicos, resumenes diarios y reportes.</span>
+                <span hidden$=[[isContador]]>Estado de los comprobantes electronicos, resumenes diarios y reportes.</span>
+                <div hidden$=[[!isContador]] style="max-width: 300px;">
+                    <label for="sel_sede" class="xColorRow_Plomo">Seleccione Establecimiento</label>
+                    <select class="xSelectOptionFlat" id="selectSedeCPC" onchange="selectOptionSedeCPC()">
+                        <option value="-1">SELECCIONE UN ESTABLECIMIENTO</option>
+                        <template is="dom-repeat" items="{{listSedeUsContador}}" as="item">
+                            <option value="[[index]]">[[item.establecimiento]] | [[item.sede]] | [[item.ciudad]] </option>
+                        </template>
+                    </select>
+                </div>
             </div>
             <div class="xContentCard" style="height: 100%;">
                 <div>
@@ -49,7 +58,7 @@
                     <br><br>
                     <iron-pages selected="{{selected}}">
                         <div id="div_comprobantes">
-                            <div>
+                            <div id="div_info_comprobantes" hidden$=[[isContador]]>
                                 <div class="xDerecha">
                                     <button class="xBoton2 xAzul xDerecha" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>
                                     <br>
@@ -63,6 +72,20 @@
                                     Sunat.<br>Este proceso es el mismo que se realiza al cierre de caja.</p>
                                 <p id="xTituloRpt" class="xColorRow_Rojo"></p>
                             </div>
+                            <div id="div_opciones_contador" hidden$=[[!isContador]]>
+                                <button class="xBoton2 xAzul" style="display: inline-flex;" 
+                                    onclick="xGenerarReporteExcelMesAnterior()"
+                                    title="Bajar a excel" id="btn_mes_anterior"><img src="../../../images/excel.png" alt="" style="padding-right: 3px">                                    
+                                    <span id="txt_btn_mes_anterior"></span>
+                                </button>
+
+                                <button class="xBoton2 xVerde" style="display: inline-flex;"
+                                    onclick="xGenerarReporteExcel()" title="Bajar a excel"><img
+                                        src="../../../images/excel.png" alt="" style="padding-right: 3px">
+                                        <span> Descargar busqueda</span>
+                                </button>
+                                        
+                            </div>
                             <br>
                             <hr>
                             <div class="x_div_linea">
@@ -70,6 +93,7 @@
                                 <input type="text" class="xMiInput xfont18 xitem2" style="width:80%; bottom: -2px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos()"
                                     id="txt_buscar" enlinea>                                                                
                             </div>
+                            
                             <br><br>
                             <table width="100%" id="tb_list_cpe" class="xtable5">
                                 <thead>
@@ -220,6 +244,7 @@
 
 <script>
     var xThisCpe, lastPos=0, xPopupLoad, p_upadate=true, p_rows_re=0, p_rows=0, p_fecha='', p_filter='', p_desde=0, data_pagination={}, data_pagination_re={}, xdebounce, xe_debounce=false, index_anular;
+    var cpe_mes_anterior = '', cpe_yy_actual='', _us_cpe='';
 
 
     function xExportarExcel() {
@@ -229,6 +254,8 @@
     function xIniCpe() {
         xThisCpe.ListCpe = [];
         xThisCpe.ListCpeResumen = [];
+        xCPE_getMesYYActual();
+        xCPEValidUs();
         xLoadCpeEmitidos('6');
         xIniPagination();
 
@@ -427,6 +454,7 @@
 
     // anulacion de comprobante
     function xAnularComprobante(obj) {
+        if ( xThisCpe.isContador ) return;
         index_anular = obj.parentElement.dataId;
         dialog_motivo_anular_comprobante.open();        
     }
@@ -460,6 +488,89 @@
         xLoadCpeEmitidos('601');
     }
 
+    // generar reporte export excel
+    function xGenerarReporteExcelMesAnterior() {        
+        const param_busqueda_mes_anterior = xCeroIzq(cpe_mes_anterior,2) + '/'+ cpe_yy_actual;
+        const org = xm_log_get('datos_org_sede');
+
+        xThisCpe.nom_sede = org[0].sedenombre;
+        xPopupLoad.titulo = "Procesando..."
+        xPopupLoad.xopen();
+        txt_buscar.value = param_busqueda_mes_anterior;
+
+        // console.log(org);
+        setTimeout(() => {            
+            xLoadCpeEmitidos('601');
+            xPopupLoad.xclose();
+        }, 1500);
+    }
+
+    function xCPE_getMesYYActual() {
+        const _f_actual = new Date();
+        cpe_mes_anterior = _f_actual.getMonth();
+        cpe_mes_anterior = cpe_mes_anterior === 0 ? 1 : cpe_mes_anterior;
+        cpe_yy_actual = _f_actual.getFullYear();
+        const cpe_nom_mes = xDevolverFechaParte('mmmm');
+        const cpe_yy_mes = xDevolverFechaParte('yy');
+
+        
+
+        txt_btn_mes_anterior.textContent = "Resporte "+cpe_nom_mes + ' ' + cpe_yy_mes;
+    }
+
+    // opciones del contador
+
+    function xCPEValidUs() {
+        _us_cpe = xm_log_get('app3_us');
+        xThisCpe.isContador = parseInt(_us_cpe.rol) == 2 ? true : false ;
+        
+        if ( xThisCpe.isContador ) {
+            xGetIdCpc();
+        }
+    }
+
+    function xGetIdCpc() {
+        $.ajax({
+            type: 'POST',
+            url: '../../bdphp/log_004.php?op=40101',
+            data: {id: _us_cpe.idus}
+        })
+        .done((res) => {
+            _us_cpe.idus_cpc = res; 
+            xLoadCpeListEstablecimientosCPC();
+        });
+    }
+
+    function xLoadCpeListEstablecimientosCPC() {
+        
+        $.ajax({
+            type: 'POST',
+            url: '../../bdphp/log_004.php?op=401',
+            data: {id: _us_cpe.idus_cpc}
+        })
+        .done((res) => {
+            const _res = $.parseJSON(res);
+            xThisCpe.listSedeUsContador = _res.datos;            
+        });
+    }
+
+    function selectOptionSedeCPC() {        
+        const index = xThisCpe.$.selectSedeCPC.value;
+        if ( index === -1 ) return;
+        const sedeSelect = xThisCpe.listSedeUsContador[index];
+
+        $.ajax({
+            type: 'POST',
+            url: '../../bdphp/log_004.php?op=40102',
+            data: {ido: sedeSelect.idorg, ids: sedeSelect.idsede}
+        })
+        .done((res) => {
+            updateapp3_woDUS_changeSede(sedeSelect.idorg, sedeSelect.idsede);
+            xIniCpe();
+        });
+    }
+    
+
 
     Polymer({
         is: 'x-cpe-emitidos',
@@ -467,7 +578,9 @@
             ListCpe: [],
             ListCpeResumen: [],
             ListReporte: [],
-            nom_sede: ''           
+            listSedeUsContador:[],
+            nom_sede: '',
+            isContador: false,
         },
         attached: function () {
             this.selected = 0,

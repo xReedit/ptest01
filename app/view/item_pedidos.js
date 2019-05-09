@@ -5,7 +5,7 @@ var xCambioCantidad=false;
 var xLocal_xDtSubTotales;
 var xLocal_TotalImporte=0;
 var xErrorPrint=false;
-var xArrayDesTipoConsumo=new Array();
+var xArrayDesTipoConsumo=[];
 var xVerificarImprimirComanda=false;//si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
 //var xLocal_TotalRowsArrayImporte=0;
 
@@ -20,7 +20,7 @@ var xGeneralDataSeccion;
 
 var xNumPedidosBD=0;
 
-var xGeneralArraySubTotales=new Array();
+var xGeneralArraySubTotales=[];
 
 // 'precio_total_calc': para calcular en regalas de carta
 
@@ -256,7 +256,7 @@ function xClassEstadoItem(xCantItem){
 	return xClassEstado+'|'+xClassEstadoStock
 }
 
-function xLoadArrayPedido(){
+function xLoadArrayPedido(){	
 	xArrayPedidoObj=JSON.parse(window.localStorage.getItem("::app3_sys_dta_pe"));
 	if(xArrayPedidoObj!==null){if(xArrayPedidoObj.length>0){return;}}
 
@@ -855,6 +855,7 @@ function xGeneralActualizaItemInactividad(){
 
 // 'precio_total_calc': para calcular en regalas de carta
 function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
+	// if ( xObjEvaluar === null ) {xLoadArrayPedidoAquiMenuJS();}; // viene de cargar x-mipedido en primera pantalla - donde no hay objeto a evaluar
 	var xArrayRegla=xm_log_get('reglas_de_carta'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
 	var xSecc_bus='';
 	var xSecc_detalle;
@@ -1202,7 +1203,7 @@ function xArmarArrayDescontarStock(obj_row,op){
 }
 
 //el detalle de los item en mipedido
-function xArmarTipoConsumo(){
+function xArmarTipoConsumo(){	
 	var xcadenaTC='';
 	xArrayDesTipoConsumo=JSON.parse(window.localStorage.getItem("::app3_sys_dta_pe"));
 	for(a in xArrayDesTipoConsumo){

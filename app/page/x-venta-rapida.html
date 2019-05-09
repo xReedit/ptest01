@@ -1,11 +1,13 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <link rel="import" href="../web_components/paper-progress/paper-progress.html">
 <link rel="import" href="../web_components/x-pago/x-pago.html">
+<link rel="import" href="../x-componentes/x-comp-datos-delivery/x-comp-datos-delivery.html">
 <dom-module id="x-venta-rapida">		
 	<template>
 		<br>
+		<x-comp-datos-delivery id="component_datos_delivery"></x-comp-datos-delivery>
 
-		<paper-dialog id="dialog_datos_delivery" style="max-width: 520px" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<!-- <paper-dialog id="dialog_datos_delivery" style="max-width: 520px" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
       <h2>Datos adicionales</h2>
       <span>Para la entrega del delivery</span>
       <hr>
@@ -33,7 +35,7 @@
         <button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
         <button class="xBoton2 xVerde" onclick="xAdjuntarDatosDelivery()">Listo, adjuntar</button>
       </div>
-    </paper-dialog>
+    </paper-dialog> -->
 
 		<paper-dialog id="dialog_pagar_vr" class="dialog_redondo" modal  entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<!-- <x-pago id="component_pago" _tipo></x-pago>
@@ -267,7 +269,7 @@ var xThisVentaRapida
 ,xReservar = 0
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
- xarr_subtotales=[], arrDatosAdjuntoDelivery={}, xIdCliente_pedido = '', xClientePedidoFnac='';
+ xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='';
 
 
 
@@ -464,7 +466,12 @@ function xIniVentaRapida(){
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		}
-	})
+	});
+
+	xCompDatosDelivery=document.getElementById('component_datos_delivery');
+	xCompDatosDelivery.addEventListener('xGetDatosDelivery', function (e) {
+		arrDatosAdjuntoDelivery = e.detail.datos;
+	});
 
 	xValPago=document.getElementById('component_pago_vr');
 	xValPago.setObjConntet($("#dialog_pagar_vr"))
@@ -644,7 +651,7 @@ function xNuevoPedidoVR(){
 
 	xRpt_pago=[];
 
-	arrDatosAdjuntoDelivery = {};
+	arrDatosAdjuntoDelivery = [];
 	frm_cliente.reset();	
 	// xReservar = 0;
 	// xsolo_llevar = 0;
@@ -755,9 +762,10 @@ async function xGuardarPedidoVR(responde){
 	if(xcount_seccion>1){xsolo_llevar=0;}
 
 	// xPopupLoad.titulo="Enviando...";
-	// xPopupLoad.xopen();
+	// xPopupLoad.xopen();	
 	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
-	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
+	// var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
+	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery.length != 0 ? arrDatosAdjuntoDelivery : [];
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados = '';
@@ -1184,39 +1192,39 @@ function xTraerDtTipoConsumo(){
 }
 
 
-function xAdjuntarDatosDelivery() {
-    arrDatosAdjuntoDelivery = {
-      idcliente: xIdCliente_pedido,
-      num_doc: txt_delivery_dni.value,
-      nombre: txt_delivery_nombre.value,
-      direccion: txt_delivery_direccion.value,
-      telefono: txt_delivery_telefono.value,
-      paga_con: txt_delivery_paga.value,
-      f_nac: xClientePedidoFnac
-    }
+// function xAdjuntarDatosDelivery() {
+//     arrDatosAdjuntoDelivery = {
+//       idcliente: xIdCliente_pedido,
+//       num_doc: txt_delivery_dni.value,
+//       nombre: txt_delivery_nombre.value,
+//       direccion: txt_delivery_direccion.value,
+//       telefono: txt_delivery_telefono.value,
+//       paga_con: txt_delivery_paga.value,
+//       f_nac: xClientePedidoFnac
+//     }
 
-    arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
+//     arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
 
-    dialog_datos_delivery.close();
-  }
+//     dialog_datos_delivery.close();
+//   }
 
-  function xValidarDNIRUC(valor, e, tecla) {    
-		if ( valor.length < 8 ) return;
-    if ( e.keyCode === 13 || !tecla) { // buscar cliente
-      xIdCliente_pedido = '';
-      $("#progress_cliente").removeClass("xInvisible");
-      xGetFindCliente(valor, 'dni', (rpt)=>{
-        if (rpt.success) {
-          xIdCliente_pedido=rpt.idcliente;
-          xClientePedidoFnac=rpt.f_nac;
-          $("#txt_delivery_nombre").val(rpt.nombres);
-          $("#txt_delivery_direccion").val(rpt.direccion);
-          $("#txt_delivery_telefono").val(rpt.telefono);
-        }
-        $("#progress_cliente").addClass("xInvisible");
-      });
-    }
-  }
+  // function xValidarDNIRUC(valor, e, tecla) {    
+	// 	if ( valor.length < 8 ) return;
+  //   if ( e.keyCode === 13 || !tecla) { // buscar cliente
+  //     xIdCliente_pedido = '';
+  //     $("#progress_cliente").removeClass("xInvisible");
+  //     xGetFindCliente(valor, 'dni', (rpt)=>{
+  //       if (rpt.success) {
+  //         xIdCliente_pedido=rpt.idcliente;
+  //         xClientePedidoFnac=rpt.f_nac;
+  //         $("#txt_delivery_nombre").val(rpt.nombres);
+  //         $("#txt_delivery_direccion").val(rpt.direccion);
+  //         $("#txt_delivery_telefono").val(rpt.telefono);
+  //       }
+  //       $("#progress_cliente").addClass("xInvisible");
+  //     });
+  //   }
+  // }
 
 Polymer({
 	is:'x-venta-rapida',
