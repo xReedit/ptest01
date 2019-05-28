@@ -253,7 +253,6 @@
 	</template>
 </dom-module>
 
-<script src="../../js/isotope.pkgd.min.js"></script>
 <style type="text/css">
 	.grid:after {
   content: '';
@@ -285,6 +284,8 @@ img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
 <script  type="text/javascript" src="../view/deNumALetras.js"></script> -->
 
 <!-- <script type="text/javascript" src="../view/config.const.js"></script> -->
+<!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
+<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 <script type="text/javascript" src="../view/item_pedidos.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
@@ -354,7 +355,7 @@ var xThisCM,
 	ImporteDiferencia = 0, // la diferencia por pagar, para saber si es una seleccion total o parcial 
 	xImporteTotalSeleccionados = 0;  // obtiene el total de los pedidos seleccionados
 
-var EstadoLoadMesas=false;
+var EstadoLoadMesas=false, firstLoad_mesas=true;
 function xIniControlMesa(){
 	$( "#accordion" ).accordion({
 		heightStyle: "content",
@@ -1242,7 +1243,7 @@ function xArmarSqlAddLUlI(){
 				xNuevoPedidoCM();
 				xCloseLULI();
 			}
-		});
+		}).fail(guardandoPedido = false);
 
 		// regresa xocupado
 		$(xObj_miPedido).removeClass('xDespachado');
@@ -1336,7 +1337,7 @@ async function xRegistrarClientePagoCP(){
 			xLoadDetallesPedido(xObj_miPedido);
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
 
-		});
+		}).fail(enProcesoGuardarPago = false);
 
 		return
 	}else{
@@ -1351,7 +1352,7 @@ async function xRegistrarClientePagoCP(){
 			xRegistrarPagoCM(xCantRow);	
 
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
-		});
+		}).fail(enProcesoGuardarPago = false);
 	}
 }
 
@@ -1531,8 +1532,9 @@ function xDesJuntarItem(){
 	$("#tb_det_pedidos .row").each(function(i,e){
 		xcant=parseInt($(e).find('#td_cant').text());
 		// punitario=parseFloat($(e).find('#td_importe').text())/xcant;
-		punitario = parseFloat($(e).attr('data-punitario'));
+		// punitario = parseFloat($(e).attr('data-punitario'));
 		p_total=parseFloat($(e).find('#td_importe').text()); // precio total
+		punitario = p_total === 0 ? 0 : parseFloat($(e).attr('data-punitario'));
 		idpd_r=$(e).attr('data-idpedidodetalle');
 
 		var _tr_clone=$(e);
@@ -2228,7 +2230,14 @@ function xLogRun_CuentaNumeroPedidos(){
 	if(typeof(EventSource) !== "undefined") {
 	    xsourceEvent = new EventSource("../../bdphp/log_run.php?op=1");
 	    xsourceEvent.onmessage = function(event) {
-	        if(event.data!==xValCountPedidos){xValCountPedidos=event.data;xActualizarItems();}
+	        if(event.data!==xValCountPedidos){
+						xValCountPedidos=event.data;
+						if (firstLoad_mesas){ // si es la primera carga no actualiza
+							firstLoad_mesas = false;
+							return;
+						}
+						xActualizarItems();
+					}
 	    };
 	}
 }
@@ -2334,11 +2343,10 @@ function xActualizarItems(){
 
 			if(xCadenaNewItem!=''){
 				var  $items=$(xCadenaNewItem);
-				$('.grid').append( $items )
-			    .isotope( 'appended', $items );
-
+				$('.grid').append($items).isotope( 'appended', $items );
 			}
-			$('.grid').isotope('updateSortData');
+
+			$('.grid').isotope('updateSortData');			
 		})
 }
 function xCalcularTiempoPedido(){

@@ -5,21 +5,29 @@ var xPopupLoad;
 var xRouterTime_cp = false;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
-document.addEventListener("DOMContentLoaded", function componentsReady() {
+// $(document).ready(function () {
+window.onload = () => {
 	xIniControlPedido();
-});
+	xConstAjax();
+};
+
+// document.addEventListener("DOMContentLoaded", function componentsReady() {
+// 	xIniControlPedido();
+// });
 
 function xIniControlPedido(){
 	xVerificarSession();
 	//setInterval(function(){ xVerificarSession(); }, 5000); // constantemente actualiza
 
 	xPopupLoad=document.getElementById('xLoad');
+	
+	xm_log_get('ini_us');
+	var xDatos_p=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
+	$("#en_nom_sede").text(xDatos_p[0].des_sede);
+	$("#en_nom_ciudad").text(xDatos_p[0].ciudad);
+	$("#en_nom_us").text(xNomUsario);
+	
 	xm_LogChequea(function(){
-		xm_log_get('ini_us');
-		var xDatos_p=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
-		$("#en_nom_sede").text(xDatos_p[0].des_sede);
-		$("#en_nom_ciudad").text(xDatos_p[0].ciudad);
-		$("#en_nom_us").text(xNomUsario);
 
 		xLoadTipoConsumoX();
 		// setTimeout(() => {

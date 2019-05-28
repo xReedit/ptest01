@@ -12,7 +12,7 @@
 	<link rel="stylesheet" href="../../css/load_style.css">
 
 	<!--script src="../../js/jquery.js"></script-->
-	<link rel="preload" href="../../css/daterangepicker.css">
+	<!-- <link rel="preload" href="../../css/daterangepicker.css"> -->
 	<link rel="stylesheet" href="../../js/jquery-ui.min.11.4.css">
 	<script src="../../js/jquery_external.js"></script>
 	<script src="../../js/jquery-ui.min.11.4.js"></script>
@@ -23,20 +23,28 @@
 	
 	<!--link rel="stylesheet" href="../../css/dc.css"/-->
 	
-	<script rel="preload" src="../web_components/webcomponentsjs/webcomponents.min.js"></script>
+	<!-- <script src="../web_components/webcomponentsjs/webcomponents.min.js"></script> -->
+	<!-- <script src="../web_components/webcomponentsjs/webcomponents-lite.min.js"></script> -->
+	<script src="../web_components/webcomponentsjs/webcomponents-lite.js"></script>
 	<link rel="import" href="../web_components/polymer/polymer.html">
+	<!-- <link rel="import" href="../web_components/app-router/app-router.html"> -->
+	<link rel="import" href="../web_components/x-router/x-router.html">
+	<link rel="import" href="../web_components/paper-toolbar/paper-toolbar.html">
 	<link rel="import" href="../web_components/paper-button/paper-button.html">
 	<link rel="import" href="../web_components/paper-input/paper-input.html">
+	<link rel="import" href="../web_components/paper-icon-button/paper-icon-button.html">
+	<link rel="import" href="../web_components/paper-dropdown-menu/paper-dropdown-menu.html">
+	<link rel="import" href="../web_components/paper-tooltip/paper-tooltip.html">
+	<link rel="import" href="../web_components/paper-toast/paper-toast.html">
+	<link rel="import" href="../web_components/x-dialog/x-dialog.html">
+	<link rel="import" href="../x-componentes/x-comp-sede-toolbar/x-comp-sede-toolbar.html">
+	<link rel="import" href="../web_components/neon-animation/neon-animations.html">
 	<link rel="import" href="../web_components/paper-input/paper-textarea.html">
 	<link rel="import" href="../web_components/paper-styles/paper-styles.html">
 	<link rel="import" href="../web_components/neon-animation/neon-animated-pages.html">
   <link rel="import" href="../web_components/neon-animation/neon-animatable.html">
-	<link rel="import" href="../web_components/neon-animation/neon-animations.html">
 	<link rel="import" href="../web_components/paper-spinner/paper-spinner.html">
 	<link rel="import" href="../web_components/paper-drawer-panel/paper-drawer-panel.html">
-
-	<link rel="import" href="../web_components/paper-toolbar/paper-toolbar.html">
-	<link rel="import" href="../web_components/paper-icon-button/paper-icon-button.html">
 	<link rel="import" href="../web_components/iron-icons/iron-icons.html">
 	<link rel="import" href="../web_components/paper-card/paper-card.html">
 	<link rel="import" href="../web_components/paper-fab/paper-fab.html">
@@ -44,28 +52,17 @@
   <link rel="import" href="../web_components/paper-item/paper-item.html">
   <link rel="import" href="../web_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
   <link rel="import" href="../web_components/paper-checkbox/paper-checkbox.html">
-	<link rel="import" href="../web_components/paper-dropdown-menu/paper-dropdown-menu.html">
 	<link rel="import" href="../web_components/iron-dropdown/iron-dropdown.html">
 	<link rel="import" href="../web_components/iron-pages/iron-pages.html">
 	<link rel="import" href="../web_components/paper-radio-button/paper-radio-button.html">
 	<link rel="import" href="../web_components/paper-slider/paper-slider.html">
 	<link rel="import" href="../web_components/paper-tabs/paper-tabs.html">
-	<link rel="import" href="../web_components/paper-tooltip/paper-tooltip.html">
 	<link rel="import" href="../web_components/paper-toggle-button/paper-toggle-button.html">
 	<link rel="import" href="../web_components/paper-badge/paper-badge.html">
 	<link rel="import" href="../web_components/paper-progress/paper-progress.html">
-	<link rel="import" href="../web_components/paper-toast/paper-toast.html">
-
-	<!--router-->
-	<link rel="import" href="../web_components/iron-icons/maps-icons.html">
-
-
-	<link rel="import" href="../web_components/x-dialog/x-dialog.html">
-	<link rel="import" href="../web_components/app-router/app-router.html">
-	<link rel="import" href="../web_components/x-router/x-router.html">
+	<link rel="import" href="../web_components/iron-icons/maps-icons.html">	
 	<link rel="import" href="../web_components/x-pass/x-pass.html">
 	<link rel="import" href="../web_components/x-pago/x-pago.html">
-	<link rel="import" href="../x-componentes/x-comp-sede-toolbar/x-comp-sede-toolbar.html">
 	
 
 	<!--router-->
@@ -250,28 +247,38 @@
        	</paper-header-panel>
 
 	
-	<script src="../view/xm_all.js"></script>
+	<script rel="preload" src="../view/xm_all.js"></script>
 	<script type="text/javascript" src="../view/onGalleta.js"></script>
 	<script type="text/javascript" src="../view/manager_storage.js"></script>
-	<script type="text/javascript" src="../view/verifyConnection.js" async></script>
+	<script type="text/javascript" src="../view/verifyConnection.js"></script>
+		
+	<script rel="preload" type="text/javascript" src='../../js/mifuncion_web.js'></script>
+	<script rel="preload" type="text/javascript" src="../view/m_panel.js" defer></script>
 
 	<!--script type="text/javascript" src="../../js/d3.min.js"></script-->
 	<!--script type="text/javascript" src="../../js/crossfilter.min.js"></script-->
 	<!--script type="text/javascript" src="../../js/dc.min.js"></script-->
 
-	<script rel="preload" type="text/javascript" src="../../js/raphael.2.1.4.min.js"></script>
-	<script rel="preload" type="text/javascript" src="../../js/justgage.js"></script>
-	<script rel="preload"src="../../js/moment.min.js"></script>
-	<script rel="preload"src="../../js/isotope.pkgd.min.js"></script>
-	<script rel="preload"src="../../js/jquery.daterangepicker.js"></script>	
+	<!-- <script rel="prefetch" type="text/javascript" src="../../js/raphael.2.1.4.min.js" defer></script> -->
+
+	<!-- <script rel="prefetch" type="text/javascript" src="../../js/justgage.js" defer></script> -->
+	<link rel="prefetch" href="../../js/justgage.js" as="script">
+
+	<!-- <script rel="preload"src="../../js/jquery.daterangepicker.js"></script> -->
+	<!-- <script rel="preload" src="../../js/moment.min.js"></script> -->
+
+	<!-- <script src="../../js/isotope.pkgd.min.js" defer></script> -->
+	<link rel="prefetch" href="../../js/isotope.pkgd.min.js" as="script">
+
 	<!--script src="../../js/perfect-scrollbar.min.js"></script-->
 
 
 	
-	<script type="text/javascript" src='../../js/mifuncion_web.js'></script>
-	<script type="text/javascript" src="../view/m_panel.js"></script>
-	<script rel="preload"src="../view/item_pedidos.js"></script>
-	<script rel="preload"src="../view/config.const.js"></script>	
+	<script src="../view/item_pedidos.js" defer></script>
+	<script src="../view/config.const.js" defer></script>	
+
+	<!-- <link rel="prefetch" href="../view/item_pedidos.js" as="script">
+	<link rel="preload" href=".../view/config.const.js" as="script"> -->
 
 	<!-- <script rel="preload" src="../view/m_panel.js"></script>	 -->
 </body>

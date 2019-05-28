@@ -343,7 +343,7 @@ function xLoadSetDatosSession(responde){
 }
 
 function xVerificarSession(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-104',async: false})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-104'})
 	.done( function (a) {
 		if(a==1){
 			setClearLocalStorage();
@@ -689,3 +689,63 @@ function delay(callback, ms) {
 		}, ms || 0);
 	};
 }
+
+function setImportHTML(_linkImport) {
+
+	_linkImport = _linkImport.trim().split(',');
+	
+	let link = document.createElement('link');	
+	link.rel = 'import';
+	_linkImport.map( x => {
+		link.href = x;
+		link.onload = onload;
+		document.head.appendChild(link);
+	})
+
+}
+
+// async function getTemplate(filepath) {
+// 	return await fetch(filepath)
+// 		.then(response => {
+// 			let txt = response.text();
+// 			let html = new DOMParser().parseFromString(txt, 'text/html');
+
+// 			return html.querySelector('template');
+// 		});
+// }
+
+function xConstAjax() {
+	$.ajax = (($oldAjax) => {
+		// on fail, retry by creating a new Ajax deferred
+		function check(a, b, c) {
+			var shouldRetry = b != 'success' && b != 'parsererror';
+			if (shouldRetry && --this.retries > 0)
+				setTimeout(() => {
+					$.ajax(this)
+				}, this.retryInterval || 100);
+		}
+
+		return settings => $oldAjax(settings).always(check)
+	})($.ajax);
+
+	$.ajaxSetup({
+		timeout: 4000,
+		retries: 3, // <-------- Optional 
+		tryCount: 0, // <---------- cuenta los intentos
+		retryLimit: 3,
+		retryInterval: 4000, // <-------- Optional
+		error: function (jqXHR, textStatus, errorThrown) {
+			this.tryCount++;
+			if (this.tryCount >= this.retryLimit) {
+				alert('No se pudo establecer conexion. Intentelo mas tarde.');
+				try {
+					xPopupLoad.xclose();
+				} catch (error) {}
+
+				return;
+			}
+		},
+	});
+}
+
+// reintentos en $.ajax

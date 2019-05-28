@@ -29,6 +29,23 @@ window.addEventListener("error", function (e) {
 //     }
 //   });
 // });
+window.onload = () => {
+  // console.log('load window');
+  $("#PanelDe").on("transitionend", function (a) {
+    if (this.selected == "main") {
+      $("#PanelDe").css("z-index", "0");
+    }
+  });
+
+  xIniMenAAA();
+  // inactivityTime();
+  setGalleta();
+  listenCookieChange(function () {
+    dialog_inactividad.open();
+  });
+
+  xConstAjax();
+}
 
 // $(document).ready(function () {  
 //   $("#PanelDe").on("transitionend", function(a) {
@@ -37,28 +54,34 @@ window.addEventListener("error", function (e) {
 //     }
 //   });
 
-  
+//   xIniMenAAA();
+//   // inactivityTime();
+//   setGalleta();
+//   listenCookieChange(function () {
+//     dialog_inactividad.open();
+//   });
+// });
 
   // setTimeout(() => {  
   //   xIniMenAAA();  
   // }, 1500);
 // });
 
-document.addEventListener("WebComponentsReady", function componentsReady() {
-  $("#PanelDe").on("transitionend", function (a) {
-    if (this.selected == "main") {
-      $("#PanelDe").css("z-index", "0");
-    }
-  });
+// document.addEventListener("WebComponentsReady", function componentsReady() {
+//   $("#PanelDe").on("transitionend", function (a) {
+//     if (this.selected == "main") {
+//       $("#PanelDe").css("z-index", "0");
+//     }
+//   });
 
-  xIniMenAAA();  
-  // inactivityTime();
-  setGalleta();
-  listenCookieChange(function() {
-    dialog_inactividad.open();
-  });
+//   xIniMenAAA();  
+//   // inactivityTime();
+//   setGalleta();
+//   listenCookieChange(function() {
+//     dialog_inactividad.open();
+//   });
   
-});
+// });
 
 // window.addEventListener('DOMContentLoaded', function () {
 //   $("#PanelDe").on("transitionend", function (a) {

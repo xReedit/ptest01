@@ -1,16 +1,114 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
 var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
 var xparam_time_ruter = false;
+
+
+async function lazyLoadWCPolyfillsIfNecessary() {
+	var onload = function () {
+		// For native Imports, manually fire WCR so user code
+		// can use the same code path for native and polyfill'd imports.
+		if (!window.HTMLImports) {
+			document.dispatchEvent(
+				new CustomEvent('WebComponentsReady', {
+					bubbles: true
+				}));
+		}
+	};
+
+	var webComponentsSupported = (
+		'registerElement' in document &&
+		'import' in document.createElement('link') &&
+		'content' in document.createElement('template'));
+
+	if (webComponentsSupported) {
+		var script = document.createElement('script');
+		script.async = true;
+		script.src = '../web_components/webcomponentsjs/webcomponents-lite.min.js';
+		script.onload = onload;
+		document.head.appendChild(script);		
+
+		// let _linkImport = `../web_components/polymer/polymer.html
+		// 				,../web_components/paper-button/paper-button.html
+		// 				,../web_components/paper-input/paper-input.html
+		// 				,../web_components/paper-input/paper-textarea.html
+		// 				,../web_components/paper-styles/paper-styles.html
+		// 				,../web_components/neon-animation/neon-animated-pages.html
+		// 				,../web_components/neon-animation/neon-animatable.html
+		// 				,../web_components/neon-animation/neon-animations.html
+		// 				,../web_components/paper-spinner/paper-spinner.html
+		// 				,../web_components/paper-drawer-panel/paper-drawer-panel.html
+		// 				,../web_components/paper-toolbar/paper-toolbar.html
+		// 				,../web_components/paper-icon-button/paper-icon-button.html
+		// 				,../web_components/iron-icons/iron-icons.html
+		// 				,../web_components/paper-card/paper-card.html
+		// 				,../web_components/paper-fab/paper-fab.html
+		// 				,../web_components/paper-menu/paper-menu.html
+		// 				,../web_components/paper-item/paper-item.html
+		// 				,../web_components/paper-dialog-scrollable/paper-dialog-scrollable.html
+		// 				,../web_components/paper-checkbox/paper-checkbox.html
+		// 				,../web_components/paper-dropdown-menu/paper-dropdown-menu.html
+		// 				,../web_components/iron-dropdown/iron-dropdown.html
+		// 				,../web_components/iron-pages/iron-pages.html
+		// 				,../web_components/paper-radio-button/paper-radio-button.html
+		// 				,../web_components/paper-slider/paper-slider.html
+		// 				,../web_components/paper-tabs/paper-tabs.html
+		// 				,../web_components/paper-tooltip/paper-tooltip.html
+		// 				,../web_components/paper-toggle-button/paper-toggle-button.html
+		// 				,../web_components/paper-badge/paper-badge.html
+		// 				,../web_components/paper-progress/paper-progress.html
+		// 				,../web_components/paper-toast/paper-toast.html
+		// 				,../web_components/iron-icons/maps-icons.html
+		// 				,../web_components/app-router/app-router.html
+		// 				,../web_components/x-router/x-router.html
+		// 				,../web_components/x-dialog/x-dialog.html
+		// 				,../web_components/x-pass/x-pass.html
+		// 				,../web_components/x-pago/x-pago.html
+		// 				,../x-componentes/x-comp-sede-toolbar/x-comp-sede-toolbar.html`
+		// setImportHTML(links)
+
+		// var link = document.createElement('link');
+		// link.rel = 'import';
+		// link.href = '../web_components/paper-button/paper-button.html';
+		// link.onload = onload;
+		// document.head.appendChild(link);
+
+		// _linkImport = _linkImport.trim().split(',');
+
+		// let link = document.createElement('link');
+		// link.rel = 'import';
+		// for (let index = 0; index < _linkImport.length; index++) {
+		// 	const element = _linkImport[index];
+		// 	link.href = element;
+		// 	link.onload = onload;
+		// 	document.head.appendChild(link);
+		// }			
+		
+
+		// let tpl = await getTemplate('../web_components/paper-button/paper-button.html');
+		// console.log(tpl);
+	} else {
+		onload();
+	}
+}
+
+// window.addEventListener('WebComponentsReady', function (e) {
+// 	alert('WebComponentsReady!!!');
+// });
+
+lazyLoadWCPolyfillsIfNecessary();
+
 // $(document).on('ready',function(){
-$(document).ready(function() {
+// $(document).ready(function() {
+window.onload = () => {
   $("#PanelDe").on("transitionend", function(a) {
     if (this.selected == "main") {
       $("#PanelDe").css("z-index", "0");
     }
   });
 
-	// xIniDocument();
-});
+	xIniDocument();
+	xConstAjax();
+};
 
 window.addEventListener("error", function (e) {
 	console.log(e.error.message, "from", e.error.stack);
@@ -20,19 +118,19 @@ window.addEventListener("error", function (e) {
 });
 
 // xxx();
-document.addEventListener("WebComponentsReady", function componentsReady() {
-	$("#PanelDe").on("transitionend", function (a) {
-		if (this.selected == "main") {
-			$("#PanelDe").css("z-index", "0");
-		}
-	});
-	xIniDocument();
-});
+// document.addEventListener("WebComponentsReady", function componentsReady() {
+// 	$("#PanelDe").on("transitionend", function (a) {
+// 		if (this.selected == "main") {
+// 			$("#PanelDe").css("z-index", "0");
+// 		}
+// 	});
+// 	xIniDocument();
+// });
 
 //window.onload = function(){xIniDocument();}
-window.addEventListener('WebComponentsReady', function(e) {
-	xIniDocument();
-});
+// window.addEventListener('WebComponentsReady', function(e) {
+// 	xIniDocument();
+// });
 //window.onload = function(){$("#nom_sede").text('SAN CARLOS'); setTimeout( function(){ xIniDocument(); }, 1600); };
 function xIniDocument(){
 	// router = document.querySelector("app-router");
@@ -131,7 +229,7 @@ function xOpenPage(xop, parametro){
 	// 		setLocalSotrage('::app3_sys_route', 0);
 	// 		xparam_time_ruter = false;
 	// 	}, 4000);
-	// 	setLocalSotrage('::app3_sys_route', 0);
+	// 	setLocalSotrage('::app3_sys_route', 0);s
 	// 	return;
 	// }
 	// if (parseInt(_route_count) > 1) return;
@@ -210,11 +308,12 @@ function xOpenPage(xop, parametro){
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
 			
-			window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			//window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
+			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+			window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
 			return; 		
 	}
 	xruta=xruta+parametro;
+	// if (router == undefined) { router = document.querySelector('app-router'); }
 	router.go(xruta+parametro);
 
 	xScrolUp(0);

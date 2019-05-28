@@ -3,7 +3,7 @@
 async function ClienteService_Guardar(xarr_cliente) {
     var rpt = 0;
 
-    const nomClie = xarr_cliente.nombres || xarr_cliente.nombre;
+    const nomClie = xarr_cliente.nombres || xarr_cliente.nombre || '';
     xarr_cliente.nombres = nomClie;
     if (xarr_cliente.idcliente === '' && nomClie === '') {
         return rpt;

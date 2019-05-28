@@ -274,7 +274,7 @@ var xThisVentaRapida
 
 
 function xIniVentaRapida(){
-	xm_LogChequea(function(){
+	// xm_LogChequea(function(){
 		xm_log_get('ini_us');
 		//if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
 		//if(xIdSede=='' || xIdSede==undefined){xIdSede=window.localStorage.getItem('::app3_woS');}
@@ -299,7 +299,7 @@ function xIniVentaRapida(){
 				xdelivery = 1;
 			}
 		})
-	})
+	// })
 
 	compFindCategoria=document.getElementById('compFindCategoria');
 	compFindCategoria.addEventListener('getValorIncial', function (e) {
@@ -768,7 +768,7 @@ async function xGuardarPedidoVR(responde){
 	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery.length != 0 ? arrDatosAdjuntoDelivery : [];
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
-	var xidpedido_seleccionados = '';
+	var xidpedido_seleccionados = '';	
 
 	xGeneralValidarRegalasCarta(xArrayPedidoObj,true);
 	if(xArmarSubtotalesArray()==0){return}
@@ -848,7 +848,7 @@ async function xGuardarPedidoVR(responde){
 				
 		
 		responde(true)
-	});
+	}).fail(guardando = false);
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
@@ -932,7 +932,7 @@ function xLoadCartaVR(){
 		//$(".xMenu_body_vr .spinner").remove();
 		$(".xMenu_body_vr").append(xCadenaCarta).trigger('create');
 
-		xDisparaEventoLoadItemInactividad()
+		// xDisparaEventoLoadItemInactividad()
 		xLoadItemsDetalleCartaALL();
 
 		setTimeout(() => {			

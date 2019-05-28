@@ -671,6 +671,9 @@ transition: none !important;
     $.ajax({
       type: "POST",
       url: "../../bdphp/log_001.php",
+      // timeout : 4000,
+      // retries : 2, // <-------- Optional 
+      // retryInterval : 2000,// <-------- Optional      
       data: {
         p_from: "a",
         p_header: xarr_header,
@@ -703,7 +706,7 @@ transition: none !important;
         xPopupLoad.xclose();        
         xNuevoPedidoMP();
       }
-    });
+    }).fail(guardandoPedido = false);
   }
 
   function xVerificarCheckEnca() {

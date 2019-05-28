@@ -1,4 +1,4 @@
-<script src="../webcomponentsjs/webcomponents.min.js"></script>
+<script src="../webcomponentsjs/webcomponents-lite.js"></script>
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../app-router/app-router.html">
 
@@ -6,7 +6,7 @@
 	<!--mode="auto|pushstate|hash"-->
 	
 	<template>
-		<app-router mode="auto|pushstate|hash" trailingSlash="ignore">
+		<app-router mode="auto|hash" trailingSlash="ignore">
 			<app-route path="/home" import="x-home.html"></app-route>
 			<app-route path="/elaborar_carta" import="x-carta.html"></app-route>
 			<app-route path="/menu" import="x-app-menu/x-menu.html"></app-route>
@@ -68,6 +68,9 @@ Polymer({
 	},
 	attached:function(){
     	xIniRouter();
-    }
+	},
+	ready: () => {
+		xIniRouter();
+	}
 })
 </script>

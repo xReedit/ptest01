@@ -1,7 +1,15 @@
 var comprobantdoConexion = false;
 var restaurandoConexion = false;
-var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-var type = connection.effectiveType;
+var connection, type;
+try {	
+	connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+	type = connection.effectiveType;
+
+	connection.addEventListener('change', activarChangeConection);
+	
+} catch (error) {
+	
+}
 var _num_intentos_conexion = 0;
 
 // setGalleta();
@@ -90,8 +98,6 @@ async function updateConnectionStatus() {
 	}
 
 }
-
-connection.addEventListener('change', activarChangeConection);
 
 function activarChangeConection() {
 	setTimeout(() => {
