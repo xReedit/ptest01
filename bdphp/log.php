@@ -3,8 +3,8 @@
 	// session_regenerate_id(true); 
 	session_start();	
 	//header("Cache-Control: no-cache,no-store");
-	header('content-type: text/html; charset: utf-8');
-	header('Content-Type: text/event-stream');
+	// header('content-type: text/html; charset: utf-8');
+	// header('Content-Type: text/event-stream');
 	header('Cache-Control: no-cache');
 	include "ManejoBD.php";
 	include "token.php";
@@ -265,6 +265,23 @@
 			$rpt=encode_dataUS();
 			echo $rpt;
 			break;
+		case -11111:  // pruebas fech
+			$payload = json_decode(file_get_contents('php://input'), true);
+			$_sys_id = base64_decode($payload);
+
+			$content = trim(file_get_contents("php://input"));
+			$payload = json_decode($content, true);
+			$_sys_id = base64_decode($payload);
+			$_sys_id = explode(':', $_sys_id);
+			$_u = $_sys_id[1];
+			$_p = base64_decode($_sys_id[2]);
+
+
+			echo json_encode('idOrg: '.$_sys_id[3].'  Idsede'.$_sys_id[4]);
+			// header('Content-Type: application/json');
+			// $arr = 1;
+			// echo json_encode($arr);
+			break;
 		case -1://log
 			//if(($_SESSION['uid']==''))
 			//{			
@@ -275,13 +292,12 @@
 					$_p = $_POST['p'];
 				} else {
 					$reconex = true;					
-					$payload = $_POST['sys_data'];
-					// $data  =  json_decode ($payload); 
-					// echo var_dump($data);
-					// echo "ini ". $payload;
-					// $data = $data->_sys_id;
+					//$payload = $_POST['sys_data'];
 					
-					// echo $payload;
+					// from fecth
+					$content = trim(file_get_contents("php://input"));
+					$payload = json_decode($content, true);
+					// $_sys_id = base64_decode($payload);
 
 					$_sys_id = base64_decode($payload);
 					// echo "decodificado ".$_sys_id;

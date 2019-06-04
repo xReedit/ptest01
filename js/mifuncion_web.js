@@ -23,6 +23,10 @@ function xRetornaMoneda(xObj){
 	$(this).each(function(){this.reset();});
 	}*/
 
+function numeroConComas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function xCeroIzq(Num, CantidadCeros){
    Num = Num.toString();
    while(Num.length < CantidadCeros) Num = "0" + Num;
@@ -70,7 +74,17 @@ function xDevolverFecha(){
 	var d = new Date();
 	var xFechaHora=xCeroIzq(d.getDate(),2)+'/'+xCeroIzq((d.getMonth()+1),2)+'/'+d.getFullYear();
 	return xFechaHora;
-	}
+}
+
+function xDevolverFechaDDMMYYY(d){	
+	var xFechaHora=xCeroIzq(d.getDate(),2)+'/'+xCeroIzq((d.getMonth()+1),2)+'/'+d.getFullYear();
+	return xFechaHora;
+}
+
+// convierte formato fecha de yyyy-mm-dd (return input date) a -> dd/mm/yyyy
+function xDevolverFechaFormatInputDate(fecha_string) {
+	return fecha_string.split('-').reverse().join('/');
+}
 
 function xDevolverFechaParte(xParte){
 	var d = new Date();
@@ -281,6 +295,25 @@ function xHorasTranscurridos(h1,h2){
 	return d1-d2;
 	}
 */
+
+function xReturnSumaFechaDada(fecha, perido, cantidad){ 	
+	var rpt_sum_fecha; 
+	fecha = fecha ? fecha : new Date();
+	switch (perido) {
+		case 'dd':			
+				rpt_sum_fecha = fecha.getDate() + cantidad;
+			break;
+		case 'mm':			
+				rpt_sum_fecha = fecha.getMonth() + cantidad;
+			break;
+		case 'yy':			
+				rpt_sum_fecha = fecha.getFullYear() + cantidad;
+			break;
+	}
+
+	return rpt_sum_fecha;
+}
+
 function xDiasDeUnMes(mes,anio){
 	dias=[31,29,31,30,31,30,31,31,30,31,30,31];
 	ultimo=0;

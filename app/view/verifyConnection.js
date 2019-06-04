@@ -125,19 +125,38 @@ async function comprobarConexion() {
 }
 
 async function restoreConexion(_data) {	
-	restaurandoConexion = false;
-	await $.ajax({
-		type: 'POST',
-		url: '../../bdphp/log.php?op=-1',
-		data: {			
-			sys_data: _data
-		}
-	})
-    .done( function (res) {
-        console.log('restaurando');
-		restaurandoConexion = true;
-    });
+	restaurandoConexion = false;	
+	const data_send = {
+		sys_data: _data
+	}
+
+	await fetch('../../bdphp/log.php?op=-1', {
+			method: 'POST',
+			headers: {
+				"Content-Type": "application/json; charset=utf-8"
+			},
+			body: JSON.stringify(data_send)
+		})
+		.then(function (response) {
+			return response.json();
+		})
+		.then(res => {
+			console.log('restaurando', res);
+			restaurandoConexion = true;
+		})
 
 	return restaurandoConexion;
+
+	// await $.ajax({
+	// 	type: 'POST',
+	// 	url: '../../bdphp/log.php?op=-1',
+	// 	data: {			
+	// 		sys_data: _data
+	// 	}
+	// })
+	// .done( function (res) {
+	//     console.log('restaurando');
+	// 	restaurandoConexion = true;
+	// });
 }
 

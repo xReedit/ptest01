@@ -31,7 +31,7 @@
 								<paper-progress indeterminate style="width: 100%; float: left; margin-top: -19px">
 								</paper-progress>
 							</div>
-							<div id="datos_cliente" class="xInvisible">
+							<div id="datos_cliente" hidden=[[hidden_container_cliente]]>
 								<paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()"
 									id="clie_nombres" onChange="conMayusculas(this)" class="xPasarEnter2"
 									required="[[ComprobanteRequiereCliente]]" auto-validate></paper-input>
@@ -387,7 +387,7 @@
 				return;
 			}
 
-			xThisPago.ComprobanteRequiereCliente = true;
+			xThisPago.ComprobanteRequiereCliente = true;			
 		}
 
 		if (valor.length === 0) {
@@ -512,11 +512,11 @@
 		var idtipo_comprobante = $(obj_option_select).attr('data-idtipo-comprobante');
 		var option_requiere_cliente = parseInt($(obj_option_select).attr('data-requiere-cliente'));
 
-		xThisPago.ComprobanteRequiereCliente = option_requiere_cliente === 0 ? false : true; //requiere ingresar cliente
+		xThisPago.ComprobanteRequiereCliente = option_requiere_cliente === 0 ? false : true; //requiere ingresar cliente		
 
 		if (parseFloat(xThisPago.total) > 700) {
 			xThisPago.ComprobanteRequiereCliente = true;
-		}
+		}		
 
 		$("#clie_nombres").val('');
 		$("#clie_direccion").val('');
@@ -540,6 +540,7 @@
 
 		// activa boton para emitir comprobantes si el tpc es !=0 = ninguno	
 		xThisPago.btnDisabledInitModoComprobante = idtipo_comprobante === "0" ? false : true;
+		xThisPago.hidden_container_cliente = idtipo_comprobante === "0" ? true : xThisPago.ComprobanteRequiereCliente;
 
 		xThisPago.fire('xSelectTipoComprobante', xThisPago.tipoComprovanteSelecionado);
 
@@ -841,6 +842,7 @@
 			},
 			progres_busca_cliente: boolean = false,
 			hidden_container_pago: boolean = true,
+			hidden_container_cliente: boolean = true,
 			hidden_container_registro_pago: boolean = false,
 			valid_form_cliente_pago: boolean = false,
 			valid_monto_pago: boolean = true,
@@ -872,6 +874,7 @@
 		setVal: function (val) {			
 			xThisPago.total = val;
 			xThisPago.ComprobanteRequiereCliente = parseFloat(val) > 700 ? true : false;
+			xThisPago.hidden_container_cliente = xThisPago.ComprobanteRequiereCliente;
 			// EmitirValidacionFormCliente();
 
 			$("#tb_tp .row").remove();
@@ -890,7 +893,7 @@
 			xThisPago.$.sel_cliente.value = '';
 			xThisPago.$.sel_cliente.focus();
 
-			$("#datos_cliente").addClass("xInvisible");
+			// $("#datos_cliente").addClass("xInvisible");
 			EmitirValidacionFormCliente();
 			xSelectedTpComprobante();
 			//xLoadCliente();

@@ -107,7 +107,7 @@ window.onload = () => {
   });
 
 	xIniDocument();
-	xConstAjax();
+	// xConstAjax();
 };
 
 window.addEventListener("error", function (e) {
@@ -303,6 +303,8 @@ function xOpenPage(xop, parametro){
 		case 26: xruta = '/c_electronico'; break;
 		case 28: xruta = '/adm_dashboard'; break
 		case 29: xruta = '/us_contador'; break
+		case 31: xruta = '/gastos_fijos'; break
+		case 32: xruta = '/gastos_variables'; break
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
@@ -463,3 +465,19 @@ function xNewUs() {
 function xPasarAMenuAcc() {
 	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{xOpenPage(1);}
 }
+
+// function pruebaFecht() {
+// 	const _data_res = xm_log_get('app3_us')._sys_sessid;
+// 	fetch('../../bdphp/log.php?op=-11111', {
+// 		method: 'POST',
+// 		headers: {"Content-Type": "application/json; charset=utf-8"},
+// 		body: JSON.stringify(_data_res)
+// 	})
+// 	.then(function (response) {
+// 		return response.json();
+// 	})
+// 	.then(res => {
+// 		console.log('restaurando', res);
+// 		restaurandoConexion = true;
+// 	}) /*mas acciones a realizar*/
+// }

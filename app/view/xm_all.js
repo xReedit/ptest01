@@ -186,7 +186,7 @@ function xBorrarItem(obj){
 	if(obj!==null){
 		xRowObj=obj.parentNode.parentNode;
 		xTableRow=$(xRowObj).attr('data-t');
-		xIdROw=$(xRowObj).attr('data-id');
+		xIdROw = $(xRowObj).attr('data-id') || xRowObj.dataId;
 	}
 	xBorrarRegistro(xTableRow,xIdROw);
 	$(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
@@ -714,38 +714,38 @@ function setImportHTML(_linkImport) {
 // 		});
 // }
 
-function xConstAjax() {
-	$.ajax = (($oldAjax) => {
-		// on fail, retry by creating a new Ajax deferred
-		function check(a, b, c) {
-			var shouldRetry = b != 'success' && b != 'parsererror';
-			if (shouldRetry && --this.retries > 0)
-				setTimeout(() => {
-					$.ajax(this)
-				}, this.retryInterval || 100);
-		}
+// function xConstAjax() {
+// 	$.ajax = (($oldAjax) => {
+// 		// on fail, retry by creating a new Ajax deferred
+// 		function check(a, b, c) {
+// 			var shouldRetry = b != 'success' && b != 'parsererror';
+// 			if (shouldRetry && --this.retries > 0)
+// 				setTimeout(() => {
+// 					$.ajax(this)
+// 				}, this.retryInterval || 100);
+// 		}
 
-		return settings => $oldAjax(settings).always(check)
-	})($.ajax);
+// 		return settings => $oldAjax(settings).always(check)
+// 	})($.ajax);
 
-	$.ajaxSetup({
-		timeout: 4000,
-		retries: 3, // <-------- Optional 
-		tryCount: 0, // <---------- cuenta los intentos
-		retryLimit: 3,
-		retryInterval: 4000, // <-------- Optional
-		error: function (jqXHR, textStatus, errorThrown) {
-			this.tryCount++;
-			if (this.tryCount >= this.retryLimit) {
-				alert('No se pudo establecer conexion. Intentelo mas tarde.');
-				try {
-					xPopupLoad.xclose();
-				} catch (error) {}
+// 	$.ajaxSetup({
+// 		timeout: 10000,
+// 		retries: 2, // <-------- Optional 
+// 		tryCount: 0, // <---------- cuenta los intentos
+// 		retryLimit: 2,
+// 		retryInterval: 4000, // <-------- Optional
+// 		error: function (jqXHR, textStatus, errorThrown) {
+// 			this.tryCount++;
+// 			if (this.tryCount >= this.retryLimit) {
+// 				alert('No se pudo establecer conexion. Intentelo mas tarde.');
+// 				try {
+// 					xPopupLoad.xclose();
+// 				} catch (error) {}
 
-				return;
-			}
-		},
-	});
-}
+// 				return;
+// 			}
+// 		},
+// 	});
+// }
 
 // reintentos en $.ajax
