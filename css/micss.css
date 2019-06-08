@@ -616,7 +616,7 @@ input:checked ~ .xsub_titulo_item{color: #9E9E9E;}*/
 .xmenu_item_2.xitem_seleccionado span{color: #9E9E9E;}
 .xmenu_item_2.xitem_seleccionado .xsub_titulo_item{color: #9E9E9E; }
 .xmenu_item_2.xitem_seleccionado .xstock_item span{color: #fff;}
-.xmenu_item_2.xitem_seleccionado{ background: #424242; max-height: 500px; border-left:none; z-index: 1 !important;
+.xmenu_item_2.xitem_seleccionado{ background: #424242; max-height: 500px; border-left:none; z-index: 0 !important;
     position: relative !important;
     transform: scale(1.01);    
     /* display: inline-block !important; */
@@ -801,6 +801,8 @@ table tr.xPedidoItem > td .xPedidoItem_indicaciones{font-size: 10px;}
 .xPedidoTotal { font-size: 20px;font-weight: 600; text-align: right; padding-right: 7px; padding-top: 10px;padding-bottom: 10px;}
 .xPedidoSubTotal { font-size: 15px;font-weight: 400; text-align: right; padding-right: 7px; padding-top: 10px;padding-bottom: 10px;}
 .footer_fixed{color:#333;background: #bdbdbd; z-index: 3; position: fixed; bottom: 0; left:0; right: 0; border-top: 1px solid #ddd; padding: 10px;}
+.zindex-1 { z-index: 1;}
+.zindex-0 { z-index: 0;}
 .footer_dialog{bottom: 0; left:0; right: 0; position: absolute; padding: 0px 20px 20px 20px;}
 
 .xEncabezadoTpCon input{display: none;}

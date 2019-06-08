@@ -1,64 +1,73 @@
-var xArrayPedidoObj;
-var xidTipoConsumo;
-var xidItem;
-var xCambioCantidad=false;
-var xLocal_xDtSubTotales;
-var xLocal_TotalImporte=0;
-var xErrorPrint=false;
-var xArrayDesTipoConsumo=[];
-var xVerificarImprimirComanda=false;//si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
+var xArrayPedidoObj
+,xidTipoConsumo
+,xidItem
+,xCambioCantidad=false
+,xLocal_xDtSubTotales
+,xLocal_TotalImporte=0
+,xErrorPrint=false
+,xArrayDesTipoConsumo=[]
+,xVerificarImprimirComanda=false//si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
+,xGeneralDataCarta
+,xGeneralRelojUpdateItemsSolo
+,xGeneralRelojUpdateItemsCambioBd
+,xDisparaUpdateItems=new Event('GeneralUpdateItemsSolo') //cada 60segundos de inactivida
+,xGeneralNumPedidosActual=0
+,xGeneralUpdateSeccion=0
+,xGeneralDataSeccion
+,xNumPedidosBD=0
+,xGeneralArraySubTotales=[], itemPedidos_objItemSelected=[], objOptionItemSelect;
+
 //var xLocal_TotalRowsArrayImporte=0;
-
-var xGeneralDataCarta;
-var xGeneralRelojUpdateItemsSolo;
-var xGeneralRelojUpdateItemsCambioBd;
-var xDisparaUpdateItems=new Event('GeneralUpdateItemsSolo');//cada 60segundos de inactividad
-
-var xGeneralNumPedidosActual=0;
-var xGeneralUpdateSeccion=0;
-var xGeneralDataSeccion;
-
-var xNumPedidosBD=0;
-
-var xGeneralArraySubTotales=[];
-
 // 'precio_total_calc': para calcular en regalas de carta
+$(document.body).on('click', '#_xSubMenu_body div.xBtn', handlerFnMiPedido); // mi pedido
+$(document.body).on('click', '#_xdlgBody div.xBtn', handlerFnMiPedido); // mi pedido -> dialog
+// $(document.body).delegate('#_xSubMenu_body div.xBtn', 'click', handlerFnMiPedido); // mi pedido
+// $(document.body).delegate('#_xdlgBody div.xBtn', 'click', handlerFnMiPedido); // mi pedido -> dialog
+// function handlerFn() {console.log('delegate click _xSubMenu_body>div.xBtn')}
 
-$(document).on('click', '.xBtn', function(e) {
+// $(document).on('click', '.xBtn', function(e) {
+function handlerFnMiPedido(e) {
+		const _thisObj = $(this);
 		xCambioCantidad=true;
-		var xOperacion=$(this).text();
-		var objCant=$(this).parent().find('.xCant_item');
-		var xStockActual=$(this).parents('.xmenu_item_2').find('.xstock_item p').text();
-		var xidItem2=$(this).parents('.xmenu_item_2').attr('data-item');//iditem verdadero
-		xidItem=$(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
-		xidTipoConsumo=$(this).parent().attr('data-id');
-		var xDesItem=$(this).parents('.xmenu_item_2').find('.xtitulo_item').text();
-		var xPrecioItem=$(this).parents('.xmenu_item_2').find('.xprecio_item').text();
-		var xIndicaciones=$(this).parents('.xmenu_item_2').find('#txt_referencia').val();
-		var xCantActual=parseInt(objCant.text());
-		var xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]["cantidad"]);
-		var xCantTotalItem=0;
-		var xDesSeccion = xTituloDet || $(this).parents('.xmenu_item_2').attr('data-desseccion');
-		var xIdSeccionItem=$(this).parents('.xmenu_item_2').attr('data-idseccion');
-		var xIdSeccionItem_index=$(this).parents('.xmenu_item_2').attr('data-idseccionindex');
-		var xRowidimpresora=$(this).parents('.xmenu_item_2').attr('data-idimpresora');
-		var xRowidporcion=$(this).parents('.xmenu_item_2').attr('data-idprocede');
-		var xRowProcede=$(this).parents('.xmenu_item_2').attr('data-procede');
-		var xRowProcede_index=$(this).parents('.xmenu_item_2').attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodega
-		var ximprmir_comanda=$(this).parents('.xmenu_item_2').attr('data-imprimircomanda'); //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
-		var xcant_descontar=$(this).parents('.xmenu_item_2').attr('data-cant_descontar'); //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
-		var xidalmacen_items=$(this).parents('.xmenu_item_2').attr('data-idalmacen_items');
-		var xidDescontar=xRowidporcion;
-		var xPrecioTotal;
+		xidItem = itemPedidos_objItemSelected.idcarta_lista // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
+		xidTipoConsumo = _thisObj.parent().attr('data-id');
+
+		// const _xmenu_item_2 = _thisObj.parents('.xmenu_item_2');
+		// const _xmenu_item_2_dataset = JSON.parse(JSON.stringify(_xmenu_item_2[0].dataset));
+
+		var xOperacion=_thisObj.text()
+		, objCant = _thisObj.parent().find('.xCant_item')
+		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0 //itemPedidos_objItemSelected.xCant_item || 0// $(this).parent().find('.xCant_item')
+		, xStockActual = itemPedidos_objItemSelected.stock_actual // _xmenu_item_2.find('.xstock_item p').text()
+		, xidItem2 = itemPedidos_objItemSelected.iditem // _xmenu_item_2_dataset.item // _xmenu_item_2.attr('data-item') //iditem verdader
+		, xDesItem = itemPedidos_objItemSelected.des_item // _xmenu_item_2.find('.xtitulo_item').text()
+		, xPrecioItem = itemPedidos_objItemSelected.precio // _xmenu_item_2.find('.xprecio_item').text()
+		, xIndicaciones = itemPedidos_objItemSelected.xindicaciones //_xmenu_item_2.find('#txt_referencia').val()
+		, xCantActual = parseInt(objCant_cant) //parseInt(objCant.text())
+		, xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]['cantidad'])
+		, xCantTotalItem=0
+		, xDesSeccion = xTituloDet || itemPedidos_objItemSelected.des_seccion // _xmenu_item_2_dataset.desseccion // _xmenu_item_2.attr('data-desseccion')
+		, xIdSeccionItem = itemPedidos_objItemSelected.idseccion // _xmenu_item_2.attr('data-idseccion')
+		, xIdSeccionItem_index = itemPedidos_objItemSelected.idseccion_index // _xmenu_item_2.attr('data-idseccionindex')
+		, xRowidimpresora = itemPedidos_objItemSelected.idimpresora // _xmenu_item_2.attr('data-idimpresora')
+		, xRowidporcion = itemPedidos_objItemSelected.idprocede // _xmenu_item_2.attr('data-idprocede')
+		, xRowProcede = itemPedidos_objItemSelected.procede // _xmenu_item_2.attr('data-procede')
+		, xRowProcede_index = itemPedidos_objItemSelected.procede_index // _xmenu_item_2.attr('data-procedeindex')//para odernar al momento de imprimir: primero carta luego 1 bodega
+		, ximprmir_comanda = itemPedidos_objItemSelected.imprimir_comanda // _xmenu_item_2.attr('data-imprimircomanda') //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
+		, xcant_descontar = itemPedidos_objItemSelected.cant_descontar // _xmenu_item_2.attr('data-cant_descontar') //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
+		, xidalmacen_items = itemPedidos_objItemSelected.idalmacen_items // _xmenu_item_2.attr('data-idalmacen_items')
+		, xidDescontar=xRowidporcion
+		, xPrecioTotal;
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
 		//xDesItem=xDesItem+xIndicaciones.toLowerCase();
+		xCantActual = isNaN(xCantActual) ? 0 : xCantActual;
+		xCantSeccion = isNaN(xCantSeccion) ? 0 : xCantSeccion;
+		// if(isNaN(xCantActual)){xCantActual=0}
+		// if(isNaN(xCantSeccion)){xCantSeccion=0}
 
-		if(isNaN(xCantActual)){xCantActual=0}
-		if(isNaN(xCantSeccion)){xCantSeccion=0}
-
-		$(this).parents('.xpedir_item').find('.xCant_item').each(function(index,element){
+		_thisObj.parents('.xpedir_item').find('.xCant_item').each(function (index, element) {
 				var xval=parseInt($(element).text());
 				if(isNaN(xval)){xval=0}
 				xCantTotalItem=parseInt(xCantTotalItem)+xval
@@ -76,6 +85,8 @@ $(document).on('click', '.xBtn', function(e) {
 		if(xCount_cant_ico<0){xCount_cant_ico=0;}
 		if(xStockActual!='ND'){if(xCantTotalItem>parseInt(xStockActual)){return;}}
 		if(xCantActual<=0){xCantActual=0; objCant.addClass('xInvisible');}else{objCant.removeClass('xInvisible');}
+
+		// itemPedidos_objItemSelected.xCant_item = xCeroIzq(xCantActual,2); // cantidad actual
 		objCant.text(xCeroIzq(xCantActual,2));
 
 		xPrecioTotal=parseFloat(xCantActual*xPrecioItem).toFixed(2);
@@ -90,7 +101,13 @@ $(document).on('click', '.xBtn', function(e) {
 		window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
 
 		window.localStorage.setItem("::app3_sys_dta_count_ico",xCount_cant_ico);
-		if(xCount_cant_ico>0){$(".xIco_MiPedido .xCantPedio_ico").text(xCeroIzq(xCount_cant_ico,2));$(".xIco_MiPedido .xCantPedio_ico").removeClass('xInvisible');}else{$(".xIco_MiPedido .xCantPedio_ico").addClass('xInvisible');}
+		const _objIcoPedido = $("#_xIco_MiPedido .xCantPedio_ico");
+		if (xCount_cant_ico > 0) {
+			_objIcoPedido.text(xCeroIzq(xCount_cant_ico, 2));
+			_objIcoPedido.removeClass('xInvisible');
+		} else {
+			_objIcoPedido.addClass('xInvisible');
+		}
 
 		
 		// si esta en modo vista pantalla tablet, update x-mipedido
@@ -103,36 +120,59 @@ $(document).on('click', '.xBtn', function(e) {
 		e.stopPropagation();
 		e.stopImmediatePropagation()
 		return false;
-	})
+	}
+	// })
 
 //agregar item desde control de pedidos
-$(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
-		var element_cant_li_sel= $(this).parent().find('.xcant_li');
-		if(element_cant_li_sel.length==0){element_cant_li_sel=$(this).parent().find('.xcant_li2');}
-		var element_li_add__print= $(this).parent().parent();
-		var xsigno=$(this).text();
-		var xcant=parseInt(element_cant_li_sel.text());
-		var xcant_max=element_cant_li_sel.attr('data-cantmax');
-		var xli_tipoconsumo=$("#select_ulTPC option:selected").val();
-		var xli_iditem=$(element_li_add__print).attr('data-idcl');
+$(document.body).on('click', '#content_item_pedido div.xBtn_li', handlerFnMiPedidoControl); // control de mesas
+$(document.body).on('click', '#accordion div.xBtn_li2', handlerFnMiPedidoControl); // venta rapida
+function handlerFnMiPedidoControl(e) {
+// $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
+		var _nomClassXcant_li = 'xcant_li';
+		const _thisObj = e.target || e;
+		const _viene_venta_rapida = _thisObj.parentElement.parentElement.dataset.ventarapida || 0; 
+		const _itemIndex = _thisObj.parentElement.parentElement.dataset.index;
 		
+		xidTipoConsumo = $("#select_ulTPC option:selected").val();
+		itemPedidos_objItemSelected = xGeneralDataCarta[_itemIndex];
+		// xli_des = itemPedidos_objItemSelected.des_item;
 		
+		if (_viene_venta_rapida == 1) { //viene de venta rapida seleccionados obj
+			_nomClassXcant_li = 'xcant_li2';
+		}
 
-		var xli_des=$(this).parent().parent().find('.xtitulo_li').text();
-		if(xli_des==""){xli_des=$(this).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
-		var xli_des_ref=$(this).parent().parent().find('#xinput_li').val();
-		var xli_precio=$(element_li_add__print).attr('data-punitario');
-		var xli_idimpresora=$(element_li_add__print).attr('data-idimpresora');
-		var xli_idprocede=$(element_li_add__print).attr('data-idprocede');
-		var xli_Procede=$(element_li_add__print).attr('data-procede');
-		var xli_Procede_index=$(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodega
-		var xPrecioTotal=0;
-		var xviene_venta_rapida=$(element_li_add__print).attr('data-ventarapida');
-		var ximprmir_comanda=$(element_li_add__print).attr('data-imprimircomanda') || 0; //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
-		var xcant_descontar=$(element_li_add__print).attr('data-cant_descontar'); //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
-		var xidcategoria=$(element_li_add__print).attr('data-idcategoria');
-		var xli_idalmacen_items=$(element_li_add__print).attr('data-idalmacen_items');
-		var xStockActual = $(element_li_add__print).attr('data-stock_actual');
+		xidItem = itemPedidos_objItemSelected.idcarta_lista; // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
+		var element_cant_li_sel = _thisObj.parentElement.getElementsByClassName(_nomClassXcant_li) //$(this).parent().find(_nomClassXcant_li);		
+		element_cant_li_sel = $(element_cant_li_sel);
+		// if(element_cant_li_sel.length==0){element_cant_li_sel=$(this).parent().find('.xcant_li2');}
+		// var element_li_add__print= $(this).parent().parent();
+		
+		var xsigno= _thisObj.textContent  //$(this).text(),
+		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
+		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),
+		, xcant_max = itemPedidos_objItemSelected.stock_actual // element_cant_li_sel.attr('data-cantmax'),
+		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
+		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
+		
+		// if(xli_des==""){xli_des=$(this).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
+		var xli_des = itemPedidos_objItemSelected.des_item // $(this).parent().parent().find('.xtitulo_li').text();
+		, xli_des_ref = itemPedidos_objItemSelected.indicaciones || '' //$(this).parent().parent().find('#xinput_li').val();
+		, xli_precio = itemPedidos_objItemSelected.precio //$(element_li_add__print).attr('data-punitario'),
+		, xli_idimpresora = itemPedidos_objItemSelected.idimpresora //$(element_li_add__print).attr('data-idimpresora'),
+		, xli_idprocede = itemPedidos_objItemSelected.idprocede //$(element_li_add__print).attr('data-idprocede'),
+		, xli_Procede = itemPedidos_objItemSelected.procede //$(element_li_add__print).attr('data-procede'),
+		, xli_Procede_index = itemPedidos_objItemSelected.procede_index // $(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodeg,
+		, xidsecion = itemPedidos_objItemSelected.idseccion
+		, xidsecion_index = itemPedidos_objItemSelected.idseccion_index
+		, xdes_seccion = itemPedidos_objItemSelected.des_seccion
+		, xidItem2 = itemPedidos_objItemSelected.iditem
+		, xPrecioTotal=0
+		// , xviene_venta_rapida = _viene_venta_rapida //$(element_li_add__print).attr('data-ventarapida'),
+		, ximprmir_comanda = itemPedidos_objItemSelected.imprimir_comanda // $(element_li_add__print).attr('data-imprimircomanda') || 0, //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprim,
+		, xcant_descontar = itemPedidos_objItemSelected.cant_descontar // $(element_li_add__print).attr('data-cant_descontar'), //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona,
+		, xidcategoria = itemPedidos_objItemSelected.idcategoria // $(element_li_add__print).attr('data-idcategoria'),
+		, xli_idalmacen_items = itemPedidos_objItemSelected.idalmacen_items // $(element_li_add__print).attr('data-idalmacen_items'),
+		, xStockActual = xcant_max; //$(element_li_add__print).attr('data-stock_actual');
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
@@ -140,9 +180,9 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 
 		//var xArrayPedidoLiObj=new Array();
 
-		if(typeof xArrayPedidoObj[xli_tipoconsumo][xli_iditem]==="undefined"){xcant=0}else{
-			xcant = parseInt(xArrayPedidoObj[xli_tipoconsumo][xli_iditem].cantidad) || 0;
-		}
+		// if(typeof xArrayPedidoObj[xli_tipoconsumo][xli_iditem]==="undefined"){xcant=0}else{
+		// 	xcant = parseInt(xArrayPedidoObj[xli_tipoconsumo][xli_iditem].cantidad) || 0;
+		// }
 
 		if(xsigno=='+'){
 			//omitir para seguir vendiendo sin stock, da change a despues
@@ -152,8 +192,12 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		}
 
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
-		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
-			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
+		// xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
+		// 	'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
+		
+		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal, 'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 'iditem2': xidItem2, 'idimpresora': xli_idimpresora, 'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
+			};
 
 		element_cant_li_sel.text(xcant);
 		if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem];}else{
@@ -161,78 +205,95 @@ $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		}
 
 
-		if(xviene_venta_rapida==1){//viene de venta rapida
+		if (_viene_venta_rapida == 1) { //viene de venta rapida
 			xVerMipedidoVR();
 		}
 
 		// event.stopPropagation();
-		e.stopPropagation();
-		e.stopImmediatePropagation()
-	})
+		try {		
+			e.stopPropagation();
+			e.stopImmediatePropagation()
+		} catch (error) {}
+	}
+	// })
 
 
 //venta rapida
 function xBtnSumarRestarKey(xobj,xval){
-	//this=$(xobj);
-	var element_cant_li_sel= $(xobj).parent().find('.xcant_li');
-		if(element_cant_li_sel.length==0){element_cant_li_sel=$(xobj).parent().find('.xcant_li2');}
-		var element_li_add__print= $(xobj).parent().parent();
-		//var xsigno=$(xobj)text();
-		var xcant=parseInt(element_cant_li_sel.text());
-		var xcant_max=element_cant_li_sel.attr('data-cantmax');
-		var xli_tipoconsumo=$("#select_ulTPC option:selected").val();
-		var xli_iditem=$(element_li_add__print).attr('data-idcl');
-		var xli_des=$(xobj).parent().parent().find('.xtitulo_li').text();
-		if(xli_des==""){xli_des=$(xobj).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
-		var xli_des_ref=$(xobj).parent().parent().find('#xinput_li').val();
-		var xli_precio=$(element_li_add__print).attr('data-punitario');
-		var xli_idimpresora=$(element_li_add__print).attr('data-idimpresora');
-		var xli_idprocede=$(element_li_add__print).attr('data-idprocede');
-		var xli_Procede=$(element_li_add__print).attr('data-procede');
-		var xli_Procede_index=$(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodega
-		var ximprmir_comanda=$(element_li_add__print).attr('data-imprimircomanda') || 0; //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
-		var xcant_descontar=$(element_li_add__print).attr('data-cant_descontar'); //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
-		var xidcategoria=$(element_li_add__print).attr('data-idcategoria');
-		var xli_idalmacen_items=$(element_li_add__print).attr('data-idalmacen_items');
-		var xPrecioTotal=0;
-		//var xArrayPedidoLiObj=new Array();
+	//this=$(xobj);	
+		const nomClassBtn = xval > 0 ? '.suma' : '.resta';
+		const element_cant_li_sel=$(xobj).parent().find(nomClassBtn)[0];
+		handlerFnMiPedidoControl(element_cant_li_sel);
+		// return;
 
-		//cantidad acutual si la hay
-		//para llevar o local caso venta rapida// add a al pedido
-		if(typeof xArrayPedidoObj[xli_tipoconsumo][xli_iditem]==="undefined"){xcant=0}else{
-			xcant = parseInt(xArrayPedidoObj[xli_tipoconsumo][xli_iditem].cantidad) || 0;
-		}
+		// if(element_cant_li_sel.length==0){
+		// 	element_cant_li_sel=$(xobj).parent().find('.xcant_li2');
+		// }
+		// var element_li_add__print= $(xobj).parent().parent();
+		// //var xsigno=$(xobj)text();
+		// var xcant=parseInt(element_cant_li_sel.text());
+		// var xcant_max=element_cant_li_sel.attr('data-cantmax');
+		// var xli_tipoconsumo=$("#select_ulTPC option:selected").val();
+		// var xli_iditem=$(element_li_add__print).attr('data-idcl');
+		// var xli_des=$(xobj).parent().parent().find('.xtitulo_li').text();
+		// if(xli_des==""){xli_des=$(xobj).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
+		// var xli_des_ref=$(xobj).parent().parent().find('#xinput_li').val();
+		// var xli_precio=$(element_li_add__print).attr('data-punitario');
+		// var xli_idimpresora=$(element_li_add__print).attr('data-idimpresora');
+		// var xli_idprocede=$(element_li_add__print).attr('data-idprocede');
+		// var xli_Procede=$(element_li_add__print).attr('data-procede');
+		// var xli_Procede_index=$(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodega
+		// var ximprmir_comanda=$(element_li_add__print).attr('data-imprimircomanda') || 0; //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprimi
+		// var xcant_descontar=$(element_li_add__print).attr('data-cant_descontar'); //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
+		// var xidcategoria=$(element_li_add__print).attr('data-idcategoria');
+		// var xli_idalmacen_items=$(element_li_add__print).attr('data-idalmacen_items');
+		// var xPrecioTotal=0;
+		// //var xArrayPedidoLiObj=new Array();
 
-		if(xval>0){
-			//omitir para seguir vendiendo sin stock, da change a despues
-			if(xcant<xcant_max){xcant++;}
-		}else{
-			xcant--;
-		}
+		// //cantidad acutual si la hay
+		// //para llevar o local caso venta rapida// add a al pedido
+		// if(typeof xArrayPedidoObj[xli_tipoconsumo][xli_iditem]==="undefined"){xcant=0}else{
+		// 	xcant = parseInt(xArrayPedidoObj[xli_tipoconsumo][xli_iditem].cantidad) || 0;
+		// }
 
-		if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li')}else{
-			element_cant_li_sel.addClass('cant_fixed_li')
-			delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem]
-		}
+		// if(xval>0){ // resta o suma
+		// 	//omitir para seguir vendiendo sin stock, da change a despues
+		// 	if(xcant<xcant_max){xcant++;}
+		// }else{
+		// 	xcant--;
+		// }
+
+		// if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li')}else{
+		// 	element_cant_li_sel.addClass('cant_fixed_li')
+		// 	delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem]
+		// }
 
 
-		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
-		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
-			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar,'idalmacen_items':xli_idalmacen_items, 'visible':0};
+		// xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
+		// xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
+		// 	'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar,'idalmacen_items':xli_idalmacen_items, 'visible':0};
 
-		element_cant_li_sel.text(xcant);;
+		// element_cant_li_sel.text(xcant);;
 
-		if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem]}else{
-			element_cant_li_sel.addClass('cant_fixed_li')
-		}
+		// if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem]}else{
+		// 	element_cant_li_sel.addClass('cant_fixed_li')
+		// }
 
 		/*event.stopPropagation();
 		e.stopPropagation();
 		e.stopImmediatePropagation()*/
 }
 
-$(document).on('keyup', '.xMiTextReferencia', function(e) {
-		xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones=$(this).val();
+$(document.body).on('keyup', '.xMiTextReferencia', function(e) {
+		if ( !xidTipoConsumo ) return;
+		const val_ref = e.target.value;
+		itemPedidos_objItemSelected.indicaciones = val_ref;
+		itemPedidos_objItemSelected.xindicaciones = val_ref;
+		try {			
+			xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones = val_ref; // $(this).val();
+		} catch (error) {}
+		// xArrayPedidoObj[xli_tipoconsumo][xli_iditem]['indicaciones'] = val_ref;
+		
 		window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
 
 		// event.stopPropagation();
@@ -271,36 +332,7 @@ function xLoadArrayPedido(){
 	};
 	window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
 
-	/*>>xm_log_get
-	if(xtpc_t==null){
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3'})
-		.done( function (DtArray) {
-			var xDtArray=$.parseJSON(DtArray);
-			xDtArray=xDtArray.datos;
-			for (var i = 0; i < xDtArray.length; i++) {
-				//xArrayPedido[xDtArray[i].idtipo_consumo]=new Array();
-				xArrayPedidoObj[xDtArray[i].idtipo_consumo]={'id':xDtArray[i].idtipo_consumo, 'des':xDtArray[i].descripcion, 'titulo':xDtArray[i].titulo};
-				xArrayDesTipoConsumo.push({'id':xDtArray[i].idtipo_consumo, 'des':xDtArray[i].descripcion, 'titulo':xDtArray[i].titulo});
-			};
-			window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
-			window.localStorage.removeItem("::app3_sys_dta_tct");
-			window.localStorage.removeItem("::app3_sys_dta_tct_estructura");
-			window.localStorage.setItem("::app3_sys_dta_tct",JSON.stringify(xArrayDesTipoConsumo))
-			window.localStorage.setItem("::app3_sys_dta_tct_estructura",JSON.stringify(xArrayDesTipoConsumo))
-		})
-	}else{
-		xArrayDesTipoConsumo=[];
-		for (var i = 0; i < xtpc_t.length; i++) {
-			//xArrayPedido[xDtArray[i].idtipo_consumo]=new Array();
-			/*
-			try{xArrayPedido[xtpc_t[i].id]={'id':xtpc_t[i].id, 'des':xtpc_t[i].des, 'titulo':xtpc_t[i].titulo};}
-			catch(err){window.localStorage.removeItem("::app3_sys_dta_tct_estructura"); xLoadArrayPedido(); return;}
-			*/
-			/*xArrayPedidoObj[xtpc_t[i].id]={'id':xtpc_t[i].id, 'des':xtpc_t[i].des, 'titulo':xtpc_t[i].titulo};
-			xArrayDesTipoConsumo.push({'id':xtpc_t[i].id, 'des':xtpc_t[i].des, 'titulo':xtpc_t[i].titulo});
-		};
-		window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
-	}*/
+	
 }
 
 
@@ -627,104 +659,6 @@ function xImprimirAhora(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,xArraySub
 	});
 }
 
-//Armar subtotales del array a imprimir
-// function xArmarSubtotalesArray(xArrayPrint,xDatosPrint){
-// 	//sub totales
-// 	var xLocal_TotalImporte=0;
-// 	xLocal_TotalImporte=xSumaCantArray(xArrayPrint);
-// 	//xTotalImporte=xSumaCantRow($("#xli_tb_pedido_ad"),'.ptotal');
-
-// 	xLocal_xDtSubTotales=new Array();
-//  	xLocal_xDtSubTotales.push({'descripcion':'Sub Total', 'importe':xMoneda(xLocal_TotalImporte), 'visible':true});
-
-//  	for (var i = 0; i < xDatosPrint.length; i++) {
-//  		xdes_sb=xDatosPrint[i].des_detalle;
-//  		if(xdes_sb!=''){
-//  			xporcentaje_sb=parseFloat(parseFloat(xDatosPrint[i].porcentaje)/100).toFixed(2);
-//  			xporcentaje_sb=parseFloat(parseFloat(xLocal_TotalImporte)*parseFloat(xporcentaje_sb)).toFixed(2);
-//  			xLocal_xDtSubTotales.push({'descripcion':xMayusculaPrimera(xdes_sb.toLowerCase()), 'importe':xMoneda(xporcentaje_sb), 'visible':true});
-//  			xLocal_TotalImporte=parseFloat(xLocal_TotalImporte)+parseFloat(xporcentaje_sb);
-//  		}
-
-//  		//adicionales van con seccion ejemplo taper van con seccion para llevar
-//  		var xid_tp_consumo_ad=xDatosPrint[i].ad_idtp_consumo;
-//  		var xtt_adicional=0;
-
-//  		if(xid_tp_consumo_ad!=''){
-//  			xid_ad_seccion=xDatosPrint[i].ad_idseccion;
-//  			xid_ad_seccion=xid_ad_seccion.split(',');
-
-//  			var xCant_item_sec=0;//=xArrayPedidoObj[xid_tp_consumo_ad].cantidad;
-//  			var u_id_ad_seccion;
-//  			for (var q = 0; q < xid_ad_seccion.length; q++){
-//  				u_id_ad_seccion=xid_ad_seccion[q];
-//  				xCant_item_sec=parseFloat(xCant_item_sec)+xBuscarCantidadPorSeccionArray(xid_tp_consumo_ad,u_id_ad_seccion,xArrayPrint);
-//  			};
-
-//  			if(xCant_item_sec==0){continue;}
-//  			xtt_adicional=parseInt(xtt_adicional)+(parseFloat(xCant_item_sec)*parseFloat(xDatosPrint[i].ad_importe));
-//  			xtt_adicional=xMoneda(xtt_adicional);
-//  			//para ver si el check de cobro de este item esta activo
-//  			var xvisibleCobro=true;
-//  			try{xvisibleCobro=$("#check"+xDatosPrint[i].ad_descripcion)[0].checked;}catch(err){xvisibleCobro=true;}
-//  			if(xvisibleCobro==true){
-//  				xLocal_xDtSubTotales.push({'descripcion':xMayusculaPrimera(xDatosPrint[i].ad_descripcion.toLowerCase()), 'importe':xtt_adicional, 'visible':true});
-//  				xLocal_TotalImporte=parseFloat(xLocal_TotalImporte)+parseFloat(xtt_adicional);
-//  			}
-//  		}
-// 	};
-
-//  	if(xLocal_xDtSubTotales.length==1){xLocal_xDtSubTotales=new Array()}
-
-//  	//xLocal_TotalRowsArrayImporte=parseFloat(xLocal_TotalRowsArrayImporte)+parseFloat(xLocal_TotalImporte);
-//  	xLocal_xDtSubTotales.push({'descripcion':'Total', 'importe':xMoneda(xLocal_TotalImporte), 'visible':true});
-//  	return xLocal_TotalImporte;
-// }
-
-// /// calcula los subtotales desde el total de la mesa
-// /// se utiliza en dashboard
-// function xArmarSubtotalesFromTotal(itemMesa) {
-// 	var xCartaSubtotales=xm_log_get('carta_subtotales'); 
-// 	var xResTotal = 0, porcentaje=0,subtotal=0;
-// 	var dtDetalle = itemMesa.secciones.split(',');
-// 	var tipoConsumo = '', secciones = '', seccionCantidad, arrDt;
-
-// 	arrDt=[];
-// 	dtDetalle.map((d,index) => {
-// 		var _d = d.split(':');
-// 		// arrDt[_d[0]] = arrDt[_d[0]] ? arrDt[_d[0]]={} : arrDt[_d[0]];
-// 		arrDt.push({'tipoconsumo':_d[0], 'seccion': _d[1], 'cantidad': _d[2]});
-// 		tipoConsumo += _d[0]+',';
-// 		secciones += _d[1]+',';
-// 	});
-
-// 	xSumTotalPorcentaje = 0;
-// 	xCartaSubtotales
-// 		.filter(c => c.tipo==='p')
-// 		.map(c => {
-// 			porcentaje=parseFloat(parseFloat(c.monto)/100).toFixed(2);		
-// 			porcentaje=parseFloat(parseFloat(itemMesa.importe)*parseFloat(porcentaje)).toFixed(2)
-// 			xSumTotalPorcentaje += parseFloat(porcentaje);
-// 		})
-
-	
-// 	xSumCantImporte = 0
-// 	xCartaSubtotales
-// 		.filter(c => c.tipo==='a')		
-// 		.map(c => {
-// 			arrDt
-// 				.filter (i => i.tipoconsumo === c.idtipo_consumo)
-// 				.filter (i => i.seccion === c.idseccion)
-// 				.map(i => {
-// 					xSumCantImporte=parseFloat(xSumCantImporte) + (parseFloat((i.cantidad) * parseFloat(c.monto)));
-// 				})
-// 		})
-
-// 	// retorna el importe total + subtotales(igv,servio,taper)
-// 	xSumCantImporte += parseFloat(xSumTotalPorcentaje);
-// 	return parseFloat(itemMesa.importe) + parseFloat(xSumCantImporte); 
-	
-// }
 
 function xBuscarCantidadPorSeccionArray(idtpc_ad,idseccion_ad,xArraySumT){
 	var xcant_sec_ad=0;
@@ -757,25 +691,6 @@ function xCargarCategoriaActual(responde){
 	//})
 }
 
-
-//>>xm_log_get;
-/*function xLoadDtPrint(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=307'})
-	.done( function (DtPrint) {
-		var xDtPrint=$.parseJSON(DtPrint);
-		xDtPrint=xDtPrint.datos;
-		window.localStorage.setItem("::app3_sys_dta_prt",JSON.stringify(xDtPrint))
-	});
-}
-
-function xLoadRegla(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=306', data:{i:xidCategoria}})
-	.done( function (DtR) {
-		var xDtR=$.parseJSON(DtR);
-		xDtR=xDtR.datos;
-		window.localStorage.setItem("::app3_sys_dta_rec",JSON.stringify(xDtR))
-	})
-}*/
 
 //load general para item del la carta
 // carta lista y boodega

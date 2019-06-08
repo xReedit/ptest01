@@ -9,7 +9,11 @@ document.addEventListener("WebComponentsReady", function componentsReady() {
 
 function xMoneda(xVal){
 	var xvalReturn='';
-	if(isNaN(parseFloat(xVal).toFixed(2))){xvalReturn=''}else{xvalReturn=parseFloat(xVal).toFixed(2)};
+	try {		
+		if(isNaN(parseFloat(xVal).toFixed(2))){xvalReturn=''}else{xvalReturn=parseFloat(xVal).toFixed(2)};
+	} catch (error) {
+		xvalReturn = xVal;
+	}
 	return xvalReturn;
 	}
 function xRetornaMoneda(xObj){

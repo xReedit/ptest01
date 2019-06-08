@@ -8,7 +8,7 @@ var xRouterTime_cp = false;
 // $(document).ready(function () {
 window.onload = () => {
 	xIniControlPedido();
-	xConstAjax();
+	// xConstAjax();
 };
 
 // document.addEventListener("DOMContentLoaded", function componentsReady() {

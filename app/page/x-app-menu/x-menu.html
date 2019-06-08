@@ -10,7 +10,7 @@
       </div>
       <div class="xLineaSombra xInvisible" id="line_sombra"></div>
       
-      <div class="xMenu_body noselect">
+      <div class="xMenu_body noselect" id="_xMenu_body">
         <div class="xAlinearCentro spinner">
           <paper-spinner active></paper-spinner>
         </div>
@@ -70,11 +70,15 @@
   }
   function xPasarDetalle(obj) {
     // alert('menu');
-    var xdt = $(obj).find(".xtitulo_item").text();
+    // var xdt = $(obj).find(".xtitulo_item").text();
+    const xdt = obj.childNodes[0].textContent;
     //var xidt=$(obj).attr('data-id');
-    //xidCategoriaSeccion=$(obj).attr('data-id');
-    xidCategoriaSeccion = $(obj).attr("data-id");
-    xidCatProcedencia = $(obj).attr("data-procede");
+    // //xidCategoriaSeccion=$(obj).attr('data-id');
+    // xidCategoriaSeccion = $(obj).attr("data-id");
+    // xidCatProcedencia = $(obj).attr("data-procede");
+
+    xidCategoriaSeccion = obj.getAttribute('data-id');
+    xidCatProcedencia = obj.getAttribute('data-procede');
     window.localStorage.setItem("::app3_sys_dt_c", xdt);
     
     // xRegDataLoadBack();
@@ -169,8 +173,8 @@
 
   function xArmarCarta(xSeccionArray) {
     var xCadenaCarta = '';
-
-    for (var z = 0; z < xSeccionArray.length; z++) {
+    const lengthFor = xSeccionArray.length;
+    for (var z = 0; z < lengthFor; z++) {
         xCadenaCarta = String(
           xCadenaCarta +'<div class="xmenu_item xPading15" data-id="' +xSeccionArray[z].id +
             '" data-procede="' +xSeccionArray[z].procede +'" onclick="xPasarDetalle(this);">' +
@@ -180,9 +184,9 @@
         );
       }
 
-      $(".xMenu_body div").remove();
-      $(".xMenu_body .spinner").remove();
-      $(".xMenu_body").append(xCadenaCarta).trigger("create");
+      $("#_xMenu_body div").remove();
+      $("#_xMenu_body .spinner").remove();
+      $("#_xMenu_body").append(xCadenaCarta).trigger("create");
 
       // $("body").addClass("loaded");
       $(window).scrollTop(window.localStorage.getItem("::app3_sys_scroll_pos") || 0);

@@ -5,7 +5,7 @@
         <span class="xtitulo">[[xt_nombre_sede]]</span>
         <div class="xsub_titulo">[[xt_eslogan]]</div>
       </div>
-      <div class="xMenu_body noselect">
+      <div class="xMenu_body noselect" id="_xMenu_body">
         <div class="xAlinearCentro spinner">
           <paper-spinner active></paper-spinner>
         </div>
@@ -85,9 +85,9 @@
         $("body").addClass("loaded");
       }, 500);
 
-      $(".xMenu_body div").remove();
-      $(".xMenu_body .spinner").remove();
-      $(".xMenu_body")
+      $("#_xMenu_body div").remove();
+      $("#_xMenu_body .spinner").remove();
+      $("#_xMenu_body")
         .append(xCadenaCartegoria)
         .trigger("create");
     }).fail(function (jqXHR, textStatus) {

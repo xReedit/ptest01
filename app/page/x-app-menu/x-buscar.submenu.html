@@ -16,7 +16,7 @@
 					<div class="xLinea7"></div>
 					<div class="xLineaSombra"></div>
 				</div>
-				<div class="xMenu_body_buscar">
+				<div class="xMenu_body_buscar" id="_xSubMenu_body">
 					<div class="xAlinearCentro spinner">
 						<paper-spinner active></paper-spinner>
 					</div>
@@ -31,14 +31,15 @@
 	</template>
 </dom-module>
 <script>
-	var xThisBuscarSubMenu, xCadenaTC='';
-
-	var xTituloDet;
-	var xArrayPedidoObj;
-	var xidItem_selected;
-	var xreloj_update_subItem_sel;
-	var xobj_row_selected;
-	var xidCatProcedencia;
+	var xThisBuscarSubMenu
+	, xCadenaTC=''
+	, xTituloDet
+	, xArrayPedidoObj
+	, xidItem_selected
+	, xreloj_update_subItem_sel
+	, xobj_row_selected
+	, xidCatProcedencia
+	, xdt_sub_Item;
 
 	function xxaa2() {
 		// alert('aaaaaaaaaa');
@@ -64,28 +65,41 @@
 			
 		// });
 
-		$(document).on('click', '.xmenu_item_2', function (e) {
+		// $(document).on('click', '.xmenu_item_2', function (e) {
+		$(document.body).on('click', '#_xSubMenu_body div.xmenu_item_2', function(e) {
 			// $(document).click(function (e) {
 			//$('.xmenu_item_2').click(function() {      
 			xobj_row_selected = $(this);
-			if ($(this).find("input:radio")[0].disabled == true) {
+			const indexSelect = xobj_row_selected.data('index');
+
+			// itemPedidos_objItemSelected = [];
+			itemPedidos_objItemSelected = xdt_sub_Item[indexSelect];
+			itemPedidos_objItemSelected.stock_actual = itemPedidos_objItemSelected.cantidad;
+
+			if (xobj_row_selected.find("input:radio")[0].disabled == true) {
 				// e.stopPropagation();
 				e.stopPropagation();
 				e.stopImmediatePropagation();
 				return false;
 			}
-			$(this).find("input:radio")[0].checked = true;
+			xobj_row_selected.find("input:radio")[0].checked = true;
 			_busqueda_xVerificarCheckItem();
 
 			var xCantArray;
 			var xindicaciones = "";
 			var xidTipoConsumoItem;
-			xTituloDet = $(this).attr("data-desseccion"); 
-			xidItem = $(this).attr("data-id");
-			xidCatProcedencia = $(this).attr("data-idprocede");
-			_xcantidad = $(this).attr("data-cantidad");
+			// xTituloDet = $(this).attr("data-desseccion"); 
+			// xidItem = $(this).attr("data-id");
+			// xidCatProcedencia = $(this).attr("data-idprocede");
+			// _xcantidad = $(this).attr("data-cantidad");
+			// xidItem_selected = xidItem;
+
+			xTituloDet = itemPedidos_objItemSelected.des_seccion; // $(this).attr("data-desseccion");
+			xidItem = itemPedidos_objItemSelected.idcarta_lista; // $(this).attr("data-id");
+			_xcantidad = itemPedidos_objItemSelected.cantidad; // $(this).attr("data-cantidad");
 			xidItem_selected = xidItem;
-			$(this)
+	  
+			xobj_row_selected
 				.find(".xpedir_row")
 				.each(function (a, element) {
 					xidTipoConsumoItem = $(element).attr("data-id");
@@ -100,7 +114,7 @@
 					}
 				});
 
-			$(this)
+			xobj_row_selected
 				.find("#txt_referencia")
 				.val(xindicaciones);
 
@@ -151,19 +165,19 @@
 			data: { i: xidCategoria, parametro: _parametro}
 			})
 		.done(function(dtItem) {
-			var xdt_sub_Item = $.parseJSON(dtItem);
+			xdt_sub_Item = $.parseJSON(dtItem);
 			// if(!xdt_sub_Item.success){alert(xdt_sub_Item.error); return;}
-			var xCadenaItem = "";
-			var xCadenaItem_encabezado = "";
-			var xCadenaItem_des_foto = "";
-			var xCadena_foto = "";
-			var xCadena_des = "";
-			var xCadenaItem_Detalle = "";
-			var xCantItem;
-			var xCheck_desactivado = "";
+			var xCadenaItem = ''
+			, xCadenaItem_encabezado = ''
+			, xCadenaItem_des_foto = ''
+			, xCadena_foto = ''
+			, xCadena_des = ''
+			, xCadenaItem_Detalle = ''
+			, xCantItem
+			, xCheck_desactivado = ''
+			, xClassEstadoStock = '';
 
 			xdt_sub_Item = xdt_sub_Item.datos;
-			var xClassEstadoStock = "";
 			for (var i = 0; i < xdt_sub_Item.length; i++) {
 				//if(xdt_sub_Item[i].idseccion!=xidCategoriaSeccion){continue}
 				xCheck_desactivado = "";
@@ -176,7 +190,7 @@
 				xCheck_desactivado = "disabled";
 				}
 
-				xCadenaItem_encabezado = '<input class="xcheck_item" type="radio" name="option" value="other" ' + xCheck_desactivado +">" + 
+				xCadenaItem_encabezado = '<input class="xcheck_item" type="radio" name="option" data-index=' + i + ' value="other" ' + xCheck_desactivado +">" + 
 					'<p class="xprecio_item xEnLinea">' + xdt_sub_Item[i].precio + "</p>" +
 					'<div id class="xstock_item ' + xClassEstadoStock + '"><span>stock</span><p class="num_stock">' + xCeroIzq(xCantItem, 2) +"</p></div>" +
 					'<p class="xtitulo_item xEnLinea">' + xdt_sub_Item[i].des_item +"</p>";
@@ -202,7 +216,7 @@
 					"</div></div>";
 
 				xCadenaItem = String(
-				xCadenaItem +'<div onclick="xxaa2();" class="xmenu_item_2 xPading10 ' +xClassEstado +'" data-id="' +xdt_sub_Item[i].idcarta_lista +
+				xCadenaItem +'<div onclick="xxaa2();" class="xmenu_item_2 xPading10 ' +xClassEstado +'" data-index='+i+' data-id="' +xdt_sub_Item[i].idcarta_lista +
 					'" data-item="' + xdt_sub_Item[i].iditem +
 					'" data-idseccion="' + xdt_sub_Item[i].idseccion +
 					'" data-idseccionindex="' + xdt_sub_Item[i].idseccion_index +
@@ -221,9 +235,9 @@
 					xCadenaItem_Detalle
 				);
 			}
-			$(".xMenu_body_buscar div").remove();
-			$(".xMenu_body_buscar .spinner").remove();
-			$(".xMenu_body_buscar").append(xCadenaItem).trigger("create");
+			$("#_xSubMenu_body div").remove();
+			$("#_xSubMenu_body .spinner").remove();
+			$("#_xSubMenu_body").append(xCadenaItem).trigger("create");
 
 			// al cargar ir a la posicion de donde vino
 			$(window).scrollTop(

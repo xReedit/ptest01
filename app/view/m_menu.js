@@ -13,6 +13,23 @@ var xOnlyAccPedido;
 var xCount_cant_ico = 0;
 // var xRouterTime_Carta = false;
 
+var InitMenu = {
+    onReady: function () {
+      console.log('PI onReady');
+      $("#PanelDe").on("transitionend", InitMenu.PanelDeTransition());
+      xIniMenAAA();
+      setGalleta();
+      listenCookieChange(function () {
+        dialog_inactividad.open();
+      });
+    },
+    PanelDeTransition: () => {
+       if (this.selected == "main") {
+         $("#PanelDe").css("z-index", "0");
+       }
+    }
+}
+
 window.addEventListener("error", function (e) {
   if (!e) {return}
   console.log(e);
@@ -29,22 +46,24 @@ window.addEventListener("error", function (e) {
 //     }
 //   });
 // });
+
 window.onload = () => {
+  InitMenu.onReady();
   // console.log('load window');
-  $("#PanelDe").on("transitionend", function (a) {
-    if (this.selected == "main") {
-      $("#PanelDe").css("z-index", "0");
-    }
-  });
+  // $("#PanelDe").on("transitionend", function (a) {
+  //   if (this.selected == "main") {
+  //     $("#PanelDe").css("z-index", "0");
+  //   }
+  // });
 
-  xIniMenAAA();
+  // xIniMenAAA();
+  // setGalleta();
+  // listenCookieChange(function () {
+  //   dialog_inactividad.open();
+  // });
+  
   // inactivityTime();
-  setGalleta();
-  listenCookieChange(function () {
-    dialog_inactividad.open();
-  });
-
-  xConstAjax();
+  //xConstAjax();
 }
 
 // $(document).ready(function () {  
@@ -177,7 +196,8 @@ function xOpenPageCarta(xop, parametro) {
 
   router.go(xruta);
   
-  PanelDe.closeDrawer();
+  // PanelDe.closeDrawer();
+  xClosePanelDe();
 }
 
 
@@ -255,8 +275,15 @@ function xScrolUpObj(obj) {
 
 function xOpenPanelDe() {
   PanelDe.openDrawer();
-  $("#PanelDe").css("z-index", "20");
+  PanelDe.classList.add('xOnZindexPanelDe');
+  // $("#PanelDe").css("z-index", "20");
 }
+
+function xClosePanelDe() {
+  PanelDe.closeDrawer();
+  PanelDe.classList.remove('xOnZindexPanelDe');
+}
+
 function xArmarMenuLateral(op) {
   var xCadenaMenuL = "";
   var xOpSalirPanel = "";
@@ -330,7 +357,8 @@ function xVerDetalleMenu(i, op) {
   var xPos = location.href.indexOf(xBus);
   if (xPos != -1) {
     if (op == 2) {
-      PanelDe.closeDrawer();
+      // PanelDe.closeDrawer();
+      xClosePanelDe();
 
       // xRegDataLoadBack();
       const _DataLoadBack = { i: xidCategoria, s: xidCategoriaSeccion, p: xidCatProcedencia }

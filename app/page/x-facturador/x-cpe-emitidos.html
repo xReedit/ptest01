@@ -484,7 +484,7 @@
     function xGenerarReporteExcel() {
         const org = xm_log_get('datos_org_sede');
         // console.log(org);
-        xThisCpe.nom_sede = org[0].sedenombre;
+        xThisCpe.nom_sede = org ? org[0].sedenombre : '';
         xLoadCpeEmitidos('601');
     }
 
@@ -493,7 +493,7 @@
         const param_busqueda_mes_anterior = xCeroIzq(cpe_mes_anterior,2) + '/'+ cpe_yy_actual;
         const org = xm_log_get('datos_org_sede');
 
-        xThisCpe.nom_sede = org[0].sedenombre;
+        xThisCpe.nom_sede = org ? org[0].sedenombre : '';
         xPopupLoad.titulo = "Procesando..."
         xPopupLoad.xopen();
         txt_buscar.value = param_busqueda_mes_anterior;
@@ -522,9 +522,9 @@
 
     function xCPEValidUs() {
         _us_cpe = xm_log_get('app3_us');
-        xThisCpe.isContador = parseInt(_us_cpe.rol) == 2 ? true : false ;
-        
+
         if ( xThisCpe.isContador ) {
+            xThisCpe.isContador = parseInt(_us_cpe.rol) == 2 ? true : false ;
             xGetIdCpc();
         }
     }
