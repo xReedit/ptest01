@@ -1,3 +1,4 @@
+<link rel="import" href="../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
 <dom-module id="x-compras">
 	<template>
 		<paper-dialog id="dialog_additem_pro" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -35,6 +36,24 @@
 				<!-- <br><br> -->
 			</div>
 		</paper-dialog>
+
+		<paper-dialog class="dialog_redondo" id="dialog_registrar_pago" style="width: 345px;" modal
+			entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div>
+				<h4>Definir Forma de pago</h4><br>					
+				<x-comp-find-tipo-pago id="compTpPago" onchange="_getTipoPago(list_tipo_pago)"></x-comp-find-tipo-pago>
+				<br>
+				<div>
+					<label for="date_fecha_pago" class="xColorRow_Plomo xfont11">Fecha de pago</label>
+					<input type="date" class="xMiInput xPasarEnter2" id="date_fecha_pago" espaciar>
+				</div>
+				<br><br>
+				<button class="xBoton2 xVerde" onclick="xRegistrar_compra();">Listo, guardar</button>
+				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+				<br>
+			</div>
+		</paper-dialog>
+
 		<br>
 		<div class="xMiCard xradius" style="width:80%">
 			<div class="xInvisible">
@@ -46,8 +65,11 @@
 
 						<input type="text" id="f_compra" name="f_compra">
 						<input type="text" id="f_registro" name="f_registro">
+						<input type="text" id="f_pago" name="f_pago">
 						<input type="text" id="total" name="total">
+						<input type="text" id="a_pagar" name="a_pagar">
 						<input type="text" id="nota_de_compra" name="nota_de_compra">
+						<input type="text" id="idtipo_pago" name="idtipo_pago">
 					</form>
 			</div>
 			<div class="xEncanezadoCard xFondoRowIndigo2 xCursor xHoverOpaco xTransicion3s" id="div_proveedor" style="height:25px;">
@@ -57,15 +79,15 @@
 					<form id="frm_proveedor" method="post" action="#">
 						<input type="text" id="descripcion" name="descripcion" placeholder="Nombre / Razon social" onChange="conMayusculas(this)" class="xMiInput xPasarEnter2" style="width:40%" inline>
 						<input type="text" id="dni" name="dni" placeholder="DNI / RUC" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" inline>
-						<input type="text" id="direccion" name="direccion" placeholder="Direccion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" inline>
-
+						<input type="text" id="direccion" name="direccion" placeholder="Direccion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)">						
 						<div class="xInvisible">
 							<input type="text" id="idorg" name="idorg">
 							<input type="text" id="idsede" name="idsede">
 							<input type="text" id="idproveedor" name="idproveedor">
 						</div>
 					</form>
-				</div>
+					<br><br>
+				</div>				
 			</div>
 			<div class="xEncanezadoCard xFondoRowAmarillo4">
 				<p>Estos productos ingresa a:</p>
@@ -97,32 +119,34 @@
 					<!-- <table id="tb_almacen_items" data-TablaName="almacen_items"></table> -->
 				</div>
 			</div>
-			<div class="xPieCard">
+			<div class="xPieCard">				
 				<br>
-				<div class="xBoton2 xAzul" onclick="xOpenRegistrarPago();">Listo, definir pago</div>
+				<div class="xBoton2 xAzul" disabled$="[[!habilitarPago]]" onclick="xOpenRegistrarPago();">Listo, definir pago</div>
 				<br><br>
 			</div>
 		</div>
 	</template>
 </dom-module>
 <script>
-var xThis;
-var xNewItemPro=false;
-var xNewFamilia=false;
-var xPrecio_item_Add=0;
-var xCan_item;
-var xDes_item;
-var xPrecio_item;
-var xnom_familia;
-var xPrecio_und_pro;
-var xIdProducto_sel;
-var xValPago;
-var xImporte_total_list=0;
-var xlo_idorg;
-var xlo_idsede;
-var xsel_proveedor;
-var xsel_almacen;
-var xRpt_pago;
+var xThis
+, xNewItemPro=false
+, xNewFamilia=false
+, xPrecio_item_Add=0
+, xCan_item
+, xDes_item
+, xPrecio_item
+, xnom_familia
+, xPrecio_und_pro
+, xIdProducto_sel
+, xValPago
+, xImporte_total_list=0
+, xlo_idorg
+, xlo_idsede
+, xsel_proveedor
+, xsel_almacen
+, xRpt_pago
+, sel_idTipoPago;
+
 function xIniCompras(){
 	//xloadProductoItem();
 	//xLoadFamilias();
@@ -139,6 +163,12 @@ function xIniCompras(){
 		xlo_idsede=xIdSede;
 		xloadAlamcen();
 	});
+
+	dateNow = new Date();
+	const maxDate = dateNow.toISOString().split("T")[0];
+	// date_fecha_pago.min = maxDate;
+	date_fecha_pago.value = maxDate;
+	xThis.habilitarPago = false;
 
 	$("#Titulo_page").text("Registrar Compras");
 	$('.xPasarEnter2').on('keyup',function(e){
@@ -208,10 +238,12 @@ function xEnterInInputDlg(e){
 	}
 }
 function xOpenRegistrarPago(){
-	xValPago.setModoSoloProveedor();
+	// xValPago.setModoSoloProveedor();
 
-	$("#component_pago_pro").focus();component_pago_pro.setVal(xMoneda(xImporte_total_list));
-	dialog_pago.open();
+	// $("#component_pago_pro").focus();component_pago_pro.setVal(xMoneda(xImporte_total_list));
+	// dialog_pago.open();
+	sel_idTipoPago = compTpPago.__data__.list_tipo_pago.idtipo_pago;
+	dialog_registrar_pago.open();
 }
 
 function xAddItemCompra(){
@@ -307,15 +339,15 @@ function xRegistrar_compra(){
 }
 function xGuardarRegistroCompra(){
 	//Obtener tipos de  pago
-	var xArrayTp=xRpt_pago[0].xtipo_pagos;
+	// var xArrayTp=xRpt_pago[0].xtipo_pagos;
 	var xrow_tipo_pago='';
-	for (var i = 0; i < xArrayTp.length; i++) {
+	// for (var i = 0; i < xArrayTp.length; i++) {
 		xrow_tipo_pago=String(xrow_tipo_pago+'<tr class="row">'+
 			'<td data-ColumName="idcompra">-compra</td>'+
-			'<td data-ColumName="idtipo_pago">'+xArrayTp[i].id+'</td>'+
-			'<td data-ColumName="importe">'+xArrayTp[i].importe+'</td>'+
+			'<td data-ColumName="idtipo_pago">'+sel_idTipoPago+'</td>'+
+			'<td data-ColumName="importe">'+xImporte_total_list+'</td>'+
 			'</tr>')
-	};
+	// };
 	$("#tb_compra_pago").append(xrow_tipo_pago).trigger('create');
 	//
 
@@ -331,14 +363,18 @@ function xGuardarRegistroCompra(){
 
 
 	//guardar datos de la compra
-	$("#frm_compra #idproveedor").val(xsel_proveedor);
-	$("#frm_compra #idalmacen").val(xsel_almacen);
-	$("#frm_compra #f_registro").val(xDevolverFecha());
-	$("#frm_compra #f_compra").val(xDevolverFecha());
-	$("#frm_compra #total").val(xImporte_total_list);
-	$("#frm_compra #idorg").val(xlo_idorg);
-	$("#frm_compra #idsede").val(xlo_idsede);
-	$("#frm_compra #nota_de_compra").val(xRpt_pago[0].nota_compra);
+	const frm_compra = $("#frm_compra");
+	frm_compra.find("#idproveedor").val(xsel_proveedor);
+	frm_compra.find("#idalmacen").val(xsel_almacen);
+	frm_compra.find("#f_registro").val(xDevolverFecha());
+	frm_compra.find("#f_compra").val(xDevolverFecha());
+	frm_compra.find("#f_pago").val(xDevolverFechaFormatInputDate(date_fecha_pago.value));
+	frm_compra.find("#idtipo_pago").val(sel_idTipoPago);
+	frm_compra.find("#total").val(xImporte_total_list);
+	frm_compra.find("#a_pagar").val(xImporte_total_list);
+	frm_compra.find("#idorg").val(xlo_idorg);
+	frm_compra.find("#idsede").val(xlo_idsede);
+	// frm_compra.find("#nota_de_compra").val(xRpt_pago[0].nota_compra);
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=compra",$("#frm_compra").serialize(),function(xUltimo_id_compra){
 		xIdCompra=xUltimo_id_compra;
 		sql_compra_items=sql_compra_items.replace(/-compra/g,xIdCompra)
@@ -350,10 +386,16 @@ function xGuardarRegistroCompra(){
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xunion_sql}})
 		.done( function (DtIdFamRpt) {
 			xPopupLoad.xclose();
+			dialog_registrar_pago.close();
 			xNuevaCompra();
 		})
 	})
 }
+
+function _getTipoPago(e) {
+	sel_idTipoPago = e.idtipo_pago;
+}
+
 function xNuevaCompra(){
 	$("#tb_update_precio tr").remove();
 	$("#tb_input tr.row").remove();
@@ -364,6 +406,7 @@ function xNuevaCompra(){
 	$("#frm_proveedor").reset();
 	$("#frm_item_pro").reset();
 	dialog_pago.close();
+	xThis.habilitarPago = false;
 
 	$("#div_proveedor").css('height','30px');
 	$("#div_proveedor #div_ínput").addClass('xInvisible');
@@ -375,7 +418,10 @@ function xSumarTotalLista(){
 	var xtt_row='<tr class="tt_row xSinBorde"><td colspan="2" align="right"><h3>Total</h3></td><td align="right"><h3><strong>'+xImporte_total_list+'</strong></h3></td><td colspan="2"></td></tr>';
 	xTb_items.find(".tt_row").remove();
 	xTb_items.append(xtt_row).trigger('create');
+
+	xThis.habilitarPago = parseInt(xImporte_total_list) > 0 ? true : false;
 }
+
 function xBorrarItemLocalPro(obj){
 	var xObj=$(obj).parent().parent();
 	var xtb=xObj.parents('table');
@@ -571,6 +617,7 @@ Polymer({
 		dtProItem:Object,
 		dtProFam:Object,
 		dtProProveedor:Object,
+		habilitarPago: false,
 	},
 	attached:function(){
     	xThis=this;

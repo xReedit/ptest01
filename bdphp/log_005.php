@@ -46,5 +46,60 @@
 			";
 			$bd->xConsulta($sql);
 			break;
+		case 2: // filtrar ingresos por mes
+			$mm = $_POST['mm'];
+			$yy = $_POST['yy'];
+			$sql = "
+				SELECT * , FORMAT(cio.importe,2) as total, cio.descripcion as des_concepto, tpi.descripcion as tp_ingreso
+				FROM contable_ingreso_otro as cio
+					INNER JOIN tipo_ingreso as tpi using (idtipo_ingreso)
+				WHERE (cio.idorg=".$g_ido." and cio.idsede=".$g_idsede.") and MONTH(STR_TO_DATE(cio.fecha_ingreso, '%d/%m/%Y')) = ".$mm." and YEAR(STR_TO_DATE(cio.fecha_ingreso, '%d/%m/%Y')) = ".$yy." and cio.estado=0
+			";
+			$bd->xConsulta($sql);
+			break;
+		case 3: // cuenta por pagar 
+			$sql = "
+				SELECT c.idcompra, c.f_compra, c.f_pago, c.f_registro, c.a_pagar AS importe, FORMAT(c.a_pagar,2) as total, FORMAT(c.total,2) as total_total, c.pagado, tp.idtipo_pago, tp.descripcion as des_tp, p.idproveedor, p.descripcion as des_proveedor, p.dni
+						, DATEDIFF(STR_TO_DATE(c.f_pago, '%d/%m/%Y'), now()) as faltan
+				from compra as c
+					inner join tipo_pago as tp using (idtipo_pago)
+					inner join proveedor as p using(idproveedor)
+				where (c.idorg=".$g_ido." and c.idsede=".$g_idsede.") and tp.idtipo_pago=3 and c.pagado=0 and c.estado=0
+			";
+			$bd->xConsulta($sql);
+			break;
+		case 301: //detalle de cuentas pagar - abonos
+			$sql="select idcompra_pago_cuenta, idcompra, fecha, importe, FORMAT(importe,2) as total from compra_pago_cuenta where idcompra=".$_POST['i'];
+			$bd->xConsulta($sql);
+			break;
+		case 302: // guardar pago cuentas por pagar
+			$arrItem=json_encode($_POST['item']);
+			$sql = "CALL procedure_pago_cuenta('".$arrItem."')";			
+			$bd->xConsulta($sql);
+			break;
+		case 303:// historial cuentas por pagar
+			$pagination = $_POST['pagination'];						
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(p.descripcion, c.f_pago, c.f_ultimo_pago) like '%".$pagination['pageFilter']."%'";
+			// $filtroFecha = $fecha === '' ? ' and cierre=0 ' : " AND SUBSTRING_INDEX(fecha,' ',1) = '".$fecha."' ";
+			// $filtroFechaCount = $fecha === '' ? '' : " and (SUBSTRING_INDEX(c.fecha,' ',1)= '".$fecha."')";
+
+			$sql = "
+				SELECT c.idcompra, c.f_ultimo_pago, c.f_compra, c.f_pago, c.f_registro, c.a_pagar AS importe, FORMAT(c.a_pagar,2) as total, FORMAT(c.total,2) as total_total, c.pagado, tp.idtipo_pago, tp.descripcion as des_tp, p.idproveedor, p.descripcion as des_proveedor, p.dni
+						, DATEDIFF(STR_TO_DATE(c.f_ultimo_pago, '%d/%m/%Y'), STR_TO_DATE(c.f_pago, '%d/%m/%Y')) as faltan
+				from compra as c
+					inner join tipo_pago as tp using (idtipo_pago)
+					inner join proveedor as p using(idproveedor)
+				where (c.idorg=".$g_ido." and c.idsede=".$g_idsede.")".$filtro." and tp.idtipo_pago=3 and c.pagado=1 and c.estado=0
+				order by STR_TO_DATE(c.f_ultimo_pago, '%d/%m/%Y') desc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];				
+			
+			$sqlCount="
+                SELECT count(c.idcompra) as d1 from compra as c inner join proveedor as p using(idproveedor)
+                where (c.idorg=".$g_ido." and c.idsede=".$g_idsede.")".$filtro." and c.idtipo_pago=3 and c.pagado=1 and c.estado=0";            
+            
+			$rowCount = $bd->xDevolverUnDato($sqlCount);
+			// echo $sqlCount;
+			$rpt = $bd->xConsulta($sql);            
+            print $rpt."**".$rowCount;
+			break;
 	}
 ?>

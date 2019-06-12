@@ -301,10 +301,12 @@ function xOpenPage(xop, parametro){
 		case 24:xruta='/items_borrados';break;
 		case 25: xruta = '/facturador'; break;
 		case 26: xruta = '/c_electronico'; break;
-		case 28: xruta = '/adm_dashboard'; break
-		case 29: xruta = '/us_contador'; break
-		case 31: xruta = '/gastos_fijos'; break
-		case 32: xruta = '/gastos_variables'; break
+		case 28: xruta = '/adm_dashboard'; break;
+		case 29: xruta = '/us_contador'; break;
+		case 30: xruta = '/cuentas_p_c'; break;
+		case 31: xruta = '/gastos_fijos'; break;
+		case 32: xruta = '/gastos_variables'; break;
+		case 33: xruta = '/otros_ingresos'; break;
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}

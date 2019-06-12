@@ -32,7 +32,7 @@
 		case 101://borrar tabla un solo criterio id
 			$sql="delete from ".$_POST['t']." where id".$_POST['t']."=".$_POST['id'];
 			$bd->xConsulta($sql);
-			break;
+			break;		
 		case 10101://borrar tabla 2 criterio tabla y id ej: en carta borrar de carta_lista la seccion
 			$sql="delete from ".$_POST['t']." where ".$_POST['campo']."=".$_POST['id'];
 			$bd->xConsulta($sql);

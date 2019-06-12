@@ -179,6 +179,12 @@ function xBorrarRegistroFisico2(tabla,i,nomcampo){
 function xBorrarRegistro(tabla,i){ //borrado logico
 	$.post('../../bdphp/log.php?op=103', {t:tabla, id:i});
 }
+
+//_c = valor
+function xBorrarRegistroCampo(tabla,i,_campo,_c){ //borrado logico
+	$.post('../../bdphp/log.php?op=106', {t:tabla, id:i, campo: _campo, c: _c});
+}
+
 function xBorrarRegistroEnAnulado(tabla,i){
 	$.post('../../bdphp/log.php?op=104', {t:tabla, id:i});
 }
@@ -191,6 +197,20 @@ function xBorrarItem(obj){
 	xBorrarRegistro(xTableRow,xIdROw);
 	$(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
 }
+
+function xBorrarItemLogicoCampo(obj, val) {
+	if (obj !== null) {
+		xRowObj = obj.parentNode.parentNode;
+		xTableRow = $(xRowObj).attr('data-t');
+		xIdROw = $(xRowObj).attr('data-id') || xRowObj.dataId;
+		xCampo = $(xRowObj).attr('data-campo') || xRowObj.dataCampo;
+	}
+	xBorrarRegistroCampo(xTableRow, xIdROw, xCampo, val);
+	$(xRowObj).fadeTo(550, 0, function () {
+		$(this).remove();
+	});
+}
+
 function xBorrarItemLocal(obj){
 	$(obj).parent().fadeTo(550, 0, function () {$(this).remove();});
 }

@@ -37,8 +37,20 @@
             $sql="SELECT idcategoria, descripcion FROM categoria WHERE (idorg=".$_SESSION['ido']." AND idsede=".$_SESSION['idsede'].") AND estado=0";
             $bd->xConsulta($sql);
             break;
-        case 4:// load categoria
+        case 4:// load tipo de gasto
             $sql="SELECT idtipo_gasto_detalle, descripcion FROM tipo_gasto_detalle WHERE idtipo_gasto=".$_POST['id']." and estado=0 order by descripcion";
             $bd->xConsulta($sql);
             break;
+        case 5:// load tipo de ingreos
+            $sql="SELECT idtipo_ingreso, descripcion FROM tipo_ingreso WHERE estado=0 order by descripcion";
+            $bd->xConsulta($sql);
+            break;
+        case 6:// load tipo pago
+            $sql="SELECT idtipo_pago, descripcion FROM tipo_pago WHERE estado=0";
+            $bd->xConsulta($sql);
+            break;
+        case 7://load clientes
+			$sql="SELECT * FROM cliente where (idorg=".$_SESSION['ido'].") AND estado=0 order by nombres";
+			$bd->xConsulta($sql);
+			break;
     }

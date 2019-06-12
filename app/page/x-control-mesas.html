@@ -792,7 +792,6 @@ async function getItemsSeleccionados() {
 	
 	
 	$("#tb_pedidos .row.selected1").each(function(index,element){
-		debugger
 		xidpedido_seleccionados=xidpedido_seleccionados+$(element).attr('data-idpedido')+',';
 		ximporte_total_seleccionados += parseFloat(ximporte_total_seleccionados)+parseFloat($(element).find("#td_importe"));
 		xid_tipo_consumo=$(element).attr('data-idtipoconsumo');
@@ -1315,10 +1314,20 @@ async function xRegistrarClientePagoCP(){
 	xPopupLoad.xopen();
 
 	var DatosCliente = xRpt_pago[0].cliente;
+	const _idCLienteCompara = xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente;
 	var ComprobanteSeleccionado = xRpt_pago[0].comprobante;
 	// var xid_cliente_pago=DatosCliente.idcliente;
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados='';
+	
+	DatosCliente.idcliente = xid_cliente_pago;
+
+	// si es nuevo cliente recarga el componente input cliente
+	if (_idCLienteCompara != xid_cliente_pago) {
+		xValPago.reloadInputDatalientes();
+	}
+
+	
 
 	//si todos los pedidos estan seleccionados
 	var xCantRow=parseInt($("#tb_pedidos .row").length);

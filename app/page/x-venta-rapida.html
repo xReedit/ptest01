@@ -769,10 +769,18 @@ async function xGuardarPedidoVR(responde){
 	// xPopupLoad.xopen();	
 	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
 	// var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
+	const _idCLienteCompara = xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente;
 	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery.length != 0 ? arrDatosAdjuntoDelivery : [];
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados = '';	
+	
+	DatosCliente.idcliente = xid_cliente_pago;
+
+	// si es nuevo cliente recarga el componente input cliente
+	if (_idCLienteCompara != xid_cliente_pago) {
+		xValPago.reloadInputDatalientes();
+	}
 
 	xGeneralValidarRegalasCarta(xArrayPedidoObj,true);
 	if(xArmarSubtotalesArray()==0){return}

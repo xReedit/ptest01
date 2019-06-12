@@ -1,4 +1,4 @@
-<link rel="import" href="../../x-componentes/x-comp-find-tipo-gasto/x-comp-find-tipo-gasto.html">
+<link rel="import" href="../../x-componentes/x-comp-find-tipo-ingreso/x-comp-find-tipo-ingreso.html">
 <dom-module id="x-ingresos-otros">
 	<template is="dom">
 
@@ -15,15 +15,15 @@
 			</div>
 		</paper-dialog>
 
-		<paper-dialog class="dialog_redondo" id="dialog_new_gasto_v" style="width: 345px;" modal
+		<paper-dialog class="dialog_redondo" id="dialog_new_ingreso" style="width: 345px;" modal
 			entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div>
 				<h4>Registrar otro ingreso.</h4>
 				<br>
 				<form id="form_new_io" method="POST">
-					<x-comp-find-tipo-gasto id="compTpGasto" id-tipo-gasto=2
-						onchange="_getTipoGastoDetalle(list_tipo_gasto)"></x-comp-find-tipo-gasto>
-					<input type="date" class="xMiInput xPasarEnter2" id="date_fecha_pago" espaciar>
+					<x-comp-find-tipo-ingreso id="compTpIngreso" 
+						onchange="_getTipoIngreso(list_tipo_ingreso)"></x-comp-find-tipo-ingreso>
+					<input type="date" class="xMiInput xPasarEnter2" id="date_fecha_ingreso" espaciar>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION"
 						onChange="conMayusculas(this)" id="descripcion" name="descripcion" espaciar required>
 					<input type="number" class="xMiInput xPasarEnter2" placeholder="IMPORTE"
@@ -31,10 +31,9 @@
 					<div class="xInvisible">
 						<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
-						<input type="text" id="idtipo_gasto" name="idtipo_gasto">
-						<input type="text" id="idtipo_gasto_detalle" name="idtipo_gasto_detalle">
+						<input type="text" id="idtipo_ingreso" name="idtipo_ingreso">						
 						<input type="text" id="fecha_registro" name="fecha_registro">
-						<input type="text" id="fecha_pago" name="fecha_pago">
+						<input type="text" id="fecha_ingreso" name="fecha_ingreso">
 					</div>
 				</form>
 				<br><br>
@@ -52,12 +51,12 @@
 					local, como por ejemplo: Catering, alquiler del local, etc.</p>
 				</div>
 			<div class="xContentCard" style="height: 100%;">
-				<!-- <button onclick="dialog_new_gasto_v.open()">new</button> -->
+				<!-- <button onclick="openDIalogNewIO()">new</button> -->
 				<div style="width: 200px;" class="xIzquierda">
 					<input type="month" class="xMiInput xPasarEnter2 xfont18" id="f_filtro"
 						onchange="_changeDateFiltro(this);">
 				</div>
-				<paper-fab icon="add" onclick="dialog_new_gasto_v.open()" title="Agregar" tabindex="0" class="xDerecha">
+				<paper-fab icon="add" onclick="openDIalogNewIO()" title="Agregar" tabindex="0" class="xDerecha">
 				</paper-fab>
 				<table width="100%">
 					<thead>
@@ -71,13 +70,13 @@
 					</thead>
 					<tbody>
 						<template is="dom-repeat" items="{{ListIO}}" as="item">
-							<tr data-t="contable_gasto_variable" data-id="{{item.idcontable_gasto_variable}}"
-								class="animated fadeIn fast" id="{{index}}" onclick="_selItemGastoFijo(this)">
+							<tr data-t="contable_ingreso_otro" data-id="{{item.idcontable_ingreso_otro}}"
+								class="animated fadeIn fast" id="{{index}}">
 								<td data-id="{{index}}"><span>{{displayIndex(index)}}</span></td>
-								<td>{{item.tp_gasto}}</td>
-								<td>{{item.descripcion}}</td>
+								<td>{{item.tp_ingreso}}</td>
+								<td>{{item.des_concepto}}</td>
 								<td>{{item.fecha_registro}}</td>
-								<td>{{item.fecha_pago}}</td>
+								<td>{{item.fecha_ingreso}}</td>
 								<td>{{item.total}}</td>
 								<!-- <td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td> -->
 								<td>
@@ -103,7 +102,7 @@
 </dom-module>
 
 <script>
-	var xThisIO, sel_idTipoGastoDetalle, xObjBorrar,
+	var xThisIO, sel_idTipoIngreso, xObjBorrar,
 		fecha_filtrar = new Date(),
 		_mm, _yy, dateNow;
 
@@ -119,8 +118,8 @@
 
 		dateNow = new Date();
 		const maxDate = dateNow.toISOString().split("T")[0];
-		date_fecha_pago.max = maxDate;
-		date_fecha_pago.value = maxDate;
+		date_fecha_ingreso.max = maxDate;
+		date_fecha_ingreso.value = maxDate;
 
 		const mesNow = dateNow.getFullYear() + '-' + xCeroIzq(dateNow.getMonth() + 1, 2);
 		f_filtro.max = mesNow;
@@ -155,10 +154,16 @@
 			}
 		});
 
-		setTimeout(() => {
-			sel_idTipoGastoDetalle = compTpGasto.__data__.list_tipo_gasto.idtipo_gasto_detalle;
-			console.log(sel_idTipoGastoDetalle);
-		}, 1000);
+		// setTimeout(() => {
+		// 	sel_idTipoIngreso = compTpIngreso.__data__.list_tipo_ingreso.idtipo_ingreso;
+		// 	console.log(sel_idTipoIngreso);
+		// }, 1000);
+	}
+
+	function openDIalogNewIO() {
+		sel_idTipoIngreso = compTpIngreso.__data__.list_tipo_ingreso.idtipo_ingreso;
+		// console.log(sel_idTipoIngreso);
+		dialog_new_ingreso.open();
 	}
 
 	function getAllListIO() {
@@ -166,7 +171,7 @@
 
 		$.ajax({
 				type: 'POST',
-				url: '../../bdphp/log_005.php?op=103',
+				url: '../../bdphp/log_005.php?op=2',
 				data: {
 					mm: _mm,
 					yy: _yy
@@ -186,13 +191,15 @@
 			});
 	}
 
+	
+
+
 	function newIO() {
 		xPopupLoad.xopen();
 		$("#form_new_io #idsede").val(xThisIO.xt_idsede);
-		$("#form_new_io #idorg").val(xThisIO.xt_org);
-		$("#form_new_io #idtipo_gasto").val(1);
-		$("#form_new_io #idtipo_gasto_detalle").val(sel_idTipoGastoDetalle);
-		$("#form_new_io #fecha_pago").val(xDevolverFechaFormatInputDate(date_fecha_pago.value));
+		$("#form_new_io #idorg").val(xThisIO.xt_org);		
+		$("#form_new_io #idtipo_ingreso").val(sel_idTipoIngreso);
+		$("#form_new_io #fecha_ingreso").val(xDevolverFechaFormatInputDate(date_fecha_ingreso.value));
 		$("#form_new_io #fecha_registro").val(xDevolverFecha());
 		xvalidateForm('form_new_io', function (a) {
 			if (a === false) {
@@ -204,9 +211,9 @@
 					xPopupLoad.xclose();
 					$("#form_new_io").reset();
 					xPopupLoad.xclose();
-					date_fecha_pago.value = dateNow.toISOString().split("T")[0];
+					date_fecha_ingreso.value = dateNow.toISOString().split("T")[0];
 					getAllListIO();
-					dialog_new_gasto_v.close();
+					dialog_new_ingreso.close();
 				})
 		})
 
@@ -221,17 +228,16 @@
 
 	function xDialogBorrarObj(obj, event) {
 		xObjBorrar = obj;
-		dialog_borrar.open();
-		event.stopPropagation();
+		dialog_borrar.open();		
 	}
 
 	function xDlgBorrar() {
 		xBorrarItem(xObjBorrar);
 		dialog_borrar.close();
-	}
+	}	
 
-	function _getTipoGastoDetalle(e) {
-		sel_idTipoGastoDetalle = e.idtipo_gasto_detalle;
+	function _getTipoIngreso(e) {
+		sel_idTipoIngreso = e.idtipo_ingreso;
 	}
 
 	Polymer({

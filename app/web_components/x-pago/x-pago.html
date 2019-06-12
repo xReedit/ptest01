@@ -2,6 +2,8 @@
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../paper-input-autocomplete/paper-input-autocomplete.html">
+<link rel="import" href="../../x-componentes/x-comp-find-input-cliente/x-comp-find-input-cliente.html">
 
 <dom-module id="x-pago">
 	<template>
@@ -21,8 +23,7 @@
 						<select id="xsel_tp_doc" class="xTextRow2 xfont16 xCursor xsel_tp_doc"
 							onchange="xSelectedTpComprobante(this.value);">
 						</select>
-						<form action="" id="form_pago_cliente" is="iron-form">
-
+						<form action="" id="form_pago_cliente" is="iron-form" style="line-height: 0.2;">							
 							<paper-input label="[[placeholder_clie]]" onkeyup="xValidarDNIRUC(this.value, event)"
 								autofocus char-counter maxlength="11" pattern="[0-9]*"
 								error-message={{mensajeErrorDocumento}} class="xPasarEnter2" id="sel_cliente">
@@ -31,13 +32,26 @@
 								<paper-progress indeterminate style="width: 100%; float: left; margin-top: -19px">
 								</paper-progress>
 							</div>
+
 							<div id="datos_cliente" hidden=[[hidden_container_cliente]]>
-								<paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()"
+								<!-- <paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()"
 									id="clie_nombres" onChange="conMayusculas(this)" class="xPasarEnter2"
 									required="[[ComprobanteRequiereCliente]]" auto-validate></paper-input>
-								<br>
+								<br> -->
+								
+								<!-- <paper-input-autocomplete id="clie_nombres_auto" label="Nombres | Razon Social" search-property="nombres"									
+									autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete> -->
+
+								<x-comp-find-input-cliente id="clie_nombres" label="Nombres | Razon Social"
+									required="[[ComprobanteRequiereCliente]]" class="xPasarEnter2" auto-validate>
+								</x-comp-find-input-cliente>
+
 								<paper-textarea autofocus label="Direccion" max-rows="2" id="clie_direccion"
 									onChange="conMayusculas(this)" class="xPasarEnter2 clie_direccion"></paper-textarea>
+
+								<paper-textarea autofocus label="Telefono whatsapp" max-rows="1" id="clie_telefono"
+									onChange="conMayusculas(this)"
+									class="xPasarEnter2"></paper-textarea>
 							</div>
 						</form>
 					</div>
@@ -172,25 +186,25 @@
 	</style>
 </dom-module>
 <script>
-	var xThisPago;
-	var xdialoag_pago;
-	var xDiferencia = 0;
-	var xtotal_recibido = 0;
-	var xtb_tp;
-	var xSel_tp = [];
-	var xSel_tp_comprobante = [];
-	var xdif_limite = 0;
-	var xsuma_total = 0;
-	var xsuma_diferencia = 0;
-	var xIdCliente_pago = '';
-	var xObjContent;
-	var xEnterTxtImporte = 0;
-	var xDatosValidos = false, // valida los datos si todos son correctos
-		tipoComprovanteSelecionado = {}, // el comprobane que selecciona
-		modoSoloComprobante = false,
-		modoSoloProveedor = false,
-		btnDisabledInitModoComprobante = true,
-		registrando = false;
+	var xThisPago
+	, xdialoag_pago
+	, xDiferencia = 0
+	, xtotal_recibido = 0
+	, xtb_tp
+	, xSel_tp = []
+	, xSel_tp_comprobante = []
+	, xdif_limite = 0
+	, xsuma_total = 0
+	, xsuma_diferencia = 0
+	, xIdCliente_pago = ''
+	, xObjContent
+	, xEnterTxtImporte = 0
+	, xDatosValidos = false // valida los datos si todos son correctos
+	, tipoComprovanteSelecionado = {} // el comprobane que selecciona
+	, modoSoloComprobante = false
+	, modoSoloProveedor = false
+	, btnDisabledInitModoComprobante = true
+	, registrando = false, _inputAutocomplete, _inputAutocompleteObj;
 
 	// modoSoloProveedor = solo pantalla de pago
 
@@ -199,11 +213,21 @@
 		xtb_tp = $("#tb_tp");
 		// xLoadCliente();
 		xLoadTipoPago();
-		xLoadTipoComprobante();
+		xLoadTipoComprobante();		
 
 		xEnterTxtImporte = 0;
 
-		$('#clie_nombres').on('keyup', function (e) {
+		_inputAutocomplete = document.getElementById('clie_nombres');
+		_inputAutocompleteObj = _inputAutocomplete.$.input_clie_nombres_auto;
+		_inputAutocomplete.addEventListener('input-autocomplete-selected', (event) => {
+			const cliente = event.detail;
+			xThisPago.clienteModel = cliente;
+			xIdCliente_pago = cliente.idcliente;
+			$("#sel_cliente").val(cliente.ruc);
+			$("#clie_direccion").val(cliente.direccion);
+		});
+
+		$('#form_pago_cliente #clie_nombres').on('keyup', function (e) {
 			var code = e.which;
 			if (code == 13 || code == 186) {
 				// $("#clie_direccion").focus();
@@ -243,14 +267,14 @@
 			}
 		});
 
-		$(document).on('focus', '.xmonto', function (e) {
+		$(document.body).on('focus', '.xmonto', function (e) {
 			$(this).select();
-			event.stopPropagation();
+			// event.stopPropagation();
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		})
 
-		$(document).on('keyup', '.xmonto', function (e) {
+		$(document.body).on('keyup', '.xmonto', function (e) {
 			xval_obj = parseFloat($(this).val());
 			var xlimite = $(this).parents('tr').find('.xsel_tp option:selected').attr('data-limite');
 			$(this).parents('tr').find('.xmonto_sumar').text(xval_obj);
@@ -272,7 +296,7 @@
 
 
 
-			event.stopPropagation();
+			// event.stopPropagation();
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		});
@@ -282,7 +306,7 @@
 			xSumarTotales_row();
 		})
 
-		$(document).on('change', '.xsel_tp', function (e) {
+		$(document.body).on('change', '.xsel_tp', function (e) {
 			var xdif_print = xsuma_diferencia;
 			if ($(xtb_tp).find('.row').length == 1) {
 				xdif_print = xThisPago.total
@@ -298,12 +322,12 @@
 
 			xSumarTotales_row();
 
-			event.stopPropagation();
+			// event.stopPropagation();
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		});
 
-		$(document).on('keydown', function (e) {
+		$(document.body).on('keydown', function (e) {
 			var evt = e;
 			if (evt.keyCode == 121) {
 				if (!xThisPago.modoSoloComprobante) {
@@ -322,7 +346,7 @@
 				}
 			}
 
-			event.stopPropagation();
+			// event.stopPropagation();
 			e.stopPropagation();
 			e.stopImmediatePropagation();
 		});
@@ -368,7 +392,8 @@
 			} else {
 				xThisPago.placeholder_clie = 'Cliente DNI o RUC';
 			}
-			$("#clie_nombres").val('');
+			// $("#clie_nombres").val('');
+			_inputAutocompleteObj.inputValue = '';
 			$("#clie_direccion").val('');
 			xIdCliente_pago = '';
 			EmitirValidacionFormCliente();
@@ -392,7 +417,8 @@
 
 		if (valor.length === 0) {
 			xThisPago.placeholder_clie = 'Cliente DNI o RUC';
-			$("#clie_nombres").val('');
+			// $("#clie_nombres").val('');
+			_inputAutocompleteObj.inputValue = '';
 			$("#clie_direccion").val('');
 			xIdCliente_pago = '';
 			return;
@@ -407,7 +433,7 @@
 				11) { // si es factura acepta solo ruc
 				xThisPago.$.sel_cliente.invalid = true;
 				xThisPago.mensajeErrorDocumento = 'Nro de RUC no valido';
-				event.stopPropagation();
+				// event.stopPropagation();
 				e.stopPropagation();
 				e.stopImmediatePropagation();
 
@@ -418,11 +444,12 @@
 				xThisPago.$.sel_cliente.invalid = true;
 				xThisPago.mensajeErrorDocumento = 'N de documento no valido.';
 
-				$("#clie_nombres").val('');
+				// $("#clie_nombres").val('');
+				_inputAutocompleteObj.inputValue = '';
 				$("#clie_direccion").val('');
 				$("#datos_cliente").addClass("xInvisible");
 
-				event.stopPropagation();
+				// event.stopPropagation();
 				e.stopPropagation();
 				e.stopImmediatePropagation();
 				return;
@@ -439,7 +466,7 @@
 					// var testele = document.getElementById('clie_nombres');
 					setTimeout(() => {
 						xThisPago.mensajeErrorDocumento = '';
-						xThisPago.$.clie_nombres.$.input.focus();
+						//xThisPago.$.clie_nombres.$.input.focus();
 					}, 100);
 
 				} else {
@@ -449,7 +476,8 @@
 				}
 
 				xIdCliente_pago = rpt.idcliente;
-				$("#clie_nombres").val(rpt.nombres);
+				// $("#clie_nombres").val(rpt.nombres);
+				_inputAutocompleteObj.inputValue = rpt.nombres;
 				$("#clie_direccion").val(rpt.direccion);
 
 				$("#progress_cliente").addClass("xInvisible");
@@ -518,7 +546,8 @@
 			xThisPago.ComprobanteRequiereCliente = true;
 		}		
 
-		$("#clie_nombres").val('');
+		// $("#clie_nombres").val('');
+		_inputAutocompleteObj.inputValue = '';
 		$("#clie_direccion").val('');
 
 		// console.log(xThisPago.ComprobanteRequiereCliente);
@@ -662,7 +691,7 @@
 		xThisPago.clienteModel = {
 			'idcliente': xIdCliente_pago,
 			'num_doc': $("#sel_cliente").val(),
-			'nombres': $("#clie_nombres").val(),
+			'nombres': _inputAutocompleteObj.inputValue, //$("#clie_nombres").val(),
 			'direccion': $("#clie_direccion").val()
 		}
 		// xThisPago.clienteModel.idcliente = $("#sel_cliente").val();
@@ -823,6 +852,54 @@
 		console.log('focus');
 	}
 
+	function _reloadDatalientes() {
+		_inputAutocomplete.reloadllClientes();
+	}
+
+	// function _selectCliente(event) {
+	// 	console.log('cliente selected', event.cliente);
+	// }
+
+	// function xLoadClientePago() {
+	// 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=601'})
+	// 	.done( function (DtProv) {
+	// 		var xDtProv=$.parseJSON(DtProv);
+	// 		xThisPago.dataClientes=xDtProv.datos;
+	// 		xCargarClientesPago();
+	// 	});
+	// }
+
+	// function xCargarClientesPago() {
+		
+	// 	var autocompleteSuggestions = document.getElementById('clie_nombres_auto');
+	// 	autocompleteSuggestions.source = xThisPago.dataClientes;
+
+	// 	// var xObjTxtProveedor=$("#form_pago_cliente #clie_nombres input");
+	// 	// var frm_clie = $("#form_pago_cliente");
+	// 	// xObjTxtProveedor.autocomplete({
+	// 	// 	autoFocus:true,
+	// 	// 	source:xThisPago.dataClientes,
+	// 	// 	select: function( event, ui ) {
+	// 	// 		xsel_cliente=ui.item.idcliente;
+	// 	// 		xObjTxtProveedor.val(ui.item.nombres);
+	// 	//         xObjTxtProveedor.attr('data-id',xsel_cliente);
+	// 	//         // $("#form_pago_cliente #idproveedor").val(xsel_proveedor);
+	// 	//         frm_clie.find("#clie_direccion").val(ui.item.direccion);
+	// 	// 		frm_clie.find("#sel_cliente").val(ui.item.ruc);
+	// 	// 		frm_clie.find("#clie_telefono").val(ui.item.telefono);
+	// 	//         return false;
+	// 	//     },
+	// 	//     focus:function(event, ui){return false;},
+	// 	//     change:function( event, ui ) {
+	// 	//     	if(ui.item===null){
+	// 	//     		xObjTxtProveedor.attr('data-id',"");
+	// 	//     		xsel_cliente="";		    		
+	// 	//     	}
+	// 	//     	return false;
+	// 	//     }
+	// 	// });
+	// }
+
 
 	Polymer({
 		is: 'x-pago',
@@ -857,7 +934,8 @@
 			val: String,
 			dt_tp: Object,
 			dt_tp_comprobante: Object,
-			clienteModel: Object
+			clienteModel: Object,
+			dataClientes: Object,
 		},
 		attached: function () {
 			//this.total='83.00';
@@ -886,7 +964,8 @@
 
 
 			xThisPago.placeholder_clie = 'Cliente DNI o RUC';
-			$("#clie_nombres").val('');
+			// $("#clie_nombres").val('');
+			_inputAutocompleteObj.inputValue = '';
 			$("#clie_direccion").val('');
 			xIdCliente_pago = '';
 
@@ -952,6 +1031,9 @@
 		},
 		xclose: function () {
 			xdialoag_pago.close();
+		},
+		reloadInputDatalientes() {
+			_reloadDatalientes()
 		}
 	})
 </script>

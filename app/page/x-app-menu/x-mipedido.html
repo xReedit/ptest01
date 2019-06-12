@@ -648,6 +648,11 @@ transition: none !important;
     // var xid_cliente_pago = arrDatosAdjuntoDelivery != {} ? await ClienteService_Guardar(data_cliente_delivery) : xIdCliente_pedido;
     var xid_cliente_pago = arrDatosAdjuntoDelivery.length != 0 ? await ClienteService_Guardar(data_cliente_delivery) : xIdCliente_pedido;
     
+    // si es nuevo cliente recarga el componente input cliente
+    if ( arrDatosAdjuntoDelivery.idcliente === '' ) {
+      xCompDatosDelivery.reloadInputDatalientes();
+    }
+    arrDatosAdjuntoDelivery.idcliente = xid_cliente_pago;
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=304', data:{h:xDevolverHora(),mesa:xmesa,ref:xref,t:xtotal,r:xReservar,sl:xsolo_llevar,idtpc:xIdTpc_pe,idcat:xidCategoriaSeccion,sql_p:xsql_p,sql_p_subt:xsql_p_subt, sql_descontar:xsub_sql_descontar}})
     // xarr_header = {'idclie':'', 'ImporteTotal': parseFloat(tt_pedido).toFixed(2) ,'referencia':xref, 'idcategoria': xidCategoriaSeccion, 'mesa':xmesa,'reservar':xReservar, 'tipo_consumo': xIdTpc_pe}
     xarr_header = {

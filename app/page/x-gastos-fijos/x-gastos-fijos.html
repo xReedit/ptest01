@@ -128,8 +128,8 @@
 				<p>Registra los gastos fijos y el periodo de tiempo en meses que estaran activos esto pagos. Ej: Prestamo, Banco BBVA importe S/. 400.00 periodo 24 (meses). Si es un tiempo ilimitado coloque cero (0).</p>
 			</div>		
 			<div class="xContentCard" style="height: 100%;">
-				<!-- <button onclick="dialog_new_gasto.open()">new</button> -->
-				<paper-fab icon="add" onclick="dialog_new_gasto.open()" title="Agregar" tabindex="0" class="xDerecha"></paper-fab>
+				<!-- <button onclick="openDIalogNewGF()">new</button> -->
+				<paper-fab icon="add" onclick="openDIalogNewGF()" title="Agregar" tabindex="0" class="xDerecha"></paper-fab>
 				<table width="100%">
 					<thead>
 						<th>#</th>
@@ -213,10 +213,15 @@
 			}
 		});
 		
-		setTimeout(() => {			
-			sel_idTipoGastoDetalle = compTpGasto.__data__.list_tipo_gasto.idtipo_gasto_detalle;
-			console.log(sel_idTipoGastoDetalle);
-		}, 600);
+		// setTimeout(() => {			
+		// 	sel_idTipoGastoDetalle = compTpGasto.__data__.list_tipo_gasto.idtipo_gasto_detalle;
+		// 	console.log(sel_idTipoGastoDetalle);
+		// }, 600);
+	}
+
+	function openDIalogNewGF() {
+		sel_idTipoGastoDetalle = compTpGasto.__data__.list_tipo_gasto.idtipo_gasto_detalle;	
+		dialog_new_gasto.open();
 	}
 
 	function getAllListGastosFijos() {
@@ -293,7 +298,6 @@
 		xThisGF.selItemGastoFijo.fecha_pago = date_fecha_pago.value; //xDevolverFechaDDMMYYY(date_fecha_pago.valueAsDate);
 		xThisGF.selItemGastoFijo.doc = doc_pago.value;		
 		const _datos = xThisGF.selItemGastoFijo;
-		console.log('arr va ', _datos);
 		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=101', data: {item: _datos}})
 		.done((res) => {
 			console.log('pagado ', res);
