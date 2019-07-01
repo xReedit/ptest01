@@ -20,27 +20,40 @@
 
             $ce_anulado = array_key_exists('anulado', $obj) ? $obj['anulado'] : 0; 
             $ce_totales_json = array_key_exists('totales_json', $obj) ? $obj['totales_json'] : ''; 
-            
-            $sqlCpe = "
-                insert into ce (external_id, idorg, idsede, idusuario, idtipo_comprobante_serie, numero, fecha, hora, json_xml, estado_api, estado_sunat, viene_facturador, msj, anulado, idcliente, nomcliente, total, pdf, xml, cdr, totales_json)
-                values ('".$obj['external_id']."',".$_SESSION['ido'].",".$_SESSION['idsede'].",".$_SESSION['idusuario'].",".$obj['idtipo_comprobante_serie'].",
-                '".$obj['numero']."', DATE_FORMAT(now(),'%d/%m/%Y'), DATE_FORMAT(now(),'%H:%i:%s'), '".$obj['jsonxml']."', ".$obj['estado_api'].",".$obj['estado_sunat'].",".$obj['viene_facturador'].",'".$obj['msj']."',".$ce_anulado.",".$obj['idcliente'].",'".$obj['nomcliente']."','".$obj['total']."',".$obj['pdf'].",".$obj['xml'].",".$obj['cdr'].",'".$ce_totales_json."')";
 
-            echo $sqlCpe;
-            $idce = $bd->xConsulta_UltimoId($sqlCpe);
+            // procedure
+            $obj['ce_anulado'] = $ce_anulado;
+            $obj['totales_json'] = $ce_totales_json;
+            $obj['idregistro_pago'] = array_key_exists('idregistro_pago', $obj) ? $obj['idregistro_pago'] : '';
+            $obj['error_api'] = array_key_exists('error_api', $obj) ? $obj['error_api'] : '0'; // si el api no responde igual tiene que emitir comprobante offline
+
+            $arrItem=json_encode($obj);
+            // echo $arrItem;            
+            $sql = "CALL procedure_cpe_registro(".$_SESSION['ido'].",".$_SESSION['idsede'].",".$_SESSION['idusuario'].",'".$arrItem."')";
+            $bd->xConsulta($sql);
+            // //
+
             
-            // si el documento no es anulado // por validacion sunat
-            if ( $ce_anulado === 0 ) {
-                if (array_key_exists('idregistro_pago', $obj)) {
-                    if ( $obj['viene_facturador'] === "1") {
-                        $sqlRp= "update cpe_facturador set idce =".$idce." where idcpe_facturador=".$obj['idregistro_pago'];
-                        $bd->xConsulta_NoReturn($sqlRp);
-                    } else {
-                        $sqlRp= "update registro_pago set idce =".$idce." where idregistro_pago=".$obj['idregistro_pago'];
-                        $bd->xConsulta_NoReturn($sqlRp);
-                    }
-                }
-            }
+            // $sqlCpe = "
+            //     insert into ce (external_id, idorg, idsede, idusuario, idtipo_comprobante_serie, numero, fecha, hora, json_xml, estado_api, estado_sunat, viene_facturador, msj, anulado, idcliente, nomcliente, total, pdf, xml, cdr, totales_json)
+            //     values ('".$obj['external_id']."',".$_SESSION['ido'].",".$_SESSION['idsede'].",".$_SESSION['idusuario'].",".$obj['idtipo_comprobante_serie'].",
+            //     '".$obj['numero']."', DATE_FORMAT(now(),'%d/%m/%Y'), DATE_FORMAT(now(),'%H:%i:%s'), '".$obj['jsonxml']."', ".$obj['estado_api'].",".$obj['estado_sunat'].",".$obj['viene_facturador'].",'".$obj['msj']."',".$ce_anulado.",".$obj['idcliente'].",'".$obj['nomcliente']."','".$obj['total']."',".$obj['pdf'].",".$obj['xml'].",".$obj['cdr'].",'".$ce_totales_json."')";
+
+            // echo $sqlCpe;
+            // $idce = $bd->xConsulta_UltimoId($sqlCpe);
+            
+            // // si el documento no es anulado // por validacion sunat
+            // if ( $ce_anulado === 0 ) {
+            //     if (array_key_exists('idregistro_pago', $obj)) {
+            //         if ( $obj['viene_facturador'] === "1") {
+            //             $sqlRp= "update cpe_facturador set idce =".$idce." where idcpe_facturador=".$obj['idregistro_pago'];
+            //             $bd->xConsulta_NoReturn($sqlRp);
+            //         } else {
+            //             $sqlRp= "update registro_pago set idce =".$idce." where idregistro_pago=".$obj['idregistro_pago'];
+            //             $bd->xConsulta_NoReturn($sqlRp);
+            //         }
+            //     }
+            // }
 
             break;
         case '101': // registra documentos que 
@@ -239,6 +252,7 @@
                     inner join tipo_comprobante as tp on tp.idtipo_comprobante=tps.idtipo_comprobante	
                     left join cliente as clie on c.nomcliente=clie.nombres
                 where (c.idorg=".$_SESSION['ido']." and c.idsede=".$_SESSION['idsede'].") ".$filtro." ".$filtroFecha." 
+                GROUP by c.idce
                 ORDER BY c.idce desc";
             
             $bd->xConsulta($sql);

@@ -41,7 +41,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	if (showPrint) { xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante; }	
 
 	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
-	if (!rptPrint.ok) { // si el documento electronico no es valido
+	if (!rptPrint.ok) { // si el documento electronico no es valido		
 		alert(rptPrint.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
 		xPopupLoad.close;
 		return rptPrint;
@@ -50,6 +50,10 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	console.log(rptPrint);
 	xArrayEncabezado[0].hash = rptPrint.hash; // que es realidad el qr
 	xArrayEncabezado[0].external_id = rptPrint.external_id;
+	// correlativo comprobante;	
+	xArrayComprobante.correlativo = rptPrint.correlativo_comprobante;
+	xArrayComprobante.facturacion_correlativo_api = rptPrint.facturacion_correlativo_api;
+	
 	
 	// return true; // temporal probamos facturacion electronica
 	//
@@ -498,4 +502,18 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 			})
 		}, 2500);
 	});	
+}
+
+function xReturnCorrelativoComprobante(_obj) {	
+	const tomaDelApi = parseInt(_obj.facturacion_correlativo_api) === 0 ? false : true;
+	const _rpt = tomaDelApi ? '#' : parseInt(_obj.correlativo) + 1;
+	if (!tomaDelApi) {
+		_obj.facturacion_correlativo_api = 1;
+		// el update de facturacion_correlativo_api=1 lo hace en el procedimiento almacendo
+		
+		// setTimeout(() => {	
+		// 	xValPago.reloadInputDatalientes();
+		// }, 2000);
+	}
+	return _rpt;
 }

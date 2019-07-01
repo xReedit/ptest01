@@ -21,7 +21,7 @@
         case 2:// load comprobantes generales
             // $sql = "SELECT * FROM tipo_comprobante where estado=0";
             $sql = "
-            SELECT tpcs.idtipo_comprobante_serie, tpcs.serie, tpcs.correlativo,tp.*
+            SELECT tpcs.idtipo_comprobante_serie, tpcs.serie, tpcs.correlativo, tpcs.facturacion_correlativo_api, tp.*
 			from tipo_comprobante_serie tpcs
 				inner join tipo_comprobante tp using(idtipo_comprobante)
 				inner join sede s on s.idsede = tpcs.idsede
@@ -51,6 +51,18 @@
             break;
         case 7://load clientes
 			$sql="SELECT * FROM cliente where (idorg=".$_SESSION['ido'].") AND estado=0 order by nombres";
+			$bd->xConsulta($sql);
+            break;
+        case 8://load cargos
+			$sql="SELECT * FROM cargo where (idorg=".$_SESSION['ido'].") AND estado=0 order by descripcion";
+			$bd->xConsulta($sql);
+            break;
+        case 9://load colaboradores
+			$sql="SELECT * FROM colaborador where (idorg=".$_SESSION['ido']." and idsede=".$_SESSION['idsede'].") AND estado=0 order by nombres";
+			$bd->xConsulta($sql);
+            break;
+        case 10://load planilla_periodo
+			$sql="SELECT * FROM planilla_periodo where estado=0";
 			$bd->xConsulta($sql);
 			break;
     }

@@ -71,7 +71,8 @@ function handlerFnMiPedido(e) {
 				var xval=parseInt($(element).text());
 				if(isNaN(xval)){xval=0}
 				xCantTotalItem=parseInt(xCantTotalItem)+xval
-			})
+			});
+			
 		if(isNaN(xCantTotalItem)){xCantTotalItem=0}
 		xCantActual=parseInt(xCantActual)+xOperacion+parseInt(1);
 		xCantTotalItem=parseInt(xCantTotalItem)+xOperacion+parseInt(1);

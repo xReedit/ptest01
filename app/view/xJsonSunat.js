@@ -102,6 +102,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         fecha_actual = fecha_manual === null ? rptDate[0] : fecha_manual;
         hora_actual = rptDate[1];    
 
+        // "numero_documento": xArrayComprobante.correlativo,
+
         var jsonData = {                    
             "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
             "numero_documento": xArrayComprobante.correlativo,
@@ -213,8 +215,8 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     const nomCliente = json_xml.datos_del_cliente_o_receptor.apellidos_y_nombres_o_razon_social;
     const idclienteComprobante = json_xml.extras.idcliente;
     const totalComprobante = json_xml.totales.total_venta;
-    const totalesJson = JSON.stringify(json_xml.totales);
-    json_xml = JSON.stringify(json_xml);   
+    const totalesJson = json_xml.totales;
+    // json_xml = json_xml;   
 
     const _idregistro_p = typeof idregistro_pago === "object" ? idregistro_pago[1] : idregistro_pago;
     const _viene_facturador = typeof idregistro_pago === "object" ? 1 : 0; 
@@ -225,7 +227,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     await fetch(_url, {
         method: 'POST',
         headers: _headers,
-        body: json_xml,
+        body: JSON.stringify(json_xml),
     }).then(function (response) {
         return response.json();
     }).then(function (res) { 
@@ -236,6 +238,8 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             rpt.qr = res.data.qr;
             rpt.hash = res.data.hash;
             rpt.external_id = res.data.external_id;
+            rpt.correlativo_comprobante = xCeroIzqNumberComprobante(res.data.number)            
+            rpt.facturacion_correlativo_api = 1; // toma los correlativos del api
                         
             res.data.nomcliente = nomCliente;
             res.data.idcliente = idclienteComprobante;
@@ -249,58 +253,8 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             
             CpeInterno_Registrar(res);
 
-            // es lo mismo
-        // } else { 
-        //     // error de ingreso de datos / no continua / advierrte al usuario
-        //     // marca como registrado en la api, no anula y manda estado_sunat=0 para volver a intentar enviarlo
-        //     // la anulacion va ha ser explicita desde cpe emitidos
             
-        //     // rpt.ok = false;
-        //     // rpt.error = 'Error al ingresar los datos';
-        //     // rpt.msj_error = res.message;
-        //     // rpt.hash='';
-            
-        //     // rpt.ok = true;
-        //     // rpt.qr = '';
-        //     // rpt.hash = "www.papaya.com.pe";
-        //     // rpt.external_id = res.data ? res.data.external_id : '' || '';
-
-        //     rpt.ok = true;
-        //     rpt.qr = res.data.qr || '';
-        //     rpt.hash = res.data.hash || 'www.papaya.com.pe';
-        //     rpt.external_id = res.data ? res.data.external_id : '' || '';
-
-        //     const msj_error = res.response.message;
-
-        //     const data = {
-        //         pdf: res.links.pdf != '' ? 1 : 0,
-        //         cdr: res.links.cdr != '' ? 1 : 0,
-        //         xml: res.links.xml != '' ? 1 : 0,
-        //         idcliente: idclienteComprobante,
-        //         total: totalComprobante,
-        //         totales_json: totalesJson,
-        //         nomcliente: nomCliente,
-        //         numero: numero_comp, 
-        //         jsonxml: json_xml, 
-        //         external_id: rpt.external_id,
-        //         // external_id: '',
-        //         // estado_api: 0,
-        //         // estado_sunat: 1,
-        //         // anulado: 1,    
-        //         estado_api: 0, // se registro correctamente              
-        //         estado_sunat: 1,// aun no se envia ( si es boleta va en resumen)
-        //         // msj: res.message,
-        //         msj: msj_error,
-        //         viene_facturador: _viene_facturador,
-        //         idtipo_comprobante_serie: idtipo_comprobante_serie,                
-        //     }
-
-        //     // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
-        //     // tambien puede que el servicio de sunat tenga problemas // o la api(si es local - aunque dificil)
-        //     CpeInterno_ErrorValidacionSunat(_idregistro_p, data);            
-
-        // }
-    }).catch(function (error) { // error de conexion o algo pero imprime
+    }).catch(async function (error) { // error de conexion o algo pero imprime
         
         const data = {
                 pdf:'0',
@@ -323,7 +277,10 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         rpt.qr = '';
         rpt.hash = "www.papaya.com.pe";
         rpt.external_id = '';
-        CpeInterno_Error(data, json_xml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);
+        const correlativo_error = await CpeInterno_Error(data, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);        
+        rpt.correlativo_comprobante = correlativo_error.correlativo;
+        rpt.facturacion_correlativo_api = correlativo_error.facturacion_correlativo_api;
+        console.log(correlativo_error);
     });
     
     setTimeout(() => {        

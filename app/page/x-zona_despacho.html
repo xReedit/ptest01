@@ -234,9 +234,9 @@ function xIniZonaDespacho(){
 		element_sonido.play();
 
 
-	})
+	});
 	//$(".xtabla_pedido_despacho tr td").on('click',function(e){
-	$(document).on('click', '.xtabla_pedido_despacho tr td', function(e) {
+	$(document.body).on('click', '.xtabla_pedido_despacho tr td', function(e) {
 		if($(this).hasClass('des_seccion')){return;}
 		if($(this).hasClass('xmarcado')){
 			$(this).removeClass();
@@ -246,7 +246,7 @@ function xIniZonaDespacho(){
 		e.stopPropagation();e.stopImmediatePropagation();
 	})
 
-	$(document).on('click', '.xBtnDespacho', function(e) {
+	$(document.body).on('click', '.xBtnDespacho', function(e) {
 		if($(this).text()==="Enviar a despacho"){$(this).text('Confirmar envio');e.stopPropagation();e.stopImmediatePropagation(); return;}
 		if($(this).text()==="Listo"){$(this).text('Confirmar'); e.stopPropagation();e.stopImmediatePropagation();return;}
 		if($(this).text()==="Confirmar"){
@@ -263,7 +263,7 @@ function xIniZonaDespacho(){
 		e.stopPropagation();e.stopImmediatePropagation();
 	})
 
-	$(document).on('click', '.xBtnDespacho_retirar', function(e) {
+	$(document.body).on('click', '.xBtnDespacho_retirar', function(e) {
 		if($(this).text()==="Retirar"){$(this).text('Confirma')}else{
 			xObjPedido=$(this).parents('.xmarco_zd_pedido');
 			xDespachado_retirado(xObjPedido,1);
@@ -697,16 +697,18 @@ function xResumenPedidosItem(){
 
 	//secciones
 	$(".xtabla_pedido_despacho .des_seccion").each(function(i,e){
-		xre_id_seccion=$(e).attr('data-id');
-		if(arr_resumen_item[xre_id_seccion]===undefined){arr_resumen_item[xre_id_seccion]={'id':xre_id_seccion,'des_seccion':$(e).text()}}
+		xre_id_seccion=e.dataset.id; // $(e).attr('data-id');
+		if(arr_resumen_item[xre_id_seccion]===undefined){arr_resumen_item[xre_id_seccion]={'id':xre_id_seccion,'des_seccion':e.textContent}}
+		
+		//$(e).text()
 	})
 
 	//items
 	for(a in arr_resumen_item){
 		$(".xtabla_pedido_despacho .row_item").each(function(i,e){
-			xre_id_seccion=$(e).attr('data-idseccion');
-			xre_id_item=$(e).attr('data-iditem');
-			xtxt_item=$(e).text().split('|');
+			xre_id_seccion = e.dataset.idseccion; //$(e).attr('data-idseccion');
+			xre_id_item = e.dataset.iditem; //$(e).attr('data-iditem');
+			xtxt_item = e.textContent.split('|'); //$(e).text().split('|');
 			if(xre_id_seccion===a){
 				if(arr_resumen_item[a][xre_id_item]!==undefined){xre_sum_cant_item=parseInt(arr_resumen_item[a][xre_id_item].cantidad_r)+parseInt(xtxt_item[0])}else{xre_sum_cant_item=parseInt(xtxt_item[0])}
 				arr_resumen_item[a][xre_id_item]={'iditem':xre_id_item,'des_item':xtxt_item[1],'cantidad_r':xre_sum_cant_item}
@@ -737,8 +739,9 @@ function xResumenPedidosItem(){
 function xRefrecarTiempoMinutos(){
 	var xtiempo_transcurrido,tiempo_encabezado,xen_cola=0;
 	$(".xmarco_zd_pedido .encabezado").each(function(i,e){
-		if($(e).attr('data-reserva')!=='1'){//si es reserva continua
-			tiempo_encabezado=$(e).attr('data-tiempo');
+		// if($(e).attr('data-reserva')!=='1'){//si es reserva continua
+		if(e.dataset.reserva !== '1'){//si es reserva continua
+			tiempo_encabezado = e.dataset.tiempo; // $(e).attr('data-tiempo');
 			xTiempoTranscurridos(tiempo_encabezado,xhora_actual_serv,function(h,m,s,dif){
 				xen_cola++;
 				xtiempo_transcurrido=xTiempoDe_MS_minutos(dif)
@@ -748,7 +751,8 @@ function xRefrecarTiempoMinutos(){
 				xCalcularEstadoSegunTiempo($(e),xtiempo_transcurrido);
 			})
 		}
-	})
+	});
+	
 	xelem_tt_p_cola.text(xCeroIzq(xen_cola,2));
 }
 function xCalcularEstadoSegunTiempo(elemento,x_tiempo_transcurrido){
@@ -788,8 +792,8 @@ function xLoadZonaDespacho(){
 			};
 
 			$("#div_zona_despacho").html(xcadena_imp);
-		})
-	})
+		});
+	});
 }
 
 function xCalcularMinutosDespacho(mm){

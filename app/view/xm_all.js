@@ -724,6 +724,33 @@ function setImportHTML(_linkImport) {
 
 }
 
+// convierte el serializeArray del form a object ej: $("#form_new_co_pla").serializeArray()
+function objectifyForm(formArray) { //serialize data function
+	var returnArray = {};
+	for (var i = 0; i < formArray.length; i++) {
+		returnArray[formArray[i]['name']] = formArray[i]['value'];
+	}
+	return returnArray;
+}
+
+function pantallaCompleta() {
+	var elem = document.documentElement;
+
+	if ( !window.screenTop && !window.screenY ) {
+		if (elem.mozRequestFullScreen) { /* Firefox */
+			elem.mozRequestFullScreen();
+		} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+			elem.webkitRequestFullscreen();
+		}
+	} else {
+		if (document.mozCancelFullScreen) { /* Firefox */
+			document.mozCancelFullScreen();
+		} else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+			document.webkitExitFullscreen();
+		}
+	}
+}
+
 // async function getTemplate(filepath) {
 // 	return await fetch(filepath)
 // 		.then(response => {

@@ -6,7 +6,7 @@
 <dom-module id="x-comp-find-comprobante">
     <template>        
         <div>
-          <select id="compFindListComprobante" class="xTextRow2 xCursor" onchange="selectOptionComprobante()">
+          <select id="compFindListComprobante" class$="[[applyClass]]" onchange="selectOptionComprobante()">
             <template is="dom-repeat" items="{{list}}" as="comprobante">
               <option value="[[index]]">[[comprobante.descripcion]] </option>
             </template>
@@ -37,6 +37,7 @@
         Polymer({
         is: 'x-comp-find-comprobante',
         properties: {
+            applyClass: { type: String, value:'xTextRow2 xCursor'},
             op:{
                 type:Number,
                 value:1
@@ -51,14 +52,21 @@
         },
         comprobanteNameChanged: function(comprobante) {
             return comprobante;
-        },
-    
+        },    
         ready: function() {
             xThisComComprobante=this;	
+            // this.class = this.class == '' ? 'xTextRow2 xCursor' : this.class;
             getAllComprobantes();
         },
         getValorIncial: function(comprobante) {
             this.fire('getValorIncialx', {values: comprobante});
+        },
+        getValorSelecionado: () => {
+            return xThisComComprobante.comprobantes;
+        },
+        reloadAllComprobantes: ()=> {
+            // recargar data, ej al cambiar correlativo api
+            getAllComprobantes();
         }
     })
     </script>

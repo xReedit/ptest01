@@ -182,12 +182,13 @@
 
 	function newGasto() {
 		xPopupLoad.xopen();
-		$("#form_new_gasto_v #idsede").val(xThisGV.xt_idsede);
-		$("#form_new_gasto_v #idorg").val(xThisGV.xt_org);
-		$("#form_new_gasto_v #idtipo_gasto").val(1);
-		$("#form_new_gasto_v #idtipo_gasto_detalle").val(sel_idTipoGastoDetalle);
-		$("#form_new_gasto_v #fecha_pago").val(xDevolverFechaFormatInputDate(date_fecha_pago.value));
-		$("#form_new_gasto_v #fecha_registro").val(xDevolverFecha());
+		const frm = $("#form_new_gasto_v");
+		frm.find("#idsede").val(xThisGV.xt_idsede);
+		frm.find("#idorg").val(xThisGV.xt_org);
+		frm.find("#idtipo_gasto").val(1);
+		frm.find("#idtipo_gasto_detalle").val(sel_idTipoGastoDetalle);
+		frm.find("#fecha_pago").val(xDevolverFechaFormatInputDate(date_fecha_pago.value));
+		frm.find("#fecha_registro").val(xDevolverFecha());
 		xvalidateForm('form_new_gasto_v', function (a) {
 			if (a === false) {
 				return;
@@ -238,8 +239,8 @@
 			selItemGastoVariable: [],
 		},
 		attached: function () {
-			this.selected = 0,
-				xThisGV = this;
+			this.selected = 0;
+			xThisGV = this;
 			xIniGastosVariables();
 		},
 		displayIndex: function (index) {

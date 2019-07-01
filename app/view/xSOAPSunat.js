@@ -1,7 +1,7 @@
 // lista documentos no registrados - documnentos que no fueron enviados al servicio api por algun error de conexion
 // ok
 
-const URL_COMPROBANTE = xm_log_get('app3_sys_const')[0].value;
+var URL_COMPROBANTE = xm_log_get('app3_sys_const')[0].value;
 
 async function xSoapSunat_getArrNoRegistrado() {
     var rpt = [];

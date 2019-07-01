@@ -90,6 +90,12 @@ function xDevolverFechaFormatInputDate(fecha_string) {
 	return fecha_string.split('-').reverse().join('/');
 }
 
+// setea al input date la fecha en 14/02/1990 -> 1990-02-14
+function xSetInputDate(fecha_string) {
+	return fecha_string.split('/').reverse().join('-');
+}
+
+
 function xDevolverFechaParte(xParte){
 	var d = new Date();
 	var xrpt;
@@ -231,6 +237,23 @@ function xTiempoDe_MS_minutos(dif){
 
 	return xCeroIzq(minutos,2)+':'+xCeroIzq(segundos,2);
 	}
+
+// x son la cantidad en dias
+function xTiempoTrascurridoYYMMDD(x) {
+	var y = 365
+	, y2 = 31
+	, remainder = x % y
+	, casio = remainder % y2;
+
+	year = (x - remainder) / y;
+	month = (remainder - casio) / y2;
+
+	const _year = year > 0 ? year + ' AÑOS ' : '';
+  	const _meses = month > 0 ? month + ' MESES Y ' : '';
+	const result = _year + _meses + casio + ' DIAS';
+
+	return result;	
+}
 
 function xSumaDiasFecha(f1,dias){
 	var fecha=new Date(f1.split('/').reverse().join('/'));

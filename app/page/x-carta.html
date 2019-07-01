@@ -42,9 +42,9 @@
 		</paper-dialog>
 		<br>
 		<div class="xContent" id="content_carta">
-			<paper-tabs selected="{{selected}}">
+			<paper-tabs selected="{{selected}}" id="tab_carta">
 				<paper-tab>CARTA ACTUAL</paper-tab>
-      			<paper-tab>ITEMS</paper-tab>
+      			<paper-tab>HISTORIAL</paper-tab>
       		</paper-tabs>
       		<div class="xLinea2"></div>
       		<br><br>
@@ -105,8 +105,42 @@
 						</div>
 					</div>
 				</div>
+      			</div>
+				
+				<div id="historial carta">
+					<h3>Historial carta</h3>
+					<br>
+					<input type="text" class="xMiInput xfont18 xitem2" style="width:100%;" placeholder="Buscar" autofocus
+						onkeyup="xfiltrarCartaHistorial()" id="txt_buscar" enlinea>
+					<table width="100%">
+						<thead>
+							<th>#</th>
+							<th align="left">Seccion</th>
+							<th align="left">Item</th>
+							<th align="right">Precio</th>
+							<th align="right">Cant. Vendido</th>
+							<th align="right">Imp. Vendido</th>
+						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{ListHistorial}}" as="item">
+								<tr class="animated fadeIn fast" id="{{index}}">
+									<td data-id="{{index}}"><span>{{displayIndex(index)}}</span></td>
+									<td align="left">{{item.desseccion}}</td>
+									<td align="left">{{item.desitem}}</td>
+									<td align="right">{{item.precio}}</td>
+									<td align="right">{{item.cant_vendido}}</td>
+									<td align="right">{{item.importe_vendido}}</td>
+								</tr>
+							</template>							
+						</tbody>
+					</table>
+
+
+				</div>
 
 			</iron-pages>
+			<br><br>
+
 		</div>
 		<style type="text/css">
 			paper-checkbox.blue {
@@ -135,22 +169,22 @@
 
 </style>
 <script>
-var xThisCarta;
-var xdes_item;
-var xdes_categoria;
-var xprecio;
-var xcant;
-var xTbSeccion='';
-var xSeccActual;
-var xTopHeaderPersiste;
-var xIdCarta='';
-var xIdObjImgDet='';//foto o detalle;
-var xObjImgDet;
-var xIdCartaAnterior;
-//var xIdCartaUpdate='';
-var xidCategoria; ///remplazar luego por el select
-var xFechaUltimaCarta;
+var xThisCarta
+, xdes_item
+, xdes_categoria
+, xprecio
+, xcant
+, xTbSeccion=''
+, xSeccActual
+, xTopHeaderPersiste
+, xIdCarta=''
+, xObjImgDet
+, xIdCartaAnterior
+, xIdObjImgDet='' //foto o detalle;
+, xidCategoria ///remplazar luego por el select
+, xFechaUltimaCarta, xdebounce, xe_debounce=false;
 
+//var xIdCartaUpdate='';
 
 function xInicarta(){
 	//xVerificarSession();
@@ -221,6 +255,12 @@ function xInicarta(){
 		$(e.target.parentElement).attr('data-modificado', '1');	
 	});
 
+	$("#tab_carta").on('iron-select',function(){
+		switch(xThisCarta.selected){
+		//case 0:;break;
+			case 1:xloadCartaHistorial();break;		
+		}
+	});
 	
 }
 function xPasaEnterClass(){//actualiza controles input para pasa enter
@@ -420,6 +460,9 @@ function xGuardarCambios(){
 			xIdCartaAnterior = xid;
 			xIdCarta = xid;			
 			xLoadCarta();
+			
+			// historail de carta
+			$.ajax({ type: 'POST', url:'../../bdphp/log.php?op=204001',data:{id:xIdCartaAnterior}});
 		})
 	});
 
@@ -940,16 +983,41 @@ function xVerSiStockCero(obj){
 	$(obj).parent().parent().find("#seccion_des").attr('data-stockcero',xval);
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2033', data:{i:xid,p:xval}})
 }
+
+function xloadCartaHistorial() {
+	const _filtro = txt_buscar.value;
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=6', data:{filtro: _filtro}})
+	.done(res => {
+		res = JSON.parse(res);
+		xThisCarta.ListHistorial = res.datos;
+	});
+}
+
+function xfiltrarCartaHistorial() {
+		if (xe_debounce) return;
+		xe_debounce = true;
+		clearTimeout(xdebounce);
+
+		xdebounce = setTimeout(() => {			
+			xe_debounce = false;
+			xloadCartaHistorial();			
+		}, 900);
+	}
+
 Polymer({
 	is:'x-carta',
 	properties:{
 		dt_item:Object,
 		dt_seccion:Object,
+		ListHistorial: [],
 	},
 	attached:function(){
 		this.selected=0;
     	xThisCarta=this;
     	xInicarta();
-    }
+	},
+	displayIndex: function (index) {
+		return xCeroIzq(index + 1, 1);
+	},
 })
 </script>

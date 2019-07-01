@@ -388,6 +388,10 @@ transition: none !important;
       xArrayRegla = xm_log_get("reglas_de_carta"); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
       xDtPrint = xm_log_get("sede_generales"); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 
+      setTimeout(() => {
+        $("body").addClass("loaded");
+      }, 200);
+
       xLoadMipedido();
 
       if (xReferenciaPedido == undefined) {
@@ -507,7 +511,7 @@ transition: none !important;
     dialog_erro_print.close();
     xPopupLoad.titulo = "Enviando...";
     xPopupLoad.xopen();
-    console.log('call xLLamarPrintMP -> xReImprimirMP');
+    // console.log('call xLLamarPrintMP -> xReImprimirMP');
     xLLamarPrintMP();
   }
   function xBuscarPedidoEnBD(xnum_m) {

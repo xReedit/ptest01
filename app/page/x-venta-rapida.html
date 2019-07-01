@@ -78,8 +78,15 @@
 					<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria>
 				</div>
 					
-				<div class="xDerecha xEnLinearTop" style="margin-top:-20px;">
-					<p><strong>Venta rapida.</strong> busca el producto por denominacion o codigo de barras.</p>
+				<div class="xDerecha">
+					<paper-button onclick="_pantallaCompleta();" style="float: right; top: -30px;right: -15px; margin: 0px;">
+						<iron-icon title="Datos Adicionales"
+							icon$="{{xIconScreen}}">Datos
+						</iron-icon>
+					</paper-button>
+
+					<!-- <button onclick="pantallaCompleta();">aaa</button>
+					<p><strong>Venta rapida.</strong> busca el producto por denominacion o codigo de barras.</p> -->
 				</div>
 				<!--div class="xDerecha" style="margin-top:-20px;">
 					<div class="xEnLinea xIzquierda xpadingLateralDe"><img src="../../images/_print_1_vr.png"></div>
@@ -269,7 +276,7 @@ var xThisVentaRapida
 ,xReservar = 0
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
- xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='';
+ xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false;
 
 
 
@@ -338,7 +345,7 @@ function xIniVentaRapida(){
 	//para controlar las teclas f1-f12
 	document.defaultAction = false;
 	var eventHandler = true ? detectEvent : empty;
-	document['onkeydown'] = eventHandler;
+	document.body['onkeydown'] = eventHandler;
 
 	$("#txt_mesa").on('keyup',function(){
 		if(tt_pedido==0 || this.value==''){$("#btn_enviar_cuenta").addClass('xInvisible'); xenviar_cuenta=false}else{$("#btn_enviar_cuenta").removeClass('xInvisible'); xenviar_cuenta=true}
@@ -1245,6 +1252,13 @@ function xTraerDtTipoConsumo(){
   //   }
   // }
 
+function _pantallaCompleta (){
+	xThisVentaRapida.xIconScreen = isSreenFull ? 'icons:fullscreen-exit' : 'icons:fullscreen'; 	
+	isSreenFull = !isSreenFull;
+	pantallaCompleta();
+}
+
+
 Polymer({
 	is:'x-venta-rapida',
 	properties:{
@@ -1254,10 +1268,12 @@ Polymer({
 		xdt_items:Object,
 		hidden_container_registro_pago: boolean = false,
 		valid_form_cliente_pago: boolean = false,
-		valid_monto_pago: boolean = false
+		valid_monto_pago: boolean = false,
+		xIconScreen: String,
 	},
 	attached:function(){
 		this.selected_us=0;
+		this.xIconScreen = 'icons:fullscreen';
     	xThisVentaRapida=this;
     	xIniVentaRapida();
     },

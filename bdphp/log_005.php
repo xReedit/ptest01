@@ -101,5 +101,123 @@
 			$rpt = $bd->xConsulta($sql);            
             print $rpt."**".$rowCount;
 			break;
+		case 304: // cuentas por cobrar
+			$pagination = $_POST['pagination'];						
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(c.nombres, rp.fecha, tpc.descripcion) like '%".$pagination['pageFilter']."%'";
+			$sql = "
+				SELECT rpd.idregistro_pago_detalle, rp.idcliente, rp.fecha, DATEDIFF(STR_TO_DATE(rp.fecha, '%d/%m/%Y'), now()) as pasaron 
+					, c.nombres as nomcliente , tpc.descripcion as tipoconsumo, rpd.importe, format(rpd.importe, 2) total_total
+				from registro_pago as rp
+					inner join registro_pago_detalle as rpd using(idregistro_pago)
+					inner join cliente as c on rp.idcliente = c.idcliente
+					inner join tipo_consumo as tpc on rp.idtipo_consumo = tpc.idtipo_consumo
+				where (rp.idorg=".$g_ido." and rp.idsede=".$g_idsede.")".$filtro." and rp.estado = 0 and rpd.idtipo_pago=3 and rpd.pagado=0
+			";
+
+			$sqlCount="
+				SELECT count(rp.idregistro_pago) as d1 from registro_pago as rp 
+					inner join registro_pago_detalle as rpd using(idregistro_pago)
+					inner join cliente as c on rp.idcliente = c.idcliente
+					inner join tipo_consumo as tpc on rp.idtipo_consumo = tpc.idtipo_consumo
+				where (rp.idorg=".$g_ido." and rp.idsede=".$g_idsede.")".$filtro." and rp.estado = 0 and rpd.idtipo_pago=3 and rpd.pagado=0 and rp.idcliente!=0";
+				
+			$rowCount = $bd->xDevolverUnDato($sqlCount);
+			// echo $sqlCount;
+			$rpt = $bd->xConsulta($sql);
+            print $rpt."**".$rowCount;
+			
+			break;
+		case 305: // registrar como pagados
+			$sql="update registro_pago_detalle set pagado=1 where idregistro_pago_detalle in (".$_POST['ids'].")";
+			$bd->xConsulta($sql);
+		case 4:// clientes
+			$pagination = $_POST['pagination'];						
+            $filtro = $pagination['pageFilter'] === '' ? '' : " and CONCAT(nombres,ruc, if(LENGTH(ruc)>8, 'PJ', 'PN'), direccion, telefono, f_registro) like '%".$pagination['pageFilter']."%'";
+			// $filtroFecha = $fecha === '' ? ' and cierre=0 ' : " AND SUBSTRING_INDEX(fecha,' ',1) = '".$fecha."' ";
+			// $filtroFechaCount = $fecha === '' ? '' : " and (SUBSTRING_INDEX(c.fecha,' ',1)= '".$fecha."')";
+
+			$sql = "
+				select *, if(LENGTH(ruc)>8, 'PJ', 'PN') as tipo from cliente
+				where (idorg=".$g_ido.")".$filtro." and nombres != '' and estado=0
+				order by nombres asc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];
+			
+			$sqlCount="
+                SELECT count(idcliente) as d1 from cliente
+                where (idorg=".$g_ido.")".$filtro." and nombres != '' and estado=0";            
+            
+			$rowCount = $bd->xDevolverUnDato($sqlCount);
+			// echo $sqlCount;
+			$rpt = $bd->xConsulta($sql);            
+            print $rpt."**".$rowCount;
+			break;
+		case 401:// historial cliente
+			$sql = "select idcliente, STR_TO_DATE(fecha, '%d/%m/%Y') fecha, fecha as fecha_mostrar, total  from registro_pago where idcliente=".$_POST['i']." and estado=0";
+			$bd->xConsulta($sql);
+			break;
+		case 5: //planilla -cargo
+			$sql = "select *, format(remuneracion, 2) importe from cargo where idorg=".$g_ido." and estado=0 order by descripcion";
+			$bd->xConsulta($sql);
+			break;
+		case 501: // colaboradores
+			$sql="
+				SELECT *, DATEDIFF(now(), STR_TO_DATE(f_ingreso, '%d/%m/%Y')) laborando,  FLOOR(DATEDIFF(now(), STR_TO_DATE(f_nac, '%d/%m/%Y'))/365) edad,  DATE_FORMAT(STR_TO_DATE(f_nac, '%d/%m/%Y'), '%d %M') cumple 
+				from colaborador
+				where (idorg=".$g_ido." and idsede=".$g_idsede.") and estado=0
+				ORDER BY nombres
+			";
+			$bd->xConsulta($sql);
+			break;
+		case 502:// lista planilla
+			$sql="
+				SELECT p.idplanilla, p.idcolaborador, p.idcargo, p.idplanilla_periodo, c.nombres, c.profesion, p.area, cargo.descripcion as descargo, p.mes_activo, c.f_ingreso, pp.descripcion as periodo_pago
+					, format((IFNULL(ppd.ingresos, 0) + cargo.remuneracion),2) as ingresos, format(IFNULL(ppd.descuentos,0),2) as descuentos, p.fecha_baja
+				from planilla as p
+					inner join colaborador as c on p.idcolaborador=c.idcolaborador
+					inner join cargo on p.idcargo = cargo.idcargo
+					inner join planilla_periodo as pp on p.idplanilla_periodo = pp.idplanilla_periodo
+					left join (select idplanilla, sum(if(tipo=0, importe,0)) ingresos, sum(if(tipo=1, importe,0)) descuentos from planilla_detalle where estado=0 group by idplanilla) as ppd on p.idplanilla=ppd.idplanilla
+				where (p.idorg=".$g_ido." and p.idsede=".$g_idsede.") and p.estado=0 
+					and ( mes_cierre = '' or STR_TO_DATE(mes_cierre, '%d/%m/%Y') >= LAST_DAY(STR_TO_DATE(CONCAT('01/','".$_POST['mes']."'), '%d/%m/%Y')) )
+			";
+			$bd->xConsulta($sql);
+			break;
+		case 503: // encabezado colaborador planilla detalle
+			$sql="
+				SELECT c.nombres, c.profesion, c.cuenta, p.area, cargo.descripcion as descargo, c.dni, c.f_ingreso, DATEDIFF(if(p.mes_cierre = '', now(), STR_TO_DATE(p.fecha_baja, '%d/%m/%Y')), STR_TO_DATE(c.f_ingreso, '%d/%m/%Y')) laborando
+					,p.mes_activo, cargo.remuneracion, format(cargo.remuneracion,2) sueldo, p.fecha_baja
+				from planilla as p
+					inner join colaborador as c on p.idcolaborador=c.idcolaborador
+					inner join cargo on p.idcargo = cargo.idcargo
+					inner join planilla_periodo as pp on p.idplanilla_periodo = pp.idplanilla_periodo
+				where idplanilla=".$_POST['id']. " and mes_activo='".$_POST['mes']."'" ;
+			$bd->xConsulta($sql);
+			break;
+		case 5031 ://detalle planilla | ingresos descuentos
+			$sql="select *, format(importe, 2) monto from planilla_detalle where idplanilla=".$_POST['id']." and mes_activo='".$_POST['mes']."' and estado=0";
+			$bd->xConsulta($sql);
+			break;
+		case 504:// guardar colaborador en planilla:
+			$arrItem=json_encode($_POST['item']);
+			$sql = "CALL procedure_add_colaborador_planilla('".$arrItem."')";			
+			$bd->xConsulta($sql);
+			break;
+		case 505: // dar de baja a colaborador
+			$sql = "update planilla set mes_cierre=DATE_FORMAT(LAST_DAY(NOW()),'%d/%m/%Y'), fecha_baja=DATE_FORMAT(NOW(),'%d/%m/%Y') where idplanilla=".$_POST['id'];
+			$bd->xConsulta($sql);
+			break;
+		case 6: // historial de la carta
+			$sql="
+				SELECT s.descripcion desseccion, i.descripcion desitem, ch.precio, sum(p.cantidad_r) cant_vendido, format(sum(p.ptotal_r),2) importe_vendido
+				FROM carta_lista_historial as ch
+					inner join seccion as s on ch.idseccion = s.idseccion
+					inner join item as i on ch.iditem = i.iditem
+					inner join carta as c on ch.idcarta=c.idcarta
+					inner join pedido_detalle as p on ch.iditem = p.iditem
+				WHERE (c.idorg=".$g_ido." and c.idsede=".$g_idsede.") and concat(s.descripcion,i.descripcion) like '%".$_POST['filtro']."%'
+				GROUP BY ch.iditem
+				ORDER by ch.sec_orden, s.descripcion, i.descripcion
+			";
+			$bd->xConsulta($sql);
+			break;
 	}
 ?>

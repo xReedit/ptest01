@@ -13,8 +13,10 @@ function CpeInterno_Registrar(data) {
         dataSave.idcliente = data.data.idcliente === "" ? 0 : data.data.idcliente;
         dataSave.total = data.data.total;
         dataSave.totales_json = data.data.totales_json;
-        dataSave.numero = data.data.numero;
+        // dataSave.numero = data.data.numero;
+        dataSave.numero = xCeroIzqNumberComprobante(data.data.number);
         dataSave.external_id = data.data.external_id;
+        // dataSave.number = data.data.number; // numero de comprobante
         dataSave.hash = data.data.hash;
         dataSave.idregistro_pago = data.data.idregistro_pago;
         dataSave.viene_facturador = data.data.viene_facturador;
@@ -41,22 +43,29 @@ function CpeInterno_Registrar(data) {
     }
 }
 
+function xCeroIzqNumberComprobante(_number) {
+    const _arrNumber = _number.split('-');
+    const _num = xCeroIzq(_arrNumber[1],7);
+    return _arrNumber[0] + '-' + _num;
+}
+
 
 // hubo un error no conexion con el servicio o algo parecido
 // guarda el cpe para volver a enviarlo al cierre
 // registra el jsonxml para ser enviado luego
 // idtipo_comprobante_serie => guardar el correlativo
-function CpeInterno_Error(data, jsonxml, _idregistro_p, _viene_facturador, idtipo_comprobante_serie) {
+async function CpeInterno_Error(data, _idregistro_p, _viene_facturador, idtipo_comprobante_serie) {
   let dataSave = {};
 
   dataSave = data;
   dataSave.estado_api = 1;
   dataSave.estado_sunat = 1;
   dataSave.msj = "Sin registrar";
+  dataSave.error_api = 1;
   if ( _idregistro_p != 0 ) {
       dataSave.idregistro_pago = _idregistro_p;
   }
-  CpeInterno_SaveBD(dataSave);
+  return await CpeInterno_SaveBD(dataSave);
 }
 
 // registra pero la sunat devuelve error m// en facturas
@@ -68,11 +77,14 @@ function CpeInterno_ErrorValidacionSunat(_idregistro_p, dataSave) {
 };
 
 // guardar en la base de datos el comprobante
-function CpeInterno_SaveBD(dataSave) {
-    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: dataSave}})
+async function CpeInterno_SaveBD(dataSave) {
+    let rptSave = '';
+    await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: dataSave}})
     .done( function (res) {
-        // console.log(res);
+        rptSave = JSON.parse(res).datos[0];
+        console.log(res);
     });
+    return rptSave;
 }
 
 // actualiza estados de documentos reenviados// estado_api , estado_sunat

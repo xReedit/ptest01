@@ -62,6 +62,8 @@ table{border-spacing:0px;}th,td{border:1;font-size:1em;padding:.3em 1em;}
 .x_div_linea .xitem2{float:left;width:48%;padding-left:10px;padding-right:10px;padding-bottom:8px;}
 .x_div_linea .xitem3{float:left;padding-left:10px;padding-right:10px;padding-bottom:8px;}
 .x_div_linea .xitem1:first-child{border-left:0px solid #CCC;}
+.x_div_linea .xitem-col-8{float:left;width:68%;padding-left:10px;padding-right:10px;padding-bottom:8px;border-left:0px solid #CCC;border-top:0px;}
+.x_div_linea .xitem-auto{float:left;width:auto;padding-left:10px;padding-right:10px;padding-bottom:8px;}
 .xBordeDe{border-right:solid rgba(0,0,0,.15) 1px;margin-right:10px; }
 .xBordeIz{border-left:solid rgba(0,0,0,.15) 1px;margin-left:10px;}
 .xBordeDe2{border-right:solid rgba(0,0,0,.25) 0.25em; }
@@ -272,6 +274,10 @@ table tr:hover .xIconTr{opacity:1;}
 table tr:hover .xIconTrNoVisible{visibility:visible;}
 table tr:hover .xDeleteRow{opacity:1;}
 table tr:hover .xDeleteRow2{opacity:1;}
+table tr:hover .xEditRow{opacity:1;}
+table tr:hover .xFileRow {
+    opacity: 1;
+}
 table tr:hover .xDeleteRowNeutro{opacity:1;}
 table tr:hover .xbtnRow{visibility:visible;}
 table tr:hover .xbtnRowLeft{visibility:visible;}
@@ -333,6 +339,30 @@ tr.xSinBorde>td{border-bottom:0px;}
 .xDeleteRow{background-image:url('../images/delete.png');background-repeat:no-repeat;background-size:contain;width:22px;height:22px;cursor:pointer;opacity:0.1;float:right;vertical-align:middle;}
 .xDeleteRow2{background-image:url('../images/trash.png');background-repeat:no-repeat;background-size:contain;width:16px;height:16px;cursor:pointer;opacity:0.1;float:right;vertical-align:middle;}
 .xDeleteRowNeutro{background-image:url('../images/delete.png');background-repeat:no-repeat;background-size:contain;width:22px;height:22px;cursor:pointer;opacity:0.1;vertical-align:middle; float: left;}
+.xEditRow {
+    background-image: url('../images/edit.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    opacity: 0.1;
+    float: right;
+    vertical-align: middle;    
+}
+
+.xFileRow {
+    background-image: url('../images/nota.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    opacity: 0.1;
+    float: right;
+    vertical-align: middle;    
+}
+
 .xTextRow{font-size:18px;border:none;border-bottom:solid 2px #42a5f5;width:100px;text-align:center; width: auto;}
 .xTextRow2{border:none;border-bottom:1px solid #616161;display:inline-block;width:100%;text-align:center;background:transparent;outline:none;box-shadow:none;transition:box-shadow 0.28s;}
 .xTextRow2.tiz{border:none;border-bottom:solid 2px #42a5f5;width:100px;text-align:left;}
@@ -582,6 +612,10 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xFondoColorVerde{background: #43a047; color: #fff;}
 .xFondoColorAmarillo{background: #FFA000; color: #fff;}
 .xFondoColorRojo{background: #D50000; color: #fff;}
+.xFondoColorPlomo {
+    background: darkgrey;
+    color: black;
+}
 
 .xmenu_item_2{border-bottom:1px solid #ddd; height: auto; transition: transform .5s;}
 .xmenu_item_2 .xcheck_item{display: none;}
@@ -1099,10 +1133,16 @@ ul.list_add_item2 li {
 .mi_panel_drawer .de{right: 0px; top: 0px; margin-right:0px; float: right; }
 .mi_panel_drawer .xpane_titulo{ background: #616161; color: #fafafa; padding: 5px;}
 
+.dialog_titulo {    
+    margin: -0.5em;
+    border-radius: 5px 5px 0px 0px;
+    padding: 10px;    
+}
 
 /*#xVentaRapidaBuscar{width: 50%;}*/
 
 .xIndicadorSize1{width: 370px; height: 390px;}
+.fondoContent {background: linear-gradient(to bottom, #F3F4F5 160px, white 50vh);}
 
 .xzoom-1 { transition: transform .2s; }
 .xzoom-1:hover {transform: scale(1.9); }

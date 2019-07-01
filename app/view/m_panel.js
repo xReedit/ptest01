@@ -4,7 +4,7 @@ var xparam_time_ruter = false;
 
 
 async function lazyLoadWCPolyfillsIfNecessary() {
-	var onload = function () {
+	var onload = function () {		
 		// For native Imports, manually fire WCR so user code
 		// can use the same code path for native and polyfill'd imports.
 		if (!window.HTMLImports) {
@@ -26,6 +26,7 @@ async function lazyLoadWCPolyfillsIfNecessary() {
 		script.src = '../web_components/webcomponentsjs/webcomponents-lite.min.js';
 		script.onload = onload;
 		document.head.appendChild(script);		
+		
 
 		// let _linkImport = `../web_components/polymer/polymer.html
 		// 				,../web_components/paper-button/paper-button.html
@@ -107,6 +108,10 @@ window.onload = () => {
   });
 
 	xIniDocument();
+
+	// setTimeout(() => {
+	// 	xLiberarRouter();
+	// }, 200);
 	// xConstAjax();
 };
 
@@ -213,7 +218,7 @@ function xOpenPage(xop, parametro){
 		xparam_time_ruter = true;
 		setTimeout(() => {
 			xLiberarRouter();
-		}, 1000);		
+		}, 200);		
 		return;
 	}
 
@@ -307,6 +312,8 @@ function xOpenPage(xop, parametro){
 		case 31: xruta = '/gastos_fijos'; break;
 		case 32: xruta = '/gastos_variables'; break;
 		case 33: xruta = '/otros_ingresos'; break;
+		case 34: xruta = '/recursos_humanos'; break;
+		case 35: xruta = '/clientes'; break;
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
