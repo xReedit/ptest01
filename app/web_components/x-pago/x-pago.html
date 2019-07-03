@@ -58,7 +58,7 @@
 								<!-- <paper-input-autocomplete id="clie_nombres_auto" label="Nombres | Razon Social" search-property="nombres"									
 									autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete> -->
 
-								<x-comp-find-input-cliente id="clie_nombres" label="Nombres | Razon Social xx"
+								<x-comp-find-input-cliente id="clie_nombres" label="Nombres | Razon Social"
 									required="[[ComprobanteRequiereCliente]]" class="xPasarEnter2" auto-validate>
 								</x-comp-find-input-cliente>
 
@@ -119,8 +119,8 @@
 				</button>
 				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]"
 					onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next"
-					disabled="[[!valid_form_cliente_pago]]">
-					<!-- <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
+					disabled$="[[!valid_form_cliente_pago]]">
+					<!-- valid_form_cliente_pago || <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
 					<div>[F10] Siguente</div>
 				</button>
 			</div>
@@ -249,9 +249,12 @@
 			const cliente = event.detail;
 			xThisPago.clienteModel = cliente;
 			xThisPago.tipoPagoRequiereCliente = false;
+			// xThisPago.valid_form_cliente_pago = true;			
+			
 			xIdCliente_pago = cliente.idcliente;
 			$("#sel_cliente").val(cliente.ruc);
 			$("#clie_direccion").val(cliente.direccion);
+			EmitirValidacionFormCliente();
 		});
 
 		objSelComprobante=document.getElementById('comp_sel_comprobante');
@@ -449,7 +452,7 @@
 				return;
 			}
 
-			xThisPago.ComprobanteRequiereCliente = true;			
+			// xThisPago.ComprobanteRequiereCliente = true;
 		}
 
 		if (valor.length === 0) {
@@ -500,6 +503,7 @@
 
 			xGetFindCliente(valor, servicio, (rpt) => {
 				if (rpt.success) {
+					xThisPago.valid_form_cliente_pago = true; // cliente valido
 					xThisPago.hidden_container_cliente = false;
 					// $("#datos_cliente").removeClass("xInvisible");
 					// xThisPago.$.clie_nombres.focus();
@@ -513,6 +517,8 @@
 					xThisPago.$.sel_cliente.invalid = true;
 					xThisPago.mensajeErrorDocumento = rpt.msg;
 					xThisPago.hidden_container_cliente = true;
+
+					xThisPago.valid_form_cliente_pago = false; // cliente no valido valido
 					// $("#datos_cliente").addClass("xInvisible");
 				}
 
@@ -578,7 +584,9 @@
 		
 		// si el importe a pagar es mayor a 700 requiere cliente
 		if (parseFloat(xThisPago.total) > 700) {
-			xThisPago.ComprobanteRequiereCliente = true;
+			if ( _selObj.codsunat === '03' || _selObj.codsunat === '01') {
+				xThisPago.ComprobanteRequiereCliente = true;
+			}
 		}
 		
 		_inputAutocompleteObj.inputValue = '';
@@ -671,8 +679,21 @@
 	function EmitirValidacionFormCliente() {
 		// console.log(xThisPago.$.form_pago_cliente);
 		// var validForm = xThisPago.$.form_pago_cliente.checkValidity();
-		var validForm = !xThisPago.$.sel_cliente.invalid && xThisPago.$.form_pago_cliente[1].validate()
-		xThisPago.valid_form_cliente_pago = validForm;		
+		// var validForm = !xThisPago.$.sel_cliente.invalid && xThisPago.$.form_pago_cliente[1].validate();
+
+		// var validForm = xThisPago.$.sel_cliente.validate() && xThisPago.$.form_pago_cliente[1].validate();
+		// xThisPago.valid_form_cliente_pago = validForm;
+		// xThisPago.fire('xFormClienteValid', validForm);
+
+		var validForm = !xThisPago.ComprobanteRequiereCliente;
+		if (xThisPago.ComprobanteRequiereCliente) { // requiere factura 0 el monto es >= 700
+			if ( xThisPago.tipoComprovanteSelecionado.codsunat === '01' ){ // si es factura tiene que ser ruc
+				validForm = xThisPago.$.sel_cliente.value.length === 11 && clie_nombres.$.input_clie_nombres_auto.$.input.value != '' ? true : false;
+			} else if ( xThisPago.tipoComprovanteSelecionado.codsunat === '03' ){ // si es boleta
+				validForm = clie_nombres.$.input_clie_nombres_auto.$.input.value !='' ? true : false;
+			}
+		} 
+		xThisPago.valid_form_cliente_pago = validForm;
 		xThisPago.fire('xFormClienteValid', validForm);
 	}
 

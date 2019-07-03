@@ -140,8 +140,9 @@
 </style>
 
 <script type="text/javascript" src="./cocinar.resumen.boletas.js"></script>
-<!-- <script type="text/javascript" src="../../view/config.const.js"></script> -->
+<script type="text/javascript" src="../../view/config.const.js"></script>
 <script type="text/javascript" src="../../view/xm_all.js"></script>
+<script type="text/javascript" src="./../x-caja/cocinar.resumen.boletas.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
@@ -407,7 +408,7 @@ function xArmarArrayPrint(){
 	xPopupLoad.xopen();
 	xPopupLoad.titulo="Obteniendo Datos...";
 
-	if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
+	// if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
 
 	xArrayCierrePrint=new Array();
 	xArrayCierrePrint.push({'des':'VENTAS', 't1':'', 't2':'','t3':''});
@@ -438,6 +439,7 @@ function xArmarArrayPrint(){
 													//xArmarSubItems(5,708,function(){
 														xUpdateCerrarCession(function(){
 															xPermisoSupervisor=0;
+															if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
 															xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);														
 														})
 													//})
