@@ -64,8 +64,10 @@ function xOpenPage(xop, parametro){
 		case 0:	xruta='/categoria';break;
 		case 1:	xruta='/menu';break;
 		case 2:	xruta='/c_pedido';break;
-		case 3:	xruta='/caja';break;
-		case 4:	document.location.href='m_panel.html';return;break;
+		case 3:	xruta='/caja';break;		
+		case 4:			
+			document.location.href='m_panel.html';
+			return;
 		case 5:
 			window.localStorage.removeItem("::app3_sys_first_load");
 			h = window.screen.availHeight-100;

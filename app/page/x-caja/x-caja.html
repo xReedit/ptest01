@@ -374,7 +374,7 @@ function xArmarSubItems(xx,numBD,reponde){
 }
 
 function xIniArraysPrint(){
-	xArrayEncabezadoCierre=new Array();
+	xArrayEncabezadoCierre=[];
 
 	var xIpPrintDoc='';
 	var xdetall_cierre='';
@@ -394,13 +394,20 @@ function xIniArraysPrint(){
 
 	const impresora = xgetImpresora(-3);
 	if (impresora == null ) {
-		xRpt = '<a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';
+		xRpt = '<p class="xColorRow_Rojo">No se selecciono ninguna impresora para este documento</p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';
 		$('#xTituloRpt2').html(xRpt);
-		alert('No se selecciono ninguna impresora para este documento');
+		// alert('No se selecciono ninguna impresora para este documento');
 		return false;
 	}
 	// xArrayEncabezadoCierre.push({'ip_print':xIpPrintDoc, 'logo':xDtPrint[0].logo,'detalle_cierre':xdetall_cierre,'titulo':'CIERRE DE CAJA','var_margen_iz':xArrayImpresoras[xidPrint].var_margen_iz, 'var_size_font':xArrayImpresoras[xidPrint].var_size_font})
-	xArrayEncabezadoCierre.push({ 'ip_print': impresora[0].ip_print, 'logo': xDtPrint[0].logo, 'detalle_cierre': xdetall_cierre, 'titulo': 'CIERRE DE CAJA', 'var_margen_iz': impresora[0].var_margen_iz, 'var_size_font': impresora[0].var_size_font })
+	xArrayEncabezadoCierre.push({ 
+		'ip_print': impresora[0].ip_print,
+		'logo': xDtPrint[0].logo,
+		'detalle_cierre': xdetall_cierre,
+		'titulo': 'CIERRE DE CAJA',
+		'var_margen_iz': impresora[0].var_margen_iz,
+		'var_size_font': impresora[0].var_size_font,
+		'papel_size': impresora[0].papel_size })
 	return true;
 }
 
@@ -438,8 +445,8 @@ function xArmarArrayPrint(){
 												//xArrayCierrePrint.push({'des':'PRODUCTOS CON STOCK MINIMO', 't1':'', 't2':'','t3':''});
 													//xArmarSubItems(5,708,function(){
 														xUpdateCerrarCession(function(){
-															xPermisoSupervisor=0;
-															if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
+															xPermisoSupervisor=0;	
+															if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return;}
 															xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);														
 														})
 													//})
