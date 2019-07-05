@@ -114,7 +114,7 @@
 				<div class="xdivEnLinea2x">
 					<div class="itemsDivx a">
 				  		<div class="xtitulo">
-				  			<h4>ITEMS</h4>
+				  			<h4>SECCIONES</h4>
 				  		</div>
 				  		<div class="xMenu_body_vr" id="_xMenu_body_vr"></div>
 				  </div>
@@ -205,7 +205,7 @@
 	}
 	.xdivEnLinea2x > .itemsDivx {
 		width: 380px;
-		height: 75vh;
+		height: calc(100vh - 260px);
 		border: solid rgba(0,0,0,.25) 1px;
 		overflow-y:auto;
 		-webkit-transition:all 0.3s ease;-o-transition:all 0.3s ease;-ms-transition:all 0.3s ease;-moz-transition:all 0.3s ease;transition:all 0.3s ease;
@@ -217,6 +217,9 @@
 			background: rgba(189,189,189,0.5);
 			border-bottom: 1px solid rgba(0,0,0,.25);
 	}
+
+	ul.list_add_item2 li.divLi{ padding:0; }
+	.content_li {padding: 10px 25px 8px;}
 
 	@media screen and (max-width:920px){
 		.xdivEnLinea2x {
@@ -776,7 +779,7 @@ async function xGuardarPedidoVR(responde){
 	// xPopupLoad.xopen();	
 	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
 	// var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
-	const _idCLienteCompara = xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente;
+	const _idCLienteCompara = xRpt_pago[0] ? xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente : 0;
 	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery.length != 0 ? arrDatosAdjuntoDelivery : [];
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
@@ -971,14 +974,16 @@ function xFiltrarItemsCartaDet(xobj){
 	   }
 	   $("#accordion li").each(function(a,element) {
 	   		if(filter==element.dataset.idseccionindex){
-					 $(element).show();
-					}else{$(element).hide();}
+				$(element).show();
+			}else{
+				$(element).hide();
+			}
 	   })
 
 	xIniFocusMoveLi();
 	$xlist_li.eq(0).focus();
-  $xlist_li.eq(0).addClass('xitem_seleccionado_li');
-  $xlist_li.eq(0).click();
+  	$xlist_li.eq(0).addClass('xitem_seleccionado_li');
+  	$xlist_li.eq(0).click();
 }
 function xLoadItemsDetalleCartaALL(){
 	$("#accordion ul").remove();
@@ -1000,7 +1005,7 @@ function xLoadItemsDetalleCartaALL(){
 		xGeneralDataCarta[p].stock_actual = xCantidadMax;
 		xGeneralDataCarta[p].idcategoria = xidCategoriaVR;
 		
-		xCadenaItems=String(xCadenaItems+'<li class="noselect" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
+		xCadenaItems=String(xCadenaItems+'<li class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
 												'" data-cat="'+xGeneralDataCarta[p].des_seccion+
 												'" data-idcl="'+xGeneralDataCarta[p].idcarta_lista+
 												'" data-idseccion="'+xGeneralDataCarta[p].idseccion+
@@ -1016,6 +1021,7 @@ function xLoadItemsDetalleCartaALL(){
 												'" data-iddescontar="'+xGeneralDataCarta[p].idprocede+
 												'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+
 												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
+														'<div class="content_li">'+
 															'<div>'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+
 																'<p class="xtitulo_li2 '+xtachar_li+'">'+xGeneralDataCarta[p].des_item+'</p>'+
@@ -1027,7 +1033,8 @@ function xLoadItemsDetalleCartaALL(){
 																'<span class="xcant_li2" data-cantmax="'+xCantidadMax+'">0</span>'+
 																'<div class="xBtn_li2 suma">+</div>'+
 															'</div>'+
-															'</li>');
+														'</div>'+
+													'</li>');
 	};
 
 	$("#accordion").html(xCadenaItems).trigger('create');

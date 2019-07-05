@@ -126,13 +126,18 @@ function handlerFnMiPedido(e) {
 
 //agregar item desde control de pedidos
 $(document.body).on('click', '#content_item_pedido div.xBtn_li', handlerFnMiPedidoControl); // control de mesas
-$(document.body).on('click', '#accordion div.xBtn_li2', handlerFnMiPedidoControl); // venta rapida
+$(document.body).on('click', '#accordion div.xBtn_contet_li2', handlerFnMiPedidoControl); // venta rapida
+$(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
+
 function handlerFnMiPedidoControl(e) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		var _nomClassXcant_li = 'xcant_li';
 		const _thisObj = e.target || e;
-		const _viene_venta_rapida = _thisObj.parentElement.parentElement.dataset.ventarapida || 0; 
-		const _itemIndex = _thisObj.parentElement.parentElement.dataset.index;
+	const _objParentLi = _thisObj.dataset.index ? _thisObj : _thisObj.parentElement.dataset.index ? _thisObj.parentElement : _thisObj.parentElement.parentElement.dataset.index ? _thisObj.parentElement.parentElement : _thisObj.parentElement.parentElement.parentElement;
+		const _dataSetObj = _objParentLi.dataset;
+		// const _isLi = _dataSetObj.isli ? true : false; // si viene del li ventarapida sumar al click
+		const _viene_venta_rapida = _dataSetObj.ventarapida; // _thisObj.parentElement.parentElement.dataset.ventarapida || 0;
+		const _itemIndex = _dataSetObj.index// _thisObj.parentElement.parentElement.dataset.index;
 		
 		xidTipoConsumo = $("#select_ulTPC option:selected").val();
 		itemPedidos_objItemSelected = xGeneralDataCarta[_itemIndex];
@@ -142,13 +147,14 @@ function handlerFnMiPedidoControl(e) {
 			_nomClassXcant_li = 'xcant_li2';
 		}
 
+
 		xidItem = itemPedidos_objItemSelected.idcarta_lista; // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
-		var element_cant_li_sel = _thisObj.parentElement.getElementsByClassName(_nomClassXcant_li) //$(this).parent().find(_nomClassXcant_li);		
+		var element_cant_li_sel = _objParentLi.getElementsByClassName(_nomClassXcant_li); // _thisObj.parentElement.getElementsByClassName(_nomClassXcant_li) //$(this).parent().find(_nomClassXcant_li);		
 		element_cant_li_sel = $(element_cant_li_sel);
 		// if(element_cant_li_sel.length==0){element_cant_li_sel=$(this).parent().find('.xcant_li2');}
 		// var element_li_add__print= $(this).parent().parent();
 		
-		var xsigno= _thisObj.textContent  //$(this).text(),
+		var xsigno= _thisObj.textContent != '+' && _thisObj.textContent != '-' ? _dataSetObj.signo : _thisObj.textContent // signo si viene de ventarapida solo click en item suma //$(this).text(),
 		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
 		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),
 		, xcant_max = itemPedidos_objItemSelected.stock_actual // element_cant_li_sel.attr('data-cantmax'),
@@ -190,6 +196,7 @@ function handlerFnMiPedidoControl(e) {
 			if(xcant<xcant_max){xcant++;}
 		}else{
 			xcant--;
+			xcant = xcant <= 0 ? 0 : xcant;
 		}
 
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
