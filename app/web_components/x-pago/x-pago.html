@@ -2,9 +2,11 @@
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-item/paper-item.html">
 <link rel="import" href="../paper-input/paper-textarea.html">
-<link rel="import" href="../paper-input-autocomplete/paper-input-autocomplete.html">
+<!-- <link rel="import" href="../paper-input-autocomplete/paper-input-autocomplete.html"> -->
 <link rel="import" href="../../x-componentes/x-comp-find-input-cliente/x-comp-find-input-cliente.html">
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
+<link rel="import" href="../../x-componentes/x-comp-find-tipo-pago-option/x-comp-find-tipo-pago-option.html">
+<link rel="import" href="../../x-componentes/x-comp-table-forma-pago/x-comp-table-forma-pago.html">
 
 <dom-module id="x-pago">
 	<template>
@@ -13,11 +15,9 @@
 				<h2 class="ptotal">{{total}}</h2>
 				<p class="pdif" id="pdif">{{diferencia}}</p>
 			</div>
-			<div class="ancho_ini">
-				<br><br>
-				<div class="container-cliente-comprobante" hidden="[[!hidden_container_pago]]">
-
-					<br>
+			<div class="ancho_ini">				
+				<br>
+				<div class="container-cliente-comprobante" hidden="[[!hidden_container_pago]]">					
 
 					<div id="container-cliente">
 						<label for="xsel_tp_doc" class="xfont11 xColorRow_Plomo2">Comprobante a imprimir: </label>
@@ -58,8 +58,9 @@
 								<!-- <paper-input-autocomplete id="clie_nombres_auto" label="Nombres | Razon Social" search-property="nombres"									
 									autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete> -->
 
-								<x-comp-find-input-cliente id="clie_nombres" label="Nombres | Razon Social"
-									required="[[ComprobanteRequiereCliente]]" class="xPasarEnter2" auto-validate>
+								<x-comp-find-input-cliente id="clie_nombres" 
+									label="Nombres | Razon Social"
+									required="[[ComprobanteRequiereCliente]]" class="xPasarEnter2">
 								</x-comp-find-input-cliente>
 
 								<paper-textarea autofocus label="Direccion" max-rows="2" id="clie_direccion"
@@ -76,14 +77,39 @@
 
 				<!-- <input type="text" placeholder="[[placeholder_clie]]" onChange="conMayusculas(this)" class="xMiInput xfont18 xPasarEnter2" id="sel_cliente" anchofull autofocus> -->
 				<div id="container-pago" hidden="[[hidden_container_pago]]">
-					<paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
+					<!-- <paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
 						class="btnAdd2"></paper-fab>
+					<br> -->
+					<x-comp-table-forma-pago id="comp-table-fp" importetotal$="{{importe_total_cobrar}}"></x-comp-table-forma-pago>
 					<br>
-					<table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
+
+					<!-- <table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
 						<thead>
-							<th width="70%" align="left">Tipo</th>
+							<th width="70%" align="left">Forma de pago</th>
 							<th align="left">Monto</th>
 						</thead>
+						<tbody>
+							<tr>
+								<td>	
+									<x-comp-find-tipo-pago-option deshabilitado="true"></x-comp-find-tipo-pago-option> -->
+									<!-- <div style="display: flex">										
+										<div class="xMiBoton_icon_option" selected>
+											<img src="../../../images/_tp_01.png">
+											<p>Efectivo</p>
+										</div>										
+										<div class="xMiBoton_icon_option">
+											<img src="../../../images/_tp_02.png">
+											<p>Tarjeta</p>
+										</div>
+										<div class="xMiBoton_icon_option">
+											<img src="../../../images/_tp_03.png">
+											<p>Credito</p>
+										</div>
+									</div> -->
+								<!-- </td>
+								<td><input type="number" min="1" pattern="[0-9]+([\.,][0-9]+)?" step="any"  class="xMiInput xfont16 xtxtCentro xmonto" id="xmonto" onblur="xRetornaMoneda(this)" anchofull></td>
+							</tr>
+						</tbody> -->
 						<!--tr class="row xSinBorde" data-idpago="">
 							<td>
 								<select id="xsel_tp" class="xTextRow2 xfont16 xCursor xsel_tp">
@@ -95,12 +121,12 @@
 							<td><input type="number" min="1" pattern="[0-9]+([\.,][0-9]+)?" step="any"  class="xMiInput xfont16 xtxtCentro xmonto" id="xmonto" onblur="xRetornaMoneda(this)" anchofull></td>
 							<td class="xInvisible xmonto_sumar"></td>
 						</tr-->
-					</table>
+					<!-- </table> -->
 
-					<br>
+					<!-- <br> -->
 					<!--div class="xBoton2 xAzul" dialog-confirm  onclick="xGuardarPago();">Listo, guardar pago</div>
 					<div class="xBoton2 xPlomo" dialog-dismiss>Regresar</div-->
-					<br>
+					<!-- <br> -->
 				</div>
 				<br>
 			</div>
@@ -138,12 +164,11 @@
 					hidden$ = "[[tipoPagoRequiereCliente]]"
 					disabled$="[[!change_monto_pago_valid]]"					
 					onclick="xListoRegistraPago();"
-					id="btn_pagoX">[F10]Listo, registrar pago</button>
+					id="btn_pagoX">[F10] Listo, registrar pago</button>
 				
 				
 				
-			</div>
-			<br><br>
+			</div>			
 		</div>
 
 	</template>
@@ -230,9 +255,12 @@
 	, modoSoloComprobante = false
 	, modoSoloProveedor = false
 	, btnDisabledInitModoComprobante = true
-	, registrando = false, _inputAutocomplete, _inputAutocompleteObj, objSelComprobante;
+	, registrando = false, _inputAutocomplete, _inputAutocompleteObj, objSelComprobante
+	, xtipoP=[], xCompTableFP;
 
 	// modoSoloProveedor = solo pantalla de pago
+
+	
 
 	function xIiniPago() {
 		//xLoadTipoMoneda_TPPago();
@@ -299,79 +327,113 @@
 			}
 		});
 
-		$(document.body).on('focus', '.xmonto', function (e) {
-			$(this).select();
-			// event.stopPropagation();
-			e.stopPropagation();
-			e.stopImmediatePropagation()
-		})
+		// $(document.body).on('focus', '.xmonto', function (e) {
+		// 	$(this).select();
+		// 	// event.stopPropagation();
+		// 	e.stopPropagation();
+		// 	e.stopImmediatePropagation()
+		// })
 
-		$(document.body).on('keyup', '.xmonto', function (e) {
-			xval_obj = parseFloat($(this).val());
-			const xobjSelRow = $(this).parents('tr').find('.xsel_tp option:selected');
-			const xlimite = xobjSelRow.attr('data-limite');
+		// $(document.body).on('keyup', '.xmonto', function (e) {
+		// 	xval_obj = parseFloat($(this).val());
+		// 	const xobjSelRow = $(this).parents('tr').find('.xsel_tp option:selected');
+		// 	const xlimite = xobjSelRow.attr('data-limite');
 			
-			$(this).parents('tr').find('.xmonto_sumar').text(xval_obj);
+		// 	$(this).parents('tr').find('.xmonto_sumar').text(xval_obj);
 
-			if (e.keyCode == 13) {
-				xEnterTxtImporte = 1;
-			}
-			xSumarTotales_row();						
+		// 	if (e.keyCode == 13) {
+		// 		xEnterTxtImporte = 1;
+		// 	}
+		// 	xSumarTotales_row();						
 
-			if (xlimite == '0') {
-				if (xval_obj > xsuma_diferencia) {
-					$(this).val(xMoneda(xsuma_diferencia));
-					$(this).parents('tr').find('.xmonto_sumar').text(xsuma_diferencia);
-				}
-			} else {
-				xResetValMontoNoLimite();
-			}
+		// 	if (xlimite == '0') {
+		// 		if (xval_obj > xsuma_diferencia) {
+		// 			$(this).val(xMoneda(xsuma_diferencia));
+		// 			$(this).parents('tr').find('.xmonto_sumar').text(xsuma_diferencia);
+		// 		}
+		// 	} else {
+		// 		xResetValMontoNoLimite();
+		// 	}
 
-			//xSumarTotales_row();
+		// 	//xSumarTotales_row();
 
 
 
-			// event.stopPropagation();
-			e.stopPropagation();
-			e.stopImmediatePropagation()
-		});
+		// 	// event.stopPropagation();
+		// 	e.stopPropagation();
+		// 	e.stopImmediatePropagation()			
+		// });
+
+		// $(document.body).on('keyup', 'table#table_op_fp input.xmonto', function (e) {
+		// 	// xval_obj = parseFloat($(this).val());
+		// 	// const xobjSelRow = $(this).parents('tr').find('.xsel_tp option:selected');
+		// 	// const xlimite = xobjSelRow.attr('data-limite');
+			
+		// 	// $(this).parents('tr').find('.xmonto_sumar').text(xval_obj);
+
+		// 	if (e.keyCode === 13) {
+		// 		// xEnterTxtImporte = 1;
+		// 		xListoRegistraPago();
+		// 	}
+		// 	// xSumarTotales_row();						
+
+		// 	// if (xlimite == '0') {
+		// 	// 	if (xval_obj > xsuma_diferencia) {
+		// 	// 		$(this).val(xMoneda(xsuma_diferencia));
+		// 	// 		$(this).parents('tr').find('.xmonto_sumar').text(xsuma_diferencia);
+		// 	// 	}
+		// 	// } else {
+		// 	// 	xResetValMontoNoLimite();
+		// 	// }
+
+		// 	//xSumarTotales_row();
+
+
+
+		// 	// event.stopPropagation();
+		// 	e.stopPropagation();
+		// 	e.stopImmediatePropagation()
+			
+		// });
+
+		
 
 
 		$("#txt_pago_cliente").on('change', function () {
 			xSumarTotales_row();
 		})
 
-		$(document.body).on('change', '.xsel_tp', function (e) {
-			var xdif_print = xsuma_diferencia;
-			const xreqCliente = e.target.options[e.target.selectedIndex].dataset.reqcliente;
-			xThisPago.tipoPagoRequiereCliente = xreqCliente === '1' && xThisPago.clienteModel.nombres == '' ? true : false;
+		// $(document.body).on('change', '.xsel_tp', function (e) {
+		// 	var xdif_print = xsuma_diferencia;
+		// 	const xreqCliente = e.target.options[e.target.selectedIndex].dataset.reqcliente;
+		// 	xThisPago.tipoPagoRequiereCliente = xreqCliente === '1' && xThisPago.clienteModel.nombres == '' ? true : false;
 
-			if ($(xtb_tp).find('.row').length == 1) {
-				xdif_print = xThisPago.total
-			} else {
-				if (xsuma_diferencia == xThisPago.total) {
-					xdif_print = xsuma_total;
-				}
-			}
+		// 	if ($(xtb_tp).find('.row').length == 1) {
+		// 		xdif_print = xThisPago.total
+		// 	} else {
+		// 		if (xsuma_diferencia == xThisPago.total) {
+		// 			xdif_print = xsuma_total;
+		// 		}
+		// 	}
 
 
-			$(this).parents('tr').find('.xmonto').val(xMoneda(xdif_print))
-			$(this).parents('tr').find('.xmonto_sumar').text(xdif_print)
-			$(this).parents('tr').find('.xmonto').focus();
-			$(this).parents('tr').find('.xmonto').select();
+		// 	$(this).parents('tr').find('.xmonto').val(xMoneda(xdif_print))
+		// 	$(this).parents('tr').find('.xmonto_sumar').text(xdif_print)
+		// 	$(this).parents('tr').find('.xmonto').focus();
+		// 	$(this).parents('tr').find('.xmonto').select();
 
-			xSumarTotales_row();
+		// 	xSumarTotales_row();
 
-			// event.stopPropagation();
-			e.stopPropagation();
-			e.stopImmediatePropagation()
-		});
+		// 	// event.stopPropagation();
+		// 	e.stopPropagation();
+		// 	e.stopImmediatePropagation()
+		// });
 
-		$(document.body).on('keydown', function (e) {
+		$(document).on('keydown', function (e) {
 			var evt = e;
 			if (evt.keyCode == 121) {
 				if (!xThisPago.modoSoloComprobante) {
-					if (!xThisPago.hidden_container_pago) {
+					if (!xThisPago.hidden_container_pago && !xThisPago.tipoPagoRequiereCliente) {
 						// habilita la opcion de validar importe
 						// if (xThisPago.valid_monto_pago) { xListoRegistraPago() }
 						// xSumarTotales_row();
@@ -405,6 +467,42 @@
 		// 	e.stopPropagation();
 		// 	e.stopImmediatePropagation()
 		// });
+		
+		xtipoP = [];
+		var xdif_text='', xPase=0;
+		xCompTableFP=document.getElementById('comp-table-fp');
+		xCompTableFP.addEventListener('xCompTableChange', function (e) {
+			const evento = e.detail.evento;
+			xtipoP = e.detail.datos;
+			
+			const xsuma_total=e.target.valImporteRestante;
+			if (xsuma_total <= 0) {
+				xdif_text = 'Vuelto: ' + xMoneda((xsuma_total * -1));
+				$("#pdif").removeClass('pdif_rojo');
+				$("#pdif").addClass('pdif_verde');
+				xPase = 1;
+				xThisPago.change_monto_pago_valid = true;
+			} else {
+				xdif_text = 'Falta: ' + xMoneda(xsuma_total);
+				$("#pdif").removeClass('pdif_verde');
+				$("#pdif").addClass('pdif_rojo');
+				xPase=0;
+				if ( xsuma_total >0 ){ xThisPago.change_monto_pago_valid = false; }
+				// EmitirValidacionFormMontoPago(false);	
+			}
+
+			xThisPago.diferencia = xdif_text;
+			xThisPago.tipoPagoRequiereCliente = xtipoP.filter(x => x.reqcliente==="1").length > 0 ? true : false;
+			if ( xThisPago.clienteModel && xThisPago.tipoPagoRequiereCliente) {
+				xThisPago.tipoPagoRequiereCliente = xThisPago.clienteModel.nombres === '' ? true : false;
+			}
+
+			xFireSend(xPase)
+
+			if ( evento && evento.keyCode === 13) {
+				xListoRegistraPago();
+			}
+		});
 
 	}
 
@@ -667,11 +765,15 @@
 			
 			xThisPago.hidden_container_pago = !xThisPago.hidden_container_pago;
 			if (!xThisPago.hidden_container_pago) {
-				xtb_tp.find('.xmonto:last-child').focus();
+				// $('.xmonto').last().focus();
+				$('table#table_op_fp input.xmonto').last().focus();
+				$('table#table_op_fp input.xmonto').last().select();
 			}
 			xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
+			xFireSend(true);
 		} else {
-			xSumarTotales_row(); // para que dispare xSend
+			// xSumarTotales_row(); // para que dispare xSend
+			xFireSend(true);
 			xListoRegistraPago();
 		}
 	}
@@ -717,76 +819,124 @@
 		/// loading - para no disparar varias veces mientras se esta ejecutando
 		setTimeout(() => {
 			registrando = false;
-		}, 1000);
+		}, 4000);
 	}
 
 
 	function xSumarTotales_row() {
-		if (xThisPago.total == '') {
-			return
-		}
-		var xPase = 0;
-		xsuma_total = 0;
-		xsuma_total_txt = 0;
-		xsuma_diferencia = 0;
-		xtb_tp.find('.row .xmonto_sumar').each(function (index, element) {
-			var xval_obj_row = parseFloat($(element).text());
-			if (isNaN(xval_obj_row)) {
-				xval_obj_row = 0
-			}
-			xsuma_total_txt = (parseFloat(xsuma_total_txt) + parseFloat(xval_obj_row));
-			if ($(element).parents('tr').find('.xmonto').is(":focus")) {
-				return;
-			}
-			xsuma_diferencia = (parseFloat(xsuma_diferencia) + parseFloat(xval_obj_row));
-		})
-		xsuma_total = parseFloat(xThisPago.total) - xsuma_total_txt;
-		xsuma_diferencia = parseFloat(xThisPago.total) - xsuma_diferencia;
-		if (xsuma_diferencia < 0) {
-			// EmitirValidacionFormMontoPago(true);
-			// EmitirValidacionFormCliente(true);
-			xsuma_diferencia = 0;
-		} 
-		// else {
-		// 	EmitirValidacionFormCliente(false);
+		// [if (xThisPago.total == '') {
+		// 	return
 		// }
-		//alert(xsuma_total+ '   '+xsuma_diferencia)
+		// var xPase = 0;
+		// xsuma_total = 0;
+		// xsuma_total_txt = 0;
+		// xsuma_diferencia = 0;
+		// xtb_tp.find('.row .xmonto_sumar').each(function (index, element) {
+		// 	var xval_obj_row = parseFloat($(element).text());
+		// 	if (isNaN(xval_obj_row)) {
+		// 		xval_obj_row = 0
+		// 	}
+		// 	xsuma_total_txt = (parseFloat(xsuma_total_txt) + parseFloat(xval_obj_row));
+		// 	if ($(element).parents('tr').find('.xmonto').is(":focus")) {
+		// 		return;
+		// 	}
+		// 	xsuma_diferencia = (parseFloat(xsuma_diferencia) + parseFloat(xval_obj_row));
+		// })
+		// xsuma_total = parseFloat(xThisPago.total) - xsuma_total_txt;
+		// xsuma_diferencia = parseFloat(xThisPago.total) - xsuma_diferencia;
+		// if (xsuma_diferencia < 0) {
+		// 	// EmitirValidacionFormMontoPago(true);
+		// 	// EmitirValidacionFormCliente(true);
+		// 	xsuma_diferencia = 0;
+		// } 
+		// // else {
+		// // 	EmitirValidacionFormCliente(false);
+		// // }
+		// //alert(xsuma_total+ '   '+xsuma_diferencia)
 
-		if (xsuma_total <= 0) {
-			xdif_text = 'Vuelto: ' + xMoneda((xsuma_total * -1));
-			$("#pdif").removeClass('pdif_rojo');
-			$("#pdif").addClass('pdif_verde');
-			xPase = 1;
-			xThisPago.change_monto_pago_valid = true;
-		} else {
-			xdif_text = 'Falta: ' + xMoneda(xsuma_total);
-			$("#pdif").removeClass('pdif_verde');
-			$("#pdif").addClass('pdif_rojo');
-			if ( xsuma_total_txt >0 ){ xThisPago.change_monto_pago_valid = false; }
-			// EmitirValidacionFormMontoPago(false);	
-		}
-		var xRpts = [];
-		var xtipoP = [];
+		// if (xsuma_total <= 0) {
+		// 	xdif_text = 'Vuelto: ' + xMoneda((xsuma_total * -1));
+		// 	$("#pdif").removeClass('pdif_rojo');
+		// 	$("#pdif").addClass('pdif_verde');
+		// 	xPase = 1;
+		// 	xThisPago.change_monto_pago_valid = true;
+		// } else {
+		// 	xdif_text = 'Falta: ' + xMoneda(xsuma_total);
+		// 	$("#pdif").removeClass('pdif_verde');
+		// 	$("#pdif").addClass('pdif_rojo');
+		// 	if ( xsuma_total_txt >0 ){ xThisPago.change_monto_pago_valid = false; }
+		// 	// EmitirValidacionFormMontoPago(false);	
+		// }
+		// var xRpts = [];
+		// xtipoP = [];
 
 
-		$("#tb_tp .row").each(function (index, element) {
-			var id_tp_row = $(element).find(".xsel_tp option:selected").val();
-			var val_row = $(element).find("#xmonto_obj_tp").val();
-			if (parseFloat(val_row) > parseFloat(xThisPago.total)) {
-				val_row = xThisPago.total
-			}
+		// $("#tb_tp .row").each(function (index, element) {
+		// 	var id_tp_row = $(element).find(".xsel_tp option:selected").val();
+		// 	var val_row = $(element).find("#xmonto_obj_tp").val();
+		// 	if (parseFloat(val_row) > parseFloat(xThisPago.total)) {
+		// 		val_row = xThisPago.total
+		// 	}
 
-			if (parseFloat(val_row) === 0) {
-				val_row = xThisPago.total;
-			}
+		// 	if (parseFloat(val_row) === 0) {
+		// 		val_row = xThisPago.total;
+		// 	}
 			
-			xtipoP.push({
-				'id': id_tp_row,
-				'importe': val_row
-			});
-		})
+		// 	xtipoP.push({
+		// 		'id': id_tp_row,
+		// 		'importe': val_row
+		// 	});
+		// })
 
-		var nom_nota = $("#sel_cliente").val();
+		// var nom_nota = $("#sel_cliente").val();
+		// // var clie_direccion=$("#sel_cliente").val();		
+		// xThisPago.clienteModel = {
+		// 	'idcliente': xIdCliente_pago,
+		// 	'num_doc': $("#sel_cliente").val(),
+		// 	'nombres': _inputAutocompleteObj.inputValue, //$("#clie_nombres").val(),
+		// 	'direccion': $("#clie_direccion").val()
+		// }
+		// // xThisPago.clienteModel.idcliente = $("#sel_cliente").val();
+		// // xThisPago.clienteModel.num_doc = $("#sel_cliente").val();
+		// // xThisPago.clienteModel.nombres = $("#clie_nombres").val(); 
+		// // xThisPago.clienteModel.direccion = $("#clie_direccion").val(); 
+
+		// if (xThisPago.tipoComprovanteSelecionado === {}) {
+		// 	xSelectedTpComprobante();
+		// }
+
+		
+
+		// xRpts.push({
+		// 	'ok': xPase,
+		// 	'valid': xDatosValidos,
+		// 	'cliente': xThisPago.clienteModel,
+		// 	'comprobante': xThisPago.tipoComprovanteSelecionado,
+		// 	'idcliente': xIdCliente_pago,
+		// 	'nota_compra': nom_nota,
+		// 	'nomcliente': nom_nota,
+		// 	xtipo_pagos: xtipoP,
+		// 	'paseEnterTxt': xEnterTxtImporte
+		// });
+
+		// if (xPase == 0) {
+		// 	// $("#btn_pago").attr('disabled', true);
+		// 	xThisPago.valid_monto_pago = false;
+		// } else {
+		// 	// btn_pago.removeAttribute("disabled")
+		// 	xThisPago.valid_monto_pago = true;
+		// }
+
+		// xThisPago.fire('xSend', {
+		// 	xRpts
+		// });
+		// // xThisPago.diferencia = xdif_text;
+
+		// xEnterTxtImporte = 0;]
+	}
+
+	function xFireSend(xPase) {
+		var nom_nota = $("#sel_cliente").val(), xRpts = [];
 		// var clie_direccion=$("#sel_cliente").val();		
 		xThisPago.clienteModel = {
 			'idcliente': xIdCliente_pago,
@@ -794,10 +944,14 @@
 			'nombres': _inputAutocompleteObj.inputValue, //$("#clie_nombres").val(),
 			'direccion': $("#clie_direccion").val()
 		}
-		// xThisPago.clienteModel.idcliente = $("#sel_cliente").val();
-		// xThisPago.clienteModel.num_doc = $("#sel_cliente").val();
-		// xThisPago.clienteModel.nombres = $("#clie_nombres").val(); 
-		// xThisPago.clienteModel.direccion = $("#clie_direccion").val(); 
+
+		// if ( xThisPago.clienteModel.nombres === '' ) {
+		// 	xThisPago.clienteModel.idcliente = $("#sel_cliente").val();
+		// 	xThisPago.clienteModel.num_doc = $("#sel_cliente").val();
+		// 	xThisPago.clienteModel.nombres = $("#clie_nombres").val(); 
+		// 	xThisPago.clienteModel.direccion = $("#clie_direccion").val(); 
+		// }
+
 
 		if (xThisPago.tipoComprovanteSelecionado === {}) {
 			xSelectedTpComprobante();
@@ -813,7 +967,7 @@
 			'idcliente': xIdCliente_pago,
 			'nota_compra': nom_nota,
 			'nomcliente': nom_nota,
-			xtipo_pagos: xtipoP,
+			'xtipo_pagos': xtipoP,
 			'paseEnterTxt': xEnterTxtImporte
 		});
 
@@ -828,19 +982,17 @@
 		xThisPago.fire('xSend', {
 			xRpts
 		});
-		xThisPago.diferencia = xdif_text;
-
-		xEnterTxtImporte = 0;
+		// xThisPago.diferencia
 	}
 
-	function xResetValMontoNoLimite() {
-		xtb_tp.find('.row').each(function (index, element) {
-			if ($(element).find('.xsel_tp option:selected').attr('data-limite') == '0') {
-				$(element).find(".xmonto").val('0');
-				$(element).find(".xmonto_sumar").text('0');
-			}
-		})
-	}
+	// function xResetValMontoNoLimite() {
+	// 	xtb_tp.find('.row').each(function (index, element) {
+	// 		if ($(element).find('.xsel_tp option:selected').attr('data-limite') == '0') {
+	// 			$(element).find(".xmonto").val('0');
+	// 			$(element).find(".xmonto_sumar").text('0');
+	// 		}
+	// 	})
+	// }
 
 	function xLoadTipoPago() {
 		$.ajax({
@@ -902,23 +1054,23 @@
 		if (xtb_tp.find('.row').length > 0 && xsuma_total <= 0) {
 			return;
 		}
-		xtb_tp.find('.row').each(function (index, element) {
-			var xval_idp_obj = $(element).find(".xsel_tp option:selected").val();
-			$(element).attr('data-idpago', xval_idp_obj);
-			xSel_tp[xval_idp_obj].visible = false;
-			$(element).find(".xsel_tp").attr('disabled', 'disabled')
-			$(element).attr('data-cerrado', '1');
-		})
+		// xtb_tp.find('.row').each(function (index, element) {
+		// 	var xval_idp_obj = $(element).find(".xsel_tp option:selected").val();
+		// 	$(element).attr('data-idpago', xval_idp_obj);
+		// 	xSel_tp[xval_idp_obj].visible = false;
+		// 	$(element).find(".xsel_tp").attr('disabled', 'disabled')
+		// 	$(element).attr('data-cerrado', '1');
+		// })
 
-		var xselect_char = xArmarSelectTP();
-		if (xselect_char == '') {
-			return;
-		}
-		var xcadena_new_row = '<tr class="row xSinBorde" data-idpago="" data-cerrado><td>' + xselect_char +
-			'</td><td><input type="number" min="0.01" pattern="[0-9]+([\.,][0-9]+)?" step="any" class="xMiInput xfont16 xtxtCentro xmonto xPasarEnter2" id="xmonto_obj_tp" onblur="xRetornaMoneda(this)" anchofull autofocus value="' +
-			xMoneda(xsuma_diferencia) + '" data-diferencia="' + xsuma_diferencia +
-			'"></td><td class="xInvisible xmonto_sumar">' + xMoneda(xsuma_diferencia) + '</td></tr>';
-		xtb_tp.append(xcadena_new_row).trigger('create');
+		// var xselect_char = xArmarSelectTP();
+		// if (xselect_char == '') {
+		// 	return;
+		// }
+		// var xcadena_new_row = '<tr class="row xSinBorde" data-idpago="" data-cerrado><td>' + xselect_char +
+		// 	'</td><td><input type="number" min="0.01" pattern="[0-9]+([\.,][0-9]+)?" step="any" class="xMiInput xfont16 xtxtCentro xmonto xPasarEnter2" id="xmonto_obj_tp" onblur="xRetornaMoneda(this)" anchofull autofocus value="' +
+		// 	xMoneda(xsuma_diferencia) + '" data-diferencia="' + xsuma_diferencia +
+		// 	'"></td><td class="xInvisible xmonto_sumar">' + xMoneda(xsuma_diferencia) + '</td></tr>';
+		// xtb_tp.append(xcadena_new_row).trigger('create');
 
 		//document.getElementById("xmonto_obj_tp").focus();
 		//$(xtb_tp).find('#xmonto_obj_tp').focus();
@@ -927,7 +1079,7 @@
 		xThisPago.focus();
 		xtb_tp.find('.xmonto:last-child').focus();
 		xtb_tp.find('.xmonto:last-child').select();
-		xSumarTotales_row();
+		// xSumarTotales_row();
 
 		// xThisPago.hidden_container_pago = true;
 		// xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);	
@@ -1018,6 +1170,10 @@
 				type: String,
 				value: 'Cliente | Publico en General'
 			},
+			importe_total_cobrar: {
+				type: Number,
+				value: 0
+			},
 			progres_busca_cliente: boolean = false,
 			hidden_container_pago: boolean = true,
 			hidden_container_cliente: boolean = true,
@@ -1051,17 +1207,22 @@
 		open: function (reponde) {
 			xdialoag_pago.open();
 		},
-		setVal: function (val) {			
-			xThisPago.total = val;
+		setVal: function (val) {
+			// xThisPago.total = val;
+			// xThisPago.importe_total_cobrar = val;
 			xThisPago.ComprobanteRequiereCliente = parseFloat(val) > 700 ? true : false;
 			xThisPago.hidden_container_cliente = xThisPago.ComprobanteRequiereCliente;
 			xThisPago.tipoPagoRequiereCliente = false;
 			// EmitirValidacionFormCliente();
 
-			$("#tb_tp .row").remove();
-			xResetOpSel();
-			xAddTipoPago();
-			$(".xmonto").val('00');
+			// $("#tb_tp .row").remove();
+			// xResetOpSel();
+			// xAddTipoPago();
+			// $(".xmonto").val('00');
+			xCompTableFP.resetFormaPago();
+			xThisPago.total = val;
+			xThisPago.importe_total_cobrar = val;
+
 			xThisPago.$.form_pago_cliente.reset();
 
 
@@ -1138,6 +1299,9 @@
 		},
 		reloadInputDatalientes() {
 			_reloadDatalientes()
+		},
+		setResetFormaPago: ()=> {
+			xCompTableFP.resetFormaPago();
 		}
 	})
 </script>

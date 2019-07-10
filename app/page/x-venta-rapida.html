@@ -232,7 +232,7 @@
 			height: 75vh;
 			width: 100%;
 		}
-		.xdivEnLinea2x > .itemsDivx { height: auto; }
+		.xdivEnLinea2x > .itemsDivx { height: auto;}
 		.xdivEnLinea2x > .itemsDivx.a { grid-area:head; width: 342px;}
 		.xdivEnLinea2x > .itemsDivx.b { grid-area:main; width: 385px; }
 		.xdivEnLinea2x > .itemsDivx.c { grid-area:foot; width: 342px;}
@@ -274,7 +274,7 @@ var xThisVentaRapida
 ,xarr_footer = []
 ,xarr_tipo_pago = []
 ,xRpt_pago=[]
-,guardando = false
+,guardando_vr = false
 ,xdelivery = 0
 ,xReservar = 0
 ,xsolo_llevar = 0
@@ -431,6 +431,7 @@ function xIniVentaRapida(){
 
 
 	$(document.body).keydown(function(e) {
+		if ( dialog_datos_delivery.opened ) return;
 		if (e.keyCode != 107 && e.keyCode != 109 && e.keyCode != 40 && e.keyCode != 38 && e.keyCode!=117 && e.keyCode!=118 && e.keyCode!=17 && e.keyCode!=77 ) {
 			if(document.activeElement.offsetParent!=null){
 				if(document.activeElement.offsetParent.innerText=='REFERENCIA' || document.activeElement.offsetParent.innerText=='MESA'){return;}
@@ -472,7 +473,7 @@ function xIniVentaRapida(){
 			xBtnSumarRestarKey($(this).find('li.xitem_seleccionado_li .xBtn_li2'),xval_add);
 			// xBtnSumarRestarKey(e,xval_add);
 			// handlerFnMiPedidoControl($(this).find('li.xitem_seleccionado_li .xBtn_li2'));
-			//window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
+			//window.localStorage.setItem("::app3_sys_dta_pe",JSON.strJSON.stringify(xArrayPedidoObj))
 			xVerMipedidoVR();
 
 			
@@ -573,6 +574,8 @@ function detectEvent(e) {
 			}
 		}else{xkey_control=false;}
 	*/
+	if (dialog_datos_delivery.opened) return;
+	
 	if(evt.ctrlKey && evt.keyCode==77){txt_mesa.$.input.focus();}//acceso rapido a num mesa
 	if(evt.keyCode==27){if(dialog_pagar_vr.opened){ xThisVentaRapida.$.dialog_pagar_vr.close(); $("#txt_bus_item").focus();xedit_detalle_item=false; return;}}
 	if (evt.keyCode>=116 && evt.keyCode<=123) {
@@ -588,7 +591,7 @@ function detectEvent(e) {
 			// 		xValPago.setVisibleContainerPago();
 			// 	}
 			// } else {			
-			
+				if ( guardando_vr ) {return;}
 				xIrARegistrarPago();
 				evt.stopPropagation();
 				e.stopPropagation();
@@ -611,6 +614,8 @@ function xValPagoMostrarContainerPago() {
 
 function xIrARegistrarPago(){
 	if(xregistrar_pago==false){return;}
+	if ( guardando_vr ) {return;}
+
 	xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
 	
 	//if(xnum_mesa_valido==false){alert('Numero de mesa no es valido.'); return;}
@@ -625,8 +630,8 @@ function xEnviarACuenta(){
 		if(xnum_mesa_valido==false && xdelivery === 0){alert('Numero de mesa no es valido.'); return;}
 		xEstadoPedido=0;
 
-		if ( guardando === true ) {return;}
-		guardando = true;
+		if ( guardando_vr === true ) {return;}
+		guardando_vr = true;
 
 		xPopupLoad.titulo="Guardando...";
 		xPopupLoad.xopen();
@@ -660,7 +665,8 @@ function xNuevoPedidoVR(){
 	xedit_detalle_item=false;
 	check_reserva.checked=false;
 	$("#txt_bus_item").focus();
-	guardando = false;
+	guardando_vr = false;
+	xValPago.setResetFormaPago();
 
 	xRpt_pago=[];
 
@@ -685,8 +691,8 @@ function xIniFocusMoveLi(){
 function xRegistrarClientePagoVR(){
 	$("#btn_pago").attr('disabled', true);
 	// btn_pago.hidden=true;
-	if ( guardando === true ) {return;}
-	guardando = true;
+	if ( guardando_vr === true ) {return;}
+	guardando_vr = true;
 
 	xid_cliente_pago=xRpt_pago[0].idcliente;
 	xPopupLoad.titulo="Guardando...";
@@ -695,7 +701,7 @@ function xRegistrarClientePagoVR(){
 	xGuardarPedidoVR(function(){
 		// xPopupLoad.xclose();
 		dialog_pagar_vr.close();
-		guardando = false;
+		// guardando_vr = false;
 
 		// setTimeout(() => {			
 		// 	xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
@@ -709,14 +715,14 @@ function xRegistrarClientePagoVR(){
 	// 		xGuardarPedidoVR(function(){
 	// 			// xPopupLoad.xclose();
 	// 			dialog_pagar.close();
-	// 			guardando = false;
+	// 			guardando_vr = false;
 	// 		})
 	// 	});
 	// } else {
 	// 	xGuardarPedidoVR(function(){
 	// 		// xPopupLoad.xclose();
 	// 		dialog_pagar.close();
-	// 		guardando = false;
+	// 		guardando_vr = false;
 	// 	})
 	// }
 	
@@ -738,18 +744,18 @@ function xRegistrarPagoVR(xidclie,xidp){
 }
 
 async function xGuardarPedidoVR(responde){
-	var xmesa=$("#txt_mesa").val();
-	var xref=$("#txt_ref").val();
-	var xtotal=$(".xPedidoTotal").text();
-	var xCantidad_descontar=0;
-	var xItem_descontar='';
-	var xsql_descontar='';
-	var xNumPedido='';
-	var xIdTpc_pe='';
-	var xsub_sql_descontar='';
-	var p_from=''; // envia al back end (a) = registra pedido (b) registra pago
-	xIdPedido='';
-	xReservar=0;
+	var xmesa=$("#txt_mesa").val()
+	, xref=$("#txt_ref").val()
+	, xtotal=$(".xPedidoTotal").text()
+	, xCantidad_descontar=0
+	, xItem_descontar=''
+	, xsql_descontar=''
+	, xNumPedido=''
+	, xIdTpc_pe=''
+	, xsub_sql_descontar=''
+	, p_from='' // envia al back end (a) = registra pedido (b) registra pago
+	, xIdPedido=''
+	, xReservar=0;
 
 	if(tt_pedido==0){return;}	
 	//verifica si imprime, si solo hay itmes de almacen no imprime en comanda segun confg
@@ -780,7 +786,14 @@ async function xGuardarPedidoVR(responde){
 	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
 	// var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
 	const _idCLienteCompara = xRpt_pago[0] ? xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente : 0;
-	var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery.length != 0 ? arrDatosAdjuntoDelivery : [];
+	var DatosCliente = 
+		xRpt_pago[0] ? 
+			xRpt_pago[0].cliente.nombres != '' ? 
+				xRpt_pago[0].cliente : 
+					arrDatosAdjuntoDelivery.length != 0 ? 
+					arrDatosAdjuntoDelivery : [] 
+			: [];
+
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	var xidpedido_seleccionados = '';	
@@ -826,6 +839,8 @@ async function xGuardarPedidoVR(responde){
 	}
 
 	xPopupLoad.xopen();
+	// xValPago.setResetFormaPago();
+
 	// xarr_tipo_pago = xEstadoPedido === 2 ?  xRpt_pago[0].xtipo_pagos : [];
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=304', data:{h:xDevolverHora(),mesa:xmesa,ref:xref,t:xtotal,r:xReservar,sl:xsolo_llevar,idtpc:xIdTpc_pe,idcat:xidCategoriaVR,estado_p:xEstadoPedido,sql_p:xsql_p,sql_p_subt:xsql_p_subt, sql_descontar:xsub_sql_descontar}})
 	//xArrayGuardarPedido={'idcategoria':xidCategoriaVR ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
@@ -862,6 +877,7 @@ async function xGuardarPedidoVR(responde){
 		xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
 		
 		if(xVerificarImprimirComanda==true){
+			guardando_vr = true;
 			xLLamarPrintVR()
 		}else{
 			xPopupLoad.xclose();
@@ -870,7 +886,7 @@ async function xGuardarPedidoVR(responde){
 				
 		
 		responde(true)
-	}).fail(guardando = false);
+	}).fail(guardando_vr = false);
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	

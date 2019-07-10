@@ -219,6 +219,50 @@ paper-dialog.xStandar{height:auto;width:40%;}
 /* .xMiBoton_icon_lateral2:hover{border:1px solid #CCC; background: #EEEEEE;} */
 /* .xMiBoton_icon_lateral2[disabled]{pointer-events:none;opacity:0.43;} */
 
+.content_div_op_pago[disabled] {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.xMiBoton_icon_option {
+    border-radius: 5px;
+    border: 2px solid #CCC;
+    width: 60px;
+    vertical-align: top;
+    text-align: center;
+    padding: 7px;
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 11px;
+    user-select: none;
+    opacity: 0.5;
+    transform: all 0.3s ease;
+}
+.xMiBoton_icon_option p {    
+    font-size: 10px;
+    line-height: 0px;
+}
+.xMiBoton_icon_option[disabled] {
+    pointer-events: none;
+    opacity: 0.43;
+}
+.xMiBoton_icon_option[selected] {    
+    opacity: 1;
+    border: solid 2px #1e88e5;
+    background: #b3e5fc;
+}
+.xMiBoton_icon_option:hover {
+    border: 2px solid #64b5f6;
+    background: #EEEEEE;    
+    opacity: 1;
+}
+/* .xMiBoton_icon_option img {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    padding-right: 3px;
+} */
+
 .xTbIcon{display:flex;-webkit-flex-flow:row wrap;}
 .xTbIcon > *{display:flex;padding:50px}
 .xicon{width:26px;height:26px;background-repeat:no-repeat;background-size:contain;z-index:10;}

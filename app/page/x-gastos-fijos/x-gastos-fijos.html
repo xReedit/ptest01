@@ -33,7 +33,7 @@
 						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 						<input type="text" id="idtipo_gasto" name="idtipo_gasto">
 						<input type="text" id="idtipo_gasto_detalle" name="idtipo_gasto_detalle">
-						<input type="text" id="mes_ultimo_pago" name="mes_ultimo_pago">
+						<input type="text" id="mes_ultimo_pago" name="mes_ultimo_pago">						
 						<input type="text" id="glosa" name="glosa">
 					</div>
 				</form>
@@ -220,7 +220,8 @@
 	}
 
 	function openDIalogNewGF() {
-		sel_idTipoGastoDetalle = compTpGasto.__data__.list_tipo_gasto.idtipo_gasto_detalle;	
+		sel_idTipoGastoDetalle = compTpGasto.__data__.list_tipo_gasto.idtipo_gasto_detalle;
+		$("#form_new_gasto").reset();
 		dialog_new_gasto.open();
 	}
 
@@ -247,12 +248,13 @@
 
 	function newGasto() {
 		xPopupLoad.xopen();
-		$("#form_new_gasto #idsede").val(xThisGF.xt_idsede);
-		$("#form_new_gasto #idorg").val(xThisGF.xt_org);
-		$("#form_new_gasto #idtipo_gasto").val(1);
-		$("#form_new_gasto #idtipo_gasto_detalle").val(sel_idTipoGastoDetalle);
-		$("#form_new_gasto #mes_ultimo_pago").val(xReturnSumaFechaDada(null, 'mm', 1));
-		$("#form_new_gasto #glosa").val(text_glosa.value);
+		const frm_new_gasto = $("#form_new_gasto");
+		frm_new_gasto.find("#idsede").val(xThisGF.xt_idsede);
+		frm_new_gasto.find("#idorg").val(xThisGF.xt_org);
+		frm_new_gasto.find("#idtipo_gasto").val(1);
+		frm_new_gasto.find("#idtipo_gasto_detalle").val(sel_idTipoGastoDetalle);
+		frm_new_gasto.find("#mes_ultimo_pago").val(xReturnSumaFechaDada(null, 'mm', 1));
+		frm_new_gasto.find("#glosa").val(text_glosa.value);
 		xvalidateForm('form_new_gasto',function(a){
 			if(a===false){return;}
 

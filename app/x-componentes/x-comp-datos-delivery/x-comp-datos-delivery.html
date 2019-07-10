@@ -1,9 +1,10 @@
+<link rel="import" href="../../web_components/polymer/polymer.html">
 <link rel="import" href="../../x-componentes/x-comp-find-input-cliente/x-comp-find-input-cliente.html">
 
 <dom-module id="x-comp-datos-delivery">
 	<template is="dom-bind">
 		<paper-dialog id="dialog_datos_delivery" class="dialog_redondo" entry-animation="scale-up-animation"
-			exit-animation="fade-out-animation" with-backdrop>
+			exit-animation="fade-out-animation" modal with-backdrop>
 			<h2>Datos adicionales-componente</h2>
 			<span>Para la entrega del delivery</span>
 			<hr>
@@ -65,7 +66,7 @@
 		_inputAutocompleteDel.addEventListener('input-autocomplete-selected', (event) => {
 			const cliente = event.detail;
 			xIdCliente_pedido = cliente.idcliente;
-			xClientePedidoFnac=cliente.f_nac || '';
+			xClientePedidoFnac = cliente.f_nac || '';
 			$("#txt_delivery_dni").val(cliente.ruc);
 			$("#txt_delivery_direccion").val(cliente.direccion);
 			$("#txt_delivery_telefono").val(cliente.telefono);

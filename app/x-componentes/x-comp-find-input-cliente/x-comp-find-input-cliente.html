@@ -1,47 +1,63 @@
+<link rel="import" href="../../web_components/polymer/polymer.html">
 <link rel="import" href="../../web_components/paper-input-autocomplete/paper-input-autocomplete.html">
+
 <dom-module id="x-comp-find-input-cliente">
 	<template>
 		<paper-input-autocomplete 
 			id="input_clie_nombres_auto" 
 			label="{{label}}" value="{{inputValue}}"
-			search-property="nombres"
+			search-property="nombres"	
+			on-autocomplete-selected="xchangeCliente"
 			autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete>
 	</template>
 </dom-module>
 <script>
-	var xThisComInputCliente, _autocomplete;
+	var xThisComInputCliente, _autocompleteComp;
+		
 
 		function getAllClientesInit() {
 			
-			_autocomplete = document.getElementById('input_clie_nombres_auto');
-			_autocomplete.addEventListener('autocomplete-selected', (event) => {				
-				const cliente = _autocomplete.getValue();
-				xThisComInputCliente.fire('input-autocomplete-selected', cliente)
-				// xThisComInputCliente.getCliente(_autocomplete.getValue());
-			});
-
-			// _autocomplete.addEventListener('autocomplete-change', (event) => {
-			// 	console.log(event);
-			// 	xThisComInputCliente.list_cliente = _autocomplete.getValue();
+			// _autocompleteComp = document.getElementById('input_clie_nombres_auto');
+			// _autocompleteComp.addEventListener('autocomplete-selected', (event) => {				
+			// 	const cliente = _autocompleteComp.getValue();
+			// 	xThisComInputCliente.fire('input-autocomplete-selected', cliente)
+			// 	// xThisComInputCliente.getCliente(_autocompleteComp.getValue());
 			// });
-
 
 			getAllClientes();
 		}
 
 		function getAllClientes() {
-			$.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=7'})
+			$.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=701'})
 			.done( function (DtProv) {
 				var xDtProv=JSON.parse(DtProv);
-				xThisComInputCliente.list=xDtProv.datos;
+				xThisComInputCliente.list_cliente=xDtProv.datos;
 				
-				_autocomplete.source = xThisComInputCliente.list;
+				// _autocompleteComp.source = ['Apple', 'Orange', 'Bananas'];
+				const listElementInput = input_clie_nombres_auto;
+				if ( listElementInput.length ) {
+					for (let item of listElementInput) {
+						item.source=xDtProv.datos;
+					}
+				} else {
+					listElementInput.source=xDtProv.datos;
+				}
+				
+				// input_clie_nombres_auto.map((x,i) => {
+				// 	input_clie_nombres_auto[i].source=xDtProv.datos
+				// });
+				// $("#input_clie_nombres_auto").each((i,element) => {
+				// 	element.source = xDtProv.datos;
+				// });
+				// _autocompleteComp.source = JSON.parse(JSON.stringify(xDtProv.datos));
+				// _autocompleteComp.remoteSource = true;
 			});
 		}
 
 		Polymer({
 			is: 'x-comp-find-input-cliente',
 			properties: {
+				_autocompleteComp: Object,
 				label: String,
 				inputValue: {
 					type: String,
@@ -71,10 +87,14 @@
 			},
 			attached: function () {
 				xThisComInputCliente = this;
-				getAllClientesInit();
+				getAllClientesInit();				
 			},
 			reloadllClientes: function() {
 				getAllClientes();
+			},
+			xchangeCliente: ()=> {
+				const cliente = event.target.value;
+				event.target.fire('input-autocomplete-selected', cliente);
 			}
 			// getValorIncial: function (val) {
 			// 	this.fire('getValorIncial', {
