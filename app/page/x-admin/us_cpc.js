@@ -1,5 +1,5 @@
 var _num_us_new_cpc = '',
-	_id_num_us_new_cpc;
+	_id_num_us_new_cpc, _companySelect;
 
 function xLoadCpc() {
 	$.ajax({
@@ -9,6 +9,7 @@ function xLoadCpc() {
 			const _res = $.parseJSON(res);
 			xThisAdmin.listCpc = _res.datos;			
 		});
+	
 }
 
 function xCpcLoad_Uusario_Cpc(obj) {
@@ -20,17 +21,35 @@ function xCpcLoad_Uusario_Cpc(obj) {
 	usuario_cpc.textContent = xThisAdmin.UsarioCpc_sedes.usuario;
 	console.log(xThisAdmin.UsarioCpc_sedes);
 	const _idCPC = xThisAdmin.UsarioCpc_sedes.idus_cpc;
+	_id_num_us_new_cpc = _idCPC;
 	// establecimientos asignados
+	// $.ajax({
+	// 		type: 'POST',
+	// 		url: '../../bdphp/log_004.php?op=401',
+	// 		data: {id: _idCPC}
+	// 	})
+	// 	.done((res) => {
+	// 		const _res = $.parseJSON(res);
+	// 		xThisAdmin.listCpc_sedes = _res.datos;
+	// 		xPopupLoad.xclose();
+	// 		// dialog_add_us_cpc.open();
+	// 	});
+	xloadEstablecimientosAsigConta(_idCPC);
+	dialog_add_us_cpc.open();
+}
+
+function xloadEstablecimientosAsigConta(us_cpc) {
 	$.ajax({
 			type: 'POST',
 			url: '../../bdphp/log_004.php?op=401',
-			data: {id: _idCPC}
+			data: {
+				id: us_cpc
+			}
 		})
 		.done((res) => {
-			const _res = $.parseJSON(res);
+			const _res = JSON.parse(res);
 			xThisAdmin.listCpc_sedes = _res.datos;
-			xPopupLoad.xclose();
-			dialog_add_us_cpc.open();
+			xPopupLoad.xclose();			
 		});
 }
 
@@ -96,4 +115,46 @@ function xGetUsNew() {
 		_num_us_new_cpc = 'CONTA' + xCeroIzq(res,3);		
 		usuario_cpc.textContent = _num_us_new_cpc;
 	});
+}
+
+// companias registradas
+function getAllCompaniesFac() {
+	$.ajax({
+			url: '../../bdphp/log_004.php?op=5'
+		})
+		.done((res) => {
+			res = JSON.parse(res);
+			if (res.error) {console.log(res.error); return; }
+			xThisAdmin.listCompanies = res.data;
+		});
+}
+
+function selectOptionCompanies() {
+	const index = xThisAdmin.$.selConpanies.value;
+	_companySelect = xThisAdmin.listCompanies[index];
+}
+
+function addCompaniesContador() {
+	// const objControl = $("#tb_cpc_sede");
+	if (event.keyCode != 13) return;
+
+	const dataCompanies = {
+		user_id: _companySelect.user_id,
+		idus_cpc : _id_num_us_new_cpc,
+		razonsocial: _companySelect.razonsocial,
+		nomsede: txt_companies_sede.value,
+		serie: txt_companies_serie.value,
+		ciudad: txt_companies_ciudad.value,
+	}
+
+	$.ajax({
+		type: 'POST',
+		url: '../../bdphp/log_004.php?op=501',
+		data: {
+			item: dataCompanies
+		}
+	}).done(res => {
+		console.log(res);
+		xloadEstablecimientosAsigConta(_id_num_us_new_cpc);
+	});	
 }

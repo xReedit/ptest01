@@ -411,11 +411,13 @@
             _arrCliente.idcliente = _arrCliente.idcliente === "" ? await ClienteService_Guardar(_arrCliente) : _arrCliente.idcliente;
         }
         // obtiene el correlativo del comprobante    
-        $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data: { p_from:'f', p_comprobante: cnf_ComprobanteSel } })
-        .done(function (comprobante_correlativo) {
-            const _arrRpt = xm_all_SetResponseLog_001(comprobante_correlativo);
+        // $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data: { p_from:'f', p_comprobante: cnf_ComprobanteSel } })
+        // .done(function (comprobante_correlativo) {
+            // const _arrRpt = xm_all_SetResponseLog_001(comprobante_correlativo);
 
-            arr_comprobante.correlativo = xCeroIzqNumComprobante(_arrRpt.correlativo_comprobante);
+            // arr_comprobante.correlativo = xCeroIzqNumComprobante(_arrRpt.correlativo_comprobante);
+            
+            arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
             
             // registrar cpe_facturador                        
             const arrCpeFac = {
@@ -430,10 +432,11 @@
             $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '102', data: arrCpeFac, arrItems: _arrItems } })
             .done(function (ultimoIdCpeFac) {                
                 _idregistro = [0, ultimoIdCpeFac]; //evalua si es array entonces sabra que esta yendo desde aca
-                xMandarCocinarImpresionComprobante(_arrRpt.correlativo_comprobante, _idregistro);
+                // xMandarCocinarImpresionComprobante(_arrRpt.correlativo_comprobante, _idregistro);
+                xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
             });
 
-        });
+        // });
     }    
 
     async function xMandarCocinarImpresionComprobante(correlativo, _idregistro) {   
@@ -442,7 +445,8 @@
         if (!xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo            
             arr_comprobante.fecha_manual = txt_fecha_cpe_manual;
             arr_comprobante = cnf_ComprobanteSel;
-            arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+            // arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+            arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
 
             // retorna el encabezado del comprobante con hash
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);

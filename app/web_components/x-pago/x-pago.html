@@ -437,8 +437,10 @@
 						// habilita la opcion de validar importe
 						// if (xThisPago.valid_monto_pago) { xListoRegistraPago() }
 						// xSumarTotales_row();
+						if ( !xThisPago.valid_form_cliente_pago ) {return}
 						xListoRegistraPago();
 					} else {
+						if ( !xThisPago.valid_form_cliente_pago ) {return}
 						xThisPago.setVisibleContainerPago();
 					}
 				} else {
