@@ -81,7 +81,7 @@ async function xCpcSave_Usuario_Cpc() {
 }
 
 function xResetearClave() {
-	const idUsReset = _id_num_us_new_cpc;
+	const idUsReset = xThisAdmin.UsarioCpc_sedes.idusuario;
 	if (idUsReset === '') return;
 	xPopupLoad.xopen();
 	$.ajax({
