@@ -80,6 +80,22 @@ async function xCpcSave_Usuario_Cpc() {
 
 }
 
+function xResetearClave() {
+	const idUsReset = _id_num_us_new_cpc;
+	if (idUsReset === '') return;
+	xPopupLoad.xopen();
+	$.ajax({
+		type: 'POST',
+		url: '../../bdphp/log.php?op=4031',
+		data: {
+			i: idUsReset
+		}
+	})
+	setTimeout(() => {
+		xPopupLoad.xclose();
+	}, 200);
+}
+
 async function xCpcRegistrarNuevoUsuarioCPC() {
 	var _idNewUsCpc=0;
 	const nom_cpc = nombre_cpc.value;

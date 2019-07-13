@@ -55,7 +55,7 @@
 							</thead>
 							<tbody>
 								<template is="dom-repeat" items="{{listMonth}}" as="item">
-									<tr id="{{index}}" class$="{{item.clase}}">
+									<tr id="{{index}}" class$="{{item.clase}}" onclick="selectedRowTR(this)">
 										<td class="xfont11">{{displayIndex(index)}}</td>
 										<td class="xfont11">{{item.mes}}</td>
 										<td class="xfont11">{{item.desestado}}</td>										
@@ -113,7 +113,13 @@
 			</table>
 
 		</div>
-	</template>
+		<style>
+			tr:hover,
+			tr.selected {
+				background-color: #e3f2fd
+			}			
+		</style>
+	</template>	
 </dom-module>
 <script type="text/javascript" src="../../view/export.excel.js"></script>
 <script>
@@ -171,10 +177,15 @@ function xLoadEstablecimientosAsignados() {
 }
 
 function selectEsablecimiento(obj) {
-	const index = obj.id;
+	const index = obj.id;	
 	xThisAdmContador.selEstablecimiento = xThisAdmContador.listAsignados[index];
 	xDataYears();
+	selectedRowTR(obj);
 }
+
+function selectedRowTR(obj){
+	$(obj).addClass("selected").siblings().removeClass("selected");
+} 
 
 function xDataYears() {	
 	const f_ini = xThisAdmContador.selEstablecimiento.mes_inicio.split('/');
