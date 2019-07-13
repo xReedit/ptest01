@@ -419,20 +419,31 @@ function showCambiarClave(){
 }
 
 function cambiarClaveUs() {
-	const pa = $("#txtpa")[0].value
-	const pn = $("#txtpn")[0].value
+	const pa = $("#txtpa")[0].value;
+	const pn = $("#txtpn")[0].value;
+
+	$("#msj_1").addClass("xInvisible");
+	$("#msj_2").addClass("xInvisible");
+	
+	if (pa.length < 6) {
+		$("#msj_1").text('Minimo 6 caracteres.');
+		$("#msj_1").removeClass("xInvisible");
+	}
 
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-304', data:{pa: pa, pn:pn}})
 	.done( function (dtC) {
-		// dtC=JSON.parse(dtC).datos[0].pass;
-		$("#msj_1").addClass("xInvisible");
-		$("#msj_2").addClass("xInvisible");
+		// dtC=JSON.parse(dtC).datos[0].pass;		
 		if (dtC === "0") {
+			$("#msj_1").text('Claves incorrecta. No coiciden.');
 			$("#msj_1").removeClass("xInvisible");			
 		} else {
 			$("#msj_2").removeClass("xInvisible");
 		}
 	});
+}
+
+function keyChangePass() {
+	if (event.keyCode===13) changePass();
 }
 
 function changePass() {
@@ -441,6 +452,7 @@ function changePass() {
 
 	if ( p1 === '') {msj_pass_clave.textContent = "Tiene que ingresar una clave"; return;}
 	if ( p1 != p2 ) {msj_pass_clave.textContent = "Las claves no son iguales"; return;}
+	if ( p1.length < 6) {msj_pass_clave.textContent = "Debe tener minimo 6 caracteres."; return;}
 	if ( p1 === "123456" ) {msj_pass_clave.textContent = "La clave no puede ser la que pusiste."; return;}
 
 	$.ajax({

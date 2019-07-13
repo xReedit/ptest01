@@ -137,6 +137,7 @@ function selectOptionCompanies() {
 function addCompaniesContador() {
 	// const objControl = $("#tb_cpc_sede");
 	if (event.keyCode != 13) return;
+	if ( !_id_num_us_new_cpc ) { alert('Guarda primero el contador.'); return;}
 
 	const dataCompanies = {
 		user_id: _companySelect.user_id,
@@ -145,6 +146,7 @@ function addCompaniesContador() {
 		nomsede: txt_companies_sede.value,
 		serie: txt_companies_serie.value,
 		ciudad: txt_companies_ciudad.value,
+		mes_inicio: _companySelect.mes_inicio,		
 	}
 
 	$.ajax({
