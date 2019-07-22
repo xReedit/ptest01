@@ -79,6 +79,7 @@
 						 <b><h3 id="xTituloCierre">CIERRE DE CAJA</h3></b>
 						 <p>Especifique que cantidad tiene en caja segun denominacion:</p>
 						 <br>
+						 <button onclick="xGetDataCierre()">aa</button>
 			            <form id="formCierre">
 			            <div class="xAlinearce xm_at_cont xEpaciarInputCierre">
 			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="200" placeholder="De 200">
@@ -147,18 +148,19 @@
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 <script>
-var xThisCaja;
-var xMontoTotalCaja;
-var xSumData;
-var xtbReport;
-var xPermisoSupervisor=0;
-var xArrayCierrePrint=new Array();
-var xArrayEncabezadoCierre;
-var xEfectivoCaja=0;
-var nom_supervisor='';
-var xlo_idorg;
-var xlo_idsede;
-var xlo_us;
+var xThisCaja
+, xMontoTotalCaja
+, xSumData
+, xtbReport
+, xPermisoSupervisor=0
+, xArrayCierrePrint = []
+, xArrayEncabezadoCierre
+, xEfectivoCaja=0
+, nom_supervisor=''
+, id_supervisor = 0
+, xlo_idorg
+, xlo_idsede
+, xlo_us
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -191,7 +193,8 @@ function xIniCaja(){
 	xPSupervisor.addEventListener('xSend', function (e) {
 		var p=e.detail.xRpts[0].p;
 		if(p==1){
-			nom_supervisor=e.detail.xRpts[0].nomus;
+			nom_supervisor = e.detail.xRpts[0].nomus;
+			id_supervisor = e.detail.xRpts[0].us;
 			xPermisoSupervisor=1;
 			xVerificar()
 			//xPreparaReport();
@@ -275,6 +278,63 @@ function xGuardarIngreso(){
 		})
 	})
 }
+
+function xGetDataCierre(idBitacora) {
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=7000', data:{id: idBitacora}})
+	.done(function (res) {
+		res = JSON.parse(res);
+		if( !res.success ) {console.log(res); xPopupLoad.xclose(); return;}
+
+		const arrData = JSON.parse(res.datos[0]['data']);
+		const arrTitulo = JSON.parse(res.datos[0]['titulo']);
+
+		var keyTitulo='', cIndex=0, arrX = [], arrRpt=[];
+		arrData.map((x, i) => {
+			keyTitulo = Object.keys(x)[0];			
+			arrX = JSON.parse(x[keyTitulo]);
+			if ( arrX ) {
+				arrRpt.push({
+					des:arrTitulo[i].des,
+					t1:arrTitulo[i].t1,
+					t2:arrTitulo[i].t2,
+					t3:arrTitulo[i].t3,
+					visible:0,
+					// items:arrX
+					});
+				
+				arrX.map((z,q) => {
+					arrRpt[cIndex][q] = z;
+				});
+				// arrRpt[cIndex][0] = arrX;
+				// arrRpt[cIndex] = {
+				// 	0: arrX,
+				// 	des: arrTitulo[i].des,
+				// 	t1 : arrTitulo[i].t1,
+				// 	t2 : arrTitulo[i].t2,
+				// 	t3 : arrTitulo[i].t3
+				// }
+				// arrRpt[cIndex] = arrX;
+				// arrTitulo[i].des = arrTitulo[i].des;
+				// arrRpt[cIndex].t1 = arrTitulo[i].t1;
+				// arrRpt[cIndex].t2 = arrTitulo[i].t2;
+				// arrRpt[cIndex].t3 = arrTitulo[i].t3;				
+				cIndex++;
+			}
+		});
+
+		xArrayCierrePrint = arrRpt;
+		console.log('arrPrint', arrRpt);
+
+		xPopupLoad.xclose();
+		$("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
+		// xUpdateCerrarCession(function () {
+			xPermisoSupervisor = 0;
+			if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return; }
+			xImprimirCierre(xArrayEncabezadoCierre, xArrayCierrePrint);
+		// });
+	});
+}
+
 function xLoadResumenIS(){
 	$("#tb_resumen_ie .row").remove();
 	$("#tb_resumen_ie").append('<tr class="row"><td colspan="5"><paper-spinner active></paper-spinner></td></tr>').trigger('create');
@@ -312,39 +372,85 @@ function xVerificar(){
 	//$.post('x../../bdphp/log.php?op=16',{xid:xDataEmp.Data[0].xu,xtb:xDevolverFecha()},function(xData){
 	$('#xTituloRpt').html('<paper-spinner active></paper-spinner>').trigger('create');
 	//$('#xTituloRpt').text('');
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=7001'})
-	.done( function (dtC) {
-		xSumData=parseFloat(dtC);
-		xEfectivoCaja=xSumData;
-		var xRpt_monto_supervicion='';
-		var xsub_falta='', xsub_sobra='';
-		var xRpt;
-		var xColor="";
-		xSumData=xMontoTotalCaja-xSumData;
+	
+	const datos = {
+		totalcaja: parseInt(xMontoTotalCaja),
+		idusuario_supervisor: id_supervisor || 0,			
+	}
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70111', data: {item: datos} })
+	.done( res => {
+		res = JSON.parse(res);		
+		if (!res.success) {console.log(res); return;}
+		res = res.datos[0];		
 
-		if(xSumData>=-1 && xSumData<=1){xRpt='<h3>OK cuadre conforme.</h3>';xColor="#060"; xArmarArrayPrint();}
-		else{
+		var xRpt, xColor='', labelItentos = '', xsub_falta = '', xsub_sobra = '', xRpt_monto_supervicion = '';
+		const isConforme = res.isConforme === '1' ? true : false;
+		const isNumIntentosAgotado = res.isNumIntentosAgotado === '1' ? true : false;
+		const calTotal = parseInt(res.calcTotal);
+
+		if(isConforme){
+			xRpt='<h3>OK cuadre conforme.</h3>';xColor='#060'; 
+			xArmarArrayPrint(res.idbitacora);
+		} else {
 			if(xPermisoSupervisor==1){//supervisor
-				if(!isNaN(xSumData)){
-					if(xSumData>1){xRpt_monto_supervicion='(sobra '+xMoneda(xSumData)+'). ';xsub_sobra='xSubrayar xBold2';}else{xRpt_monto_supervicion='(falta '+xMoneda(xSumData)+'). ';xsub_falta='xSubrayar xBold2';}
+				if(!isNaN(calTotal)){
+					if(calTotal>1){
+						xRpt_monto_supervicion='(sobra '+xMoneda(calTotal)+'). ';xsub_sobra='xSubrayar xBold2';}
+					else{
+						xRpt_monto_supervicion='(falta '+xMoneda(calTotal)+'). ';xsub_falta='xSubrayar xBold2';
+					}
 				}
-				xRpt='<p class="xfont16"><strong>Efectivo: '+xEfectivoCaja+' </strong> '+xRpt_monto_supervicion+' Resultado de caja con supervision. Si <span class='+xsub_sobra+'>tiene sobrante</span>, haga un ingreso en caja como sobrante de efectivo. Si por el contrario <span class='+xsub_falta+'>tiene faltante</span>, haga una salida de caja como faltante en caja. Luego vuela a realizar el cuadre de caja, imprima los resultados y cierre su terminal. </p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';xColor="#8e24aa"; //<a onclick="xArmarArrayPrint();">Imprimir cierre</a>
+				xRpt='<p class="xfont16"><strong>Efectivo: '+ xMoneda(res.efectivoCaja) +' </strong> '+xRpt_monto_supervicion+' Resultado de caja con supervision. Si <span class='+xsub_sobra+'>tiene sobrante</span>, haga un ingreso en caja como sobrante de efectivo. Si por el contrario <span class='+xsub_falta+'>tiene faltante</span>, haga una salida de caja como faltante en caja. Luego vuela a realizar el cuadre de caja, imprima los resultados y cierre su terminal. </p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';xColor="#8e24aa"; //<a onclick="xArmarArrayPrint();">Imprimir cierre</a>
 				//xPermisoSupervisor=0;
 			}else{
-				if(xSumData>1){xRpt='<h3>Existe sobrante en caja</h3>';xColor="#F00";}
-				if(xSumData<-1){xRpt='<h3>Existe faltante en caja</h3>';xColor="#F00";}
+				xColor='#F00';				
+				if ( isNumIntentosAgotado ) {
+					xRpt='<h3>NUMERO DE INTENTOS DE CIERRE AGOTADO, POR FAVOR LLAME AL SUPERVISOR.</h3>';
+				} else {
+					labelItentos = '<br><span class="xBold xfont14">Intentos de cierre '+ xCeroIzq(res.numintentos,2) + ' de '+ xCeroIzq(res.numintentos_permitidos,2)+'</span> ';
+					if(calTotal>1){xRpt='<h3>Existe sobrante en caja.'+ labelItentos +'</h3>';}
+					if(calTotal<-1){xRpt='<h3>Existe faltante en caja.'+ labelItentos +'</h3>';}
+				}
+
 			}
 		}
-		//$('.xTxtMontoPagar').find('#xBtns').remove();
+		
 		$('#xTituloRpt').html(xRpt);
 		$('#xTituloRpt').css('color',xColor);
-
-		if(xColor=="#060"){
-			////dialog_cierre.open();
-			//$('.xTxtMontoPagar').append('<div id="xBtns"><button data-theme="a" onClick="xImprimir();")>Listo, Imprimir operaciones.</button><button data-theme="a" onClick="xCerrarSession();">Cerrar Terminal</button></div>');
-			//$('.xTxtMontoPagar').trigger('create');
-			}
 	});
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=7001'})
+	// .done( function (dtC) {
+	// 	xSumData=parseFloat(dtC);
+	// 	xEfectivoCaja=xSumData;
+	// 	var xRpt_monto_supervicion='';
+	// 	var xsub_falta='', xsub_sobra='';
+	// 	var xRpt;
+	// 	var xColor="";
+	// 	xSumData=xMontoTotalCaja-xSumData;
+
+	// 	if(xSumData>=-1 && xSumData<=1){xRpt='<h3>OK cuadre conforme.</h3>';xColor="#060"; xArmarArrayPrint();}
+	// 	else{
+	// 		if(xPermisoSupervisor==1){//supervisor
+	// 			if(!isNaN(xSumData)){
+	// 				if(xSumData>1){xRpt_monto_supervicion='(sobra '+xMoneda(xSumData)+'). ';xsub_sobra='xSubrayar xBold2';}else{xRpt_monto_supervicion='(falta '+xMoneda(xSumData)+'). ';xsub_falta='xSubrayar xBold2';}
+	// 			}
+	// 			xRpt='<p class="xfont16"><strong>Efectivo: '+xEfectivoCaja+' </strong> '+xRpt_monto_supervicion+' Resultado de caja con supervision. Si <span class='+xsub_sobra+'>tiene sobrante</span>, haga un ingreso en caja como sobrante de efectivo. Si por el contrario <span class='+xsub_falta+'>tiene faltante</span>, haga una salida de caja como faltante en caja. Luego vuela a realizar el cuadre de caja, imprima los resultados y cierre su terminal. </p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';xColor="#8e24aa"; //<a onclick="xArmarArrayPrint();">Imprimir cierre</a>
+	// 			//xPermisoSupervisor=0;
+	// 		}else{
+	// 			if(xSumData>1){xRpt='<h3>Existe sobrante en caja</h3>';xColor="#F00";}
+	// 			if(xSumData<-1){xRpt='<h3>Existe faltante en caja</h3>';xColor="#F00";}
+	// 		}
+	// 	}
+	// 	//$('.xTxtMontoPagar').find('#xBtns').remove();
+	// 	$('#xTituloRpt').html(xRpt);
+	// 	$('#xTituloRpt').css('color',xColor);
+
+	// 	if(xColor=="#060"){
+	// 		////dialog_cierre.open();
+	// 		//$('.xTxtMontoPagar').append('<div id="xBtns"><button data-theme="a" onClick="xImprimir();")>Listo, Imprimir operaciones.</button><button data-theme="a" onClick="xCerrarSession();">Cerrar Terminal</button></div>');
+	// 		//$('.xTxtMontoPagar').trigger('create');
+	// 		}
+	// });
 		//});
 }
 
@@ -411,57 +517,60 @@ function xIniArraysPrint(){
 	return true;
 }
 
-function xArmarArrayPrint(){
+function xArmarArrayPrint(idBitacora){
 	xPopupLoad.xopen();
 	xPopupLoad.titulo="Obteniendo Datos...";
 
+	xGetDataCierre(idBitacora);
 	// if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
 
-	xArrayCierrePrint=new Array();
-	xArrayCierrePrint.push({'des':'VENTAS', 't1':'', 't2':'','t3':''});
-	xArmarSubItems(0,7,function(){
-		xArrayCierrePrint.push({'des':'CAJA INGRESOS', 't1':'', 't2':'','t3':''});
-		xArmarSubItems(1,701,function(){
-			xArrayCierrePrint.push({'des':'CAJA SALIDAS', 't1':'', 't2':'','t3':''});
-			xArmarSubItems(2,7002,function(){
-				xArrayCierrePrint.push({'des':'VENTAS AL CREDITO', 't1':'', 't2':'','t3':''});
-				xArmarSubItems(3,702,function(){
-					xArrayCierrePrint.push({'des':'TOTAL EFECTIVO', 't1':'', 't2':'','t3':''});
-					xArmarSubItems(4,7021,function(){
-						xArrayCierrePrint.push({'des':'PEDIDOS ATENDIDOS', 't1':'', 't2':'cant','t3':'importe'});
-						xArmarSubItems(5,703,function(){
-							xArrayCierrePrint.push({'des':'ITEMS ANULADOS', 't1':'', 't2':'cant','t3':'importe'});
-							xArmarSubItems(5,7091,function(){
-								xArrayCierrePrint.push({'des':'PEDIDOS ANULADOS - MOTIVO', 't1':'Motivo', 't2':'','t3':'importe'});
-								xArmarSubItems(5,7092,function(){
-									xArrayCierrePrint.push({'des':'CANTIDAD POR SECCION', 't1':'', 't2':'cant','t3':'importe'});
-									xArmarSubItems(5,70010,function(){
-										xArrayCierrePrint.push({'des':'PORCIONES', 't1':'', 't2':'ven','t3':'queda'});
-										xArmarSubItems(5,707,function(){
-											xArrayCierrePrint.push({'des':'PRODUCTOS VENDIDOS', 't1':'ven', 't2':'qda','t3':'importe'});
-											xArmarSubItems(5,705,function(){
-												xArrayCierrePrint.push({'des':'VENDIDO X BODEGA', 't1':'', 't2':'vend','t3':'queda'});
-												xArmarSubItems(5,706,function(){
-												//xArrayCierrePrint.push({'des':'PRODUCTOS CON STOCK MINIMO', 't1':'', 't2':'','t3':''});
-													//xArmarSubItems(5,708,function(){
-														xUpdateCerrarCession(function(){
-															xPermisoSupervisor=0;	
-															if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return;}
-															xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);														
-														})
-													//})
-												})
-											})
-										})
-									})
-								})
-							})
-						})
-					})
-				})
-			})
-		})
-	})
+	// xArrayCierrePrint=new Array();
+	// xArrayCierrePrint.push({'des':'VENTAS', 't1':'', 't2':'','t3':''});
+	// xArmarSubItems(0,7,function(){
+	// 	xArrayCierrePrint.push({'des':'CAJA INGRESOS', 't1':'', 't2':'','t3':''});
+	// 	xArmarSubItems(1,701,function(){
+	// 		xArrayCierrePrint.push({'des':'CAJA SALIDAS', 't1':'', 't2':'','t3':''});
+	// 		xArmarSubItems(2,7002,function(){
+	// 			xArrayCierrePrint.push({'des':'VENTAS AL CREDITO', 't1':'', 't2':'','t3':''});
+	// 			xArmarSubItems(3,702,function(){
+	// 				xArrayCierrePrint.push({'des':'TOTAL EFECTIVO', 't1':'', 't2':'','t3':''});
+	// 				xArmarSubItems(4,7021,function(){
+	// 					xArrayCierrePrint.push({'des':'PEDIDOS ATENDIDOS', 't1':'', 't2':'cant','t3':'importe'});
+	// 					xArmarSubItems(5,703,function(){
+	// 						xArrayCierrePrint.push({'des':'ITEMS ANULADOS', 't1':'', 't2':'cant','t3':'importe'});
+	// 						xArmarSubItems(5,7091,function(){
+	// 							xArrayCierrePrint.push({'des':'PEDIDOS ANULADOS - MOTIVO', 't1':'', 't2':'','t3':'importe'});
+	// 							xArmarSubItems(5,7092,function(){
+	// 								xArrayCierrePrint.push({'des':'CANTIDAD POR SECCION', 't1':'', 't2':'cant','t3':'importe'});
+	// 								xArmarSubItems(5,70010,function(){
+	// 									xArrayCierrePrint.push({'des':'PORCIONES', 't1':'', 't2':'ven','t3':'qda'});
+	// 									xArmarSubItems(5,707,function(){
+	// 										xArrayCierrePrint.push({'des':'PRODUCTOS VENDIDOS', 't1':'ven', 't2':'qda','t3':'importe'});
+	// 										xArmarSubItems(5,705,function(){
+	// 											xArrayCierrePrint.push({'des':'VENDIDO X BODEGA', 't1':'', 't2':'ven','t3':'qda'});
+	// 											xArmarSubItems(5,706,function(){
+	// 											//xArrayCierrePrint.push({'des':'PRODUCTOS CON STOCK MINIMO', 't1':'', 't2':'','t3':''});
+	// 												//xArmarSubItems(5,708,function(){
+	// 													console.log('xArrayCierrePrint', xArrayCierrePrint);
+	// 													return;
+	// 													xUpdateCerrarCession(function(){
+	// 														xPermisoSupervisor=0;	
+	// 														if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return;}
+	// 														xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);														
+	// 													});
+	// 												//})
+	// 											})
+	// 										})
+	// 									})
+	// 								})
+	// 							})
+	// 						})
+	// 					})
+	// 				})
+	// 			})
+	// 		})
+	// 	})
+	// })
 }
 
 
@@ -492,7 +601,7 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	xArrayEncabezadoCierre[0].nom_us = xm_log_get('app3_us').nomus;
 	xArrayEncabezadoCierre[0].nom_sede = xm_log_get('datos_org_sede')[0].sedenombre;
-
+	
 	const _data = {Array_enca:xArrayEncabezadoCierre, ArrayItem:xArrayCierrePrint};
 
 	if (_sys_local === 1) {

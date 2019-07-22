@@ -1,9 +1,11 @@
 <dom-module id="x-buscar.submenu">
 	<script type="text/javascript" src="../../view/item_pedidos.js"></script>
 	<template>
-		<div id="contenedor-x" style="display: flex;">
+		 <!-- style="display: flex;" -->
+		<div id="contenedor-x" class="dis-flex">
 			<!-- menu -->
-			<div class="xBordeDe2 xNoVisibleMenos720" style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto">
+			 <!-- style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto" -->
+			<div class="xBordeDe2 posLinePedido xNoVisibleMenos720">
 				<x-menu small-page="true"></x-menu>
 				<div class="xNoVisibleMenos920">
 				<br><br><br>
@@ -24,12 +26,22 @@
 			</div>
 
 			<!-- mi pedido -->
-			<div class="xBordeIz2 xNoVisibleMenos720 xNoVisibleMenos920" style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto">
+			<!-- style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto" -->
+			<div class="xBordeIz2 xNoVisibleMenos720 xNoVisibleMenos920 posLinePedido">
 				<x-mipedido id="mipedido-view"></x-mipedido>
 			</div>
 		</div>
+
 	</template>
 </dom-module>
+<style>
+	.posLinePedido {
+		position: relative;
+		width: 41%;
+		height: calc(100vh - 60px);
+		overflow-y: auto
+	}
+</style>
 <script>
 	var xThisBuscarSubMenu
 	, xCadenaTC=''

@@ -54,11 +54,13 @@
 
 	</template>
 	<style type="text/css">
-paper-spinner {
-   width: 20px;
-   height: 20px;
-}
-		</style>
+		paper-spinner {
+			width: 20px;
+			height: 20px;
+		}
+
+		.paper-spinner-a { width:15px; height:15px; }
+	</style>
 <script>
 var $table;
 var xThisMonPe,
@@ -178,9 +180,9 @@ function xLoadAllItem(){
 			xIdUlIl=xArrayEncaUlLi[z].id;
 			xCadenaHeadUlDt=String('<div class="table-titulo">'+
 					'<div class="table-like__item">'+
-						'<span class="name"><p class="xfont16 xBold" style="position:relative;">'+xArrayEncaUlLi[z].des_seccion+'</p></span>'+
-						'<span class="stock" style="vertical-align: bottom;">Stock</span>'+
-						'<span class="number" style="vertical-align: bottom;">Salio</span>'+
+						'<span class="name"><p class="xfont16 xBold pos-relative">'+xArrayEncaUlLi[z].des_seccion+'</p></span>'+
+						'<span class="stock valing-b">Stock</span>'+
+						'<span class="number valing-b">Salio</span>'+
 					'</div>'+
 				'</div>');
 			xcandena_a='';
@@ -240,7 +242,7 @@ function xModBlur(obj,tipo){
 			xidcarta_lista=$(obj).parent().attr('data-idcarta_lista'),
 			xiditem=$(obj).parent().attr('data-iditem');
 
-	$(obj).parent().html('<paper-spinner id="aax" active style="width:15px; height:15px;"></paper-spinner>').trigger('create');
+	$(obj).parent().html('<paper-spinner id="aax" class="paper-spinner-a" active></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1901', data:{p:xProcede,idcl:xidcarta_lista,idi:xiditem,c:xvalObj}})
 	.done( function (dtRpt) {
 		

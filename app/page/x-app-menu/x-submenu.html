@@ -3,9 +3,9 @@
 <dom-module id="x-submenu">
   <script type="text/javascript" src="../../view/item_pedidos.js"></script>
   <template>
-    <div id="contenedor-x" style="display: flex;">
+    <div id="contenedor-x" class="dis-flex">
       <!-- menu -->
-      <div class="xBordeDe2 xNoVisibleMenos720" style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto">
+      <div class="xBordeDe2 xNoVisibleMenos720 posLinePedido">
         <x-menu small-page="true"></x-menu>
         <div class="xNoVisibleMenos920">
           <br><br><br>
@@ -25,11 +25,14 @@
       </div>
 
       <!-- mi pedido -->
-      <div class="xBordeIz2 xNoVisibleMenos720 xNoVisibleMenos920" style="position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto">
+      <div class="xBordeIz2 xNoVisibleMenos720 xNoVisibleMenos920 posLinePedido">
         <x-mipedido id="mipedido-view"></x-mipedido>
       </div>
     </div>
   </template>
+  <style>
+    .posLinePedido {position: relative; width: 41%; height: calc(100vh - 60px); overflow-y: auto}
+  </style>
 </dom-module>
 <script>
   var xThis;
@@ -193,7 +196,7 @@
       ,xCadena_foto = ''
       ,xCadena_des = ''
       ,xCadenaItem_Detalle = ''
-      ,xCantItem
+      ,xCantItem = 0
       ,xCheck_desactivado = ''
       ,xClassEstadoStock = "";
 
@@ -204,7 +207,7 @@
       for (var i = 0; i < xdt_sub_Item.length; i++) {
         //if(xdt_sub_Item[i].idseccion!=xidCategoriaSeccion){continue}
         xCheck_desactivado = "";
-        var xCantItem = xdt_sub_Item[i].cantidad,
+        xCantItem = xdt_sub_Item[i].cantidad,
         xClassEstadoStock = xClassEstadoItem(xCantItem),
         xClassEstado = xClassEstadoStock.split("|")[0],
         xClassEstadoStock = xClassEstadoStock.split("|")[1];

@@ -1058,6 +1058,28 @@ input:checked ~ .xMenuPopup{display: none;}
 }
 .xBtnCloseDrawer:hover{background: #e91e63; color: #eeeeee; }
 
+.dis-flex {
+    display: flex;
+}
+
+.divLeft23 {
+    margin-left: 23px;
+}
+
+.pos-relative {position:relative;}
+
+.valing-b { vertical-align: bottom; }
+
+/* control pedidos*/
+/* .lh-7{line-height: 7px;}
+.pd-r-10 { padding-right:10px; }
+.pd-l-10 { padding-left:10px; }
+.pd-l-10-a { padding-left:10px; position:absolute; right:40px; }
+.mg-t-15 { margin-top:-15px; }
+.pos-union { position:absolute; right:78px; }
+.pos-fotter-btn { margin-top: 12px;display: inline-flex; }
+.div-filtro-header-input { width:80px; margin-right:5px; } */
+
 .isotope,
 .isotope .isotope-item {
   /* change duration value to whatever you like */

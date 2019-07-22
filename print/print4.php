@@ -118,7 +118,7 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 		//if($item["des"]!='PEDIDOS ATENDIDOS'){continue;}
 
 
-		$des_seccion=$item["des"];	
+		$des_seccion=$item['des'];	
 		//$sum_total=0;
 		$sum_t1=0;
 		$sum_t2=0;
@@ -128,7 +128,7 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 		//usort($item, "cmp");			
 		$printer -> setEmphasis(true);
 		//$printer -> text($des_seccion."\n");
-		$printer -> text(new item2($des_seccion,$item["t1"], $item["t2"], $item["t3"]));
+		$printer -> text(new item2($des_seccion,$item['t1'], $item['t2'], $item['t3']));
 		$printer -> text($linea_hr);	
 		$printer -> setEmphasis(false);
 

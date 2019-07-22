@@ -6,8 +6,8 @@
 			<h4>Error en impresora</h4>
 			<p id="print_error"></p>
 			<br>
-			<div class="xBoton2 xVerde" style="margin-left:23px;" onclick="xReImprimir();">Intentar Nuevamente</div>
-			<div class="xBoton2 xPlomo" style="margin-left:23px;" dialog-dismiss onclick="dialog_detalle.close();">No imprimir</div>
+			<div class="xBoton2 xVerde divLeft23" onclick="xReImprimir();">Intentar Nuevamente</div>
+			<div class="xBoton2 xPlomo divLeft23" dialog-dismiss onclick="dialog_detalle.close();">No imprimir</div>
 			<br><br><br>
 		</paper-dialog>
 		<paper-dialog style="min-width:290px; background: #212121; color: #fff;" id="dialog_borrar_item" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -96,7 +96,7 @@
 
 				<iron-pages selected="0" id="content_page" class="xNoScroll">
 					<div id="div_detalle_pedido" class="xNoScroll">
-						<div style="line-height: 7px;">
+						<div class="lh-7">
 							<div class="xDerecha">
 								<paper-fab icon="add" onclick="xOpenLULI()" title="[F8] Agregar item" tabindex="0" class="btnAdd2"></paper-fab>
 							</div>
@@ -109,8 +109,9 @@
 						<div class="content-pedido">
 							<table width="100%" class="xtable4">
 								<tr class="xSinBorde_tr" valign="top">
-									<td width="40%" style="padding-right:10px;">
-										<div class="xtd_derecha">
+									 <!-- style="padding-right:10px;" -->
+									<td width="40%" class="pd-r-10">
+										<div class="xtd-derecha">
 										<table width="100%" id="tb_pedidos" class="xRowPading4">
 											<thead><th colspan="5" align="left">PEDIDOS</th></thead>
 											<tr class="row selected1 xCursor check_item_p" data-idpedido="1">
@@ -134,10 +135,10 @@
 										</table>
 										</div>
 									</td>
-									<td class="xBordeIzq" style="padding-left:10px;">
-										<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor" style="position:absolute; right:78px;"  title="Unir items">
-										<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor" style="padding-left:10px; position:absolute; right:40px;" title="Separar items">
-										<div class="xtd_derecha" id="xBody">
+									<td class="xBordeIzq pd-l-10">
+										<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor pos-union" title="Unir items">
+										<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor pd-l-10-a" title="Separar items">
+										<div class="xtd-derecha" id="xBody">
 										<div>
 										<table width="100%" id="tb_det_pedidos" class="xRowPading4">
 											<!--thead><th colspan="6" align="left">Detalle del pedido | <div class="xBoton_flat xPlomo"> (2)</div><div class="xBoton_flat xPlomo">Para LLevar (3)</div></th></thead-->
@@ -168,7 +169,8 @@
 								</tr>
 							</table>
 						</div>
-						<div class="xAddItemPedido" style="overflow: hidden;" id="SelAddLuLi">
+						 <!-- style="overflow: hidden;" -->
+						<div class="xAddItemPedido xNoScroll" id="SelAddLuLi">
 								<div>
 									<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria>
 									<select class="xTextRow2 xCursor w-100" id="select_ulTPC"></select>
@@ -205,10 +207,11 @@
 						<div class="footer_dialog xAlinearce xFondoRowBlanco2">
 							<div class="xLinea"></div>
 							<br>
-							<div class="xDerecha" style="margin-top: 12px;display: inline-flex;">
-								<div class="xMiBoton_icon_lateral" style="margin-top:-15px;" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div>
-								<div class="xMiBoton_icon_lateral" style="margin-top:-15px;" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p>Cambiar de mesa</p></div>
-								<div class="xMiBoton_icon_lateral" style="margin-top:-15px;" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div>
+							<!-- style="margin-top: 12px;display: inline-flex;" -->
+							<div class="xDerecha pos-fotter-btn">
+								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div>
+								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p>Cambiar de mesa</p></div>
+								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div>
 							</div>
 							<button class="xBoton2 xAzul" id="btn_registrar_pago" onclick="xIrPage(1);">F10 | Listo, pagar</button>
 							<button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
@@ -251,26 +254,39 @@
 			</div>
 		</div>
 	</template>
-</dom-module>
+<style>
+	.lh-7{line-height: 7px;}
+	.pd-r-10 { padding-right:10px; }
+	.pd-l-10 { padding-left:10px; }
+	.pd-l-10-a { padding-left:10px; position:absolute; right:40px; }
+	.mg-t-15 { margin-top:-15px; }
+	.pos-union { position:absolute; right:78px; }
+	.pos-fotter-btn { margin-top: 12px;display: inline-flex; }
 
+	.div-filtro-header-input { width:80px; margin-right:5px; }
+	.subtotal-tr-row {padding-top:1px;padding-bottom:1px;}
+</style>
+</dom-module>
 <style type="text/css">
 	.grid:after {
-  content: '';
-  display: block;
-  clear: both;
-}
-#dialog_detalle.tall{border-radius: 5px; width: 100%;min-width: 300px;
-position: fixed;
-  top: 0;
-  left: 2;
-  bottom: 0;
-  right: 2;
-  margin: 2px;
-  min-height: 50vh;
-}
-#dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
-.xtd_derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
-img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
+		content: '';
+		display: block;
+		clear: both;
+	}
+	#dialog_detalle.tall{border-radius: 5px; width: 100%;min-width: 300px;
+		position: fixed;
+		top: 0;
+		left: 2;
+		bottom: 0;
+		right: 2;
+		margin: 2px;
+		min-height: 50vh;
+	}
+	#dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
+	.xtd-derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
+	img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
+
+	
 
 </style>
 
@@ -386,7 +402,7 @@ function xIniControlMesa(){
 		$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);
 		document.title ="Control de Pedidos";
 
-		$("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" placeholder="mesa" style="width:80px; margin-right:5px;" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
+		$("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:80px; margin-right:5px;" placeholder="mesa" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
 		xThisCM.xt_org=xIdOrg;
 		xThisCM.xt_idsede=xIdSede;
 		xThisCM.xt_idus=xIdUsuario;
@@ -1996,12 +2012,13 @@ async function xSumarTotalPedidos(viene_borrar){
 			_fontSize='xfont15';
 			_fontSizeTitulo=='xfont15';
 			titulo=element.descripcion.toUpperCase();
-			_style='style="padding-top:1px;padding-bottom:1px;"';
+			// _style='style="padding-top:1px;padding-bottom:1px;"';
+			_style = 'subtotal-tr-row';
 		}
 		
 		htmlSubtotales = htmlSubtotales + '<tr class="total '+classTachado+'">'+
-							'<td colspan="4" '+_style+'><p class="'+_fontSizeTitulo+'">'+titulo+' '+ xBtnQuitar +'</p></td>'+
-							'<td align="right" '+_style+'><p class="'+_fontSize+' xColorRow_Azul" id="'+_id+'">'+importeRow+'</p></td>'+
+							'<td colspan="4" class="'+_style+'"><p class="'+_fontSizeTitulo+'">'+titulo+' '+ xBtnQuitar +'</p></td>'+
+							'<td align="right" class="'+_style+'"><p class="'+_fontSize+' xColorRow_Azul" id="'+_id+'">'+importeRow+'</p></td>'+
 						'</tr>';
 	});
 

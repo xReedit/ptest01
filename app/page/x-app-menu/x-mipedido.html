@@ -71,15 +71,13 @@
       <p id="print_error"></p>
       <br />
       <div
-        class="xBoton2 xVerde"
-        style="margin-left:23px;"
+        class="xBoton2 xVerde divLeft23"        
         onclick="xReImprimirMP();"
       >
         Intentar Nuevamente
       </div>
       <div
-        class="xBoton2 xPlomo"
-        style="margin-left:23px;"
+        class="xBoton2 xPlomo divLeft23"        
         onclick="xNuevoPedidoMP();"
       >
         No imprimir
@@ -92,7 +90,7 @@
         <div class="spinner"><paper-spinner active></paper-spinner></div>
       </div>
       <br />
-      <div class="xBoton2 xPlomo xInvisible" id="dlgBtn" style="margin-left:23px;" onclick="xListoDlg();">
+      <div class="xBoton2 xPlomo xInvisible divLeft23" id="dlgBtn" onclick="xListoDlg();">
         Cerrar
       </div>
       <br /><br />
@@ -233,8 +231,7 @@
       -->
     </footer>
   </template>
-  <style is="custom-style">
-    
+  <style is="custom-style">        
 
     paper-checkbox.check_red {
       background: #bdbdbd;
@@ -244,6 +241,8 @@
       transition: none !important;    
     }
 
+    /* .divLeft23 {margin-left:23px;} */
+
 /* iron-collapse { --iron-collapse-transition-duration: 0ms; } */
     table tr td.xtb_pedido_importe {
       width: 10px;
@@ -251,6 +250,8 @@
     }
 
     .btn_apunte_deliver { margin-top: -10px;}
+
+    .subtotalRow { padding-top:1px;padding-bottom:1px; }
   </style>
 </dom-module>
 <style type="text/css">
@@ -567,10 +568,10 @@ transition: none !important;
   function xVerificarSiSoloLLevar() {
     xsolo_llevar = 0;
     xdelivery = 0;
-    var xcount_seccion = 0;
+    var xcount_seccion = 0, textColapse;
     $("#xBody .xEncabezadoTpCon").each(function(index, element) {
       xcount_seccion++;
-      const textColapse = element.textContent.toUpperCase();
+      textColapse = element.textContent.toUpperCase();
       if (index == 0) {
         xIdTpc_pe = $(element).attr("data-idtpc");
       }
@@ -765,11 +766,15 @@ transition: none !important;
         _fontSize = "xfont15";
         _fontSizeTitulo == "xfont15";
         titulo = element.descripcion.toUpperCase();
-        _style = 'style="padding-top:1px;padding-bottom:1px;"';
+        _style = 'subtotalRow';// 'style="padding-top:1px;padding-bottom:1px;"';
       }
 
-      htmlSubtotales = htmlSubtotales +'<tr class="total">' +'<td colspan="3" ' + _style +'><p class="' +_fontSizeTitulo +' xColorRow_Plomo">' +titulo +"</p></td>" +
-        '<td align="right" ' +_style +'><p class="' +_fontSize +" " +_colorImporte +'" id="' +_id +'">' +element.importe +"</p></td>" +
+      // htmlSubtotales = htmlSubtotales +'<tr class="total">' +'<td colspan="3" ' + _style +'><p class="' +_fontSizeTitulo +' xColorRow_Plomo '+_style+'">' +titulo +"</p></td>" +
+      //   '<td align="right" ' +_style +'><p class="' +_fontSize +" " +_colorImporte + " "+_style + '" id="' +_id +'">' +element.importe +"</p></td>" +
+      //   "</tr>";
+
+      htmlSubtotales = htmlSubtotales +'<tr class="total">' +'<td colspan="3"><p class="' +_fontSizeTitulo +' xColorRow_Plomo '+_style+'">' +titulo +"</p></td>" +
+        '<td align="right"><p class="' +_fontSize +" " +_colorImporte + " "+_style + '" id="' +_id +'">' +element.importe +"</p></td>" +
         "</tr>";
     });
 
