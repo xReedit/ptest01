@@ -588,7 +588,7 @@ function detectEvent(e) {
 	if (evt.keyCode>=116 && evt.keyCode<=123) {
 		//alert('charCode is ' + evt.charCode);
 		//return document.defaultAction;
-		if(evt.keyCode==119){xEnviarACuenta();}
+		if(evt.keyCode==119){xEnviarACuenta(); return;}
 		if(evt.keyCode==121){
 
 			if ( !dialog_pagar_vr.opened ) {
@@ -632,22 +632,25 @@ function xIrARegistrarPago(){
 	xThisVentaRapida.$.dialog_pagar_vr.open()
 	$("#component_pago_vr").focus(); component_pago_vr.setVal(xMoneda(tt_pedido));
 }
-function xEnviarACuenta(){
+function xEnviarACuenta(){	
+	if ( guardando_vr ) {return;}
+	guardando_vr = true;
+
 	if(xenviar_cuenta==true){
-		if(xnum_mesa_valido==false && xdelivery === 0){alert('Numero de mesa no es valido.'); return;}
-		xEstadoPedido=0;
-
-		if ( guardando_vr === true ) {return;}
-		guardando_vr = true;
-
-		xPopupLoad.titulo="Guardando...";
-		xPopupLoad.xopen();
-		xid_cliente_pago=0;
-		xGuardarPedidoVR(function(){
-			//xPopupLoad.xclose();
-			//xNuevoPedidoVR();
-			// guardando = false;
-		});
+	if(xnum_mesa_valido==false && xdelivery === 0){alert('Numero de mesa no es valido.'); return;}
+	xPopupLoad.titulo="Guardando...";
+	xPopupLoad.xopen();
+	
+	setTimeout(() => {
+			xEstadoPedido=0;		
+			xid_cliente_pago=0;
+			xGuardarPedidoVR(function(){
+				//xPopupLoad.xclose();
+				//xNuevoPedidoVR();
+				// guardando = false;
+				guardando_vr = false;
+			});
+		}, 500);
 	}
 }
 
@@ -900,7 +903,10 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 	if ( xRpt_pago.length > 0 ) {
 		var arr_cliente = xRpt_pago[0].cliente;
 		var arr_comprobante = xRpt_pago[0].comprobante;
-		arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		correlativo = correlativo ? correlativo : '';
+		if ( arr_comprobante ) {
+			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		}
 		
 		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
 		xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);

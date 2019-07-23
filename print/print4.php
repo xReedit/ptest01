@@ -138,7 +138,7 @@ $hora_actual=date('H').':'.date('i').':'.date('s');
 		}
 		
 		foreach ($item as $subitem) {
-			if(is_array($subitem)==false){continue;}			
+			if(is_array($subitem)==false){continue;}
 
 
 			$printer -> setEmphasis(false);

@@ -429,7 +429,7 @@
 		// 	e.stopImmediatePropagation()
 		// });
 
-		$(document).on('keydown', function (e) {
+		$(document.body).on('keydown', function (e) {
 			var evt = e;
 			if (evt.keyCode == 121) {
 				if (!xThisPago.modoSoloComprobante) {
@@ -821,7 +821,7 @@
 		/// loading - para no disparar varias veces mientras se esta ejecutando
 		setTimeout(() => {
 			registrando = false;
-		}, 4000);
+		}, 2000);
 	}
 
 
