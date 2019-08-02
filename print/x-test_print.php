@@ -44,8 +44,8 @@ try {
 $printer -> text('MESA 01'."\n");
 
 
-$connector->write(Printer::GS.'L'.$var_margen_iz);
-$printer -> setFont($var_size_font);
+// $connector->write(Printer::GS.'L'.$var_margen_iz);
+// $printer -> setFont($var_size_font);
 
 
 // tamaño de papel
@@ -54,18 +54,23 @@ $papel_size = (int)$ArrayEnca['papel_size'];
 
 // lineas hr - divisor
 $linea_hr = '';
+$espacioAlFinal = false; // en impresoras de 58- 57mm  no aparece el ultimo texto 
 $GLOBALS['leftCols'] = 38;
 switch ($papel_size) {
 	case '0': // 80mm
 		$linea_hr = "------------------------------------------------\n";
 		$GLOBALS['leftCols'] = 38;
+		$espacioAlFinal = false;
 		break;
 	case '1': // 58mm
 		$linea_hr = "------------------------------------------\n";
 		$GLOBALS['leftCols'] = 32;
+		$espacioAlFinal = true;
 		break;	
 }
 
+$connector->write(Printer::GS.'L'.$var_margen_iz);			
+$printer -> setFont($var_size_font);
 
 if($logo_post!=''){
 	// $logo = EscposImage::load($logo_post, false);
@@ -75,7 +80,8 @@ if($logo_post!=''){
 	$logo = EscposImage::load($logo_post, false);
 	$printer -> bitImage($logo);	
 }	
-/* ENCABEZADO */
+/* ENCABEZADO */	
+	if ($espacioAlFinal) {$printer -> feed();}
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 	$printer -> text('MESA 01'."\n");
 	$printer -> selectPrintMode();
@@ -139,9 +145,9 @@ if($logo_post!=''){
 	$printer -> text($ArrayEnca['pie_pagina']."\n");
 	$printer -> feed(2);
 	$printer -> text("Atendido por: PEDRO \n");
-	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
-
+	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");		
 	$printer -> text("www.papaya.com.pe\n");
+	if ( $espacioAlFinal ) { $printer -> text("\n\n"); }
 	$printer -> feed(2);
 
 	$printer -> cut();

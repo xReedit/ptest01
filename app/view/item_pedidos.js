@@ -458,6 +458,8 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 		xArrayDatosPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
 		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font;
 		xArrayDatosPrint[0].papel_size = xPrintLocal.papel_size;
+		xArrayDatosPrint[0].num_copias = xPrintLocal.num_copias;
+		xArrayDatosPrint[0].copia_local = xPrintLocal.copia_local;
 		xArrayDatosPrint[0].local = 1;
 		xpasePrint=true;
 	}else{
@@ -469,6 +471,8 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 				xArrayDatosPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xArrayDatosPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
 				xArrayDatosPrint[0].papel_size = xArrayImpresoras[i].papel_size
+				xArrayDatosPrint[0].num_copias = xArrayImpresoras[i].num_copias;
+				xArrayDatosPrint[0].copia_local = xArrayImpresoras[i].copia_local;
 				xArrayDatosPrint[0].local = 0;
 				break;
 			}
@@ -511,6 +515,8 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 		xArrayDatosPrint[0].var_margen_iz=xPrintLocal.var_margen_iz;
 		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font;
 		xArrayDatosPrint[0].papel_size = xPrintLocal.papel_size;
+		xArrayDatosPrint[0].num_copias = xPrintLocal.num_copias;
+		xArrayDatosPrint[0].copia_local = xPrintLocal.copia_local;
 		xArrayDatosPrint[0].local = 1;
 		xpasePrint=true;
 	}else{
@@ -522,6 +528,8 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 				xArrayDatosPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xArrayDatosPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
 				xArrayDatosPrint[0].papel_size = xArrayImpresoras[i].papel_size;
+				xArrayDatosPrint[0].num_copias = xArrayImpresoras[i].num_copias;
+				xArrayDatosPrint[0].copia_local = xArrayImpresoras[i].copia_local;
 				xArrayDatosPrint[0].local = 0;
 				break;
 			}

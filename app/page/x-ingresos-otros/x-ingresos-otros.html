@@ -161,7 +161,7 @@
 	}
 
 	function openDIalogNewIO() {
-		sel_idTipoIngreso = compTpIngreso.__data__.list_tipo_ingreso.idtipo_ingreso;
+		sel_idTipoIngreso = compTpIngreso.getTipoIngreso().idtipo_ingreso;
 		// console.log(sel_idTipoIngreso);
 		dialog_new_ingreso.open();
 	}
@@ -198,7 +198,7 @@
 		xPopupLoad.xopen();
 		$("#form_new_io #idsede").val(xThisIO.xt_idsede);
 		$("#form_new_io #idorg").val(xThisIO.xt_org);		
-		$("#form_new_io #idtipo_ingreso").val(sel_idTipoIngreso);
+		$("#form_new_io #idtipo_ingreso").val(compTpIngreso.getTipoIngreso().idtipo_ingreso);
 		$("#form_new_io #fecha_ingreso").val(xDevolverFechaFormatInputDate(date_fecha_ingreso.value));
 		$("#form_new_io #fecha_registro").val(xDevolverFecha());
 		xvalidateForm('form_new_io', function (a) {
@@ -237,7 +237,7 @@
 	}	
 
 	function _getTipoIngreso(e) {
-		sel_idTipoIngreso = e.idtipo_ingreso;
+		// sel_idTipoIngreso = e.idtipo_ingreso;
 	}
 
 	Polymer({

@@ -413,7 +413,7 @@
 								<td>
 									<select id="select_papel_zona">
 										<option value="0">80 mm</option>
-										<option value="1">58 mm</option>
+										<option value="1">58 mm</option>										
 									</select>
 								</td>
 								<td><a href="#" onclick="xTestPrint(0)">Test Impresion</a></td>
@@ -1118,6 +1118,7 @@ function xTestPrint(xOpC){
 	};
 
 	// si eta en la web
+	console.log('print params', xArrayPasarTest);
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	const _data = {
 		Array_enca:xArrayPasarTest

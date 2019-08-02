@@ -13,7 +13,9 @@
 					<x-comp-find-colaborador id="selColaborador" espaciar></x-comp-find-colaborador><br>
 					<x-comp-find-cargo id="selCargo" espaciar></x-comp-find-cargo><br>
 					<x-comp-find-planilla-tiempo-pago id="selPeriodo" espaciar></x-comp-find-planilla-tiempo-pago><br>
-					<input type="text" class="xMiInput xPasarEnter2" id="area" name="area" value$="[[selPlaColaborador.area]]"
+					<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" 
+						id="area" name="area"
+						value$="[[selPlaColaborador.area]]"
 						placeholder="AREA" espaciar required>
 
 					
@@ -152,7 +154,7 @@
 			})
 			.done((res) => {
 				const _res = JSON.parse(res);
-				console.log(_res.datos);
+				// console.log(_res.datos);
 				var sumTotal = 0;
 
 				xThisPPlanilla.ListPlanilla = _res.datos.map(x => {
@@ -181,8 +183,7 @@
 		frm.find("#mes_activo").val(mes_yy_activo);
 
 		const dataform = objectifyForm($("#form_new_co_pla").serializeArray());
-		console.log(JSON.stringify(dataform));
-		return;
+		
 		$.ajax({
 			type: 'POST',
 			url: '../../bdphp/log_005.php?op=504',
