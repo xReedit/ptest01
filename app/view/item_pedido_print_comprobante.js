@@ -51,8 +51,8 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	xArrayEncabezado[0].hash = rptPrint.hash; // que es realidad el qr
 	xArrayEncabezado[0].external_id = rptPrint.external_id;
 	// correlativo comprobante;	
-	xArrayComprobante.correlativo = rptPrint.correlativo_comprobante;
-	xArrayComprobante.facturacion_correlativo_api = rptPrint.facturacion_correlativo_api;
+	xArrayComprobante.correlativo = rptPrint.correlativo_comprobante || xArrayComprobante.correlativo;
+	xArrayComprobante.facturacion_correlativo_api = rptPrint.facturacion_correlativo_api || xArrayComprobante.facturacion_correlativo_api;
 	
 	
 	// return true; // temporal probamos facturacion electronica
@@ -505,15 +505,28 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 }
 
 function xReturnCorrelativoComprobante(_obj) {	
-	const tomaDelApi = parseInt(_obj.facturacion_correlativo_api) === 0 ? false : true;
-	const _rpt = tomaDelApi ? '#' : parseInt(_obj.correlativo) + 1;
-	if (!tomaDelApi) {
-		_obj.facturacion_correlativo_api = 1;
-		// el update de facturacion_correlativo_api=1 lo hace en el procedimiento almacendo
-		
-		// setTimeout(() => {	
-		// 	xValPago.reloadInputDatalientes();
-		// }, 2000);
+	let _rpt;
+	if ( _obj.codsunat === '0' ) {  // para ticktes y otros
+		_rpt = parseInt(_obj.correlativo) + 1;
+		_rpt = xCeroIzq(_rpt, 7); // 7 ceros a la izq
+
+		// suma correlativo  otro comprobante no declarado
+		$.ajax({
+			type: 'POST',
+			url: '../../bdphp/log_002.php',
+			data: {
+				op: '103',
+				i: _obj.idtipo_comprobante_serie
+			}
+		});
+
+	} else {
+		const tomaDelApi = parseInt(_obj.facturacion_correlativo_api) === 0 ? false : true;
+		_rpt = tomaDelApi ? '#' : parseInt(_obj.correlativo) + 1;
+		if (!tomaDelApi) {
+			_obj.facturacion_correlativo_api = 1;		
+		}
 	}
+
 	return _rpt;
 }

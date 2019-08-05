@@ -459,7 +459,7 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font;
 		xArrayDatosPrint[0].papel_size = xPrintLocal.papel_size;
 		xArrayDatosPrint[0].num_copias = xPrintLocal.num_copias;
-		xArrayDatosPrint[0].copia_local = xPrintLocal.copia_local;
+		// xArrayDatosPrint[0].copia_local = xPrintLocal.copia_local;
 		xArrayDatosPrint[0].local = 1;
 		xpasePrint=true;
 	}else{
@@ -516,7 +516,7 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 		xArrayDatosPrint[0].var_size_font=xPrintLocal.var_size_font;
 		xArrayDatosPrint[0].papel_size = xPrintLocal.papel_size;
 		xArrayDatosPrint[0].num_copias = xPrintLocal.num_copias;
-		xArrayDatosPrint[0].copia_local = xPrintLocal.copia_local;
+		// xArrayDatosPrint[0].copia_local = xPrintLocal.copia_local;
 		xArrayDatosPrint[0].local = 1;
 		xpasePrint=true;
 	}else{
