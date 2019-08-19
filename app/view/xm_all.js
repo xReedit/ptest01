@@ -559,7 +559,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 	var token = "XXeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.1tLS4vhIGufCW5H5vJ4bmNxhf43x-Vaik4oRwaDXi7E";
 	var label_num = servicio === "dni" ? "ndni" : "ruc"; 
 	var _url_servicio;
-		
+				
 		//primero busca en local
 		var dt = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=602', data:{doc: valor}})
 		// .done( function (dt) {
@@ -593,6 +593,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 					.done( function (dt) {
 						// responde (JSON.parse(dt));
 						dt = JSON.parse(dt);
+						console.log(dt);
 						var nombres='', direccion='', telefono='';
 						var num_doc = valor;
 						var fnacimiento = '';

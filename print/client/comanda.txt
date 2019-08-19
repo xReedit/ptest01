@@ -91,6 +91,7 @@ $papel_size = (int)$xArray_print[0]['papel_size'];
 // lineas hr - divisor
 $linea_hr = '';
 $linea_titulo = '';
+$espacioAlFinal = false; // en impresoras de 58- 57mm  no aparece el ultimo texto 
 $GLOBALS['leftCols'] = 38;
 switch ($papel_size) {
 	case '0': // 80mm
@@ -102,6 +103,7 @@ switch ($papel_size) {
 		$linea_hr = "------------------------------------------\n";
 		$linea_titulo = '***';
 		$GLOBALS['leftCols'] = 32;
+		$espacioAlFinal = true;
 		break;	
 }
 
@@ -232,7 +234,11 @@ while($num_copias>=0){
 			// $or_des_seccion[$key]  = !empty($row['des_seccion']) ? $row['des_seccion'] : '';
 			$or_des_seccion[$key]  = !empty($row['sec_orden']) ? $row['sec_orden'] : ''; 
 		}
-		array_multisort($procede, SORT_ASC,$or_des_seccion, SORT_ASC, $item);		
+
+		// array_multisort($procede, SORT_ASC,$or_des_seccion, SORT_ASC, $item);
+		array_multisort($procede, SORT_ASC, SORT_NUMERIC,
+						$or_des_seccion, SORT_ASC, SORT_NUMERIC,
+						$item, SORT_ASC, SORT_LOCALE_STRING);
 		
 		foreach ($item as $subitem) {
 			if(is_array($subitem)==false){continue;}
@@ -314,7 +320,8 @@ while($num_copias>=0){
 	$printer -> feed();
 	$printer -> text($linea_hr);
 	$printer -> setEmphasis(true);
-	$r_subt_t=0;		
+	$r_subt_t=0;
+	$importeTotal=0;
 	
 	foreach ($ArraySubTotales as $item_sbt) {//
 		if($item_sbt['visible']=='false'){continue;}
@@ -325,6 +332,7 @@ while($num_copias>=0){
 		$imp_sbt=$item_sbt['importe'];//
 
 		if($des_sbt=='Total'){
+			$importeTotal = $imp_sbt;
 			$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
 			$printer -> text(new item($des_sbt, $imp_sbt, true));
 			$printer -> selectPrintMode();
@@ -334,6 +342,13 @@ while($num_copias>=0){
 		$printer -> text(new item($des_sbt, $imp_sbt));
 	}
 	//
+	/* CODEBAR */
+	$printer -> feed();
+	$printer -> setJustification(Printer::JUSTIFY_CENTER);
+	$printer->setBarcodeHeight(45);
+	$printer->setBarcodeWidth(2);	
+	$valCodBar = (int)$correlativo_dia."%".(float)$importeTotal;	
+	$printer->barcode($valCodBar);
 
 	/* PIE DE PAGINA */	
 	$pie_pagina = $xArray_print[0]['pie_pagina'];
@@ -348,7 +363,8 @@ while($num_copias>=0){
 	$printer -> text($fecha_actual.' | '.$hora_actual. "\n");
 
 	$printer -> text("www.papaya.com.pe\n");
-	$printer -> feed(2);
+	if ( $espacioAlFinal ) { $printer -> text("\n\n"); }
+	$printer -> feed();
 	
 	$printer -> cut();
 	$printer -> pulse();

@@ -884,7 +884,9 @@ async function xGuardarPedidoVR(responde){
 		};
 
 
-		xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
+		if ( p_from === 'ab' ) {
+			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
+		}
 		
 		if(xVerificarImprimirComanda==true){
 			guardando_vr = true;

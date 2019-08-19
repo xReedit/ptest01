@@ -323,8 +323,8 @@ function xOpenPage(xop, parametro){
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
 			
-			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
+			window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+			// window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
 			return; 		
 	}
 	xruta=xruta+parametro;

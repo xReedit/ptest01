@@ -238,7 +238,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             rpt.qr = res.data.qr;
             rpt.hash = res.data.hash;
             rpt.external_id = res.data.external_id;
-            rpt.correlativo_comprobante = xCeroIzqNumberComprobante(res.data.number)            
+            rpt.correlativo_comprobante = xCeroIzqNumberComprobante(res.data.number).split('-')[1]            
             rpt.facturacion_correlativo_api = 1; // toma los correlativos del api
                         
             res.data.nomcliente = nomCliente;
