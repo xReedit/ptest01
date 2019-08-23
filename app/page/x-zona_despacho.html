@@ -544,7 +544,9 @@ function xDespachado_retirado(obj,op){
 	$(obj).find('.row_item').each(function(i,e){
 		xid_pd=xid_pd+$(e).attr('data-id')+',';
 	})
-	xid_pd=xid_pd.slice(0,-1);
+	// xid_pd=xid_pd.slice(0,-1);
+	xid_pd = xid_p; // se despacha todo no uno por uno
+
 
 	// estado del pedido -> 1 verde, 2 ambar, 3 alertado
 	const objColor = $(obj).find(".encabezado");

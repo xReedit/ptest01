@@ -393,7 +393,7 @@ function xVerificar(){
 		} else {
 			if(xPermisoSupervisor==1){//supervisor
 				if(!isNaN(calTotal)){
-					if(calTotal>1){
+					if(calTotal<1){
 						xRpt_monto_supervicion='(sobra '+xMoneda(calTotal)+'). ';xsub_sobra='xSubrayar xBold2';}
 					else{
 						xRpt_monto_supervicion='(falta '+xMoneda(calTotal)+'). ';xsub_falta='xSubrayar xBold2';
@@ -407,8 +407,8 @@ function xVerificar(){
 					xRpt='<h3>NUMERO DE INTENTOS DE CIERRE AGOTADO, POR FAVOR LLAME AL SUPERVISOR.</h3>';
 				} else {
 					labelItentos = '<br><span class="xBold xfont14">Intentos de cierre '+ xCeroIzq(res.numintentos,2) + ' de '+ xCeroIzq(res.numintentos_permitidos,2)+'</span> ';
-					if(calTotal>1){xRpt='<h3>Existe sobrante en caja.'+ labelItentos +'</h3>';}
-					if(calTotal<-1){xRpt='<h3>Existe faltante en caja.'+ labelItentos +'</h3>';}
+					if(calTotal<-1){xRpt='<h3>Existe sobrante en caja.'+ labelItentos +'</h3>';}
+					if(calTotal>1){xRpt='<h3>Existe faltante en caja.'+ labelItentos +'</h3>';}
 				}
 
 			}

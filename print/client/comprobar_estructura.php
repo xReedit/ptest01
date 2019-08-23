@@ -42,7 +42,8 @@
 
         // update estructuras
         if ($pase) {
-            $nom_file = $item['nom_documento'].".txt";
+            // $nom_file = $item['nom_documento'].".txt";
+            $nom_file = $item['nom_documento'].".php";
             $estructura = $item['estructura_json'];
             echo "pase a crear estructura ".$nom_file;
             
