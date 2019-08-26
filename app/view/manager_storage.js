@@ -17,7 +17,7 @@ function removeAllLocalStorage() {
 function bkLocalStorage() {
     var _bkLocalStorage = [];
     Object.keys(localStorage).forEach(function (key) {
-        if (key != '::app3_sys_backup') {
+        if (key != '::app3_sys_backup' && key != '::app3_sys_dta_pe') {
             _bkLocalStorage.push({
                 id: key,
                 content: localStorage.getItem(key)

@@ -332,12 +332,19 @@ function xLoadArrayPedido(){
 	var xtpc_t=[];
 	xArrayDesTipoConsumo=[];
 	xArrayPedidoObj=[];
-
-	xtpc_t=xm_log_get('estructura_pedido'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_tct_estructura"));
-	for (var i = 0; i < xtpc_t.length; i++) {
-		xArrayPedidoObj[xtpc_t[i].idtipo_consumo]={'id':xtpc_t[i].idtipo_consumo, 'des':xtpc_t[i].descripcion, 'titulo':xtpc_t[i].titulo};
-		xArrayDesTipoConsumo.push({'id':xtpc_t[i].idtipo_consumo, 'des':xtpc_t[i].descripcion, 'titulo':xtpc_t[i].titulo});
-	};
+	
+	
+	xtpc_t=xm_log_get('estructura_pedido'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_tct_estructura"));	
+	xtpc_t.map(x => {
+		const indexTpc = x.idtipo_consumo;
+		xArrayPedidoObj[indexTpc] ={'id':x.idtipo_consumo, 'des':x.descripcion, 'titulo':x.titulo};
+		xArrayDesTipoConsumo.push({'id':x.idtipo_consumo, 'des':x.descripcion, 'titulo':x.titulo});
+	});
+	
+	// for (var i = 0; i < xtpc_t.length; i++) {
+	// 	xArrayPedidoObj[xtpc_t[i].idtipo_consumo]={'id':xtpc_t[i].idtipo_consumo, 'des':xtpc_t[i].descripcion, 'titulo':xtpc_t[i].titulo};
+	// 	xArrayDesTipoConsumo.push({'id':xtpc_t[i].idtipo_consumo, 'des':xtpc_t[i].descripcion, 'titulo':xtpc_t[i].titulo});
+	// };
 	window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj))
 
 	
