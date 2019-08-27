@@ -288,7 +288,7 @@ function xArmarMenuLateral(op) {
   var xCadenaMenuL = "";
   var xOpSalirPanel = "";
   var xCadenadaCerrarSession =
-    '<li onClick="xCerrarSession();"><p>CERRAR SESSION </p></li>';
+    '<li onclick="xCerrarSession();"><p>CERRAR SESSION </p></li>';
   switch (op) {
     case 1: //categoria
       xMenuArray = $.parseJSON(
@@ -299,7 +299,7 @@ function xArmarMenuLateral(op) {
       } else {
         if (xIdUsuario != "") {
           xOpSalirPanel =
-            '<li onClick="xOpenPageCarta(4)"><p>SALIR AL PANEL </p></li>';
+            '<li onclick="xOpenPageCarta(4)"><p>SALIR AL PANEL </p></li>';
         }
       }
       break;
@@ -317,7 +317,7 @@ function xArmarMenuLateral(op) {
       xCadenaMenuL +
         '<li data-id="' +
         xMenuArray[i].id +
-        '" onClick="xVerDetalleMenu(' +
+        '" onclick="xVerDetalleMenu(' +
         i +
         "," +
         op +
@@ -327,9 +327,9 @@ function xArmarMenuLateral(op) {
     );
   }
   xCadenaMenuL =
-    '<ul class="noselect xCursor"><li onClick="btn_lateral_inicio();"><p>INICIO</p></li>' +
+    '<ul class="noselect xCursor"><li onclick="btn_lateral_inicio();"><p>INICIO</p></li>' +
     xCadenaMenuL +
-    '<li onClick="xOpenPageCarta(3);"><p>VER MI PEDIDO</p></li>' +
+    '<li onclick="xOpenPageCarta(3);"><p>VER MI PEDIDO</p></li>' +
     xOpSalirPanel +
     xCadenadaCerrarSession +
     "</ul>";
