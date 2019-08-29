@@ -905,10 +905,12 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 	if ( xRpt_pago.length > 0 ) {
 		var arr_cliente = xRpt_pago[0].cliente;
 		var arr_comprobante = xRpt_pago[0].comprobante;
-		correlativo = correlativo ? correlativo : '';
-		if ( arr_comprobante ) {
-			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-		}
+		// correlativo = correlativo ? correlativo === '' ? arr_comprobante.correlativo : '' : '';
+		// correlativo comprobante
+		// if ( arr_comprobante ) {
+		// 	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		// }
+		arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
 		
 		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
 		xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
