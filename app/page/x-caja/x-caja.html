@@ -268,7 +268,8 @@ function xGuardarIngreso(){
 
 		//var xx=$("#form_ingreso").serialize();
 
-		$.post("../../bdphp/ManejoBD_IUD.php?tb=ie_caja",$("#form_ingreso").serialize(),function(){
+		$.post("../../bdphp/ManejoBD_IUD.php?tb=ie_caja",$("#form_ingreso").serialize(),function(aa){
+			console.log(aa);
 			xPopupLoad.xclose();
 			//$("#form_ingreso").reset();
 			$("#form_ingreso #motivo").val('');

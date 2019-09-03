@@ -772,7 +772,7 @@ function xIniControlMesa(){
 
 // 12118 // seleccionar idcarta al hacer pedido desde aca (control de mesas)
 function _getCategoria(categoria) {
-	console.log(categoria);
+	// console.log(categoria);
 	xidCategoriaPD = categoria.idcategoria;
 	setLocalSotrage('::app3_cat_defualt', JSON.stringify(categoria));
 	xLoadDataUlAdd();
@@ -2413,7 +2413,7 @@ function xPintarEstadoPedido() {
 			xCadenaNewItem='';
 			xdtPe=xdtPe.datos.map( x => {x.actualizado = false; return x;});
 
-			console.log(xdtPe);
+			// console.log(xdtPe);
 			// for (var i = 0; i < NumMesa; i++) {
 			$(".xMiCardPedido .numero").each(function(index,element){
 				xindex=-1;

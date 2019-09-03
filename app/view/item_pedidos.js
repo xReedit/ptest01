@@ -40,7 +40,7 @@ function handlerFnMiPedido(e) {
 		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0 //itemPedidos_objItemSelected.xCant_item || 0// $(this).parent().find('.xCant_item')
 		, xStockActual = itemPedidos_objItemSelected.stock_actual // _xmenu_item_2.find('.xstock_item p').text()
 		//, xidItem2 = itemPedidos_objItemSelected.iditem
-		, xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem // _xmenu_item_2_dataset.item // _xmenu_item_2.attr('data-item') //iditem verdader
+		, xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem : itemPedidos_objItemSelected.iditem // _xmenu_item_2_dataset.item // _xmenu_item_2.attr('data-item') //iditem verdader
 		, xDesItem = itemPedidos_objItemSelected.des_item // _xmenu_item_2.find('.xtitulo_item').text()
 		, xPrecioItem = itemPedidos_objItemSelected.precio // _xmenu_item_2.find('.xprecio_item').text()
 		, xIndicaciones = itemPedidos_objItemSelected.xindicaciones //_xmenu_item_2.find('#txt_referencia').val()
@@ -177,7 +177,8 @@ function handlerFnMiPedidoControl(e) {
 		, xidsecion_index = itemPedidos_objItemSelected.idseccion_index
 		, xdes_seccion = itemPedidos_objItemSelected.des_seccion
 		// , xidItem2 = itemPedidos_objItemSelected.iditem
-		, xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem 
+		// , xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem 
+		, xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem : itemPedidos_objItemSelected.iditem // _xmenu_item_2_dataset.item // _xmenu_item_2.attr('data-item') //iditem verdader
 		, xPrecioTotal=0
 		// , xviene_venta_rapida = _viene_venta_rapida //$(element_li_add__print).attr('data-ventarapida'),
 		, ximprmir_comanda = itemPedidos_objItemSelected.imprimir_comanda // $(element_li_add__print).attr('data-imprimircomanda') || 0, //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprim,
@@ -1191,7 +1192,7 @@ async function xVerificarStockItemPedidoBefore() {
 				// lista a mostrar
 				_item[0].stock_actual = parseFloat(x.cantidad);
 				_rptList.push(_item[0]);
-				console.log('item', _item[0].des);
+				// console.log('item', _item[0].des);
 			}
 		});
 	});
