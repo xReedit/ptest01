@@ -185,7 +185,8 @@ function handlerFnMiPedidoControl(e) {
 		, xcant_descontar = itemPedidos_objItemSelected.cant_descontar // $(element_li_add__print).attr('data-cant_descontar'), //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona,
 		, xidcategoria = itemPedidos_objItemSelected.idcategoria // $(element_li_add__print).attr('data-idcategoria'),
 		, xli_idalmacen_items = itemPedidos_objItemSelected.idalmacen_items // $(element_li_add__print).attr('data-idalmacen_items'),
-		, xStockActual = xcant_max; //$(element_li_add__print).attr('data-stock_actual');
+		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
+		, xSotockSocket = xcant_max;
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
@@ -198,11 +199,20 @@ function handlerFnMiPedidoControl(e) {
 		// }
 
 		if(xsigno=='+'){
-			//omitir para seguir vendiendo sin stock, da change a despues
-			if(xcant<xcant_max){xcant++;}
+			//omitir para seguir vendiendo sin stock, da change a despues			
+			if ( !isSocket ) {
+				if(xcant<xcant_max){xcant++;}			
+			} else {
+				xSotockSocket = xcant_max > 0 ? xSotockSocket - 1 : 0;
+				if(xcant_max > 0 ){xcant++;}				
+			}
 		}else{
-			xcant--;
+
+			xSotockSocket = xcant === 0 ? xcant_max : xSotockSocket + 1;
+			xcant--;						
 			xcant = xcant <= 0 ? 0 : xcant;
+			// xSotockSocket = xcant < 0 ? xSotockSocket : xSotockSocket + 1;
+			// xSotockSocket = xSotockSocket > xcant_max ? xcant_max : xSotockSocket;
 		}
 
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
@@ -211,12 +221,31 @@ function handlerFnMiPedidoControl(e) {
 		
 		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal, 'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 'iditem2': xidItem2, 'idimpresora': xli_idimpresora, 'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
+			,'pwa': isSocket ? 1 : 0, isporcion: itemPedidos_objItemSelected.isporcion
 			};
 
 		element_cant_li_sel.text(xcant);
 		if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem];}else{
 			element_cant_li_sel.addClass('cant_fixed_li')
 		}
+
+
+		if ( isSocket ) {			
+			itemPedidos_objItemSelected.stock_actual = xSotockSocket;
+			const itemNotifySocket = {
+				cantidad: xSotockSocket,
+				idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
+				iditem: itemPedidos_objItemSelected.iditem,
+				isalmacen: itemPedidos_objItemSelected.procede === '1' ? 0 : 1,
+				isporcion: itemPedidos_objItemSelected.isporcion
+			}
+			
+			_cpSocketEmitItemModificado(itemNotifySocket);
+
+			_cpSocketSavePedidoStorage(xArrayPedidoObj);
+			
+		}
+
 
 
 		if (_viene_venta_rapida == 1) { //viene de venta rapida
@@ -230,6 +259,20 @@ function handlerFnMiPedidoControl(e) {
 		} catch (error) {}
 	}
 	// })
+
+// enviar item modificado socket
+
+function xNotifyItemModificado(item) {
+	const itemNotifySocket = {
+		cantidad: item.cantidad,
+		idcarta_lista: objItem.parent().attr('data-idcarta_lista'),
+		iditem: objItem.parent().attr('data-iditem'),
+		isalmacen: objItem.parent().attr('data-procede') === '1' ? 0 : 1,
+		isporcion: objItem.parent().attr('data-isporcion')
+	}
+}
+
+// enviar item modificado socket
 
 
 //venta rapida

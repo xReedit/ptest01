@@ -244,6 +244,7 @@
 
 <!-- <script type="text/javascript" src="../view/config.const.js"></script> -->
 <script type="text/javascript" src="../view/item_pedidos.js"></script>
+<script type="text/javascript" src="../view/socket.service.p.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../view/cpe_interno.js"></script>
@@ -282,7 +283,8 @@ var xThisVentaRapida
 ,xReservar = 0
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
- xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false;
+xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false
+, isSocket = false;
 
 
 
@@ -299,6 +301,9 @@ function xIniVentaRapida(){
 		xArrayRegla=xm_log_get('reglas_de_carta');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
 		xDtPrint=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 		xNumMesasBd=parseInt(xDtPrint[0].mesas);
+
+		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
+		console.log('isSocket', isSocket);
 
 		xLoadArrayPedido();
 		
@@ -655,12 +660,23 @@ function xEnviarACuenta(){
 }
 
 function xNuevoPedidoVR(){
+		
+
 	window.localStorage.removeItem("::app3_sys_dta_pe");
 	//xArrayPedido=new Array();
 	//xDtSubTotales=new Array();
 	xPopupLoad.xopen();
-	xLoadArrayPedido();
-	xLoadCartaVR();
+	xLoadArrayPedido();	
+
+	// reset pedido socket si no se envio
+	if (isSocket) {
+		_cpSocketRestoreFromPedidoStorage();
+		setTimeout(() => {
+			xLoadCartaVR();
+		}, 500);
+	} else {
+		xLoadCartaVR();
+	}
 
 	$("#xtb_pedido_subtotales tr").remove();
 	$("#tb_pedido_detalle").remove();
@@ -688,6 +704,7 @@ function xNuevoPedidoVR(){
 
 	xLocal_SubTotal_Quitados='';
 	//tt_pedido=0;
+	
 }
 
 
@@ -890,9 +907,10 @@ async function xGuardarPedidoVR(responde){
 		
 		if(xVerificarImprimirComanda==true){
 			guardando_vr = true;
-			xLLamarPrintVR()
+			xLLamarPrintVR();
 		}else{
 			xPopupLoad.xclose();
+			if (isSocket) { _cpSocketClearStorage(); }
 			xNuevoPedidoVR();
 		}
 				
@@ -934,6 +952,7 @@ function xLLamarPrintVR() {
 	xCocinarImprimirComanda(xArrayEnca,xArrayPedidoObj,xarr_subtotales, (res)=>{
 		if(res==false){ //si no hay error
 			xPopupLoad.xclose();
+			if (isSocket) { _cpSocketClearStorage(); }
 			xNuevoPedidoVR();
 		} else {
 			dialog_erro_print.open();
@@ -1038,7 +1057,7 @@ function xLoadItemsDetalleCartaALL(){
 		xGeneralDataCarta[p].stock_actual = xCantidadMax;
 		xGeneralDataCarta[p].idcategoria = xidCategoriaVR;
 		
-		xCadenaItems=String(xCadenaItems+'<li class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
+		xCadenaItems=String(xCadenaItems+'<li id="li2'+xGeneralDataCarta[p].idcarta_lista+'" class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
 												'" data-cat="'+xGeneralDataCarta[p].des_seccion+
 												'" data-idcl="'+xGeneralDataCarta[p].idcarta_lista+
 												'" data-idseccion="'+xGeneralDataCarta[p].idseccion+
@@ -1053,6 +1072,7 @@ function xLoadItemsDetalleCartaALL(){
 												'" data-ventarapida=1 data-imprimircomanda="'+xGeneralDataCarta[p].imprimir_comanda+
 												'" data-iddescontar="'+xGeneralDataCarta[p].idprocede+
 												'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+
+												'" data-stock_actual="'+xGeneralDataCarta[p].cantidad+
 												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
 														'<div class="content_li">'+
 															'<div>'+
@@ -1072,6 +1092,34 @@ function xLoadItemsDetalleCartaALL(){
 
 	$("#accordion").html(xCadenaItems).trigger('create');
 	xIniFocusMoveLi();
+}
+
+// listen sokect change items
+function _cpStockItemModificado(item){
+	if (!isSocket) {return; } // si no hay socket	
+
+	const idFind = '#li2' + item.idcarta_lista;	
+	const xCantidadMax = item.cantidad;
+	const index = $(idFind).attr('data-index');
+	var xClassRow = '';
+
+	xtachar_li='';	
+	if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
+	if(xCantidadMax=='ND'){xCantidadMax=1000}
+
+	$(idFind).attr('data-stock_actual', xCantidadMax);
+	// $(idFind)[0].dataset.stock_actual = xCantidadMax
+	$(idFind + ' span.xcant_li2').attr('data-cantmax', xCantidadMax);
+
+	xGeneralDataCarta[index].stock_actual = xCantidadMax;
+	xGeneralDataCarta[index].cantidad = xCantidadMax;
+	itemPedidos_objItemSelected = xGeneralDataCarta[index];
+	// $(idFind + ' span.xcant_li')[0].dataset.cantmax = xCantidadMax	
+	if ( xtachar_li != '' ) {
+		$(idFind).find('.xtitulo_li2').addClass(xtachar_li);
+	} else {
+		$(idFind).find('.xtitulo_li2').removeClass('xTachar');
+	}
 }
 
 function xVerMipedidoVR(){
@@ -1110,25 +1158,6 @@ function xVerMipedidoVR(){
 				if(n.indicaciones!=undefined && n.indicaciones!=''){xIndicacionItem='<span class="xPedidoItem_indicaciones">('+n.indicaciones+')</span>';}
 				if(xArraySeccion[n.idseccion_index]==null){xArraySeccion[n.idseccion_index]='<tr><td colspan="2" class="xSinBorde xBold">'+n.des_seccion+'</td></tr>';}
 				//idcategoria en pedido
-				//xidCategoriaSeccion=n.idcategoria;
-				/*xCadenaItemArray=String('<tr class="xPedidoItem row" data-id"'+n.iditem+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" onclick="xOpenDlgItem(this);">'+
-					'<td width="90%">'+xCeroIzq(n.cantidad,2)+' | '+n.des+' '+xIndicacionItem+'</td>'+
-					//'<td>'+n.des+' '+xIndicacionItem+'</td>'+
-					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+
-					'<td class="xInvisible" data-ColumName="cantidad" id="cant_descontar">'+xCeroIzq(n.cantidad,2)+'</td>'+
-					'<td class="xInvisible" id="td_cant">'+n.cantidad+'</td>'+
-					'<td class="xInvisible" data-ColumName="punitario" id="punitario">'+n.precio+'</td>'+
-					'<td class="xInvisible" data-ColumName="iditem">'+n.iditem2+'</td>'+
-					'<td class="xInvisible" data-ColumName="idcarta_lista" id="id_descontar">'+n.iditem+'</td>'+
-					'<td class="xInvisible" data-ColumName="idseccion">'+n.idseccion+'</td>'+
-					'<td class="xInvisible" id="row_idprocede">'+n.idprocede+'</td>'+
-					'<td class="xInvisible" data-ColumName="idcategoria">'+n.idcategoria+'</td>'+
-					'<td class="xInvisible" data-ColumName="idtipo_consumo">'+xDtPedido[i].id+'</td>'+
-					'<td class="xInvisible" data-ColumName="descripcion">'+n.des+' '+n.indicaciones+'</td>'+
-					'<td class="xInvisible" data-ColumName="procede">'+n.procede_index+'</td>'+ //guardar relacion idprocede=idproducto_familia
-					'<td class="xInvisible" id="row_tb_procede">'+n.procede+'</td>'+ //tabla de procedencia
-					'<td class="xInvisible" data-ColumName="idpedido">?p</td>'+
-					'</tr>');*/
 
 				xCadenaItemArray=String('<tr class="xPedidoItem row" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'">'+
 					'<td width="90%">'+xCeroIzq(n.cantidad,2)+' | '+n.des+' '+xIndicacionItem+'</td>'+
@@ -1267,41 +1296,6 @@ function xTraerDtTipoConsumo(){
 	//});
 }
 
-
-// function xAdjuntarDatosDelivery() {
-//     arrDatosAdjuntoDelivery = {
-//       idcliente: xIdCliente_pedido,
-//       num_doc: txt_delivery_dni.value,
-//       nombre: txt_delivery_nombre.value,
-//       direccion: txt_delivery_direccion.value,
-//       telefono: txt_delivery_telefono.value,
-//       paga_con: txt_delivery_paga.value,
-//       f_nac: xClientePedidoFnac
-//     }
-
-//     arrDatosAdjuntoDelivery = JSON.stringify(arrDatosAdjuntoDelivery);
-
-//     dialog_datos_delivery.close();
-//   }
-
-  // function xValidarDNIRUC(valor, e, tecla) {    
-	// 	if ( valor.length < 8 ) return;
-  //   if ( e.keyCode === 13 || !tecla) { // buscar cliente
-  //     xIdCliente_pedido = '';
-  //     $("#progress_cliente").removeClass("xInvisible");
-  //     xGetFindCliente(valor, 'dni', (rpt)=>{
-  //       if (rpt.success) {
-  //         xIdCliente_pedido=rpt.idcliente;
-  //         xClientePedidoFnac=rpt.f_nac;
-  //         $("#txt_delivery_nombre").val(rpt.nombres);
-  //         $("#txt_delivery_direccion").val(rpt.direccion);
-  //         $("#txt_delivery_telefono").val(rpt.telefono);
-  //       }
-  //       $("#progress_cliente").addClass("xInvisible");
-  //     });
-  //   }
-  // }
-
 function _pantallaCompleta (){
 	xThisVentaRapida.xIconScreen = isSreenFull ? 'icons:fullscreen-exit' : 'icons:fullscreen'; 	
 	isSreenFull = !isSreenFull;
@@ -1325,14 +1319,15 @@ Polymer({
 		this.selected_us=0;
 		this.xIconScreen = 'icons:fullscreen';
     	xThisVentaRapida=this;
-    	xIniVentaRapida();
+		xIniVentaRapida();
+		_cpSocketIsConnect();
     },
     detached:function(){
     	document.defaultAction = false;
 		//var eventHandler = true ? detectEvent : empty;
 		document['onkeydown'] = empty;
-
 		clearInterval(xGeneralRelojUpdateItemsSolo);
+		_cpSocketClose();
     }
 })
 </script>

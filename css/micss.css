@@ -1205,6 +1205,13 @@ ul.list_add_item2 li {
     padding: 10px;    
 }
 
+.btnAddItem {
+    background: dodgerblue;
+    padding: 5px;
+    border-radius: 5px;
+    color: white !important;
+}
+
 /*#xVentaRapidaBuscar{width: 50%;}*/
 
 .xIndicadorSize1{width: 370px; height: 390px;}

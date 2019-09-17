@@ -1,5 +1,7 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-control-mesas">
+	<script type="text/javascript" src="../view/socket.service.p.js"></script>
+
 	<template>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
 		<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -365,11 +367,12 @@ var xThisCM,
 	xCountTotalPedidos=0, //cuenta la cantidad total de pedidos, si es diferente actualiza
 	xValCountPedidos=0,
 	enProcesoGuardarPago = false,
-	guardandoPedido = false,
+	guardandoPedido_cp = 0,
 	checkItemsSeleccionados = [], // items seleccionados o todos // al sumar cantidades
 	arrSumSubtTotales = [], // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
 	ImporteDiferencia = 0, // la diferencia por pagar, para saber si es una seleccion total o parcial 
-	xImporteTotalSeleccionados = 0;  // obtiene el total de los pedidos seleccionados
+	xImporteTotalSeleccionados = 0,  // obtiene el total de los pedidos seleccionados
+	isSocket = false;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true;
 function xIniControlMesa(){
@@ -389,6 +392,10 @@ function xIniControlMesa(){
 
 	xPopupLoad=document.getElementById('xLoad');
 	//xm_LogChequea(function(){ inicia en m_control_pedidos.js
+
+		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
+		console.log('isSocket', isSocket);
+		
 		xm_log_get('ini_us');
 
 		xNuevoPedidoCM();
@@ -1099,16 +1106,24 @@ function xOpenLULI(){
 	xLoadDataUlAdd();
 }
 function xCloseLULI(){
+	_cpSocketRestoreFromPedidoStorage();
 	$("#SelAddLuLi").css('display','none');
 	xopen_add_item=false;
 }
 
 function xNuevoPedidoCM(){
 	//vacear array pedido atenrior
+	try {		
+		if (isSocket) { _cpSocketClearStorage(); }
+	} catch (error) {
+		
+	}
+
 	window.localStorage.removeItem("::app3_sys_dta_pe");
 	xArrayPedido=new Array();
 	xDtSubTotales=new Array();
-	guardandoPedido = false;
+	guardandoPedido_cp = 0;
+	console.log('send p cero', guardandoPedido_cp);
 	xLoadArrayPedido();
 }
 
@@ -1152,7 +1167,7 @@ function xLoadDataUlAdd(){
 					xGeneralDataCarta[p].stock_actual = xCantidadMax;
 					xGeneralDataCarta[p].idcategoria = xidCategoriaPD;
 
-					xCadenaBodyUlDt=String(xCadenaBodyUlDt+'<li class="row" data-index = "'+ p +'" data-idcategoria="'+xidCategoriaPD+
+					xCadenaBodyUlDt=String(xCadenaBodyUlDt+'<li class="row" id="li'+xGeneralDataCarta[p].idcarta_lista+'" data-index = "'+ p +'" data-idcategoria="'+xidCategoriaPD+
 														'" data-cat="'+xArrayEncaUlLi[z].des_seccion+
 														'" data-idcl="'+xGeneralDataCarta[p].idcarta_lista+
 														'" data-idcartalista="'+xGeneralDataCarta[p].idcarta_lista+
@@ -1197,9 +1212,40 @@ function xLoadDataUlAdd(){
 	});
 }
 
+// listen sokect change items
+function _cpStockItemModificado(item){
+	if (!isSocket) {return; } // si no hay socket
+	if ( !xopen_add_item ) {return; } // si el panel lateral no esta abierto
+
+	const idFind = '#li' + item.idcarta_lista;	
+	const xCantidadMax = item.cantidad;
+	const index = $(idFind).attr('data-index');
+	var xClassRow = '';
+
+	xtachar_li='';	
+	if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
+	if(xCantidadMax=='ND'){xCantidadMax=1000}
+
+	$(idFind).attr('data-stock_actual', xCantidadMax);
+	// $(idFind)[0].dataset.stock_actual = xCantidadMax
+	$(idFind + ' span.xcant_li').attr('data-cantmax', xCantidadMax);
+
+	xGeneralDataCarta[index].stock_actual = xCantidadMax;
+	xGeneralDataCarta[index].cantidad = xCantidadMax;
+	itemPedidos_objItemSelected = xGeneralDataCarta[index];
+	// $(idFind + ' span.xcant_li')[0].dataset.cantmax = xCantidadMax	
+	if ( xtachar_li != '' ) {
+		$(idFind).find('.xtitulo_li').addClass(xtachar_li);
+	} else {
+		$(idFind).find('.xtitulo_li').removeClass('xTachar');
+	}
+}
+
 function xArmarSqlAddLUlI(){
-	if ( guardandoPedido === true ) {return;}
-	guardandoPedido = true;
+	console.log('send p', guardandoPedido_cp);
+	if ( guardandoPedido_cp === 1 ) {return;}
+	guardandoPedido_cp = 1;
+	console.log('send p', guardandoPedido_cp);
 
 	var xRowLi='';
 	var xli_id_pedido;
@@ -1248,7 +1294,8 @@ function xArmarSqlAddLUlI(){
 
 	if (xsolo_llevar==="0" && xdelivery==="0" && (xli_nummesa==="" || xli_nummesa==="0") ) {
 		alert("Indique numero de mesa. Coloque cero(0) si no corresponde");
-		guardandoPedido = false;
+		guardandoPedido_cp = 0;
+		console.log('send p cero', guardandoPedido_cp);
 		// xPopupLoad.xclose();
 		return;
 	}
@@ -1284,11 +1331,18 @@ function xArmarSqlAddLUlI(){
 				// })
 			}else{
 				//actualizar y cerrar
-				xLoadDetallesPedido(xObj_miPedido);
+				xLoadDetallesPedido(xObj_miPedido);				
 				xNuevoPedidoCM();
 				xCloseLULI();
 			}
-		}).fail(guardandoPedido = false);
+			
+			// repintar actaulizar mesa
+			if (isSocket) {_cpSocketPintarPedido(null);}			
+
+		}).fail(() => {
+			guardandoPedido_cp = 0;
+			console.log('send p cero', guardandoPedido_cp);
+		});
 
 		// regresa xocupado
 		$(xObj_miPedido).removeClass('xDespachado');
@@ -1300,6 +1354,7 @@ function xLLamarPrintAddLUlI() {
 		if(!res){ //si no hay error
 			xPopupLoad.xclose();
 			xLoadDetallesPedido(xObj_miPedido);
+			
 			xNuevoPedidoCM();
 			xCloseLULI();
 		} else {
@@ -1795,24 +1850,9 @@ function xLoadMipedidoBD(dt){
 	$("#xBody").html(xCadenaGrupo).trigger('create');
 }
 
-/*
-function xLoadRegla(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=306', data:{i:xidCategoria}})
-	.done( function (DtR) {
-		var xDtR=$.parseJSON(DtR);
-		xDtR=xDtR.datos;
-		window.localStorage.setItem("::app3_sys_dta_rec",JSON.stringify(xDtR))
-	})
-}*/
 
 function xLoadDtPrintCM(){
-	/*$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=307'})
-	.done( function (DtPrint) {
-		xDtPrint=$.parseJSON(DtPrint);
-		xDtPrint=xDtPrint.datos;
-		window.localStorage.setItem("::app3_sys_dta_prt",JSON.stringify(xDtPrint))
-		xDtPrint=xm_log_get('sede_generales'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
-	});*/
+	
 	xDtPrint=xm_log_get('sede_generales'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 }
 
@@ -1956,6 +1996,7 @@ function xLLamarPrintAddLi(){
 			dialog_erro_print.open();
 		}else{
 			xPopupLoad.titulo='Exito!';
+			
 			xNuevoPedidoCM()
 			//setTimeout( function(){ xNuevoPedido(); }, 1500);
 
@@ -2091,14 +2132,7 @@ function quitarSubTotal(obj, index) {
 	xSumarTotalPedidos();
 }
 
-/*function xModificarTotalBD(xid_i,xid_pd,x_importe_i,x_cant_i,x_importe_ipd){
-	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=505', data:{i:xid_i,ipd:xid_pd,m:x_importe_i,c:x_cant_i,mpd:x_importe_ipd},function(){return false;}})
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=505', data:{i:xid_i,ipd:xid_pd,m:x_importe_i,c:x_cant_i,mpd:x_importe_ipd,icl_de:xid_carta_lista_de,icl_a:xid_carta_lista_a,iddescontar:xIDdescontar_en_item_lista,tabladescontar:xdescontar_en_item_lista}})
-	.done( function (a) {
-		//
-		xPopupLoad.xclose();
-	});
-}	*/
+
 function xOrdenPedido(op){
 	switch(op){
 		case 0:
@@ -2133,218 +2167,16 @@ function xFiltroPedidos(obj){
 		iIniIsotope = true;
 	}
 		
-	// setTimeout(() => {
-	// 	if (iIniIsotope) {
-	// 		$('.grid').isotope({ filter: xIdFiltro1 });
-	// 	} else {
-	// 		xLoadMesas();
-	// 	}		
-	// }, 1000);	
+	
 	
 }
 
-/*function xVerDetallePedido(obj){
-	var xidm=$(obj).attr('data-id');
-	var xidp=$(obj).attr('data-p');
-	var xnump=$(obj).attr('data-nump');
-	xparam='?m='+xidm+'?p='+xidp+'?np='+xnump;
-	xOpenPage(10,xparam);
-}
-*/
+
 async function xLoadMesas(){	
-	// if(EstadoLoadMesas) return;
-	// EstadoLoadMesas=true;
-
-
-	// var container_grid = $('#_gridCM');	
-	// $container.isotope( 'remove', 'xMiCardPedido' );
-	// $(".grid").isotope({		
-	// 	layoutMode: 'fitRows',		
-	// });
 	
-	// $('.grid').remove('.xMiCardPedido').trigger('create');
-
-	// get selector tipo consumo local
-	// const selector_tpc_local_id = await xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x => x.idtipo_consumo)[0];
-	// const selector_tpc_local = 'tpc' + selector_tpc_local_id;
-	// xIdFiltro1 = selector_tpc_local_id;
 
 	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');
 	xPintarMesas();
-	// xPintarEstadoPedido();
-	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5'})
-	// .done( function (NumMesa) {
-	// 	var xCadenaNumMesa='';
-	// 	var xCadenaPedidoOtros='';
-	// 	var xidtipo_c='tpc1';		
-
-		
-
-	// 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501'})
-	// 	.done( function (dtPe) {
-	// 		if($(".grid .xMiCardPedido").length>0){return;}
-			
-	// 		var xdtPe=$.parseJSON(dtPe)
-	// 		, xCadenaTPC=''
-	// 		, xcont_mesa=1
-	// 		, xindex
-	// 		, xtxtEstado='', xtxtEstadoDespachado='', itemList
-	// 		, xtxtHora='', xtxt_subtota_total=0;
-
-	// 		xCadenaNumMesa='';
-	// 		xdtPe=xdtPe.datos;
-	// 		for (var i = 0; i < NumMesa; i++) {
-	// 			xindex=-1;
-	// 			xtxtEstado='';
-	// 			xtxtEstadoDespachado = ''
-	// 			xtxtHora='';
-				
-	// 			itemList = xdtPe.filter(x => parseInt(x.nummesa) === parseInt(xcont_mesa))[0];
-	// 			if ( itemList ) {
-	// 				xindex = 0;
-	// 				xtxtEstado = 'xOcupado';
-	// 				xtxtEstadoDespachado = parseInt(itemList.despachado) === 0 ? '' : 'xDespachado';
-	// 				xtxtHora = itemList.hora;
-
-	// 				// retorna el total + subtotales
-	// 				xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
-	// 				xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xOcupado ' + xtxtEstadoDespachado + ' ' + selector_tpc_local + ' xCursor'
-	// 					+' data-estado="a" data-tpc="' + selector_tpc_local + '" data-hora="' + itemList.hora + '"' 
-	// 					+' data-p="' + itemList.idpedido + '" data-nummesa="' + itemList.nummesa + '"'
-	// 					+' data-correlativo="' + itemList.correlativo_dia + '"  data-numpedido="' + itemList.numpedido + '"'
-	// 					+' data-idcat="' + itemList.idcategoria + '" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">' +
-	// 					'<p class="tipo">Mesa</p>' +
-	// 					'<h3 class="numero xBold">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
-	// 					'<p class="tiempo xfont11">-</p>' +
-	// 					'<p class="importe xBold">S/. ' + xMoneda(xtxt_subtota_total) + '</p>' +
-	// 					'</div>');
-	// 			} else {
-	// 				xtxtEstado = 'xNeutro';
-	// 				xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
-	// 					'<p class="tipo">Mesa</p>' +
-	// 					'<h3 class="numero xBold">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
-	// 					'<p class="tiempo xfont11">disponible</p>' +
-	// 					'<p class="importe xBold">-</p>' +
-	// 					'</div>'
-	// 				);
-	// 			}
-
-	// 			// for (var z = 0; z < xdtPe.length; z++) {
-	// 			// 	// consumir en el local
-	// 			// 	if(xdtPe[z].nummesa!=xcont_mesa){continue;}
-	// 			// 	//if(xdtPe[z].solo_llevar==0){
-	// 			// 		xindex=z;
-	// 			// 		xtxtEstado='xOcupado';
-	// 			// 		xtxtEstadoDespachado = parseInt(xdtPe[z].despachado) === 0 ? '' : 'xDespachado';
-	// 			// 		xtxtHora=xdtPe[z].hora;
-	// 			// 	//}
-	// 			// 	break;
-	// 			// };
-
-	// 			// if(xindex==-1){
-	// 			// 	xtxtEstado='xNeutro';
-	// 			// 	xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xNeutro '+ selector_tpc_local+'" data-estado="b" data-tpc="'+ selector_tpc_local+'" data-abrir-detalle=0>'+
-	// 			// 		'<p class="tipo">Mesa</p>'+
-	// 			// 	    '<h3 class="numero xBold">'+xCeroIzq(xcont_mesa,2)+'</h3>'+
-	// 			// 	    '<p class="tiempo xfont11">disponible</p>'+
-	// 			// 	    '<p class="importe xBold">-</p>'+
-	// 			// 	'</div>'
-	// 			// 	);
-	// 			// }
-	// 			// else{
-	// 			// 	// retorna el total + subtotales
-	// 			// 	xtxt_subtota_total = xArmarSubtotalesFromTotal(xdtPe[xindex]);
-	// 			// 	xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xOcupado '+ xtxtEstadoDespachado+' '+ selector_tpc_local+' xCursor" data-estado="a" data-tpc="'+ selector_tpc_local+'" data-hora="'+xdtPe[xindex].hora+'" data-p="'+xdtPe[xindex].idpedido+'" data-nummesa="'+xdtPe[xindex].nummesa+'" data-correlativo="'+xdtPe[xindex].correlativo_dia+'"  data-numpedido="'+xdtPe[xindex].numpedido+'" data-idcat="'+xdtPe[xindex].idcategoria+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
-	// 			// 		'<p class="tipo">Mesa</p>'+
-	// 			// 	    '<h3 class="numero xBold">'+xCeroIzq(xcont_mesa,2)+'</h3>'+
-	// 			// 	    '<p class="tiempo xfont11">-</p>'+
-	// 			// 	    '<p class="importe xBold">S/. '+xMoneda(xtxt_subtota_total)+'</p>'+
-	// 			// 	'</div>');
-	// 			// }
-	// 			xcont_mesa++;
-	// 		}
-
-	// 		// para llevar / delivery / reserva / otros
-	// 		var xref_reserva='';
-	// 		xdtPe.filter(x => parseInt(x.nummesa) === 0 || parseInt(x.reserva) === 1).map(itemList => {
-	// 			// if (itemList) {
-	// 				xref_reserva = '';
-	// 				xidtipo_c = itemList.idtipo_consumo;
-	// 				if (parseInt(itemList.reserva) === 1) {
-	// 					xidtipo_c = '99';
-	// 					xref_reserva = '<p class="ref_reserva xfont12">' + itemList.referencia + '</p>';
-	// 				}
-
-	// 				xidtipo_c='tpc'+xidtipo_c;
-
-	// 				xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
-	// 				xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xOcupado '+xidtipo_c+' xCursor"'
-	// 					+' data-estado="a" data-tpc="'+xidtipo_c+'" data-hora="'+itemList.hora+'" data-p="'+itemList.idpedido+'"'
-	// 					+' data-nummesa="'+itemList.nummesa+'" data-correlativo="'+itemList.correlativo_dia+'"'
-	// 					+' data-numpedido="'+itemList.numpedido+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
-	// 					'<p class="tipo">Pedido</p>'+
-	// 					'<h3 class="numero xBold">'+xCeroIzq(itemList.correlativo_dia,4)+'</h3>'+
-	// 					'<p class="tiempo xfont11">-</p>'+xref_reserva+
-	// 					'<p class="importe xBold">S/. '+xMoneda(xtxt_subtota_total)+'</p>'+
-	// 				'</div>');
-	// 			// }
-	// 		});
-
-	// 		// for (var q = 0; q < xdtPe.length; q++) {
-	// 		// 	xref_reserva='';
-	// 		// 	xidtipo_c=xdtPe[q].idtipo_consumo;
-	// 		// 	if(xdtPe[q].reserva==1){
-	// 		// 		xidtipo_c='99';
-	// 		// 		xref_reserva='<p class="ref_reserva xfont12">'+xdtPe[q].referencia+'</p>';
-	// 		// 	}
-	// 		// 	else{
-	// 		// 		// if(xidtipo_c===1){continue;}
-	// 		// 		// if (xdtPe[q].tipo_consumo_titulo === 'LOCAL') { continue; }
-	// 		// 		if (xdtPe[q].nummesa > 0) { continue; }
-	// 		// 	}
-	// 		// 	xidtipo_c='tpc'+xidtipo_c;
-
-	// 		// 	xtxt_subtota_total = xArmarSubtotalesFromTotal(xdtPe[q]);
-	// 		// 	xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xOcupado '+xidtipo_c+' xCursor" data-estado="a" data-tpc="'+xidtipo_c+'" data-hora="'+xdtPe[q].hora+'" data-p="'+xdtPe[q].idpedido+'" data-nummesa="'+xdtPe[q].nummesa+'" data-correlativo="'+xdtPe[q].correlativo_dia+'" data-numpedido="'+xdtPe[q].numpedido+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
-	// 		// 		'<p class="tipo">Pedido</p>'+
-	// 		// 	    '<h3 class="numero xBold">'+xCeroIzq(xdtPe[q].correlativo_dia,4)+'</h3>'+
-	// 		// 	    '<p class="tiempo xfont11">-</p>'+xref_reserva+
-	// 		// 	    '<p class="importe xBold">S/. '+xMoneda(xtxt_subtota_total)+'</p>'+
-	// 		// 	'</div>');
-
-	// 		// };
-
-	// 		xIdFiltro1 = xIdFiltro1.indexOf('tpc')>-1 ? xIdFiltro1 : '.tpc' + xIdFiltro1;
-
-	// 		$('.grid').html($(xCadenaNumMesa)).trigger('create').isotope({
-	// 		  itemSelector: '.xMiCardPedido',
-	// 		  layoutMode: 'fitRows',
-	// 		  getSortData: {
-	// 		  	tpc: '[data-tpc]',
-	// 		    estado: '[data-estado]',
-	// 		    numero: '.numero parseInt'
-	// 		  },
-	// 		  sortBy: [ 'tpc','numero','estado' ],
-	// 		  filter: xIdFiltro1
-	// 		});
-
-	// 		iIniIsotope = true;
-
-	// 		// $grid.isotope('updateSortData');
-
-	// 		// $('.grid').isotope('reloadItems');
-	// 		// $grid.isotope('reloadItems');
-	// 		// $grid.isotope('reLayout');
-	// 		// $grid.isotope('layout');
-	// 		// $grid.isotope('layout');
-			
-
-	// 		xCadenaNumMesa='';
-	// 	});
-
-		// xLogRun_CuentaNumeroPedidos();
-		// EstadoLoadMesas = false;
-	// });
 	xLogRun_CuentaNumeroPedidos();
 }
 
@@ -2527,7 +2359,136 @@ function xPintarEstadoPedido() {
 		});
 }
 
+function _cpSocketPintarPedido(pedido) {	
+	xPintarEstadoPedido()
+}
+
+// xdtPe -> pedido
+// function pintarChildPedido(isInit, pedido) {
+// 	$(".xMiCardPedido .numero").each(function(index,element){
+// 	xindex=-1;
+// 	xtxtEstado='';
+// 	xtxtEstadoDespachado = ''
+// 	xtxtHora='', xdtPe = [];
+
+// 	const _eparent = $(element).parent();
+// 	xcont_mesa = element.textContent; //numero mesa
+
+// 	// itemList = xdtPe.filter(x => parseInt(x.nummesa) === parseInt(xcont_mesa))[0];
+// 	// isInit -> si esta iniciando el item viene del loadmesas, de
+// 	if (!isInit) {
+// 		if ( isSocket ) {
+// 			xdtPe.push(pedido);
+// 		} else {
+// 			xdtPe = pedido;
+// 		}
+// 	} else { xdtPe = pedido; }
+	
+// 	itemList = xdtPe.filter(x => xCeroIzq(x.nummesa, 2) === element.textContent || xCeroIzq(x.correlativo_dia, 4) === element.textContent)[0]
+// 	if ( itemList ) {
+// 	xindex = 0;
+// 	xtxtEstado = 'xOcupado';
+// 	xtxtEstadoDespachado = parseInt(itemList.despachado) === 0 ? '' : 'xDespachado';
+// 	xtxtHora = itemList.hora;
+
+// 	// retorna el total + subtotales
+// 	xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
+
+// 	// xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xOcupado ' + xtxtEstadoDespachado + ' ' + selector_tpc_local + ' xCursor'
+// 					// 	+' data-estado=" a" data-tpc="' + selector_tpc_local + '" data-hora="' + itemList.hora + '"' 
+// 					// 	+' data-p="' + itemList.idpedido + '" data-nummesa="' + itemList.nummesa + '"'
+// 					// 	+' data-correlativo="' + itemList.correlativo_dia + '" data-numpedido="' + itemList.numpedido + '"'
+// 					// 	+' data-idcat="' + itemList.idcategoria + '" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">' +
+// 		// '<p class="tipo">Mesa</p>' +
+// 		// '<h3 class="numero xBold">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
+// 		// '<p class="tiempo xfont11">-</p>' +
+// 		// '<p class="importe xBold">S/. ' + xMoneda(xtxt_subtota_total) + '</p>' +
+// 		// '</div>');
+
+// 	_eparent.removeClass('xNeutro');
+// 	_eparent.addClass('xOcupado');
+// 	_eparent.addClass('xCursor');
+// 	_eparent.addClass(xtxtEstadoDespachado);
+// 	// _eparent.addClass(xidtpc_item_up);
+// 	_eparent.find(".importe").text('S/. '+xMoneda(xtxt_subtota_total))
+// 	_eparent.attr('data-hora',itemList.hora);
+// 	_eparent.attr('data-p',itemList.idpedido);
+// 	_eparent.attr('data-nummesa',itemList.nummesa);
+// 	_eparent.attr('data-numpedido',itemList.numpedido);
+// 	_eparent.attr('data-correlativo',itemList.correlativo_dia);
+// 	_eparent.attr('data-estado','a');
+// 	// _eparent.attr('data-tpc', xidtpc_item_up);
+// 	_eparent.attr('data-abrir-detalle','1');
+// 	_eparent.click(function(e){
+// 	xLoadDetallesPedido(_eparent)
+// 	e.stopPropagation();
+// 	e.stopImmediatePropagation()
+// 	});
+
+// 	itemList.actualizado=true;
+// 	// xactualiza = true;
+// 	// } else {
+// 	// xtxtEstado = 'xNeutro';
+// 	// xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '"
+// 		// data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
+// 		// '<p class="tipo">Mesa</p>' +
+// 		// '<h3 class="numero xBold">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
+// 		// '<p class="tiempo xfont11">disponible</p>' +
+// 		// '<p class="importe xBold">-</p>' +
+// 		// '</div>'
+// 	// );
+// 	}
+
+// 	// xcont_mesa++;
+// 	});
+
+// 	// para llevar / delivery / reserva / otros
+// 	var xref_reserva='';
+// 	// xdtPe.filter(x => parseInt(x.nummesa) === 0 || parseInt(x.reserva) === 1).map(itemList => {
+// 	xdtPe.filter(x => !x.actualizado).map(itemList => {
+// 	// if (itemList) {
+// 	xref_reserva = '';
+// 	xidtipo_c = itemList.idtipo_consumo;
+// 	if (parseInt(itemList.reserva) === 1) {
+// 	xidtipo_c = '99';
+// 	xref_reserva = '<p class="ref_reserva xfont12">' + itemList.referencia + '</p>';
+// 	}
+
+// 	xidtipo_c='tpc'+xidtipo_c;
+
+// 	xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
+// 	xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido xOcupado '+xidtipo_c+' xCursor"'
+// 						+' data-estado="a" data-tpc="'+xidtipo_c+'" data-hora="'+itemList.hora+'" data-p="'+itemList.idpedido+'"'
+// 						+' data-nummesa="'+itemList.nummesa+'" data-correlativo="'+itemList.correlativo_dia+'"'
+// 						+' data-numpedido="'+itemList.numpedido+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
+// 		'<p class="tipo">Pedido</p>'+
+// 		'<h3 class="numero xBold">'+xCeroIzq(itemList.correlativo_dia,4)+'</h3>'+
+// 		'<p class="tiempo xfont11">-</p>'+xref_reserva+
+// 		'<p class="importe xBold">S/. '+xMoneda(xtxt_subtota_total)+'</p>'+
+// 		'</div>');
+// 	// }
+// 	});
+
+// 	if(xCadenaNewItem!=''){
+// 	var $items=$(xCadenaNewItem);
+// 	$('.grid').append($items).isotope( 'appended', $items );
+// 	}
+
+// 	$('.grid').isotope('updateSortData');
+
+// 	iIniIsotope = true;
+
+// 	xCadenaNewItem='';
+
+// 	xResetMesaDefault(xdtPe.map(x => {
+// 	const _val = x.nummesa == 0 ? '|'+xCeroIzq(x.correlativo_dia,4)+'|' : '|'+xCeroIzq(x.nummesa,2)+'|';
+// 	return _val;
+// 	}).join(','));
+// }
+
 function xLogRun_CuentaNumeroPedidos(){
+	if ( isSocket) { return; }
+
 	if(typeof(EventSource) !== "undefined") {
 	    xsourceEvent = new EventSource("../../bdphp/log_run.php?op=1");
 	    xsourceEvent.onmessage = function(event) {
@@ -2544,6 +2505,7 @@ function xLogRun_CuentaNumeroPedidos(){
 }
 
 function xVerificarSiActualizaItems(){
+	if (isSocket) {return; }
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50101'})
 	.done( function (dtRptI) {
 		dtRptI=parseInt(dtRptI);
@@ -2554,179 +2516,10 @@ function xVerificarSiActualizaItems(){
 	})
 }
 function xActualizarItems(){
-	xPintarEstadoPedido();
+	if (!isSocket)  {
+		xPintarEstadoPedido();
+	}
 
-	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501'})
-	// 	.done( function (dtPe) {
-	// 		var xdtPe=$.parseJSON(dtPe)
-	// 		, xCadenaTPC=''
-	// 		, xnum_mesa_item
-	// 		, xupdate=0
-	// 		, xidtpc_item_up=''
-	// 		, xref_reserva=''
-	// 		, xCadenaNewItem='', xtxt_subtota_total=0, xdespachado_class='', xmesa_evaluadas='', itemList;
-	// 		xdtPe=xdtPe.datos.map( x => {x.actualizado = false; return x});
-
-	// 		const _lengthDt = xdtPe.length;
-	// 		// for (var i = 0; i < _lengthDt; i++) {
-	// 			//si es mesa actualiza
-	// 			var xactualiza=false;
-	// 			// xnum_mesa_item=xCeroIzq(xdtPe[i].nummesa,2);
-	// 			// if(xdtPe[i].nummesa==0){xnum_mesa_item=xCeroIzq(xdtPe[i].correlativo_dia,4);}
-	// 			// xdespachado_class = parseInt(xdtPe[i].despachado) === 0 ? '' : 'xDespachado'; 
-
-	// 			// xtxt_subtota_total = xArmarSubtotalesFromTotal(xdtPe[i]);
-
-	// 			$(".xMiCardPedido .numero").each(function(index,element){
-					
-	// 				const _eparent = $(element).parent();
-	// 				itemList = xdtPe.filter(x => xCeroIzq(x.nummesa, 2) === element.textContent || xCeroIzq(x.correlativo_dia, 4) === element.textContent)[0];
-	// 				if ( itemList ) {												
-	// 					xdespachado_class = parseInt(itemList.despachado) === 0 ? '' : 'xDespachado';
-	// 					xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
-
-	// 					if (!itemList.actualizado) {
-	// 						xidtpc_item_up='tpc'+itemList.idtipo_consumo;
-	// 						_eparent.addClass(xidtpc_item_up);	
-	// 						_eparent.attr('data-tpc', xidtpc_item_up);													
-	// 					}
-
-	// 					_eparent.removeClass('xNeutro');
-	// 					_eparent.addClass('xOcupado');
-	// 					_eparent.addClass('xCursor');
-	// 					_eparent.addClass(xdespachado_class);
-	// 					// _eparent.addClass(xidtpc_item_up);
-	// 					_eparent.find(".importe").text('S/. '+xMoneda(xtxt_subtota_total))
-	// 					_eparent.attr('data-hora',itemList.hora);
-	// 					_eparent.attr('data-p',itemList.idpedido);
-	// 					_eparent.attr('data-nummesa',itemList.nummesa);
-	// 					_eparent.attr('data-numpedido',itemList.numpedido);
-	// 					_eparent.attr('data-correlativo',itemList.correlativo_dia);
-	// 					_eparent.attr('data-estado','a');
-	// 					// _eparent.attr('data-tpc', xidtpc_item_up);
-	// 					_eparent.attr('data-abrir-detalle','1');
-	// 					_eparent.click(function(e){
-	// 						xLoadDetallesPedido(_eparent)
-	// 						// event.stopPropagation();
-	// 						e.stopPropagation();
-	// 						e.stopImmediatePropagation()
-	// 					});
-	// 					itemList.actualizado=true;
-	// 					xactualiza = true;
-	// 					// $(element).parent().attr('data-tpc', 'tpc' + xdtPe[i].idtipo_consumo);
-	// 				}
-	// 			});
-
-	// 			//agrega // para llevar / delivery / reserva / otros
-	// 			xdtPe.filter(x => !x.actualizado).map(x => {
-	// 				itemList = x;
-	// 				xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
-	// 				xidtpc_item_up = 'tpc' + itemList.idtipo_consumo;		
-	// 				xref_reserva = '';
-	// 					//if(xdtPe[i].idtipo_consumo!=1){
-	// 				// xidtpc_item_up = itemList.idtipo_consumo;
-	// 				if (itemList.reserva == 1) {
-	// 					xidtpc_item_up = '99';
-	// 					xref_reserva = '<p class="ref_reserva xfont12">' + itemList.referencia + '</p>';
-	// 				}
-
-	// 					// xidtpc_item_up = 'tpc' + xidtpc_item_up;
-	// 				xCadenaNewItem = String(xCadenaNewItem + '<div class="xMiCardPedido xOcupado ' + xidtpc_item_up + '" data-estado="a" data-tpc="' + xidtpc_item_up + '" data-hora="' + itemList.hora + '" data-p="' + itemList.idpedido + '" data-nummesa="' + itemList.nummesa + '" data-correlativo="' + itemList.correlativo_dia + '" data-numpedido="' + itemList.numpedido + '" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">' +
-	// 					'<p class="tipo">Pedido</p>' +
-	// 					'<h3 class="numero xBold">' + xCeroIzq(itemList.correlativo_dia, 4) + '</h3>' +
-	// 					'<p class="tiempo xfont11">-</p>' + xref_reserva +
-	// 					'<p class="importe xBold">S/. ' + xMoneda(xtxt_subtota_total) + '</p>' +
-	// 					'</div>');					
-	// 			});				
-					
-	// 				// if(xnum_mesa_item==element.textContent){						
-	// 				// 	// if(xdtPe[i].nummesa!=0 && xdtPe[i].idtipo_consumo==1){
-	// 				// 	if (xdtPe[i].nummesa != 0 && xdtPe[i].tipo_consumo_titulo === 'LOCAL') {
-	// 				// 		xidtpc_item_up='tpc'+xdtPe[i].idtipo_consumo;														
-
-	// 				// 		_eparent.removeClass('xNeutro');
-	// 				// 		_eparent.addClass('xOcupado');
-	// 				// 		_eparent.addClass('xCursor');
-	// 				// 		_eparent.addClass(xdespachado_class);
-	// 				// 		_eparent.addClass(xidtpc_item_up);
-	// 				// 		_eparent.find(".importe").text('S/. '+xMoneda(xtxt_subtota_total))
-	// 				// 		_eparent.attr('data-hora',xdtPe[i].hora);
-	// 				// 		_eparent.attr('data-p',xdtPe[i].idpedido);
-	// 				// 		_eparent.attr('data-nummesa',xdtPe[i].nummesa);
-	// 				// 		_eparent.attr('data-numpedido',xdtPe[i].numpedido);
-	// 				// 		_eparent.attr('data-correlativo',xdtPe[i].correlativo_dia);
-	// 				// 		_eparent.attr('data-estado','a');
-	// 				// 		_eparent.attr('data-abrir-detalle','1');
-	// 				// 		_eparent.click(function(e){
-	// 				// 			xLoadDetallesPedido(_eparent)
-	// 				// 			// event.stopPropagation();
-	// 				// 			e.stopPropagation();
-	// 				// 			e.stopImmediatePropagation()
-	// 				// 		});
-
-	// 				// 		//$(element).parent().attr('data-tpc','tpc'+xdtPe[i].idtipo_consumo);
-	// 				// 		xactualiza=true;
-	// 				// 		return false;
-	// 				// 	}else{xactualiza=true;}
-						
-	// 					// return false;
-	// 				// } 
-	// 				// else {
-	// 				// 	_eparent.addClass('xNeutro');
-	// 				// 	_eparent.removeClass('xOcupado');
-	// 				// 	_eparent.removeClass('xCursor');
-	// 				// 	_eparent.addClass('tpc1');
-	// 				// 	_eparent.find(".importe").text('-');
-	// 				// 	_eparent.attr('data-hora','disponible');						
-	// 				// }
-	// 				/*}else{
-	// 					$(element).parent().addClass('xNeutro');
-	// 					$(element).parent().removeClass('xOcupado');
-	// 					$(element).parent().removeClass('xCursor');
-
-	// 					$(element).parent().addClass('tpc1');
-	// 					$(element).parent().find(".importe").text('-');
-	// 					$(element).parent().attr('data-hora','disponible');
-
-	// 				}*/
-	// 			// });
-
-	// 			//agrega // para llevar / delivery / reserva / otros
-	// 			// if(xactualiza==false){
-	// 			// 	xref_reserva='';
-	// 			// 	//if(xdtPe[i].idtipo_consumo!=1){
-	// 			// 		xidtpc_item_up=xdtPe[i].idtipo_consumo;
-	// 			// 		if(xdtPe[i].reserva==1){
-	// 			// 			xidtpc_item_up='99';
-	// 			// 			xref_reserva='<p class="ref_reserva xfont12">'+xdtPe[i].referencia+'</p>';
-	// 			// 		}
-
-	// 			// 		xidtpc_item_up='tpc'+xidtpc_item_up;
-	// 			// 		xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido xOcupado '+xidtpc_item_up+'" data-estado="a" data-tpc="'+xidtpc_item_up+'" data-hora="'+xdtPe[i].hora+'" data-p="'+xdtPe[i].idpedido+'" data-nummesa="'+xdtPe[i].nummesa+'" data-correlativo="'+xdtPe[i].correlativo_dia+'" data-numpedido="'+xdtPe[i].numpedido+'" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">'+
-	// 			// 			'<p class="tipo">Pedido</p>'+
-	// 			// 		    '<h3 class="numero xBold">'+xCeroIzq(xdtPe[i].correlativo_dia,4)+'</h3>'+
-	// 			// 		    '<p class="tiempo xfont11">-</p>'+xref_reserva+
-	// 			// 		    '<p class="importe xBold">S/. '+xMoneda(xtxt_subtota_total)+'</p>'+
-	// 			// 		'</div>');
-
-	// 			// 		//continue;
-	// 			// 	//}
-	// 			// }
-	// 		// });
-
-
-	// 		if(xCadenaNewItem!=''){
-	// 			var  $items=$(xCadenaNewItem);
-	// 			$('.grid').append($items).isotope( 'appended', $items );
-	// 		}
-
-	// 		$('.grid').isotope('updateSortData');	
-			
-	// 		xResetMesaDefault(xdtPe.map(x => {
-	// 			const _val = x.nummesa == 0 ? '|'+xCeroIzq(x.correlativo_dia,4)+'|' : '|'+xCeroIzq(x.nummesa,2)+'|';
-	// 			return _val;
-	// 			}).join(','));
-	// 	});
 }
 
 function xResetMesaDefault(_num) {
@@ -2811,14 +2604,6 @@ function xLoadItems_add(){
 		});
 	});
 }
-/*function xSumarTotalesxxxx(){
-	var xImporteTotal=xMoneda(xSumaCantRowVisible($("#tb_mesa"),'.ximporte_row'));
-	var xnumpedidos=xCeroIzq(xSumaCantRowVisible($("#tb_mesa"),'.xnum_pedidos_row'),2);
-	var xCadenT='<tr class="row_total xpie_row1"><td class="xBold" colspan="3" align="right">Total</td><td class="xBold" align="right">'+xImporteTotal+'</td><td class="xBold" align="center">'+xnumpedidos+'</td><td class="">-</td></tr>';
-
-	$("#tb_mesa .row_total").remove();
-	$("#tb_mesa").append(xCadenT).trigger('create');
-}*/
 
 
 Polymer({
@@ -2841,6 +2626,7 @@ Polymer({
 
 		xIniControlMesa();
 		xbuscar_mesa = false;
+		_cpSocketIsConnect();
 		// if ( xThisCM ) {return}
     	
     },
@@ -2848,9 +2634,11 @@ Polymer({
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);
     	clearInterval(xRefreshPermiso);
-			xbuscar_mesa=true;		
+		xbuscar_mesa=true;		
 
-			xsourceEvent.close();			
+		xsourceEvent.close();			
+		
+		_cpSocketClose();
     }
 })
 </script>

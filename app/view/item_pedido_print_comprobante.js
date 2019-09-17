@@ -474,18 +474,33 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 			break;
 	}
 	
-	_data = JSON.stringify(_data);
+	_data = JSON.stringify(_data);	
 
 	$.ajax({
 		url: '../../bdphp/log_003.php?op=1',
 		type: 'POST',		
-		data: {			
+		data: {
 			datos: _data,
 			idprint_server_estructura: _idprint_server_estructura,
 			tipo: _tipo
 		}
 	})
 	.done((UltimoIdPrint)=> {	
+		const _isSocket = isSocket ? isSocket : false;
+		if ( _isSocket ) {
+			const dataSend = {			
+				detalle_json: _data,
+				idprint_server_estructura: _idprint_server_estructura,
+				tipo: _tipo,
+				descripcion_doc: _tipo,
+				nom_documento: _tipo,
+				idprint_server_detalle: UltimoIdPrint
+			}
+	
+			_cpSocketEmitPrinterOnly(dataSend);
+			return;
+		}
+
 		// console.log(x);
 		
 		// // esperar respuesta // si hay algun error

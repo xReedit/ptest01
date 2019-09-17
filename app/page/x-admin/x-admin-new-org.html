@@ -79,9 +79,17 @@
 							<input type="password" class="xMiInput xPasarEnter2" id="id_api_comprobante" name="id_api_comprobante" espaciar>
 							
 							<br><br>
-							<p><strong>Plataforma | local o web</strong></p>
-							<input type="text" class="xMiInput xPasarEnter2" placeholder="RUN LOCAL?" id="sys_local" name="sys_local" espaciar>
-							<input type="text" class="xMiInput xPasarEnter2" placeholder="IP PRINT SERVER" id="ip_server_local" name="ip_server_local" espaciar>
+							<p><strong>Plataforma | local o web</strong></p>							
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="IP PRINT SERVER" id="ip_server_local" name="ip_server_local" espaciar>							
+							<paper-checkbox id="check_print_server"><span>Print server desde la web | version de internet</span></paper-checkbox>
+							<br><br>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="TIEMPO LIMITE EN MINUTOS PARA TOMAR PEDIDO" id="pwa_time_limit" name="pwa_time_limit" espaciar>
+							<paper-checkbox id="check_pwa"><span>PWA con sockets</span></paper-checkbox>
+
+							<div class="xInvisible">
+								<input type="text" class="xMiInput xPasarEnter2" placeholder="RUN LOCAL?" id="sys_local" name="sys_local" espaciar>
+								<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="pwa" name="pwa" espaciar>
+							</div>
 
 							<br><br>
 							<p><strong>Escenario</strong></p>
@@ -135,6 +143,13 @@
 		$("#frm_sede #idorg").val(xThisAdminNew.xIdOrg);
 		$("#frm_sede #idsede").val(xThisAdminNew.xIdSede);
 		$("#frm_sede #tipo").val(selTipoVal);
+
+		const _printServerCheck = check_print_server.checked ? 1 : 0;
+		const _pwaCheck = check_pwa.checked ? 1 : 0;
+
+		$("#frm_sede #sys_local").val(_printServerCheck);
+		$("#frm_sede #pwa").val(_pwaCheck);
+
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede", $("#frm_sede").serialize(), function (id) {
 			xPopupLoad.xclose();
 
@@ -203,7 +218,12 @@
 		$("#frm_sede #id_api_comprobante").val(dataSede.id_api_comprobante);
 		$("#frm_sede #sys_local").val(dataSede.sys_local);
 		$("#frm_sede #ip_server_local").val(dataSede.ip_server_local);
+		$("#frm_sede #pwa").val(dataSede.pwa);
 		$("#frm_sede #finicio").val(dataSede.finicio);
+		$("#frm_sede #pwa_time_limit").val(dataSede.pwa_time_limit);
+
+		check_print_server.checked = dataSede.ip_server_local === "0" ? false : true;
+		check_pwa.checked = dataSede.pwa === "0" ? false : true;
 		selTipo.value = dataSede.tipo;
 	}
 

@@ -3,7 +3,10 @@
 <dom-module id="x-monitor-pedidos">
 	<script src="../../js/isotope.pkgd.min.js"></script>
 	<script type="text/javascript" src="../../js/raphael.2.1.0.min.js"></script>
-	<script type="text/javascript" src="../../js/justgage.js"></script>
+	<script type="text/javascript" src="../../js/justgage.js"></script>	
+	<script rel="preload" src="../view/xm_all.js"></script>
+	<!-- <script type="text/javascript" src="../../js/socket.io.js"></script> -->
+	<script type="text/javascript" src="../view/socket.service.js"></script>
 	<template>
 		<paper-dialog id="dialog_cambiar_pedidos_x_hora" class="dialog_redondo" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -18,6 +21,29 @@
 				<br><br>
 			</div>
 		</paper-dialog>
+
+		<!-- nuevo item -->
+		<paper-dialog id="dialog_new_item" class="dialog_redondo" modal  entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<br>
+				<h4><span id="newItemTitulo"></span></h4>
+				<div class="xLinea2"></div>
+				<br>				
+				<!-- <input type="text" class="xMiInput xMiInput xPasarEnter2" onChange="conMayusculas(this)" placeholder="Descripcion del item" id="txt_des_item" espaciar> -->
+				<form id="frmNewItem">
+					<input type="text" id="txt_des_item" data-id="" class="xMiInput xPasarEnter2 des_item" placeholder="ITEM" onChange="conMayusculas(this)" required espaciar autofocus>
+					<input type="number" min="0" placeholder="Precio" pattern="[0-9]+([\.,][0-9]+)?" step="any" onblur="xRetornaMoneda(this)"   class="xMiInput xMiInput xPasarEnter2" id="txt_precio_item" required espaciar>
+					<input type="text" class="xMiInput xMiInput xPasarEnter2" onChange="conMayusculas(this)" placeholder="Cantidad" id="txt_cantidad_item" required espaciar>
+				</form>
+				<br><br><br>
+
+				<div class="xBoton2 xAzul" dialog-dismiss onclick="guardarNewItem()">Listo, Agregar</div>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+				<br><br><br>
+			</div>
+		</paper-dialog>
+
+
 		<div class="xContent">
 			<div id="result"></div>
 			<br><br>
@@ -25,8 +51,8 @@
 			<div class="xEncanezadoCard xFondoRowAmarillo2">
 				<p><strong>La tabla indica las cantidades vendidas y el stock actual, antes del cierre, las cantidades se actualizan automaticamente. De clic en la cantidad del stock para modificar.</strong></p>
 			</div>
-			<div class="xAlinearce" style="width:100%;">
-				<div class="xm_at_cont xAlinearce xBordeDe">
+			<div class="xAlinearce" style="width:100%;">				
+				<div class="xm_at_cont xAlinearce xBordeDe">					
 					<h3>Carta: 
 					<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-categoria></h3>
 					<br>
@@ -59,7 +85,7 @@
 			height: 20px;
 		}
 
-		.paper-spinner-a { width:15px; height:15px; }
+		.paper-spinner-a { width:15px; height:15px; }		
 	</style>
 <script>
 var $table;
@@ -71,7 +97,9 @@ var xThisMonPe,
 	xDt_sede_other,
 	source,
 	xValCountPedidos=0,
-	idCategoriaSel, cnf_CategoriaSel;
+	idCategoriaSel, cnf_CategoriaSel, xArrayEncaUlLi, _seccionNewItem,
+	isSocket = false;
+
 
 function xIniMonPe(){
 	xPopupLoad=document.getElementById('xLoad');
@@ -86,11 +114,120 @@ function xIniMonPe(){
 
 		$("#Titulo_page").text("Monitoreo del stock");
 		
+		xCargarEnInputItem();
 		graf_ped_x_hora=null;
 		xRefrecarGrafico(0);
 		config_valoresInicialesComponenteCategoria();
-	})
+
+		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
+		console.log('isSocket', isSocket);
+	});
+
+	$('.xPasarEnter2').on('keyup',function(e){
+			var code=e.which;
+			if ( code==13||code==186 ) {
+				var inputs = $('input'); // storage a array of Inputs
+			    var a = inputs.index(document.activeElement);
+			    if (inputs[a + 1] !== null)
+			    {
+			      var nextBox = inputs[a + 1];
+			      if(nextBox===undefined){return}
+			      if(nextBox.disabled){nextBox = inputs[a + 2]}
+
+			      if(nextBox==undefined){return;}
+			  	  nextBox.focus();
+			  	  nextBox.select();
+			    }
+			    event.stopPropagation();
+			    e.stopPropagation();
+			    e.stopImmediatePropagation()
+			    return false;
+	  		}
+		});
 }
+
+// AGREGAR NUEVO ITEM //
+
+function xCargarEnInputItem(){
+	//categoria
+	var xdtI;
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2'})
+	.done( function (dtI) {
+		xdtI=$.parseJSON(dtI);
+		xdtI=xdtI.datos;
+		
+		// var xdtI=xThisCarta.dt_item;
+		var xObjTxtItem=$("#txt_des_item");
+		xObjTxtItem.autocomplete({
+			autoFocus:true,
+			source:xdtI,
+			appendTo: '#dialog_new_item',
+			select: function( event, ui ) {
+				xObjTxtItem.val(ui.item.label);
+		        xObjTxtItem.attr('data-value',ui.item.value);
+		        xObjTxtItem.parents().find('#txt_precio_item').val(ui.item.precio);
+		        //xObjTxtItem.parents('tr').find('#item_precio').focus();
+		        return false;
+		    },
+		    focus:function(event, ui){return false;},
+		    change:function( event, ui ) {
+		    	if(ui.item===null){
+		    		xObjTxtItem.attr('data-value',"");
+		    		xObjTxtItem.parents().find('#txt_precio_item').val('');
+		    	}
+		    	return false;
+		    }
+		});
+
+	});
+
+	
+}
+
+function xOpenDialogNewItem(index) {
+	_seccionNewItem = xArrayEncaUlLi[index];
+	newItemTitulo.textContent = _seccionNewItem.des_seccion
+	dialog_new_item.open();
+	console.log('seccion agregar', _seccionNewItem);
+}
+
+function guardarNewItem() {
+	xvalidateFormInput('frmNewItem',function(a){
+		if(a===false){return;}
+		xPopupLoad.xopen();
+		_seccionNewItem.id_item = txt_des_item.dataset.value;
+		_seccionNewItem.des_item = txt_des_item.value;
+		_seccionNewItem.precio_item = txt_precio_item.value;		
+		_seccionNewItem.cant_item = txt_cantidad_item.value;		
+		_seccionNewItem.det_item = '';
+		_seccionNewItem.img_item = '';
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204002',data:{item: _seccionNewItem}})
+		.done( function (xid) {
+			var rpt = xid.split('|');
+			_seccionNewItem.idcarta_lista = rpt[0];
+			_seccionNewItem.iditem = rpt[1];
+			_seccionNewItem.cantidad = _seccionNewItem.cant_item;
+			_seccionNewItem.des = _seccionNewItem.des_item;
+			_seccionNewItem.detalles = '';
+			_seccionNewItem.idseccion = parseInt(_seccionNewItem.idseccion);
+			_seccionNewItem.imprimir_comanda = 1;
+			_seccionNewItem.isalmacen = 0;
+			_seccionNewItem.isporcion = "0";
+			_seccionNewItem.precio = _seccionNewItem.precio_item;
+			_seccionNewItem.procede = 1;
+
+			const _isSocket = isSocket ? isSocket : false;
+			if (isSocket) {_monitoreoSocketEmitNewItemInCarta(_seccionNewItem);}			
+
+			$('#frmNewItem').reset();
+			xPopupLoad.xclose();
+			xLoadAllItem();
+		});
+	});
+}
+
+// AGREGAR NUEVO ITEM //
+
 function _getCategoria($event) {
 	this.cnf_CategoriaSel = $event;
 	this.idCategoriaSel = $event.idcategoria;
@@ -105,6 +242,8 @@ function config_valoresInicialesComponenteCategoria() {
 }
 
 function xLogRun_CoutPedido(){
+	const _isSocket = isSocket ? isSocket : false;
+	if (isSocket) {return; }
 	if(typeof(EventSource) !== "undefined") {
 	    source = new EventSource("../../bdphp/log_run.php?op=1");
 	    source.onmessage = function(event) {
@@ -162,15 +301,20 @@ function xLoadAllItem(){
 	.done( function (DtItemP) {
 		var xDtItemP=$.parseJSON(DtItemP),
 				xcandena_a='',
-				xArrayEncaUlLi=[],
 				xNom_seccion_ul='';
 
+		xArrayEncaUlLi=[];
 		xDtItemP=xDtItemP.datos;
 
 		//encabezados
 		for (var i = 0; i < xDtItemP.length; i++) {
 			if(xNom_seccion_ul==xDtItemP[i].des_seccion){continue;}
-			xArrayEncaUlLi.push({'id':xDtItemP[i].idseccion,'des_seccion':xDtItemP[i].des_seccion});
+			xArrayEncaUlLi.push({'id':xDtItemP[i].idseccion,
+									'des_seccion':xDtItemP[i].des_seccion, 
+									'idseccion':xDtItemP[i].idseccion, 
+									'idcarta': xDtItemP[i].idcarta, 
+									'idcategoria': xDtItemP[i].idcategoria, 
+									'sec_orden': xDtItemP[i].sec_orden});
 			xNom_seccion_ul=xDtItemP[i].des_seccion;
 		}
 
@@ -180,7 +324,7 @@ function xLoadAllItem(){
 			xIdUlIl=xArrayEncaUlLi[z].id;
 			xCadenaHeadUlDt=String('<div class="table-titulo">'+
 					'<div class="table-like__item">'+
-						'<span class="name"><p class="xfont16 xBold pos-relative">'+xArrayEncaUlLi[z].des_seccion+'</p></span>'+
+						'<span class="name"><p class="xfont16 xBold pos-relative">'+xArrayEncaUlLi[z].des_seccion+' <span class="btnAddItem xfont12 xCursor" onClick="xOpenDialogNewItem('+z+')">Agregar</span></p></span>'+
 						'<span class="stock valing-b">Stock</span>'+
 						'<span class="number valing-b">Salio</span>'+
 					'</div>'+
@@ -188,9 +332,9 @@ function xLoadAllItem(){
 			xcandena_a='';
 			for (var p = 0; p < xDtItemP.length; p++) {
 				if(xIdUlIl==xDtItemP[p].idseccion){
-					xcandena_a=String(xcandena_a+'<li class="table-like__item row li'+xDtItemP[p].idcarta_lista+'">'+
+					xcandena_a=String(xcandena_a+'<li class="table-like__item row li'+xDtItemP[p].idcarta_lista+'" id="li'+xDtItemP[p].idcarta_lista+'">'+
 							    '<div class="name text_puntos">'+xDtItemP[p].plato+'</div>'+
-							    '<div class="stock xCursor contar" data-iditem="'+xDtItemP[p].iditem+'" data-idcarta_lista="'+xDtItemP[p].idcarta_lista+'" data-procede="'+xDtItemP[p].procede+'" id="cantidad_stock" title="editar" onclick="xModRow(this);"><strong>'+xCeroIzq(xDtItemP[p].cantidad,2)+'</strong></div>'+
+							    '<div class="stock xCursor contar" data-isporcion="'+xDtItemP[p].isporcion+'" data-iditem="'+xDtItemP[p].iditem+'" data-idcarta_lista="'+xDtItemP[p].idcarta_lista+'" data-procede="'+xDtItemP[p].procede+'" id="cantidad_stock" title="editar" onclick="xModRow(this);"><strong>'+xCeroIzq(xDtItemP[p].cantidad,2)+'</strong></div>'+
 							    '<div class="number contar cant_vendido" id="cantidad_vendido">'+xCeroIzq(xDtItemP[p].cant_vendido,2)+'</div>'+
 							  '</li>');
 				}
@@ -222,6 +366,52 @@ function xLoadAllItem(){
 		//$table.isotope( 'reloadItems' ).isotope();
 	});
 }
+
+function monitoreoStockEmitItemModificado(objItem) {
+	
+	const item = {
+		cantidad: parseInt(objItem.val())
+		, idcarta_lista: objItem.parent().attr('data-idcarta_lista')
+		, iditem: objItem.parent().attr('data-iditem')		
+		, isalmacen: objItem.parent().attr('data-procede') === '1' ? 0 : 1
+		, isporcion: objItem.parent().attr('data-isporcion')
+	}
+
+	_monitoreoSocketEmitItemModificado(item);
+	_monitoreoStockItemModificado(item); // class estado
+
+}
+
+function _monitoreoStockItemModificado(item){
+	const idFind = '#li' + item.idcarta_lista;	
+	const xCant_stock = item.cantidad;
+	var xClassRow = '';
+	$(idFind + ' div.stock').text(item.cantidad);
+
+	// (idFind + ' div.number').text(xCeroIzq(item.,2));
+	$(idFind + ' div.stock').html('<strong>'+xCeroIzq(xCant_stock,2)+'<strong>');
+
+	setRowClassEstado(item);	
+}
+
+function _monitoreoStockNuevoPedido() {
+	xIntervalGraficoPxH();
+}
+
+function setRowClassEstado(item) {
+	const idFind = '#li' + item.idcarta_lista;
+	const xCant_stock = item.cantidad;
+	var xClassRow = '';
+	if(xCant_stock<6){xClassRow='xFondoRowRojo';} else if(xCant_stock<11){xClassRow='xFondoRowAmarillo' ;}
+	$(idFind).removeClass('xFondoRowRojo'); 
+	$(idFind).removeClass('xFondoRowAmarillo'); 
+	$(idFind).addClass(xClassRow);
+	
+	$table.isotope( 'reloadItems' ).isotope();
+	xSumarTotales();
+}
+
+
 function xModRow(obj,tipo){
 	var xvalObj=$(obj).text();
 	xValCantAnterior=xvalObj;
@@ -230,7 +420,8 @@ function xModRow(obj,tipo){
 	$(obj).find('input').select();
 	xActualizar=1;
 }
-function xModBlur(obj,tipo){
+function xModBlur(obj,tipo){	
+	
 	var xvalObj=$(obj).val();
 	if(xvalObj==xValCantAnterior){
 	$(obj).parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
@@ -241,6 +432,17 @@ function xModBlur(obj,tipo){
 	var xProcede=$(obj).parent().attr('data-procede'),
 			xidcarta_lista=$(obj).parent().attr('data-idcarta_lista'),
 			xiditem=$(obj).parent().attr('data-iditem');
+
+		
+	if (isSocket) { // si es pwa con socket
+		monitoreoStockEmitItemModificado($(obj));
+
+		$(obj).parent().html('<paper-spinner id="aax" class="paper-spinner-a" active></paper-spinner>').trigger('create');
+		$("#aax").parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
+		$("#aax").remove();
+		// $table.isotope( 'reloadItems' ).isotope();
+		return;
+	}
 
 	$(obj).parent().html('<paper-spinner id="aax" class="paper-spinner-a" active></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1901', data:{p:xProcede,idcl:xidcarta_lista,idi:xiditem,c:xvalObj}})
@@ -318,16 +520,20 @@ function xCambiarMaxPxH(){
 	});
 }
 
+
+
 Polymer({
 	is:'x-monitor-pedidos',
 	properties:{
 		xval_pedidos_x_hora:Number
 	},
 	attached:function(){
-    	xThisMonPe=this;
-    	xIniMonPe();
+		xThisMonPe=this;
+		xIniMonPe();		
+		_monitoreoSocketIsConnect();
   	},
   	detached:function(){
+		_monitoreoSocketClose();
     	source.close();
   	}
 });
