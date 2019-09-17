@@ -13,7 +13,7 @@ isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 function _monitoreoSocketOpen() {    
     if (!isSocket) { return; }
 
-    socketMonitoreo = io.connect('http://localhost:5819', {
+    socketMonitoreo = io.connect(URL_SOCKET, {
         query: dataSocket
     });
 

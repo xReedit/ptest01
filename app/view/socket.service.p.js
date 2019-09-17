@@ -9,7 +9,7 @@ var dataSocket = {
 isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 if (isSocket) {
 
-    var socketCP = io.connect('http://localhost:5819', {
+    var socketCP = io.connect(URL_SOCKET, {
         query: dataSocket
     });
 
@@ -36,7 +36,7 @@ function _cpSocketIsConnect() {
     if (!isSocket) { return; }
 
     if (!socketCP.connected) {
-        socketCP = io.connect('http://localhost:5819', {
+        socketCP = io.connect(URL_SOCKET, {
             query: dataSocket
         });
     }
