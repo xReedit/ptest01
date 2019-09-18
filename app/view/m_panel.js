@@ -27,66 +27,6 @@ async function lazyLoadWCPolyfillsIfNecessary() {
 		script.onload = onload;
 		document.head.appendChild(script);		
 		
-
-		// let _linkImport = `../web_components/polymer/polymer.html
-		// 				,../web_components/paper-button/paper-button.html
-		// 				,../web_components/paper-input/paper-input.html
-		// 				,../web_components/paper-input/paper-textarea.html
-		// 				,../web_components/paper-styles/paper-styles.html
-		// 				,../web_components/neon-animation/neon-animated-pages.html
-		// 				,../web_components/neon-animation/neon-animatable.html
-		// 				,../web_components/neon-animation/neon-animations.html
-		// 				,../web_components/paper-spinner/paper-spinner.html
-		// 				,../web_components/paper-drawer-panel/paper-drawer-panel.html
-		// 				,../web_components/paper-toolbar/paper-toolbar.html
-		// 				,../web_components/paper-icon-button/paper-icon-button.html
-		// 				,../web_components/iron-icons/iron-icons.html
-		// 				,../web_components/paper-card/paper-card.html
-		// 				,../web_components/paper-fab/paper-fab.html
-		// 				,../web_components/paper-menu/paper-menu.html
-		// 				,../web_components/paper-item/paper-item.html
-		// 				,../web_components/paper-dialog-scrollable/paper-dialog-scrollable.html
-		// 				,../web_components/paper-checkbox/paper-checkbox.html
-		// 				,../web_components/paper-dropdown-menu/paper-dropdown-menu.html
-		// 				,../web_components/iron-dropdown/iron-dropdown.html
-		// 				,../web_components/iron-pages/iron-pages.html
-		// 				,../web_components/paper-radio-button/paper-radio-button.html
-		// 				,../web_components/paper-slider/paper-slider.html
-		// 				,../web_components/paper-tabs/paper-tabs.html
-		// 				,../web_components/paper-tooltip/paper-tooltip.html
-		// 				,../web_components/paper-toggle-button/paper-toggle-button.html
-		// 				,../web_components/paper-badge/paper-badge.html
-		// 				,../web_components/paper-progress/paper-progress.html
-		// 				,../web_components/paper-toast/paper-toast.html
-		// 				,../web_components/iron-icons/maps-icons.html
-		// 				,../web_components/app-router/app-router.html
-		// 				,../web_components/x-router/x-router.html
-		// 				,../web_components/x-dialog/x-dialog.html
-		// 				,../web_components/x-pass/x-pass.html
-		// 				,../web_components/x-pago/x-pago.html
-		// 				,../x-componentes/x-comp-sede-toolbar/x-comp-sede-toolbar.html`
-		// setImportHTML(links)
-
-		// var link = document.createElement('link');
-		// link.rel = 'import';
-		// link.href = '../web_components/paper-button/paper-button.html';
-		// link.onload = onload;
-		// document.head.appendChild(link);
-
-		// _linkImport = _linkImport.trim().split(',');
-
-		// let link = document.createElement('link');
-		// link.rel = 'import';
-		// for (let index = 0; index < _linkImport.length; index++) {
-		// 	const element = _linkImport[index];
-		// 	link.href = element;
-		// 	link.onload = onload;
-		// 	document.head.appendChild(link);
-		// }			
-		
-
-		// let tpl = await getTemplate('../web_components/paper-button/paper-button.html');
-		// console.log(tpl);
 	} else {
 		onload();
 	}
@@ -322,9 +262,11 @@ function xOpenPage(xop, parametro){
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
+			const versionPrintServer = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? 'print-server' : 'print-server-1.2';
+			const _urlPrintServver = 'http://appx.papaya.com.pe/'+versionPrintServer+'/print-server.html?o='+_xr
 			
-			window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			// window.open('http://appx.papaya.com.pe/print-server/print-server.html?o='+_xr, "Servidor de Impresion");// produccion
+			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+			window.open(_urlPrintServver, "Servidor de Impresion");// produccion
 			return; 		
 	}
 	xruta=xruta+parametro;
