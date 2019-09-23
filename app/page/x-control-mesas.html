@@ -1,5 +1,7 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-control-mesas">
+	<script rel="preload" type="text/javascript" src="../../js/socket.io.js"></script>
+	<script rel="preload" type="text/javascript" src="../view/config.const.js"></script>
 	<script type="text/javascript" src="../view/config.const.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 
@@ -105,6 +107,9 @@
 							</div>
 							<h3 id="p_mesa">MESA 02</h3>
 							<div class="xfont11"><span id="p_correlativo"> CO: 00112</span><span id="p_referencia"> DR VALDES</span><span id="p_antendido"> | ATENDIDO POR: ORLANDO</span></div>
+							<div class="xdiv-info-delivery xInvisible" id="content-info-delivery">
+								<div class="xfont11" id="txt-info-delivery">DELIVERY: 42299556 | MARCELO RAMIREZ | JR. REYES GUERRA 7 | 745212 | PAGA CON: 420 : EFECTIVO</div>
+							</div>
 							<br>
 						</div>
 						<div class="xLinea"></div>
@@ -268,6 +273,12 @@
 
 	.div-filtro-header-input { width:80px; margin-right:5px; }
 	.subtotal-tr-row {padding-top:1px;padding-bottom:1px;}
+	.xdiv-info-delivery {
+		padding: 10px 0px 0px 0px;
+		border-top: 1px solid lightgrey;
+		margin-top: 10px;
+		color: gray;
+	}
 </style>
 </dom-module>
 <style type="text/css">
@@ -373,6 +384,7 @@ var xThisCM,
 	arrSumSubtTotales = [], // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
 	ImporteDiferencia = 0, // la diferencia por pagar, para saber si es una seleccion total o parcial 
 	xImporteTotalSeleccionados = 0,  // obtiene el total de los pedidos seleccionados
+	datosDelivery = null, 
 	isSocket = false;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true;
@@ -1073,7 +1085,9 @@ async function xImprimirPrecuenta(){
 	xmunp_pc=xmunp_pc.replace(/\s/g,'');
 	xmesa_pc=xmesa_pc[1];
 
-	xArrayPrintEncaLi_pre_cuenta={'m':xmesa_pc, 'r':'', 'num_pedido':xmunp_pc,'reservar':0, 'solo_llevar':0,'correlativo_dia':xmunp_pc,'precuenta':true};
+	const isDelivery = datosDelivery ? 1 : 0;
+
+	xArrayPrintEncaLi_pre_cuenta={'m':xmesa_pc, 'r':'', 'num_pedido':xmunp_pc,'reservar':0, 'solo_llevar':0,'correlativo_dia':xmunp_pc,'precuenta':true, 'delivery': isDelivery, 'arrDatosDelivery': datosDelivery};
 
 	xMandarImprimirOtroDoc(xArrayPrintEncaLi_pre_cuenta,xDtPrint,xArrayItemPreCuenta,arrSumSubtTotales,-1);
 }
@@ -1548,7 +1562,17 @@ function xLoadDetallesPedido (obj){
 		//encabezado
 		$("#p_correlativo").text('CO-'+xCeroIzq(xdtDpedido[0].correlativo_dia,5)+' | ');
 		$("#p_referencia").text(xdtDpedido[0].referencia +' | ');
-		$("#p_antendido").text('ATENDIDO POR: '+xdtDpedido[0].nom_usuario+' | ')
+		$("#p_antendido").text('ATENDIDO POR: '+xdtDpedido[0].nom_usuario+' | ');
+
+		datosDelivery = xdtDpedido[0].json_datos_delivery;
+		datosDelivery = datosDelivery != '' && datosDelivery != '{}' ? JSON.parse(datosDelivery) : null;
+		if (datosDelivery) {
+			$('#content-info-delivery').removeClass('xInvisible');
+			const infoDelivery =  datosDelivery.num_doc + ' | ' + datosDelivery.nombre + ' | '+  datosDelivery.direccion + ' | '+  datosDelivery.telefono + ' | '+  datosDelivery.paga_con;
+			$('#txt-info-delivery').text('DELIVERY: ' + infoDelivery);
+		} else {
+			$('#content-info-delivery').addClass('xInvisible');
+		}
 
 		//PEDIDOS
 		var xcadena_pedido='';
@@ -2280,6 +2304,7 @@ function xPintarEstadoPedido() {
 					// 	'</div>');
 
 					_eparent.removeClass('xNeutro');
+					_eparent.removeClass('xDespachado');
 					_eparent.addClass('xOcupado');
 					_eparent.addClass('xCursor');
 					_eparent.addClass(xtxtEstadoDespachado);

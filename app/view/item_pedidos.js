@@ -160,7 +160,7 @@ function handlerFnMiPedidoControl(e) {
 		
 		var xsigno= _thisObj.textContent != '+' && _thisObj.textContent != '-' ? _dataSetObj.signo : _thisObj.textContent // signo si viene de ventarapida solo click en item suma //$(this).text(),
 		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
-		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),
+		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),		
 		, xcant_max = itemPedidos_objItemSelected.stock_actual // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
 		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
@@ -186,7 +186,9 @@ function handlerFnMiPedidoControl(e) {
 		, xidcategoria = itemPedidos_objItemSelected.idcategoria // $(element_li_add__print).attr('data-idcategoria'),
 		, xli_idalmacen_items = itemPedidos_objItemSelected.idalmacen_items // $(element_li_add__print).attr('data-idalmacen_items'),
 		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
-		, xSotockSocket = xcant_max;
+		, xSotockSocket = xcant_max
+		, xSotockSocketRun = xcant_max
+		, xcantRunSocket = xcant_max;
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
@@ -204,12 +206,16 @@ function handlerFnMiPedidoControl(e) {
 				if(xcant<xcant_max){xcant++;}			
 			} else {
 				xSotockSocket = xcant_max > 0 ? xSotockSocket - 1 : 0;
-				if(xcant_max > 0 ){xcant++;}				
+				xSotockSocketRun = xcant_max > -1 ? xSotockSocketRun - 1 : 0;
+				if(xcant_max > 0 ){xcant++;}
 			}
+			xcantRunSocket = xcant;				 
 		}else{
 
 			xSotockSocket = xcant === 0 ? xcant_max : xSotockSocket + 1;
-			xcant--;						
+			xSotockSocketRun = xcant === 0 ? xcant_max : xSotockSocketRun + 1;
+			xcant--;	
+			xcantRunSocket = xcant;					
 			xcant = xcant <= 0 ? 0 : xcant;
 			// xSotockSocket = xcant < 0 ? xSotockSocket : xSotockSocket + 1;
 			// xSotockSocket = xSotockSocket > xcant_max ? xcant_max : xSotockSocket;
@@ -229,22 +235,26 @@ function handlerFnMiPedidoControl(e) {
 			element_cant_li_sel.addClass('cant_fixed_li')
 		}
 
+		
+		if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
 
-		if ( isSocket ) {			
 			itemPedidos_objItemSelected.stock_actual = xSotockSocket;
 			const itemNotifySocket = {
 				cantidad: xSotockSocket,
 				idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
 				iditem: itemPedidos_objItemSelected.iditem,
-				isalmacen: itemPedidos_objItemSelected.procede === '1' ? 0 : 1,
-				isporcion: itemPedidos_objItemSelected.isporcion
+				isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+				isporcion: itemPedidos_objItemSelected.isporcion,
+				sumar:  xsigno === '+' ? true : false
 			}
 			
 			_cpSocketEmitItemModificado(itemNotifySocket);
 
 			_cpSocketSavePedidoStorage(xArrayPedidoObj);
-			
+					
 		}
+
+		xcantRunSocket = true;
 
 
 

@@ -1,6 +1,8 @@
 <!--link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html" !-->
 <dom-module id="x-caja">
+	<script rel="preload" type="text/javascript" src="../../../js/socket.io.js"></script>
+
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 	<template>
 		<paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -146,6 +148,8 @@
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
+
+<script type="text/javascript" src="../../view/socket.service.p.js"></script>
 <script>
 var xThisCaja
 , xMontoTotalCaja
@@ -159,7 +163,7 @@ var xThisCaja
 , id_supervisor = 0
 , xlo_idorg
 , xlo_idsede
-, xlo_us
+, xlo_us, isSocket;
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -182,6 +186,8 @@ function xIniCaja(){
 
 		//xIniArraysPrint();
 		xtbReport=$("#xTableList");
+		
+		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 	});
 
 	/*xThis.xt_org=xIdOrg;
@@ -769,7 +775,11 @@ Polymer({
 	attached:function(){
 		this.selected=0;
     	xThisCaja=this;
-    	xIniCaja();
-    }
+		xIniCaja();
+		_cpSocketIsConnect();
+	},
+	detached:function(){
+		_cpSocketClose();
+	}
 })
 </script>

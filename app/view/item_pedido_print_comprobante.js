@@ -475,6 +475,7 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	}
 	
 	_data = JSON.stringify(_data);	
+	_tipo = _tipo === 'pre cuenta' ? 'comanda' : _tipo;
 
 	$.ajax({
 		url: '../../bdphp/log_003.php?op=1',

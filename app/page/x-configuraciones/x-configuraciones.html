@@ -633,8 +633,10 @@
 <script type="text/javascript" src="config_comporbantes.js"></script>
 <script type="text/javascript" src="../../shared/config.const.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
+<script type="text/javascript" src="../../view/socket.service.p.js"></script>
+
 <script>
-var xThisConfig, _arrPrintLocal=[];
+var xThisConfig, _arrPrintLocal=[], isSocket;
 var xObjBorrar = 0; // object contiene informacion de la fila a borrar + tabla e id
 function _getCategoria(val) { console.log(val);}
 
@@ -662,6 +664,8 @@ function xIniConf(){
 
 		xLoadOrg();
 		xLoadCategoria();
+
+		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 	})
 	
 	// compFindSede=document.getElementById('compFindCategoria');
@@ -1678,6 +1682,10 @@ Polymer({
 		this.selected_conf=0;
 		xThisConfig=this;
 		xIniConf();
+		_cpSocketIsConnect();
+	},
+	detached:function(){
+		_cpSocketClose();
 	}
 })
 </script>

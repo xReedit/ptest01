@@ -2,6 +2,12 @@
 	<link href="../../js/c3.min.css" rel="stylesheet">
 	<script src="../../js/d3.min.js"></script>
 	<script src="../../js/c3.min.js"></script>
+
+	<script rel="preload"  type="text/javascript" src="../../js/socket.io.js"></script>
+	<script rel="preload"  type="text/javascript" src="../view/xm_all.js"></script>	
+	<script rel="preload"  type="text/javascript" src="../view/config.const.js"></script>
+	<script rel="preload"  type="text/javascript" src="../view/socket.service.z.js"></script>
+	
 	<template>
 		<paper-dialog id="dialog_despachar"  style="max-width: 350px; z-index: 500;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xtxtCentro">
@@ -204,7 +210,7 @@
 <script>
 var xThisZonaDespacho;
 var xdata_zona=[], xIdZonaSeccion='',xIdTp='', des_despacho='',xValCountPedidosDespacho=0, xUltimoIdPedidoEnZona=0, xColorMarcado='xNaranja',xObjPedido,xRefresh_tiempo, xelem_tt_p_cola,xhora_actual_serv;
-var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido;
+var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido, isSocket;
 
 function pruebaAddPedido(){
 	var xaa='<div class="xmarco_zd_pedido ini"><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3></div>';
@@ -231,7 +237,10 @@ function xIniZonaDespacho(){
 		element_sonido=document.getElementById('sonido_notifica_despacho');
 		element_sonido.autobuffer = true;
 		element_sonido.load();
-		element_sonido.play();
+		try {
+			element_sonido.play();			
+		} catch (error) {			
+		}
 
 
 	});
@@ -563,10 +572,14 @@ function xDespachado_retirado(obj,op){
 		$(xObjPedido).addClass('retirada');
 		setTimeout(function(){$(xObjPedido).remove();xObjPedido.empty();xResumenPedidosItem();},2000)
 		xPopupLoad.xclose();
+		
+		_zonaSocketprinterOnly(xObjPedido);
 	})
 }
 
 function xVerSiPedidos_logrun(){
+	if ( isSocket) { return; }
+
 	var xrpt_run;
 	console.log(xdata_zona);
 	if(typeof(EventSource) !== "undefined") {
@@ -582,6 +595,31 @@ function xVerSiPedidos_logrun(){
 	    };
 	}
 }
+
+function xVerSiPedidos_logrun_socket(){
+	var xrpt_run;
+	console.log(xdata_zona);
+	if(typeof(EventSource) !== "undefined") {
+		const _url = '../../bdphp/log_run.php?op=201&tp='+xdata_zona.tipo_consumo+'&ids='+xdata_zona.idseccion;
+		$.ajax({ type: 'GET', url: _url})
+		.done(event => {	    
+	    	xrpt_run=event.split(',');
+	    	xhora_actual_serv=xrpt_run[1];
+	        if(xrpt_run[0]!==xValCountPedidosDespacho){
+				xValCountPedidosDespacho=xrpt_run[0];
+				// xUltimoIdPedidoEnZona = xValCountPedidosDespacho;
+				xActualizarPedidosZona();
+			}
+		});	    
+	}
+}
+
+function _zonaSocketPintarPedido(pedido) {		
+
+	xVerSiPedidos_logrun_socket();
+}
+
+
 
 function xActualizarPedidosZona(){
 	var xarr_pedido=[];
@@ -847,6 +885,7 @@ function xEstablecerFiltroDespachos(){
 	xValCountPedidosDespacho=0
 	xThisZonaDespacho.select_div=0;
 	xVerSiPedidos_logrun();
+	xVerSiPedidos_logrun_socket();
 
 	xRefresh_tiempo=setInterval(function () {xRefrecarTiempoMinutos()},1000);
 }
@@ -960,9 +999,11 @@ Polymer({
 	attached:function(){
 		this.select_div=0;
     	xThisZonaDespacho=this;
-    	xIniZonaDespacho();
+		_zonaSocketIsConnect();
+		xIniZonaDespacho();
     },
     detached:function(){
+		_zonaSocketClose();
 		clearInterval(xRefresh_tiempo);
 		// xsourceEvent.close();
     }

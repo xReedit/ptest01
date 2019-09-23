@@ -4,10 +4,9 @@
 	<script src="../../js/isotope.pkgd.min.js"></script>
 	<script type="text/javascript" src="../../js/raphael.2.1.0.min.js"></script>
 	<script type="text/javascript" src="../../js/justgage.js"></script>	
-	<script rel="preload" src="../view/xm_all.js"></script>
-	<!-- <script type="text/javascript" src="../../js/socket.io.js"></script> -->
-	<script rel="preload" type="text/javascript" src="../view/config.const.js"></script>
-	<script rel="preload" type="text/javascript" src="../view/socket.service.js"></script>
+
+	
+
 	<template>
 		<paper-dialog id="dialog_cambiar_pedidos_x_hora" class="dialog_redondo" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -88,6 +87,14 @@
 
 		.paper-spinner-a { width:15px; height:15px; }		
 	</style>
+
+<!-- <script rel="preload"  type="text/javascript" src="../../js/socket.io.js"></script> -->
+<!-- <script rel="prefetch" src="../view/xm_all.js"></script>	 -->
+<!-- <script rel="prefetch" type="text/javascript" src="../view/config.const.js"></script> -->
+
+<script rel="prefetch" type="text/javascript" src="../view/socket.service.js"></script>
+
+
 <script>
 var $table;
 var xThisMonPe,
@@ -374,7 +381,7 @@ function monitoreoStockEmitItemModificado(objItem) {
 		cantidad: parseInt(objItem.val())
 		, idcarta_lista: objItem.parent().attr('data-idcarta_lista')
 		, iditem: objItem.parent().attr('data-iditem')		
-		, isalmacen: objItem.parent().attr('data-procede') === '1' ? 0 : 1
+		, isalmacen: objItem.parent().attr('data-procede') === '0' ? 1 : 0
 		, isporcion: objItem.parent().attr('data-isporcion')
 	}
 
