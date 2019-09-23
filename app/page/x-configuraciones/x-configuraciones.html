@@ -435,6 +435,7 @@
 							<thead>
 								<th>Seccion</th>
 								<th>Imprime o muestra en:</th>
+								<th></th>
 							</thead>
 						</table>
 						<div class="xInvisible">
@@ -1156,7 +1157,7 @@ function xLoadSecciones(){
 			//$("#sel_impr_Sec > option")[0].css('checked','true')
 			//sel_impr_Sec.options[xdtSec[i].idimpresora].selected=true;
 			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected');
-			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'"><td>'+xdtSec[i].plato+'</td><td><select class="xsel_sec_print" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec")[0].innerHTML+'</select></td></tr>')
+			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'"><td>'+xdtSec[i].plato+'</td><td><select class="xsel_sec_print" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec")[0].innerHTML+'</select></td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected',false);
 		};
 		$("#tb_sec_impr .row").remove();
