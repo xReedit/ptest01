@@ -258,6 +258,7 @@ function xOpenPage(xop, parametro){
 		case 37: 
 			window.open('https://restobar.papaya.com.pe/analitica', "Analitica");			
 			break;
+		case 38: xruta = '/promociones'; break;
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
