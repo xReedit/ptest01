@@ -95,6 +95,7 @@
       </div>
       <br /><br />
     </paper-dialog>
+
     <paper-dialog
       id="dialog_msj_confirma_pedido"
       style="min-width: 300px;"
@@ -318,49 +319,6 @@ transition: none !important;
         }
       }
     }
-
-    // lo haremos con socketes
-    // antes de enviar verificar si aun existe stock item x item
-    // const _arrNoStockItem = await xVerificarStockItemPedidoBefore();
-    // if ( _arrNoStockItem.length > 0 ) {
-    //   //body_item_sin_stock
-    //   var msj_sin_stock = '';
-    //   _arrNoStockItem.map(x => {
-    //     // mostrar msj
-    //     msj_sin_stock += '<tr><td>'+ xCeroIzq( x.stock_actual,1 ) +'</td><td>'+ x.des +'</td></tr>'        
-
-    //     // update cantidad en vista
-    //     // elimina de la lista
-    //     if ( x.stock_actual === 0 ) {
-    //       delete xArrayPedidoObj[x.tipo_consumo][x.id];
-    //     } else {
-    //       xArrayPedidoObj[x.tipo_consumo][x.id].cantidad = x.stock_actual;        
-    //       xArrayPedidoObj[x.tipo_consumo][x.id].update_stock = true;
-    //       x.stock_modificado = true;        
-    //     }
-        
-        
-    //   });
-
-    //   // update en bd -> reserva el stock que hay
-    //   const _itemReservar = _arrNoStockItem.filter(x => x.stock_modificado).map(x => {
-    //                           return {id: x.id, procede: x.procede, stock: x.stock_actual}
-    //                         });
-
-    //   xUpdateItemNoStock('re-resta', _itemReservar); ///y si ya no quiere esos platos? mejor con sockets
-
-    //   // vista
-    //   window.localStorage.setItem("::app3_sys_dta_pe", JSON.stringify(xArrayPedidoObj));
-    //   xLoadMipedido();
-      
-    //   ///
-
-    //   $("#body_item_sin_stock").html(msj_sin_stock).trigger('create');
-    //   dialog_item_sin_stock.open();      
-    //   return;
-    // }
-
-    
 
     btn_dlg_confirm.hidden = false;
     dialog_msj_confirma_pedido.open();
@@ -1071,6 +1029,7 @@ transition: none !important;
       // obj.animate = false;
     }
   }
+  
   function xOpenDlgItem(tpc, id) {
     itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
     xidItem = id; // $(obj).attr("data-id");

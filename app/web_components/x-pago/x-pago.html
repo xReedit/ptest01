@@ -44,6 +44,12 @@
 								autofocus char-counter maxlength="11" pattern="[0-9]*"
 								error-message={{mensajeErrorDocumento}} class="xPasarEnter2" id="sel_cliente">
 							</paper-input>
+
+							<paper-icon-button icon="icons:search" title="Buscar DNI"
+								onclick="xValidarDNIRUC(null, event, false)"
+								style="position: absolute; right: 70px; margin-top: -48px;">
+							</paper-icon-button>
+
 							<div class="xInvisible" id="progress_cliente">
 								<paper-progress indeterminate style="width: 100%; float: left; margin-top: -19px">
 								</paper-progress>
@@ -510,8 +516,9 @@
 
 	/// 0918 ///
 
-	async function xValidarDNIRUC(valor, e) {
+	async function xValidarDNIRUC(valor, e, tecla=true) {
 		var servicio = 'ruc';
+		valor = valor ? valor : sel_cliente.value;
 		xThisPago.mensajeErrorDocumento = '';
 
 		if (!xThisPago.$.sel_cliente.validate()) {
@@ -566,7 +573,7 @@
 
 		EmitirValidacionFormCliente();
 
-		if (e.keyCode === 13) { // buscar cliente
+		if (e.keyCode === 13 || !tecla) { // buscar cliente
 			xThisPago.$.sel_cliente.invalid = false;
 
 			if (xThisPago.tipoComprovanteSelecionado.codsunat === '01' && valor.length <

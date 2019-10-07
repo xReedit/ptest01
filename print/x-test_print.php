@@ -1,5 +1,5 @@
 <?php	
-session_start();
+// session_start();
 date_default_timezone_set('America/Lima');	
 require __DIR__ . '/autoload.php';
 use Mike42\Escpos\Printer;
@@ -20,7 +20,7 @@ $val_size_font_comanda_tall = array_key_exists('var_size_font_tall_comanda', $Ar
 $size_font_comanda_tall = (int)$val_size_font_comanda_tall===0 ? false : true;
 $val_size_font_comanda_tall++; //tamaño de letra,1+1>2 2+1>3
 
-$printImg64=$ArrayEnca['img64']; // si imprime el logo en 64btis
+// $printImg64=$ArrayEnca['img64']; // si imprime el logo en 64btis
 
 $fecha_actual=date('d').'/'.date('m').'/'.date('y');
 $hora_actual=date('H').':'.date('i').':'.date('s');
@@ -138,6 +138,12 @@ if($logo_post!=''){
 	$printer -> selectPrintMode(Printer::MODE_DOUBLE_WIDTH);	
 	$printer -> text(new item('TOTAL', '39.00', true));
 	$printer -> selectPrintMode();
+
+	/* CODIGO QR */
+	$testStr = 'CodigoQREjemplo';
+	$printer -> setJustification(Printer::JUSTIFY_CENTER);
+	$printer -> qrCode($testStr, Printer::QR_ECLEVEL_H, 5);	
+	$printer -> feed();
 
 	/* PIE DE PAGINA */	
 	$printer -> feed(2);

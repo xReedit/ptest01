@@ -6,7 +6,7 @@
 <dom-module id="x-comp-find-categoria">
     <template is="dom-bind">        
         <div>
-          <select id="compFindListCategoria" class="xTextRow2 xCursor" onchange="selectOptionCategoria()">
+          <select id="compFindListCategoria" class="xTextRow2 xCursor" onchange="selectOptionCategoria()" style$="[[estilo]]">
             <template is="dom-repeat" items="{{list}}" as="categoria">
               <option value="[[index]]">[[categoria.descripcion]] </option>
             </template>
@@ -38,6 +38,7 @@
         Polymer({
         is: 'x-comp-find-categoria',
         properties: {
+            estilo: String,
             list: [],
             categorias: {
                 type: Object,

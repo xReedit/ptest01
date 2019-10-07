@@ -131,7 +131,11 @@ function handlerFnMiPedido(e) {
 //agregar item desde control de pedidos
 $(document.body).on('click', '#content_item_pedido div.xBtn_li', handlerFnMiPedidoControl); // control de mesas
 $(document.body).on('click', '#accordion div.xBtn_contet_li2', handlerFnMiPedidoControl); // venta rapida
-$(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
+// $(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
+$(document.body).on('click', '#accordion div.content_li', function(e) {
+	if (!isTouch) return; // desde venta rapida activa el touch
+	handlerFnMiPedidoControl(e);
+}); // venta rapida
 
 function handlerFnMiPedidoControl(e) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {

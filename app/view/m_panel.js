@@ -259,6 +259,19 @@ function xOpenPage(xop, parametro){
 			window.open('https://restobar.papaya.com.pe/analitica', "Analitica");			
 			break;
 		case 38: xruta = '/promociones'; break;
+		case 39: xruta = '/encuesta'; break;
+		case 40: // lanzar encuesta 			
+			const dataE = {
+				o: xIdOrg,
+                s: xIdSede,
+                r: true // repeat
+			}
+			const _urlEncuesta = 'http://192.168.1.64/restobar-encuesta/?o=' + btoa(JSON.stringify(dataE));
+			// window.open(_urlEncuesta, "_self");// produccion
+			window.location.replace(_urlEncuesta);// produccion			
+			return;			
+
+			break;
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
@@ -267,7 +280,7 @@ function xOpenPage(xop, parametro){
 			const _urlPrintServver = 'http://appx.papaya.com.pe/'+versionPrintServer+'/print-server.html?o='+_xr
 			
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			window.open(_urlPrintServver, "Servidor de Impresion");// produccion
+			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
 			return; 		
 	}
 	xruta=xruta+parametro;
