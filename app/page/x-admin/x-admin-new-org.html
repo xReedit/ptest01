@@ -92,6 +92,10 @@
 							</div>
 
 							<br><br>
+							<p><strong>Temporal (url_api_fac)</strong></p>							
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="URL api facturador" id="url_api_fac" name="url_api_fac" espaciar>	
+
+							<br><br>
 							<p><strong>Escenario</strong></p>
 							<select id="selTipo" class="xCursor">
 								<option value="PRUEBAS">PRUEBAS</option>
@@ -221,6 +225,7 @@
 		$("#frm_sede #pwa").val(dataSede.pwa);
 		$("#frm_sede #finicio").val(dataSede.finicio);
 		$("#frm_sede #pwa_time_limit").val(dataSede.pwa_time_limit);
+		$("#frm_sede #url_api_fac").val(dataSede.url_api_fac);
 
 		check_print_server.checked = dataSede.ip_server_local === "0" ? false : true;
 		check_pwa.checked = dataSede.pwa === "0" ? false : true;

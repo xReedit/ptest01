@@ -266,7 +266,8 @@ function xOpenPage(xop, parametro){
                 s: xIdSede,
                 r: true // repeat
 			}
-			const _urlEncuesta = 'http://192.168.1.64/restobar-encuesta/?o=' + btoa(JSON.stringify(dataE));
+			// const _urlEncuesta = 'http://192.168.1.64/restobar-encuesta/?o=' + btoa(JSON.stringify(dataE));
+			const _urlEncuesta = 'http://appx.papaya.com.pe/encuesta/?o=' + btoa(JSON.stringify(dataE));
 			// window.open(_urlEncuesta, "_self");// produccion
 			window.location.replace(_urlEncuesta);// produccion			
 			return;			

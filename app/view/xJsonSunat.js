@@ -205,10 +205,12 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
 // tipo_documento = 01 > factura se envia de manera individual 
 // idtipo_comprobante_serie => guardar el correlativo
 async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie, guardarError=true) {
-    const URL_COMPROBANTE = xm_log_get('app3_sys_const')[0].value;
+    const dtSede = xm_log_get("datos_org_sede")[0];
+    const url_api_fac_sede = dtSede.url_api_fac || '';
+    const URL_COMPROBANTE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[0].value : url_api_fac_sede;
     const _url = URL_COMPROBANTE+'/documents';
     let _headers = HEADERS_COMPROBANTE;
-    _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
+    _headers.Authorization = "Bearer " + dtSede.authorization_api_comprobante;
 
     var rpt = {};
     const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;

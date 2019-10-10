@@ -238,21 +238,23 @@
 						</div>
           </paper-toolbar>
 	        <div fit layout vertical class="content xContent" id="x-main">
+					<div class="wrapper">
+							<div id="loader-wrapper">
+							  <div id="loader"></div>
+							  <div class="loader-section section-left"></div>
+							  <div class="loader-section section-right"></div>
+							</div>
+						  </div>
 	        	<!-- <div class="xInvisible"></div> -->
 							<x-router></x-router>
 							<paper-toast id="toast" duration=0 text="Hello world!">
 								<paper-progress id="loading" indeterminate style="width: 100%; float: left;"></paper-progress>
 							</paper-toast>
-	        </div>
+			</div>
+			
        	</paper-header-panel>
 
-		   <!-- <div class="wrapper">
-				<div id="loader-wrapper">
-				  <div id="loader"></div>
-				  <div class="loader-section section-left"></div>
-				  <div class="loader-section section-right"></div>
-				</div>
-			  </div> -->
+		   
 	
 	<script src="../view/xm_all.js"></script>
 	<script type="text/javascript" src="../view/onGalleta.js"></script>

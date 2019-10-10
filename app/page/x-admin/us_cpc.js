@@ -159,6 +159,7 @@ function addCompaniesContador() {
 		user_id: _companySelect.user_id,
 		idus_cpc : _id_num_us_new_cpc,
 		razonsocial: _companySelect.razonsocial,
+		ruc: _companySelect.ruc,
 		nomsede: txt_companies_sede.value,
 		serie: txt_companies_serie.value,
 		ciudad: txt_companies_ciudad.value,

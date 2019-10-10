@@ -135,6 +135,7 @@ function xIniAdmContador() {
 	xThisAdmContador.xt_org = _dtUs.ido;
 	xThisAdmContador.xt_idsede = _dtUs.idsede;
 	xThisAdmContador.xt_idus = _dtUs.idus;
+	xThisAdmContador.ListReporte = [];
 	$('body').addClass('loaded');
 
 	$('.xPasarEnter2').on('keyup', function (e) {
@@ -250,6 +251,9 @@ function downloadReporteCPE(obj) {
 	}
 	xPopupLoad.titulo='Descargando...';
 	xPopupLoad.xopen();
+
+	var dataListReporte = [];
+	xThisAdmContador.ListReporte = [];
 	$.ajax({
 			type: 'POST',
 			url: '../../bdphp/log_007.php?op=2',
@@ -259,17 +263,55 @@ function downloadReporteCPE(obj) {
 			res = JSON.parse(res);
 			if ( res.error ) {console.log(res.error); return;}
 			console.log(res.data);
-			xThisAdmContador.ListReporte = res.data.map(x => {
+			res.data.map(x => {
 				x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
 				x.style_reporte = x.estado === 'ANULADO' ? 'color: red' : 'color: green';
 				x.style_td = x.estado === 'ANULADO' ? 'color: red' : '';
-				return x;
+				dataListReporte.push(x);
+				//return x;
 			});
 
-			setTimeout(() => {
-				xExportarExcel();
-			}, 500);
+			// xThisAdmContador.ListReporte = dataListReporte;
+
+			// setTimeout(() => {
+			// 	xExportarExcel();
+			// }, 500);
 		});
+
+	// api2
+	$.ajax({
+			type: 'POST',
+			url: '../../bdphp/log_007.php?op=3',
+			data: {item: _data}
+		})
+		.done((res) => {
+			try {
+				res = JSON.parse(res);
+				if ( res.error ) {console.log(res.error); 
+					setDataListReporte(dataListReporte);
+					return;}	
+			} catch (error) {
+				setDataListReporte(dataListReporte);
+			}
+			
+			console.log(res.data);
+			res.data.map(x => {
+				x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
+				x.style_reporte = x.estado === 'ANULADO' ? 'color: red' : 'color: green';
+				x.style_td = x.estado === 'ANULADO' ? 'color: red' : '';
+				dataListReporte.push(x);
+				//return x;
+			});
+
+			setDataListReporte(dataListReporte);	
+		});
+}
+
+function setDataListReporte(list) {
+	xThisAdmContador.ListReporte = list;
+	setTimeout(() => {
+		xExportarExcel();
+	}, 500);
 }
 
 function xExportarExcel() {
