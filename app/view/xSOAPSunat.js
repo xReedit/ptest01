@@ -1,7 +1,9 @@
 // lista documentos no registrados - documnentos que no fueron enviados al servicio api por algun error de conexion
 // ok
-
-var URL_COMPROBANTE = xm_log_get('app3_sys_const')[0].value;
+var dtSede = xm_log_get("datos_org_sede")[0];
+var url_api_fac_sede = dtSede.url_api_fac || '';
+var URL_COMPROBANTE = url_api_fac_sede === '' ? xm_log_get('app3_sys_const')[0].value : url_api_fac_sede;
+var URL_COMPROBANTE_DOWNLOAD_FILE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[1].value : url_api_fac_sede.replace('.pe/api', '.pe/downloads/document');
 
 async function xSoapSunat_getArrNoRegistrado() {
     var rpt = [];
@@ -440,7 +442,9 @@ function xSoapSunat_cambiarFormatoFechaString2(sfecha) {
 /////////// consultas
 
 function xSoapSunat_DownloadFile(tipo, id) {
-    const URL_COMPROBANTE_DOWNLOAD_FILE = xm_log_get('app3_sys_const')[1].value;
+    // const dtSede = xm_log_get("datos_org_sede")[0];
+    // const url_api_fac_sede = dtSede.url_api_fac || '';
+    // const URL_COMPROBANTE_DOWNLOAD_FILE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[1].value : url_api_fac_sede.replace('.pe/api', '.pe/downloads/document');
     const _url = `${URL_COMPROBANTE_DOWNLOAD_FILE}/${tipo}/${id}`;
     window.open(_url, "_blank");
 }

@@ -102,6 +102,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         fecha_actual = fecha_manual === null ? rptDate[0] : fecha_manual;
         hora_actual = rptDate[1];    
 
+        const direccionEmisor = xArrayEncabezado[0].sededireccion === '' ? xArrayEncabezado[0].direccion : xArrayEncabezado[0].sededireccion;
+
         // "numero_documento": xArrayComprobante.correlativo,
 
         var jsonData = {                    
@@ -117,7 +119,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "datos_del_emisor": {
                 "codigo_pais": "PE",
                 "ubigeo": xArrayEncabezado[0].ubigeo,
-                "direccion": `${xArrayEncabezado[0].sededireccion} | ` + `${xArrayEncabezado[0].sedeciudad}`,
+                "direccion": `${direccionEmisor} | ` + `${xArrayEncabezado[0].sedeciudad}`,
                 "correo_electronico": "",
                 "telefono": `${xArrayEncabezado[0].telefono}`,
                 "codigo_del_domicilio_fiscal": xArrayEncabezado[0].codigo_del_domicilio_fiscal

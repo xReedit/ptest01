@@ -1,5 +1,6 @@
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <dom-module id="x-facturador">
+    <script src="../../view/xm_all.js"></script>
     <template is="dom-bind">
         <paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation"
             exit-animation="fade-out-animation">
@@ -155,6 +156,7 @@
 
         fact_getAllImpresoras();
         $('body').addClass('loaded');
+        $("#Titulo_page").text("Facturador");
 
         $('.xPasarEnter2').on('keyup', function (e) {
             var code = e.which;
@@ -446,7 +448,7 @@
             arr_comprobante.fecha_manual = txt_fecha_cpe_manual;
             arr_comprobante = cnf_ComprobanteSel;
             // arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-            arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
+            arr_comprobante.correlativo = correlativo; //xReturnCorrelativoComprobante(arr_comprobante);
 
             // retorna el encabezado del comprobante con hash
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);
