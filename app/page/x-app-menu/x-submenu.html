@@ -207,9 +207,9 @@
       for (var i = 0; i < xdt_sub_Item.length; i++) {
         //if(xdt_sub_Item[i].idseccion!=xidCategoriaSeccion){continue}
         xCheck_desactivado = "";
-        xCantItem = xdt_sub_Item[i].cantidad,
-        xClassEstadoStock = xClassEstadoItem(xCantItem),
-        xClassEstado = xClassEstadoStock.split("|")[0],
+        xCantItem = xdt_sub_Item[i].cantidad;
+        xClassEstadoStock = xClassEstadoItem(xCantItem);
+        xClassEstado = xClassEstadoStock.split("|")[0];
         xClassEstadoStock = xClassEstadoStock.split("|")[1];
 
         if (xCantItem <= 0) {

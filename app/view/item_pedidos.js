@@ -31,6 +31,7 @@ function handlerFnMiPedido(e) {
 		xCambioCantidad=true;
 		xidItem = itemPedidos_objItemSelected.idcarta_lista // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
 		xidTipoConsumo = _thisObj.parent().attr('data-id');
+		const _viene_venta_rapida = parseInt(_thisObj.parent().attr('data-ventarapida'));
 
 		// const _xmenu_item_2 = _thisObj.parents('.xmenu_item_2');
 		// const _xmenu_item_2_dataset = JSON.parse(JSON.stringify(_xmenu_item_2[0].dataset));
@@ -58,13 +59,24 @@ function handlerFnMiPedido(e) {
 		, xcant_descontar = itemPedidos_objItemSelected.cant_descontar // _xmenu_item_2.attr('data-cant_descontar') //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona)
 		, xidalmacen_items = itemPedidos_objItemSelected.idalmacen_items // _xmenu_item_2.attr('data-idalmacen_items')
 		, xidDescontar=xRowidporcion
-		, xPrecioTotal;
+		, xPrecioTotal
+		, xcant_max = parseInt(xStockActual)
+		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
+		, xSotockSocket = xcant_max
+		, xSotockSocketRun = xcant_max
+		, xcantRunSocket = xcant_max
+		, xcant = xCantActual
+		, xsigno = xOperacion;
+
+		
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
 		//xDesItem=xDesItem+xIndicaciones.toLowerCase();
 		xCantActual = isNaN(xCantActual) ? 0 : xCantActual;
 		xCantSeccion = isNaN(xCantSeccion) ? 0 : xCantSeccion;
+
+		xcant = xCantActual;
 		// if(isNaN(xCantActual)){xCantActual=0}
 		// if(isNaN(xCantSeccion)){xCantSeccion=0}
 
@@ -74,19 +86,48 @@ function handlerFnMiPedido(e) {
 				xCantTotalItem=parseInt(xCantTotalItem)+xval
 			});
 			
-		if(isNaN(xCantTotalItem)){xCantTotalItem=0}
-		xCantActual=parseInt(xCantActual)+xOperacion+parseInt(1);
-		xCantTotalItem=parseInt(xCantTotalItem)+xOperacion+parseInt(1);
-		xCount_cant_ico=parseInt(xCount_cant_ico)+xOperacion+parseInt(1);
-		xCantSeccion=parseInt(xCantSeccion)+xOperacion+parseInt(1);
+			if (_viene_venta_rapida === 1) { //viene de venta rapida seleccionados obj
+			
+				if(xOperacion=='+'){
+					//omitir para seguir vendiendo sin stock, da change a despues			
+					if ( !isSocket ) {
+						if(xcant<xcant_max){xcant++;}			
+					} else {
+						xSotockSocket = xcant_max > 0 ? xSotockSocket - 1 : 0;
+						xSotockSocketRun = xcant_max > -1 ? xSotockSocketRun - 1 : 0;
+						if(xcant_max > 0 ){xcant++;}
+					}
+					xcantRunSocket = xcant;				 
+				}else{
+		
+					xSotockSocket = xcant === 0 ? xcant_max : xSotockSocket + 1;
+					xSotockSocketRun = xcant === 0 ? xcant_max : xSotockSocketRun + 1;
+					xcant--;	
+					xcantRunSocket = xcant;					
+					xcant = xcant <= 0 ? 0 : xcant;
+					// xSotockSocket = xcant < 0 ? xSotockSocket : xSotockSocket + 1;
+					// xSotockSocket = xSotockSocket > xcant_max ? xcant_max : xSotockSocket;
+				}
 
-		xCantActual=eval(xCantActual);
-		xCantTotalItem=eval(xCantTotalItem);
-		xCount_cant_ico=eval(xCount_cant_ico);
-		xCantSeccion=eval(xCantSeccion);
-		if(xCount_cant_ico<0){xCount_cant_ico=0;}
-		if(xStockActual!='ND'){if(xCantTotalItem>parseInt(xStockActual)){return;}}
-		if(xCantActual<=0){xCantActual=0; objCant.addClass('xInvisible');}else{objCant.removeClass('xInvisible');}
+				xCantActual = xcant;
+				xCount_cant_ico = xcant; // esta variable se utiliza en mipedido para mostrar la cantidad de items por seccion
+	
+			} else {
+
+				if(isNaN(xCantTotalItem)){xCantTotalItem=0}
+				xCantActual=parseInt(xCantActual)+xOperacion+parseInt(1);
+				xCantTotalItem=parseInt(xCantTotalItem)+xOperacion+parseInt(1);
+				xCount_cant_ico=parseInt(xCount_cant_ico)+xOperacion+parseInt(1);
+				xCantSeccion=parseInt(xCantSeccion)+xOperacion+parseInt(1);
+		
+				xCantActual=eval(xCantActual);
+				xCantTotalItem=eval(xCantTotalItem);
+				xCount_cant_ico=eval(xCount_cant_ico);
+				xCantSeccion=eval(xCantSeccion);
+				if(xCount_cant_ico<0){xCount_cant_ico=0;}
+				if(xStockActual!='ND'){if(xCantTotalItem>parseInt(xStockActual)){return;}}
+				if(xCantActual<=0){xCantActual=0; objCant.addClass('xInvisible');}else{objCant.removeClass('xInvisible');}
+			}
 
 		// itemPedidos_objItemSelected.xCant_item = xCeroIzq(xCantActual,2); // cantidad actual
 		objCant.text(xCeroIzq(xCantActual,2));
@@ -110,6 +151,28 @@ function handlerFnMiPedido(e) {
 		} else {
 			_objIcoPedido.addClass('xInvisible');
 		}
+
+		
+
+		if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
+
+			itemPedidos_objItemSelected.stock_actual = xSotockSocket;
+			const itemNotifySocket = {
+				cantidad: xSotockSocket,
+				idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
+				iditem: itemPedidos_objItemSelected.iditem,
+				isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+				isporcion: itemPedidos_objItemSelected.isporcion,
+				sumar:  xsigno === '+' ? true : false
+			}
+			
+			_cpSocketEmitItemModificado(itemNotifySocket);
+
+			_cpSocketSavePedidoStorage(xArrayPedidoObj);
+					
+		}
+
+		xcantRunSocket = true;
 
 		
 		// si esta en modo vista pantalla tablet, update x-mipedido
@@ -141,7 +204,7 @@ function handlerFnMiPedidoControl(e) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
 		var _nomClassXcant_li = 'xcant_li';
 		const _thisObj = e.target || e;
-	const _objParentLi = _thisObj.dataset.index ? _thisObj : _thisObj.parentElement.dataset.index ? _thisObj.parentElement : _thisObj.parentElement.parentElement.dataset.index ? _thisObj.parentElement.parentElement : _thisObj.parentElement.parentElement.parentElement;
+		const _objParentLi = _thisObj.dataset.index ? _thisObj : _thisObj.parentElement.dataset.index ? _thisObj.parentElement : _thisObj.parentElement.parentElement.dataset.index ? _thisObj.parentElement.parentElement : _thisObj.parentElement.parentElement.parentElement;
 		const _dataSetObj = _objParentLi.dataset;
 		// const _isLi = _dataSetObj.isli ? true : false; // si viene del li ventarapida sumar al click
 		const _viene_venta_rapida = _dataSetObj.ventarapida; // _thisObj.parentElement.parentElement.dataset.ventarapida || 0;
@@ -235,8 +298,11 @@ function handlerFnMiPedidoControl(e) {
 			};
 
 		element_cant_li_sel.text(xcant);
-		if(xcant<=0){xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem];}else{
-			element_cant_li_sel.addClass('cant_fixed_li')
+		if(xcant<=0){
+			xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');
+			delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem];}
+		else{
+			element_cant_li_sel.addClass('cant_fixed_li');
 		}
 
 		
@@ -380,9 +446,10 @@ function xClassEstadoItem(xCantItem){
 	if(xCantItem=='ND'){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}
 			else{
 				xCantItem=parseInt(xCantItem);
-				if(xCantItem>=1){xClassEstado='xEstadoAmarillo';xClassEstadoStock='xFondoColorAmarillo';}
+				if(xCantItem>=5){xClassEstado='xEstadoAmarillo';xClassEstadoStock='xFondoColorAmarillo';}
 				if(xCantItem>=10){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}
-				if(xCantItem<=0){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
+				if(xCantItem<5){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
+				// if(xCantItem<=0){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
 			}
 
 	return xClassEstado+'|'+xClassEstadoStock
@@ -1204,12 +1271,12 @@ function xArmarArrayDescontarStock(obj_row,op){
 }
 
 //el detalle de los item en mipedido
-function xArmarTipoConsumo(){	
+function xArmarTipoConsumo(isVentaRapida = 0){	
 	var xcadenaTC='';
 	xArrayDesTipoConsumo=JSON.parse(window.localStorage.getItem("::app3_sys_dta_pe"));
 	for(a in xArrayDesTipoConsumo){
 		if(xArrayDesTipoConsumo[a]==null){continue;}
-		xcadenaTC=String(xcadenaTC+'<div class="xpedir_row" data-id="'+xArrayDesTipoConsumo[a].id+'">'+
+		xcadenaTC=String(xcadenaTC+'<div class="xpedir_row" data-ventarapida="'+ isVentaRapida +'" data-id="'+xArrayDesTipoConsumo[a].id+'">'+
 							'<p>'+xArrayDesTipoConsumo[a].des+'</p>'+
 							'<p class="xCant_item"></p>'+
 							'<div class="xBtnIz xBtn">-</div>'+

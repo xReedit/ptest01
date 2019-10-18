@@ -119,7 +119,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "datos_del_emisor": {
                 "codigo_pais": "PE",
                 "ubigeo": xArrayEncabezado[0].ubigeo,
-                "direccion": `${direccionEmisor} | ` + `${xArrayEncabezado[0].sedeciudad}`,
+                "direccion": `${direccionEmisor} `+ ' | ' + `${xArrayEncabezado[0].sedeciudad}`,
                 "correo_electronico": "",
                 "telefono": `${xArrayEncabezado[0].telefono}`,
                 "codigo_del_domicilio_fiscal": xArrayEncabezado[0].codigo_del_domicilio_fiscal

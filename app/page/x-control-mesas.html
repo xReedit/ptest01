@@ -1848,9 +1848,10 @@ function xLoadMipedidoBD(dt){
 							'" data-total="'+xDtBd[i].ptotal+
 							'" data-des_seccion="'+ xNom_seccion +
 							'" data-subtotales_tachados="'+ xDtBd[i].subtotales_tachados +
+							'" data-idbus = "' + xDtBd[i].idseccion +
 							'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+
-									'<td width="50px" class="click_row_dt_p"><paper-checkbox class="check_item"></paper-checkbox><span id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2)+'</span></td>'+
-									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+xDtBd[i].descripcion+'</td>'+
+									'<td width="50px" class="click_row_dt_p" id="cant_descontar"><paper-checkbox class="check_item"></paper-checkbox><span id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2)+'</span></td>'+
+									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+xDtBd[i].descripcion+'</td>'+									
 									'<td class="click_row_dt_p" align="right" id="td_importe">'+xDtBd[i].ptotal+'</td>'+
 									'<td align="center" class="td_op" data-op="borrar" data-procede=0>'+
 										'<img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'">'+
@@ -1873,6 +1874,10 @@ function xLoadMipedidoBD(dt){
 	xCadenaGrupo='<div><table width="100%" id="tb_det_pedidos" class="xRowPading4">'+xCadenaGrupo+'</table></div>';
 	$("#xBody div").remove();
 	$("#xBody").html(xCadenaGrupo).trigger('create');
+
+	// setTimeout(() => {		
+	// 	xGeneralValidarRegalasCarta('#tb_det_pedidos', false);
+	// }, 200);
 }
 
 

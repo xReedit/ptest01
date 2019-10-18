@@ -353,7 +353,31 @@
 	}
 
 	ul.list_add_item2 li.divLi{ padding:0; }
-	.content_li {padding: 10px 25px 8px;}
+	.content_li {padding: 14px 25px 14px;}
+
+	/* .content-titulo {display: flex;} */
+	.content-titulo .stock_item {
+		padding: 5px 3px 10px;		
+		text-align: center;
+		border-radius: 4px;
+		line-height: 0;
+		margin-top: -22px;
+		margin-left: -20px;
+		width: 15px;
+	}
+
+	/* .content-titulo span {
+		font-size: 8px;
+    	color: #757575;
+	} */
+
+	.content-titulo .xt-p {
+		font-size: 14px;
+	}
+
+	.content-titulo .num-stock {
+		font-size: 11px;
+	}
 
 	@media screen and (max-width:920px){
 		.xdivEnLinea2x > .itemsDivx.a { 
@@ -506,7 +530,7 @@ function xIniVentaRapida(){
 
 		setValuesStorage(); // toogles
 
-		xCadenaTC = xArmarTipoConsumo();
+		xCadenaTC = xArmarTipoConsumo(1);
 
 		xCount_cant_ico = 0;
 
@@ -1292,6 +1316,11 @@ function xLoadItemsDetalleCartaALL(){
 
 		xGeneralDataCarta[p].stock_actual = xCantidadMax;
 		xGeneralDataCarta[p].idcategoria = xidCategoriaVR;
+
+		xCantItem = xGeneralDataCarta[p].cantidad;
+		xClassEstadoStock = xClassEstadoItem(xCantItem);
+        xClassEstado = xClassEstadoStock.split("|")[0];
+        xClassEstadoStock = xClassEstadoStock.split("|")[1];
 		
 		xCadenaItems=String(xCadenaItems+'<li id="li2'+xGeneralDataCarta[p].idcarta_lista+'" class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
 												'" data-cat="'+xGeneralDataCarta[p].des_seccion+
@@ -1311,9 +1340,10 @@ function xLoadItemsDetalleCartaALL(){
 												'" data-stock_actual="'+xGeneralDataCarta[p].cantidad+
 												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
 														'<div class="content_li">'+
-															'<div>'+
+															'<div class="content-titulo">'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+
-																'<p class="xtitulo_li2 '+xtachar_li+'">'+xGeneralDataCarta[p].des_item+'</p>'+
+																'<p class="xtitulo_li2 xt-p '+xtachar_li+'">'+xGeneralDataCarta[p].des_item+'</p>'+																
+																'<div class="stock_item '+ xClassEstadoStock +'" id="content-stock-item"><span class="num-stock" id="numStock">' + xCeroIzq(xCantItem, 2) + '</span></div>' + 
 																'<p class="xInvisible">'+xGeneralDataCarta[p].codigo_barra+'</p>'+
 																'<input type="text" class="xMiInput xMiTextReferencia" anchofull id="xinput_li">'+
 															'</div>'+
@@ -1343,9 +1373,16 @@ function _cpStockItemModificado(item){
 	if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
 	if(xCantidadMax=='ND'){xCantidadMax=1000}
 
-	$(idFind).attr('data-stock_actual', xCantidadMax);
+	$(idFind).attr('data-stock_actual', xCantidadMax);	
 	// $(idFind)[0].dataset.stock_actual = xCantidadMax
+	$(idFind + ' #numStock').text(xCeroIzq(xCantidadMax,2));
 	$(idFind + ' span.xcant_li2').attr('data-cantmax', xCantidadMax);
+	
+	// clase color
+	xClassEstadoStock = xClassEstadoItem(xCantidadMax).split("|")[1];
+	$(idFind + ' #content-stock-item').removeClass();
+	$(idFind + ' #content-stock-item').addClass('stock_item ' + xClassEstadoStock);
+
 
 	xGeneralDataCarta[index].stock_actual = xCantidadMax;
 	xGeneralDataCarta[index].cantidad = xCantidadMax;

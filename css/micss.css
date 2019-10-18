@@ -1167,7 +1167,7 @@ ul.list_add_item2 li {
 }
 .li_nofocus{outline:none;}
 
-.xtitulo_li2{width: 230px;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.xtitulo_li2{width: 235px;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 /*ul.list_add_item2 li:last-child { border-bottom: none;}*/
 .list_add_item2 li:hover{background: #fff9c4; color: #212121}
 .list_add_item2 li:hover .xBtn_li2{visibility: visible; z-index: 1000;}
