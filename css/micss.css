@@ -297,6 +297,7 @@ paper-dialog.xStandar{height:auto;width:40%;}
 .xIconTrNoVisible{cursor:pointer;visibility: hidden;display: inline-block; vertical-align:middle; background-repeat:no-repeat;background-size:auto; padding-right: 5px;}
 .xIconTr,.xIconTrNoVisible.xIcoDelete{background-image:url('../images/_delete2.png'); width: 16px; height: 16px;}
 .xIconTr,.xIconTrNoVisible.xIcoDetalle{background-image:url('../images/_detalles.png');width: 16px; height: 16px;}
+.xIconTr,.xIconTrNoVisible.xIcoSubItem{background-image:url('../images/_subitem.png');width: 16px; height: 16px;}
 .xIconTr,.xIconTrNoVisible.xIcoCamara{background-image:url('../images/_camara.png');width: 16px; height: 16px;}
 
 table thead{font-weight:700;padding:0px;margin:0px;}
@@ -656,6 +657,7 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xFondoColorVerde{background: #43a047; color: #fff;}
 .xFondoColorAmarillo{background: #FFA000; color: #fff;}
 .xFondoColorRojo{background: #D50000; color: #fff;}
+.xFondoColorAmbar{background: #ff6f00; color: #fff;}
 .xFondoColorPlomo {
     background: darkgrey;
     color: black;
@@ -668,6 +670,7 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xmenu_item_2.xEstadoVerde{border-left:thick solid #43a047;}
 .xmenu_item_2.xEstadoAmarillo{border-left:thick solid #FFA000;}
 .xmenu_item_2.xEstadoRojo{border-left:thick solid #D50000; text-decoration:line-through;color:#D50000;}
+.xmenu_item_2.xEstadoAmbar{border-left:thick solid #ff6f00; color:#ff6f00;}
 .xmenu_item_2:hover {background: #424242;}
 .xmenu_item_2:hover p{color: #FFFFFF;}
 .xmenu_item_2:hover span{color: #9E9E9E;}

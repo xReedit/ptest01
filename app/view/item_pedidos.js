@@ -446,9 +446,15 @@ function xClassEstadoItem(xCantItem){
 	if(xCantItem=='ND'){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}
 			else{
 				xCantItem=parseInt(xCantItem);
-				if(xCantItem>=5){xClassEstado='xEstadoAmarillo';xClassEstadoStock='xFondoColorAmarillo';}
-				if(xCantItem>=10){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}
-				if(xCantItem<5){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
+				if(xCantItem>5){xClassEstado='xEstadoAmarillo';xClassEstadoStock='xFondoColorAmarillo';}					if(xCantItem>=5){xClassEstado='xEstadoAmarillo';xClassEstadoStock='xFondoColorAmarillo';}
+				if(xCantItem>=10){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}					if(xCantItem>=10){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}
+				if(xCantItem<=5){xClassEstado='xEstadoAmbar';xClassEstadoStock='xFondoColorAmbar';}
+				if(xCantItem<=0){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
+
+				// if(xCantItem>=5){xClassEstado='xEstadoAmarillo';xClassEstadoStock='xFondoColorAmarillo';}
+				// if(xCantItem>=10){xClassEstado='xEstadoVerde';xClassEstadoStock='xFondoColorVerde';}
+				// if(xCantItem<=5){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
+				// if(xCantItem<=0){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
 				// if(xCantItem<=0){xClassEstado='xEstadoRojo';xClassEstadoStock='xFondoColorRojo';}
 			}
 

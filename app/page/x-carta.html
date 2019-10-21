@@ -1,5 +1,64 @@
 <dom-module id="x-carta">
 	<template>
+		<paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<h4>Sub Items</h4>							
+				<!-- <span style="font-size: 11px; line-height: 1;color: grey;">Agregue los sub item y condiciones al item principal, estas se mostrarn en el app de pedidos. Ej: <br>1) En una heladeria, el cono de helado puede salir con 2 sabores; ingrese en los subiten todos los sabores e indique que es requerido que seleccione por lo menos 2 alternativas. <br>2) En una polleria, el 1/4 de pollo se sirve con una guarnicion, ingrese en los subitem todas las guarniciones disponibles e indique que es requerido que seleccione una de las alternativas.</span> -->
+				<!-- <br> -->
+
+				<div id="accordion">
+					<h3>Como funciona?</h3>
+					<div>
+					  <p style="font-size: 11px; line-height: 1;color: grey;">Agregue los sub item y condiciones al item principal, estas se mostrarn en el app de pedidos. Ej: <br>1) En una heladeria, el cono de helado puede salir con 2 sabores; ingrese en los subiten todos los sabores e indique que es requerido que seleccione 2 alternativas. <br>2) En una polleria, el 1/4 de pollo se sirve con una guarnicion, ingrese en los subitem todas las guarniciones disponibles e indique que es requerido que seleccione una de las alternativas.</p>
+					</div>
+					<h3>Precio Adicional</h3>
+					<div>
+					  <p style="font-size: 11px; line-height: 1;color: grey;">En la casilla de precio coloque cero (0) si no afecta al precio principal o agregue la cantidad que suma al precio principal; por ejemplo: En una polleria si el 1/4 de pollo tiene un precio de 15.00, y si sale con la guarnicion de papas andinas fritas el precio se suma 2.00 mas. <br>Entonces el subitem  de papas andinas fritas en la casilla de precio se tendria que colocar 2.00</p>
+					</div>						
+				</div>
+
+				<hr>
+
+				<paper-fab mini icon="add" onclick="addSubItem()" class="xDerecha"></paper-fab>
+				<table>
+					<thead width="100%">
+						<th width="50%"><input type="text" class="xMiInput xPasarEnter2 w-100" id="txt_sub_des" placeholder="DESCRIPCION" onChange="conMayusculas(this)"></th>
+						<th width="25%"><input type="text" class="xMiInput xPasarEnter2" id="txt_sub_cant" placeholder="CANT" onChange="conMayusculas(this)"></th>
+						<th width="25%"><input type="number" class="xMiInput" id="txt_sub_precio" placeholder="PRECIO" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"></th>
+						<th></th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="{{ListSubItems}}" as="item">
+							<tr data-index="{{index}}" data-t="item_subitem" data-id="{{item.iditem_subitem}}" class="xCursor">
+								<td>{{item.descripcion}}</td>
+								<td>{{item.cantidad}}</td>
+								<td>{{item.precio}}</td>
+								<td><span class="xDeleteRow" title="Anular" onclick="xBorrarItem(this);"></span></td>
+							</tr>
+						</template>
+						<tr>
+							<td class="xBold">Cantidad Total </td>
+							<td class="xBold">{{cantidadSubItems}}</td>
+							<td>.</td>
+							<td>.</td>
+						</tr>
+					</tbody>
+				</table>
+				<br><br>
+				<h4>Condiciones</h4>
+				<hr>
+				<label for="txt_sub_condicion_cant">Cuantos subitem o alternativas se pueden seleccionar?</label>
+				<input type="number" style="width: 100px;" class="xMiInput" id="txt_sub_condicion_cant" placeholder="Cant" onChange="conMayusculas(this)">
+				<br><br>
+				<paper-checkbox id="xcheck_subitem_required" data-index="{{index}}" data-procede="u">Es requerido que se seleccione?</paper-checkbox>				
+
+				<br><br><br>
+				<div class="xBoton2 xAzul" dialog-confirm  onclick="addSubItemItem();">Listo, guardar</div>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+			</div>
+		</paper-dialog>
+
+
 		<paper-dialog id="dialog_detalle" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
 				<h4 id="dlg_des_item">Item</h4>
@@ -182,7 +241,7 @@ var xThisCarta
 , xIdCartaAnterior
 , xIdObjImgDet='' //foto o detalle;
 , xidCategoria ///remplazar luego por el select
-, xFechaUltimaCarta, xdebounce, xe_debounce=false;
+, xFechaUltimaCarta, xdebounce, xe_debounce=false, xdtCAct, itemSelectSubItem;
 
 //var xIdCartaUpdate='';
 
@@ -199,6 +258,10 @@ function xInicarta(){
 		xIdCarta='';
 		xLoadItemsCategoria();
 		xLoadCarta();		
+		$( "#accordion" ).accordion({
+			heightStyle: "content",
+			collapsible: false
+		});
 	});
 
 
@@ -212,6 +275,7 @@ function xInicarta(){
 
 
 	//xLoadUltimaCarta()
+	xThisCarta.ListSubItems = [];
 
 	xPasaEnterClass();
 
@@ -279,7 +343,7 @@ function xPasaEnterClass(){//actualiza controles input para pasa enter
 			  	  nextBox.focus();
 			  	  nextBox.select();
 			    }
-			    event.stopPropagation();
+			   	event.stopPropagation();
 			    e.stopPropagation();
 			    e.stopImmediatePropagation()
 			    return false;
@@ -374,14 +438,15 @@ function xGuardarCambiosOrden(){
 }*/
 
 function xGuardarCambios(){
-	var xObjSeccion;
-	var xSqlLista='';
-	var xSqlPrevio='';
-	var xFechaInsert=xDevolverFechaTrim2();
-	var xIdItemCarList='';
-	var xsec_orden=0;
-	var xArraySeccionItem=new Array();
-	var contador_row=0;
+	var xObjSeccion
+	, xSqlLista=''
+	, xSqlPrevio=''
+	, xFechaInsert=xDevolverFechaTrim2()
+	, xIdItemCarList=''
+	, xsec_orden=0
+	, xArraySeccionItem=new Array()
+	, contador_row=0;
+
 	xPopupLoad.xopen();
 
 	// get primera impresora
@@ -580,7 +645,7 @@ function xItemGuardarDetalle(){
 		xPopupLoad.xclose();
 	})
 }
-function xItemDetalle(obj){
+function xItemDetalle(obj, e){
 	xObjImgDet=obj;
 	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
 	var xval_det=$(obj).parents('tr').find("#td_detalle").text();
@@ -588,11 +653,14 @@ function xItemDetalle(obj){
 	$("#dialog_detalle #dlg_des_item").text(xval_des)
 	$("#dialog_detalle #dlg_det_item").val(xval_det)
 	dialog_detalle.open();
+
+	e.stopPropagation();
+	e.stopImmediatePropagation();
 }
 function xSeleccionarFoto(){
 	$("#ctrl_open_file").click();
 }
-function xItemFoto(obj){
+function xItemFoto(obj, e){
 	xObjImgDet=obj;
 	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
 	var xval_des=$(obj).parent().text();
@@ -607,6 +675,9 @@ function xItemFoto(obj){
 	$("#dialog_foto #dlg_des_item").text(xval_des)
 	$("#ctrl_open_file").val('');
 	dialog_foto.open();
+
+	e.stopImmediatePropagation();
+	e.stopPropagation();
 }
 function xAddRowItem(obj){
 	var xtr=$(obj).parents('tr')
@@ -634,8 +705,9 @@ function xAddRowItem(obj){
 			var xCadenaNoRow='<tr class="row nomarcar" data-id="'+xitem_id+'" data-nombus="'+xitem_d+'">'+
 			'<td data-id="'+xseccion_id+'" id="td_des" onclick="xModRow(this,3);">'+
 				'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+
-				'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
-				'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
+				// '<span class="xIconTrNoVisible xIcoSubItem xDerecha" title="Sub Items" onclick="xOpenDialogSubItem(' + xitem_id + ');"></span>'+
+				'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this, event);"></span>'+
+				'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this, event);"></span>'+
 				xitem_d+
 			'</td>'+
 			'<td align="right" data-ColumName="precio" onclick="xModRow(this,1);" id="td_precio">'+xMoneda(xitem_p)+'</td>'+
@@ -696,15 +768,16 @@ function xLoadListadoCartaActual(){
 	xIdCarta = '';
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2051', data:{i:xidCategoria}})
 	.done( function (dtCAct) {
-		var xListCartaActual='';
-		var xCadenaSeccionList='';
-		var xdtCAct=$.parseJSON(dtCAct);
-		var xCadenaNoRow='';
-		var xSeccionArray = new Array();
-		var xidSeccionArray='';
-		var xCountArray=0;
-		var xClassCheckPrint='';
-		var xClassCheckPrintCero='';
+		var xListCartaActual=''
+		, xCadenaSeccionList=''	
+		, xCadenaNoRow=''
+		, xSeccionArray = new Array()
+		, xidSeccionArray=''
+		, xCountArray=0
+		, xClassCheckPrint=''
+		, xClassCheckPrintCero=''
+		
+		xdtCAct=$.parseJSON(dtCAct);
 		xdtCAct=xdtCAct.datos;
 
 		$("#f_uc").text('');
@@ -757,8 +830,9 @@ function xLoadListadoCartaActual(){
 				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xdtCAct[i].idcarta_lista +'" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
 				'<td data-id="'+xidSeccionArray+'" id="td_des" onclick="xModRow(this,3);" class="txt_modifica_bd">'+
 					'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocalBD(this);"></span>'+
-					'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this);"></span>'+
-					'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this);"></span>'+
+					'<span class="xIconTrNoVisible xIcoSubItem xDerecha" title="Sub Items" onclick="xOpenDialogSubItem(' + i + ', event);"></span>'+
+					'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this, event);"></span>'+
+					'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this, event);"></span>'+
 					xdtCAct[i].des_item+
 				'</td>'+
 				'<td align="right" data-ColumName="precio" class="txt_modifica_bd" onclick="xModRow(this,1);" id="td_precio">'+xdtCAct[i].precio+'</td>'+
@@ -1004,12 +1078,84 @@ function xfiltrarCartaHistorial() {
 		}, 900);
 	}
 
+function xOpenDialogSubItem(index, e) {
+	itemSelectSubItem = xdtCAct[index];
+	xloadSubItems(itemSelectSubItem.iditem);
+	dialog_subitem.open();
+
+	e.stopPropagation();
+	e.stopImmediatePropagation()
+}
+
+function addSubItem() {
+	const dataSubItem = {
+		iditem: itemSelectSubItem.iditem,
+		descripcion: txt_sub_des.value,
+		cantidad: txt_sub_cant.value,
+		precio: txt_sub_precio.value,
+		cant_select: txt_sub_condicion_cant.value,
+		required_select: xcheck_subitem_required.checked ? 1 : 0
+	} 
+	
+	xPopupLoad.xopen();
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=8', data:{item:dataSubItem}})
+	.done( function (a) {		
+		xloadSubItems(itemSelectSubItem.iditem);
+
+		txt_sub_des.value = '';
+		txt_sub_cant.value = '';
+		xPopupLoad.xclose();
+	});
+
+	// console.log(dataSubItem);
+}
+
+function addSubItemItem() {
+	const dataSubItem = {
+		iditem: itemSelectSubItem.iditem,
+		cant_select: txt_sub_condicion_cant.value,
+		required_select: xcheck_subitem_required.checked ? 1 : 0,
+		cantidad: parseInt(xThisCarta.cantidadSubItems) ? parseInt(xThisCarta.cantidadSubItems) : null   // esto reemplaza a la cantidad especificada en carta, siempre y cuando sean cantidades fijas, si es nd no reemplaza
+	} 	
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=800', data:{item:dataSubItem}})
+	.done( function (a) {
+		dialog_subitem.close();
+	});
+}
+
+function xloadSubItems(iditem) {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=801', data:{i:iditem}})
+	.done( function (dtSubItem) {
+		dtSubItem = JSON.parse(dtSubItem);
+		xThisCarta.ListSubItems = dtSubItem.datos;
+
+		xThisCarta.cantidadSubItems = xThisCarta.ListSubItems.map(x => parseInt(x.cantidad)).reduce((a, b) => a + b , 0);
+		xThisCarta.cantidadSubItems = isNaN(xThisCarta.cantidadSubItems) ? '-' : xThisCarta.cantidadSubItems;
+		console.log('ListSubItems', dtSubItem.datos);
+
+		// item
+		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=802', data:{i:iditem}})
+		.done( function (dtItem) {
+			dtItem = JSON.parse(dtItem);
+			dtItem = dtItem.datos[0];
+
+			xcheck_subitem_required.checked = parseInt(dtItem.subitem_required_select) === 1 ? true : false;
+			txt_sub_condicion_cant.value = dtItem.subitem_cant_select;
+		});
+	})
+}
+
+
 Polymer({
 	is:'x-carta',
 	properties:{
 		dt_item:Object,
 		dt_seccion:Object,
 		ListHistorial: [],
+		ListSubItems: [],
+		cantidadSubItems: 0
 	},
 	attached:function(){
 		this.selected=0;
