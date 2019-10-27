@@ -103,18 +103,18 @@ if($logo_post!=''){
 		$printer -> setTextSize($val_size_font_comanda_tall, 1);	
 	}
 
-	$printer -> setJustification(Printer::JUSTIFY_LEFT);
-	$printer -> setEmphasis(true);				
-	$printer -> text('ENTRADAS'."\n");
-	$printer -> text($linea_hr);	
-	$printer -> setEmphasis(false);
+	// $printer -> setJustification(Printer::JUSTIFY_LEFT);
+	// $printer -> setEmphasis(true);				
+	// $printer -> text('ENTRADAS'."\n");
+	// $printer -> text($linea_hr);	
+	// $printer -> setEmphasis(false);
 
-	//destalles
-	$printer -> setEmphasis(false);
-	$printer -> text(new item('01 ARROZ CON LECHE', '2.00'));
-	$printer -> text(new item('01 ENSALADA FRESCA', '2.00'));
-	$printer -> text(new item('01 CAUSA RELLENA', '5.00'));
-	$printer -> feed();
+	// //destalles
+	// $printer -> setEmphasis(false);
+	// $printer -> text(new item('01 ARROZ CON LECHE', '2.00'));
+	// $printer -> text(new item('01 ENSALADA FRESCA', '2.00'));
+	// $printer -> text(new item('01 CAUSA RELLENA', '5.00'));
+	// $printer -> feed();
 
 
 	//SECCION 2
@@ -127,6 +127,19 @@ if($logo_post!=''){
 	//destalles
 	$printer -> setEmphasis(false);
 	$printer -> text(new item('01 AJI DE GALLINA', '10.00'));
+
+		// item-subitems
+		$printer -> setFont(Printer::FONT_B);		
+		
+		$printer -> setEmphasis(false);
+		$printer -> text(new item_subitem('01 peccho', '+2.00'));
+		$printer -> text(new item_subitem('02 entrepierna', '.'));		
+		// $printer -> text("\n");
+		// $printer -> text(new item_subitem('..', ''));
+		$printer -> feed();
+		$printer -> setFont(Printer::FONT_A);
+		
+
 	$printer -> text(new item('01 ARROZ CON MARISCOS', '10.00'));
 	$printer -> text(new item('01 LOMITO SALTADO', '10.00'));
 	
@@ -182,6 +195,35 @@ class item
             $leftCols = $leftCols / 2 - $rightCols / 2;
         }
         $left = str_pad($this -> name, $leftCols) ;
+
+        $sign = ($this -> dollarSign ? 'S/. ' : '');
+        $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);
+        return "$left$right\n";
+    }
+}
+
+class item_subitem
+{
+    private $name;
+    private $price;
+    private $dollarSign;
+
+    public function __construct($name = '', $price = '', $dollarSign = false)
+    {
+        $this -> name = $name;
+        $this -> price = $price;
+        $this -> dollarSign = $dollarSign;
+    }
+
+    public function __toString()
+    {
+        $rightCols = 26;
+        $leftCols = $GLOBALS['leftCols'];
+        if ($this -> dollarSign) {
+            $leftCols = $leftCols / 2 - $rightCols / 2;
+		}
+
+        $left = str_pad('    '.$this -> name, $leftCols) ;
 
         $sign = ($this -> dollarSign ? 'S/. ' : '');
         $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);

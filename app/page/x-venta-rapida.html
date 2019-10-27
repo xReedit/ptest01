@@ -2,6 +2,7 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <link rel="import" href="../web_components/paper-progress/paper-progress.html">
 <link rel="import" href="../x-componentes/x-comp-datos-delivery/x-comp-datos-delivery.html">
+<link rel="import" href="../x-componentes/x-comp-item-subitems/x-comp-item-subitems.html">;
 <dom-module id="x-venta-rapida">		
 	<template>
 			<!-- <paper-toolbar id="panel_toolbarx">
@@ -49,17 +50,17 @@
 			  </button>
 			</div>
 		  </paper-dialog>
-
+<!-- 
 		<paper-dialog id="dialog_item" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xdlgBody" id="_xdlgBody">
 			  <div class="spinner"><paper-spinner active></paper-spinner></div>
 			</div>
-			<br />
+			<br/>
 			<div class="xBoton2 xPlomo xInvisible divLeft23" id="dlgBtn" onclick="xListoDlgVR();">
 			  Cerrar
 			</div>
-			<br /><br />
-		</paper-dialog>
+			<br/><br/>
+		</paper-dialog> -->
 		  
 	  	<div class="tool-bar-vr">
 			<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDeVR();"></paper-icon-button>
@@ -87,6 +88,8 @@
 		<!-- <br> -->
 		<x-comp-datos-delivery id="component_datos_delivery"></x-comp-datos-delivery>
 
+		<!-- subitems -->
+		<x-comp-item-subitems id="comp_subitems"></x-comp-item-subitems>
 
 
 		<!-- <paper-dialog id="dialog_datos_delivery" style="max-width: 520px" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -480,7 +483,7 @@ var xThisVentaRapida
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
 xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=false
-, xCadenaTC='', isSocket = false;
+, xCadenaTC='', xCompSubitems, isSocket = false;
 
 
 
@@ -716,6 +719,8 @@ function xIniVentaRapida(){
 			e.stopImmediatePropagation()
 		}
 	});
+
+	xCompSubitems=document.getElementById('comp_subitems');
 
 	xCompDatosDelivery=document.getElementById('component_datos_delivery');
 	xCompDatosDelivery.addEventListener('xGetDatosDelivery', function (e) {
@@ -1386,7 +1391,26 @@ function _cpStockItemModificado(item){
 
 	xGeneralDataCarta[index].stock_actual = xCantidadMax;
 	xGeneralDataCarta[index].cantidad = xCantidadMax;
+
+	// puede que no traiga esta propiedad subitems_selected
+	try {
+		xGeneralDataCarta[index].subitems_selected = itemPedidos_objItemSelected.subitems_selected;		
+		xGeneralDataCarta[index].subitems = itemPedidos_objItemSelected.subitems;
+	} catch (error) {}
+
 	itemPedidos_objItemSelected = xGeneralDataCarta[index];
+
+	// subitems
+	if (item.subitems) {
+		item.subitems.map((asub) => {
+			itemPedidos_objItemSelected.subitems.filter((bsub) => asub.iditem_subitem === bsub.iditem_subitem)[0].cantidad = asub.cantidad;
+		});
+
+		try { // actualiza la vista componente
+			xCompSubitems.refreshSubItems();			
+		} catch (error) {}
+	}
+
 	// $(idFind + ' span.xcant_li')[0].dataset.cantmax = xCantidadMax	
 	if ( xtachar_li != '' ) {
 		$(idFind).find('.xtitulo_li2').addClass(xtachar_li);
@@ -1432,10 +1456,27 @@ function xVerMipedidoVR(){
 				if(xArraySeccion[n.idseccion_index]==null){xArraySeccion[n.idseccion_index]='<tr><td colspan="2" class="xSinBorde xBold">'+n.des_seccion+'</td></tr>';}
 				//idcategoria en pedido
 
+				/// subtitems_views
+				var cadenaSubItemView = '', precioSubitem;
+				if ( n.subitems_view ) {
+					n.subitems_view.map(subitem => {	
+						precioSubitem = parseFloat(subitem.precio);
+						precioSubitem = isNaN(precioSubitem) ? 0 : precioSubitem;
+						subitem.precio_mostrar = precioSubitem === 0 ? '.' : precioSubitem.toFixed(2);
+						subitem.precio = precioSubitem;
+						cadenaSubItemView += String(`												
+								<tr class="subitem-content-resumen">
+									<td style="padding-left: 35px;">${subitem.cantidad_seleccionada} ${subitem.des}</td>
+									<td style="text-align: right;">${subitem.precio_mostrar}</td>
+								</tr>													
+						`);
+					});
+				}
+
 				xCadenaItemArray=String('<tr class="xPedidoItem row xCursor" onclick="xOpenDlgItemVR('+ i +','+ n.iditem  +');" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'">'+
 					'<td width="90%">'+xCeroIzq(n.cantidad,2)+' | '+n.des+' '+xIndicacionItem+'</td>'+
 					'<td class="xInvisible" data-ColumName="cantidad" id="cant_descontar">'+xCeroIzq(n.cantidad,2)+'</td>'+
-					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+
+					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+					
 					'<td class="xInvisible" id="ptotal_calc">' + n.precio_total_calc + '</td>' +
 					'<td class="xInvisible" data-ColumName="punitario" id="punitario">'+n.precio+'</td>'+
 					'<td class="xInvisible" id="td_cant">'+n.cantidad+'</td>'+
@@ -1449,7 +1490,8 @@ function xVerMipedidoVR(){
 					'<td class="xInvisible" data-ColumName="procede">'+n.procede_index+'</td>'+ //guardar relacion idprocede=idproducto_familia
 					'<td class="xInvisible" id="row_tb_procede">'+n.procede+'</td>'+ //tabla de procedencia
 					'<td class="xInvisible" data-ColumName="idpedido">?p</td>'+
-					'</tr>');
+					'</tr>' + cadenaSubItemView
+					);
 
 				xArraySeccion[n.idseccion_index]=xArraySeccion[n.idseccion_index]+xCadenaItemArray;
 				xHayPedido=1;
@@ -1607,25 +1649,33 @@ function setValuesStorage() {
 }
 
 function xOpenDlgItemVR(tpc, id) {
-    itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
-    xidItem = id; // $(obj).attr("data-id");
-    xTituloDet = itemPedidos_objItemSelected.des_seccion; // $(obj).attr("data-seccion");
-    var xidsecc_item = itemPedidos_objItemSelected.idseccion // $(obj).attr("data-idseccion");
-    , xidproc_item = itemPedidos_objItemSelected.procede //$(obj).attr("data-procede");
-    , xCantArray
-    , xindicaciones = ''
-    , xidTipoConsumoItem;
 
-    $("#_xdlgBody")
-      .html(
-        '<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>'
-      )
-      .trigger("create");
-    $("#dlgBtn").addClass("xInvisible");
-    xLoadItemMiPedidoVR(xidItem, xidsecc_item, xidproc_item);
+	xCompSubitems.item_select = itemPedidos_objItemSelected;
+	xCompSubitems.openDialog(tpc, id);
+	//dialog_item_comp.open();
 
-    dialog_item.open();
-    // objOptionItemSelect.checked = false;
+    // itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
+    // xidItem = id; // $(obj).attr("data-id");
+    // xTituloDet = itemPedidos_objItemSelected.des_seccion; // $(obj).attr("data-seccion");
+    // var xidsecc_item = itemPedidos_objItemSelected.idseccion // $(obj).attr("data-idseccion");
+    // , xidproc_item = itemPedidos_objItemSelected.procede //$(obj).attr("data-procede");
+    // , xCantArray
+    // , xindicaciones = ''
+    // , xidTipoConsumoItem;
+
+    // $("#_xdlgBody")
+    //   .html(
+    //     '<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>'
+    //   )
+    //   .trigger("create");
+    // $("#dlgBtn").addClass("xInvisible");
+    // xLoadItemMiPedidoVR(xidItem, xidsecc_item, xidproc_item);
+
+	// dialog_item.open();
+	
+
+
+    // // objOptionItemSelect.checked = false;
   }
 
 function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
@@ -1800,6 +1850,7 @@ Polymer({
 		xdt_items:Object,
 		xt_nombre_sede: String,
 		xt_eslogan: String,
+		// listSubItems: Object,
 		hidden_container_registro_pago: boolean = false,
 		valid_form_cliente_pago: boolean = false,
 		valid_monto_pago: boolean = false,

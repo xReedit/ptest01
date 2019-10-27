@@ -322,6 +322,27 @@ while($num_copias>=0){
 			$printer -> text(new item($r_subitem, $precio));			
 			if($des_part2!=''){$printer -> text(new item($des_part2, ''));}
 			if($des_part3!=''){$printer -> text(new item($des_part3, ''));}
+
+			// ITEM-SUBITEMS <-----------
+			$ListSubItem = array_key_exists('subitems_view', $subitem) ? $subitem['subitems_view'] : null;
+
+			if ( $ListSubItem && count($ListSubItem) > 0) {
+				$printer -> setFont(Printer::FONT_B);
+				foreach ($ListSubItem as $sub) {
+					$indicaciones_item_sub=$sub["indicaciones"];
+					if($indicaciones_item_sub!=''){$indicaciones_item_sub='('.$indicaciones_item_sub.')';}
+
+					$des_sub_item = $sub['cantidad_seleccionada'].' '.$sub['des'].$indicaciones_item_sub;
+					$precio_sub_item = $sub['precio'] === '0' ? '.' : '+'. number_format((float)$sub['precio'], 2, '.', '');
+					$printer -> text(new item_subitem(strtolower($des_sub_item), $precio_sub_item));
+				}
+				$printer -> text(new item_subitem('....', ''));
+				// $printer -> feed();
+				$printer -> setFont(Printer::FONT_A);
+			}
+
+			// ITEM-SUBITEMS ----------->
+
 			$printer -> selectPrintMode();
 			// $printer -> setTextSize(1, 1);
 		}	
@@ -409,6 +430,35 @@ class item
         $left = str_pad($this -> name, $leftCols) ;
 
         $sign = ($this -> dollarSign ? 'S/.' : '');
+        $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);
+        return "$left$right\n";
+    }
+}
+
+class item_subitem
+{
+    private $name;
+    private $price;
+    private $dollarSign;
+
+    public function __construct($name = '', $price = '', $dollarSign = false)
+    {
+        $this -> name = $name;
+        $this -> price = $price;
+        $this -> dollarSign = $dollarSign;
+    }
+
+    public function __toString()
+    {
+        $rightCols = 26;
+        $leftCols = $GLOBALS['leftCols'];
+        if ($this -> dollarSign) {
+            $leftCols = $leftCols / 2 - $rightCols / 2;
+		}
+
+        $left = str_pad('    '.$this -> name, $leftCols) ;
+
+        $sign = ($this -> dollarSign ? 'S/. ' : '');
         $right = str_pad($sign . $this -> price, $rightCols, ' ', STR_PAD_LEFT);
         return "$left$right\n";
     }

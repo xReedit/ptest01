@@ -1215,6 +1215,13 @@ ul.list_add_item2 li {
     color: white !important;
 }
 
+.subitem-content-resumen {
+    background: #eceff1;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 12px;
+    color: #616161;
+  }
+
 /*#xVentaRapidaBuscar{width: 50%;}*/
 
 .xIndicadorSize1{width: 370px; height: 390px;}

@@ -134,10 +134,22 @@ function handlerFnMiPedido(e) {
 
 		xPrecioTotal=parseFloat(xCantActual*xPrecioItem).toFixed(2);
 
-
+		
+		const mySubItemView = checkMySubitemView(xidTipoConsumo, xidItem);
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
 		xArrayPedidoObj[xidTipoConsumo][xidItem]={'idcategoria':xidCategoria, 'idseccion':xIdSeccionItem, 'idseccion_index':xIdSeccionItem_index, 'des_seccion':xDesSeccion, 'iditem':xidItem, 'idtipo_consumo':xidTipoConsumo, 'stock_actual': xStockActual, 'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
-			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal ,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0};
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal ,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0
+			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
+			,'subitems': itemPedidos_objItemSelected.subitems
+			,'subitems_selected' : itemPedidos_objItemSelected.subitems_selected
+			,'subitem_required_select': itemPedidos_objItemSelected.subitem_required_select
+			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
+			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView 
+		};
+
+		// subitems_view
+		const sumar  =  xsigno === '+' ? true : false;
+		xAddSubItemsView(xidTipoConsumo, xidItem, sumar);
 
 		if(xCantActual<=0){delete xArrayPedidoObj[xidTipoConsumo][xidItem]}
 
@@ -163,6 +175,8 @@ function handlerFnMiPedido(e) {
 				iditem: itemPedidos_objItemSelected.iditem,
 				isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
 				isporcion: itemPedidos_objItemSelected.isporcion,
+				subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
+				subitems_selected: itemPedidos_objItemSelected.subitems_selected,
 				sumar:  xsigno === '+' ? true : false
 			}
 			
@@ -292,9 +306,17 @@ function handlerFnMiPedidoControl(e) {
 		// xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
 		// 	'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
 		
+		var mySubItemView = checkMySubitemView(xli_tipoconsumo, xli_tipoconsumo);
+
 		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal, 'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 'iditem2': xidItem2, 'idimpresora': xli_idimpresora, 'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
 			,'pwa': isSocket ? 1 : 0, isporcion: itemPedidos_objItemSelected.isporcion
+			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
+			,'subitems': itemPedidos_objItemSelected.subitems
+			,'subitems_selected' : itemPedidos_objItemSelected.subitems_selected
+			,'subitem_required_select': itemPedidos_objItemSelected.subitem_required_select
+			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
+			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView
 			};
 
 		element_cant_li_sel.text(xcant);
@@ -315,6 +337,8 @@ function handlerFnMiPedidoControl(e) {
 				iditem: itemPedidos_objItemSelected.iditem,
 				isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
 				isporcion: itemPedidos_objItemSelected.isporcion,
+				subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
+				subitems_selected: itemPedidos_objItemSelected.subitems_selected,
 				sumar:  xsigno === '+' ? true : false
 			}
 			
@@ -354,6 +378,112 @@ function xNotifyItemModificado(item) {
 
 // enviar item modificado socket
 
+function checkMySubitemView(tpc, id) {
+	try {
+		return xArrayPedidoObj[tpc][id].subitems_view ? xArrayPedidoObj[tpc][id].subitems_view : null
+	} catch (error) {
+		return null;
+	}
+}
+
+function xAddSubItemsView(tpc, id, sumar) {
+	var elItem = xArrayPedidoObj[tpc][id];
+	elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];
+
+	if (elItem.subitems.length === 0 ) { return; }
+    var newSubItemView = {};
+    newSubItemView.id = 0;
+    newSubItemView.des = '';
+    newSubItemView.cantidad_seleccionada = 0;
+    newSubItemView.precio = 0;
+    newSubItemView.indicaciones = '';
+	newSubItemView.subitems = [];
+
+	if ( elItem.subitems_selected ) {
+
+        elItem.subitems_selected.map((x) => {
+          newSubItemView.id += x.id;
+          newSubItemView.des += x.des + ' ';
+          newSubItemView.cantidad_seleccionada = 1;
+          newSubItemView.precio += parseFloat(x.precio);
+          newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  x.indicaciones + '. ';
+          newSubItemView.subitems.push(x);
+        });
+
+        // itemCarta para sacar los indicadores
+        // itemCarta.indicaciones = '';
+        elItem.indicaciones = '';
+        elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];
+
+        const isExistSubItemView = elItem.subitems_view.filter((subView) => subView.id === newSubItemView.id)[0];
+        if ( isExistSubItemView ) {
+          if ( sumar ) {
+            isExistSubItemView.indicaciones += newSubItemView.indicaciones;
+            isExistSubItemView.cantidad_seleccionada += 1;
+            isExistSubItemView.precio += newSubItemView.precio;
+          } else {
+            // resta
+            this.restarCantSubItemView(elItem, isExistSubItemView);
+          }
+        } else {
+          // isExistSubItemView.indicaciones = newSubItemView.indicaciones;
+          if ( sumar ) {
+			elItem.subitems_view.push(newSubItemView);
+			xArrayPedidoObj[tpc][id].subitems_view = elItem.subitems_view;
+          } else {
+            // si es restar y no existe en la lista quita el ultimo
+            this.restarCantSubItemView(elItem, null);
+          }
+        }
+
+      } else {
+        this.restarCantSubItemView(elItem, null);
+	  }
+	  
+	  this.addPrecioItemMiPedido(elItem);
+	  
+}
+
+function restarCantSubItemView(_elItem, isExistSubItemView = null) {
+    if ( isExistSubItemView ) {
+      // si existe subitemview
+      const precioDescontar = isExistSubItemView.precio / isExistSubItemView.cantidad_seleccionada;
+      isExistSubItemView.cantidad_seleccionada -= 1;
+      isExistSubItemView.precio -= precioDescontar;
+      isExistSubItemView.precio = isExistSubItemView.precio < 0 ? 0 : isExistSubItemView.precio;
+
+      if ( isExistSubItemView.cantidad_seleccionada <= 0 ) {
+        // borrar el item
+        _elItem.subitems_view = _elItem.subitems_view.filter((subView) => subView.cantidad_seleccionada > 0);
+      }
+
+    } else {
+      // si no envia o no existe el subitemview a restar toma el ultimo
+      const lentSubItemView = _elItem.subitems_view.length;
+      const _SubItemView = _elItem.subitems_view[lentSubItemView - 1];
+      const precioDescontar = _SubItemView.precio / _SubItemView.cantidad_seleccionada;
+
+      _SubItemView.cantidad_seleccionada --;
+      _SubItemView.precio -= precioDescontar;
+
+      if ( _SubItemView.cantidad_seleccionada <= 0 ) {
+        // borrar el item
+        _elItem.subitems_view = _elItem.subitems_view.filter((subView) => subView.cantidad_seleccionada > 0);
+      }
+
+      // para restar en el back end
+      _elItem.subitems_selected = _SubItemView.subitems;
+    }
+  }
+
+function addPrecioItemMiPedido(elItem) {
+	elItem.cantidad_seleccionada = elItem.cantidad;
+	var totalSubItems = elItem.subitems_view ? elItem.subitems_view.map((subIt) => parseFloat(subIt.precio)).reduce((a, b) => a + b , 0) : 0;
+	var precioTotal = elItem.cantidad * parseFloat(elItem.precio_unitario);
+	precioTotal = parseFloat(precioTotal + totalSubItems).toFixed(2);
+	elItem.precio_total = precioTotal;
+	elItem.precio_print = precioTotal;
+}
 
 //venta rapida
 function xBtnSumarRestarKey(xobj,xval){
