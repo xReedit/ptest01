@@ -1,3 +1,4 @@
+<link rel="import" href="../x-componentes/x-comp-item-subitems-edit/x-comp-item-subitems-edit.html">;
 <dom-module id="x-carta">
 	<template>
 		<paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -19,7 +20,12 @@
 
 				<hr>
 
-				<paper-fab mini icon="add" onclick="addSubItem()" class="xDerecha"></paper-fab>
+				<x-comp-item-subitems-edit id="comp-subitems-content"></x-comp-item-subitems-edit>
+				<br>
+				<div class="xBoton2 xPlomo xDerecha" dialog-dismiss>Cerrar</div>
+				<br><br>
+
+				<!-- <paper-fab mini icon="add" onclick="addSubItem()" class="xDerecha"></paper-fab>
 				<table>
 					<thead width="100%">
 						<th width="50%"><input type="text" class="xMiInput xPasarEnter2 w-100" id="txt_sub_des" placeholder="DESCRIPCION" onChange="conMayusculas(this)"></th>
@@ -54,7 +60,7 @@
 
 				<br><br><br>
 				<div class="xBoton2 xAzul" dialog-confirm  onclick="addSubItemItem();">Listo, guardar</div>
-				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div> -->
 			</div>
 		</paper-dialog>
 
@@ -275,9 +281,11 @@ function xInicarta(){
 
 
 	//xLoadUltimaCarta()
-	xThisCarta.ListSubItems = [];
+	// xThisCarta.ListSubItems = [];
 
 	xPasaEnterClass();
+
+	xCompSubItemContet = document.getElementById('comp-subitems-content');
 
 	$(document).scroll(function() {
 		try {			
@@ -1080,72 +1088,75 @@ function xfiltrarCartaHistorial() {
 
 function xOpenDialogSubItem(index, e) {
 	itemSelectSubItem = xdtCAct[index];
-	xloadSubItems(itemSelectSubItem.iditem);
+	// xloadSubItems(itemSelectSubItem.iditem);
+	
+	xCompSubItemContet.iditem = itemSelectSubItem.iditem;
+	xCompSubItemContet.loadSubItemIni();
 	dialog_subitem.open();
 
 	e.stopPropagation();
 	e.stopImmediatePropagation()
 }
 
-function addSubItem() {
-	const dataSubItem = {
-		iditem: itemSelectSubItem.iditem,
-		descripcion: txt_sub_des.value,
-		cantidad: txt_sub_cant.value,
-		precio: txt_sub_precio.value,
-		cant_select: txt_sub_condicion_cant.value,
-		required_select: xcheck_subitem_required.checked ? 1 : 0
-	} 
+// function addSubItem() {
+// 	const dataSubItem = {
+// 		iditem: itemSelectSubItem.iditem,
+// 		descripcion: txt_sub_des.value,
+// 		cantidad: txt_sub_cant.value,
+// 		precio: txt_sub_precio.value,
+// 		cant_select: txt_sub_condicion_cant.value,
+// 		required_select: xcheck_subitem_required.checked ? 1 : 0
+// 	} 
 	
-	xPopupLoad.xopen();
+// 	xPopupLoad.xopen();
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=8', data:{item:dataSubItem}})
-	.done( function (a) {		
-		xloadSubItems(itemSelectSubItem.iditem);
+// 	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=8', data:{item:dataSubItem}})
+// 	.done( function (a) {		
+// 		xloadSubItems(itemSelectSubItem.iditem);
 
-		txt_sub_des.value = '';
-		txt_sub_cant.value = '';
-		xPopupLoad.xclose();
-	});
+// 		txt_sub_des.value = '';
+// 		txt_sub_cant.value = '';
+// 		xPopupLoad.xclose();
+// 	});
 
-	// console.log(dataSubItem);
-}
+// 	// console.log(dataSubItem);
+// }
 
-function addSubItemItem() {
-	const dataSubItem = {
-		iditem: itemSelectSubItem.iditem,
-		cant_select: txt_sub_condicion_cant.value,
-		required_select: xcheck_subitem_required.checked ? 1 : 0,
-		cantidad: parseInt(xThisCarta.cantidadSubItems) ? parseInt(xThisCarta.cantidadSubItems) : null   // esto reemplaza a la cantidad especificada en carta, siempre y cuando sean cantidades fijas, si es nd no reemplaza
-	} 	
+// function addSubItemItem() {
+// 	const dataSubItem = {
+// 		iditem: itemSelectSubItem.iditem,
+// 		cant_select: txt_sub_condicion_cant.value,
+// 		required_select: xcheck_subitem_required.checked ? 1 : 0,
+// 		cantidad: parseInt(xThisCarta.cantidadSubItems) ? parseInt(xThisCarta.cantidadSubItems) : null   // esto reemplaza a la cantidad especificada en carta, siempre y cuando sean cantidades fijas, si es nd no reemplaza
+// 	} 	
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=800', data:{item:dataSubItem}})
-	.done( function (a) {
-		dialog_subitem.close();
-	});
-}
+// 	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=800', data:{item:dataSubItem}})
+// 	.done( function (a) {
+// 		dialog_subitem.close();
+// 	});
+// }
 
-function xloadSubItems(iditem) {
-	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=801', data:{i:iditem}})
-	.done( function (dtSubItem) {
-		dtSubItem = JSON.parse(dtSubItem);
-		xThisCarta.ListSubItems = dtSubItem.datos;
+// function xloadSubItems(iditem) {
+// 	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=801', data:{i:iditem}})
+// 	.done( function (dtSubItem) {
+// 		dtSubItem = JSON.parse(dtSubItem);
+// 		xThisCarta.ListSubItems = dtSubItem.datos;
 
-		xThisCarta.cantidadSubItems = xThisCarta.ListSubItems.map(x => parseInt(x.cantidad)).reduce((a, b) => a + b , 0);
-		xThisCarta.cantidadSubItems = isNaN(xThisCarta.cantidadSubItems) ? '-' : xThisCarta.cantidadSubItems;
-		console.log('ListSubItems', dtSubItem.datos);
+// 		xThisCarta.cantidadSubItems = xThisCarta.ListSubItems.map(x => parseInt(x.cantidad)).reduce((a, b) => a + b , 0);
+// 		xThisCarta.cantidadSubItems = isNaN(xThisCarta.cantidadSubItems) ? '-' : xThisCarta.cantidadSubItems;
+// 		console.log('ListSubItems', dtSubItem.datos);
 
-		// item
-		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=802', data:{i:iditem}})
-		.done( function (dtItem) {
-			dtItem = JSON.parse(dtItem);
-			dtItem = dtItem.datos[0];
+// 		// item
+// 		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=802', data:{i:iditem}})
+// 		.done( function (dtItem) {
+// 			dtItem = JSON.parse(dtItem);
+// 			dtItem = dtItem.datos[0];
 
-			xcheck_subitem_required.checked = parseInt(dtItem.subitem_required_select) === 1 ? true : false;
-			txt_sub_condicion_cant.value = dtItem.subitem_cant_select;
-		});
-	})
-}
+// 			xcheck_subitem_required.checked = parseInt(dtItem.subitem_required_select) === 1 ? true : false;
+// 			txt_sub_condicion_cant.value = dtItem.subitem_cant_select;
+// 		});
+// 	})
+// }
 
 
 Polymer({
@@ -1154,8 +1165,8 @@ Polymer({
 		dt_item:Object,
 		dt_seccion:Object,
 		ListHistorial: [],
-		ListSubItems: [],
-		cantidadSubItems: 0
+		// ListSubItems: [],
+		// cantidadSubItems: 0
 	},
 	attached:function(){
 		this.selected=0;
