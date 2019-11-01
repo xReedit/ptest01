@@ -1,49 +1,100 @@
 <dom-module id="x-comp-item-subitems">
     <template>
-        <paper-dialog id="dialog_item_comp" style="max-width: 400px;" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-            
-            <div>
-                <div class="contet-subitem">
-                    <h4 hidden$ = "{{!isSubItemReq}}">Requiere que seleccione {{cantSubItemSelect}} opción.</h4>
-                    <h4 hidden$ = "{{isSubItemReq}}">Si desea seleccione {{cantSubItemSelect}} opción.</h4>
-                    <div class="subitem-content pl-3 pr-3 pt-2">                      
-                            <template is="dom-repeat" items="[[listSubItems]]" as="subitem" observe="_updateHack">
-                                <div class="xoption w-50 fs-13">
-                                    <paper-checkbox                                     
-                                        data-id = "{{index}}"
-                                        checked$ = "[[subitem.selected]]"
-                                        class = "check-subitem"
-                                        disabled$ = "[[subitem.disabled]]"
-                                        onchange = "addSubItem(this)"
-                                    >
-                                        <div>
-                                            {{subitem.des}}
-                                            <span class="xprecio" hidden$ = [[!subitem.precio_visible]]>
-                                                (+ {{subitem.precio}})
-                                            </span>
-                                            <span class="xprecio" hidden$ = [[!subitem.cantidad_visible]]>
-                                                | [[subitem.cantidad]]
-                                            </span>
-                                        </div>
-                                    </paper-checkbox>
-                            </div>                   
-                        </template>
-                    </div>
+        <paper-dialog id="dialog_item_comp" style="max-width: 400px; overflow-x: auto;" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <div style="max-height: 82vh;">
+            <!-- descripcion producto -->
+            <div class="xheader-top">
+                <h4>{{desProducto}} <span class="xmenu_item_2" id="contetStock">{{stockProducto}}</span></h4>
+                                
+                <!-- stock
+                <div class="xstock_item" id="contetStock">
+                    <span>stock</span>
+                    <p>{{stockProducto}}</p>
+                </div> -->
+            </div>            
+            <!-- descripcion producto -->
+
+            <!-- body -->
+            <div class="pt-55 body-content">
+                <span class="fs-12 color-secundario">{{detalleProducto}}</span>
+                <div class="xLinea2"></div>
+                <br>
+                <!-- sub items -->
+                <div>
+                    <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
+                        <div class="pb-10">
+                            <div class="xtitulo-subitems">
+                                <div>
+                                    <p class="xBold">{{contentSub.des}}</p>
+                                    <span class="fs-12 color-secundario">{{contentSub.des_cant_select}} {{contentSub.subitem_cant_select}}</span>
+                                    <span class="txt-obligatorio" hidden$="[[!contentSub.isObligatorio]]">Obligatorio</span>
+                                </div>                            
+                            </div>
+                            
+                            <div>
+                                <template is="dom-repeat" items="[[contentSub.opciones]]" as="subitem">
+                                    <div class="xoption w-100 xCursor">
+                                        <paper-checkbox   
+                                            data-item = "{{subitem}}"         
+                                            data-idcontent = "{{contentSub.iditem_subitem_content}}"
+                                            data-id = "{{index}}"
+                                            checked$ = "[[subitem.selected]]"
+                                            class = "check-subitem w-100"
+                                            disabled$ = "[[subitem.disabled]]"
+                                            onchange = "addSubItem(this)"
+                                            >                                            
+                                            <div>
+                                                    {{subitem.des}}                                                
+                                                    <span class="xprecio" hidden$ = [[!subitem.cantidad_visible]]>
+                                                        | [[subitem.cantidad]]
+                                                    </span>
+                                                    <span class="xprecio aling-derecha" hidden$ = [[!subitem.precio_visible]]>
+                                                        + {{subitem.precio}}
+                                                    </span>
+                                                </div>
+                                        </paper-checkbox>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <!-- sub items -->
+
+                <!-- otras indicaciones -->
+                <div class="xreferencia_item pt-5">
+                    <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
+                    <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia" id="txt_referencia">
+                    <hr>
+                </div>
+                <!-- otras indicaciones -->
+
+                <!-- tipos de consumo -->
+                <br><br>
+                <span class="xColorRow_Rojo" hidden$="[[isOptionRequeridosComplet]]">Hay opciones requeridas por marcar</span>
+                <div class="xdlgBody" id="_xdlgBody" disabled$="[[!isOptionRequeridosComplet]]">
+                    <div class="spinner"><paper-spinner active></paper-spinner></div>
+                </div>                
+                <!-- tipos de consumo -->
+            </div>
+            <!-- body -->            
+
+            <div class="xfooter-bottom">
+                <button class="xBoton2 xPlomo xInvisible" id="dlgBtn" onclick="xListoDlgVR_comp();">
+			        Cerrar
+                </button>
+                <div class="txt-precio">
+                    {{precioProducto}}
                 </div>
             </div>
-
-            <div class="xdlgBody" id="_xdlgBody">
-			  <div class="spinner"><paper-spinner active></paper-spinner></div>
-			</div>
-			<br/>
-			<div class="xBoton2 xPlomo xInvisible divLeft23" id="dlgBtn" onclick="xListoDlgVR_comp();">
-			  Cerrar
-			</div>
-			<br/><br/>
+        </div>
 		</paper-dialog>
     </template>
 </dom-module>
 <style>
+    hr {
+       background: #e0e0e0;       
+    }
     .subitem-content {
         display: inline-flex;
         width: 100%;
@@ -79,39 +130,162 @@
         padding: 8px 10px 8px 10px;
     }
 
+    .xtitulo-subitems {
+        background: #eeeeee;
+        width: 100%;
+        padding: 5px;
+        border-radius: 2px;
+    }
+
+    .xoption {        
+        padding-right: 8px;
+        min-width: 150px;
+        font-size: 12px;
+        display: inline-flex;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 2px;
+        padding-top: 2px;
+    }
+
+    .xoption .agotado {
+        text-decoration: line-through;
+        color: palevioletred;
+    }
+
+    .xoption .xprecio {
+        font-size: 10px;
+        color: #757575;
+    }
+
+    .xprecio.aling-derecha{
+        position: relative;
+        float: right;
+    }
+
     .xhidden {
         display: none !important;
     }
 
+    .txt-obligatorio {
+        font-size: 12px;
+        background: #bdbdbd;
+        padding: 6px;
+        margin-left: 5px;
+        border-radius: 8px;
+        position: relative;
+        float: right;
+        top: -18px;
+    }
+
+    .xheader-top {
+        padding: 25px 0px 5px;
+        background: white;
+        position: fixed;
+        /* top: 0; */
+        width: 355px;
+        z-index: 1;
+        border-bottom: 1px solid lightgray;
+        padding-bottom: 5px;
+    }
+
+    .xfooter-bottom {
+        position: sticky;
+        bottom: -1px;
+        z-index: 1;
+        border-top: 1px solid lightgray;
+        width: 355px;
+        background: white;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .txt-precio {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        font-size: 20px;
+        padding: 20px;
+    }
+
+    .body-content {
+        position: relative;
+    }
+
+    #contetStock {
+        border-radius: 5px;
+        padding: 3px;
+        font-weight: 100;
+    }
+
+    #checkboxLabel { width: 90%;}
+
+    .paper-dialog-0 > *:first-child {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+
+    #_xdlgBody[disabled] {
+        pointer-events:none;opacity:0.43;
+    }
+
 </style>
 <script>
-	var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false;
+    var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario;    
+    
+    function xIniCompSubItems() {
+        $(document).on('click', '#_xdlgBody div.xBtn', function(e) {
+            console.log('aaaaaaaaaaa');
+        }); 
+    }
 
     function xOpenDlgItemVR_comp(tpc, id) {
         
+        xThisComSubItem.isOptionRequeridosComplet = false;
+
         // itemPedidos_objItemSelected = xThisComSubItem.item_select
-        itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];        
-        xThisComSubItem.cantSubItemSelect = itemPedidos_objItemSelected.subitem_cant_select;
-        xThisComSubItem.isSubItemReq = itemPedidos_objItemSelected.subitem_cant_select === '1' ? true : false; 
+        if ( tpc ) {
+            itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
+        }
+
+        itemPedidos_objItemSelected.des = itemPedidos_objItemSelected.des ? itemPedidos_objItemSelected.des : itemPedidos_objItemSelected.des_item;
+        xThisComSubItem.desProducto = itemPedidos_objItemSelected.des;
+        xThisComSubItem.detalleProducto = itemPedidos_objItemSelected.detalle;
+        xThisComSubItem.stockProducto = itemPedidos_objItemSelected.stock_actual;        
+        _precioProductoUnitario = itemPedidos_objItemSelected.precio;
+        
+
+        _precioProductoIni = compGetTotalItemTPC();
+        xThisComSubItem.precioProducto = _precioProductoIni;
+
+        
+
+        // xThisComSubItem.cantSubItemSelect = itemPedidos_objItemSelected.subitem_cant_select;
+        // xThisComSubItem.isSubItemReq = itemPedidos_objItemSelected.subitem_cant_select === '1' ? true : false; 
         
         // itemPedidos_objItemSelected.subitems_selected = [];
 
         if (  itemPedidos_objItemSelected.subitems ) {
             if ( typeof itemPedidos_objItemSelected.subitems !== "object" ) {
-                itemPedidos_objItemSelected.subitems = JSON.parse(itemPedidos_objItemSelected.subitems);
-                
+                itemPedidos_objItemSelected.subitems = JSON.parse(itemPedidos_objItemSelected.subitems);                                
             }
-            xThisComSubItem.listSubItems = [];
-            xThisComSubItem.listSubItems = itemPedidos_objItemSelected.subitems;
+
+            // xThisComSubItem.listSubItems = [];
+            // xThisComSubItem.listSubItems = itemPedidos_objItemSelected.subitems;
+
+            xThisComSubItem.listContentSub = [];
+            xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
+            
             isExistSubitems = true;
             $('.contet-subitem').removeClass('xhidden');
         } else {
-            xThisComSubItem.listSubItems = [];
+            xThisComSubItem.listContentSub = [];
             isExistSubitems = false;
             $('.contet-subitem').addClass('xhidden');
         }
 
         cocinarListSubItemsView();
+
+        checkOptionObligario();
 
         xidItem = id; // $(obj).attr("data-id");
         xTituloDet = itemPedidos_objItemSelected.des_seccion; // $(obj).attr("data-seccion");
@@ -135,6 +309,21 @@
         // objOptionItemSelect.checked = false;
     }
 
+    // chequea si todas las opciones requeridas ya estan marcadas
+    function checkOptionObligario() {
+        var countOptionReq = 0;
+        xThisComSubItem.listContentSub.map(t => {
+            countOptionReq = t.isObligatorio ? + 1 : countOptionReq;            
+        });
+
+        xThisComSubItem.isOptionRequeridosComplet = countOptionReq === 0 ?  true : false;
+        // if ( countOptionReq === 0 ) {            
+        //     $('#_xdlgBody div.xmenu_item_2').removeClass('xInvisible');
+        // } else {
+        //     $('#_xdlgBody div.xmenu_item_2').addClass('xInvisible');
+        // }
+    }
+
     function xRefresSubItems_comp() {
         // var listUpdate = [];
         xThisComSubItem.listSubItems = [];
@@ -147,12 +336,31 @@
     }
 
     function cocinarListSubItemsView() {
-        if (xThisComSubItem.listSubItems.length > 0) {
-            xThisComSubItem.listSubItems.map( x => {                
-                x.iditem_subitem = x.id;                
-                x.precio_visible = parseFloat(x.precio) === 0 ? false : true;
-                x.cantidad_visible = isNaN(parseFloat(x.cantidad)) ? false : true;
-                x.selected = false;
+        // if (xThisComSubItem.listSubItems.length > 0) {
+        //     xThisComSubItem.listSubItems.map( x => {                
+        //         x.iditem_subitem = x.id;                
+        //         x.precio_visible = parseFloat(x.precio) === 0 ? false : true;
+        //         x.cantidad_visible = isNaN(parseFloat(x.cantidad)) ? false : true;
+        //         x.selected = false;
+        //     });
+        // }
+
+        if (xThisComSubItem.listContentSub.length > 0) {
+            xThisComSubItem.listContentSub.map( z => {                
+                z.isSoloUno = z.subitem_cant_select === 1 ? true : false;
+                z.isObligatorio = z.subitem_required_select === 1 ? true : false;
+                z.des_cant_select = z.isSoloUno ? 'Solo ': 'Hasta ';
+                z.subitem_cant_select = z.subitem_cant_select === 0 ? z.opciones.length : z.subitem_cant_select;
+                // z.isRequeridComplet = !z.isObligatorio ? true : false;
+
+                z.opciones.map(x => {
+                    x.iditem_subitem = x.iditem_subitem;                
+                    x.precio_visible = parseFloat(x.precio) === 0 ? false : true;
+                    x.precio = x.precio_visible ? parseFloat(x.precio) : 0;
+                    x.cantidad_visible = isNaN(parseFloat(x.cantidad)) ? false : true;
+                    x.disabled = x.cantidad === 0 ? true : false;
+                    x.selected = false;
+                })
             });
         }
 
@@ -167,47 +375,118 @@
     }
 
     function addSubItem(obj) {
+        const idItemContentObj = obj.dataIdcontent;
         const index = obj.dataId;
-        var subitem = xThisComSubItem.listSubItems[index];
+        var subitem = obj.dataItem
+        , listChecks = []
+        , countOptionsCheks = 0;
+
         subitem.selected = obj.checked;
 
 
     // subitem.selected = !subitem.selected;
 
     // if ( subitem.selected ) {
-      const listSubItemChecked = xThisComSubItem.listSubItems.filter((x) => x.selected);
+      const contetnSubSelect = xThisComSubItem.listContentSub.filter(x => x.iditem_subitem_content === idItemContentObj)[0];
+      const listCheckContentSelect = contetnSubSelect.opciones;
+      const listSubItemChecked = listCheckContentSelect.filter((x) => x.selected);
       let countSelectReq = listSubItemChecked.length;
 
       // adicional el importe al precio del item
-      const precioSubIem = itemPedidos_objItemSelected.precio_unitario;
-      itemPedidos_objItemSelected.precio = parseFloat(parseFloat(precioSubIem) + parseFloat(subitem.precio)).toFixed(2);
+    //   const precioSubIem = itemPedidos_objItemSelected.precio_unitario;
+    //   itemPedidos_objItemSelected.precio = parseFloat(parseFloat(precioSubIem) + parseFloat(subitem.precio)).toFixed(2);
 
       // $('.xprecio_item').text(itemPedidos_objItemSelected.precio);
       // itemPedidos_objItemSelected.precio_total = parseFloat(itemPedidos_objItemSelected.precio);
 
+      // todos los seleccionados
 
+      // seleccionar solo los permitidos
       listSubItemChecked.map( (_subItem, i) =>  {
-        if (countSelectReq > itemPedidos_objItemSelected.subitem_cant_select && _subItem !== subitem) {
-          _subItem.selected = false;
-          countSelectReq--;
-
+        if (countSelectReq > contetnSubSelect.subitem_cant_select && _subItem !== subitem) {
+            // _subItem.selected = false;          
+          
             $('.check-subitem').each((i, e) => {
-                var __subitem = xThisComSubItem.listSubItems[i];
-                if ( __subitem === _subItem ) {
+                const __subitemChek = e.dataItem;
+                const eId = e.dataId
+                const eIdContent = e.dataIdcontent
+                // const __subitem = listChecks[i];
+                if ( idItemContentObj != eIdContent ) {return; }
+                // if ( __subitem === _subItem ) {
+                if (__subitemChek  === _subItem) {
                     e.checked = false;
+                    _subItem.selected = false;
+                    countSelectReq--;
                 }
             });
         }
       });
 
+      countOptionsCheks = listCheckContentSelect.filter((x) => x.selected).length;
+      
+      if ( contetnSubSelect.subitem_required_select === 1 ) {
+          contetnSubSelect.isObligatorio = countOptionsCheks === contetnSubSelect.subitem_cant_select ? false : true;
+      }      
+      
+
     //   $('.check-subitem').each((e, i) => {
     //     var _subitem = xThisComSubItem.listSubItems[i];        
     //   });
+
         itemPedidos_objItemSelected.subitems_selected = [];
-        const listChecks = listSubItemChecked.filter((x) => x.selected);
+        xThisComSubItem.listContentSub.map(t => t.opciones.filter((x) => {
+            if (x.selected) {
+                listChecks.push(x);
+            }
+        }));
+        
         itemPedidos_objItemSelected.subitems_selected =  listChecks;
 
+        // xThisComSubItem.listContentSub = [];                
+        // xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
+
+        checkOptionObligario();
+        compItemSumImporte(true);
+
     // }
+    }
+
+    // viene del check y no del btn add +
+    function compItemSumImporte(fromToCheck = false) {
+        if ( fromToCheck ) {
+            var _importeChecks = 0;
+            xThisComSubItem.listContentSub.map(t => {
+                t.opciones.filter(o => o.selected).map(o => {
+                    _importeChecks += parseFloat(o.precio);
+                });
+            });
+
+            var _totalItemSelect =  parseFloat(compGetTotalItemTPC());
+            _totalItemSelect = _totalItemSelect === 0 ? _precioProductoIni : _totalItemSelect;
+            xThisComSubItem.precioProducto = parseFloat(_totalItemSelect + _importeChecks).toFixed(2);
+        } else {
+            // si viene del btn add +
+            xThisComSubItem.precioProducto =  compGetTotalItemTPC();
+        }
+    }
+
+    // cantidad total seleccionada en todos los tipos de consumo
+    function compGetTotalItemTPC() {
+        var _iditem = itemPedidos_objItemSelected.iditem
+        , cantRpt = 0
+        , objTpc;
+        $('#_xdlgBody')
+        .find('div.xmenu_item_2 .xpedir_row')
+        .each(function(a, element) {
+          xidTipoConsumoItem = $(element).attr("data-id");
+          objTpc = xArrayPedidoObj[xidTipoConsumoItem][_iditem];
+          if (objTpc != null && objTpc.cantidad != 0) {              
+            xidTipoConsumo = xidTipoConsumoItem;
+            cantRpt += parseInt(objTpc.precio_total); 
+          }
+        });
+
+        return parseFloat(cantRpt).toFixed(2);
     }
 
     function xLoadItemMiPedidoVR_comp(xid, xidseccion, xprocede) {
@@ -231,55 +510,56 @@
       , xCadenaItem_des_foto = ''
       , xCadenaItem_encabezado = ''
       , xCadenaItem_Detalle = ''
-      , xCadenaItem = '', xClassStockRedondo = '';
+      , xCadenaItem = '', xClassStockRedondo = '', xCantArray = '', xindicaciones = '';
 
       var xCantItem = xdtItem.stock_actual; //xdtItem.cantidad;
       xClassEstadoStock = xClassEstadoItem(xCantItem);
       xClassEstadoStock = xClassEstadoStock.split("|")[1];
       xClassStockRedondo = isExistSubitems ? 'xstock_item-redondo ' : '';
 
+      $("#contetStock").addClass(xClassEstadoStock);
 
-      xCadenaItem_encabezado =
-        '<input class="xcheck_item" type="radio" name="option" value="other">' +
-        '<p class="xprecio_item xEnLinea">' +
-        xdtItem.precio +
-        "</p>" +
-        '<div class="xstock_item ' + xClassStockRedondo +
-        xClassEstadoStock + 
-        '"><span>stock</span><p>' +
-        xCeroIzq(xCantItem, 2) +
-        "</p></div>" +
-        '<p class="xtitulo_item xEnLinea">' +
-        xdtItem.des_item +
-        "</p>";
+    //   xCadenaItem_encabezado =
+    //     '<input class="xcheck_item" type="radio" name="option" value="other">' +
+    //     '<p class="xprecio_item xEnLinea">' +
+    //     xdtItem.precio +
+    //     "</p>" +
+    //     // '<div class="xstock_item ' + xClassStockRedondo +
+    //     // xClassEstadoStock + 
+    //     // '"><span>stock</span><p>' +
+    //     // xCeroIzq(xCantItem, 2) +
+    //     // "</p></div>" +
+    //     '<p class="xtitulo_item xEnLinea">' +
+    //     xdtItem.des_item +
+    //     "</p>";
 
-      xCadenaItem_des_foto = "";
-      if (xdtItem.img) {
-        xCadena_foto = '<img src="../img/' + xdtItem.img + '">';
-        xCadenaItem_des_foto = "1";
-      }
-      if (xdtItem.detalle) {
-        xCadena_des =
-          '<div class="xsub_titulo_item">' +
-          xMayusculaPrimera(xdtItem.detalle || '') +
-          "</div>";
-        xCadenaItem_des_foto = "1";
-      }
-      if (xCadenaItem_des_foto == "1") {
-        xCadenaItem_des_foto =
-          '<div class="xdescripcion_foto">' +
-          xCadena_des +
-          xCadena_foto +
-          "</div>";
-      } else {
-        xCadenaItem_des_foto = "";
-      }
+    //   xCadenaItem_des_foto = "";
+    //   if (xdtItem.img) {
+    //     xCadena_foto = '<img src="../img/' + xdtItem.img + '">';
+    //     xCadenaItem_des_foto = "1";
+    //   }
+    //   if (xdtItem.detalle) {
+    //     xCadena_des =
+    //       '<div class="xsub_titulo_item">' +
+    //       xMayusculaPrimera(xdtItem.detalle || '') +
+    //       "</div>";
+    //     xCadenaItem_des_foto = "1";
+    //   }
+    //   if (xCadenaItem_des_foto == "1") {
+    //     xCadenaItem_des_foto =
+    //       '<div class="xdescripcion_foto">' +
+    //       xCadena_des +
+    //       xCadena_foto +
+    //       "</div>";
+    //   } else {
+    //     xCadenaItem_des_foto = "";
+    //   }
 
       xCadenaItem_Detalle =
-        '<div id="subitems"></div>' +
+        // '<div id="subitems"></div>' +
         '<div class="xdetalle_item">' +
         xCadenaItem_des_foto +
-        '<div class="xreferencia_item"><input type="text" autocomplete="on" placeholder="Escribe aqui las especificaciones..." class="xMiTextReferencia" id="txt_referencia"></div>' +
+        // '<div class="xreferencia_item"><input type="text" autocomplete="on" placeholder="Escribe aqui las especificaciones..." class="xMiTextReferencia" id="txt_referencia"></div>' +
         xCadenaTC +
         "</div></div>";
 
@@ -355,10 +635,11 @@
           }
         });
         dialog_item_comp.center();
-      $(".xmenu_item_2")
-        .find("#txt_referencia")
-        .val(xindicaciones);
+    //   $(".xmenu_item_2")
+    //     .find("#txt_referencia")
+    //     .val(xindicaciones);
     // });
+        $("#txt_referencia").val(xindicaciones);
     }
 		
 
@@ -366,18 +647,31 @@
 		is: 'x-comp-item-subitems',
 		properties: {
             item_select: Object,
+            listContentSub: {
+                type: Object,
+                notify: true,
+                reflectToAttribute: true            
+            },
             listSubItems: {
                 type: Object,
                 notify: true,
                 reflectToAttribute: true            
             },
+            desProducto: String,
+            detalleProducto: String,
+            stockProducto: String,
+            precioProducto: String,
+            countTotalObligatorio: Number,
+            countSelectObligatorio: Number,
             cantSubItemSelect: Number,
             isSubItemReq: Boolean,
-            isExistSubItems: Boolean
+            isExistSubItems: Boolean,
+            isOptionRequeridosComplet: Boolean // si hay opciones requeridas por marcar
 		},
 		attached: function () {
             xThisComSubItem = this;				
             xThisComSubItem.cantSubItemSelect = 0 ;
+            xIniCompSubItems();
         },
         openDialog: function(tpc, id) {
             xOpenDlgItemVR_comp(tpc, id);

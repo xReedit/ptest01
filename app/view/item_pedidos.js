@@ -135,17 +135,20 @@ function handlerFnMiPedido(e) {
 		xPrecioTotal=parseFloat(xCantActual*xPrecioItem).toFixed(2);
 
 		
-		const mySubItemView = checkMySubitemView(xidTipoConsumo, xidItem);
+		const mySubItemView = checkMySubitemView(xidTipoConsumo, xidItem);		
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
 		xArrayPedidoObj[xidTipoConsumo][xidItem]={'idcategoria':xidCategoria, 'idseccion':xIdSeccionItem, 'idseccion_index':xIdSeccionItem_index, 'des_seccion':xDesSeccion, 'iditem':xidItem, 'idtipo_consumo':xidTipoConsumo, 'stock_actual': xStockActual, 'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal ,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0
 			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
+			,'detalle': itemPedidos_objItemSelected.detalle
 			,'subitems': itemPedidos_objItemSelected.subitems
 			,'subitems_selected' : itemPedidos_objItemSelected.subitems_selected
 			,'subitem_required_select': itemPedidos_objItemSelected.subitem_required_select
 			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
 			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView 
 		};
+
+		itemPedidos_objItemSelected.cantidad = xCantActual;
 
 		// subitems_view
 		const sumar  =  xsigno === '+' ? true : false;
@@ -183,6 +186,8 @@ function handlerFnMiPedido(e) {
 			_cpSocketEmitItemModificado(itemNotifySocket);
 
 			_cpSocketSavePedidoStorage(xArrayPedidoObj);
+
+			compItemSumImporte(); // del componente comp-item-subitems
 					
 		}
 
@@ -211,11 +216,13 @@ $(document.body).on('click', '#accordion div.xBtn_contet_li2', handlerFnMiPedido
 // $(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
 $(document.body).on('click', '#accordion div.content_li', function(e) {
 	if (!isTouch) return; // desde venta rapida activa el touch
+		
 	handlerFnMiPedidoControl(e);
 }); // venta rapida
 
 function handlerFnMiPedidoControl(e) {
-// $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {
+// $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {		
+
 		var _nomClassXcant_li = 'xcant_li';
 		const _thisObj = e.target || e;
 		const _objParentLi = _thisObj.dataset.index ? _thisObj : _thisObj.parentElement.dataset.index ? _thisObj.parentElement : _thisObj.parentElement.parentElement.dataset.index ? _thisObj.parentElement.parentElement : _thisObj.parentElement.parentElement.parentElement;
@@ -226,6 +233,9 @@ function handlerFnMiPedidoControl(e) {
 		
 		xidTipoConsumo = $("#select_ulTPC option:selected").val();
 		itemPedidos_objItemSelected = xGeneralDataCarta[_itemIndex];
+		
+		//si tiene subtiems lanza el popup opciones
+		if (itemPedidos_objItemSelected.subitems) { xCompSubitems.openDialog(null, _itemIndex);  return; }
 		// xli_des = itemPedidos_objItemSelected.des_item;
 		
 		if (_viene_venta_rapida == 1) { //viene de venta rapida seleccionados obj
@@ -312,6 +322,7 @@ function handlerFnMiPedidoControl(e) {
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal, 'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 'iditem2': xidItem2, 'idimpresora': xli_idimpresora, 'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
 			,'pwa': isSocket ? 1 : 0, isporcion: itemPedidos_objItemSelected.isporcion
 			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
+			,'detalle': itemPedidos_objItemSelected.detalle
 			,'subitems': itemPedidos_objItemSelected.subitems
 			,'subitems_selected' : itemPedidos_objItemSelected.subitems_selected
 			,'subitem_required_select': itemPedidos_objItemSelected.subitem_required_select
@@ -390,10 +401,11 @@ function xAddSubItemsView(tpc, id, sumar) {
 	var elItem = xArrayPedidoObj[tpc][id];
 	elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];
 
+	if ( !elItem.subitems ) { return; }
 	if (elItem.subitems.length === 0 ) { return; }
     var newSubItemView = {};
-    newSubItemView.id = 0;
-    newSubItemView.des = '';
+    newSubItemView.id = '';
+    newSubItemView.des = [];
     newSubItemView.cantidad_seleccionada = 0;
     newSubItemView.precio = 0;
     newSubItemView.indicaciones = '';
@@ -402,13 +414,15 @@ function xAddSubItemsView(tpc, id, sumar) {
 	if ( elItem.subitems_selected ) {
 
         elItem.subitems_selected.map((x) => {
-          newSubItemView.id += x.id;
-          newSubItemView.des += x.des + ' ';
+          newSubItemView.id += x.iditem_subitem.toString();
+          newSubItemView.des.push(primeraConMayusculas(x.des.toLowerCase()));
           newSubItemView.cantidad_seleccionada = 1;
           newSubItemView.precio += parseFloat(x.precio);
           newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  x.indicaciones + '. ';
           newSubItemView.subitems.push(x);
-        });
+		});
+		
+		newSubItemView.des = newSubItemView.des.join(', ');
 
         // itemCarta para sacar los indicadores
         // itemCarta.indicaciones = '';
@@ -671,6 +685,7 @@ function xSumaCantArray(ArrySum){
 		$.map(ArrySum[i], function(n, z) {
 			if (typeof n === "object"){
 				const _xprecio_unitario = parseFloat(n.precio);
+				const isSubItems = n.subitems_view ? true : false;
 				
 				// _total = x.precio_total_calc || x.total;
 				// _total = _total.toString().indexOf(',') > -1 ? x.precio_total : _total; // cuando juntan la cuenta
@@ -695,7 +710,7 @@ function xSumaCantArray(ArrySum){
 				
 				// si el precio calculado de und * punitario es menor que ptotal quiere decir que viene de desajuntar
 
-				let xprecio_p = xp_print > importe_calculado_unitario ? _xprecio_unitario.toFixed(2) : xp_print.toFixed(2);
+				let xprecio_p = xp_print > importe_calculado_unitario && !isSubItems ? _xprecio_unitario.toFixed(2) : xp_print.toFixed(2);
 
 				if(xprecio_p === ""){
 					// xprecio_p = n.precio_total;

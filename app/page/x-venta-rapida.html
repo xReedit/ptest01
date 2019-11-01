@@ -452,6 +452,7 @@
 <script type="text/javascript" src="../view/manager_storage.js"></script>
 <script type="text/javascript" src="../view/cliente.service.js"></script>
 <script type="text/javascript" src="../../js/keynavigator-min.js"></script>	
+<script type="text/javascript" src="../../js/mifuncion_web.js"></script>	
 
 
 
@@ -1526,6 +1527,7 @@ function xValidarReglaCarta(){
 	xGeneralValidarRegalasCarta($('.xtb_pedido'),false);
 	xSumarTotal();
 }
+
 function xSumarTotal(){
 	// var rptSum=xGeneralSumarTotales()
 	// tt_pedido=rptSum[0].ImporteTotal;
@@ -1651,7 +1653,7 @@ function setValuesStorage() {
 function xOpenDlgItemVR(tpc, id) {
 
 	xCompSubitems.item_select = itemPedidos_objItemSelected;
-	xCompSubitems.openDialog(tpc, id);
+	xCompSubitems.openDialog(null, id);
 	//dialog_item_comp.open();
 
     // itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
@@ -1686,7 +1688,7 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
     //   data: { i: xid, p: xprocede }
     // }).done(function(dtItem) {	  
 	  itemPedidos_objItemSelected.idcarta_lista = itemPedidos_objItemSelected.iditem;
-	  itemPedidos_objItemSelected.des_item = itemPedidos_objItemSelected.des;
+	  itemPedidos_objItemSelected.des_item = itemPedidos_objItemSelected.des ? itemPedidos_objItemSelected.des : itemPedidos_objItemSelected.des_item;
 
 	  var xdtItem = itemPedidos_objItemSelected; //$.parseJSON(dtItem);
 	  
