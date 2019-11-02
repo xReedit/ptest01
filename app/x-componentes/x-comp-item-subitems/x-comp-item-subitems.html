@@ -43,7 +43,7 @@
                                             disabled$ = "[[subitem.disabled]]"
                                             onchange = "addSubItem(this)"
                                             >                                            
-                                            <div>
+                                            <div class$="[[subitem.classAgotado]]">
                                                     {{subitem.des}}                                                
                                                     <span class="xprecio" hidden$ = [[!subitem.cantidad_visible]]>
                                                         | [[subitem.cantidad]]
@@ -358,7 +358,8 @@
                     x.precio_visible = parseFloat(x.precio) === 0 ? false : true;
                     x.precio = x.precio_visible ? parseFloat(x.precio) : 0;
                     x.cantidad_visible = isNaN(parseFloat(x.cantidad)) ? false : true;
-                    x.disabled = x.cantidad === 0 ? true : false;
+                    x.disabled = x.cantidad <= 0 ? true : false;
+                    x.classAgotado = x.cantidad <= 0 ? 'agotado' : '';
                     x.selected = false;
                 })
             });
@@ -496,7 +497,7 @@
     //   url: "../../bdphp/log.php?op=303",
     //   data: { i: xid, p: xprocede }
     // }).done(function(dtItem) {	  
-	  itemPedidos_objItemSelected.idcarta_lista = itemPedidos_objItemSelected.iditem;
+	//   itemPedidos_objItemSelected.idcarta_lista = itemPedidos_objItemSelected.iditem;
 	  itemPedidos_objItemSelected.des_item = itemPedidos_objItemSelected.des;
 
 	  var xdtItem = itemPedidos_objItemSelected; //$.parseJSON(dtItem);

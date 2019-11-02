@@ -33,6 +33,16 @@
 							<paper-icon-button id="BtnUs" icon="account-box" title="Usuario" onclick="xAbrirDialogUs(this)"></paper-icon-button>											
 	  </paper-toolbar> -->
 
+	  	<!-- dialog subitems item mi pedido -->
+	  	<paper-dialog id="dialog_quitar_subitem" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<p>{{objSubItemQuitar.des}}</p>
+			<div>
+				<div>Quitar Uno</div>
+				<div dialog-dismiss>Cerrar</div>
+			</div>
+		</paper-dialog>
+
+
 	  <paper-dialog id="dialog_nuevo_pedido" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<h2>Nuevo Pedido</h2>
 			<p>
@@ -1466,9 +1476,13 @@ function xVerMipedidoVR(){
 						subitem.precio_mostrar = precioSubitem === 0 ? '.' : precioSubitem.toFixed(2);
 						subitem.precio = precioSubitem;
 						cadenaSubItemView += String(`												
-								<tr class="subitem-content-resumen">
-									<td style="padding-left: 35px;">${subitem.cantidad_seleccionada} ${subitem.des}</td>
-									<td style="text-align: right;">${subitem.precio_mostrar}</td>
+								<tr class="subitem-content-resumen" 
+									data-idtipo_consumo="${n.idtipo_consumo}" 
+									data-idcarta_lista="${n.iditem}" 
+									data-des = "${subitem.des}"
+									data-idsubitem="${subitem.id}" onclick="quitarUnSubImte(this)">
+										<td style="padding-left: 35px;">${subitem.cantidad_seleccionada} ${subitem.des}</td>
+										<td style="text-align: right;">${subitem.precio_mostrar}</td>
 								</tr>													
 						`);
 					});
@@ -1656,29 +1670,18 @@ function xOpenDlgItemVR(tpc, id) {
 	xCompSubitems.openDialog(null, id);
 	//dialog_item_comp.open();
 
-    // itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
-    // xidItem = id; // $(obj).attr("data-id");
-    // xTituloDet = itemPedidos_objItemSelected.des_seccion; // $(obj).attr("data-seccion");
-    // var xidsecc_item = itemPedidos_objItemSelected.idseccion // $(obj).attr("data-idseccion");
-    // , xidproc_item = itemPedidos_objItemSelected.procede //$(obj).attr("data-procede");
-    // , xCantArray
-    // , xindicaciones = ''
-    // , xidTipoConsumoItem;
+}
 
-    // $("#_xdlgBody")
-    //   .html(
-    //     '<div class="xCentradoVerticalHorizontal spinner"><paper-spinner active></paper-spinner></div>'
-    //   )
-    //   .trigger("create");
-    // $("#dlgBtn").addClass("xInvisible");
-    // xLoadItemMiPedidoVR(xidItem, xidsecc_item, xidproc_item);
-
-	// dialog_item.open();
-	
-
-
-    // // objOptionItemSelect.checked = false;
-  }
+function quitarUnSubImte(obj) {
+	const _idtpc = obj.dataset.idtipo_consumo;
+	const _idcl = obj.dataset.idcarta_lista;
+	const _idsubitem = obj.dataset.idsubitem;
+	const _subItemQuit = xArrayPedidoObj[_idtpc][_idcl];
+	xThisVentaRapida.objSubItemQuitar = _subItemQuit.subitems_view.filter(x => x.id === _idsubitem)[0];
+	console.log(_subItemQuit);
+	// xThisVentaRapida.objSubItemQuitar = JSON.parse(_subItemQuit);
+	dialog_quitar_subitem.open();
+}
 
 function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
     //$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=303', data:{i:xid}})
@@ -1857,6 +1860,7 @@ Polymer({
 		valid_form_cliente_pago: boolean = false,
 		valid_monto_pago: boolean = false,
 		xIconScreen: String,
+		objSubItemQuitar: Object
 	},
 	attached:function(){
 		this.selected_us=0;

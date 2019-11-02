@@ -148,7 +148,9 @@ function handlerFnMiPedido(e) {
 			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView 
 		};
 
-		itemPedidos_objItemSelected.cantidad = xCantActual;
+		// itemPedidos_objItemSelected = xArrayPedidoObj[xidTipoConsumo][xidItem];
+
+		// itemPedidos_objItemSelected.cantidad = xCantActual;
 
 		// subitems_view
 		const sumar  =  xsigno === '+' ? true : false;
@@ -181,7 +183,7 @@ function handlerFnMiPedido(e) {
 				subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
 				subitems_selected: itemPedidos_objItemSelected.subitems_selected,
 				sumar:  xsigno === '+' ? true : false
-			}
+			}			
 			
 			_cpSocketEmitItemModificado(itemNotifySocket);
 

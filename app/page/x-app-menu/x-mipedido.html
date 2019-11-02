@@ -1070,7 +1070,7 @@ transition: none !important;
       , xCadenaItem_Detalle = ''
       , xCadenaItem = '';
 
-      var xCantItem = xdtItem.stock_actual; //xdtItem.cantidad;
+      var xCantItem = xdtItem.stock_actual ? xCeroIzq(xdtItem.stock_actual, 2) : 'ND'; //xdtItem.cantidad;
       xClassEstadoStock = xClassEstadoItem(xCantItem);
       xClassEstadoStock = xClassEstadoStock.split("|")[1];
 
@@ -1082,7 +1082,8 @@ transition: none !important;
         '<div class="xstock_item ' +
         xClassEstadoStock +
         '"><span>stock</span><p>' +
-        xCeroIzq(xCantItem, 2) +
+            xCantItem +
+        // xCeroIzq(xCantItem, 2) +
         "</p></div>" +
         '<p class="xtitulo_item xEnLinea">' +
         xdtItem.des_item +
