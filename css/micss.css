@@ -1222,6 +1222,38 @@ ul.list_add_item2 li {
     color: #616161;
   }
 
+.subitem-content-resumen .btnCount {
+    transition: all ease-in 0.1s;
+    height: 18px;    
+    cursor: pointer;
+    opacity: 0;
+}
+
+.subitem-content-resumen:hover .btnCount {
+    opacity: 1;
+}
+
+.subitem-content-resumen .btnMenos {
+    font-size: 15px;
+    font-weight: bold;
+    background: #D32F2F;
+    padding: 0px 8px 0px 8px;
+    margin-right: 3px;
+    border-radius: 3px;
+    color: white;
+}
+
+.subitem-content-resumen .btnMas {
+    font-size: 15px;
+    font-weight: bold;
+    background: #1565C0;
+    padding: 0px 8px 0px 8px;
+    margin-left: 3px;
+    border-radius: 3px;
+    color: white;
+}
+
+
 /*#xVentaRapidaBuscar{width: 50%;}*/
 
 .xIndicadorSize1{width: 370px; height: 390px;}
@@ -1245,6 +1277,8 @@ ul.list_add_item2 li {
 .pt-25 {padding-top: 25px;}
 .pt-45 {padding-top: 45px;}
 .pt-55 {padding-top: 55px;}
+
+.p-20 {padding: 20px;}
 
 .pb-5 {padding-bottom: 5px;}
 .pb-10 {padding-bottom: 10px;}

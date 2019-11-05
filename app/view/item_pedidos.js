@@ -21,6 +21,7 @@ var xArrayPedidoObj
 // 'precio_total_calc': para calcular en regalas de carta
 $(document.body).on('click', '#_xSubMenu_body div.xBtn', handlerFnMiPedido); // mi pedido
 $(document.body).on('click', '#_xdlgBody div.xBtn', handlerFnMiPedido); // mi pedido -> dialog
+$(document.body).on('click', '.subitem-content-resumen div.btnCount', handlerFnMiPedido); // mi pedido -> dialog
 // $(document.body).delegate('#_xSubMenu_body div.xBtn', 'click', handlerFnMiPedido); // mi pedido
 // $(document.body).delegate('#_xdlgBody div.xBtn', 'click', handlerFnMiPedido); // mi pedido -> dialog
 // function handlerFn() {console.log('delegate click _xSubMenu_body>div.xBtn')}
@@ -29,10 +30,15 @@ $(document.body).on('click', '#_xdlgBody div.xBtn', handlerFnMiPedido); // mi pe
 function handlerFnMiPedido(e) {
 		const _thisObj = $(this);
 		xCambioCantidad=true;
-		xidItem = itemPedidos_objItemSelected.idcarta_lista // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
 		xidTipoConsumo = _thisObj.parent().attr('data-id');
 		const _viene_venta_rapida = parseInt(_thisObj.parent().attr('data-ventarapida'));
-
+		const _viene_subitems_mod = parseInt(_thisObj.parent().attr('data-viene-subitems-mod')); // si viene del sumar o restar subitem venta rapida
+		
+		if ( _viene_subitems_mod == 1 ) { // modifica el subitems_select por el subitem a modificar (+ -);
+			modificarUnSubItem(_thisObj);
+		}
+		
+		xidItem = itemPedidos_objItemSelected.idcarta_lista || itemPedidos_objItemSelected.iditem; // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
 		// const _xmenu_item_2 = _thisObj.parents('.xmenu_item_2');
 		// const _xmenu_item_2_dataset = JSON.parse(JSON.stringify(_xmenu_item_2[0].dataset));
 
@@ -48,7 +54,7 @@ function handlerFnMiPedido(e) {
 		, xCantActual = parseInt(objCant_cant) //parseInt(objCant.text())
 		, xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]['cantidad'])
 		, xCantTotalItem=0
-		, xDesSeccion = xTituloDet || itemPedidos_objItemSelected.des_seccion // _xmenu_item_2_dataset.desseccion // _xmenu_item_2.attr('data-desseccion')
+		, xDesSeccion = itemPedidos_objItemSelected.des_seccion || xTituloDet // _xmenu_item_2_dataset.desseccion // _xmenu_item_2.attr('data-desseccion')
 		, xIdSeccionItem = itemPedidos_objItemSelected.idseccion // _xmenu_item_2.attr('data-idseccion')
 		, xIdSeccionItem_index = itemPedidos_objItemSelected.idseccion_index // _xmenu_item_2.attr('data-idseccionindex')
 		, xRowidimpresora = itemPedidos_objItemSelected.idimpresora // _xmenu_item_2.attr('data-idimpresora')
@@ -193,7 +199,7 @@ function handlerFnMiPedido(e) {
 					
 		}
 
-		xcantRunSocket = true;
+		// xcantRunSocket = true;
 
 		
 		// si esta en modo vista pantalla tablet, update x-mipedido
@@ -201,6 +207,10 @@ function handlerFnMiPedido(e) {
 
 		if (xVistaMiPedido) {
 			xVistaMiPedido._outLoadPedido();
+		}
+
+		if (_viene_venta_rapida == 1) { //viene de venta rapida
+			xVerMipedidoVR();
 		}
 
 		//
@@ -342,7 +352,7 @@ function handlerFnMiPedidoControl(e) {
 
 		
 		if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
-
+			
 			itemPedidos_objItemSelected.stock_actual = xSotockSocket;
 			const itemNotifySocket = {
 				cantidad: xSotockSocket,
@@ -399,6 +409,46 @@ function checkMySubitemView(tpc, id) {
 	}
 }
 
+// envia el item por socket
+function xSendItemBySocket(xsigno) {
+	// itemPedidos_objItemSelected.stock_actual = xSotockSocket;
+	const itemNotifySocket = {
+		cantidad: xSotockSocket,
+		idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
+		iditem: itemPedidos_objItemSelected.iditem,
+		isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+		isporcion: itemPedidos_objItemSelected.isporcion,
+		subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
+		subitems_selected: itemPedidos_objItemSelected.subitems_selected,
+		sumar:  xsigno === '+' ? true : false
+	}			
+	
+	_cpSocketEmitItemModificado(itemNotifySocket);
+	_cpSocketSavePedidoStorage(xArrayPedidoObj);
+	compItemSumImporte(); // del componente comp-item-subitems
+}
+
+// de la lista de mi pedido subitems de venta rapida - para sumar o restar
+function modificarUnSubItem(obj) {
+	obj = obj.parents('tr')[0];
+	// const _sumar = sumar === 0 ? false : true;
+	// const _signo = _sumar ? '+' : '-';
+	const _idtpc = obj.dataset.idtipo_consumo;
+	const _idcl = obj.dataset.idcarta_lista;
+	const _idsubitem = obj.dataset.idsubitem;
+	var _subItemQuit = xArrayPedidoObj[_idtpc][_idcl];
+	const _subItemDelete = _subItemQuit.subitems_view.filter(t => t.id === _idsubitem)[0].subitems;
+	_subItemQuit.subitems_selected = [];
+	_subItemQuit.subitems_selected = _subItemDelete;
+
+	// para que coincidan en la funcion principal
+	itemPedidos_objItemSelected = _subItemQuit;
+	itemPedidos_objItemSelected.des_item = _subItemQuit.des;
+	itemPedidos_objItemSelected.idcarta_lista = _subItemQuit.iditem;
+	// xThisVentaRapida.objSubItemQuitar = _subItemQuit.subitems_view.filter(x => x.id === _idsubitem)[0];
+	// console.log(_subItemQuit);
+}
+
 function xAddSubItemsView(tpc, id, sumar) {
 	var elItem = xArrayPedidoObj[tpc][id];
 	elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];
@@ -420,11 +470,13 @@ function xAddSubItemsView(tpc, id, sumar) {
           newSubItemView.des.push(primeraConMayusculas(x.des.toLowerCase()));
           newSubItemView.cantidad_seleccionada = 1;
           newSubItemView.precio += parseFloat(x.precio);
-          newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  x.indicaciones + '. ';
+          newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  ' (' + x.indicaciones + ')';
           newSubItemView.subitems.push(x);
 		});
 		
 		newSubItemView.des = newSubItemView.des.join(', ');
+
+		newSubItemView.des += elItem.indicaciones === undefined ? '' :  ', (' + elItem.indicaciones + ')';
 
         // itemCarta para sacar los indicadores
         // itemCarta.indicaciones = '';
