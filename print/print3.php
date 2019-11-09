@@ -311,11 +311,11 @@ while($num_copias>=0){
 				// $pos_last_space =  $strrpos
 
 
-				$des_part2='  '.substr($r_subitem,35,strlen($r_subitem));
+				$des_part2='   '.substr($r_subitem,35,strlen($r_subitem));
 				$r_subitem=substr($r_subitem,0,35)."-";			
 			}
 			if(strlen($des_part2) > 35){
-				$des_part3='  '.substr($des_part2,35,strlen($des_part2));
+				$des_part3='   '.substr($des_part2,35,strlen($des_part2));
 				$des_part2=substr($des_part2,0,35)."-";			
 			}
 			//$r_subitem = strlen($r_subitem) > 35 ? substr($r_subitem,0,35)."..." : $r_subitem;
@@ -342,12 +342,12 @@ while($num_copias>=0){
 					$des_sub_item_p3 = '';
 					
 					if(strlen($des_sub_item) > 48){
-						$des_sub_item_p2=substr($des_sub_item,48,strlen($des_sub_item));
+						$des_sub_item_p2='   '.substr($des_sub_item,48,strlen($des_sub_item));
 						$des_sub_item=substr($des_sub_item,0,48)."-";
 					}
 
 					if(strlen($des_sub_item_p2) > 48){
-						$des_sub_item_p3=substr($des_sub_item_p2,48,strlen($des_sub_item_p2));
+						$des_sub_item_p3='   '.substr($des_sub_item_p2,48,strlen($des_sub_item_p2));
 						$des_sub_item_p2=substr($des_sub_item_p2,0,48)."-";
 					}
 

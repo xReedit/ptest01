@@ -311,12 +311,7 @@
             countOptionReq = t.isObligatorio ? + 1 : countOptionReq;            
         });
 
-        xThisComSubItem.isOptionRequeridosComplet = countOptionReq === 0 ?  true : false;
-        // if ( countOptionReq === 0 ) {            
-        //     $('#_xdlgBody div.xmenu_item_2').removeClass('xInvisible');
-        // } else {
-        //     $('#_xdlgBody div.xmenu_item_2').addClass('xInvisible');
-        // }
+        xThisComSubItem.isOptionRequeridosComplet = countOptionReq === 0 ?  true : false;        
     }
 
     function xRefresSubItems_comp() {
@@ -356,14 +351,7 @@
     }
 
     function cocinarListSubItemsView() {
-        // if (xThisComSubItem.listSubItems.length > 0) {
-        //     xThisComSubItem.listSubItems.map( x => {                
-        //         x.iditem_subitem = x.id;                
-        //         x.precio_visible = parseFloat(x.precio) === 0 ? false : true;
-        //         x.cantidad_visible = isNaN(parseFloat(x.cantidad)) ? false : true;
-        //         x.selected = false;
-        //     });
-        // }
+
 
         if (xThisComSubItem.listContentSub.length > 0) {
             xThisComSubItem.listContentSub.map( z => {                
@@ -412,15 +400,6 @@
       const listCheckContentSelect = contetnSubSelect.opciones;
       const listSubItemChecked = listCheckContentSelect.filter((x) => x.selected);
       let countSelectReq = listSubItemChecked.length;
-
-      // adicional el importe al precio del item
-    //   const precioSubIem = itemPedidos_objItemSelected.precio_unitario;
-    //   itemPedidos_objItemSelected.precio = parseFloat(parseFloat(precioSubIem) + parseFloat(subitem.precio)).toFixed(2);
-
-      // $('.xprecio_item').text(itemPedidos_objItemSelected.precio);
-      // itemPedidos_objItemSelected.precio_total = parseFloat(itemPedidos_objItemSelected.precio);
-
-      // todos los seleccionados
 
       // seleccionar solo los permitidos
       listSubItemChecked.map( (_subItem, i) =>  {

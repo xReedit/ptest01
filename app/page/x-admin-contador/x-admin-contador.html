@@ -271,6 +271,8 @@ function downloadReporteCPE(obj) {
 				//return x;
 			});
 
+			setDataListReporte(dataListReporte);
+
 			// xThisAdmContador.ListReporte = dataListReporte;
 
 			// setTimeout(() => {
@@ -279,32 +281,32 @@ function downloadReporteCPE(obj) {
 		});
 
 	// api2
-	$.ajax({
-			type: 'POST',
-			url: '../../bdphp/log_007.php?op=3',
-			data: {item: _data}
-		})
-		.done((res) => {
-			try {
-				res = JSON.parse(res);
-				if ( res.error ) {console.log(res.error); 
-					setDataListReporte(dataListReporte);
-					return;}	
-			} catch (error) {
-				setDataListReporte(dataListReporte);
-			}
+	// $.ajax({
+	// 		type: 'POST',
+	// 		url: '../../bdphp/log_007.php?op=3',
+	// 		data: {item: _data}
+	// 	})
+	// 	.done((res) => {
+	// 		try {
+	// 			res = JSON.parse(res);
+	// 			if ( res.error ) {console.log(res.error); 
+	// 				setDataListReporte(dataListReporte);
+	// 				return;}	
+	// 		} catch (error) {
+	// 			setDataListReporte(dataListReporte);
+	// 		}
 			
-			console.log(res.data);
-			res.data.map(x => {
-				x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
-				x.style_reporte = x.estado === 'ANULADO' ? 'color: red' : 'color: green';
-				x.style_td = x.estado === 'ANULADO' ? 'color: red' : '';
-				dataListReporte.push(x);
-				//return x;
-			});
+	// 		console.log(res.data);
+	// 		res.data.map(x => {
+	// 			x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
+	// 			x.style_reporte = x.estado === 'ANULADO' ? 'color: red' : 'color: green';
+	// 			x.style_td = x.estado === 'ANULADO' ? 'color: red' : '';
+	// 			dataListReporte.push(x);
+	// 			//return x;
+	// 		});
 
-			setDataListReporte(dataListReporte);	
-		});
+	// 		setDataListReporte(dataListReporte);	
+	// 	});
 }
 
 function setDataListReporte(list) {
