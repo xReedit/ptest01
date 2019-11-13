@@ -300,6 +300,11 @@ paper-dialog.xStandar{height:auto;width:40%;}
 .xIconTr,.xIconTrNoVisible.xIcoSubItem{background-image:url('../images/_subitem.png');width: 16px; height: 16px;}
 .xIconTr,.xIconTrNoVisible.xIcoCamara{background-image:url('../images/_camara.png');width: 16px; height: 16px;}
 
+.xIconTr.xIcoDelete{background-image:url('../images/_delete2.png'); width: 16px; height: 16px;}
+.xIconTr.xIcoDetalle{background-image:url('../images/_detalles.png');width: 16px; height: 16px;}
+.xIconTr.xIcoSubItem{background-image:url('../images/_subitem.png');width: 16px; height: 16px;}
+.xIconTr.xIcoCamara{background-image:url('../images/_camara.png');width: 16px; height: 16px;}
+
 table thead{font-weight:700;padding:0px;margin:0px;}
 table thead th{border-bottom:1px solid #CCC;}
 table tr>td{border-bottom:1px solid #CCC;}

@@ -1,11 +1,9 @@
 <link rel="import" href="../x-componentes/x-comp-item-subitems-edit/x-comp-item-subitems-edit.html">;
 <dom-module id="x-carta">
 	<template>
-		<paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+		<!-- <paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
-				<h4>Sub Items</h4>							
-				<!-- <span style="font-size: 11px; line-height: 1;color: grey;">Agregue los sub item y condiciones al item principal, estas se mostrarn en el app de pedidos. Ej: <br>1) En una heladeria, el cono de helado puede salir con 2 sabores; ingrese en los subiten todos los sabores e indique que es requerido que seleccione por lo menos 2 alternativas. <br>2) En una polleria, el 1/4 de pollo se sirve con una guarnicion, ingrese en los subitem todas las guarniciones disponibles e indique que es requerido que seleccione una de las alternativas.</span> -->
-				<!-- <br> -->
+				<h4>Sub Items</h4>											
 
 				<div id="accordion">
 					<h3>Como funciona?</h3>
@@ -24,58 +22,57 @@
 				<br>
 				<div class="xBoton2 xPlomo xDerecha" dialog-dismiss>Cerrar</div>
 				<br><br>
-
-				<!-- <paper-fab mini icon="add" onclick="addSubItem()" class="xDerecha"></paper-fab>
-				<table>
-					<thead width="100%">
-						<th width="50%"><input type="text" class="xMiInput xPasarEnter2 w-100" id="txt_sub_des" placeholder="DESCRIPCION" onChange="conMayusculas(this)"></th>
-						<th width="25%"><input type="text" class="xMiInput xPasarEnter2" id="txt_sub_cant" placeholder="CANT" onChange="conMayusculas(this)"></th>
-						<th width="25%"><input type="number" class="xMiInput" id="txt_sub_precio" placeholder="PRECIO" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"></th>
-						<th></th>
-					</thead>
-					<tbody>
-						<template is="dom-repeat" items="{{ListSubItems}}" as="item">
-							<tr data-index="{{index}}" data-t="item_subitem" data-id="{{item.iditem_subitem}}" class="xCursor">
-								<td>{{item.descripcion}}</td>
-								<td>{{item.cantidad}}</td>
-								<td>{{item.precio}}</td>
-								<td><span class="xDeleteRow" title="Anular" onclick="xBorrarItem(this);"></span></td>
-							</tr>
-						</template>
-						<tr>
-							<td class="xBold">Cantidad Total </td>
-							<td class="xBold">{{cantidadSubItems}}</td>
-							<td>.</td>
-							<td>.</td>
-						</tr>
-					</tbody>
-				</table>
-				<br><br>
-				<h4>Condiciones</h4>
-				<hr>
-				<label for="txt_sub_condicion_cant">Cuantos subitem o alternativas se pueden seleccionar?</label>
-				<input type="number" style="width: 100px;" class="xMiInput" id="txt_sub_condicion_cant" placeholder="Cant" onChange="conMayusculas(this)">
-				<br><br>
-				<paper-checkbox id="xcheck_subitem_required" data-index="{{index}}" data-procede="u">Es requerido que se seleccione?</paper-checkbox>				
-
-				<br><br><br>
-				<div class="xBoton2 xAzul" dialog-confirm  onclick="addSubItemItem();">Listo, guardar</div>
-				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div> -->
 			</div>
-		</paper-dialog>
+		</paper-dialog> -->
 
 
-		<paper-dialog id="dialog_detalle" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+		<paper-dialog id="dialog_detalle" class="dialog_redondo" style="width: 90%; max-width: 500px; height: auto !important; overflow: auto" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
-				<h4 id="dlg_des_item">Item</h4>
+				<h4 id="dlg_des_item_detalle">Item</h4>
+				<div class="xLinea2"></div>
+
+				<paper-tabs selected="{{selectedDetalle}}" id="tab_detalle">
+					<paper-tab>DESCRIPCION</paper-tab>
+					<paper-tab>SUBITEMS</paper-tab>
+					<paper-tab>FOTO</paper-tab>
+				</paper-tabs>
+				<div class="xLinea2"></div>
 				<br>
-				<textarea id="dlg_det_item" rows="4" cols="50" onChange="conMayusculas(this)"></textarea>
-				<br><br><br>
-				<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarDetalle();">Listo, guardar</div>
-				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+				<iron-pages selected="{{selectedDetalle}}">
+					<!-- descripcion detalles -->
+      				<div>						
+						<textarea id="dlg_det_item" rows="4" cols="50"></textarea>
+						<br><br>						
+						<button class="xBoton2 xAzul" onclick="xItemGuardarDetalle();">Listo, guardar</button>
+						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+					</div>
+
+					<!-- subitems -->
+					<div>						
+						<x-comp-item-subitems-edit id="comp-subitems-content"></x-comp-item-subitems-edit>						
+						<br><br>
+						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+					</div>
+
+					<!-- Foto -->
+					<div id="dlg_foto_vista_previa">						
+						<a class="xDerecha xInvisible xCursor" onclick="xItemQuitarFoto()" id="dlg_btn_quitar_foto">Quitar Foto</a>
+						<br>
+						<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
+						<div id="dlg_foto_vista_previa" class="div_foto" onclick="xSeleccionarFoto();">
+							<div class="xCentradoHijo" id="dlg_label_foto">Clic aqui para seleccionar</div>
+						</div>
+						<br><br>
+						<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFoto();">Listo, guardar</div>
+						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+					</div>
+
+				</iron-pages>
+				<!-- <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div> -->
 			</div>
 		</paper-dialog>
-		<paper-dialog id="dialog_foto" style="min-width:300px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+
+		<!-- <paper-dialog id="dialog_foto" style="min-width:300px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
 				<h4 id="dlg_des_item">Item</h4>
 				<a class="xDerecha xInvisible xCursor" onclick="xItemQuitarFoto()" id="dlg_btn_quitar_foto">Quitar Foto</a>
@@ -88,7 +85,8 @@
 				<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFoto();">Listo, guardar</div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 			</div>
-		</paper-dialog>
+		</paper-dialog> -->
+
 		<paper-dialog id="dialog_orden" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
 				<h4 id="dlg_des_item">Ordenar Secciones</h4>
@@ -227,7 +225,7 @@
 	paper-button[raised].xnegro {	background: #424242;color: #fff;}
 	#xCardCarta,.xMiCard{ width:80%;}
 
-	.div_foto{ width: 250px; height:260px; background: #e0e0e0; cursor:pointer;display:inline-block;}
+	.div_foto{ width: 100%; height:260px; background: #e0e0e0; cursor:pointer;display:inline-block;}
 	.div_foto #dlg_label_foto{opacity: .8; text-align:center; z-index:0;}
 	.div_foto img{ width: 250px; height:260px; z-index: 10; clear: both;}
 
@@ -658,13 +656,65 @@ function xItemDetalle(obj, e){
 	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
 	var xval_det=$(obj).parents('tr').find("#td_detalle").text();
 	var xval_des=$(obj).parent().text();
-	$("#dialog_detalle #dlg_des_item").text(xval_des)
-	$("#dialog_detalle #dlg_det_item").val(xval_det)
+	// $("#dialog_detalle #dlg_des_item").text(xval_des);
+	$("#dialog_detalle #dlg_det_item").val(xval_det);
+
+	
 	dialog_detalle.open();
 
 	e.stopPropagation();
 	e.stopImmediatePropagation();
 }
+
+function xItemDetalleOpciones(index, obj, e){
+	itemSelectSubItem = xdtCAct[index];
+	xCompSubItemContet.iditem = itemSelectSubItem.iditem;
+	xCompSubItemContet.loadSubItemIni();
+	
+	xObjImgDet=obj;
+	xIdObjImgDet=itemSelectSubItem.iditem;
+	var xval_det=itemSelectSubItem.detalle;
+	var xval_des=itemSelectSubItem.des_item.trim();
+
+	dlg_des_item_detalle.textContent = xval_des;
+
+	// detalle
+	// $("#dialog_detalle #dlg_des_item").val(xval_des);
+	$("#dialog_detalle #dlg_det_item").val(xval_det);
+
+	// foto
+	xObjImgDet=obj;
+	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
+	var xval_des=$(obj).parent().text();
+	var xval_img=$(obj).parents('tr').find("#td_img").text();
+	$("#dlg_foto_vista_previa img").remove();
+	$("#dlg_btn_quitar_foto").addClass('xInvisible');
+	if(xval_img!==''){
+		xval_img='<img src=../img/'+xval_img+'>';
+		$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
+		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
+	}	
+	$("#ctrl_open_file").val('');
+
+	
+	dialog_detalle.open();
+
+	e.stopPropagation();
+	e.stopImmediatePropagation();
+}
+
+function xOpenDialogSubItem(index, e) {
+	itemSelectSubItem = xdtCAct[index];
+	// xloadSubItems(itemSelectSubItem.iditem);
+	
+	xCompSubItemContet.iditem = itemSelectSubItem.iditem;
+	xCompSubItemContet.loadSubItemIni();
+	dialog_subitem.open();
+
+	e.stopPropagation();
+	e.stopImmediatePropagation()
+}
+
 function xSeleccionarFoto(){
 	$("#ctrl_open_file").click();
 }
@@ -712,14 +762,17 @@ function xAddRowItem(obj){
 		else{
 			var xCadenaNoRow='<tr class="row nomarcar" data-id="'+xitem_id+'" data-nombus="'+xitem_d+'">'+
 			'<td data-id="'+xseccion_id+'" id="td_des" onclick="xModRow(this,3);">'+
-				'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+
-				// '<span class="xIconTrNoVisible xIcoSubItem xDerecha" title="Sub Items" onclick="xOpenDialogSubItem(' + xitem_id + ');"></span>'+
-				'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this, event);"></span>'+
-				'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this, event);"></span>'+
+				'<span class="xIconTr xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+
+				// '<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocal(this);"></span>'+				
+				// '<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this, event);"></span>'+
+				// '<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this, event);"></span>'+
 				xitem_d+
 			'</td>'+
 			'<td align="right" data-ColumName="precio" onclick="xModRow(this,1);" id="td_precio">'+xMoneda(xitem_p)+'</td>'+
-			'<td align="center" data-ColumName="cantidad" class="cantidad_sum" onclick="xModRow(this,2);" id="td_cant">'+xitem_c+'</td>'+
+			'<td align="center" data-ColumName="cantidad" class="cantidad_sum" onclick="xModRow(this,2);" id="td_cant">'+
+				xitem_c+
+				// '<span class="xIconTr xIcoSubItem xDerecha" title="Opciones Adicionales" onclick="xItemDetalle(this, event);"></span>'+
+			'</td>'+
 			'<td class="xInvisible" id="td_detalle"></td>'+
 			'<td class="xInvisible" id="td_img"></td>'+
 			'<td class="xInvisible" data-ColumName="idcarta_lista" id="td_idcarta_lista"></td>'+
@@ -837,14 +890,18 @@ function xLoadListadoCartaActual(){
 				if(xidSeccionArray!=xdtCAct[i].idseccion){continue;}
 				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xdtCAct[i].idcarta_lista +'" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
 				'<td data-id="'+xidSeccionArray+'" id="td_des" onclick="xModRow(this,3);" class="txt_modifica_bd">'+
-					'<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocalBD(this);"></span>'+
-					'<span class="xIconTrNoVisible xIcoSubItem xDerecha" title="Sub Items" onclick="xOpenDialogSubItem(' + i + ', event);"></span>'+
-					'<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this, event);"></span>'+
-					'<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this, event);"></span>'+
+					// '<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocalBD(this);"></span>'+
+					// '<span class="xIconTrNoVisible xIcoSubItem xDerecha" title="Sub Items" onclick="xOpenDialogSubItem(' + i + ', event);"></span>'+
+					// '<span class="xIconTrNoVisible xIcoCamara xDerecha" title="Foto" onclick="xItemFoto(this, event);"></span>'+
+					// '<span class="xIconTrNoVisible xIcoDetalle xDerecha" title="Descripcion Adicional (detalles)" onclick="xItemDetalle(this, event);"></span>'+
+					'<span class="xIconTr xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocalBD(this, event);"></span>'+
 					xdtCAct[i].des_item+
 				'</td>'+
 				'<td align="right" data-ColumName="precio" class="txt_modifica_bd" onclick="xModRow(this,1);" id="td_precio">'+xdtCAct[i].precio+'</td>'+
-				'<td align="center" data-ColumName="cantidad" class="cantidad_sum txt_modifica_bd" onclick="xModRow(this,2);" id="td_cant">'+xdtCAct[i].cantidad+'</td>'+
+				'<td align="center" data-ColumName="cantidad" class="cantidad_sum txt_modifica_bd" onclick="xModRow(this,2);" id="td_cant">'
+					+xdtCAct[i].cantidad+
+					'<span class="xIconTr xIcoSubItem xDerecha" title="Opciones Adicionales" onclick="xItemDetalleOpciones(' + i + ',this, event);"></span>'+
+					'</td>'+
 				'<td class="xInvisible" id="td_detalle">'+xdtCAct[i].detalle+'</td>'+
 				'<td class="xInvisible" id="td_img">'+xdtCAct[i].img+'</td>'+
 				'<td class="xInvisible" data-ColumName="idcarta_lista" id="td_idcarta_lista">'+xdtCAct[i].idcarta_lista+'</td>'+
@@ -974,7 +1031,7 @@ function xxxBorrarItemLocal(obj){
 }
 
 // borrar item ya guardado en bd
-function xxxBorrarItemLocalBD(obj){
+function xxxBorrarItemLocalBD(obj, e){
 	const xRowObj = obj.parentNode.parentNode;
 	const xTableRow = $(xRowObj).attr('data-t');
 	const xIdROw = $(xRowObj).attr('data-idborrar');
@@ -983,6 +1040,9 @@ function xxxBorrarItemLocalBD(obj){
 
 	$(xRowObj).fadeTo(550, 0, function () { $(this).remove(); });
 	$("#Lista_Carta").trigger('create');
+
+	e.stopImmediatePropagation();
+	e.stopPropagation();
 }
 
 function xBorrarSeccionLocal(obj){
@@ -1012,20 +1072,19 @@ function xItemQuitarFoto(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=207', data:{i:xIdObjImgDet,d:''}})
 	.done( function (a) {dialog_foto.close();xPopupLoad.xclose();})
 }
-function xItemGuardarFoto(){
-	xPopupLoad.xopen();
-	$(".xobj_subir_foto").each(function(index, element) {
-	if($(this).val()==''){return}
-	file=this.files[0]; name = file.name; size = file.size; type = file.type;
-	xhr = new XMLHttpRequest();
-	xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
+function xItemGuardarFoto(){	
+	$(".xobj_subir_foto").each(function(index, element) {		
+		if($(this).val()==''){return}
+		file=this.files[0]; name = file.name; size = file.size; type = file.type;
+		xhr = new XMLHttpRequest();
+		xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
 
-	xhr.open('POST','upload.php?op=1',true);
+		xhr.open('POST','upload.php?op=1',true);
 
-	xhr.setRequestHeader("Cache-Control", "no-cache");
-	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-	xhr.setRequestHeader("X-File-Name", file.name);
-	xhr.send(file);
+		xhr.setRequestHeader("Cache-Control", "no-cache");
+		xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+		xhr.setRequestHeader("X-File-Name", file.name);
+		xhr.send(file);
 	})
 };
 function transferenciaCompleta(xfile){
@@ -1086,17 +1145,6 @@ function xfiltrarCartaHistorial() {
 		}, 900);
 	}
 
-function xOpenDialogSubItem(index, e) {
-	itemSelectSubItem = xdtCAct[index];
-	// xloadSubItems(itemSelectSubItem.iditem);
-	
-	xCompSubItemContet.iditem = itemSelectSubItem.iditem;
-	xCompSubItemContet.loadSubItemIni();
-	dialog_subitem.open();
-
-	e.stopPropagation();
-	e.stopImmediatePropagation()
-}
 
 // function addSubItem() {
 // 	const dataSubItem = {
@@ -1170,6 +1218,7 @@ Polymer({
 	},
 	attached:function(){
 		this.selected=0;
+		this.selectedDetalle = 0;
     	xThisCarta=this;
     	xInicarta();
 	},

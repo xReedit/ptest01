@@ -277,7 +277,7 @@ function xOpenPage(xop, parametro){
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
-			const versionPrintServer = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? 'print-server' : 'print-server-1.2';
+			const versionPrintServer = 'print-server' // parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? 'print-server' : 'print-server-1.2';
 			const _urlPrintServver = 'http://appx.papaya.com.pe/'+versionPrintServer+'/print-server.html?o='+_xr
 			
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo

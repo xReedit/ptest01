@@ -1,4 +1,5 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+<link rel="import" href="../x-componentes/x-comp-item-subitems-edit/x-comp-item-subitems-edit.html">;
 
 <dom-module id="x-monitor-pedidos">
 	<script src="../../js/isotope.pkgd.min.js"></script>
@@ -18,6 +19,17 @@
 				<br><br><br>
 				<div class="xBoton2 xVerde" dialog-dismiss onclick="xCambiarMaxPxH();">Listo</div>
 				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
+				<br><br>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog id="dialog_subitem" class="dialog_redondo" style="width: 90%; max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<h4 id="dlg_des_item_detalle">Item</h4>
+				<div class="xLinea2"></div>
+				<x-comp-item-subitems-edit id="comp-subitems-content"></x-comp-item-subitems-edit>
+				<br>
+				<div class="xBoton2 xPlomo xDerecha" dialog-dismiss>Cerrar</div>
 				<br><br>
 			</div>
 		</paper-dialog>
@@ -105,8 +117,8 @@ var xThisMonPe,
 	xDt_sede_other,
 	source,
 	xValCountPedidos=0,
-	idCategoriaSel, cnf_CategoriaSel, xArrayEncaUlLi, _seccionNewItem,
-	isSocket = false;
+	idCategoriaSel, cnf_CategoriaSel, xArrayEncaUlLi, _seccionNewItem, dtAllItems,
+	isSocket = false, xCompSubItemContet;
 
 
 function xIniMonPe(){
@@ -152,6 +164,8 @@ function xIniMonPe(){
 			    return false;
 	  		}
 		});
+
+	xCompSubItemContet = document.getElementById('comp-subitems-content');
 }
 
 // AGREGAR NUEVO ITEM //
@@ -307,23 +321,23 @@ function xLoadAllItem(){
 	xPopupLoad.xopen();
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=19', data: {'idcategoria': this.idCategoriaSel}})
 	.done( function (DtItemP) {
-		var xDtItemP=$.parseJSON(DtItemP),
+		dtAllItems=$.parseJSON(DtItemP),
 				xcandena_a='',
 				xNom_seccion_ul='';
 
 		xArrayEncaUlLi=[];
-		xDtItemP=xDtItemP.datos;
+		dtAllItems=dtAllItems.datos;
 
 		//encabezados
-		for (var i = 0; i < xDtItemP.length; i++) {
-			if(xNom_seccion_ul==xDtItemP[i].des_seccion){continue;}
-			xArrayEncaUlLi.push({'id':xDtItemP[i].idseccion,
-									'des_seccion':xDtItemP[i].des_seccion, 
-									'idseccion':xDtItemP[i].idseccion, 
-									'idcarta': xDtItemP[i].idcarta, 
-									'idcategoria': xDtItemP[i].idcategoria, 
-									'sec_orden': xDtItemP[i].sec_orden});
-			xNom_seccion_ul=xDtItemP[i].des_seccion;
+		for (var i = 0; i < dtAllItems.length; i++) {
+			if(xNom_seccion_ul==dtAllItems[i].des_seccion){continue;}
+			xArrayEncaUlLi.push({'id':dtAllItems[i].idseccion,
+									'des_seccion':dtAllItems[i].des_seccion, 
+									'idseccion':dtAllItems[i].idseccion, 
+									'idcarta': dtAllItems[i].idcarta, 
+									'idcategoria': dtAllItems[i].idcategoria, 
+									'sec_orden': dtAllItems[i].sec_orden});
+			xNom_seccion_ul=dtAllItems[i].des_seccion;
 		}
 
 		var xIdUlIl, xCantidadMax, xCadenaBodyUlDt='';
@@ -338,12 +352,12 @@ function xLoadAllItem(){
 					'</div>'+
 				'</div>');
 			xcandena_a='';
-			for (var p = 0; p < xDtItemP.length; p++) {
-				if(xIdUlIl==xDtItemP[p].idseccion){
-					xcandena_a=String(xcandena_a+'<li class="table-like__item row li'+xDtItemP[p].idcarta_lista+'" id="li'+xDtItemP[p].idcarta_lista+'">'+
-							    '<div class="name text_puntos">'+xDtItemP[p].plato+'</div>'+
-							    '<div class="stock xCursor contar" data-isporcion="'+xDtItemP[p].isporcion+'" data-iditem="'+xDtItemP[p].iditem+'" data-idcarta_lista="'+xDtItemP[p].idcarta_lista+'" data-procede="'+xDtItemP[p].procede+'" id="cantidad_stock" title="editar" onclick="xModRow(this);"><strong>'+xCeroIzq(xDtItemP[p].cantidad,2)+'</strong></div>'+
-							    '<div class="number contar cant_vendido" id="cantidad_vendido">'+xCeroIzq(xDtItemP[p].cant_vendido,2)+'</div>'+
+			for (var p = 0; p < dtAllItems.length; p++) {
+				if(xIdUlIl==dtAllItems[p].idseccion){
+					xcandena_a=String(xcandena_a+'<li class="table-like__item row li'+dtAllItems[p].idcarta_lista+'" id="li'+dtAllItems[p].idcarta_lista+'">'+
+							    '<div class="name text_puntos">'+dtAllItems[p].plato+'</div>'+
+							    '<div class="stock xCursor contar" data-isporcion="'+dtAllItems[p].isporcion+'" data-iditem="'+dtAllItems[p].iditem+'" data-idcarta_lista="'+dtAllItems[p].idcarta_lista+'" data-procede="'+dtAllItems[p].procede+'" id="cantidad_stock" title="editar" onclick="xModRow(this, '+ p +');"><strong>'+xCeroIzq(dtAllItems[p].cantidad,2)+'</strong></div>'+
+							    '<div class="number contar cant_vendido" id="cantidad_vendido">'+xCeroIzq(dtAllItems[p].cant_vendido,2)+'</div>'+
 							  '</li>');
 				}
 			}
@@ -419,8 +433,42 @@ function setRowClassEstado(item) {
 	xSumarTotales();
 }
 
+// evalua si en las cantidades de los items son diferentes a ND para abrir el dialog suubitems
+function evaluarItemIsSubitem(item) {
+	var rpt = false;
+	if ( item.subitems ) {
 
-function xModRow(obj,tipo){
+		const _subitems = typeof item.subitems === 'object' ? item.subitems : JSON.parse(item.subitems);
+		
+		_subitems.map(o => {
+			o.opciones.map(s => {
+				if (s.cantidad != 'ND') {
+					rpt = true;
+					return rpt;
+				}
+			});
+		});
+	}
+
+	return rpt;
+}
+
+
+function xModRow(obj, index ,tipo){
+	const itemSelected = dtAllItems[index];
+	const rptIfOpenSubItems = evaluarItemIsSubitem(itemSelected);
+	console.log('rptIfOpenSubItems', rptIfOpenSubItems);
+	if ( rptIfOpenSubItems ) {
+		dlg_des_item_detalle.textContent = itemSelected.plato;
+		xCompSubItemContet.iditem = itemSelected.iditem;
+		xCompSubItemContet.itemselected = itemSelected;
+		xCompSubItemContet.frommonitor = true;
+		xCompSubItemContet.loadSubItemIni();
+		dialog_subitem.open();
+		return;
+	}
+
+
 	var xvalObj=$(obj).text();
 	xValCantAnterior=xvalObj;
 	if($(obj).find('input').length>0){$(obj).find('input').select();return;}

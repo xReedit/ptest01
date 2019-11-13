@@ -685,8 +685,8 @@ function xIniVentaRapida(){
 
 	$(document.body).keydown(function(e) {
 		if ( dialog_datos_delivery.opened ) return;
+		if ( document.activeElement.dataset.val === 'referencia' || document.activeElement.dataset.val === 'mesa') {return; }
 		if (e.keyCode != 107 && e.keyCode != 109 && e.keyCode != 40 && e.keyCode != 38 && e.keyCode!=117 && e.keyCode!=118 && e.keyCode!=17 && e.keyCode!=77 ) {
-			if ( document.activeElement.dataset.val === 'referencia' || document.activeElement.dataset.val === 'mesa') {return; }
 			// if(document.activeElement.offsetParent!=null){				
 			// 	if(document.activeElement.offsetParent.innerText=='REFERENCIA' || document.activeElement.offsetParent.innerText=='MESA'){return;}
 			// }
@@ -721,6 +721,7 @@ function xIniVentaRapida(){
 
     	}
 
+		if ( document.activeElement.dataset.val === 'referencia' || document.activeElement.dataset.val === 'mesa') {return; }
 		if (e.keyCode == 107 || e.keyCode == 109) {
 			xtxt_select=true;//selecciona todo el txt de para agilizar busqueda
 			var xval_add = e.keyCode == 107 ? 1 : -1;
