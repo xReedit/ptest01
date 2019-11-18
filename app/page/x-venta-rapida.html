@@ -1413,7 +1413,7 @@ function _cpStockItemModificado(item){
 	// puede que no traiga esta propiedad subitems_selected
 	try {
 		xGeneralDataCarta[index].subitems_selected = itemPedidos_objItemSelected.subitems_selected;		
-		xGeneralDataCarta[index].subitems = itemPedidos_objItemSelected.subitems;
+		xGeneralDataCarta[index].subitems = xGeneralDataCarta[index].subitems ? itemPedidos_objItemSelected.subitems : null;
 	} catch (error) {}
 
 	itemPedidos_objItemSelected = xGeneralDataCarta[index];

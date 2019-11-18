@@ -200,10 +200,19 @@ function xOpenPage(xop, parametro){
 		case 1:	xruta='/home';break;
 		case 2:	xruta='/elaborar_carta';break;
 		case 3:	
-			window.localStorage.removeItem("::app3_sys_first_load");
-			document.location.href='m_menu.html';
-			xLiberarRouter();
-			return;break;
+
+			if ( parseInt(xm_log_get('datos_org_sede')[0].pwa) === 1  ) { // si socket
+				window.localStorage.removeItem("::app3_sys_first_load");
+				document.location.href='https://app.restobar.papaya.com.pe';
+				xLiberarRouter();
+				return;
+			} else {
+				window.localStorage.removeItem("::app3_sys_first_load");
+				document.location.href='m_menu.html';
+				xLiberarRouter();
+				return;
+			}
+			break;
 		//case 4:	xruta='/menu'; break;
 		//case 4:	xruta='/reglas';break;
 		//case 5:	xruta='/datos_print';break;

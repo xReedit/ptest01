@@ -3,6 +3,7 @@ var xIdSede;
 var xNomU;
 var xPopupLoad;
 var xRouterTime_cp = false;
+var myWindowAppCarta;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
 // $(document).ready(function () {
@@ -69,8 +70,16 @@ function xOpenPage(xop, parametro){
 			document.location.href='m_panel.html';
 			return;
 		case 5:
-			window.localStorage.removeItem("::app3_sys_first_load");
 			h = window.screen.availHeight-100;
+			if ( parseInt(xm_log_get('datos_org_sede')[0].pwa) === 1  ) { // si socket 
+				if ( !myWindowAppCarta ) {					
+					myWindowAppCarta = window.open('https://app.restobar.papaya.com.pe', "carta", "width=400,height="+h);
+				}
+				myWindowAppCarta.focus();
+				return;
+			}
+
+			window.localStorage.removeItem("::app3_sys_first_load");			
 			var myWindow = window.open('m_menu.html', "Carta", "width=400,height="+h);	return;break;
 		case 6:	xruta='/pedido_detalle';break;
 		case 7:	xruta='/monitor_pedidos';break;
