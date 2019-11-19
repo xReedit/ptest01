@@ -400,10 +400,11 @@ function xVerificar(){
 		} else {
 			if(xPermisoSupervisor==1){//supervisor
 				if(!isNaN(calTotal)){
-					if(calTotal<1){
-						xRpt_monto_supervicion='(sobra '+xMoneda(calTotal)+'). ';xsub_sobra='xSubrayar xBold2';}
-					else{
+					if(calTotal<1) {
 						xRpt_monto_supervicion='(falta '+xMoneda(calTotal)+'). ';xsub_falta='xSubrayar xBold2';
+					}
+					else {
+						xRpt_monto_supervicion='(sobra '+xMoneda(calTotal)+'). ';xsub_sobra='xSubrayar xBold2';
 					}
 				}
 				xRpt='<p class="xfont16"><strong>Efectivo: '+ xMoneda(res.efectivoCaja) +' </strong> '+xRpt_monto_supervicion+' Resultado de caja con supervision. Si <span class='+xsub_sobra+'>tiene sobrante</span>, haga un ingreso en caja como sobrante de efectivo. Si por el contrario <span class='+xsub_falta+'>tiene faltante</span>, haga una salida de caja como faltante en caja. Luego vuela a realizar el cuadre de caja, imprima los resultados y cierre su terminal. </p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';xColor="#8e24aa"; //<a onclick="xArmarArrayPrint();">Imprimir cierre</a>
