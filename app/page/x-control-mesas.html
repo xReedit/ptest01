@@ -1,8 +1,10 @@
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-control-mesas">
+	<script type="text/javascript" src="../../js/rxjs.umd.js"></script>
 	<script rel="preload" type="text/javascript" src="../../js/socket.io.js"></script>
 	<script rel="preload" type="text/javascript" src="../view/config.const.js"></script>
 	<script type="text/javascript" src="../view/config.const.js"></script>
+	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 
 	<template>
@@ -1460,6 +1462,7 @@ async function xRegistrarClientePagoCP(){
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xLoadDetallesPedido(xObj_miPedido);
+			if (isSocket) {_cpSocketPintarPedido(null);}
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
 
 		}).fail(enProcesoGuardarPago = false);
@@ -2657,10 +2660,16 @@ Polymer({
 
 		xIniControlMesa();
 		xbuscar_mesa = false;
-		_cpSocketIsConnect();
+		// _cpSocketIsConnect();
+		setTimeout(() => {			
+			_cpSocketOpen();
+		}, 1000);
 		// if ( xThisCM ) {return}
     	
-    },
+	},
+	// ready: () => {
+	// 	_cpSocketOpen();
+	// },
     detached:function(){
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);

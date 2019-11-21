@@ -5,6 +5,7 @@
 	<script src="../../js/isotope.pkgd.min.js"></script>
 	<script type="text/javascript" src="../../js/raphael.2.1.0.min.js"></script>
 	<script type="text/javascript" src="../../js/justgage.js"></script>	
+	<script type="text/javascript" src="../../js/rxjs.umd.js"></script>
 
 	
 
@@ -103,7 +104,8 @@
 <!-- <script rel="preload"  type="text/javascript" src="../../js/socket.io.js"></script> -->
 <!-- <script rel="prefetch" src="../view/xm_all.js"></script>	 -->
 <!-- <script rel="prefetch" type="text/javascript" src="../view/config.const.js"></script> -->
-
+<!-- <script type="text/javascript" src="../../js/rxjs.umd.js"></script> -->
+<script rel="prefetch" type="text/javascript" src="../view/socket.master.service.js"></script>
 <script rel="prefetch" type="text/javascript" src="../view/socket.service.js"></script>
 
 
@@ -118,7 +120,7 @@ var xThisMonPe,
 	source,
 	xValCountPedidos=0,
 	idCategoriaSel, cnf_CategoriaSel, xArrayEncaUlLi, _seccionNewItem, dtAllItems,
-	isSocket = false, xCompSubItemContet;
+	isSocket = false, xCompSubItemContet, objSeccionAdd;
 
 
 function xIniMonPe(){
@@ -141,7 +143,10 @@ function xIniMonPe(){
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 		console.log('isSocket', isSocket);
-	});
+
+		
+	});			
+	
 
 	$('.xPasarEnter2').on('keyup',function(e){
 			var code=e.which;
@@ -166,6 +171,8 @@ function xIniMonPe(){
 		});
 
 	xCompSubItemContet = document.getElementById('comp-subitems-content');
+
+	
 }
 
 // AGREGAR NUEVO ITEM //
@@ -209,6 +216,7 @@ function xCargarEnInputItem(){
 function xOpenDialogNewItem(index) {
 	_seccionNewItem = xArrayEncaUlLi[index];
 	newItemTitulo.textContent = _seccionNewItem.des_seccion
+	objSeccionAdd = $('#ulItems'+index);
 	dialog_new_item.open();
 	console.log('seccion agregar', _seccionNewItem);
 }
@@ -226,24 +234,49 @@ function guardarNewItem() {
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204002',data:{item: _seccionNewItem}})
 		.done( function (xid) {
 			var rpt = xid.split('|');
-			_seccionNewItem.idcarta_lista = rpt[0];
-			_seccionNewItem.iditem = rpt[1];
 			_seccionNewItem.cantidad = _seccionNewItem.cant_item;
 			_seccionNewItem.des = _seccionNewItem.des_item;
 			_seccionNewItem.detalles = '';
+			_seccionNewItem.idcarta_lista = rpt[0];
+			_seccionNewItem.idimpresora = _seccionNewItem.idimpresora
+			_seccionNewItem.iditem = rpt[1];
 			_seccionNewItem.idseccion = parseInt(_seccionNewItem.idseccion);
 			_seccionNewItem.imprimir_comanda = 1;
 			_seccionNewItem.isalmacen = 0;
 			_seccionNewItem.isporcion = "0";
 			_seccionNewItem.precio = _seccionNewItem.precio_item;
+			_seccionNewItem.precio_unitario = _seccionNewItem.precio_item;
 			_seccionNewItem.procede = 1;
+			_seccionNewItem.sec_orden = _seccionNewItem.sec_orden
+			_seccionNewItem.seccion = _seccionNewItem.des_seccion
+			_seccionNewItem.selected = false
+			_seccionNewItem.subitem_cant_select = 0
+			_seccionNewItem.subitem_required_select = 0
+			_seccionNewItem.subitems = null
+			_seccionNewItem.ver_stock_cero = 0
+			_seccionNewItem.visible = true		
 
 			const _isSocket = isSocket ? isSocket : false;
 			if (isSocket) {_monitoreoSocketEmitNewItemInCarta(_seccionNewItem);}			
 
 			$('#frmNewItem').reset();
 			xPopupLoad.xclose();
-			xLoadAllItem();
+
+			dtAllItems.push(_seccionNewItem);
+
+			const index_li = dtAllItems.length - 1;
+
+			// agregar el item al final
+			const liAdd = '<li class="table-like__item row li'+_seccionNewItem.idcarta_lista+'" id="li'+_seccionNewItem.idcarta_lista+'">'+
+							    '<div class="name text_puntos">'+_seccionNewItem.des+'</div>'+
+							    '<div class="stock xCursor contar" data-isporcion="'+_seccionNewItem.isporcion+'" data-iditem="'+_seccionNewItem.iditem+'" data-idcarta_lista="'+_seccionNewItem.idcarta_lista+'" data-procede="'+_seccionNewItem.procede+'" id="cantidad_stock" title="editar" onclick="xModRow(this, '+ index_li +');"><strong>'+xCeroIzq(_seccionNewItem.cantidad,2)+'</strong></div>'+
+							    '<div class="number contar cant_vendido" id="cantidad_vendido">0</div>'+
+							  '</li>';
+			
+			$(objSeccionAdd).append(liAdd).trigger('create');
+			$table.isotope( 'reloadItems' ).isotope();
+
+			// xLoadAllItem();
 		});
 	});
 }
@@ -363,7 +396,7 @@ function xLoadAllItem(){
 			}
 
 
-			xcandena_a='<ul class="table-like" data-id="'+z+'">'+xcandena_a+'</ul><li class="table-like__item_total"><p class="t_stock" id="total_row'+z+'"><stong>-</stong></p><p class="t_number" id="total_row_cant_vendido'+z+'"><stong>-</stong></p></li><br><br>';
+			xcandena_a='<ul class="table-like" id="ulItems'+z+'" data-id="'+z+'">'+xcandena_a+'</ul><li class="table-like__item_total"><p class="t_stock" id="total_row'+z+'"><stong>-</stong></p><p class="t_number" id="total_row_cant_vendido'+z+'"><stong>-</stong></p></li><br><br>';
 			xCadenaBodyUlDt=String(xCadenaBodyUlDt+xCadenaHeadUlDt+xcandena_a);
 		}
 
@@ -579,11 +612,11 @@ function xCambiarMaxPxH(){
 
 
 Polymer({
-	is:'x-monitor-pedidos',
+	is:'x-monitor-pedidos',	
 	properties:{
 		xval_pedidos_x_hora:Number
 	},
-	attached:function(){
+	attached:function(){		
 		xThisMonPe=this;
 		xIniMonPe();
 		_monitoreoSocketIsConnect();
@@ -591,7 +624,7 @@ Polymer({
   	detached:function(){
 		_monitoreoSocketClose();
     	// source.close();
-  	}
+	}
 });
 </script>
 </dom-module>

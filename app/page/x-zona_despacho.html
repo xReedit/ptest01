@@ -3,9 +3,11 @@
 	<script src="../../js/d3.min.js"></script>
 	<script src="../../js/c3.min.js"></script>
 
+	<script rel="preload"  type="text/javascript" src="../../js/rxjs.umd.js"></script>
 	<script rel="preload"  type="text/javascript" src="../../js/socket.io.js"></script>
 	<script rel="preload"  type="text/javascript" src="../view/xm_all.js"></script>	
 	<script rel="preload"  type="text/javascript" src="../view/config.const.js"></script>
+	<script rel="preload"  type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script rel="preload"  type="text/javascript" src="../view/socket.service.z.js"></script>
 	
 	<template>
@@ -782,9 +784,11 @@ function xRefrecarTiempoMinutos(){
 		// if($(e).attr('data-reserva')!=='1'){//si es reserva continua
 		if(e.dataset.reserva !== '1'){//si es reserva continua
 			tiempo_encabezado = e.dataset.tiempo; // $(e).attr('data-tiempo');
-			xTiempoTranscurridos(tiempo_encabezado,xhora_actual_serv,function(h,m,s,dif){
+			// xTiempoTranscurridos_2(tiempo_encabezado,xhora_actual_serv,function(h,m,s,dif){
+				xTiempoTranscurridos_2(tiempo_encabezado,function(h, m ,s){
 				xen_cola++;
-				xtiempo_transcurrido=xTiempoDe_MS_minutos(dif)
+				// xtiempo_transcurrido=xTiempoDe_MS_minutos(dif)
+				xtiempo_transcurrido=m+':'+s;
 				$(e).find('#val_minutos').text(xtiempo_transcurrido);
 				$(e).find('#val_num_cola').text(xCeroIzq(xen_cola,2));
 
@@ -999,7 +1003,7 @@ Polymer({
 	attached:function(){
 		this.select_div=0;
     	xThisZonaDespacho=this;
-		_zonaSocketIsConnect();
+		// _zonaSocketIsConnect();
 		xIniZonaDespacho();
     },
     detached:function(){
