@@ -3,12 +3,15 @@
 	<script src="../../js/d3.min.js"></script>
 	<script src="../../js/c3.min.js"></script>
 
-	<script rel="preload"  type="text/javascript" src="../../js/rxjs.umd.js"></script>
-	<script rel="preload"  type="text/javascript" src="../../js/socket.io.js"></script>
+	<!-- <script rel="preload"  type="text/javascript" src="../../js/rxjs.umd.js"></script>
+	<script rel="preload"  type="text/javascript" src="../../js/socket.io.js"></script> -->
+	<script type="text/javascript" src="../view/socket.service.z.js"></script>
+	<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 	<script rel="preload"  type="text/javascript" src="../view/xm_all.js"></script>	
 	<script rel="preload"  type="text/javascript" src="../view/config.const.js"></script>
-	<script rel="preload"  type="text/javascript" src="../view/socket.master.service.js"></script>
-	<script rel="preload"  type="text/javascript" src="../view/socket.service.z.js"></script>
+	
+	<!-- <script rel="preload"  type="text/javascript" src="../view/socket.master.service.js"></script> -->
+	
 	
 	<template>
 		<paper-dialog id="dialog_despachar"  style="max-width: 350px; z-index: 500;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -212,7 +215,7 @@
 <script>
 var xThisZonaDespacho;
 var xdata_zona=[], xIdZonaSeccion='',xIdTp='', des_despacho='',xValCountPedidosDespacho=0, xUltimoIdPedidoEnZona=0, xColorMarcado='xNaranja',xObjPedido,xRefresh_tiempo, xelem_tt_p_cola,xhora_actual_serv;
-var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido, isSocket;
+var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido, isSocket, $grid;
 
 function pruebaAddPedido(){
 	var xaa='<div class="xmarco_zd_pedido ini"><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3></div>';
@@ -463,7 +466,13 @@ function xVerPedidosDespachados(){
 		//$aa.isotope('reloadItems');
 		$(xtb_obj).html($(xCadenaNumMesa)).trigger('create').isotope({
 		  itemSelector: '.xMiCardPedido',
-		  layoutMode: 'fitRows'
+		  layoutMode: 'cellsByRow',
+		//   percentPosition: true,
+		//   sortBy: [ 'numero' ],
+		// //   layoutMode: 'cellsByRow',
+		//   masonry: {
+		// 		columnWidth: 120
+		// 	}
 		});
 
 		//$aa.isotope('fitRows');
@@ -725,10 +734,26 @@ function xActualizarPedidosZona(){
 				xcadena_pedido=String(xcadena_enca+xcadena_pedido+'</div>'+xcandena_btn+'</div></div>');
 				$("#xContent_zd_pedido").append(xcadena_pedido).trigger('create');
 			}
-			//element_sonido.play();
+
+			// var $items=$(xcadena_pedido);
+			// $grid.append($items).isotope( 'appended', $items );
 			setTimeout(function(){xTransicionPedido();},100);
+			element_sonido.play();
+
 			xcadena_pedido='';
 		}
+
+		// aca
+		// $('.xContent_zd_pedido').html(xcadena_pedido).trigger('create').isotope({
+		//   itemSelector: '.xmarco_zd_pedido',
+		//   layoutMode: 'cellsByColumn',
+		//   percentPosition: true,
+		//   sortBy: [ 'numero' ],
+		// //   layoutMode: 'cellsByRow',
+		//   masonry: {
+		// 		columnWidth: 120
+		// 	}
+		// });
 
 		xUltimoIdPedidoEnZona=xValCountPedidosDespacho;
 	})
@@ -838,6 +863,18 @@ function xLoadZonaDespacho(){
 			$("#div_zona_despacho").html(xcadena_imp);
 		});
 	});
+
+	// $grid = $('#xContent_zd_pedido').isotope({
+	// 	  itemSelector: '.xmarco_zd_pedido',
+	// 	//   layoutMode: 'fitRows',
+	// 	//   percentPosition: true,
+	// 	//   sortBy: [ 'numero' ],
+	// 	//   layoutMode: 'cellsByRow',
+	// 	  masonry: {
+	// 			columnWidth: 300,				
+    // 			// gutter: 8
+	// 		}
+	// 	});
 }
 
 function xCalcularMinutosDespacho(mm){
@@ -1004,6 +1041,9 @@ Polymer({
 		this.select_div=0;
     	xThisZonaDespacho=this;
 		// _zonaSocketIsConnect();
+		setTimeout(() => {			
+			_zonaSocketConnect();
+		}, 1000);
 		xIniZonaDespacho();
     },
     detached:function(){
