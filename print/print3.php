@@ -102,7 +102,7 @@ $papel_size = (int)$xArray_print[0]['papel_size'];
 $linea_hr = '';
 $linea_titulo = '';
 $espacioAlFinal = false; // en impresoras de 58- 57mm  no aparece el ultimo texto 
-$espacioLeftCols = 32;
+$espacioLeftCols = 30;
 $GLOBALS['leftCols'] = 38;
 $GLOBALS['leftColsSubItem'] = 54; // la letra es mas pequeña
 switch ($papel_size) {

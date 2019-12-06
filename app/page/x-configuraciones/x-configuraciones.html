@@ -1,6 +1,7 @@
 <link rel="import" href="../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <link rel="import" href="../../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+<link rel="import" href="./x-carta-virtual-config/x-carta-virtual-config.html">
 
 <dom-module id="x-configuraciones">
 	<template>
@@ -102,6 +103,7 @@
 				<paper-tab>DESPACHO E IMPRESORAS</paper-tab>
 				<paper-tab>ALMACENES</paper-tab>
 				<paper-tab>EMISION DE COMPROBANTES</paper-tab>
+				<paper-tab>CARTA APP</paper-tab>
 			</paper-tabs>
 			<div class="xLinea2"></div>
 				<br>
@@ -149,7 +151,7 @@
 								<th width="5px"></th>
 								<th width="5px"></th>
 							</thead>
-						</table>
+						</table>						
 					</div>
 
 					<div id="div_tpc">
@@ -625,6 +627,11 @@
 
 
 					</div>
+
+					<!-- carta app -->
+					<div id="div_carta_app" class="xContent">						
+						<x-carta-virtual-config></x-carta-virtual-config>
+					</div>
 				</iron-pages>
 			</div>
 		</div>
@@ -634,7 +641,7 @@
 <script type="text/javascript" src="config_comporbantes.js"></script>
 <script type="text/javascript" src="../../shared/config.const.js"></script>
 <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
-<script type="text/javascript" src="../../view/socket.service.p.js"></script>
+<!-- <script type="text/javascript" src="../../view/socket.service.p.js"></script> -->
 
 <script>
 var xThisConfig, _arrPrintLocal=[], isSocket;
@@ -1683,10 +1690,10 @@ Polymer({
 		this.selected_conf=0;
 		xThisConfig=this;
 		xIniConf();
-		_cpSocketIsConnect();
+		// _cpSocketIsConnect();
 	},
 	detached:function(){
-		_cpSocketClose();
+		// _cpSocketClose();
 	}
 })
 </script>

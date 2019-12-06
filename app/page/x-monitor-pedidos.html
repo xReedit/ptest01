@@ -120,7 +120,7 @@ var xThisMonPe,
 	source,
 	xValCountPedidos=0,
 	idCategoriaSel, cnf_CategoriaSel, xArrayEncaUlLi, _seccionNewItem, dtAllItems,
-	isSocket = false, xCompSubItemContet, objSeccionAdd;
+	isSocket = false, xCompSubItemContet, objSeccionAdd, reloadIsotope = false;
 
 
 function xIniMonPe(){
@@ -163,7 +163,7 @@ function xIniMonPe(){
 			  	  nextBox.focus();
 			  	  nextBox.select();
 			    }
-			    event.stopPropagation();
+			    // event.stopPropagation();
 			    e.stopPropagation();
 			    e.stopImmediatePropagation()
 			    return false;
@@ -405,10 +405,15 @@ function xLoadAllItem(){
 
 		//clearInterval(xTimeActualizarListaPed);
 		//xTimeActualizarListaPed=setInterval(function () {xActualizarListaPed()},5000);
-		xLogRun_CoutPedido();
-		xActualizarListaPed();
+		// xLogRun_CoutPedido();
+		// xActualizarListaPed();
 
-		$table = $('.table-like').isotope({
+		$table = $('.table-like');
+
+
+		// if(xActualizar===1){$table.isotope( 'reloadItems' ).isotope(); return;}
+
+		$table.isotope({
 			  layoutMode: 'vertical',
 			  getSortData: {
 			    name: '.name',
@@ -418,8 +423,17 @@ function xLoadAllItem(){
 			});
 
 		$table.isotope({ sortBy: 'stock' });
+
+		xLogRun_CoutPedido();
+		xActualizarListaPed();
+
+		// reloadIsotope = true;
 		//$table.isotope( 'reloadItems' ).isotope();
 	});
+}
+
+function _monitoreoStockUpdateCarta(res) {
+	xLoadAllItem();
 }
 
 function monitoreoStockEmitItemModificado(objItem) {
@@ -556,7 +570,7 @@ function xActualizarListaPed(){
 			xClassRow='';
 			xCant_stock=xDtItemP[i].cantidad;
 			xIsClass='.li'+xDtItemP[i].idcarta_lista;
-			if(xActualizar==0){
+			// if(xActualizar==0){
 				$(".table-like__item"+xIsClass+" .number").text(xCeroIzq(xDtItemP[i].cant_vendido,2));
 				$(".table-like__item"+xIsClass+" .stock").html('<strong>'+xCeroIzq(xCant_stock,2)+'<strong>');
 
@@ -565,10 +579,11 @@ function xActualizarListaPed(){
 				$(".table-like__item"+xIsClass).removeClass('xFondoRowRojo');
 				$(".table-like__item"+xIsClass).removeClass('xFondoRowAmarillo');
 				$(".table-like__item"+xIsClass).addClass(xClassRow);
-			}
+			// }
 		}
 
 		//$table.isotope({ sortBy: 'stock' });
+		
 		if(xActualizar==0){$table.isotope( 'reloadItems' ).isotope();}
 		xSumarTotales();
 		//$table.isotope({ sortBy: 'stock' });
