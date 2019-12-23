@@ -31,6 +31,9 @@ $(this).one('pageshow',function(){
 
 	var t = setTimeout(function(){
 		$('body').addClass('loaded');
+		// setTimeout(() => {
+		// 	$('.wrapper').addClass('xQuitar')
+		// }, 1000);		
 	},1000);
 
 	xul.addEventListener('xSend', function (e) {

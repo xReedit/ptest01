@@ -1,0 +1,29 @@
+<dom-module id="x-indicadores">
+	<template is="dom">
+
+    </template>
+</dom-module>
+
+<script>
+    var xThisI;
+
+    function initIndicadores() {
+
+    }
+
+    Polymer({
+		is: 'x-xindicadores',
+		properties: {
+			xt_org: Number,
+			xt_idsede: Number,
+		},
+		attached: function () {
+			// this.selected = 0,
+			xThisI = this;
+			initIndicadores();
+		},
+		displayIndex: function (index) {
+			return xCeroIzq(index + 1, 1);
+		},
+	})
+</script>
