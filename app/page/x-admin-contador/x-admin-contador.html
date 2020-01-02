@@ -202,22 +202,31 @@ function xDataYears() {
 
 	xThisAdmContador.listYears = _listYear;
 
-	if( count_year === 1 ) {xDataYearsMonth(_y_now);}
+	setTimeout(() => {
+		// xThisAdmContador.$.selYear.selectedIndex = count_year;
+		xThisAdmContador.$.selYear.selectedIndex = count_year - 1;
+		xDataYearsMonth(_y_now);
+	}, 100);
+	// if( count_year === 1 ) {xDataYearsMonth(_y_now);}	
 }
 
-function selectOptionYear() {
-	const index = xThisAdmContador.$.selYear.value;
-	const yy = xThisAdmContador.listYears[index];
+function selectOptionYear() {	
+	const index = xThisAdmContador.$.selYear.selectedIndex;
+	const yy = parseInt(xThisAdmContador.listYears[index].y);
+
+	// _y_now = yy;
 	xDataYearsMonth(yy);
 }
 
 function xDataYearsMonth(yy) {
 	// list mes
 	var _listMonth=[],count_m=1;
+	const _my_ini = xThisAdmContador.selEstablecimiento.mes_inicio.split('/');
+	const _num_f_ini = parseInt(_my_ini[0])+parseInt(_my_ini[1]); // sumamos > 02+2019 = 2021
+	const isMismoYY = _y_now === yy;
+
 	while(count_m <= 12) { 
-		const _my_ini = xThisAdmContador.selEstablecimiento.mes_inicio.split('/');
-		const _num_f_ini = parseInt(_my_ini[0])+parseInt(_my_ini[1]); // sumamos > 02+2019 = 2021
-		const _num_f_now = _m_now+_y_now;
+		const _num_f_now = isMismoYY ? _m_now+_y_now : 12 + yy;
 		const _num_f = count_m+yy;
 		const _activo = _num_f < _num_f_ini || _num_f > _num_f_now ? false : true;
 		const _clase = _activo ? 'animated fadeIn fast xCursor' : 'animated fadeIn fast xColorRow_Plomo2';
