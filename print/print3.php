@@ -139,7 +139,7 @@ while($num_copias>=0){
 	// si es desde el cliente
 	if ($isCliente == true) {
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> text("<<< desde el cliente >>>");
+		$printer -> text("<<< c >>>");
 		$printer -> text($nom_us.'\n');		
 		$printer -> feed();
 	}

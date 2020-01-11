@@ -400,7 +400,7 @@ function xVerificar(){
 		} else {
 			if(xPermisoSupervisor==1){//supervisor
 				if(!isNaN(calTotal)){
-					if(calTotal<1) {
+					if(calTotal>1) {
 						xRpt_monto_supervicion='(falta '+xMoneda(calTotal)+'). ';xsub_falta='xSubrayar xBold2';
 					}
 					else {

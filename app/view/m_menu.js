@@ -13,6 +13,16 @@ var xOnlyAccPedido;
 var xCount_cant_ico = 0;
 // var xRouterTime_Carta = false;
 
+var s = document.createElement('script');
+	s.src = "../web_components/webcomponentsjs/webcomponents-lite.js",
+	document.head.appendChild(s);
+
+  window.addEventListener('WebComponentsReady', function (e) {
+    console.log('WebComponentsReady');
+    // xIniControlPedido();
+    InitMenu.onReady();
+    })
+
 var InitMenu = {
     onReady: function () {
       console.log('PI onReady');
@@ -47,24 +57,24 @@ window.addEventListener("error", function (e) {
 //   });
 // });
 
-window.onload = () => {
-  InitMenu.onReady();
-  // console.log('load window');
-  // $("#PanelDe").on("transitionend", function (a) {
-  //   if (this.selected == "main") {
-  //     $("#PanelDe").css("z-index", "0");
-  //   }
-  // });
+// window.onload = () => {
+//   InitMenu.onReady();
+//   // console.log('load window');
+//   // $("#PanelDe").on("transitionend", function (a) {
+//   //   if (this.selected == "main") {
+//   //     $("#PanelDe").css("z-index", "0");
+//   //   }
+//   // });
 
-  // xIniMenAAA();
-  // setGalleta();
-  // listenCookieChange(function () {
-  //   dialog_inactividad.open();
-  // });
+//   // xIniMenAAA();
+//   // setGalleta();
+//   // listenCookieChange(function () {
+//   //   dialog_inactividad.open();
+//   // });
   
-  // inactivityTime();
-  //xConstAjax();
-}
+//   // inactivityTime();
+//   //xConstAjax();
+// }
 
 // $(document).ready(function () {  
 //   $("#PanelDe").on("transitionend", function(a) {

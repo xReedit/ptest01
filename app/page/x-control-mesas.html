@@ -821,7 +821,7 @@ async function PreparComprobante() {
 
 // obtener los pedidos seleccionados
 async function getItemsSeleccionados() {
-	var xidpedido_seleccionados = '';
+	var xidpedido_seleccionados = '', idRowClientePedido, xArrayIdClienteUsuarioPedido = [];
 	var ximporte_total_seleccionados=0;
 
 	// // si es pago total o parcial
@@ -833,9 +833,16 @@ async function getItemsSeleccionados() {
 	
 	$("#tb_pedidos .row.selected1").each(function(index,element){
 		xidpedido_seleccionados=xidpedido_seleccionados+$(element).attr('data-idpedido')+',';
+		idRowClientePedido=$(element).attr('data-idcliente'),
 		ximporte_total_seleccionados += parseFloat(ximporte_total_seleccionados)+parseFloat($(element).find("#td_importe"));
 		xid_tipo_consumo=$(element).attr('data-idtipoconsumo');
-	})
+
+		if ( xArrayIdClienteUsuarioPedido.filter(x => x === idRowClientePedido).length ===0 ) {
+			xArrayIdClienteUsuarioPedido.push(idRowClientePedido);
+		}
+
+	});
+
 	xidpedido_seleccionados=xidpedido_seleccionados.slice(0,-1);
 
 	//obtener subitems detalle pedido - idpedido_detalle
@@ -855,6 +862,7 @@ async function getItemsSeleccionados() {
 	//obtner todos los subitems
 	tb_pedido_dt.find('.row').each(function(i,e){
 		var xid_pedido_dt_p=$(e).attr('data-idpedido'),
+			xid_cliente_dt_p=$(e).attr('data-idcliente'),
 			xid_iditem=$(e).attr('data-iditem'),
 			xid_pedido_detalle_dt_p=$(e).attr('data-idpedidodetaller'),
 			ximporte_dt_p=$(e).attr('data-totalr'),
@@ -901,13 +909,18 @@ async function getItemsSeleccionados() {
 									'iditem': xid_iditem, 'cantidad':xcantidad_dt_p,
 									'precio': xpunitario_dt_p, 'total':ximporte_dt_p,'ptotal':ximporte_dt_p_mostrar, 
 									'idtipo_consumo': xid_tipo_consumo, 
-									'subtotales_tachados': xsubtotales_tachados});
+									'subtotales_tachados': xsubtotales_tachados});				
 			}
 		}
 	});
 
 	
-	return {esSeleccionTotal: _esSeleccionTotal, arrayPedidosSeleccionados: xArraySql_dt_p, idPedidosSeleccionados: xidpedido_seleccionados, tipoConsumo : xid_tipo_consumo, importeTotalSeleccionado: ximporte_pagar_tt_p, importeTotalSubItemSeleccionados: ximporte_total_seleccionados };
+	return {esSeleccionTotal: _esSeleccionTotal, arrayPedidosSeleccionados: xArraySql_dt_p, arrayIdClienteUsPedido: xArrayIdClienteUsuarioPedido, idPedidosSeleccionados: xidpedido_seleccionados, tipoConsumo : xid_tipo_consumo, importeTotalSeleccionado: ximporte_pagar_tt_p, importeTotalSubItemSeleccionados: ximporte_total_seleccionados };
+
+}
+
+// agrega a la lista los ids del o de los usuario que estan en esta mesa, para notificar si se pago la cuenta
+function addListClienteUsuarioPedido(idcliente) {
 
 }
 
@@ -1452,6 +1465,10 @@ async function xRegistrarClientePagoCP(){
 	xarr_comprobante = ComprobanteSeleccionado;
 	// xarr_items_seleccionados = xArraySql_dt_p; // items seleccionados
 	xarr_items_seleccionados = xcheckItemsSeleccionados.arrayPedidosSeleccionados; // items seleccionados
+	
+	// lista usuarios clientes pedidos (cliente que hizo su pedido, para notificar pago)
+	xarr_list_cliente_usuario_pedido = xcheckItemsSeleccionados.arrayIdClienteUsPedido;
+
 	xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
 	xarr_subtotal = arrSumSubtTotales;
 
@@ -1464,7 +1481,11 @@ async function xRegistrarClientePagoCP(){
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xLoadDetallesPedido(xObj_miPedido);
-			if (isSocket) {_cpSocketPintarPedido(null);}
+			if (isSocket) {
+				_cpSocketPintarPedido(null);
+				// notificar al usuario de la cuenta
+				_cpSocketEmitPedidoPagoCliente(xarr_list_cliente_usuario_pedido);
+			}
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
 
 		}).fail(enProcesoGuardarPago = false);
@@ -1480,6 +1501,11 @@ async function xRegistrarClientePagoCP(){
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xRegistrarPagoCM(xCantRow);	
+
+			if (isSocket) {
+				// notificar al usuario de la cuenta
+				_cpSocketEmitPedidoPagoCliente(xarr_list_cliente_usuario_pedido);
+			}
 
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
 		}).fail(enProcesoGuardarPago = false);
@@ -1596,6 +1622,7 @@ function xLoadDetallesPedido (obj){
 
 			xcadena_pedido=String(xcadena_pedido+'<tr class="row selected1 xCursor check_item_p" data-idcategoria="'+xidCategoriaPD+
 								'" data-idpedido="'+xdtDpedido[i].idpedido+
+								'" data-idcliente="'+xdtDpedido[i].idcliente+
 								'" data-idcat="'+xp_sel_idcategoria+
 								'" data-punitario="'+xdtDpedido[i].punitario+
 								'" data-total="'+xdtDpedido[i].total+
@@ -1664,9 +1691,12 @@ function xFiltrarRowArray(){
 
 	for (var i = 0; i < objDt.length; i++) {
 		for (var z = 0; z < xArraychek_pedido.length; z++) {
-			if(objDt[i].idpedido!=xArraychek_pedido[z].idp){objDt[i].visible=1;}
+			if(objDt[i].idpedido!=xArraychek_pedido[z].idp){
+				objDt[i].visible=1;
+			}
 			else{
-				objDt[i].visible=0; break;}
+				objDt[i].visible=0; 
+				break;}
 		};
 	};
 
@@ -1837,6 +1867,7 @@ function xLoadMipedidoBD(dt){
 					if(xArraySeccion[xDtBd[i].idseccion_index]==null){xArraySeccion[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
 					xCadenaItemArray=String('<tr class="row xCursor" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+
 							'" data-idpedido="'+xDtBd[i].idpedido+
+							'" data-idcliente="'+xDtBd[i].idcliente+
 							'" data-punitario="'+xDtBd[i].punitario+
 							'" data-idtipoconsumo="'+xDtBd[i].idtipo_consumo+
 							'" data-idcategoria="'+xDtBd[i].idcategoria+

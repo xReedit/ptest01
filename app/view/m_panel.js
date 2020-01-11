@@ -2,57 +2,60 @@ var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableR
 var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
 var xparam_time_ruter = false;
 
+// alert('aaa')
 
-async function lazyLoadWCPolyfillsIfNecessary() {
-	var onload = function () {		
-		// For native Imports, manually fire WCR so user code
-		// can use the same code path for native and polyfill'd imports.
-		if (!window.HTMLImports) {
-			document.dispatchEvent(
-				new CustomEvent('WebComponentsReady', {
-					bubbles: true
-				}));
-		}
-	};
+var s = document.createElement('script');
+	s.src = "../web_components/webcomponentsjs/webcomponents-lite.min.js",
+	document.head.appendChild(s);
 
-	var webComponentsSupported = (
-		'registerElement' in document &&
-		'import' in document.createElement('link') &&
-		'content' in document.createElement('template'));
+if ('registerElement' in document && 'import' in document.createElement('link')) {
+	// no polyfills needed
+	console.log('no polyfills needed');
+  } else {
+	console.log('si necestia polyfills');	
+  }
 
-	if (webComponentsSupported) {
-		var script = document.createElement('script');
-		script.async = true;
-		script.src = '../web_components/webcomponentsjs/webcomponents-lite.min.js';
-		script.onload = onload;
-		document.head.appendChild(script);		
-		
-	} else {
-		onload();
-	}
-}
 
-// window.addEventListener('WebComponentsReady', function (e) {
-// 	alert('WebComponentsReady!!!');
-// });
-
-lazyLoadWCPolyfillsIfNecessary();
+window.addEventListener('WebComponentsReady', function (e) {	
+	
+	console.log('WebComponentsReady');
+	// $('body').addClass('loaded');
+	xIniDocument();
+});
 
 // $(document).on('ready',function(){
 // $(document).ready(function() {
+// $(document).on('pageinit', function() {	
 window.onload = () => {
+	console.log(
+		"Native HTML Imports?", 'import' in document.createElement('link'),
+		"Native Custom Elements v0?", 'registerElement' in document, 
+		"Native Shadow DOM v0?", 'createShadowRoot' in document.createElement('div'));
+// $(this).one('pageshow',function(){	
+	// confirm('from pageshow');
+
+
   $("#PanelDe").on("transitionend", function(a) {
     if (this.selected == "main") {
       $("#PanelDe").css("z-index", "0");
     }
   });
 
-	xIniDocument();
+//   alert('aaaaaa');
+  console.log('aaaaaaaaa');
+
+  
+  
+
+
+//   if ( !$.browser.webkit ) { e.preventDefault(); }
+	// xIniDocument();
 
 	// setTimeout(() => {
 	// 	xLiberarRouter();
 	// }, 200);
 	// xConstAjax();
+// });
 };
 
 window.addEventListener("error", function (e) {
@@ -151,6 +154,7 @@ function xOneOptionPage(_codOne) {
 
 var aapasa=0;
 function xOpenPage(xop, parametro){	
+	// alert('open ' + xop);
 	var _route_count = getLocalStorage('::app3_sys_route') || 0;
 	
 	if (parseInt(_route_count) === 1) {	
@@ -294,7 +298,8 @@ function xOpenPage(xop, parametro){
 			return; 		
 	}
 	xruta=xruta+parametro;
-	// if (router == undefined) { router = document.querySelector('app-router'); }
+	// alert('go '+ xruta);
+	if (router == undefined) { router = document.querySelector('app-router'); }
 	router.go(xruta+parametro);
 
 	xScrolUp(0);

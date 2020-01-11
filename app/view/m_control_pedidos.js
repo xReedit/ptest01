@@ -7,11 +7,26 @@ var myWindowAppCarta;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
 // $(document).ready(function () {
-window.onload = () => {
-	xIniControlPedido();
-	// xConstAjax();
-};
+// window.onload = () => {
+// 	xIniControlPedido();
+// 	// xConstAjax();
+// };
+var s = document.createElement('script');
+	s.src = "../web_components/webcomponentsjs/webcomponents-lite.js",
+	document.head.appendChild(s);
 
+if ('registerElement' in document && 'import' in document.createElement('link')) {
+	// no polyfills needed
+	console.log('no polyfills needed');
+  } else {
+	console.log('si necestia polyfills');
+	
+  }
+
+  window.addEventListener('WebComponentsReady', function (e) {
+	console.log('WebComponentsReady');
+	xIniControlPedido();
+  })
 // document.addEventListener("DOMContentLoaded", function componentsReady() {
 // 	xIniControlPedido();
 // });

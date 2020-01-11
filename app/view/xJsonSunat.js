@@ -21,7 +21,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     
     // evalua si I.G.V es = 0 esta exonerado
     var procentajeIGV = 0;
-    var xCartaSubtotales=xm_log_get('carta_subtotales')    
+    var xCartaSubtotales=xm_log_get('carta_subtotales');
+
     xCartaSubtotales.filter(x => x.descripcion.indexOf('I.G.V') > -1)
         .map(x => procentajeIGV = x);
     const valIGV = parseFloat(procentajeIGV.monto);

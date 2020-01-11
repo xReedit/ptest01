@@ -48,7 +48,7 @@ var xArray_us_home;
 function xUs(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1111'})
 		.done( function (dt) {
-			alert(dt)
+			// alert(dt)
 			window.localStorage.setItem("::app3_woDUS", dt);
 		})
 }
@@ -59,6 +59,8 @@ function xUsExtraer(){
 	alert(xaa)
 }
 function xIniHome(){
+
+	// alert(' from HOME') ;
 	//xVerificarSession();
 //xm_LogChequea(function(){
 		xLoadAcc();

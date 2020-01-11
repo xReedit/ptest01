@@ -2,6 +2,7 @@
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <link rel="import" href="../../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-config.html">
+<link rel="import" href="./x-carta-virtual-config/x-carta-virtual-mesas.html">
 
 <dom-module id="x-configuraciones">
 	<template>
@@ -631,7 +632,10 @@
 					<!-- carta app -->
 					<div id="div_carta_app" class="xContent">						
 						<x-carta-virtual-config></x-carta-virtual-config>
-					</div>
+
+						<br><br>						
+						<x-carta-virtual-mesas></x-carta-virtual-mesas>
+					</div>					
 				</iron-pages>
 			</div>
 		</div>
