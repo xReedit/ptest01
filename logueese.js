@@ -25,6 +25,8 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 // $(this).one('pageshow',function(){
 window.addEventListener('WebComponentsReady', function (e) {	
 
+	this.getFrase();
+
 
 	console.log(
 		"Native HTML Imports?", 'import' in document.createElement('link'),
@@ -118,3 +120,15 @@ window.addEventListener('WebComponentsReady', function (e) {
 			}
 	});
 });
+
+function getFrase() {
+	fetch('bdphp/log_005.php?op=100')
+	.then(res => {
+		return res.json();
+	}).then(res => {
+		const data = res.datos[0];		
+		$('#lbl-frase').text(data.frase);
+		$('#lbl-autor').text('- ' + data.autor);		
+	});
+}
+
