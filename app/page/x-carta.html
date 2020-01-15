@@ -55,7 +55,7 @@
 					</div>
 
 					<!-- Foto -->
-					<div id="dlg_foto_vista_previa">						
+					<div id="dlg_foto_vista_previa-div">						
 						<a class="xDerecha xInvisible xCursor" onclick="xItemQuitarFoto()" id="dlg_btn_quitar_foto">Quitar Foto</a>
 						<br>
 						<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
@@ -227,7 +227,7 @@
 
 	.div_foto{ width: 100%; height:260px; background: #e0e0e0; cursor:pointer;display:inline-block;}
 	.div_foto #dlg_label_foto{opacity: .8; text-align:center; z-index:0;}
-	.div_foto img{ width: 250px; height:260px; z-index: 10; clear: both;}
+	.div_foto img{ width: 100%;}
 
 
 </style>
@@ -686,11 +686,13 @@ function xItemDetalleOpciones(index, obj, e){
 	xObjImgDet=obj;
 	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
 	var xval_des=$(obj).parent().text();
-	var xval_img=$(obj).parents('tr').find("#td_img").text();
+	var xval_img = $(obj).parents('tr').find("#td_img").text();
+	xval_img = xval_img === '' ? '' : URL_IMG_CARTA + xval_img;
+
 	$("#dlg_foto_vista_previa img").remove();
 	$("#dlg_btn_quitar_foto").addClass('xInvisible');
 	if(xval_img!==''){
-		xval_img='<img src=../img/'+xval_img+'>';
+		xval_img='<img src="'+xval_img+'">';
 		$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
 		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
 	}	
@@ -732,7 +734,7 @@ function xItemFoto(obj, e){
 	}
 	$("#dialog_foto #dlg_des_item").text(xval_des)
 	$("#ctrl_open_file").val('');
-	dialog_foto.open();
+	// dialog_foto.open();
 
 	e.stopImmediatePropagation();
 	e.stopPropagation();
@@ -1070,7 +1072,10 @@ function xItemQuitarFoto(){
 	$(".div_foto img").remove();
 	$(xObjImgDet).parents('tr').find('#td_img').text('');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=207', data:{i:xIdObjImgDet,d:''}})
-	.done( function (a) {dialog_foto.close();xPopupLoad.xclose();})
+	.done( function (a) {
+		// dialog_foto.close();
+		xPopupLoad.xclose();
+	})
 }
 function xItemGuardarFoto(){	
 	$(".xobj_subir_foto").each(function(index, element) {		
@@ -1091,7 +1096,7 @@ function transferenciaCompleta(xfile){
 	xfile=xIdOrg+xIdSede+xfile;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=207', data:{i:xIdObjImgDet,d:xfile}})
 	.done( function (a) {
-		dialog_foto.close();
+		// dialog_foto.close();
 		$(xObjImgDet).parents('tr').find('#td_img').text(xfile);
 		xPopupLoad.xclose();
 	})

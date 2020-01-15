@@ -19,6 +19,12 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 window.addEventListener('WebComponentsReady', function (e) {	
 	
 	console.log('WebComponentsReady');
+	$("#PanelDe").on("transitionend", function(a) {
+		if (this.selected == "main") {
+		  $("#PanelDe").css("z-index", "0");
+		}
+	  });
+	
 	// $('body').addClass('loaded');
 	xIniDocument();
 });
@@ -26,37 +32,37 @@ window.addEventListener('WebComponentsReady', function (e) {
 // $(document).on('ready',function(){
 // $(document).ready(function() {
 // $(document).on('pageinit', function() {	
-window.onload = () => {
-	console.log(
-		"Native HTML Imports?", 'import' in document.createElement('link'),
-		"Native Custom Elements v0?", 'registerElement' in document, 
-		"Native Shadow DOM v0?", 'createShadowRoot' in document.createElement('div'));
-// $(this).one('pageshow',function(){	
-	// confirm('from pageshow');
+// window.onload = () => {
+// 	console.log(
+// 		"Native HTML Imports?", 'import' in document.createElement('link'),
+// 		"Native Custom Elements v0?", 'registerElement' in document, 
+// 		"Native Shadow DOM v0?", 'createShadowRoot' in document.createElement('div'));
+// // $(this).one('pageshow',function(){	
+// 	// confirm('from pageshow');
 
 
-  $("#PanelDe").on("transitionend", function(a) {
-    if (this.selected == "main") {
-      $("#PanelDe").css("z-index", "0");
-    }
-  });
+//   $("#PanelDe").on("transitionend", function(a) {
+//     if (this.selected == "main") {
+//       $("#PanelDe").css("z-index", "0");
+//     }
+//   });
 
-//   alert('aaaaaa');
-  console.log('aaaaaaaaa');
+// //   alert('aaaaaa');
+//   console.log('aaaaaaaaa');
 
   
   
 
 
-//   if ( !$.browser.webkit ) { e.preventDefault(); }
-	// xIniDocument();
+// //   if ( !$.browser.webkit ) { e.preventDefault(); }
+// 	// xIniDocument();
 
-	// setTimeout(() => {
-	// 	xLiberarRouter();
-	// }, 200);
-	// xConstAjax();
-// });
-};
+// 	// setTimeout(() => {
+// 	// 	xLiberarRouter();
+// 	// }, 200);
+// 	// xConstAjax();
+// // });
+// };
 
 window.addEventListener("error", function (e) {
 	console.log(e.error.message, "from", e.error.stack);

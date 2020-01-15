@@ -272,8 +272,17 @@ function xColocarUrl(xpath){
       //this.selected=0;
       xIniMenu();
       if ( this.smallPage ) {
-        Encabezado_menu_m.classList.remove('xMenu_Encabezado');
-        Encabezado_menu_m.classList.add('xMenu_Encabezado_small');        
+        try {
+          Encabezado_menu_m.classList.remove('xMenu_Encabezado');
+        } catch (error) {
+          
+        }
+        // Encabezado_menu_m.classList.remove('xMenu_Encabezado');
+        try {          
+          Encabezado_menu_m.classList.add('xMenu_Encabezado_small');        
+        } catch (error) {
+          
+        }
         line_sombra.classList.remove('xInvisible');
       }
     }
