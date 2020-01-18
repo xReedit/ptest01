@@ -17,6 +17,7 @@ async function xCocinarResumenBoletas() {
     // verifica si hay facturacion electronica
     var _arrSedes = xm_log_get('datos_org_sede');
     const isFacturacionElectronica = _arrSedes[0].facturacion_e_activo === "0" ? false : true; // si se emiten comprobantes electronicos    
+    // const isFacturacionElectronica = true;
 
     if (!isFacturacionElectronica) {
         return rptSoap;
@@ -27,10 +28,21 @@ async function xCocinarResumenBoletas() {
     $("#dgl_sunat_msj3").text("Verificando comprobantes...");
     const arrDocNoRegistrado = await xSoapSunat_getArrNoRegistrado();
     let error = false;
-    for (const i in arrDocNoRegistrado) {
-        
+    let jsonxml = ''
+    for (const i in arrDocNoRegistrado) {                
+
         $("#dgl_sunat_msj3").text("Verificando comprobantes B..." + xCeroIzq(i) );
-        const jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml.replace('"{', '{').replace('}"', '}'))
+        try {            
+            jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml);
+        } catch (error) {
+            try {
+                jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml.replace(/\n/g, '')); // quita los espacios en blanco                
+                // jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml.replace('"{', '{').replace('}"', '}'))
+            } catch (error) {
+                console.log('json error', arrDocNoRegistrado[i].json_xml);
+                break; // no puede con el json                
+            }
+        }
         // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
         const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idce);
         if (!rpt.ok) { 

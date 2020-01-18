@@ -6,9 +6,9 @@ window.onerror = function (error, url, line) {
 	// controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
 };
 
-var s = document.createElement('script');
-	s.src = "app/web_components/webcomponentsjs/webcomponents-lite.min.js",
-	document.head.appendChild(s);
+// var s = document.createElement('script');
+// 	s.src = "app/web_components/webcomponentsjs/webcomponents-lite.min.js",
+// 	document.head.appendChild(s);
 
 
 if ('registerElement' in document && 'import' in document.createElement('link')) {
@@ -132,3 +132,16 @@ function getFrase() {
 	});
 }
 
+
+// (function() {
+// 	if ('registerElement' in document
+// 		&& 'import' in document.createElement('link')
+// 		&& 'content' in document.createElement('template')) {
+// 	  // platform is good!
+// 	} else {
+// 	  // polyfill the platform!
+// 	  var e = document.createElement('script');
+// 	  e.src = './app/web_components/webcomponentsjs/webcomponents-lite.min.js';
+// 	  document.body.appendChild(e);
+// 	}
+//   })();

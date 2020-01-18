@@ -13,9 +13,9 @@ var xOnlyAccPedido;
 var xCount_cant_ico = 0;
 // var xRouterTime_Carta = false;
 
-var s = document.createElement('script');
-	s.src = "../web_components/webcomponentsjs/webcomponents-lite.js",
-	document.head.appendChild(s);
+// var s = document.createElement('script');
+// 	s.src = "../web_components/webcomponentsjs/webcomponents-lite.js",
+// 	document.head.appendChild(s);
 
   window.addEventListener('WebComponentsReady', function (e) {
     console.log('WebComponentsReady');

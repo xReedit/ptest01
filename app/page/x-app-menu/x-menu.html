@@ -271,19 +271,16 @@ function xColocarUrl(xpath){
       xThisMenu = this;
       //this.selected=0;
       xIniMenu();
+      
       if ( this.smallPage ) {
-        try {
-          Encabezado_menu_m.classList.remove('xMenu_Encabezado');
-        } catch (error) {
-          
-        }
-        // Encabezado_menu_m.classList.remove('xMenu_Encabezado');
-        try {          
-          Encabezado_menu_m.classList.add('xMenu_Encabezado_small');        
-        } catch (error) {
-          
-        }
+        
+        var Encabezado_menu_m = document.getElementById("Encabezado_menu_m");
+        var line_sombra = document.getElementById("line_sombra");
+
+        Encabezado_menu_m.classList.remove('xMenu_Encabezado');
+        Encabezado_menu_m.classList.add('xMenu_Encabezado_small');        
         line_sombra.classList.remove('xInvisible');
+        
       }
     }
   });

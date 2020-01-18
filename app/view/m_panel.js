@@ -4,9 +4,9 @@ var xparam_time_ruter = false;
 
 // alert('aaa')
 
-var s = document.createElement('script');
-	s.src = "../web_components/webcomponentsjs/webcomponents-lite.min.js",
-	document.head.appendChild(s);
+// var s = document.createElement('script');
+// 	s.src = "../web_components/webcomponentsjs/webcomponents-lite.min.js",
+// 	document.head.appendChild(s);
 
 if ('registerElement' in document && 'import' in document.createElement('link')) {
 	// no polyfills needed
