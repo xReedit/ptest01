@@ -100,7 +100,7 @@
 				<br>
 			</div>
 		</paper-dialog>
-		<paper-dialog modal id="dialog_detalle" class="tall xNoScroll" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog modal id="dialog_detalle" class="tall-polys tall xNoScroll" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div>
 
 				<iron-pages selected="0" id="content_page" class="xNoScroll">
@@ -291,7 +291,8 @@
 		display: block;
 		clear: both;
 	}
-	#dialog_detalle.tall{border-radius: 5px; width: 100%;min-width: 300px;
+	#dialog_detalle.tall{
+		border-radius: 5px; width: 100%;min-width: 300px;
 		position: fixed;
 		top: 0;
 		left: 2;
@@ -299,7 +300,16 @@
 		right: 2;
 		margin: 2px;
 		min-height: 50vh;
+		width: -webkit-fill-available;
+		height: -webkit-fill-available;
 	}
+
+	#dialog_detalle.tall-polys{
+		width: -webkit-fill-available;
+		height: -webkit-fill-available;
+		border-radius: 5px;
+	}
+
 	#dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
 	.xtd-derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
 	img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
@@ -2672,6 +2682,23 @@ function xLoadItems_add(){
 	});
 }
 
+// function addContadorLoad() {
+// 	var contadoLoad = parseInt(localStorage.getItem('::app3_sys_count_load_m'));
+// 	contadoLoad = isNaN(contadoLoad) ? 1 : contadoLoad + 1;
+// 	localStorage.setItem('::app3_sys_count_load_m', contadoLoad);
+// }
+
+// function isContadorLoad() {
+// 	var contadoLoad = parseInt(localStorage.getItem('::app3_sys_count_load_m'));
+// 	contadoLoad = isNaN(contadoLoad) ? 1 : contadoLoad;
+
+// 	if ( contadoLoad > 1 ) {
+// 		localStorage.setItem('::app3_sys_count_load_m', 0);
+// 	}
+
+// 	return contadoLoad > 1 ? false : true;
+// }
+
 
 Polymer({
 	is:'x-control-mesas',
@@ -2681,29 +2708,41 @@ Polymer({
 		xt_idus:Number,
 		dt_item:Object,
 		xdtPedDet: Object,
+		isLoadMesasIsotope: Boolean
 		// hidden_container_registro_pago: boolean = false,
 		// valid_form_cliente_pago: boolean = false,
 		// valid_monto_pago: boolean = false
 	},
 	attached:function(){				
 		xThisCM = this;
-		xThisCM.select_page = 0;		
-
+		xThisCM.select_page = 0;	
+		
 		iIniIsotope = false;
-
 		xIniControlMesa();
+		
+		// iIniIsotope = false;
+		// addContadorLoad();
+		// if ( isContadorLoad() ) {
+		// 	xIniControlMesa();
+		// }
 		xbuscar_mesa = false;
+		console.log('entra');
+		
 		// _cpSocketIsConnect();
-		setTimeout(() => {			
+		setTimeout(() => {				
+			// xIniControlMesa();
+			
 			_cpSocketOpen();
 		}, 1000);
 		// if ( xThisCM ) {return}
     	
 	},
-	// ready: () => {
-	// 	_cpSocketOpen();
-	// },
+	ready: () => {
+		// _cpSocketOpen();
+		console.log('entra ready');
+	},
     detached:function(){
+		console.log('sale');
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);
     	clearInterval(xRefreshPermiso);

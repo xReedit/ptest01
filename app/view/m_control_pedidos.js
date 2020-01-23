@@ -50,7 +50,7 @@ function xIniControlPedido(){
 		// 	xOpenPage(2, '?f1=1?df1=LOCAL');
 		// }, 2500);
 
-		xOpenPage(2, "?f1=1?df1=LOCAL");
+		// xOpenPage(2, "?f1=1?df1=LOCAL");
 		
 	})
 	//if(xIdUsuario==''){	xIdUsuario=window.localStorage.getItem('::app3_woU');}
@@ -101,7 +101,7 @@ function xOpenPage(xop, parametro){
 		case 8:	xruta='/historial_ventas';break;
 		case 22:xruta='/resumen_caja';break;
 	}
-	xruta=xruta+parametro
+	xruta=xruta+parametro;
 	// setTimeout( function(){
 	// 	if (router != undefined) {
 	// 		router.go(xruta); 
