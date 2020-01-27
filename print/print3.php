@@ -59,7 +59,7 @@ try {
 
 $imLogo="./logo/".$xArray_print[0]['logo'];
 
-$isCliente = array_key_exists('isCliente', $ArrayEnca) ? $ArrayEnca['isCliente'] : false; 
+$isCliente = array_key_exists('isCliente', $ArrayEnca) ? $ArrayEnca['isCliente'] : '0'; 
 
 
 
@@ -74,7 +74,8 @@ $nom_us=$ArrayEnca['nom_us'];
 $pre_cuenta=!empty($ArrayEnca['precuenta']) ? $ArrayEnca['precuenta'] : '';
 $logo_solo_llevar="_ico_solo_llevar2.png";
 $logo_delivery = "_ico_delivery.png";
-$logo_delivery = "_ico_delivery.png";
+$logo_cliente = "_ico_cliente.png";
+// $logo_delivery = "_ico_delivery.png";
 
 $nom_us=explode(' ',$_SESSION['nomUs']);
 
@@ -137,11 +138,15 @@ $precio='';
 while($num_copias>=0){
 
 	// si es desde el cliente
-	if ($isCliente == true) {
+	if ($isCliente == 1) {
+		try {
+		$_logo_cliente = EscposImage::load($logo_cliente, false);
 		$printer -> setJustification(Printer::JUSTIFY_CENTER);
-		$printer -> text("<<< c >>>");
-		$printer -> text($nom_us.'\n');		
+		$printer -> bitImage($_logo_cliente);
 		$printer -> feed();
+		} catch (Exception $e) {
+			
+		}
 	}
 
 	// icono delivery
@@ -427,7 +432,7 @@ while($num_copias>=0){
 	$printer -> feed();
 
 	// si no viene del cliente
-	if ($isCliente == false) { 
+	if ($isCliente == 1) { 
 		$printer -> text("Atendido por:".$nom_us[0]."\n");
 	}
 

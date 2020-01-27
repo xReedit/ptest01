@@ -3,11 +3,13 @@
 	<!-- <script type="text/javascript" src="../../js/rxjs.umd.js"></script>
 	<script rel="preload" type="text/javascript" src="../../js/socket.io.js"></script> -->
 	
-	<!-- <script rel="preload" type="text/javascript" src="../view/config.const.js"></script> -->
+	<!-- <script rel="preload" type="text/javascript" src="../view/config.const.js"></script> -->	
 	<script type="text/javascript" src="../view/config.const.js"></script>
 	
 	<!-- <script type="text/javascript" src="../view/socket.master.service.js"></script> -->
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
+
+	<script type="text/javascript" src="../view/notifica.js"></script>
 
 	<template>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
@@ -254,7 +256,7 @@
 			</div>
 		</paper-dialog>
 		<br>
-		<div class="xContent">
+		<div class="xContent d-flex">
 			<!--button onclick="xGeneralActualizaItemInactivo();">aaa</button-->
 			<div class="grid" id="_gridCM">
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
@@ -264,6 +266,11 @@
 					<p class="importe xBold">-</p>
 				</div-->
 			</div>
+
+			<!-- div lateral notificacion cuentas pagadas por el cliente -->
+			<!-- <div class="div-lateral-notifica-pago">
+				<h1>aaaaa</h1>
+			</div> -->
 		</div>
 	</template>
 <style>
@@ -340,7 +347,7 @@
 <script type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
 <script type="text/javascript" src="../view/deNumALetras.js"></script>
 <script type="text/javascript" src="../view/manager_storage.js"></script>
-<script type="text/javascript" src="../view/cliente.service.js"></script>
+<!-- <script type="text/javascript" src="../view/cliente.service.js"></script> -->
 
 
 <script>
