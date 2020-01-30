@@ -1288,7 +1288,7 @@ ul.list_add_item2 li {
 #dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
 	.xtd-derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
 	img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
-
+/* 
 .div-lateral-notifica-pago {
     float: right;
     width: 200px;
@@ -1298,7 +1298,7 @@ ul.list_add_item2 li {
     top: 0;
     bottom: 0px;    
     box-sizing: content-box;
-}
+} */
 
 /* control de pedidos */
 

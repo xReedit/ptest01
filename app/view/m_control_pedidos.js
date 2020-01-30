@@ -1,9 +1,10 @@
-var xIdOrg;
-var xIdSede;
-var xNomU;
-var xPopupLoad;
-var xRouterTime_cp = false;
-var myWindowAppCarta;
+var xIdOrg,
+xIdSede,
+xNomU,
+xPopupLoad,
+xRouterTime_cp = false,
+myWindowAppCarta,
+componentsLoad = false;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
 // $(document).ready(function () {
@@ -25,8 +26,17 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 
   window.addEventListener('WebComponentsReady', function (e) {
 	console.log('WebComponentsReady');
+	this.componentsLoad = true;
 	xIniControlPedido();
-  })
+  });
+
+
+  window.onload = () => {
+	  if ( this.componentsLoad ) {return; }
+	  xIniControlPedido();
+	  console.log('docuemnto cargardo');
+  };
+
 // document.addEventListener("DOMContentLoaded", function componentsReady() {
 // 	xIniControlPedido();
 // });

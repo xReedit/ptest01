@@ -1,6 +1,7 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
 var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
 var xparam_time_ruter = false;
+var componentsLoadPanel = false;
 
 // alert('aaa')
 
@@ -26,8 +27,20 @@ window.addEventListener('WebComponentsReady', function (e) {
 	  });
 	
 	// $('body').addClass('loaded');
+	this.componentsLoadPanel = true;
 	xIniDocument();
 });
+
+window.onload = () => {
+	if ( this.componentsLoadPanel ) {return; }
+
+	$("#PanelDe").on("transitionend", function(a) {
+		if (this.selected == "main") {
+		  $("#PanelDe").css("z-index", "0");
+		}
+	  });
+	xIniDocument();	
+};
 
 // $(document).on('ready',function(){
 // $(document).ready(function() {
