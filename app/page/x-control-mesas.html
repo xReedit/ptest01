@@ -2447,6 +2447,17 @@ function _cpSocketPintarPedido(pedido) {
 	xPintarEstadoPedido()
 }
 
+// cuenta los numero de pagos desde la app notificados 
+function _cpSocketPintarNumerosPagosNotificados() {
+	var divLabelFromApp = $('#labelPagoFromApp');
+	var cantPagosNotificados = parseInt(divLabelFromApp.find('.xIndicadorCant-no-remove').text());
+	cantPagosNotificados = isNaN(cantPagosNotificados) ? 0 : cantPagosNotificados; 
+	cantPagosNotificados ++;
+
+	divLabelFromApp.find('.xIndicadorCant-no-remove').remove();
+	divLabelFromApp.append('<span class="xIndicadorCant-no-remove">'+cantPagosNotificados+'</span>').trigger('create');	
+}
+
 // xdtPe -> pedido
 // function pintarChildPedido(isInit, pedido) {
 // 	$(".xMiCardPedido .numero").each(function(index,element){

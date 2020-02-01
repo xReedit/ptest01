@@ -941,6 +941,7 @@ input:checked ~ .xMenuPopup{display: none;}
 
 .xIco_MiPedido .xCantPedio_ico{ width: 18px; height: 18px; line-height: 18px; border-radius: 50%; background: #f44336; color:#fff; text-align: center; font-size: 9px; float: right; position: fixed; z-index: 100; right: 14px;}
 .xIndicadorCant{ width: 18px; height: 18px; line-height: 18px; border-radius: 4px; background: #f44336; color:#fff; text-align: center; font-size: 9px; float: right;}
+.xIndicadorCant-no-remove{ width: 18px; height: 18px; line-height: 18px; border-radius: 4px; background: #f44336; color:#fff; text-align: center; font-size: 9px; float: right;}
 .xIndicadorCant2{ width: 22px; height: 22px; line-height: 22px; border-radius: 50%; text-align: center; float: right;}
 .xIndicadorVr{ width: 20px; height: 20px; line-height: 20px; border-radius: 50%; background: #4C90DA; color:#fff; text-align: center; font-size: 8px; float: right; position: fixed; z-index: 100; right: 14px;}
 .xIndicadorPedido{width: auto; height: 40px; line-height: 12px; border-radius: 10%;display: inline-block; text-align: center;vertical-align: middle; font-size: 18px; top: 0; margin: 5px; padding:10px; transition: all .2s ease-in-out;}

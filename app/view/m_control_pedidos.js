@@ -109,6 +109,7 @@ function xOpenPage(xop, parametro){
 		case 6:	xruta='/pedido_detalle';break;
 		case 7:	xruta='/monitor_pedidos';break;
 		case 8:	xruta='/historial_ventas';break;
+		case 9:	xruta='/historial_registro_pago_app';break;
 		case 22:xruta='/resumen_caja';break;
 	}
 	xruta=xruta+parametro;
@@ -136,7 +137,7 @@ function xLoadTipoConsumoX(){
 		var xdtTPC=xm_log_get('estructura_pedido'); //xdtTPC.datos;
 		var xCadenaTPC='';
 		var xDesLi='';
-		var xIdTpc
+		var xIdTpc;
 		var xidfiltro='';
 		for (var i = 0; i < xdtTPC.length; i++) {
 			if(xdtTPC[i]==null){continue;}
