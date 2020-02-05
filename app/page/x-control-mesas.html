@@ -1,3 +1,4 @@
+<!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-control-mesas">
 	<!-- <script type="text/javascript" src="../../js/rxjs.umd.js"></script>
@@ -336,7 +337,7 @@
 
 <!-- <script type="text/javascript" src="../view/config.const.js"></script> -->
 <!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
-<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
+<!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
 <script type="text/javascript" src="../view/item_pedidos.js"></script>
 <script type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
@@ -2231,6 +2232,7 @@ function xOrdenPedido(op){
 			break;
 	}
 }
+
 function xFiltroPedidos(obj){
 	var xurl_actual = window.location.href;
 	xDesFiltro1=$(obj).find('.titulo').text();
@@ -2248,9 +2250,7 @@ function xFiltroPedidos(obj){
 		$('.grid').isotope({ filter: xIdFiltro1 });
 	} else {		
 		iIniIsotope = true;
-	}
-		
-	
+	}			
 	
 }
 
@@ -2284,18 +2284,23 @@ function xPintarMesas() {
 	}
 
 	xIdFiltro1 = xIdFiltro1.indexOf('tpc')>-1 ? xIdFiltro1 : '.tpc' + xIdFiltro1;
+	$('.grid').html($(xCadenaNumMesa)).trigger('create');
 
-	$('.grid').html($(xCadenaNumMesa)).trigger('create').isotope({
-	  itemSelector: '.xMiCardPedido',
-	  layoutMode: 'fitRows',
-	  getSortData: {
-	  	tpc: '[data-tpc]',
-	    estado: '[data-estado]',
-	    numero: '.numero parseInt'
-	  },
-	  sortBy: [ 'tpc','numero','estado' ],
-	  filter: xIdFiltro1
-	});
+	// if ($('.grid').length) {
+		$('.grid').isotope({
+		  itemSelector: '.xMiCardPedido',
+		  layoutMode: 'fitRows',
+		  getSortData: {
+			  tpc: '[data-tpc]',
+			estado: '[data-estado]',
+			numero: '.numero parseInt'
+		  },
+		  sortBy: [ 'tpc','numero','estado' ],
+		  filter: xIdFiltro1
+		});
+	// }
+	
+	// $('.grid').isotope('layout');
 
 	iIniIsotope = true;
 
@@ -2426,11 +2431,11 @@ function xPintarEstadoPedido() {
 			});
 
 			if(xCadenaNewItem!=''){
-			var $items=$(xCadenaNewItem);
-			$('.grid').append($items).isotope( 'appended', $items );
+				var $items=$(xCadenaNewItem);				
+				$('.grid').append(xCadenaNewItem).trigger('create').isotope( 'appended', $items ).isotope('layout');				
 			}
 
-			$('.grid').isotope('updateSortData');
+			$('.grid').isotope('updateSortData').isotope('layout');
 
 			iIniIsotope = true;
 

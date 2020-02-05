@@ -28,7 +28,10 @@ window.addEventListener('WebComponentsReady', function (e) {
 	
 	// $('body').addClass('loaded');
 	this.componentsLoadPanel = true;
-	xIniDocument();
+	setTimeout(() => {
+		console.log('cargado en 4s');	
+		xIniDocument();
+	}, 3000);
 });
 
 window.onload = () => {
@@ -39,7 +42,11 @@ window.onload = () => {
 		  $("#PanelDe").css("z-index", "0");
 		}
 	  });
-	xIniDocument();	
+
+	  setTimeout(() => {
+		console.log('cargado en 4s');	
+		xIniDocument();
+	}, 3000);
 };
 
 // $(document).on('ready',function(){

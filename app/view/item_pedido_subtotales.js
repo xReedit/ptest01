@@ -171,7 +171,8 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 					const valorImpuesto = c.activo === "0" ? c.monto : 0; // se marca 0=activo o 1=desactivado para obtener el % del impuesto requerido por comprobante electronico			
 					const visible_cpe = esImpuesto === "1" ? true : false; // indica si se muestra en la facturacion electronica
 					let porcentaje = parseFloat(parseFloat(valorImpuesto)/100).toFixed(2);		
-					porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
+					// porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
+					porcentaje = c.descripcion === 'I.G.V' ? porcentaje : parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
 
 					// const esVisible = porcentaje > 0 ? true : false; // ver que implica
 					
@@ -181,7 +182,24 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 		});
 
 	 
-	const sumTotal = Object.keys(arrSuma).map(x => arrSuma[x].importe).reduce((a, b) => parseFloat(a) + parseFloat(b));
+	// const sumTotal = Object.keys(arrSuma).map(x => arrSuma[x].importe).reduce((a, b) => parseFloat(a) + parseFloat(b));
+	
+	// IGV filtramos los que no es impuesto IGV | 030220
+	// const arrSubTotalObj = Object.keys(arrSuma);
+	var sumTotal = arrSuma.filter(x => x.descripcion !== "I.G.V").map(x => x.importe).reduce((a, b) => parseFloat(a) + parseFloat(b));
+	var rowSubTotal =  arrSuma.filter(x => x.descripcion === "Sub Total")[0];
+	var rowImporteIGV = arrSuma.filter(x => x.descripcion === "I.G.V")[0];	
+	var _importeIGV = parseFloat(rowImporteIGV.importe);
+	var _importeSubTotal = parseFloat(rowSubTotal.importe);
+
+	if ( _importeIGV > 0 ) {
+		_importeIGV = parseFloat(_importeSubTotal *  _importeIGV).toFixed(2);
+		_importeSubTotal = _importeSubTotal - _importeIGV;
+		rowImporteIGV.importe = _importeIGV;
+		rowSubTotal.importe = _importeSubTotal.toFixed(2);
+	}
+	/// IGV --->
+
 	if(arrSuma.length==1){arrSuma=[];}
 	arrSuma.push({ 'descripcion': 'Total', 'importe': xMoneda(sumTotal), 'visible': true, 'visible_cpe': true});
 

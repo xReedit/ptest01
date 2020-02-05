@@ -25,16 +25,25 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
   }
 
   window.addEventListener('WebComponentsReady', function (e) {
-	console.log('WebComponentsReady');
-	this.componentsLoad = true;
-	xIniControlPedido();
+	console.log('WebComponentsReady');	
+	
+
+	setTimeout(() => {
+		if ( this.componentsLoad ) {return; }
+		console.log('cargado en 4s');	
+		this.componentsLoad = true;
+		xIniControlPedido();		
+	}, 3000);
   });
 
 
-  window.onload = () => {
-	  if ( this.componentsLoad ) {return; }
-	  xIniControlPedido();
-	  console.log('docuemnto cargardo');
+  window.onload = () => {	  
+	  setTimeout(() => {
+		if ( this.componentsLoad ) {return; }
+		console.log('cargado en 4s');	
+		this.componentsLoad = true;
+		xIniControlPedido();
+	}, 3000);
   };
 
 // document.addEventListener("DOMContentLoaded", function componentsReady() {
@@ -158,3 +167,25 @@ function xLoadTipoConsumoX(){
 		$("#list_menu_lateral li:first-child").after(xCadenaTPC).trigger('create');
 	//});
 }
+
+
+// function xFiltroPedidos(obj){
+// 	var xurl_actual = window.location.href;
+// 	xDesFiltro1=$(obj).find('.titulo').text();
+// 	xIdFiltro1=$(obj).attr('data-id');
+
+// 	if(xurl_actual.indexOf('c_pedido')==-1){
+// 		xOpenPage(2,'?f1='+xIdFiltro1+'?df1='+xDesFiltro1);
+// 	}
+// 	xIdFiltro1='.tpc'+xIdFiltro1;
+	
+// 	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
+	
+
+// 	if (iIniIsotope) {
+// 		$('.grid').isotope({ filter: xIdFiltro1 });
+// 	} else {		
+// 		iIniIsotope = true;
+// 	}			
+	
+// }

@@ -11,6 +11,7 @@ var xidCatProcedencia = 0; //0  procede de la carta !=0 procede bodega
 var xPopupLoad;
 var xOnlyAccPedido;
 var xCount_cant_ico = 0;
+var componentsLoadMenu = false;
 // var xRouterTime_Carta = false;
 
 // var s = document.createElement('script');
@@ -20,8 +21,14 @@ var xCount_cant_ico = 0;
   window.addEventListener('WebComponentsReady', function (e) {
     console.log('WebComponentsReady');
     // xIniControlPedido();
-    InitMenu.onReady();
-    })
+    if ( this.componentsLoadMenu ) {return; }
+    this.componentsLoadMenu = true;
+    setTimeout(() => {
+      console.log('cargado en 4s');	
+      // xIniDocument();
+      InitMenu.onReady();
+    }, 3000);
+    });
 
 var InitMenu = {
     onReady: function () {
@@ -46,6 +53,16 @@ window.addEventListener("error", function (e) {
   // alert(e.error + ' ->' + e.error.stack);
   // You can send data to your server
   // sendError(data);
+});
+
+window.onload = () => {
+  if ( this.componentsLoadMenu ) {return; }
+  this.componentsLoadMenu = true;
+    setTimeout(() => {
+      console.log('cargado en 4s');	
+      // xIniDocument();
+      InitMenu.onReady();
+    }, 3000);
 })
 
 // $(document).one("ready", function() {
