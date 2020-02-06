@@ -71,7 +71,7 @@ function xIniControlPedido(){
 
 		// xOpenPage(2, "?f1=1?df1=LOCAL");
 		
-	})
+	});
 	//if(xIdUsuario==''){	xIdUsuario=window.localStorage.getItem('::app3_woU');}
 
 

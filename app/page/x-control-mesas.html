@@ -260,6 +260,7 @@
 		<div class="xContent d-flex">
 			<!--button onclick="xGeneralActualizaItemInactivo();">aaa</button-->
 			<div class="grid" id="_gridCM">
+				<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
 					<p class="tipo">Mesa</p>
 					<h3 class="numero xBold">01</h3>
@@ -430,6 +431,8 @@ function xIniControlMesa(){
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 		console.log('isSocket', isSocket);
+
+		firstLoad_mesas=true;
 		
 		xm_log_get('ini_us');
 
@@ -2255,19 +2258,21 @@ function xFiltroPedidos(obj){
 }
 
 
-async function xLoadMesas(){	
-	
+async function xLoadMesas(){		
 
-	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');
+	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');	
+	$('.grid').isotope('destroy');
+		
 	xPintarMesas();
 	xLogRun_CuentaNumeroPedidos();
+	
 }
 
 function xPintarMesas() {
 	const selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x =>
 	x.idtipo_consumo)[0];
 	const selector_tpc_local = 'tpc' + selector_tpc_local_id;
-	xIdFiltro1 = selector_tpc_local_id;
+	xIdFiltro1 = selector_tpc_local_id;	
 
 	const NumMesa = parseInt(xm_log_get('datos_org_all_sede')[0].mesas);
 	var xcont_mesa=1, xCadenaNumMesa = '';
@@ -2284,7 +2289,7 @@ function xPintarMesas() {
 	}
 
 	xIdFiltro1 = xIdFiltro1.indexOf('tpc')>-1 ? xIdFiltro1 : '.tpc' + xIdFiltro1;
-	$('.grid').html($(xCadenaNumMesa)).trigger('create');
+	$('.grid').html(xCadenaNumMesa).trigger('create');
 
 	// if ($('.grid').length) {
 		$('.grid').isotope({
@@ -2304,9 +2309,9 @@ function xPintarMesas() {
 
 	iIniIsotope = true;
 
-	setTimeout(() => {		
+	// setTimeout(() => {		
 		xPintarEstadoPedido();
-	}, 500);
+	// }, 500);
 }
 
 function xPintarEstadoPedido() {
@@ -2431,11 +2436,12 @@ function xPintarEstadoPedido() {
 			});
 
 			if(xCadenaNewItem!=''){
-				var $items=$(xCadenaNewItem);				
-				$('.grid').append(xCadenaNewItem).trigger('create').isotope( 'appended', $items ).isotope('layout');				
+				var $itemsNew=$(xCadenaNewItem);		
+				$('.grid').append($itemsNew).isotope( 'appended', $itemsNew );				
 			}
 
-			$('.grid').isotope('updateSortData').isotope('layout');
+			// $('.grid').isotope('updateSortData');			
+			
 
 			iIniIsotope = true;
 
@@ -2446,6 +2452,8 @@ function xPintarEstadoPedido() {
 				return _val;
 			}).join(','));
 		});
+
+		$('.grid').isotope('updateSortData'); //.isotope('layout');
 }
 
 function _cpSocketPintarPedido(pedido) {	
