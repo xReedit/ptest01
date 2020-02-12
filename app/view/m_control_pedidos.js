@@ -24,26 +24,23 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 	
   }
 
-  window.addEventListener('WebComponentsReady', function (e) {
-	console.log('WebComponentsReady');	
-	
+  window.addEventListener('WebComponentsReady', function (e) {		
 
-	setTimeout(() => {
-		if ( this.componentsLoad ) {return; }
-		console.log('cargado en 4s');	
+	// setTimeout(() => {
+		// if ( this.componentsLoad ) {return; }		
 		this.componentsLoad = true;
+		console.log('cargado en 4s - desde WebComponentsReady');	
 		xIniControlPedido();		
-	}, 3000);
+	// }, 4000);
   });
 
 
   window.onload = () => {	  
 	  setTimeout(() => {
-		if ( this.componentsLoad ) {return; }
-		console.log('cargado en 4s');	
-		this.componentsLoad = true;
+		if ( this.componentsLoad ) {return; }		
+		console.log('cargado en 4s - desde ready');	
 		xIniControlPedido();
-	}, 3000);
+	}, 4000);
   };
 
 // document.addEventListener("DOMContentLoaded", function componentsReady() {

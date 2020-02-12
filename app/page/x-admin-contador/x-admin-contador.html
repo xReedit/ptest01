@@ -222,13 +222,14 @@ function xDataYearsMonth(yy) {
 	// list mes
 	var _listMonth=[],count_m=1;
 	const _my_ini = xThisAdmContador.selEstablecimiento.mes_inicio.split('/');
-	const _num_f_ini = parseInt(_my_ini[0])+parseInt(_my_ini[1]); // sumamos > 02+2019 = 2021
+	const yy_ini = parseInt(_my_ini[1]);
+	const _num_f_ini = _y_now === yy_ini ? parseInt(_my_ini[0]) + yy_ini : 1 + _y_now; // sumamos > 02+2019 = 2021 : 1 + 2020
 	const isMismoYY = _y_now === yy;
 
-	while(count_m <= 12) { 
+	while(count_m <= 12) { 		
 		const _num_f_now = isMismoYY ? _m_now+_y_now : 12 + yy;
 		const _num_f = count_m+yy;
-		const _activo = _num_f < _num_f_ini || _num_f > _num_f_now ? false : true;
+		const _activo = _num_f < _num_f_ini || _num_f > _num_f_now ? false : true;  // activa la descarga
 		const _clase = _activo ? 'animated fadeIn fast xCursor' : 'animated fadeIn fast xColorRow_Plomo2';
 		const _desestado = _activo ? 'DISPONIBLE' : 'SIN DATOS';
 		// const _desbtn = _activo ? 'Descargar' : '';

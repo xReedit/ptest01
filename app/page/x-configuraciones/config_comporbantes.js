@@ -54,31 +54,31 @@ function config_comprobante_getall() {
 		$("#tb_emision_comprobantes").append(xcadena_tr_comp).trigger('create');
 		// $("#tb_emision_comprobantes").html(xcadena_sel_almacen_file).trigger('create');
 
-    })
+    });
 
 
     this.config_valoresInicialesComponente();
-    this.config_comprobante_load_sede_cpe();
+    // this.config_comprobante_load_sede_cpe();
     
 }
 
-function config_comprobante_load_sede_cpe() { // load sedes comprobante electronico
-    var _arrSedes = xm_log_get('datos_org_all_sede'); // todas las sedes
-    var cadena_tr = '';
-    _arrSedes.map(x => {
-        checkActivo = x.facturacion_e_activo === "0" ? '' : 'checked';
-        cadena_tr += '<tr class="row" data-t="sede" data-id="'+x.idsede+'">'+
-        '<td>'+x.nombre+'</td>'+
-        '<td data-campo="authorization_api_comprobante">'+
-        '<input type="password" class="xMiInput" onblur="config_comprobante_update_token(this)" value="'+ x.authorization_api_comprobante +'"></td>'+
-        '<td data-campo="id_api_comprobante">'+
-        '<input type="password" class="xMiInput" onblur="config_comprobante_update_id(this)" value="'+ x.id_api_comprobante +'"></td>'+
-        '<td><paper-checkbox class="check_cpe" '+ checkActivo +'></paper-checkbox></td>'+
-        '</tr>' 
-    });
+// function config_comprobante_load_sede_cpe() { // load sedes comprobante electronico
+//     var _arrSedes = xm_log_get('datos_org_all_sede'); // todas las sedes
+//     var cadena_tr = '';
+//     _arrSedes.map(x => {
+//         checkActivo = x.facturacion_e_activo === "0" ? '' : 'checked';
+//         cadena_tr += '<tr class="row" data-t="sede" data-id="'+x.idsede+'">'+
+//         '<td>'+x.nombre+'</td>'+
+//         '<td data-campo="authorization_api_comprobante">'+
+//         '<input type="password" class="xMiInput" onblur="config_comprobante_update_token(this)" value="'+ x.authorization_api_comprobante +'"></td>'+
+//         '<td data-campo="id_api_comprobante">'+
+//         '<input type="password" class="xMiInput" onblur="config_comprobante_update_id(this)" value="'+ x.id_api_comprobante +'"></td>'+
+//         '<td><paper-checkbox class="check_cpe" '+ checkActivo +'></paper-checkbox></td>'+
+//         '</tr>' 
+//     });
 
-    $("#tb_comprobante_electronico tbody").append(cadena_tr).trigger('create');
-}
+//     $("#tb_comprobante_electronico tbody").append(cadena_tr).trigger('create');
+// }
 
 function config_comprobante_update_token(obj){
     // guarda el token del servicio y asi activar facturacion electronica

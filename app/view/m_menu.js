@@ -1,8 +1,8 @@
 var xIdOrg;
 var xIdSede;
 var xNomU;
-var xArrayPedido = new Array();
-var xArrayDesTipoConsumo = new Array();
+var xArrayPedido = [];
+var xArrayDesTipoConsumo = [];
 var xToglePanel = 0;
 var xMenuArray;
 var xidCategoria;
@@ -19,15 +19,15 @@ var componentsLoadMenu = false;
 // 	document.head.appendChild(s);
 
   window.addEventListener('WebComponentsReady', function (e) {
-    console.log('WebComponentsReady');
+    // console.log('WebComponentsReady');
     // xIniControlPedido();
-    if ( this.componentsLoadMenu ) {return; }
+    // if ( this.componentsLoadMenu ) {return; }
     this.componentsLoadMenu = true;
-    setTimeout(() => {
-      console.log('cargado en 4s');	
+    // setTimeout(() => {
+      console.log('cargado en 4s - WebComponentsReady');	
       // xIniDocument();
       InitMenu.onReady();
-    }, 3000);
+    // }, 3000);
     });
 
 var InitMenu = {
@@ -56,14 +56,14 @@ window.addEventListener("error", function (e) {
 });
 
 window.onload = () => {
-  if ( this.componentsLoadMenu ) {return; }
-  this.componentsLoadMenu = true;
-    setTimeout(() => {
-      console.log('cargado en 4s');	
+  // this.componentsLoadMenu = true;
+  setTimeout(() => {
+    if ( this.componentsLoadMenu ) {return; }
+      console.log('cargado en 4s - desde ready');	
       // xIniDocument();
       InitMenu.onReady();
-    }, 3000);
-})
+    }, 4000);
+};
 
 // $(document).one("ready", function() {
 //   xIniMenu();

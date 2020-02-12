@@ -463,7 +463,8 @@ function xAddSubItemsView(tpc, id, sumar) {
     newSubItemView.indicaciones = '';
 	newSubItemView.subitems = [];
 
-	if ( elItem.subitems_selected ) {
+	// if ( elItem.subitems_selected ) {
+	if ( elItem.subitems_selected && elItem.subitems_selected.length > 0 ) {
 
         elItem.subitems_selected.map((x) => {
           newSubItemView.id += x.iditem_subitem.toString();

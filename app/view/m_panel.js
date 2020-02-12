@@ -28,25 +28,26 @@ window.addEventListener('WebComponentsReady', function (e) {
 	
 	// $('body').addClass('loaded');
 	this.componentsLoadPanel = true;
-	setTimeout(() => {
-		console.log('cargado en 4s');	
+	// setTimeout(() => {
+		console.log('cargado en 4s - desde WebComponentsReady');	
 		xIniDocument();
-	}, 3000);
+	// }, 3000);
 });
 
-window.onload = () => {
-	if ( this.componentsLoadPanel ) {return; }
-
-	$("#PanelDe").on("transitionend", function(a) {
-		if (this.selected == "main") {
-		  $("#PanelDe").css("z-index", "0");
-		}
-	  });
+window.onload = () => {	
 
 	  setTimeout(() => {
-		console.log('cargado en 4s');	
+		if ( this.componentsLoadPanel ) {return; }
+
+		$("#PanelDe").on("transitionend", function(a) {
+			if (this.selected == "main") {
+			  $("#PanelDe").css("z-index", "0");
+			}
+		  });
+		
+		console.log('cargado en 4s - desde ready');	
 		xIniDocument();
-	}, 3000);
+	}, 4000);
 };
 
 // $(document).on('ready',function(){
