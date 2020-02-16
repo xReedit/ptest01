@@ -1100,7 +1100,9 @@ function xCambiarMesa(){
 		$(xObj_miPedido).attr('data-estado','b');
 		$(xObj_miPedido).attr('data-abrir-detalle','0');
 		$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
-	})
+
+		xPintarEstadoPedido(); // pinta nuevamente el cambio de mesa
+	});
 }
 
 async function xImprimirPrecuenta(){

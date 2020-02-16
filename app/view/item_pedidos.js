@@ -177,26 +177,28 @@ function handlerFnMiPedido(e) {
 
 		
 
-		if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
-
-			itemPedidos_objItemSelected.stock_actual = xSotockSocket;
-			const itemNotifySocket = {
-				cantidad: xSotockSocket,
-				idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
-				iditem: itemPedidos_objItemSelected.iditem,
-				isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
-				isporcion: itemPedidos_objItemSelected.isporcion,
-				subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
-				subitems_selected: itemPedidos_objItemSelected.subitems_selected,
-				sumar:  xsigno === '+' ? true : false
-			}			
-			
-			_cpSocketEmitItemModificado(itemNotifySocket);
-
-			_cpSocketSavePedidoStorage(xArrayPedidoObj);
-
-			compItemSumImporte(); // del componente comp-item-subitems
-					
+		if ( itemPedidos_objItemSelected.cantidad !== 'ND' ) {
+			if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
+				
+				itemPedidos_objItemSelected.stock_actual = xSotockSocket;
+				const itemNotifySocket = {
+					cantidad: xSotockSocket,
+					idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
+					iditem: itemPedidos_objItemSelected.iditem,
+					isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+					isporcion: itemPedidos_objItemSelected.isporcion,
+					subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
+					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
+					sumar:  xsigno === '+' ? true : false
+				}			
+				
+				_cpSocketEmitItemModificado(itemNotifySocket);
+	
+				_cpSocketSavePedidoStorage(xArrayPedidoObj);
+	
+				compItemSumImporte(); // del componente comp-item-subitems
+						
+			}
 		}
 
 		// xcantRunSocket = true;
@@ -246,12 +248,14 @@ function handlerFnMiPedidoControl(e) {
 		xidTipoConsumo = $("#select_ulTPC option:selected").val();
 		itemPedidos_objItemSelected = xGeneralDataCarta[_itemIndex];
 		
-		//si tiene subtiems lanza el popup opciones
-		if (itemPedidos_objItemSelected.subitems) { xCompSubitems.openDialog(null, _itemIndex);  return; }
+		
 		// xli_des = itemPedidos_objItemSelected.des_item;
 		
 		if (_viene_venta_rapida == 1) { //viene de venta rapida seleccionados obj
 			_nomClassXcant_li = 'xcant_li2';
+
+			//si tiene subtiems lanza el popup opciones // en control de pedidos no lanza subopciones
+			if (itemPedidos_objItemSelected.subitems) { xCompSubitems.openDialog(null, _itemIndex);  return; } 
 		}
 
 
@@ -350,25 +354,26 @@ function handlerFnMiPedidoControl(e) {
 			element_cant_li_sel.addClass('cant_fixed_li');
 		}
 
-		
-		if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
-			
-			itemPedidos_objItemSelected.stock_actual = xSotockSocket;
-			const itemNotifySocket = {
-				cantidad: xSotockSocket,
-				idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
-				iditem: itemPedidos_objItemSelected.iditem,
-				isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
-				isporcion: itemPedidos_objItemSelected.isporcion,
-				subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
-				subitems_selected: itemPedidos_objItemSelected.subitems_selected,
-				sumar:  xsigno === '+' ? true : false
-			}
-			
-			_cpSocketEmitItemModificado(itemNotifySocket);
+		if ( itemPedidos_objItemSelected.cantidad !== 'ND' ) {
+			if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
+				
+				itemPedidos_objItemSelected.stock_actual = xSotockSocket;
+				const itemNotifySocket = {
+					cantidad: xSotockSocket,
+					idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
+					iditem: itemPedidos_objItemSelected.iditem,
+					isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+					isporcion: itemPedidos_objItemSelected.isporcion,
+					subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
+					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
+					sumar:  xsigno === '+' ? true : false
+				}
+				
+				_cpSocketEmitItemModificado(itemNotifySocket);
 
-			_cpSocketSavePedidoStorage(xArrayPedidoObj);
-					
+				_cpSocketSavePedidoStorage(xArrayPedidoObj);
+						
+			}
 		}
 
 		xcantRunSocket = true;

@@ -440,9 +440,11 @@ function xCerrarSessionAll(){
 
 function setClearLocalStorage() {
 	var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
+	var touchVR = window.localStorage.getItem('::app3_sys_vr_touch');	
 	window.localStorage.clear();
 
-	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL)};
+	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL); }
+	if (touchVR) {window.localStorage.setItem('::app3_sys_vr_touch', touchVR); }
 	document.location.href='../../logueese.html';
 };
 
