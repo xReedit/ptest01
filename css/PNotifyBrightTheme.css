@@ -60,7 +60,7 @@ Color Scheme: http://paletton.com/palette.php?uid=c1T3n2J040kpEKzpEKzbEPSOEyiNk9
 }
 [ui-pnotify].ui-pnotify .brighttheme-error {
   background-color: #FFABA2;
-  background-image: repeating-linear-gradient(135deg, transparent, transparent 35px, rgba(255,255,255,.3) 35px, rgba(255,255,255,.3) 70px);
+  /* background-image: repeating-linear-gradient(135deg, transparent, transparent 35px, rgba(255,255,255,.3) 35px, rgba(255,255,255,.3) 70px); */
   border: 0 solid #FF1800;
 }
 [ui-pnotify].ui-pnotify .brighttheme-error h4,
