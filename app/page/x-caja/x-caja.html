@@ -31,7 +31,7 @@
             	<paper-button tabindex="0" raised class="xnegro" onclick=""><iron-icon icon="save"></iron-icon>Cerrar sistema</paper-button>
 			</div>
 		</paper-dialog>
-		<x-pass id="xPSupervisor" titulo="Permiso del administrador" val="Pe1"></x-pass>
+		<x-pass id="xPSupervisor" titulo="Permiso del administrador" val="Rol1"></x-pass>
 		<br>
 		<div class="xContent">
 			<paper-tabs selected="{{selected}}" id="tab_caja">
@@ -195,6 +195,7 @@ function xIniCaja(){
 	xThis.xt_idus=xIdUsuario;*/
 
 	xPSupervisor=document.getElementById('xPSupervisor');
+	xPSupervisor.valor = 'Rol1'; // solo administrador
 	xPSupervisor.addEventListener('xSend', function (e) {
 		var p=e.detail.xRpts[0].p;
 		if(p==1){

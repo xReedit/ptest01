@@ -1425,6 +1425,11 @@ ul.list_add_item2 li {
     
 /* css de venta rapida chrome 80*/
 
+/* elaborar carta */
+.table-max-alto {
+    overflow-y: auto; max-height: 200px !important; display: inline-block;
+}
+
 .xIndicadorSize1{width: 370px; height: 390px;}
 .fondoContent {background: linear-gradient(to bottom, #F3F4F5 160px, white 50vh);}
 
