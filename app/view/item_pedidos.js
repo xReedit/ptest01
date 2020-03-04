@@ -151,7 +151,8 @@ function handlerFnMiPedido(e) {
 			,'subitems_selected' : itemPedidos_objItemSelected.subitems_selected
 			,'subitem_required_select': itemPedidos_objItemSelected.subitem_required_select
 			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
-			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView 
+			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView
+			,'isporcion': itemPedidos_objItemSelected.isporcion
 		};
 
 		// itemPedidos_objItemSelected = xArrayPedidoObj[xidTipoConsumo][xidItem];
@@ -185,7 +186,8 @@ function handlerFnMiPedido(e) {
 					cantidad: xSotockSocket,
 					idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
 					iditem: itemPedidos_objItemSelected.iditem,
-					isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+					// isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+					isalmacen: itemPedidos_objItemSelected.procede.toString() === '0' ? 1 : 0,
 					isporcion: itemPedidos_objItemSelected.isporcion,
 					subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
 					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
@@ -344,6 +346,7 @@ function handlerFnMiPedidoControl(e) {
 			,'subitem_required_select': itemPedidos_objItemSelected.subitem_required_select
 			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
 			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView
+			,'isporcion': itemPedidos_objItemSelected.isporcion
 			};
 
 		element_cant_li_sel.text(xcant);
@@ -362,7 +365,7 @@ function handlerFnMiPedidoControl(e) {
 					cantidad: xSotockSocket,
 					idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
 					iditem: itemPedidos_objItemSelected.iditem,
-					isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+					isalmacen: itemPedidos_objItemSelected.procede.toString() === '0' ? 1 : 0,
 					isporcion: itemPedidos_objItemSelected.isporcion,
 					subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
 					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
@@ -399,7 +402,9 @@ function xNotifyItemModificado(item) {
 		cantidad: item.cantidad,
 		idcarta_lista: objItem.parent().attr('data-idcarta_lista'),
 		iditem: objItem.parent().attr('data-iditem'),
-		isalmacen: objItem.parent().attr('data-procede') === '1' ? 0 : 1,
+		// isalmacen: objItem.parent().attr('data-procede') === '1' ? 0 : 1,
+		isalmacen: objItem.parent().attr('data-procede') === '0' ? 1 : 0,
+		// isalmacen: itemPedidos_objItemSelected.procede.toString() === '0' ? 1 : 0,
 		isporcion: objItem.parent().attr('data-isporcion')
 	}
 }
@@ -421,7 +426,8 @@ function xSendItemBySocket(xsigno) {
 		cantidad: xSotockSocket,
 		idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
 		iditem: itemPedidos_objItemSelected.iditem,
-		isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+		// isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
+		isalmacen: itemPedidos_objItemSelected.procede.toString() === '0' ? 1 : 0,
 		isporcion: itemPedidos_objItemSelected.isporcion,
 		subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
 		subitems_selected: itemPedidos_objItemSelected.subitems_selected,
