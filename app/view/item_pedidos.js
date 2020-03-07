@@ -349,6 +349,12 @@ function handlerFnMiPedidoControl(e) {
 			,'isporcion': itemPedidos_objItemSelected.isporcion
 			};
 
+
+		// limpiar de nulls xArrayPedidoObj
+		// xArrayPedidoObj = xArrayPedidoObj.filter(x => x).map(x => x);
+		// console.log(xArrayPedidoObj);
+
+
 		element_cant_li_sel.text(xcant);
 		if(xcant<=0){
 			xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');

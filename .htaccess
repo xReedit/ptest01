@@ -6,6 +6,8 @@ RewriteRule ^ %{REQUEST_URI}?v=45 [R=301,L]
 
 Options All -Indexes
 
+php_value max_input_vars 15000
+
 # asegurando el archivo htaccess
 <Files .htaccess>
 	order allow,deny

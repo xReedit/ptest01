@@ -1125,7 +1125,7 @@ async function xGuardarPedidoVR(responde){
 
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
 	xarr_header = {
-		idclie: xid_cliente_pago ,
+		idclie: xid_cliente_pago || '',
 		referencia: xref,
 		idcategoria: xidCategoriaVR,
 		mesa: xmesa,
@@ -1155,8 +1155,25 @@ async function xGuardarPedidoVR(responde){
 	//xArrayGuardarPedido={'idcategoria':xidCategoriaVR ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=30401', data:{arr:xArrayGuardarPedido,estado_p:xEstadoPedido}})
 	// >>>$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:p_from, p_header:xarr_header, p_body: xarr_body, p_subtotales: xarr_subtotales, p_tipo_pago: xarr_tipo_pago, estado_p:xEstadoPedido}})
-	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:p_from, p_cliente:xarr_cliente, p_body: xarr_body, p_header:xarr_header, p_tipo_pago: xarr_tipo_pago, p_subtotales: xarr_subtotales, p_comprobante: xarr_comprobante, estado_p:xEstadoPedido}})
+	xarr_body = xarr_body.filter(x => x).map(x => x);
+	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
+		data:{
+			p_from:p_from, 
+			p_cliente: JSON.stringify(xarr_cliente), 
+			p_body: JSON.stringify(xarr_body), 
+			p_header: JSON.stringify(xarr_header), 
+			p_tipo_pago: JSON.stringify(xarr_tipo_pago), 
+			p_subtotales: JSON.stringify(xarr_subtotales), 
+			p_comprobante: JSON.stringify(xarr_comprobante), 
+			estado_p: xEstadoPedido
+		}		
+	})
 	.done( function (idP) {
+		
+		// console.log(xarr_body);
+		// console.log(xarr_header);
+		// console.log(idP);
+		// return;
 		const _arrRpt = xm_all_SetResponseLog_001(idP);
 		// xIdPedido=idP.split('|');
 		// var xrpt_correlativo=xIdPedido[0];
