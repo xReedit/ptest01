@@ -60,6 +60,7 @@
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION" onChange="conMayusculas(this)" id="descripcion" name="descripcion" espaciar required>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="HORA INICIO" onChange="conMayusculas(this)" id="hora_ini" name="hora_ini" espaciar>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="HORA FINAL" onChange="conMayusculas(this)" id="hora_fin" name="hora_fin" espaciar>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="DETALLE" onChange="conMayusculas(this)" id="detalle" name="detalle" espaciar required>
 					<div class="xInvisible">
 						<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
 						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
@@ -1613,6 +1614,7 @@ function xModificarCat(obj){
 	$("#frm_cat #descripcion").val(xThisConfig.dt_cat[xids].descripcion);
 	$("#frm_cat #hora_ini").val(xThisConfig.dt_cat[xids].hora_ini);
 	$("#frm_cat #hora_fin").val(xThisConfig.dt_cat[xids].hora_fin);
+	$("#frm_cat #detalle").val(xThisConfig.dt_cat[xids].detalle);
 	dialog_add_cat.open();
 
 }

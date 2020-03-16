@@ -29,6 +29,12 @@
 		<paper-dialog id="dialog_detalle_pd" style="border-radius: 5px; padding:0px; width: 320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<paper-dialog-scrollable style="padding:0px; top:0px; left:0px; overflow-y:auto;">
 				<div id="div_pd_detalle">
+
+				</div>
+				<br>
+				<div class="xtxtCentro" hidden$="isPedidoDespachado">
+					<hr>
+					<button class="xBoton2 xPlomo" onclick="pedidoDeliveryEntregado();">Entregado</button>
 				</div>
 			</paper-dialog-scrollable>
 		</paper-dialog>
@@ -215,7 +221,7 @@
 <script>
 var xThisZonaDespacho;
 var xdata_zona=[], xIdZonaSeccion='',xIdTp='', des_despacho='',xValCountPedidosDespacho=0, xUltimoIdPedidoEnZona=0, xColorMarcado='xNaranja',xObjPedido,xRefresh_tiempo, xelem_tt_p_cola,xhora_actual_serv;
-var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido, isSocket, $grid;
+var xtiempo_maximo=0,tiempo_medio=0,xNumReservas=0,element_sonido, isSocket, $grid, itemPedidoEntregar;
 
 function pruebaAddPedido(){
 	var xaa='<div class="xmarco_zd_pedido ini"><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3><h3>pedido</h3></div>';
@@ -443,7 +449,7 @@ function xVerPedidosDespachados(){
 		xdtPe=xdtPe.datos;
 		for (var i = 0; i < xdtPe.length; i++) {
 			xindex=i;xdes_mesa_pedido='Mesa';
-			if(xdtPe[xindex].nummesa===''){xdes_mesa_pedido='Pedido';xcont_mesa=xCeroIzq(xdtPe[xindex].correlativo_dia,4);}else{xcont_mesa=xCeroIzq(xdtPe[xindex].nummesa,2);}
+			if(xdtPe[xindex].nummesa==='' || xdtPe[xindex].nummesa==='0'){xdes_mesa_pedido='Pedido';xcont_mesa=xCeroIzq(xdtPe[xindex].correlativo_dia,4);}else{xcont_mesa=xCeroIzq(xdtPe[xindex].nummesa,2);}
 
 			xcolor_tiempo_transcurrido='xFondoRowverde_estado_pedido';
 			x_tiempo_transcurrido=xdtPe[xindex].despachado_tiempo
@@ -457,8 +463,9 @@ function xVerPedidosDespachados(){
 
 			xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xCursor '+xcolor_tiempo_transcurrido+'" data-hora="'+xdtPe[xindex].despacho_tiempo+'" data-color="'+xcolor_tiempo_transcurrido+'" data-p="'+xdtPe[xindex].idpedido+'" data-nummesa="'+xdtPe[xindex].nummesa+'" data-correlativo="'+xdtPe[xindex].correlativo_dia+'"  data-numpedido="'+xdtPe[xindex].numpedido+'" onclick="xVerDetallePD(this)">'+
 						'<p class="tipo">'+xdes_mesa_pedido+'</p>'+
-					    '<h3 class="numero xBold">'+xcont_mesa+'</h3>'+
-					    '<p class="referencia xfont11">'+xdtPe[xindex].referencia+'</p>'+
+						'<h3 class="numero xBold">'+xcont_mesa+'</h3>'+
+						'<p class="referencia xfont9">'+xdtPe[xindex].idpedido+'</p>'+
+					    '<p class="referencia xfont12">'+xdtPe[xindex].referencia+'</p>'+
 					    '<p class="tiempo xBold">'+x_tiempo_transcurrido+'</p>'+
 					'</div>');
 		};
@@ -466,7 +473,7 @@ function xVerPedidosDespachados(){
 		//$aa.isotope('reloadItems');
 		$(xtb_obj).html($(xCadenaNumMesa)).trigger('create').isotope({
 		  itemSelector: '.xMiCardPedido',
-		  layoutMode: 'cellsByRow',
+		//   layoutMode: 'cellsByRow',
 		//   percentPosition: true,
 		//   sortBy: [ 'numero' ],
 		// //   layoutMode: 'cellsByRow',
@@ -492,6 +499,10 @@ function xVerDetallePD(obj){
 		//Armamos pedidos y lanzamos
 		for (e in xarr_pedido) {
 			//HEADER
+			itemPedidoEntregar = xarr_pedido[e];
+			xThisZonaDespacho.isPedidoDespachado = xarr_pedido[e].pwa_delivery_status === '0' ? false : true;
+
+			if(xarr_pedido[e].nummesa==='' || xarr_pedido[e].nummesa==='0'){xdes_mesa_pedido='Pedido';xcont_mesa=xCeroIzq(xarr_pedido[e].correlativo_dia,4);}else{xcont_mesa=xCeroIzq(xarr_pedido[e].nummesa,2);}
 			xcadena_secc='';
 			xid_p=e;//xid_p=xarr_pedido[e].id;
 			xcadena_enca='<div class="xmarco_zd_pedidox" data-id="'+xid_p+'">'+
@@ -499,7 +510,7 @@ function xVerDetallePD(obj){
 						'<table width="100%" class="xtable4">'+
 							'<tr class="xSinBorde_tr">'+
 								'<td>'+
-									'<div class="xEncabezado_zd_pedido"><p class="xfont30">'+xCeroIzq(xarr_pedido[e].nummesa,2)+'</p><span>mesa</span></div>'+
+									'<div class="xEncabezado_zd_pedido"><p class="xfont30">'+xcont_mesa+'</p><span>' + xdes_mesa_pedido + '</span></div>'+
 								'</td>'+
 								'<td>'+
 									'<div class="xEncabezado_zd_pedido"><p id="val_num_cola">-</p><span># en cola</span></div>'+
@@ -941,7 +952,7 @@ function xElaborarArray(xdata){
 		for (var i = 0; i < xdt_pedidos.length; i++) {
 			xid_p=xdt_pedidos[i].idpedido;
 			if(xarr_pedido[xid_p]!==undefined){continue;}
-			xarr_pedido[xid_p]={'id':xid_p,'fecha_hora':xdt_pedidos[i].fecha_hora,'hora':xdt_pedidos[i].hora,'nummesa':xdt_pedidos[i].nummesa,'correlativo_dia':xdt_pedidos[i].correlativo_dia,'referencia':xdt_pedidos[i].referencia,'reserva':xdt_pedidos[i].reserva,'des_tipo_consumo':xdt_pedidos[i].des_tipo_consumo,'idtipo_consumo':xdt_pedidos[i].idtipo_consumo,'despachado_tiempo':xdt_pedidos[i].despachado_tiempo, 'reserva':xdt_pedidos[i].reserva}
+			xarr_pedido[xid_p]={'id':xid_p,'fecha_hora':xdt_pedidos[i].fecha_hora,'hora':xdt_pedidos[i].hora,'nummesa':xdt_pedidos[i].nummesa,'correlativo_dia':xdt_pedidos[i].correlativo_dia,'referencia':xdt_pedidos[i].referencia,'reserva':xdt_pedidos[i].reserva,'des_tipo_consumo':xdt_pedidos[i].des_tipo_consumo,'idtipo_consumo':xdt_pedidos[i].idtipo_consumo,'despachado_tiempo':xdt_pedidos[i].despachado_tiempo, 'reserva':xdt_pedidos[i].reserva, 'pwa_delivery_status': xdt_pedidos[i].pwa_delivery_status, 'idcliente': xdt_pedidos[i].idcliente}
 		};
 
 		//tipo de consumo //llevar / consumir local
@@ -1033,9 +1044,21 @@ function xDespacharTodos() {
 		});
 }
 
+function pedidoDeliveryEntregado() {
+	if (itemPedidoEntregar.pwa_delivery_status !== '0') {return; } // si ya fue despachado
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2202', data:{'i':itemPedidoEntregar.id}})
+		.done(function (x) {		
+			
+			// notificar socket
+			_zonaSocketPedidoEntregado(itemPedidoEntregar.idcliente);
+			dialog_detalle_pd.close();			
+		});
+}
+
 Polymer({
 	is:'x-zona_despacho',
 	properties:{
+		isPedidoDespachado: Boolean
 	},
 	attached:function(){
 		this.select_div=0;
