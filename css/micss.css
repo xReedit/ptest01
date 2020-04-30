@@ -1467,6 +1467,32 @@ ul.list_add_item2 li {
     color: #616161;
 }
 
+/* configuraciones  */
+.img-ico-seccion {
+    width: 16px;
+    padding-right: 5px;
+}
+
+.img-ico-seccion-size-2 {    
+    width: 32px;    
+    padding: 8px;
+}
+
+.img-ico-seccion-size-2:hover {    
+    background: lightblue;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.content-icon-seccion {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.overflow-auto {
+    overflow: auto;
+}
+
 .animated {
     -webkit-animation-duration: 1s;
     animation-duration: 1s;

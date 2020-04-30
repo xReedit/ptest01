@@ -70,6 +70,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	});
 }
 
+// aca
 function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,xArrayComprobante,xArrayCliente,callback){
 	xPopupLoad.titulo="Imprimiendo...";	
 
@@ -487,9 +488,9 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 		}
 	})
 	.done((UltimoIdPrint)=> {	
-		const _isSocket = isSocket ? isSocket : false;
+		var _isSocket = isSocket ? isSocket : false;
 		if ( _isSocket ) {
-			const dataSend = {			
+			var dataSend = {			
 				detalle_json: _data,
 				idprint_server_estructura: _idprint_server_estructura,
 				tipo: _tipo,

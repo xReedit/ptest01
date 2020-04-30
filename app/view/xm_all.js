@@ -563,7 +563,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 	var _url_servicio;
 				
 		//primero busca en local
-		var dt = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=602', data:{doc: valor}})
+		var dt = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=602', data:{doc: valor}});
 		// .done( function (dt) {
 			dt = JSON.parse(dt);			
 			if (dt.datos.length > 0) { // si tiene los datos en el local
@@ -653,11 +653,11 @@ function xValidarToken(token, callback) {
 			xRefreshToken((t)=>{
 				_token = t;
 				callback(_token);
-			})
+			});
 		} else {
 			callback(_token);
 		}
-	}).fail((jqXHR, textStatus)=>{
+	}).fail((jqXHR, textStatus)=> {
 		callback("error");
 	});
 }

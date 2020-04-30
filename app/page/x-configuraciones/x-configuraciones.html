@@ -22,7 +22,7 @@
 				<h4>Selecciona el almacen donde ingresan los productos:</h4>
 				<select class="xTextRow2" id="sel_almacen_file"></select>
 				<br><br><br>
-				<div class="xBoton2 xVerde" onclick="xSubirFileAlmacen();">Listo, subir archivo e ingresar</div>
+				<div class="xBoton2 xVerde" onclick="xSubirFileAlmacen();">Listo, subir archivo e ingresar</div>				
 			</div>
 		</paper-dialog>
 		<paper-dialog id="dialog_add_sede" style="max-width: 300px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -91,6 +91,22 @@
 				<div class="xBoton2 xPlomo" onclick="dialog_add_tpc.close();">Cancelar</div>
 			</div>
 		</paper-dialog>
+
+
+		<paper-dialog id="dialog_img_ico_carta" class="dialog_redondo overflow-auto" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">				
+				<span class="xColorRow_Plomo">Este icono se mostrara en la aplicacion de pedidos</span>
+				<div class="content-icon-seccion">
+					<template is="dom-repeat" items="{{listIconSeccion}}" as="item">															
+						<img data-index="[[index]]" onclick="updateIconSeccion(this)" class="img-ico-seccion-size-2" src="{{item.img}}" alt="a2">						
+					</template>
+				</div>
+
+			</div>
+		</paper-dialog>
+
+
+
 		<br>
 		<h3>CONFIGURACIONES</h3>
 		<div class="xLinea2"></div>		
@@ -649,9 +665,12 @@
 <!-- <script type="text/javascript" src="../../view/socket.service.p.js"></script> -->
 
 <script>
-var xThisConfig, _arrPrintLocal=[], isSocket;
+var xThisConfig, _arrPrintLocal=[], isSocket, numIconSeccion = 101, xRutaIconSeccion = '../../images/img-icon-carta/', xidSeccionIcon, opIcon;
 var xObjBorrar = 0; // object contiene informacion de la fila a borrar + tabla e id
 function _getCategoria(val) { console.log(val);}
+
+
+
 
 function xIniConf(){
 	xPopupLoad=document.getElementById('xLoad');
@@ -679,14 +698,15 @@ function xIniConf(){
 		xLoadCategoria();
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
+
+		loadIconSeccion();
 	})
 	
 	// compFindSede=document.getElementById('compFindCategoria');
     // compFindSede.addEventListener('getValorIncial', function (e) {
     //     console.log('event: ', e.detail.categorias); // true
 	// });
-	
-	
+		
 
 	$("#Titulo_page").text("Configuraciones");
 	xThisConfig.selected_conf=0;
@@ -825,6 +845,22 @@ function xIniConf(){
 		return false;
 	})
 }
+
+function loadIconSeccion() {
+	var nomIcon = '', contador = 0, lisIcon = [];
+	xThisConfig.listIconSeccion = [];
+	while (contador <= numIconSeccion) {		
+		nomIcon = xRutaIconSeccion+contador+'.png';
+		lisIcon.push({img: nomIcon});
+		contador++;
+	}
+
+	xThisConfig.listIconSeccion = lisIcon;
+
+	console.log('xThisConfig.listIconSeccion', xThisConfig.listIconSeccion);
+}
+
+
 // dialog borrar
 function xDialogBorrarObj(obj) {
 	xThisConfig.xObjBorrar = obj;
@@ -1161,15 +1197,21 @@ function xLoadSecciones(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=409'})
 	.done( function (dtSec) {
 		var xdtSec=$.parseJSON(dtSec);
-		var xCadena_sec='';
+		var xCadena_sec='', imgIcon = '';
 		//var xsel_impr=$("#sel_impr_Sec");
 		xdtSec=xdtSec.datos
 		for (var i = 0; i < xdtSec.length; i++) {
+			imgIcono = xdtSec[i].img != '' ? xdtSec[i].img : i+'.png';
 			//sel_impr_Sec.value=xdtSec[i].idimpresora;
 			//$("#sel_impr_Sec > option")[0].css('checked','true')
 			//sel_impr_Sec.options[xdtSec[i].idimpresora].selected=true;
+
 			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected');
-			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'"><td>'+xdtSec[i].plato+'</td><td><select class="xsel_sec_print" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec")[0].innerHTML+'</select></td><td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
+			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'">'+
+												'<td onclick="openImgIconDialog(this, 0)"> <img class="img-ico-seccion xCursor" src="'+ xRutaIconSeccion + imgIcono+'" alt="img-ico">'+xdtSec[i].plato+'</td>'+
+												'<td><select class="xsel_sec_print" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec")[0].innerHTML+'</select></td>'+
+												'<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td>'+
+												'</tr>')
 			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected',false);
 		};
 		$("#tb_sec_impr .row").remove();
@@ -1184,15 +1226,19 @@ function xLoadSecciones_bodega(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=40901'})
 	.done( function (dtSec) {
 		var xdtSec=$.parseJSON(dtSec);
-		var xCadena_sec='';
+		var xCadena_sec='',imgIcono = '';
 		//var xsel_impr=$("#sel_impr_Sec");
 		xdtSec=xdtSec.datos
 		for (var i = 0; i < xdtSec.length; i++) {
+			imgIcono = xdtSec[i].img != '' ? xdtSec[i].img : i+'.png';
 			//sel_impr_Sec.value=xdtSec[i].idimpresora;
 			//$("#sel_impr_Sec > option")[0].css('checked','true')
 			//sel_impr_Sec.options[xdtSec[i].idimpresora].selected=true;
 			$("#sel_impr_Sec_bodega  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected')
-			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'"><td>'+xdtSec[i].plato+'</td><td><select class="xsel_sec_print_bodega" data-id="'+xdtSec[i].idseccion+'" option="'+xdtSec[i].idimpresora+'">'+$("#sel_impr_Sec_bodega")[0].innerHTML+'</select></td></tr>')
+			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'">'+
+				'<td onclick="openImgIconDialog(this, 1)"><img class="img-ico-seccion xCursor" src="'+ xRutaIconSeccion + imgIcono+'" alt="img-ico">'+xdtSec[i].plato+'</td>'+
+				'<td><select class="xsel_sec_print_bodega" data-id="'+xdtSec[i].idseccion+'" option="'+xdtSec[i].idimpresora+'">'+$("#sel_impr_Sec_bodega")[0].innerHTML+'</select></td>'+
+				'</tr>')
 			//$("#sel_impr_Sec_bodega  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected')
 		};
 		if(xdtSec.length>0){
@@ -1680,6 +1726,25 @@ function xLoadOrg(){
 	});
 }
 
+function openImgIconDialog(obj, _opIcon) {
+	opIcon = _opIcon; // 0 seccion 1 producto_familia
+	xidSeccionIcon = obj.parentElement.dataset.id
+	dialog_img_ico_carta.open();
+}
+
+function updateIconSeccion(obj) {	
+	const _img = obj.dataIndex+'.png';
+	xPopupLoad.xopen();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=8', data:{i:xidSeccionIcon,img:_img, opIcon: opIcon}})
+	.done( function (a) {
+		// dialog_foto.close();
+		if ( opIcon === 0 )	{ xLoadSecciones(); } else { xLoadSecciones_bodega(); }
+		
+		dialog_img_ico_carta.close();
+		xPopupLoad.xclose();
+	})
+}
+
 
 
 Polymer({
@@ -1691,6 +1756,7 @@ Polymer({
 		dt_sede:Object,
 		dt_cat:Object,
 		dt_impr:Object,
+		listIconSeccion: []
 	},
 	attached:function(){
 		this.selected_conf=0;

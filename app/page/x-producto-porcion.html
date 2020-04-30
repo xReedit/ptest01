@@ -59,6 +59,26 @@
 				<br><br><br>
 			</div>
 		</paper-dialog>
+
+		<paper-dialog id="dialog_detalle" class="dialog_redondo" style="width: 90%; max-width: 550px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">				
+				<!-- Foto -->
+				<div id="dlg_foto_vista_previa-div">						
+					<a class="xDerecha xInvisible xCursor" onclick="xItemQuitarFoto()" id="dlg_btn_quitar_foto">Quitar Foto</a>
+					<br>
+					<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
+					<div id="dlg_foto_vista_previa" class="div_foto" onclick="xSeleccionarFoto();">
+						<div class="xCentradoHijo" id="dlg_label_foto">Clic aqui para seleccionar</div>
+					</div>
+					<br><br>
+					<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFoto();">Listo, guardar</div>
+					<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+				</div>
+				<!-- <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div> -->
+			</div>
+		</paper-dialog>
+
+
 		<br>
 		<div class="xContent">
 			<paper-tabs selected="{{selected}}" id="tab_pro_por">
@@ -95,6 +115,7 @@
 							<th align="left">Producto</th>
 							<th align="left" width="80px">Stock</th>
 							<th align="left" width="80px">P. Venta</th>
+							<th align="left" width="80px">Imagen</th>
 							<th width="5px"></th>
 						</thead>
 					</table>
@@ -121,8 +142,14 @@
 			</iron-pages>
       	</div>
 	</template>
-<script>
-var xThisProPor,xidAlmacenbUS,xObjRowSel,xPrecio_item;
+<style>
+	.div_foto{ width: 100%; height:260px; background: #e0e0e0; cursor:pointer;display:inline-block;}
+	.div_foto #dlg_label_foto{opacity: .8; text-align:center; z-index:0;}
+	.div_foto img{ width: 100%;}
+</style>
+
+<script>	
+var xThisProPor,xidAlmacenbUS,xObjRowSel,xPrecio_item, xObjImgDet, xIdObjImgDet;
 function xIniProPor(){
 	xPopupLoad=document.getElementById('xLoad');
 	xm_LogChequea(function(){
@@ -134,6 +161,21 @@ function xIniProPor(){
 
 		xLoadAlmacenes();
 	})
+
+	$("#ctrl_open_file").change(function(e) {
+	    for (var i = 0; i < e.originalEvent.srcElement.files.length; i++) {
+	        var file = e.originalEvent.srcElement.files[i];
+	        var img = document.createElement("img");
+	        var reader = new FileReader();
+	        reader.onloadend = function() {
+	             img.src = reader.result;
+	        }
+	        reader.readAsDataURL(file);
+	        $("#dlg_foto_vista_previa img").remove();
+	        $("#dlg_foto_vista_previa").append(img).trigger('create');
+	        //$("#ctrl_open_file").after(img);
+	    }
+	});
 
 	$('.xPasarEnter2').on('keyup',function(e){
 			var code=e.which;
@@ -332,7 +374,7 @@ function xLoadProductos(xid_filtro){
 		var xdtPro=xThisProPor.xdt_prodcutos
 		var xCadenaPro='';
 		var xico_stock_min='';
-		var xtitulo_stock_min='';
+		var xtitulo_stock_min='', btnImgTitulo = 'Subir Imagen';
 		for (var i = 0; i < xdtPro.length; i++) {
 			if(xid_filtro!=0){
 				if(xid_filtro!=xdtPro[i].idalmacen){continue;}
@@ -341,6 +383,8 @@ function xLoadProductos(xid_filtro){
 			xtitulo_stock_min='';
 			var xtr_stock_min=parseInt(xdtPro[i].stock_minimo);
 			var xtr_stock=parseInt(xdtPro[i].stock);
+
+			btnImgTitulo = xdtPro[i].img != '' ? 'Cambiar Imagen' : 'Subir Imagen';
 			if(xtr_stock<=xtr_stock_min && xtr_stock_min!=0){xtitulo_stock_min='stock minimo'; xico_stock_min='<image title="stock minimo '+xtr_stock_min+'" src="../../images/tr_alert_min.png">'}
 			xCadenaPro=String(xCadenaPro+'<tr class="row" data-idal="'+xdtPro[i].idproducto_stock+'" data-idp="'+xdtPro[i].idproducto+'" data-idalmacen="'+xdtPro[i].idalmacen+'">'
 				+'<td>'+xdtPro[i].almacen+'</td>'
@@ -348,7 +392,9 @@ function xLoadProductos(xid_filtro){
 				+'<td class="xCursor"><div><span onclick="xModRow(this,3);" id="td_des" data-valorginal="'+xdtPro[i].producto+'">'+xdtPro[i].producto+'<span><span class="xDerecha">'+xico_stock_min+'</span><span class="xInvisible">'+xtitulo_stock_min+'</span></div></td>'
 				+'<td class="sumar_stock xCursor" onclick="xModRow(this,2);" id="td_stock" data-valorginal="'+xtr_stock+'" data-mod-stock="'+xtr_stock+'" data-mod-precio="" data-colummn="stock">'+xtr_stock+'</td>'
 				+'<td class="xCursor" onclick="xModRow(this,1);" id="td_pventa" data-valorginal="'+xdtPro[i].precio_venta+'" data-mod-stock="" data-mod-precio="'+xdtPro[i].precio_venta+'" data-colummn="precio_venta">'+xdtPro[i].precio_venta+'</td>'
+				+'<td class="xCursor" onclick="openDialogImg(this);"><span class="xfont11">'+ btnImgTitulo +'</span></td>'
 				+'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarProducto(this);"></span></td>'
+				+'<td class="xInvisible" id="td_img">'+xdtPro[i].img+'</td>'+
 				+'</tr>')
 		};
 		$("#tb_productos .row").remove();
@@ -359,7 +405,7 @@ function xLoadProductos(xid_filtro){
 function xSumarTotales(){
 	var xtotal_row=xContarCantRowVisible($("#tb_productos"),'.sumar_stock');
 	var xsum_stock=xSumaCantRowVisible($("#tb_productos"),'.sumar_stock');
-	var xrow_total='<tr class="tr_total xBold xfont18"><td>Totales</td><td>'+xtotal_row+'</td><td>-</td><td>'+xsum_stock+'</td><td>-</td></tr>';
+	var xrow_total='<tr class="tr_total xBold xfont18"><td>Totales</td><td>'+xtotal_row+'</td><td>-</td><td>'+xsum_stock+'</td><td>-</td><td>-</td><td>-</td></tr>';
 	$("#tb_productos .tr_total").remove();
 	$("#tb_productos").append(xrow_total).trigger('create');
 }
@@ -457,6 +503,99 @@ function xConfirmBorrarPorcion(){
 		dialog_msj_confirma.close();
 	})
 }
+
+
+function xSeleccionarFoto(){
+	$("#ctrl_open_file").click();
+}
+function xItemFoto(obj, e){
+	xObjImgDet=obj;
+	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
+	var xval_des=$(obj).parent().text();
+	var xval_img=$(obj).parents('tr').find("#td_img").text();
+	$("#dlg_foto_vista_previa img").remove();
+	$("#dlg_btn_quitar_foto").addClass('xInvisible');
+	if(xval_img!==''){
+		xval_img='<img src=../img/'+xval_img+'>';
+		$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
+		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
+	}
+	$("#dialog_foto #dlg_des_item").text(xval_des)
+	$("#ctrl_open_file").val('');
+	// dialog_foto.open();
+
+	e.stopImmediatePropagation();
+	e.stopPropagation();
+}
+
+function xItemQuitarFoto(){
+	xPopupLoad.xopen();
+	$(".div_foto img").remove();
+	$(xObjImgDet).parents('tr').find('#td_img').text('');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20701', data:{i:xIdObjImgDet,d:''}})
+	.done( function (a) {
+		// dialog_foto.close();
+		xPopupLoad.xclose();
+	})
+}
+
+function xItemGuardarFoto(){	
+	$(".xobj_subir_foto").each(function(index, element) {		
+		if($(this).val()==''){return}
+		file=this.files[0]; name = file.name; size = file.size; type = file.type;
+		xhr = new XMLHttpRequest();
+		xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
+
+		xhr.open('POST','upload.php?op=1',true);
+
+		xhr.setRequestHeader("Cache-Control", "no-cache");
+		xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+		xhr.setRequestHeader("X-File-Name", file.name);
+		xhr.send(file);
+	})
+};
+
+
+function transferenciaCompleta(xfile){
+	xfile=xIdOrg+xIdSede+xfile;
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20701', data:{i:xIdObjImgDet,d:xfile}})
+	.done( function (a) {
+		// dialog_foto.close();
+		$(xObjImgDet).parents('tr').find('#td_img').text(xfile);
+		xPopupLoad.xclose();
+	})
+}
+
+function openDialogImg(obj) {
+	xObjImgDet=obj;
+	xObjRowSel=obj.parentElement;
+	// var xida=xObjRowSel.attr('data-idalmacen');
+	// var xidp=xObjRowSel.attr('data-data-idp');
+
+	xIdObjImgDet=obj.parentElement.dataset.idp;
+
+
+	// foto	
+	var xval_des=$(obj).parent().text();
+	var xval_img = $(obj).parents('tr').find("#td_img").text();
+	xval_img = xval_img === '' ? '' : URL_IMG_CARTA + xval_img;
+
+	$("#dlg_foto_vista_previa img").remove();
+	$("#dlg_btn_quitar_foto").addClass('xInvisible');
+	if(xval_img!==''){
+		xval_img='<img src="'+xval_img+'">';
+		$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
+		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
+	}	
+	$("#ctrl_open_file").val('');
+
+	dialog_detalle.open();
+
+	// e.stopPropagation();
+	// e.stopImmediatePropagation();
+}
+
+
 Polymer({
 	is:'x-producto-porcion',
 	properties:{

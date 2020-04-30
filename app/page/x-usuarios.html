@@ -12,13 +12,15 @@
 	      		<br>
 	      		<iron-pages selected="{{selected_us}}">
 	      			<div id="datos_us" >
-	      				<form id="frm_us">
-									<select class="xTextRow2" id="select_rol">
-										<option value="0">COLABORADOR</option>
-										<option value="1">ADMINISTRADOR</option>
-										<!-- <option value="2">ZONA</option> -->
-									</select>
-									<br><br>
+						  <select class="xTextRow2" id="select_rol" onchange="tipoUsuario(this)">
+							  <option value="0">COLABORADOR</option>
+							  <option value="1">ADMINISTRADOR</option>
+							  <option value="3">REPARTIDOR / DELIVERISTA</option>
+							  <!-- <option value="2">ZONA</option> -->
+						  </select>
+						  <br><br>
+
+	      				<form id="frm_us" hidden$="[[showFormRepartidor]]">
 
 		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRES" onChange="conMayusculas(this)" id="nombres" name="nombres" espaciar required>
 		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="CARGO" onChange="conMayusculas(this)" id="cargo" name="cargo" espaciar required>
@@ -41,6 +43,20 @@
 										<input type="text" id="rol" name="rol">
 		      				</div>
 						</form>
+
+						<!-- datos del repartidor -->
+						<div id="formRepartidor"  hidden$="[[!showFormRepartidor]]">
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRES" onChange="conMayusculas(this)" id="nombres_r" name="nombres" espaciar required>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="APELLIDOS" onChange="conMayusculas(this)" id="apellidos_r" name="apellidos" espaciar required>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="DNI" onChange="conMayusculas(this)" id="dni_r" name="dni_r" espaciar required>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="telefono_r" name="telefono" espaciar required>
+							<div style="display: flex;margin-left: 5px;">
+								<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO" id="txt_sufijo_r" value$="[[xt_sufijo]]" style="width: 50px;" enLinea readonly>
+								<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO"  id="usuario_r" name="usuario" enLinea required>
+							</div>
+							<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass_r" name="pass" espaciar required>
+						</div>
+						
 						<br>
 						<a href="#" onclick="xResetearClave()"> Resetear clave</a>
 						<br>								
@@ -124,6 +140,20 @@
 				<th width="5px"></th>
 			</thead>
 		</table>
+
+		<br>		
+		<br><br>
+		<h3>REPARTIDORES / DELIVERISTA</h3>
+		<div class="xLinea2"></div>
+		<table id="tb_us_re" width="100%" class="xtable2">
+			<thead>
+				<th align="left">Nombres</th>
+				<th align="left">Cargo</th>
+				<th align="left">usuario</th>
+				<th width="5px"></th>
+			</thead>
+		</table>
+
 	</template>
 </dom-module>
 <script>
@@ -141,6 +171,7 @@ function xIniUsuarios(){
 	xThis.xt_idsede=xIdSede;
 	xThis.xt_idus=xIdUsuario;
 	xThis.xt_sufijo = sufijoSede;
+	xThis.showFormRepartidor = false;
 
 	if (xIdOrg === "" || xIdOrg == undefined){
 			var _dtUs = xm_log_get('app3_us');
@@ -257,6 +288,34 @@ function xGuardarUs(){
 	const _usuario = xThis.xt_sufijo + usuario.value;
 	$("#frm_us #usuario").val(_usuario);
 
+	if ( xThis.showFormRepartidor ) {
+		const _dataSend = {
+			nombre: nombres_r.value,
+			apellido: apellidos_r.value,
+			dni: dni_r.value,
+			telefono: telefono_r.value,
+			usuario: txt_sufijo_r.value + usuario_r.value,
+			pass: pass_r.value,
+			idsede: xThis.xt_idsede
+		}
+
+		// const aa = JSON.stringify(_dataSend).toString();
+		console.log(JSON.stringify(_dataSend));
+
+		xPopupLoad.xopen();
+		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=11', data: {item:_dataSend}})
+		.done( function (DtProv) {
+			console.log(DtProv);			
+			// var xDtProv=$.parseJSON(DtProv);
+			// xThisPago.dataClientes=xDtProv.datos;
+			xLoadUs();
+			xPopupLoad.xclose();
+			dialog_add_us.close();
+		});
+
+		return;
+	}
+
 	xvalidateFormInput('frm_us',function(a){
 		if(a===false){xThis.selected_us=0; return;}
 		xPopupLoad.xopen();
@@ -266,7 +325,7 @@ function xGuardarUs(){
 			xNuevoUsuario();
 			xLoadUs();
 		})
-	})
+	});
 
 }
 function xNuevoUsuario(){
@@ -294,7 +353,31 @@ function xLoadUs(){
 		$("#tb_us .row").remove();
 		$("#tb_us").append(xCadenaUs).trigger('create');
 	});
+
+
+	/// repartidor
+	$("#tb_us_re").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4021'})
+	.done( function (dtUs) {
+		var xdtUs=$.parseJSON(dtUs);
+		var xCadenaUs='';
+		xdtUs=xdtUs.datos;
+		for (var i = 0; i < xdtUs.length; i++) {
+			xCadenaUs=String(xCadenaUs+'<tr class="row" data-id="'+xdtUs[i].idrepartidor+'" data-t="repartidor"><td>'+xdtUs[i].nombre+' '+ xdtUs[i].apellido +'</td><td>Repartidor</td><td>'+xdtUs[i].usuario+'</td>'+
+				'<td><span onclick="xBorrarItem(this);" class="xDeleteRow" title="Borrar"></span></td>'+
+				'</tr>');
+		}
+		$("#tb_us_re .row").remove();
+		$("#tb_us_re").append(xCadenaUs).trigger('create');
+	});
 }
+
+
+function tipoUsuario($event) {
+	xThis.showFormRepartidor = $event.selectedIndex === 2;	
+}
+
+
 Polymer({
 	is:'x-usuarios',
 	properties:{
@@ -302,12 +385,14 @@ Polymer({
 		xt_idsede:Number,
 		xt_idus:Number,
 		xt_sufijo:String,
+		showFormRepartidor: boolean = false
 	},
 	// ready: function() {
 	// 	xIniUsuarios();
 	// },
 	attached:function(){
 		this.selected_us=0;
+		this.showFormRepartidor = false;
     	xThis=this;
     	xIniUsuarios();
     }
