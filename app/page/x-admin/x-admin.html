@@ -1,3 +1,4 @@
+<link rel="import" href="./x-repartidores.html">
 <dom-module id="x-admin">
 	<template>
 
@@ -87,6 +88,20 @@
 			</div>
 		</paper-dialog>
 
+
+		<!-- REPARDIROR -->
+		<paper-dialog id="dialog_add_us_repartidor" style="max-width: 420px;" entry-animation="scale-up-animation"
+			exit-animation="fade-out-animation" class="dialog_redondo" with-backdrop>
+			<div class="xContent">													
+				<h3>Datos del repartidor</h3>
+				<hr>
+				<br>
+				<div>
+					<x-repartidores usuarioReparido="UsarioRepartidorSelected"></x-repartidores>
+				</div>
+			</div>
+		</paper-dialog>
+
 		<br>
 		<div class="xMiCard xradius" style="width:calc(100% - 10%)">
 			<div class="xEncanezadoCard xFondoRowAmarillo4">				
@@ -94,8 +109,9 @@
 			</div>
 			<div class="xContentCard">
 				<paper-tabs selected="{{selected}}" id="tab_admin">
-					<paper-tab>Establecimientos</paper-tab>
+					<paper-tab>Establecimientos</paper-tab>					
 					<paper-tab>Registro de Contadores CPC</paper-tab>
+					<paper-tab>Repartidores</paper-tab>
 				</paper-tabs>
 				<div class="xLinea2"></div>
 				<br><br>
@@ -134,6 +150,9 @@
 							</tbody>
 						</table>
 					</div>
+
+
+					<!-- contadores -->
 					<div id="div_contadores_cpc">
 						<div class="x_div_linea">
 							<h3>Listado de contadores</h3>							
@@ -169,6 +188,55 @@
 							</tbody>
 						</table>
 					</div>
+
+
+					<!-- repartidores -->
+					<div id="div_contadores_cpc">
+						<div class="x_div_linea">
+							<h3>Listado de repartidores</h3>							
+							<button class="xBoton2 xAzul xDerecha" onclick="xCpcNewUsRepartidor();">Nuevo</button>
+						</div>						
+						<hr>
+						<br>
+						<table width="100%" id="tb_cpc">
+							<thead>
+								<th>#</th>
+								<th>Nombres</th>
+								<th>DNI</th>								
+								<th>Telefono</th>
+								<th>Usuario</th>
+								<th>Ciudad</th>								
+								<th>F. registro</th>
+								<th>Calificacion</th>
+								<th>P. Atendidos</th>
+								<th>P. Reasignados</th>
+								<th>En</th>
+								<th>Estado</th>
+								<th></th>
+							</thead>
+							<tbody>
+								<template is="dom-repeat" items="{{listRepartidores}}" as="item">
+									<tr data-id="{{index}}">
+										<td>{{displayIndex(index)}}</td>
+										<td>{{item.nombre}}  {{item.apellido}}</td>
+										<td>{{item.dni}}</td>
+										<td>{{item.telefono}}</td>
+										<td>{{item.usuario}}</td>
+										<td>{{item.ciudad}}</td>
+										<td>{{item.f_registro}}</td>
+										<td>{{item.calificacion}}</td>
+										<td>{{item.pedidos_atendidos}}</td>
+										<td>{{item.pedidos_reasignados}}</td>
+										<td>{{item.sede}}</td>
+										<td>{{item.des_estado}}</td>
+										<td title="Modificar" onClick="xCpcLoad_Uusario_Repartidor(this)"><span class="xIconRow xCursor"><img
+													src="../../../images/edit.png"></span></td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
+
 				</iron-pages>
 				<br><br>
 			</div>
@@ -183,6 +251,7 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 		xLoadCpc();
 		xLoadSedes();	
 		getAllCompaniesFac();
+		xLoadRepartidores();
 		$('body').addClass('loaded');
 	}
 
@@ -191,6 +260,18 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 		.done((res) => {
 			const _res = $.parseJSON(res);
 			xThisAdmin.ListSedes = _res.datos;			
+		});
+	}
+
+	function xLoadRepartidores(){
+		$.ajax({ url: '../../bdphp/log_004.php?op=9' })
+		.done((res) => {
+			const _res = $.parseJSON(res);
+			xThisAdmin.listRepartidores = _res.datos.map(r => {
+				r.des_estado = r.estado === '0' ? 'Activo' : 'Baja';
+				r.sede = r.idsede_suscrito === null ? 'RED' : r.nom_sede;
+				return r; 
+			});			
 		});
 	}
 
@@ -206,6 +287,21 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 		router.go('/adm_dashboard-new');
 	}
 
+	function xCpcNewUsRepartidor() {
+		dialog_add_us_repartidor.open();
+		// localStorage.removeItem('::app3_woOAdm');
+		// router.go('/adm_dashboard-new-repartidor');
+	}
+
+
+	function xCpcLoad_Uusario_Repartidor(obj) {
+		xPopupLoad.titulo = "Cargado..."		
+
+		const index = obj.parentElement.dataId;
+		xThisAdmin.UsarioRepartidorSelected = xThisAdmin.listRepartidores[index];		
+		dialog_add_us_repartidor.open();
+	}
+
 
 	Polymer({
 			is: 'x-admin',
@@ -214,10 +310,13 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 				listCpc: [],
 				listCpc_sedes: [],
 				listCompanies: [],
+				listRepartidores: [],
 				UsarioCpc_sedes: {},
+				UsarioRepartidorSelected: {},
 				// hayDatosRestaurar: boolean = true,
 			},
 			attached: function () {		
+				// this.UsarioRepartidorSelected = {};
 				this.selected = 0,
 				xThisAdmin = this;
 				xIniAdmin();

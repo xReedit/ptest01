@@ -63,6 +63,7 @@ function xCpeValidarFormSave() {
 	});
 }
 
+
 async function xCpcSave_Usuario_Cpc() {	
 		_id_num_us_new_cpc = idusuario.value;
 		if (_id_num_us_new_cpc == "") { // registrar usuario
@@ -124,6 +125,8 @@ function xCpcNewUs() {
 	xGetUsNew();
 	dialog_add_us_cpc.open();
 }
+
+
 
 function xGetUsNew() {
 	$.ajax({url: '../../bdphp/log_004.php?op=402'})
