@@ -1642,7 +1642,8 @@ function xLoadDetallesPedido (obj){
 		$("#p_antendido").text('ATENDIDO POR: '+xdtDpedido[0].nom_usuario+' | ');
 
 		datosDelivery = xdtDpedido[0].json_datos_delivery;
-		datosDelivery = datosDelivery != '' && datosDelivery != '{}' ? JSON.parse(datosDelivery) : null;
+		datosDelivery = datosDelivery != '' && datosDelivery != '{}' && datosDelivery != '[]' ? JSON.parse(datosDelivery) : null;
+		datosDelivery = typeof datosDelivery === 'object' ? datosDelivery.p_header ? datosDelivery.p_header.delivery === 0 ? null : datosDelivery : datosDelivery : datosDelivery;
 		if (datosDelivery) {
 			$('#content-info-delivery').removeClass('xInvisible');
 			const infoDelivery =  datosDelivery.num_doc + ' | ' + datosDelivery.nombre + ' | '+  datosDelivery.direccion + ' | '+  datosDelivery.telefono + ' | '+  datosDelivery.paga_con;
