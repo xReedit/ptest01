@@ -1443,6 +1443,12 @@ ul.list_add_item2 li {
 .fs-13 {font-size: 13px;}
 .fs-14 {font-size: 14px;}
 .fs-15 {font-size: 15px;}
+.fs-16 {font-size: 16px;}
+.fs-17 {font-size: 17px;}
+.fs-18 {font-size: 18px;}
+.fs-19 {font-size: 19px;}
+.fs-20 {font-size: 20px;}
+.fs-21 {font-size: 21px;}
 
 .pt-5 {padding-top: 5px;}
 .pt-10 {padding-top: 10px;}
@@ -1451,6 +1457,12 @@ ul.list_add_item2 li {
 .pt-25 {padding-top: 25px;}
 .pt-45 {padding-top: 45px;}
 .pt-55 {padding-top: 55px;}
+
+.pb-2 {padding-bottom: 2px;}
+.pb-3 {padding-bottom: 3px;}
+.pb-5 {padding-bottom: 5px;}
+.pb-8 {padding-bottom: 8px;}
+.pb-10 {padding-bottom: 10px;}
 
 .p-20 {padding: 20px;}
 
@@ -1491,6 +1503,12 @@ ul.list_add_item2 li {
 
 .overflow-auto {
     overflow: auto;
+}
+
+
+/* control de pedidos */
+.content-info-delivery {
+    line-height: 15px;
 }
 
 .animated {
