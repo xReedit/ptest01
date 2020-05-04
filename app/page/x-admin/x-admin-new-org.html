@@ -624,7 +624,7 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_hablitar_calc_costo_servicio").val(_check_afiliado_calc_distancia);
 		$("#formDatosAPP #pwa_delivery_acepta_yape").val(_check_afiliado_yape);
 		$("#formDatosAPP #pwa_delivery_habilitar_recojo_local").val(_check_afiliado_recojo_local);
-		$("#formDatosAPP #pwa_delivery_comercio_solidaridad").val(_check_habilita_delivery);
+		$("#formDatosAPP #pwa_delivery_comercio_solidaridad").val(_check_habilitar_solidaridad);
 
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede",$("#formDatosAPP").serialize(),function(xUltimoId){
