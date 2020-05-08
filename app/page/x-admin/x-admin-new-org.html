@@ -131,8 +131,8 @@
 							<div class="xBordeIzqHover">
 								<form method="post" id="formDatosAPP">
 									<p>Coordenadas: </p>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="LATITUDE" onChange="conMayusculas(this)" id="latitude" name="latitude" espaciar required>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="LONGITUDE" onChange="conMayusculas(this)" id="longitude" name="longitude" espaciar required>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="LATITUDE" id="latitude" name="latitude" espaciar required>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="LONGITUDE" id="longitude" name="longitude" espaciar required>
 									<br><br><br>
 
 									<p>Datos para delivery:</p><br>
@@ -153,17 +153,25 @@
 									<paper-checkbox id="check_afiliado_calc_distancia"><span>Habilitar calcular costo entrega segun zona</span></paper-checkbox>
 									<hr><br>
 
-									<p>Comercio acepta pagos con yape</p><br>
+									<p>Comercio acepta pagos con Yape</p><br>
 									<paper-checkbox id="check_afiliado_yape"><span>Habilitar pagos con yape</span></paper-checkbox>
 									<hr><br>
 
-									<p>Comercio tiene la opcion de recojo en su propio local</p><br>
-									<paper-checkbox id="check_afiliado_recojo_local"><span>Habilitar recojo en el local</span></paper-checkbox>
+									<p>Comercio acepta pagos con Tarjeta</p><br>
+									<paper-checkbox id="check_afiliado_yape"><span>Habilitar pagos con yape</span></paper-checkbox>
+									<hr><br>
+
+									<p>Comercio tiene la opcion de recojo en su propio local (para Locales no afiliados -por la comision-)</p><br>
+									<paper-checkbox id="pwa_delivery_acepta_tarjeta"><span>Habilitar pago con Tarjeta</span></paper-checkbox>
 									<hr><br>
 
 									<p>Comercio es partde del grupo de solidaridad</p><br>
 									<paper-checkbox id="check_habilitar_solidaridad"><span>Habilitar solidaridad</span></paper-checkbox>
 									<hr><br>
+
+									<p>Comision FIJA comercio no afiliado - comision para la plataforma (x ej: 1.50)</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="COMSION FIJA COMERCIO NO AFILIADO" id="pwa_delivery_comision_fija_no_afiliado" name="pwa_delivery_comision_fija_no_afiliado" espaciar required>
+									<br><br>
 
 									<p>Importe minimo de delivery</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="IMPORTE MINIMO DE CONSUMO" id="pwa_delivery_importe_min" name="pwa_delivery_importe_min" espaciar required>
@@ -231,6 +239,7 @@
 										<input type="text" id="pwa_delivery_acepta_yape" name="pwa_delivery_acepta_yape">
 										<input type="text" id="pwa_delivery_habilitar_recojo_local" name="pwa_delivery_habilitar_recojo_local">
 										<input type="text" id="pwa_delivery_comercio_solidaridad" name="pwa_delivery_comercio_solidaridad">
+										<input type="text" id="pwa_delivery_acepta_tarjeta" name="pwa_delivery_acepta_tarjeta">
 									</div>
 								</form>
 								<br><br><br>
@@ -435,6 +444,7 @@ function transferenciaCompleta(xfile){
 		check_afiliado_yape.checked = dataSede.pwa_delivery_acepta_yape === "0" ? false : true;
 		check_afiliado_recojo_local.checked = dataSede.pwa_delivery_habilitar_recojo_local === "0" ? false : true;
 		check_habilitar_solidaridad.checked = dataSede.pwa_delivery_comercio_solidaridad === "0" ? false : true;
+		check_habilitar_tarjeta.checked = dataSede.pwa_delivery_acepta_tarjeta === "0" ? false : true;
 
 
 		selTipo.value = dataSede.tipo;
@@ -458,6 +468,7 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_acepta_yape").val(dataSede.pwa_delivery_acepta_yape);
 		$("#formDatosAPP #pwa_delivery_habilitar_recojo_local").val(dataSede.pwa_delivery_habilitar_recojo_local);
 		$("#formDatosAPP #pwa_delivery_comercio_solidaridad").val(dataSede.pwa_delivery_comercio_solidaridad);
+		$("#formDatosAPP #pwa_delivery_acepta_tarjeta").val(dataSede.pwa_delivery_acepta_tarjeta);
 
 		// check dias que atienden
 		$('.dia_atencion').each((i, e) => {e.checked = false});
@@ -586,6 +597,7 @@ function transferenciaCompleta(xfile){
 		const _check_afiliado_yape = check_afiliado_yape.checked ? 1 : 0;
 		const _check_afiliado_recojo_local = check_afiliado_recojo_local.checked ? 1 : 0;
 		const _check_habilitar_solidaridad = check_habilitar_solidaridad.checked ? 1 : 0;
+		const _check_habilitar_tarjeta = check_habilitar_tarjeta.checked ? 1 : 0;
 		
 
 		var dias_atienden = '';
@@ -625,6 +637,7 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_acepta_yape").val(_check_afiliado_yape);
 		$("#formDatosAPP #pwa_delivery_habilitar_recojo_local").val(_check_afiliado_recojo_local);
 		$("#formDatosAPP #pwa_delivery_comercio_solidaridad").val(_check_habilitar_solidaridad);
+		$("#formDatosAPP #pwa_delivery_acepta_tarjeta").val(_check_habilitar_tarjeta);
 
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede",$("#formDatosAPP").serialize(),function(xUltimoId){
