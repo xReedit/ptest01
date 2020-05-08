@@ -142,7 +142,7 @@ function xIniDocument(){
 		//xSoloAccPedido();
  		/*debugger
  		xIdAccDirecto=getUrlParameter('dir','?');
- 		if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */
+		 if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */
  	});
 
  	//xRefreshNotificaciones=setInterval(function () {xNotificaciones()},10000);

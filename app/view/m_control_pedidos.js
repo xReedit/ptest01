@@ -4,7 +4,7 @@ xNomU,
 xPopupLoad,
 xRouterTime_cp = false,
 myWindowAppCarta,
-componentsLoad = false;
+componentsLoad = false, isOnlineDeliveryApp = false;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
 // $(document).ready(function () {
@@ -62,6 +62,9 @@ function xIniControlPedido(){
 	xm_LogChequea(function(){
 
 		xLoadTipoConsumoX();
+
+		// xSetActivarDeliveryOnline(isOnlineDeliveryApp);
+		setValueStorageOnlineDelivery();
 		// setTimeout(() => {
 		// 	xOpenPage(2, '?f1=1?df1=LOCAL');
 		// }, 2500);
@@ -163,6 +166,28 @@ function xLoadTipoConsumoX(){
 		$("#list_menu_lateral .li_row").remove();
 		$("#list_menu_lateral li:first-child").after(xCadenaTPC).trigger('create');
 	//});
+}
+
+function setValueStorageOnlineDelivery() {
+	var valDeliveryOnline = window.localStorage.getItem('::app3_sys_vr_online_delivery') ? window.localStorage.getItem('::app3_sys_vr_online_delivery') : 0;
+	isOnlineDeliveryApp = parseInt(valDeliveryOnline) === 0 ? false : true;
+	// isOnlineDeliveryApp = !isOnlineDeliveryApp;
+	toogleOnline.checked = isOnlineDeliveryApp;
+}
+
+function xActivarDeliveryApp(obj) {
+	isOnlineDeliveryApp = !isOnlineDeliveryApp;	
+	xSetActivarDeliveryOnline(isOnlineDeliveryApp);
+}
+
+function xSetActivarDeliveryOnline(isValDeliveryOnline) {
+	var valDeliveryOnline = isValDeliveryOnline ? 1 : 0;
+	window.localStorage.setItem('::app3_sys_vr_online_delivery', valDeliveryOnline);
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=12', data:{val:valDeliveryOnline}})
+	.done( function (xidC) {
+		console.log('online');
+	});
 }
 
 
