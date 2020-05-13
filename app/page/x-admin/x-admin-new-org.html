@@ -153,16 +153,16 @@
 									<paper-checkbox id="check_afiliado_calc_distancia"><span>Habilitar calcular costo entrega segun zona</span></paper-checkbox>
 									<hr><br>
 
+									<p>Comercio habilitar recojo en el local, el cliente pasa a recoger.</p><br>
+									<paper-checkbox id="check_afiliado_recojo_local"><span>Habilitar recojo en el local</span></paper-checkbox>
+									<hr><br>
+
 									<p>Comercio acepta pagos con Yape</p><br>
 									<paper-checkbox id="check_afiliado_yape"><span>Habilitar pagos con yape</span></paper-checkbox>
-									<hr><br>
+									<hr><br>									
 
-									<p>Comercio acepta pagos con Tarjeta</p><br>
-									<paper-checkbox id="check_afiliado_yape"><span>Habilitar pagos con yape</span></paper-checkbox>
-									<hr><br>
-
-									<p>Comercio tiene la opcion de recojo en su propio local (para Locales no afiliados -por la comision-)</p><br>
-									<paper-checkbox id="pwa_delivery_acepta_tarjeta"><span>Habilitar pago con Tarjeta</span></paper-checkbox>
+									<p>Comercio tiene la opcion de recojo en su propio local (quitar para Locales no afiliados -por la comision-)</p><br>
+									<paper-checkbox id="check_habilitar_tarjeta"><span>Habilitar pago con Tarjeta</span></paper-checkbox>
 									<hr><br>
 
 									<p>Comercio es partde del grupo de solidaridad</p><br>
@@ -461,6 +461,7 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #dias_atienden").val(dataSede.dias_atienden);
 		$("#formDatosAPP #dias_atienden").val(dataSede.dias_atienden);
 		$("#formDatosAPP #pwa_delivery_importe_min").val(dataSede.pwa_delivery_importe_min);
+		$("#formDatosAPP #pwa_delivery_comision_fija_no_afiliado").val(dataSede.pwa_delivery_comision_fija_no_afiliado);
 		$("#formDatosAPP #pwa_habilitar_delivery_app").val(dataSede.pwa_habilitar_delivery_app);
 		$("#formDatosAPP #pwa_delivery_servicio_propio").val(dataSede.pwa_delivery_servicio_propio);
 

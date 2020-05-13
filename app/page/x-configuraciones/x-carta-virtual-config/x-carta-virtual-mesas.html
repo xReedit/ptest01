@@ -15,6 +15,28 @@
                     </div>
                 </template>
             </div>
+            <br><br>
+            <h3>Otros Codigos QR</h3>
+            <p>Toca para descargar.</p>
+            <div class="xLinea2"></div>
+            <div class="content-qr">
+                <template is="dom-repeat" items="{{objListOtherQr}}" as="item_o">
+                    <div class="codigo-qr xCursor" onclick="descargarOtroQR(this)" data-index = [[index]]>                        
+                        <img src="{{item_o.codigo}}" alt="">
+                        <span>{{item_o.titulo}}</span>
+                    </div>
+                </template>
+            </div>
+
+            <br><br>
+            <h3>Modelo de afiche</h3>
+            <p>Toca para descargar.</p>
+            <div class="xLinea2"></div>           
+            <a href="{{imgAfiche}}" download>
+                <img class="xCursor" src="{{imgAfiche}}" alt="" width="100">
+            </a>       
+            
+
             
             <br><br><br><br><br><br>
         </div>
@@ -38,6 +60,10 @@
 
     function xIniCartaVirtualMesas() {
         console.log('ini mesa carta');
+
+        xThisCartaVMesas.imgAfiche = URL_IMG_CARTA + 'afiche_qr_modelo.jpg';
+        console.log('xThisCartaVMesas.imgAfiche', xThisCartaVMesas.imgAfiche);
+
         loadDatosCartaMesas();
         // loadReglasPwa();
     }
@@ -53,8 +79,42 @@
                 x.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${x.codigo}`;
                 return x;
             })
-            console.log(xThisCartaVMesas.objListMesasQr);
+            // console.log(xThisCartaVMesas.objListMesasQr);
+
+
+            // codigo qr para llevar
+            xThisCartaVMesas.objListOtherQr = [];
+            var listOther = [];
+            xThisCartaVMesas.qrLLevar = {};
+            var _cod = res.datos[0].qr_para_llevar;
+            xThisCartaVMesas.qrLLevar.codigoDownload = `https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=${_cod}`;
+            xThisCartaVMesas.qrLLevar.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${_cod}`;
+            xThisCartaVMesas.qrLLevar.titulo = 'Solo para llevar';
+            
+            // codigo qr delivery
+            xThisCartaVMesas.qrDelivery = {};
+            _cod = res.datos[0].qr_delivery;
+            xThisCartaVMesas.qrDelivery.codigoDownload = `https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=${_cod}`;
+            xThisCartaVMesas.qrDelivery.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${_cod}`;
+            xThisCartaVMesas.qrDelivery.titulo = 'Delivery';
+
+            listOther.push(xThisCartaVMesas.qrLLevar);
+            listOther.push(xThisCartaVMesas.qrDelivery);
+            xThisCartaVMesas.objListOtherQr = JSON.parse(JSON.stringify(listOther));
+
+            console.log('xThisCartaVMesas.objListOtherQr', xThisCartaVMesas.objListOtherQr);
         });
+    }
+
+    function descargarAfiche() {
+        window.open(xThisCartaVMesas.imgAfiche, 'Afiche', "width=500,height=500");
+    }
+
+    function descargarOtroQR(obj) {
+        const index = obj.dataIndex;
+        const fileDown = xThisCartaVMesas.objListOtherQr[index];
+        const url = fileDown.codigoDownload;
+        window.open(url, "CodigoQR", "width=500,height=500");
     }
 
     function descarGarQR(obj) {
@@ -107,7 +167,11 @@
             properties: {
                 xt_org:Number,
                 xt_idsede:Number,
-                objListMesasQr: Object
+                objListMesasQr: Object,
+                qrLLevar: Object,
+                qrDelivery: Object,
+                objListOtherQr: Object,
+                imgAfiche: String
             },
             attached: function () {                
                 xThisCartaVMesas = this;

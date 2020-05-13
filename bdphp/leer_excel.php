@@ -18,9 +18,14 @@ $excel = new PhpExcelReader;
     break;  
 }
 */
+
+// echo "lego";
+
  $filexls="../file/".$_POST['f'];
     $excel->read($filexls);    
     sheetDataProductos($excel->sheets[0]);
+
+
 
 function sheetDataProductos($sheet) {      
   $bdP=new xManejoBD('restobar');
@@ -77,7 +82,7 @@ function sheetDataProductos($sheet) {
         if($idt==''){
           $sql="insert into producto_familia(descripcion,idorg,idsede)value('".$cell."',".$idorg.",".$idsede.")";                    
           $bdP->xConsulta_NoReturn($sql); 
-	  //$idt=$bdP->xConsulta_NoReturn($sql);    
+    //$idt=$bdP->xConsulta_NoReturn($sql);    
           // $idt=$bdP->xConsulta_UltimoId($sql);     
           
           // 191118 -- el id es char ej: f1
@@ -143,9 +148,9 @@ function sheetDataProductos($sheet) {
     //echo 'new:'.$xrow_producto_new;
     if($xrow_producto_new==0){
       $sqlProducto="insert into producto (descripcion,idproducto_familia,codigo_barra,stock_minimo,precio,precio_unitario,precio_venta, idorg, idsede) values ".$re;            
-      echo ' | sql:'.$sqlProducto;
+      // echo ' | sql:'.$sqlProducto;
       //echo 'add producto '.$sqlProducto;
-      // $idProducto=$bdP->xConsulta_UltimoId($sqlProducto);
+      $idProducto=$bdP->xConsulta_UltimoId($sqlProducto);
       $reDP=$reDP.'('.$IdAlmacen.','.$idProducto.','.$row_cant_almacem.','.$fecha_actual.'),';        
       $sqlProductoDetalle=$sqlProductoDetalle."INSERT INTO producto_stock (idproducto, idalmacen, stock ) VALUES (".$idProducto.",".$IdAlmacen.",".$row_cant_almacem."); ";
     }else{
