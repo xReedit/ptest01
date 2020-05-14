@@ -111,12 +111,14 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
     let cantAddSubtotal = 0;
     xArraySubTotales.map(x => {
         if (x.id === undefined) { return; } // id remplaza a tachado es decir no se aceptan subtotales
+        if (x.id === 0) { return; } // es el sub total cunado viene de papaya express
         if (x.tachado === true) { return; }
         if (x.esImpuesto === "1") { return; }
 
-        const seccion = x.id.indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
+        const seccion = x.id.toString().indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
         // const cantidad = x.cantidad ? x.cantidad : 1;
-        const cantidad = parseInt(x.importe / x.punitario);
+        const _pUnitario = x.punitario ? parseFloat(x.punitario) : parseFloat(x.importe); // para calcular la cantidad cuando es por item // si este cobro es por pedido entonces el punitario es igual al total
+        const cantidad = parseInt(parseFloat(x.importe) / _pUnitario);
         const index = group.length+1; // en facturacion electronica el id debe ser numero
 
         cantAddSubtotal = x.importe; // para aumentar al subtotal xArraySubTotales

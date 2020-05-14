@@ -113,7 +113,7 @@
 								<paper-fab icon="add" onclick="xOpenLULI()" title="[F8] Agregar item" tabindex="0" class="btnAdd2"></paper-fab>
 							</div>
 							<h3 id="p_mesa">MESA 02</h3>
-							<div class="xfont11"><span id="p_correlativo"> CO: 00112</span><span id="p_referencia"> DR VALDES</span><span id="p_antendido"> | ATENDIDO POR: ORLANDO</span></div>
+							<div class="xfont11 pb-3"><span id="p_correlativo"> CO: 00112</span><span id="p_referencia"> DR VALDES</span><span id="p_antendido"> | ATENDIDO POR: ORLANDO</span></div>
 							<div class="xdiv-info-delivery xInvisible lh-15" id="content-info-delivery">
 								<div class="xfont11"  style="padding: 5px 0px 5px 0px;" id="txt-info-delivery">DELIVERY: 42299556 | MARCELO RAMIREZ | JR. REYES GUERRA 7 | 745212 | PAGA CON: 420 : EFECTIVO</div>
 								<div id="div-info-delivery-from-app" class="xInvisible" style="padding: 5px 0px 5px 0px; border-top: 1px solid #bbbb; background: antiquewhite;">		
@@ -1651,6 +1651,8 @@ function xLoadDetallesPedido (obj){
 	//armar cantidad de pedidos
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido}})
 	.done( function (dtDpedido) {
+
+		var isDelivery = false;
 		var xdtDpedido=$.parseJSON(dtDpedido);
 		var optionDeliveryCliente, isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = ''; // si el pedido es delivery y viene de la app
 		xdtDpedido=xdtDpedido.datos;
@@ -1662,52 +1664,57 @@ function xLoadDetallesPedido (obj){
 
 		datosDelivery = xdtDpedido[0].json_datos_delivery;
 		datosDelivery = datosDelivery != '' && datosDelivery != '{}' && datosDelivery != '[]' ? JSON.parse(datosDelivery) : null;
-		console.log('datosDelivery', datosDelivery);
-
-		// datos del delivery app cliente
-		optionDeliveryCliente = datosDelivery;
-		isClienteDeliveryFromApp = optionDeliveryCliente.p_header.isCliente === 1 && optionDeliveryCliente.p_header.delivery === 1;		
+		isDelivery = datosDelivery ? true : false;
+		console.log('datosDelivery', datosDelivery);		
 		
 
-		if ( isClienteDeliveryFromApp ) {
-			isComercioServicioDeliveryPropio = optionDeliveryCliente.p_header.arrDatosDelivery.establecimiento.pwa_delivery_servicio_propio === 0;
-			
-			isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
+		if (isDelivery) {
+
+			// datos del delivery app cliente
+			optionDeliveryCliente = datosDelivery;
+			isClienteDeliveryFromApp = optionDeliveryCliente.p_header.isCliente === 1 && optionDeliveryCliente.p_header.delivery === 1;		
+		
+			if ( isClienteDeliveryFromApp ) {
+				isComercioServicioDeliveryPropio = optionDeliveryCliente.p_header.arrDatosDelivery.establecimiento.pwa_delivery_servicio_propio !== 0;
+				
+				isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
 
 
-			xtitulo = 'Pedido #' + xp_sel_numpedido; // para el titulo
-			if ( optionDeliveryCliente.p_header.arrDatosDelivery.pasoRecoger ) {
-				pintarInfoDeliveryCliente = 'El cliente pasa a recoger. ';
-			} else {
-				pintarInfoDeliveryCliente = !xdtDpedido[0].nom_repartidor ? 'Repartidor ... ' :  'REPARTIDOR: ' + xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor;
+				xtitulo = 'Pedido #' + xp_sel_numpedido; // para el titulo
+				if ( optionDeliveryCliente.p_header.arrDatosDelivery.pasoRecoger ) {
+					pintarInfoDeliveryCliente = 'El cliente pasa a recoger. ';
+				} else {
+					pintarInfoDeliveryCliente = !xdtDpedido[0].nom_repartidor ? 'Repartidor ... ' :  'REPARTIDOR: ' + xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor;
+				}
+
+				// facturacion
+				const dtFacDelivery = optionDeliveryCliente.p_header.arrDatosDelivery.tipoComprobante;
+				const dtMetodoPago = optionDeliveryCliente.p_header.arrDatosDelivery.metodoPago;
+				const fac_razon_social = dtFacDelivery.dni ? dtFacDelivery.dni : 'Publico en general' + ' | ' + (dtFacDelivery.otro_dato || '');
+				const desRepartidorPaga = dtMetodoPago.idtipo_pago === 2 ? 'El pedido YA ESTA pagado, solo recogen.' : 'El pedido DEBE ser pagado';
+				pintarInfoDeliveryCliente += ' | Facturacion: ' + dtFacDelivery.descripcion + ' ' + fac_razon_social + '  |  ' + desRepartidorPaga;
+
+				$('#div-info-delivery-from-app').removeClass('xInvisible');
+
+				// totales
+				// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
+				arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
 			}
 
-			// facturacion
-			const dtFacDelivery = optionDeliveryCliente.p_header.arrDatosDelivery.tipoComprobante;
-			const dtMetodoPago = optionDeliveryCliente.p_header.arrDatosDelivery.metodoPago;
-			const fac_razon_social = !dtFacDelivery.nombre ? 'Publico en general' : dtFacDelivery.nombre + ' | ' + dtFacDelivery.otro_dato || '';
-			const desRepartidorPaga = dtMetodoPago.idtipo_pago === 2 ? 'El pedido YA ESTA pagado, solo recogen.' : 'El pedido DEBE ser pagado';
-			pintarInfoDeliveryCliente += ' | Facturacion: ' + dtFacDelivery.descripcion + ' ' + fac_razon_social + '  |  ' + desRepartidorPaga;
+			///
 
-			$('#div-info-delivery-from-app').removeClass('xInvisible');
+			datosDelivery = typeof datosDelivery === 'object' ? datosDelivery.p_header ? datosDelivery.p_header.delivery === 0 ? null : datosDelivery.p_header.arrDatosDelivery : datosDelivery : datosDelivery;
+			
+			if (datosDelivery) {
+				$('#content-info-delivery').removeClass('xInvisible');
+				datosDelivery.paga_con = datosDelivery.paga_con.replace('undefined', '');
+				const infoDelivery =  datosDelivery.num_doc || '' + ' | ' + datosDelivery.nombre + ' | '+  datosDelivery.direccion + ' | '+  datosDelivery.telefono + ' | '+  datosDelivery.paga_con;
+				$('#txt-info-delivery').text('DELIVERY: ' + infoDelivery);
 
-			// totales
-			// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
-			arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
-		}
-
-		///
-
-		datosDelivery = typeof datosDelivery === 'object' ? datosDelivery.p_header ? datosDelivery.p_header.delivery === 0 ? null : datosDelivery.p_header.arrDatosDelivery : datosDelivery : datosDelivery;
-		
-		if (datosDelivery) {
-			$('#content-info-delivery').removeClass('xInvisible');
-			const infoDelivery =  datosDelivery.num_doc || '' + ' | ' + datosDelivery.nombre + ' | '+  datosDelivery.direccion + ' | '+  datosDelivery.telefono + ' | '+  datosDelivery.paga_con;
-			$('#txt-info-delivery').text('DELIVERY: ' + infoDelivery);
-
-			$('#txt-info-delivery-from-app').text(pintarInfoDeliveryCliente);
-		} else {
-			$('#content-info-delivery').addClass('xInvisible');
+				$('#txt-info-delivery-from-app').text(pintarInfoDeliveryCliente);
+			} else {
+				$('#content-info-delivery').addClass('xInvisible');
+			}
 		}
 
 		//PEDIDOS
@@ -2518,7 +2525,7 @@ function xPintarEstadoPedido() {
 					xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido xOcupado '+xidtipo_c+' xCursor"'
 						+' data-estado="a" data-tpc="'+xidtipo_c+'" data-hora="'+itemList.hora+'" data-p="'+itemList.idpedido+'"'
 						+' data-nummesa="'+itemList.nummesa+'" data-correlativo="'+itemList.correlativo_dia+'"'
-						+' data-numpedido="'+itemList.numpedido+'"  data-abrir-detalle="1">'+ // onclick="xLoadDetallesPedido(this)"
+						+' data-numpedido="'+itemList.numpedido+'"  data-abrir-detalle="1" onclick="xLoadDetallesPedido(this)">'+ // onclick="xLoadDetallesPedido(this)"
 						'<p class="tipo">Pedido</p>'+
 						'<h3 class="numero xBold">'+xCeroIzq(itemList.correlativo_dia,4)+ '</h3>'+
 						'<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>'+
