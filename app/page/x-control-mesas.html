@@ -1656,11 +1656,15 @@ function xLoadDetallesPedido (obj){
 		var xdtDpedido=$.parseJSON(dtDpedido);
 		var optionDeliveryCliente, isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = ''; // si el pedido es delivery y viene de la app
 		xdtDpedido=xdtDpedido.datos;
+		
+		var atendidoPor = xdtDpedido[0].nom_usuario ? xdtDpedido[0].nom_usuario : 'Cliente';
+		atendidoPor = 'ATENDIDO POR: '+ atendidoPor  +' | ';
+		
 
 		//encabezado
 		$("#p_correlativo").text('CO-'+xCeroIzq(xdtDpedido[0].correlativo_dia,5)+' | ');
 		$("#p_referencia").text(xdtDpedido[0].referencia +' | ');
-		$("#p_antendido").text('ATENDIDO POR: '+xdtDpedido[0].nom_usuario+' | ');
+		$("#p_antendido").text(atendidoPor);
 
 		datosDelivery = xdtDpedido[0].json_datos_delivery;
 		datosDelivery = datosDelivery != '' && datosDelivery != '{}' && datosDelivery != '[]' ? JSON.parse(datosDelivery) : null;
@@ -1672,7 +1676,7 @@ function xLoadDetallesPedido (obj){
 
 			// datos del delivery app cliente
 			optionDeliveryCliente = datosDelivery;
-			isClienteDeliveryFromApp = optionDeliveryCliente.p_header.isCliente === 1 && optionDeliveryCliente.p_header.delivery === 1;		
+			isClienteDeliveryFromApp = optionDeliveryCliente.p_header.delivery === 1;		
 		
 			if ( isClienteDeliveryFromApp ) {
 				isComercioServicioDeliveryPropio = optionDeliveryCliente.p_header.arrDatosDelivery.establecimiento.pwa_delivery_servicio_propio !== 0;
