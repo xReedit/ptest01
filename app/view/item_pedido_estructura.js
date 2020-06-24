@@ -113,7 +113,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
         if (x.id === undefined) { return; } // id remplaza a tachado es decir no se aceptan subtotales
         if (x.id === 0) { return; } // es el sub total cunado viene de papaya express
         if (x.tachado === true) { return; }
-        if (x.esImpuesto === "1") { return; }
+        if (x.esImpuesto.toString() === "1") { return; }
 
         const seccion = x.id.toString().indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
         // const cantidad = x.cantidad ? x.cantidad : 1;

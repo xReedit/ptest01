@@ -31,9 +31,10 @@
 		var xThisComTipoPagoOption;
 
 		function getAllTipoPagoOption() {
+			const op = xThisComTipoPagoOption.ispagoapp ? 601 : 6;
 			$.ajax({
 					type: 'GET',
-					url: '../../bdphp/log_componentes.php?op=6'
+					url: '../../bdphp/log_componentes.php?op='+op
 				})
 				.done(function (dtValues) {
 					dtValues = $.parseJSON(dtValues);
@@ -100,10 +101,11 @@
 			properties: {
 				// idTipoIngreso: {type : Number, notify: true, reflectToAttribute: true},
 				novisibles: {type: String, value:''},
+				ispagoapp: {type: Boolean, value:false, reflectToAttribute: true, notify: true},
 				deshabilitado: {type: Boolean, value:false},
 				hiddenIconBorrar: {type: Boolean, value:true},
 				idselect: {type: Number, value:1},
-				reqcliente: {type: Number, value:0},
+				reqcliente: {type: Number, value:0},				
 				limite: {type: Number, value:1},
 				list: [],
 				list_tipo_pago: {
@@ -126,6 +128,10 @@
 				'onchange': 'getTipoPagoOption',
 				'onclick': 'getTipoPagoOption'
 			},
+			setResetOption: () => {
+				getAllTipoPagoOption(); // vuelve a buscar
+			}
+			,
 			tipoPagoNameChanged: function (categoria) {
 				return categoria;
 			},

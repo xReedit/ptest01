@@ -29,6 +29,10 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     const isExoneradoIGV = procentajeIGV.activo === "1" ? true : false; //1 = desactivado => exonerado
 
 
+
+    // cambio para sumar los costos negativos, si es que es delivery y el comercio paga
+	xArraySubTotales = darFormatoSubTotalesParaFacturacion(xArraySubTotales, false);
+
     // cpe = false subtotal + adicional -> lo ponemos en xImprimirComprobanteAhora() // para mostrar en la impresion
     var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false);
     xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV, isExoneradoIGV);
@@ -186,9 +190,9 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
             "codigo_producto_gsl": "90101500",
             "unidad_de_medida": "NIU",
             "cantidad": x.cantidad,
-            "valor_unitario": x.punitario,
+            "valor_unitario": x.punitario || x.precio_total,
             "codigo_tipo_precio": "01",
-            "precio_unitario": x.punitario,
+            "precio_unitario": x.punitario || x.precio_total,
             "codigo_tipo_afectacion_igv": codigo_tipo_afectacion_igv,
             "total_base_igv": total_base_igv,
             "porcentaje_igv": ValorIGV,

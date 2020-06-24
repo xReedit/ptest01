@@ -33,6 +33,10 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	
 	// escribir el importe total en letras
 	// siempre ultimo es es el total
+
+	// cambio para sumar los costos negativos, si es que es delivery y el comercio paga
+	xArraySubTotales = darFormatoSubTotalesParaFacturacion(xArraySubTotales, false);
+
 	const index_total = xArraySubTotales.length-1;
 	const total_pagar = parseFloat(xArraySubTotales[index_total].importe);
 	xArraySubTotales[index_total].importe_letras = numeroALetras(total_pagar);

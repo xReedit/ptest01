@@ -10,7 +10,7 @@
 
 <dom-module id="x-pago">
 	<template>
-		<div style="max-width:480px;">
+		<div style="max-width:480px; min-width:480px;">
 			<div class="xEnca_pago">
 				<h2 class="ptotal">{{total}}</h2>
 				<p class="pdif" id="pdif">{{diferencia}}</p>
@@ -47,7 +47,10 @@
 
 							<paper-icon-button icon="icons:search" title="Buscar DNI"
 								onclick="xValidarDNIRUC(null, event, false)"
-								style="position: absolute; right: 70px; margin-top: -48px;">
+								style="position: relative;
+								right: 10px;
+								margin-top: -48px;
+								float: right;">
 							</paper-icon-button>
 
 							<div class="xInvisible" id="progress_cliente">
@@ -86,7 +89,7 @@
 					<!-- <paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
 						class="btnAdd2"></paper-fab>
 					<br> -->
-					<x-comp-table-forma-pago id="comp-table-fp" importetotal$="{{importe_total_cobrar}}"></x-comp-table-forma-pago>
+					<x-comp-table-forma-pago id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="{{pedidoPagadoFromAPP}}"></x-comp-table-forma-pago>
 					<br>
 
 					<!-- <table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
@@ -1193,6 +1196,7 @@
 			change_monto_pago_valid: boolean = true, // deshabilita boton f10 registrar pago si el importe recibido no es default o es menor
 			ComprobanteRequiereCliente: boolean = false,
 			tipoPagoRequiereCliente: boolean = false,
+			pedidoPagadoFromAPP: boolean = false, // el pedido fue pagado desde la app papaya express
 			// modoSoloComprobante: boolean = false,
 			_tipo: {
 				type: Number,
@@ -1216,6 +1220,11 @@
 		},
 		open: function (reponde) {
 			xdialoag_pago.open();
+		},
+		setIsPedidoPagadoFromAPP: function (val = false) {
+			// Si el epdido ya fue pagado con tarjeta desde papaya express
+			this.pedidoPagadoFromAPP = val;
+			xCompTableFP.setRsetList()
 		},
 		setVal: function (val) {
 			// xThisPago.total = val;
@@ -1292,7 +1301,7 @@
 			// solo para ingresar datos del cliente e imprimir comprabantes
 			// desde registro de pagos, pedido pagado
 			this.modoSoloComprobante = true;
-		},
+		},		
 		setModoSoloProveedor: function () {
 			// solo pantalla de pago, esto se usara en compras y para registrar solo pagos (no tiene en cuenta: cliente o proveedor)
 			this.modoSoloProveedor = true;

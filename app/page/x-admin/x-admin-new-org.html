@@ -169,12 +169,28 @@
 									<paper-checkbox id="check_habilitar_solidaridad"><span>Habilitar solidaridad</span></paper-checkbox>
 									<hr><br>
 
+									<p>Comercio paga el servicio de entrega: Cuando el repartidor llegue recoger el pedido pagara el total - costo de delivery</p><br>
+									<paper-checkbox id="check_habilitar_comercio_paga_entrega"><span>Comercio paga el servicio de entrega</span></paper-checkbox>
+									<hr><br>
+
+									<p>Comercio puede llamar a un repartidor de papaya express?</p><br>
+									<paper-checkbox id="check_habilitar_llamar_repartidor"><span>Habilitar llamar  a repartdior</span></paper-checkbox>
+									<hr><br>
+
+									<p>Comercio acepta pedidos programados?</p><br>
+									<paper-checkbox id="check_habilitar_pedidos_programados"><span>Habilitar pedidos programados</span></paper-checkbox>
+									<hr><br>
+
 									<p>Comision FIJA comercio no afiliado - comision para la plataforma (x ej: 1.50)</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="COMSION FIJA COMERCIO NO AFILIADO" id="pwa_delivery_comision_fija_no_afiliado" name="pwa_delivery_comision_fija_no_afiliado" espaciar required>
 									<br><br>
 
 									<p>Importe minimo de delivery</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="IMPORTE MINIMO DE CONSUMO" id="pwa_delivery_importe_min" name="pwa_delivery_importe_min" espaciar required>
+									<br><br>
+
+									<p>Importe que acumula en pedidos para ser llevados por un solo repartidor</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="IMPORTE ACUMULA" id="pwa_delivery_monto_acumla" name="pwa_delivery_monto_acumla" espaciar required>
 									<br><br>
 
 									<p>Datos para delivery:</p>
@@ -219,6 +235,15 @@
 
 									<br><br>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="TIEMPO DE ENTREGA EJ: 10 A 15 MIN" onChange="conMayusculas(this)" id="tiempo_aprox_entrega" name="tiempo_aprox_entrega" espaciar required>
+
+									<br><br>
+									<p>TIEMPO transcurridos para notificar al repartidor:</p><br>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="TIEMPO TRANSUCURRIDO PARA NOTIFICAR A REPARTIDOR EJ: Comercio prepara en 10min y el repartidor se lo avisa en 5(transucirridos)" onChange="conMayusculas(this)" id="pwa_min_despacho" name="pwa_min_despacho" espaciar required>
+									
+									
+									<br><br>
+									<p>Telefono a donde notifica pedido delivery nuevo - Si esta en blanco no notifica:</p><br>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO NOTIFICA PEDIDO" onChange="conMayusculas(this)" id="pwa_delivery_telefono_notifica_pedido" name="pwa_delivery_telefono_notifica_pedido" espaciar required>
 									<br>
 									<br><br>
 
@@ -240,6 +265,9 @@
 										<input type="text" id="pwa_delivery_habilitar_recojo_local" name="pwa_delivery_habilitar_recojo_local">
 										<input type="text" id="pwa_delivery_comercio_solidaridad" name="pwa_delivery_comercio_solidaridad">
 										<input type="text" id="pwa_delivery_acepta_tarjeta" name="pwa_delivery_acepta_tarjeta">
+										<input type="text" id="pwa_delivery_comercio_paga_entrega" name="pwa_delivery_comercio_paga_entrega">
+										<input type="text" id="pwa_delivery_habilitar_llamar_repartidor_papaya" name="pwa_delivery_habilitar_llamar_repartidor_papaya">
+										<input type="text" id="pwa_delivery_habilitar_pedido_programado" name="pwa_delivery_habilitar_pedido_programado">
 									</div>
 								</form>
 								<br><br><br>
@@ -445,6 +473,9 @@ function transferenciaCompleta(xfile){
 		check_afiliado_recojo_local.checked = dataSede.pwa_delivery_habilitar_recojo_local === "0" ? false : true;
 		check_habilitar_solidaridad.checked = dataSede.pwa_delivery_comercio_solidaridad === "0" ? false : true;
 		check_habilitar_tarjeta.checked = dataSede.pwa_delivery_acepta_tarjeta === "0" ? false : true;
+		check_habilitar_comercio_paga_entrega.checked  = dataSede.pwa_delivery_comercio_paga_entrega === "0" ? false : true;
+		check_habilitar_llamar_repartidor.checked  = dataSede.pwa_delivery_habilitar_llamar_repartidor_papaya === "0" ? false : true;
+		check_habilitar_pedidos_programados.checked  = dataSede.pwa_delivery_habilitar_pedido_programado === "0" ? false : true;
 
 
 		selTipo.value = dataSede.tipo;
@@ -470,7 +501,12 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_habilitar_recojo_local").val(dataSede.pwa_delivery_habilitar_recojo_local);
 		$("#formDatosAPP #pwa_delivery_comercio_solidaridad").val(dataSede.pwa_delivery_comercio_solidaridad);
 		$("#formDatosAPP #pwa_delivery_acepta_tarjeta").val(dataSede.pwa_delivery_acepta_tarjeta);
-
+		$("#formDatosAPP #pwa_delivery_comercio_paga_entrega").val(dataSede.pwa_delivery_comercio_paga_entrega);
+		$("#formDatosAPP #pwa_delivery_habilitar_llamar_repartidor_papaya").val(dataSede.pwa_delivery_habilitar_llamar_repartidor_papaya);
+		$("#formDatosAPP #pwa_min_despacho").val(dataSede.pwa_min_despacho);		
+		$("#formDatosAPP #pwa_delivery_telefono_notifica_pedido").val(dataSede.pwa_delivery_telefono_notifica_pedido);		
+		$("#formDatosAPP #pwa_delivery_monto_acumla").val(dataSede.pwa_delivery_monto_acumla);		
+		$("#formDatosAPP #pwa_delivery_habilitar_pedido_programado").val(dataSede.pwa_delivery_habilitar_pedido_programado);		
 		// check dias que atienden
 		$('.dia_atencion').each((i, e) => {e.checked = false});
 
@@ -599,6 +635,9 @@ function transferenciaCompleta(xfile){
 		const _check_afiliado_recojo_local = check_afiliado_recojo_local.checked ? 1 : 0;
 		const _check_habilitar_solidaridad = check_habilitar_solidaridad.checked ? 1 : 0;
 		const _check_habilitar_tarjeta = check_habilitar_tarjeta.checked ? 1 : 0;
+		const _check_habilitar_comercio_paga_entrega = check_habilitar_comercio_paga_entrega.checked ? 1 : 0;
+		const _check_habilitar_llamar_repartidor = check_habilitar_llamar_repartidor.checked ? 1 : 0;
+		const _check_habilitar_pedidos_programados = check_habilitar_pedidos_programados.checked ? 1 : 0;
 		
 
 		var dias_atienden = '';
@@ -639,6 +678,9 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_habilitar_recojo_local").val(_check_afiliado_recojo_local);
 		$("#formDatosAPP #pwa_delivery_comercio_solidaridad").val(_check_habilitar_solidaridad);
 		$("#formDatosAPP #pwa_delivery_acepta_tarjeta").val(_check_habilitar_tarjeta);
+		$("#formDatosAPP #pwa_delivery_comercio_paga_entrega").val(_check_habilitar_comercio_paga_entrega);
+		$("#formDatosAPP #pwa_delivery_habilitar_llamar_repartidor_papaya").val(_check_habilitar_llamar_repartidor);
+		$("#formDatosAPP #pwa_delivery_habilitar_pedido_programado").val(_check_habilitar_pedidos_programados);
 
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede",$("#formDatosAPP").serialize(),function(xUltimoId){

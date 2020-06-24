@@ -255,3 +255,63 @@ function getImporteTotalSubTotalesDelivery(arrTotales = null) {
     // -2 = servicio deliver -3 = propina
     return rowTotal.importe;
   }
+
+
+
+// quitamos servicio delivery y propina del subtotal
+  // flagSolicitaRepartidor = cuando comercio con repartidor propio solicita repartidor de la red papaya express
+function darFormatoSubTotalesComisionRepartidor(sedeInfo, arrTotales, costoEntrega, flagSolicitaRepartidor = false) {
+    console.log('aaa');
+
+    // si tiene sus propios repartidores no da formato no quita nada
+    if ( sedeInfo.pwa_delivery_servicio_propio === '1' && !flagSolicitaRepartidor ) { return arrTotales; }
+
+
+    // agregar o restar el importe del costo de entrega SI el comercio paga el costo de entrega pwa_delivery_comercio_paga_entrega
+    if ( sedeInfo.pwa_delivery_comercio_paga_entrega === '1' || flagSolicitaRepartidor) {
+      // ingresamos en la penultima postion del arrTotales
+      const postionInsert = arrTotales.length - 1;
+      const _row = {
+        descripcion: 'Costo de Entrega',
+        esImpuesto: 0,
+        id: -4,
+        importe: - costoEntrega,
+        quitar: false,
+        tachado: false,
+        visible: false,
+        visible_cpe: false
+      };
+      arrTotales.splice(postionInsert, 0, _row);
+
+      // console.log('costo de entrega insertado', arrTotales);
+	}	
+
+    // console.log(arrTotales);
+    const rowTotal = arrTotales[arrTotales.length - 1];
+
+    // si repartidores propio muestra comisiciones y propina
+    if ( sedeInfo.pwa_delivery_servicio_propio === '1') {
+
+      rowTotal.importe = arrTotales.filter(x => x.descripcion !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+      return arrTotales;
+
+    } else {
+      // -2 = servicio deliver -3 = propina
+      rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && x.descripcion !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+      return arrTotales.filter(x => x.id !== -2 && x.id !== -3);
+    }
+  }
+
+
+    // quitamos pwa_delivery_comercio_paga_entrega costo de entrega y lo volvemos a sumar, por que el costo de entrega que paga el comercio no figura en el comprobante
+	function darFormatoSubTotalesParaFacturacion(arrTotales, isSumar = true) {
+		const rowCostoEntrega = arrTotales.filter(x => x.id === -4)[0];
+		if ( rowCostoEntrega ) {
+			if ( isSumar  ) {
+				const rowTotal = arrTotales[arrTotales.length - 1];
+				rowTotal.importe += (rowCostoEntrega.importe * -1); // este dato es negativo
+			}
+		  return arrTotales.filter(x => x.id !== -4); // quitamos costo de entrega que paga el comericio
+		}
+		return arrTotales;
+	  }
