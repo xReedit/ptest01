@@ -113,8 +113,46 @@
 				
 				//
 				$idItem2 = $subitem['iditem2'] ? $subitem['iditem2'] : $subitem['iditem'];
-				$pwa = $subitem['pwa'] ? $subitem['pwa'] : 0;
-				$sql_pedido_detalle=$sql_pedido_detalle.'(?,'.$tipo_consumo.','.$categoria.','.$subitem['iditem'].','.$idItem2.',"'.$subitem['idseccion'].'","'.$subitem['cantidad'].'","'.$subitem['cantidad'].'","'.$subitem['precio'].'","'.$precio_total.'","'.$precio_total.'","'.$subitem['des'].$indicaciones_p.'",'.$viene_de_bodega.','.$tabla_procede.','.$pwa.'),';  
+				$pwa = $subitem['pwa'] ? $subitem['pwa'] : 0;				
+				$subItemSelect = json_encode($subitem['subitems_view'], true);
+				
+				//  -- 29/07/2020 SI TIENE SUBITEMS ENTONCES EN EL DETALLE DESGLOSA
+				// -- ESTO PARA CONTROL DE PEDIDOS
+
+				$lisSubItemsSelect = $subitem['subitems_view'];
+				if ( $lisSubItemsSelect == null ) {
+
+					// print $subItemSelect;
+					$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$subitem['cantidad']."','".$subitem['cantidad']."','".$subitem['precio']."','".$precio_total."','".$precio_total."','".$subitem['des'].$indicaciones_p."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."'),";
+
+				} else {
+					$pUnitarioItem = $subitem['precio'];
+					$DesItemUp = $subitem['des'];
+					foreach ($lisSubItemsSelect as $sub) {						
+
+						$pUnitario = $sub['precio'];
+						$desItem = $DesItemUp.' ('.$sub['des'].')';
+						$cantSeleccionadaSubItem = $sub['cantidad_seleccionada'];
+
+						if ( $pUnitario == 0 ) {
+							$pUnitario = $pUnitarioItem;	
+							$pTotal = $pUnitario * $cantSeleccionadaSubItem;
+						}
+						else { 
+							$pUnitario = $pUnitario / $cantSeleccionadaSubItem + $pUnitarioItem;
+							$pTotal = $pUnitario * $cantSeleccionadaSubItem;
+						}
+
+						$subitem['des'] = $desItem;
+						$subitem['cantidad'] = $cantSeleccionadaSubItem;
+						$subitem['precio'] = number_format($pUnitario, 2);
+						$precio_total = number_format($pTotal, 2);
+
+						// print $subItemSelect;
+						$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$subitem['cantidad']."','".$subitem['cantidad']."','".$subitem['precio']."','".$precio_total."','".$precio_total."','".$subitem['des']."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."'),";
+
+					}
+				}
 
 			}
 
@@ -166,7 +204,14 @@
 			
 
 			// si es delivery y si trae datos adjuntos -- json-> direccion telefono forma pago
-			$json_datos_delivery=array_key_exists('arrDatosDelivery', $x_array_pedido_header) ? json_encode($x_array_pedido_header['arrDatosDelivery']) : '';
+			$json_datos_delivery='';
+			if ( array_key_exists('arrDatosDelivery', $x_array_pedido_header) ) {
+				$arrD = $x_array_pedido_header['arrDatosDelivery'];
+				
+				// desde 03/08/2020 -- omologacion con papaya express
+				$x_array_pedido_header['delivery'] = array_key_exists('pasoRecoger', $arrD) ? 1 : 0;
+				$json_datos_delivery = json_encode(array('p_header' => $x_array_pedido_header, 'p_body' => $x_array_pedido_body, 'p_subtotales' => $x_array_subtotales));
+			}
 			
 
             // guarda pedido
@@ -192,7 +237,7 @@
 		$sql_pedido_detalle=substr ($sql_pedido_detalle, 0, -1);
 
 		//pedido_detalle
-		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla, pwa) values '.$sql_pedido_detalle;
+		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla, pwa, subitems) values '.$sql_pedido_detalle;
 		//pedido_subtotales
 		$sql_subtotales='insert into pedido_subtotales (idpedido,idorg,idsede,descripcion,importe, tachado) values '.$sql_subtotales;
 		// echo $sql_pedido_detalle;

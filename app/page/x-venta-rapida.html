@@ -936,8 +936,9 @@ function xEnviarACuenta(){
 
 function xNuevoPedidoVR(){
 		
-
+	localStorage.removeItem('::app3_woDUS::cxe');
 	window.localStorage.removeItem("::app3_sys_dta_pe");
+	xCompDatosDelivery.resetValInit();
 	//xArrayPedido=new Array();
 	//xDtSubTotales=new Array();
 	xPopupLoad.xopen();

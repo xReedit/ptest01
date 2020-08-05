@@ -323,6 +323,7 @@ function xOpenPage(xop, parametro){
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
 			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
 			return; 		
+		case 41: xruta = '/indicadores'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

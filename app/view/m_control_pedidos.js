@@ -120,6 +120,7 @@ function xOpenPage(xop, parametro){
 		case 8:	xruta='/historial_ventas';break;
 		case 9:	xruta='/historial_registro_pago_app';break;
 		case 22:xruta='/resumen_caja';break;
+		case 10:xruta='/indicadores';break;
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){

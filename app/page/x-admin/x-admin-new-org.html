@@ -113,6 +113,10 @@
 										<option value="PRODUCCION">PRODUCCION</option>
 									</select>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="FECHA INICIO" id="finicio" name="finicio" espaciar>
+
+									<p>COMISION FIJO MENSUAL</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="COSTO FIJO MENSUAL" id="costo_restobar_fijo_mensual" name="costo_restobar_fijo_mensual" espaciar>
+									<br><br>
 		
 									<div class="xInvisible">
 										<input type="text" id="idorg" name="idorg" value$="{{xIdOrg}}">
@@ -134,6 +138,12 @@
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="LATITUDE" id="latitude" name="latitude" espaciar required>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="LONGITUDE" id="longitude" name="longitude" espaciar required>
 									<br><br><br>
+
+									<p>Habilitar busqueda con mapa cuando es delivery. Si esta deshabilitado no tiene en cuenta si el servicio papaya express esta en esa zona y la direccion solo sera un campo de texto:</p><br>									
+									<paper-checkbox id="check_habilitar_busqueda_mapa"><span>Habilitar la busqueda de direccion con mapa</span></paper-checkbox>
+									<hr><br><br>
+
+									<hr>
 
 									<p>Datos para delivery:</p><br>
 									<!-- <label><input type="checkbox" name="" id="check_habilita_delivery">Habilitar delivery, para que la sede figure en papaya express</label> -->
@@ -181,6 +191,10 @@
 									<paper-checkbox id="check_habilitar_pedidos_programados"><span>Habilitar pedidos programados</span></paper-checkbox>
 									<hr><br>
 
+									<p>Servicio de reparto papaya express solo para pedidos desde la App?</p><br>
+									<paper-checkbox id="check_pwa_delivery_reparto_solo_app"><span>Habilitar servicio delivery solo pedidos desde la app</span></paper-checkbox>
+									<hr><br>
+
 									<p>Comision FIJA comercio no afiliado - comision para la plataforma (x ej: 1.50)</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="COMSION FIJA COMERCIO NO AFILIADO" id="pwa_delivery_comision_fija_no_afiliado" name="pwa_delivery_comision_fija_no_afiliado" espaciar required>
 									<br><br>
@@ -192,6 +206,10 @@
 									<p>Importe que acumula en pedidos para ser llevados por un solo repartidor</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="IMPORTE ACUMULA" id="pwa_delivery_monto_acumla" name="pwa_delivery_monto_acumla" espaciar required>
 									<br><br>
+
+									<p>COMISION ACORDADA (%) - colocar sin simbolo</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="COMISION ACORDADA" id="comsion_entrega" name="comsion_entrega" espaciar required>
+									<br><br>									
 
 									<p>Datos para delivery:</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" id="ciudad" name="ciudad" espaciar required>
@@ -268,6 +286,9 @@
 										<input type="text" id="pwa_delivery_comercio_paga_entrega" name="pwa_delivery_comercio_paga_entrega">
 										<input type="text" id="pwa_delivery_habilitar_llamar_repartidor_papaya" name="pwa_delivery_habilitar_llamar_repartidor_papaya">
 										<input type="text" id="pwa_delivery_habilitar_pedido_programado" name="pwa_delivery_habilitar_pedido_programado">
+										<input type="text" id="pwa_habilitar_busqueda_mapa" name="pwa_habilitar_busqueda_mapa">
+										<input type="text" id="pwa_delivery_reparto_solo_app" name="pwa_delivery_reparto_solo_app">
+										
 									</div>
 								</form>
 								<br><br><br>
@@ -460,6 +481,7 @@ function transferenciaCompleta(xfile){
 		$("#frm_sede #finicio").val(dataSede.finicio);
 		$("#frm_sede #pwa_time_limit").val(dataSede.pwa_time_limit);
 		$("#frm_sede #url_api_fac").val(dataSede.url_api_fac);
+		$("#frm_sede #costo_restobar_fijo_mensual").val(dataSede.costo_restobar_fijo_mensual);
 
 		check_print_server.checked = dataSede.ip_server_local === "0" ? false : true;
 		check_pwa.checked = dataSede.pwa === "0" ? false : true;
@@ -476,6 +498,8 @@ function transferenciaCompleta(xfile){
 		check_habilitar_comercio_paga_entrega.checked  = dataSede.pwa_delivery_comercio_paga_entrega === "0" ? false : true;
 		check_habilitar_llamar_repartidor.checked  = dataSede.pwa_delivery_habilitar_llamar_repartidor_papaya === "0" ? false : true;
 		check_habilitar_pedidos_programados.checked  = dataSede.pwa_delivery_habilitar_pedido_programado === "0" ? false : true;
+		check_habilitar_busqueda_mapa.checked = dataSede.pwa_habilitar_busqueda_mapa === "0" ? false : true;
+		check_pwa_delivery_reparto_solo_app.checked = dataSede.pwa_delivery_reparto_solo_app === "0" ? false : true;
 
 
 		selTipo.value = dataSede.tipo;
@@ -490,7 +514,7 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #tiempo_aprox_entrega").val(dataSede.tiempo_aprox_entrega);
 		$("#formDatosAPP #pwa_delivery_img").val(dataSede.pwa_delivery_img);
 		$("#formDatosAPP #dias_atienden").val(dataSede.dias_atienden);
-		$("#formDatosAPP #dias_atienden").val(dataSede.dias_atienden);
+		$("#formDatosAPP #comsion_entrega").val(dataSede.comsion_entrega);
 		$("#formDatosAPP #pwa_delivery_importe_min").val(dataSede.pwa_delivery_importe_min);
 		$("#formDatosAPP #pwa_delivery_comision_fija_no_afiliado").val(dataSede.pwa_delivery_comision_fija_no_afiliado);
 		$("#formDatosAPP #pwa_habilitar_delivery_app").val(dataSede.pwa_habilitar_delivery_app);
@@ -507,6 +531,9 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_telefono_notifica_pedido").val(dataSede.pwa_delivery_telefono_notifica_pedido);		
 		$("#formDatosAPP #pwa_delivery_monto_acumla").val(dataSede.pwa_delivery_monto_acumla);		
 		$("#formDatosAPP #pwa_delivery_habilitar_pedido_programado").val(dataSede.pwa_delivery_habilitar_pedido_programado);		
+		$("#formDatosAPP #pwa_habilitar_busqueda_mapa").val(dataSede.pwa_habilitar_busqueda_mapa);
+		$("#formDatosAPP #pwa_delivery_reparto_solo_app").val(dataSede.pwa_delivery_reparto_solo_app);
+			
 		// check dias que atienden
 		$('.dia_atencion').each((i, e) => {e.checked = false});
 
@@ -638,6 +665,8 @@ function transferenciaCompleta(xfile){
 		const _check_habilitar_comercio_paga_entrega = check_habilitar_comercio_paga_entrega.checked ? 1 : 0;
 		const _check_habilitar_llamar_repartidor = check_habilitar_llamar_repartidor.checked ? 1 : 0;
 		const _check_habilitar_pedidos_programados = check_habilitar_pedidos_programados.checked ? 1 : 0;
+		const _check_habilitar_busqueda_mapa = check_habilitar_busqueda_mapa.checked ? 1 : 0;
+		const _check_pwa_delivery_reparto_solo_app = check_pwa_delivery_reparto_solo_app.checked ? 1 : 0;
 		
 
 		var dias_atienden = '';
@@ -681,6 +710,8 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_comercio_paga_entrega").val(_check_habilitar_comercio_paga_entrega);
 		$("#formDatosAPP #pwa_delivery_habilitar_llamar_repartidor_papaya").val(_check_habilitar_llamar_repartidor);
 		$("#formDatosAPP #pwa_delivery_habilitar_pedido_programado").val(_check_habilitar_pedidos_programados);
+		$("#formDatosAPP #pwa_habilitar_busqueda_mapa").val(_check_habilitar_busqueda_mapa);
+		$("#formDatosAPP #pwa_delivery_reparto_solo_app").val(_check_pwa_delivery_reparto_solo_app);
 
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede",$("#formDatosAPP").serialize(),function(xUltimoId){

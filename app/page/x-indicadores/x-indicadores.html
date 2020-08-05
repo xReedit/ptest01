@@ -1,19 +1,203 @@
 <dom-module id="x-indicadores">
+	<script type="text/javascript" src="../../../js/raphael.2.1.0.min.js"></script>
+	<script type="text/javascript" src="../../../js/justgage.js"></script>
+	<script type="text/javascript" src="../../../js/crossfilter.min.js"></script>
+	<!-- <script type="text/javascript" src="../../../js/Chart.min.js"></script> -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 	<template is="dom">
+		<div class="p-20">
+			
+			<div class="row w-100">
 
+				<!-- meta diaria -->
+				<div class="col-md-4 div-grafico">
+					<div id="meta_diaria" class="xIndicadorSize1"></div>
+					<button class="">Cambiar Meta</button>
+				</div>
+
+				<!-- list por tipo pago -->
+				<div class="col-md-4">
+					<table>
+						<thead>
+							<th>Tipo pago</th>
+							<th>Importe</th>
+						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{listTipoPago}}" as="item">
+								<tr>
+									<td>{{ item.key }}</td>
+									<td align="right">{{ item.value }}</td>
+								</tr>
+							  </template>
+						</tbody>
+					</table>
+				</div>
+
+				<!-- canales de consumo -->
+				<div class="col-md-4" style="width: 350px; height: 100px;">
+					<canvas id="myChart" width="250" height="100"></canvas>
+				</div>
+
+			</div>
+
+
+		</div>
     </template>
 </dom-module>
-
+<style>
+	.div-grafico {
+		text-align: center;
+		max-width: 300px;
+	}
+	.xIndicadorSize1 {
+		width: 250px; height: 200px;
+		margin: 0 auto;
+        clear: both;
+	}
+</style>
 <script>
-    var xThisI;
+    var xThisI, dataMeta, dataVentasDia, dataVentasCanalConsumo, metaDiaria=0, grafico_meta_diaria = null, porcentajeMedaDia = 0, crosVenta, crosCanalConsumo;
 
     function initIndicadores() {
+		loadMestasSede();
+		loadCanalConsumoTops();
+		// loadVentasDia();
+	}
 
-    }
+	function loadVentasDia(){
+		$.ajax({
+				type: 'GET',
+				url: '../../bdphp/log_005.php?op=16'
+			})
+			.done(function (res) {				
+				dataMetdataVentasDia = JSON.parse(res).datos;		
+				console.log('dataMetdataVentasDia', dataMetdataVentasDia);
+				crosVenta = crossfilter(dataMetdataVentasDia);
+				console.log('dataMetdataVentasDia', dataMetdataVentasDia);
+				cocinarDataVentasDia();
+			});
+	}
+
+	function cocinarDataVentasDia() {
+		
+		let sumImporteTotal = dataMetdataVentasDia.map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+		porcentajeMedaDia = ((sumImporteTotal /  metaDiaria) * 100).toFixed(1);		
+		graficoMetaDiaria(porcentajeMedaDia);
+
+		// tipo de pago
+		var ddTp = crosVenta.dimension(item => item.destp);
+		let byTipoPago = ddTp.group().reduceSum(item => parseFloat(item.importe));
+		xThisI.listTipoPago = byTipoPago.all();
+		console.log('byTipoPago', byTipoPago.all());
+
+	}
+
+	function loadCanalConsumoTops() {
+		$.ajax({
+				type: 'GET',
+				url: '../../bdphp/log_005.php?op=1601'
+			})
+			.done(function (res) {				
+				dataVentasCanalConsumo = JSON.parse(res).datos;		
+				console.log('dataVentasCanalConsumo', dataVentasCanalConsumo);
+				crosCanalConsumo = crossfilter(dataVentasCanalConsumo);				
+				cocinarCanalConsumoTops();
+			});
+	}
+
+	function cocinarCanalConsumoTops() {
+		// canal de comsumo
+		var ddCanal = crosCanalConsumo.dimension(item => item.destpc);
+		let byCanalConsumo = ddCanal.group().reduceSum(item => parseFloat(item.importe));
+		xThisI.listCanalConsumo = byCanalConsumo.all();
+
+		graficoCanalesConsumo();
+	}
+
+	function graficoMetaDiaria( val ) {
+		if ( !grafico_meta_diaria ) {
+			grafico_meta_diaria = new JustGage({
+				id: "meta_diaria",
+				value: porcentajeMedaDia,
+				symbol: '%',
+				pointer: true,
+				pointerOptions: {
+					toplength: -15,
+					bottomlength: 10,
+					bottomwidth: 12,
+					color: '#8e8e93',
+					stroke: '#ffffff',
+					stroke_width: 3,
+					stroke_linecap: 'round'
+				},			
+				levelColors: [
+					"#e91e63",
+					"#ffc107",
+					"#64dd17"
+				],
+				title: 'Meta Diaria',
+				min: 0,
+				max: 100,			
+				label: "Avance",			
+				counter: true
+			});
+		} 
+		else {
+			grafico_meta_diaria.refresh(parseInt(val));
+		}
+	}
+
+	function graficoCanalesConsumo(){
+		var ctx = document.getElementById('myChart').getContext('2d');		
+		var myBarChart = new Chart(ctx, {
+			type: 'bar',
+			data: {
+				labels: xThisI.listCanalConsumo.map(x => x.key),
+				datasets: [{
+					label: 'Importe',
+					data: xThisI.listCanalConsumo.map(x => x.value),
+					backgroundColor: ["#DBF2F2", "#D7ECFB", "#EBE0FF", "#FFF5DD", "#FFECD9", "#FFE0E6"],
+					borderColor: ["#87D5D5", "#89C8F3", "#A67AFF", "#CCCED2", "#FFDC8A", "#FBB773"],
+					borderWidth: 2
+				}],
+			},			
+			options: {
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true
+						}
+					}]
+				},
+				legend: {
+					display: false,					
+				}
+			}			
+			// options: options
+		});
+	}
+	
+	function loadMestasSede() {		
+		$.ajax({
+				type: 'GET',
+				url: '../../bdphp/log_005.php?op=15'
+			})
+			.done(function (res) {
+				console.log(res);						
+				dataMeta = JSON.parse(res).datos[0];
+				metaDiaria = dataMeta.diaria;
+
+				// graficoMetaDiaria(0);
+				loadVentasDia();
+			});
+	}
 
     Polymer({
-		is: 'x-xindicadores',
+		is: 'x-indicadores',
 		properties: {
+			listTipoPago: [],
+			listCanalConsumo: [],
+			metaD: Number,
 			xt_org: Number,
 			xt_idsede: Number,
 		},
@@ -21,9 +205,6 @@
 			// this.selected = 0,
 			xThisI = this;
 			initIndicadores();
-		},
-		displayIndex: function (index) {
-			return xCeroIzq(index + 1, 1);
-		},
+		}
 	})
 </script>

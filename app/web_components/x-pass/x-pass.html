@@ -33,6 +33,8 @@ function xIiniPass(){
 	})
 	$("#pass").on('keyup',function(e){
 		var code=e.which; if ( code==13||code==186 ) {xVerificarPassUs()}
+		e.stopPropagation();
+		e.stopImmediatePropagation();
 	})
 
 	$("#dialog_cotent").on('iron-overlay-opened',function(){		

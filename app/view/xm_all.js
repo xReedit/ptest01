@@ -590,6 +590,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 			
 					token = t;
 					_url_servicio = "../../consulta/"+servicio+"/api/service.php?"+label_num+"="+valor+"&token="+token;
+					
 								
 					$.ajax({ type: 'POST', url: _url_servicio})
 					.done( function (dt) {

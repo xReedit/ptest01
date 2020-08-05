@@ -141,7 +141,7 @@
 									<div id="divRepartidorNom" class="xInvisible">
 										<span class="xfont11">Repartidor: </span>
 										<span class="xBold" id="a_nom_repartidor"></span>
-										<br>
+										<hr>
 									</div>
 									<div id="divRepartidorSelect" class="xInvisible">																	
 										<span class="xfont11">Repartidor: </span>
@@ -151,15 +151,15 @@
 												<option value="[[index]]">[[repartidor.nombre]] </option>
 											</template>
 										</select>
+										<hr>
 									</div>	
-									<hr>
 								</div>
 
 
 								<!-- <div class="xfont11"  style="padding: 5px 0px 5px 0px;" id="txt-info-delivery">DELIVERY: 42299556 | MARCELO RAMIREZ | JR. REYES GUERRA 7 | 745212 | PAGA CON: 420 : EFECTIVO</div> -->
 								<div class="div-info-pedido">									
 									<div class="w-50">
-										<span class="xColorRow_Plomo3 fs-13">Datos del pedido</span>
+										<span class="xColorRow_Plomo3 fs-13">Datos del Cliente</span>
 										<div id="info-pedido" class="fs-11">
 
 										</div>
@@ -745,6 +745,8 @@ function xIniControlMesa(){
 			xCronometro_us=30;
 			xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
 			xOp_permiso();
+			e.stopPropagation();
+			e.stopImmediatePropagation()
 		}
 	});
 
@@ -1843,14 +1845,16 @@ function xLoadDetallesPedido (obj){
 				} else {
 					$('#divRepartidorPropio').removeClass('xInvisible');
 					$('#btnLlamarRepartidorP').removeClass('xInvisible');
-					labelInfoPedido = '<p><i class="fa fa-user"></i> '+ xdtDpedido[0].referencia +'</p>'
+					const _nomClienteDelivery = xdtDpedido[0].referencia === '' ? datosDelivery.nombre : xdtDpedido[0].referencia;
+					const _refDireccion = datosDelivery.referencia ? '<p><i class="fa fa-map-marker"></i> '+ datosDelivery.referencia +'</p>' : '';
+					labelInfoPedido = '<p><i class="fa fa-user"></i> '+ _nomClienteDelivery +'</p>'
 								+'<p><i class="fa fa-map-marker"></i> '+ datosDelivery.direccion +'</p>'
-								+'<p><i class="fa fa-map-marker"></i> '+ datosDelivery.referencia +'</p>'
+								+ _refDireccion
 								+'<p><i class="fa fa-phone"></i> '+ datosDelivery.telefono +'</p>';
 
 				}
 				
-				const _stylepago = datosDelivery.metodoPago.idtipo_pago === 2 ? 'fs-14 badge-info' : 'badge-secondary';
+				const _stylepago = datosDelivery.metodoPago ? datosDelivery.metodoPago.idtipo_pago === 2 ? 'fs-14 badge-info' : 'badge-secondary' : 'badge-secondary';
 				labelInfoComprobante += '<p><strong>Metodo de pago: </strong><span class="badge '+ _stylepago +'">' + datosDelivery.paga_con + '</span></p>';
 
 
@@ -1920,6 +1924,7 @@ function xLoadDetallesPedido (obj){
 			var xdtPbdet=$.parseJSON(dtPbdet);
 			xArrayDtOrdenFiltro=xdtPbdet.datos;
 			xThisCM.xdtPedDet=xArrayDtOrdenFiltro;
+			console.log('xThisCM.xdtPedDet', xThisCM.xdtPedDet);
 			xLoadMipedidoBD(xArrayDtOrdenFiltro)
 
 			xSumarTotalPedidos();
@@ -2111,6 +2116,34 @@ function xLoadMipedidoBD(dt){
 	//tipo de consumo // estructura de impresion
 	for(a in xDtBd) {
 		if(xArrayTpC[xDtBd[a].idtipo_consumo]==null){xArrayTpC[xDtBd[a].idtipo_consumo]={'id':xDtBd[a].idtipo_consumo, 'des':xDtBd[a].des_tp}}
+
+		// desglosar subitems y agregarlos como items unicos
+		// const itemSubitems = xDtBd[a].subitems.length > 0 && xDtBd[a].subitems !==null ? JSON.parse(xDtBd[a].subitems) : null;
+		// if ( itemSubitems ) {
+
+		// 	const item = JSON.parse(JSON.stringify(xDtBd[a]));
+		// 	// borramos el item para ya no mostrar
+		// 	xDtBd = xDtBd.filter(i => i.idcarta_lista !== item.idcarta_lista);
+
+		// 	itemSubitems.map(sub => {
+			
+		// 		const itemAdd = JSON.parse(JSON.stringify(item));
+		// 		const pUnitario = sub.precio.toString() === '0' ? item.punitario :  parseFloat((parseFloat(sub.precio) / sub.cantidad_seleccionada)  + parseFloat(item.punitario) ).toFixed(2);
+		// 		const pTotal = sub.precio.toString() === '0' ? (parseFloat(pUnitario) * parseFloat(sub.cantidad_seleccionada)).toFixed(2) :  (parseFloat(parseFloat(pUnitario) *  sub.cantidad_seleccionada)).toFixed(2);
+
+			
+		// 		itemAdd.cant_descontar = sub.cantidad_seleccionada;
+		// 		itemAdd.cantidad = sub.cantidad_seleccionada;
+		// 		itemAdd.cantidad_r = sub.cantidad_seleccionada;
+		// 		itemAdd.descripcion = itemAdd.descripcion + '( '+ sub.des +' )';
+		// 		itemAdd.precio_default = pUnitario;	
+		// 		itemAdd.ptotal = pTotal;
+		// 		itemAdd.punitario = pUnitario;
+			
+		// 		// agregamos el item nuevo
+		// 		xDtBd.push(itemAdd);
+		// 	});
+		// }
 	}
 	//inicia check
 	xArraychek_pedido=[];
@@ -2126,7 +2159,7 @@ function xLoadMipedidoBD(dt){
 		xArraySeccion=[];
 
 		//xCantItems=0;
-		for (i in xDtBd) {
+		for (i in xDtBd) {			
 			if(xArrayTpC[b].id==xDtBd[i].idtipo_consumo){
 					//fue juntado
 					if(xDtBd[i].visible==1){continue; }
@@ -2684,37 +2717,44 @@ function xPintarEstadoPedido() {
 					xidtipo_c='tpc'+xidtipo_c;
 					var _stylePedido = 'xOcupado ', xEstadoMiPedido = 'a', xIconPedido = '', xnomCliente = '', _labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>', labelTitle = 'Pedido';					
 
-					if ( itemList.json_datos_delivery.p_header ) {
+					if ( itemList.json_datos_delivery ) {
+
+						if ( itemList.json_datos_delivery.p_header &&  itemList.json_datos_delivery.p_header.arrDatosDelivery.metodoPago) {
+
+							_stylePedido = itemList.json_datos_delivery.p_header.arrDatosDelivery.metodoPago.idtipo_pago === 2 ? 'xWarning ' : 'xOcupado ';
+							if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.pasoRecoger ) {
+								_stylePedido = 'xWarning ';
+								xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
+								_labelIdpedido = '<p class="xfont10">' + xnomCliente + '</p>';
+								xIconPedido = '<i class="fa fa-user fa-2x"></i>';
+								labelTitle = 'Cliente Pasa Recoger';
+								xEstadoMiPedido = 'r';
+							}
+	
+							// si es un pedido programado
+							if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado ) {
+								if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.modificado ) {
+									_stylePedido = 'xWarning ';
+									xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
+									_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>';
+									xIconPedido = '<i class="fa fa-clock-o fa-2x"></i>';
+									labelTitle = 'Pedido Programado  '  + itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.dia + ' ' + itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.hora;
+									xEstadoMiPedido = 'p';
+								}
+							}
+	
+							// si ha sido pagado con tarjeta
+							if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.metodoPago.idtipo_pago === 2 ) {
+								_stylePedido = 'xInfo ';
+								xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
+								_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>';
+								xIconPedido = '<i class="fa fa-credit-card fa-2x"></i>';
+								labelTitle = 'Pedido Pagado';
+								xEstadoMiPedido = 't';
+							}
+
+						}
 						
-						_stylePedido = itemList.json_datos_delivery.p_header.arrDatosDelivery.metodoPago.idtipo_pago === 2 ? 'xWarning ' : 'xOcupado ';
-						if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.pasoRecoger ) {
-							_stylePedido = 'xWarning ';
-							xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
-							_labelIdpedido = '<p class="xfont10">' + xnomCliente + '</p>';
-							xIconPedido = '<i class="fa fa-user fa-2x"></i>';
-							labelTitle = 'Cliente Pasa Recoger';
-							xEstadoMiPedido = 'r';
-						}
-
-						// si es un pedido programado
-						if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.modificado ) {
-							_stylePedido = 'xWarning ';
-							xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
-							_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>';
-							xIconPedido = '<i class="fa fa-clock-o fa-2x"></i>';
-							labelTitle = 'Pedido Programado  '  + itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.dia + ' ' + itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.hora;
-							xEstadoMiPedido = 'p';
-						}
-
-						// si ha sido pagado con tarjeta
-						if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.metodoPago.idtipo_pago === 2 ) {
-							_stylePedido = 'xInfo ';
-							xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
-							_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>';
-							xIconPedido = '<i class="fa fa-credit-card fa-2x"></i>';
-							labelTitle = 'Pedido Pagado';
-							xEstadoMiPedido = 't';
-						}
 
 
 					}

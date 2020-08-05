@@ -181,6 +181,23 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 			}	
 		});
 
+	// SI TIENE COSTO DE ENTREGA
+	var _costoServicio = localStorage.getItem('::app3_woDUS::cxe');
+	if (_costoServicio) {
+		rpt = {};
+		rpt.id = -2;
+        rpt.descripcion = 'Entrega';
+        rpt.isDeliveryApp = true;
+        rpt.esImpuesto = 0;
+        rpt.visible = true;
+        rpt.quitar = false;
+        rpt.tachado = false;
+        rpt.visible_cpe = false;
+		rpt.importe = parseFloat(_costoServicio.toString()).toFixed(2);
+		arrSuma.push(rpt);
+	}
+
+	//
 	 
 	// const sumTotal = Object.keys(arrSuma).map(x => arrSuma[x].importe).reduce((a, b) => parseFloat(a) + parseFloat(b));
 	
