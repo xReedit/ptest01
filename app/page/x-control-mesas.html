@@ -502,8 +502,7 @@ function xIniControlMesa(){
 	});
 
 	xPopupLoad=document.getElementById('xLoad');
-	//xm_LogChequea(function(){ inicia en m_control_pedidos.js
-
+	//xm_LogChequea(function(){ inicia en m_control_pedidos.js		
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 		console.log('isSocket', isSocket);
 
@@ -1775,7 +1774,7 @@ function xLoadDetallesPedido (obj){
 				// facturacion
 				const dtFacDelivery = optionDeliveryCliente.p_header.arrDatosDelivery.tipoComprobante;
 				const dtMetodoPago = optionDeliveryCliente.p_header.arrDatosDelivery.metodoPago;
-				const fac_razon_social = dtFacDelivery.dni ? dtFacDelivery.dni : 'Publico en general' + ' ' + (dtFacDelivery.otro_dato || '');
+				const fac_razon_social = dtFacDelivery ? dtFacDelivery.dni ? dtFacDelivery.dni : 'Publico en general' + ' ' + (dtFacDelivery.otro_dato || ''): 'Publico en general';
 				const desRepartidorPaga = dtMetodoPago.idtipo_pago === 2 ? 'El pedido YA ESTA pagado, solo recogen.' : 'El pedido DEBE ser pagado';
 				isPedidoPagadoFromApp = dtMetodoPago.idtipo_pago === 2; // esto va al componente pago
 				infoFacturacion = ' | Facturacion: ' + dtFacDelivery.descripcion + ' ' + fac_razon_social + '  |  ' + desRepartidorPaga;
@@ -2526,6 +2525,8 @@ function xOrdenPedido(op){
 }
 
 function xFiltroPedidos(obj){
+	$('#div_filtro_header').removeClass('xInvisible');
+	
 	var xurl_actual = window.location.href;
 	xDesFiltro1=$(obj).find('.titulo').text();
 	xIdFiltro1=$(obj).attr('data-id');

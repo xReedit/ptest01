@@ -4,7 +4,7 @@ xNomU,
 xPopupLoad,
 xRouterTime_cp = false,
 myWindowAppCarta,
-componentsLoad = false, isOnlineDeliveryApp = false;
+componentsLoad = false, isOnlineDeliveryApp = false; showBusqyedaMesaOder = false;
 // window.onload = function(){setTimeout( function(){ xIniControlPedido(); }, 600); };
 
 // $(document).ready(function () {
@@ -90,8 +90,7 @@ function xOpenPage(xop, parametro){
 	}, 1000);
 
 	// axxx++;
-	// console.log('control pedidos router run ', axxx);
-
+	// console.log('control pedidos router run ', axxx);	
 	if(parametro==null){parametro='';}
 	var xruta='';
 	switch(xop){
@@ -120,7 +119,10 @@ function xOpenPage(xop, parametro){
 		case 8:	xruta='/historial_ventas';break;
 		case 9:	xruta='/historial_registro_pago_app';break;
 		case 22:xruta='/resumen_caja';break;
-		case 10:xruta='/indicadores';break;
+		case 10:
+			$('#div_filtro_header').addClass('xInvisible');
+			xruta='/indicadores';
+			break;
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){
@@ -144,6 +146,7 @@ function xLoadTipoConsumoX(){
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3'})
 	//.done( function (dtTPC) {
 		//var xdtTPC=$.parseJSON(dtTPC);
+		$('#div_filtro_header').removeClass('xInvisible');
 		var xdtTPC=xm_log_get('estructura_pedido'); //xdtTPC.datos;
 		var xCadenaTPC='';
 		var xDesLi='';

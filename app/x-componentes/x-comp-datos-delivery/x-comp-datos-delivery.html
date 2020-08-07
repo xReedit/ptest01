@@ -17,7 +17,7 @@
 
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DNI" autofocus
 						onkeyup="xValidarDNIRUCDel(this.value, event, true)" onChange="conMayusculas(this)" id="txt_delivery_dni"
-						espaciar required>
+						espaciar>
 					<paper-icon-button icon="icons:search" title="Buscar DNI"
 						onclick="xValidarDNIRUCDel(txt_delivery_dni.value, event, false)"
 						style="position: absolute; right: 38px; margin-top: -5px;"></paper-icon-button>
@@ -180,7 +180,8 @@
 				codigo_postal: _dirEstablecimineto.codigo_postal
 			};			
 
-				const _url = `${URL_SERVER}/pedido/get-last-comsion-entrega-sede`
+				const _url = `${URL_SERVER}/pedido/get-last-comsion-entrega-sede`;
+
 				$.ajax({
 						type: 'POST',
 						url: _url,
@@ -253,10 +254,13 @@
 	}
 
 	async function xAdjuntarDatosDelivery() {
-
+		var pase = false;
 		xvalidateFormInput('frm_cliente',function(a){
+			pase = a;
 			if(a===false){return;}						
 		});
+
+		if ( !pase ) {return; }
 
 		var DatosCliente;
 		// guardar primero cliente y su direccion
@@ -332,7 +336,8 @@
 
 		// guardamos nueva direccion si es necesario
 		if ( xSaveNewDireccionPwa ) {
-			const _url = `${URL_SERVER}/cliente/new-direccion`
+			const _url = `${URL_SERVER}/cliente/new-direccion`;
+
 			$.ajax({
 						type: 'POST',
 						url: _url,
