@@ -1,5 +1,18 @@
+<script src="../../../../js/qr.min.js"></script>
 <dom-module id="x-carta-virtual-mesas">
     <template is="dom"> 
+
+        <paper-dialog oncontextmenu = "null" id="dialog_qr" modal class="dialog-redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation">			            
+            <p> {{ objQrSelected.titulo }} </p>            
+            <canvas id="qr-download"></canvas>
+            
+			<br>			            
+            <div style="display: flex;">
+                <div class="xBoton2 xVerde" onclick="copiarQr();">Copiar</div>
+                <div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+            </div>
+		</paper-dialog>
+
         <div>
             <h3>Codigos QR para las mesas</h3>
             <p>Toca para descargar.</p>
@@ -7,9 +20,10 @@
             <br>
             <div class="content-qr">
                 <template is="dom-repeat" items="{{objListMesasQr}}" as="item">
-                    <div class="codigo-qr xCursor" onclick="descarGarQR(this)" data-index = [[index]]>
+                    <!-- <div class="codigo-qr xCursor" onclick="descarGarQR(this)" data-index = [[index]]> -->
+                    <div class="codigo-qr xCursor" onclick="generateQRCode(this, 1)" data-index = [[index]]>                        
                         <!-- <a href="#" download="{{item.codigoDownload}}"> -->
-                            <img src="{{item.codigo}}" alt="">
+                            <img src="{{item.codigo}}" alt="">                            
                             <span>{{item.nummesa}}</span>
                         <!-- </a> -->
                     </div>
@@ -21,8 +35,9 @@
             <div class="xLinea2"></div>
             <div class="content-qr">
                 <template is="dom-repeat" items="{{objListOtherQr}}" as="item_o">
-                    <div class="codigo-qr xCursor" onclick="descargarOtroQR(this)" data-index = [[index]]>                        
-                        <img src="{{item_o.codigo}}" alt="">
+                    <!-- <div class="codigo-qr xCursor" onclick="descargarOtroQR(this)" data-index = [[index]]>                         -->
+                    <div class="codigo-qr xCursor" onclick="generateQRCode(this, 0)" data-index = [[index]]>                        
+                        <img src="{{item_o.codigo}}" alt="">                        
                         <span>{{item_o.titulo}}</span>
                     </div>
                 </template>
@@ -75,8 +90,11 @@
             // console.log('mesas', res.datos[0].mesas);
             xThisCartaVMesas.objListMesasQr = JSON.parse(res.datos[0].mesas);
             xThisCartaVMesas.objListMesasQr.map(x => {
+                const  _cod = x.codigo;
                 x.codigoDownload = `https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=${x.codigo}`;
                 x.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${x.codigo}`;
+                x.titulo = 'Mesa '+ x.nummesa;     
+                x.codigo_qr = _cod;     
                 return x;
             })
             // console.log(xThisCartaVMesas.objListMesasQr);
@@ -90,6 +108,7 @@
             xThisCartaVMesas.qrLLevar.codigoDownload = `https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=${_cod}`;
             xThisCartaVMesas.qrLLevar.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${_cod}`;
             xThisCartaVMesas.qrLLevar.titulo = 'Solo para llevar';
+            xThisCartaVMesas.qrLLevar.codigo_qr = _cod;          
             
             // codigo qr delivery
             xThisCartaVMesas.qrDelivery = {};
@@ -97,13 +116,14 @@
             xThisCartaVMesas.qrDelivery.codigoDownload = `https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=${_cod}`;
             xThisCartaVMesas.qrDelivery.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${_cod}`;
             xThisCartaVMesas.qrDelivery.titulo = 'Delivery';
+            xThisCartaVMesas.qrDelivery.codigo_qr = _cod;
 
             listOther.push(xThisCartaVMesas.qrLLevar);
             listOther.push(xThisCartaVMesas.qrDelivery);
             xThisCartaVMesas.objListOtherQr = JSON.parse(JSON.stringify(listOther));
 
-            console.log('xThisCartaVMesas.objListOtherQr', xThisCartaVMesas.objListOtherQr);
-        });
+            console.log('xThisCartaVMesas.objListOtherQr', xThisCartaVMesas.objListOtherQr);            
+        });        
     }
 
     function descargarAfiche() {
@@ -162,6 +182,42 @@
     //     })
     // }
 
+    // op 0= otros qr 1 = mesas
+    function generateQRCode(obj, op) {
+        const index = obj.dataIndex;
+        var item = op === 0 ? xThisCartaVMesas.objListOtherQr[index] : xThisCartaVMesas.objListMesasQr[index];
+        xThisCartaVMesas.objQrSelected = item;
+        console.log('item', item);
+                var qr = new QRious({
+                    foreground: 'black',
+                    element: document.getElementById('qr-download'),
+                    size: 350,
+                    value: item.codigo_qr
+                });
+
+                dialog_qr.open();
+                
+                // qr.set({
+                //     foreground: 'black',
+                //     size: 100,
+                //     value: qrtext
+                // });
+            }
+
+        
+    async function copiarQr() {
+        var img = document.getElementById('qr-download');
+        img = img.toDataURL('image/png');
+        const response = await fetch(img)
+        const blob = await response.blob()
+        await setToClipboard(blob);    
+    }
+
+    async function setToClipboard(blob) {
+        const data = [new ClipboardItem({ [blob.type]: blob })]
+        return navigator.clipboard.write(data)
+    }
+
     Polymer({
             is: 'x-carta-virtual-mesas',
             properties: {
@@ -171,6 +227,7 @@
                 qrLLevar: Object,
                 qrDelivery: Object,
                 objListOtherQr: Object,
+                objQrSelected: Object,
                 imgAfiche: String
             },
             attached: function () {                
