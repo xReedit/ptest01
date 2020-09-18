@@ -23,34 +23,37 @@ function pNotificaPago(res) {
     };
   }
 
-if ( !res.objTransaction.error ) {
-  PNotify.success({
-    title: 'Confirmar Pago',
-    text: '<strong>'+ hora + '</strong> En la mesa <strong>' + _datos.nummesa + '</strong> '+ _datos.nom_cliente +' canceló <strong>S/. '+ _datos.importe  +'</strong> con tarjeta '+ _datos.brand +'.',
-    textTrusted: true,
-    // icon: 'fas fa-info-circle',
-    hide: false,
-    stack: window.stackBottomRight,
-    modules: {
-      Confirm: {
-        confirm: true,
-        buttons: [{
-          text: 'Confirmar',
-          primary: true,
-          click: function(notice) {
-            notice.close();
-          }
-        }]
-      },
-      // Buttons: {
-      //   closer: false,
-      //   sticker: false
-      // },
-      // History: {
-      //   history: false
-      // }
-    }
-  });
+  if ( !res.objTransaction.error ) {
+    var canalPedido = _datos.nummesa ? ' La Mesa ' + xCeroIzq(_datos.nummesa, 2) : '';
+    canalPedido = canalPedido === '' ? res.isdelivery ? ' Pedido Delivery ' : ' Pedido Para LLevar ' : canalPedido;
+
+    PNotify.success({
+      title: 'Confirmar Pago',
+      text: hora + '<strong>' + canalPedido + '</strong> <p>'+ _datos.nom_cliente +'</p><p> Pagó con tarjeta desde la aplicación el importe de: <strong>S/. '+ _datos.importe  +'</strong> </p>',
+      textTrusted: true,
+      // icon: 'fas fa-info-circle',
+      hide: false,
+      stack: window.stackBottomRight,
+      modules: {
+        Confirm: {
+          confirm: true,
+          buttons: [{
+            text: 'Confirmar',
+            primary: true,
+            click: function(notice) {
+              notice.close();
+            }
+          }]
+        },
+        // Buttons: {
+        //   closer: false,
+        //   sticker: false
+        // },
+        // History: {
+        //   history: false
+        // }
+      }
+    });
 } else {
 
   // error de pago
@@ -112,6 +115,64 @@ function pNotificaPersonal(mesa) {
 
   // PlaySound('../../sound/notifica-llamado.mp3');
   PlaySound('notificaLlamadoCliente');
+
+}
+
+
+// notifica nuevo pedido desde el app
+function pNotificaNuevoPedido(pedido) {
+  // solo notifica pedidos de clientes desde app
+  if ( !pedido ) {return; }
+  if ( !pedido.p_header ) {return; }
+  if ( pedido.p_header.isCliente === 0 ) {return; }
+
+  pedido.p_header.m = pedido.p_header.m ? pedido.p_header.m : '';
+  
+  // tipo // delivery // llevar
+  var nomCliente = pedido.p_header.r;
+  var iconPedido = pedido.p_header.delivery === 1 ? 'fa fa-motorcycle' : 'fa fa-shopping-bag';
+  var canalPedido = pedido.p_header.delivery === 1 ? 'Delivery' : 'Para LLevar';
+  canalPedido = pedido.p_header.m === '' ? canalPedido : 'Mesa ' + xCeroIzq(pedido.p_header.m, 2);
+  iconPedido = pedido.p_header.m === '' ? iconPedido : 'fa fa-cutlery';
+
+  var importePedido = pedido.p_subtotales[pedido.p_subtotales.length - 1].importe;
+
+
+  
+  var hora = pTimeNow();
+
+
+
+	if (typeof window.stackBottomRight === 'undefined') {
+    window.stackBottomRight = {
+      'dir1': 'up',
+      'dir2': 'left',
+      'firstpos1': 25,
+      'firstpos2': 25
+    };
+  }
+
+  var notice = PNotify.notice({  
+    text: hora + ' Pedido APP <span><strong>'+ canalPedido + ' <i class="' + iconPedido + '"></i></strong>' +
+          '<p>' + nomCliente + ' <span><strong> S/.'+ importePedido + '</strong></p>',
+    textTrusted: true,  
+    delay: 30000,
+    closer: true,
+    stack: window.stackBottomRight,
+    modules: {
+      History: {
+        maxInStack: 5
+      }
+    } 
+  });  
+
+  notice.on('click', function() {
+  	notice.close();
+	});
+
+
+  // PlaySound('../../sound/notifica-llamado.mp3');
+  PlaySound('notificaNuevoPedido');
 
 }
 

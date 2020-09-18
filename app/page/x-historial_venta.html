@@ -31,7 +31,9 @@
 		<div class="xMiCard xradius" style="width:85%">
 			<div class="xEncanezadoCard xFondoRowAmarillo2">
 				<p>El Registro de pago muestra todos los pedidos que fueron cancelados o pagaddos por dia y solo es informativo. Seleccione o escriba una fecha.</p>
-				<input type="date" class="xMiInput" style="width:200px;" id="txt_fecha">
+				<div class="d-flexx">
+					<input type="date" class="xMiInput" style="width:200px;" id="txt_fecha">										
+				</div>
 			</div>
 			<div class="xContentCard" style="height: 100%;">
 				<div class="xdivEnLinea2">
@@ -46,20 +48,21 @@
 								<th width="40px">Hora</th>
 								<th align="right">Importe</th>
 							</thead>
-						</table>
+						</table>						
 						<br>
 						<div>                                
                             <pagination-input id="paginator" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>
                         </div>
-						<br>
-					</div>
+						<br>						
+					</div>					
 					<br>
 					<div class="itemsDiv xpadingLateralDe xpadingLateralIz" style="width:75%;">
 						<br><br>
 						<div class="xDerecha">
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div></paper-button>
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 100px;" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div></paper-button>
-							<paper-button disabled="[[xYaTieneComprobante]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>						
+							<paper-button disabled="[[xYaTieneComprobante]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>							
+							<paper-button hidden$="[[!xIsPuedeReimprimirCPE]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="reImprimirComprobante();"><img src="../../images/_print_vr.png"><p>Reimprimir Comprobante</p></div></paper-button>
 						</div>
 						<br><br>
 						<br>
@@ -79,15 +82,15 @@
 						<div class="x_div_linea	">
 							<div>
 							<label for="txt_mesa" class="xfont10">Mesa:</label>
-							<p id="txt_mesa" class="xfont20">02</p>
+							<p id="txt_mesa" class="xfont20">00</p>
 							</div>
 							<div>
 							<label for="txt_mozo" class="xfont10">Atendido por:</label>
-							<p id="txt_mozo" class="xfont20">mramirez</p>
+							<p id="txt_mozo" class="xfont20"></p>
 							</div>
 							<div>
 							<label for="txt_correlativo" class="xfont10">Correlativo:</label>
-							<p id="txt_correlativo" class="xfont20" style="white-space: pre-wrap; width: 50px;">CO-0005</p>
+							<p id="txt_correlativo" class="xfont20" style="white-space: pre-wrap; width: 50px;">CO-0000</p>
 							</div>
 							<div>
 							<label for="txt_tpc" class="xfont10">Tiempo de atencion:</label>
@@ -99,9 +102,11 @@
 							</div>
 						</div>
 						<div class="xLinea2"></div><br><br>
-						<div id="xBody"></div>
+						<div id="xBody"></div>						
 					</div>
 				</div>
+				<br>
+				<button class="btn btn-sm btn-secondary" hidden$="[[ !isCierreCaja ]]" onclick="reImprimirCierre()">Reimprimir Cierre de Caja</button>
 			</div>
 		</div>
 		<br><br>
@@ -128,7 +133,7 @@ var xArrayDtOrdenFiltro=[];
 var xTotalItemSel;
 var xidregistro_pago_sel;
 var xDtPrint,xPSupervisor,xEstado_registro_pago=0,xhtml_anulado='', xdt_h=[],
-	arrSumSubtTotales = [], xRpt_pago = [], index_historial, x_icon_facturado; // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
+	arrSumSubtTotales = [], xRpt_pago = [], index_historial, x_icon_facturado, xdt_pdE; // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
 
 var data_pagination={}, p_rows=0, p_fecha='';
 
@@ -263,19 +268,24 @@ function xloadHistorial(){
 		res = $.parseJSON(res[0]);
 		
 		xdt_h=res;
-		var xcadena_h='',ximg_estado,xclass_anulado,xget_icon_facturado;
+		var xcadena_h='',ximg_estado,xclass_anulado,xget_icon_facturado, isFacturaEmitido = false;
 		if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}
 		xdt_h=xdt_h.datos;
 
 		var xcount_row=0;
+		xThisHistVenta.isCierreCaja = false;
 		for (var i = 0; i < xdt_h.length; i++) {
 			xcount_row++;
 			ximg_estado='';xclass_anulado='';
 
-			if(xdt_h[i].cierre==="1"){ximg_estado='<img src="../../images/candado.png" style="width:10px; heigh:10px; padding-right:2px; padding-top:4px;" class="xIzquierda EnLinea">';}
+			if(xdt_h[i].cierre==="1"){ximg_estado='<img src="../../images/candado.png" style="width:10px; heigh:10px; padding-right:2px; padding-top:4px;" class="xIzquierda EnLinea">'; xThisHistVenta.isCierreCaja = true;}
 			if(xdt_h[i].estado==="1"){xclass_anulado='xrow_anulado';}
 
+			isFacturaEmitido = xdt_h[i].idce === null ? false : true;
 			xget_icon_facturado = xdt_h[i].idce === null ? '' : x_icon_facturado;
+
+			xdt_h[i].isFacturaEmitido = isFacturaEmitido;
+			xdt_h[i].isCerrado = xdt_h[i].cierre==="1";
 
 			xcadena_h=String(xcadena_h+'<tr class="row xCursor  '+xclass_anulado+'" data-index='+ i +' data-id="'+xdt_h[i].idregistro_pago+'" data-idpedidos='+xdt_h[i].idpedido+' data-estado="'+xdt_h[i].estado+'" data-motivoa="'+xdt_h[i].motivo_anular+'" onclick="xloadDetallePago(this);">'+
 				'<td id="row_historial'+ i +'">'+ximg_estado+xCeroIzq(xcount_row,3)+xget_icon_facturado+'</td>'+
@@ -357,15 +367,20 @@ function xloadDetallePago(obj){
 	// encabezado del pedido
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20002', data:{i:xidregistro_pago_sel}})
 	.done( function (dt_pdE) {
-		var xdt_pdE=$.parseJSON(dt_pdE);
+		xdt_pdE=$.parseJSON(dt_pdE);
 		if(!xdt_pdE.success){xPopupLoad.xclose();alert(xdt_pdE.error);return;}
 		xdt_pdE=xdt_pdE.datos[0];
+		console.log('datos pedido ', xdt_pdE);
 		// var xdt_pdE = xdt_h[index_historial];
 		// var comprobanteEmitido = xdt_pdE.comprobante +' '+ (xdt_pdE.serie==="0" ? '' : xdt_pdE.serie || '') + '-'+ (xdt_pdE.correlativo === "0" ? '' : xCeroIzqNumComprobante(xdt_pdE.correlativo) || '');
 		var comprobanteEmitido = xdt_pdE.num_comprobante;
 		$("#txt_comprobante").text(comprobanteEmitido);
 
 		xThisHistVenta.xYaTieneComprobante = xdt_pdE.idce === null ? false : true; 
+		xThisHistVenta.xYaPedidoCerrado = xdt_pdE.cerrado === '1';
+
+		xThisHistVenta.xIsPuedeReimprimirCPE = !xThisHistVenta.xYaPedidoCerrado && xThisHistVenta.xYaTieneComprobante;
+		
 
 		// console.log(xThisHistVenta.xYaTieneComprobante);
 		$("#txt_cliente").text(xdt_pdE.cliente);
@@ -544,14 +559,46 @@ function xImprimirPrecuenta(){
 	xMandarImprimirOtroDoc(xArrayPrintEncaLi_pre_cuenta,xDtPrint,xArrayItemPreCuenta,arrSumSubtTotales,-1);
 }
 
+function reImprimirCierre() {
+	xPopupLoad.xopen()	
+	fecha = xDevolverFechaFormatInputDate(txt_fecha.value);
+	$.ajax({ type: 'POST', 
+		url: '../../bdphp/log_005.php?op=17',
+		data:{f: fecha}})
+	.done( function (res) {
+		setTimeout(() => {
+			xPopupLoad.xclose()
+		}, 1500);
+	});
+}
+
+function reImprimirComprobante() {
+	xPopupLoad.xopen()	
+	const _cpe = xdt_pdE.num_comprobante;
+	$.ajax({ type: 'POST', 
+		url: '../../bdphp/log_005.php?op=1701',
+		data:{comprobante: _cpe}})
+	.done( function (res) {
+		setTimeout(() => {
+			xPopupLoad.xclose()
+		}, 1500);
+	});
+}
+
 Polymer({
 	is:'x-historial_venta',
 	properties:{
 		xdtPedDet: Object,
-		xYaTieneComprobante: boolean = true
+		isCierreCaja: Boolean,
+		xYaTieneComprobante: boolean = true,
+		xYaPedidoCerrado: boolean = true,
+		xIsPuedeReimprimirCPE: boolean = false
 	},
 	attached:function(){
+		this.xIsPuedeReimprimirCPE = false;
 		this.xYaTieneComprobante = true;
+		this.xYaPedidoCerrado = true;
+		this.isCierreCaja = false;
     	xThisHistVenta=this;
     	xIniHistVenta();
     }

@@ -353,6 +353,10 @@ table tr .xMargin10{padding-top:10px;padding-bottom:10px;}
 .xRowPading2 tr td{padding-top:15px;padding-bottom:15px;}
 .xRowPading3 tr td{padding-top:5px;padding-bottom:5px;}
 .xRowPading4 tr td{padding-top:7px;padding-bottom:7px;}
+.xRowPading4 tr td.icon-a{visibility: hidden;}
+.xRowPading4 tr td.icon-a:hover {
+    visibility: visible;
+}
 .xRowPading5 tr td{padding-top:1px;padding-bottom:1px;}
 .xRowPading6 tr td{padding-top:3px;padding-bottom:3px;}
 .xtable1 thead th{text-align:left;}
@@ -1277,6 +1281,14 @@ ul.list_add_item2 li {
     margin-left: 3px;
     border-radius: 3px;
     color: white;
+}
+
+.btn-sm-add-row {
+    background: lightgreen;
+    padding: 0px 8px 0px 8px;
+    border-radius: 5px;
+    margin: 0 auto;
+    width: 12px;
 }
 
 /* control de pedidos */

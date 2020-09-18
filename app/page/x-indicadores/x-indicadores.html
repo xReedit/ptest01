@@ -116,6 +116,55 @@
 			<hr>
 
 			<div class="flexbox">
+				<!-- mozo virtual -->
+				<div class="left">
+					<p class="text-left fs-16 fw-600">Mozo Virtual</p>
+					<hr>
+					<table class="w-100">
+						<thead>
+							<th align="left">Canal</th>
+							<th align="center">Cantidad</th>
+							<th align="right">Importe</th>
+						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{listMozoVirtual}}" as="item">
+								<tr>
+									<td align="left">{{ item.descripcion }}</td>
+									<td align="center">{{ item.t2 }}</td>
+									<td align="right">{{ item.t3 }}</td> 
+								</tr>
+							  </template>
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Pago desde el app -->
+				<div class="left">
+					<p class="text-left fs-16 fw-600">Pagos desde APP</p>
+					<hr>
+					<table class="w-100">
+						<thead>
+							<th align="left">Canal</th>
+							<th align="center">Cantidad</th>
+							<th align="right">Importe</th>
+						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{listPagosApp}}" as="item">
+								<tr>
+									<td align="left">{{ item.descripcion }}</td>
+									<td align="center">{{ item.t2 }}</td>
+									<td align="right">{{ item.t3 }}</td> 
+								</tr>
+							  </template>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+
+			<hr>
+
+			<div class="flexbox">
 				<!-- seccion que mas vende -->
 				<div class="left">
 					<p class="text-left fs-16 fw-600">Lista de Secciones</p>
@@ -300,6 +349,9 @@
 		loadMovimientoCaja();
 		loadAnulados();
 		loadIfCierreCaja()
+
+		loadMozoVirtual();
+		loadPagoAPP();
 	}
 	
 	function changeFecha(val) {
@@ -419,6 +471,31 @@
 			.done(function (res) {					
 				idsCierres = JSON.parse(res).datos;
 				xThisI.showBtnCierreCaja = idsCierres.length > 0;				
+			});
+	}
+
+	function loadMozoVirtual() {
+		xThisI.listMozoVirtual = [];
+		$.ajax({
+				type: 'POST',
+				url: '../../bdphp/log.php?op=700221',
+				data: dataFiltro
+			})
+			.done(function (res) {					
+				var resp = JSON.parse(res);				
+				xThisI.listMozoVirtual =  resp.datos;	
+				console.log('xThisI.listMozoVirtual', xThisI.listMozoVirtual);
+			});
+
+	}
+	function loadPagoAPP() {
+		$.ajax({
+				type: 'POST',
+				url: '../../bdphp/log.php?op=700211',
+				data: dataFiltro
+			})
+			.done(function (res) {					
+				xThisI.listPagosApp =  JSON.parse(res).datos;	
 			});
 	}
 
@@ -631,6 +708,8 @@
 			listSemana: [],
 			listPedidosAnulados: [],
 			listPedidosItemAnulados: [],
+			listMozoVirtual: [],
+			listPagosApp: [],
 			showBtnCierreCaja: Boolean,
 			metaD: Number,
 			xt_org: Number,

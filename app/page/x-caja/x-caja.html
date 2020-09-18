@@ -336,6 +336,9 @@ function xGetDataCierre(idBitacora) {
 		$("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
 		// xUpdateCerrarCession(function () {
 			xPermisoSupervisor = 0;
+			
+			// xOpenPage(22)
+
 			if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return; }
 			xImprimirCierre(xArrayEncabezadoCierre, xArrayCierrePrint);
 		// });

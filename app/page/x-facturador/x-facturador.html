@@ -184,6 +184,7 @@
             if (code == 13 || code == 186) {
                 $("#punitario").val(xMoneda(this.value));
                 $("#ptotal").focus();
+                xAddItem();
             }
         });
         $(".xprecio").on('keyup', function (e) {

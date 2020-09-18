@@ -1,33 +1,52 @@
 <dom-module id="x-registro-pago-app">
 	<template is="dom">
-        <br><br>
-        <div class="xMiCard xradius">
+        <br>
+        <!-- <div style="margin: 25px; border: 1px solid lightgray; padding: 0px; border-radius: 5px;"> -->
+            <div class="xMiCard xradius" style="width:85%">
 			<div class="xEncanezadoCard xFondoRowAmarillo2">
-                <h3>Registro de pagos desde la aplicación</h3>
+                <div class="d-flexx justify-content-between align-items-center">
+                    <h3>Registro de pagos desde la aplicación</h3>
+                    <p class="xfont18"><strong>Total:</strong> S/. {{sumList}}</p>
+                </div>
                 <div class="xLinea2"></div><br>
-                <p class="xfont18"><strong>Total:</strong> S/. {{sumList}}</p>
+                <div>
+                    <div class="d-flexx">
+                        <div>
+                            <p>Desde </p>
+                            <input type="date" placeholder="Desde"  onchange="showData()" class="xMiInput" style="width:200px;" id="txt_fecha_de">
+                        </div>
+
+                        <div>
+                            <p>Hasta </p>
+                            <input type="date" placeholder="Hasta" onchange="showData()" class="xMiInput" style="width:200px;" id="txt_fecha_a">
+                        </div>
+
+                    </div>                    
+                </div>
 			</div>		
             <div class="xContentCard" style="padding: 20px;">            
                 <div class="w-100">
-                    <div style="max-width: 650px; margin: 0 auto;">                                
+                    <div style="width: 100%; margin: 0 auto;">                                
                         <table width="100%" class="xtable2">
                             <thead>
                                 <th align="left" width="10px">#</th>
-                                <th align="left" width="60px">Hora</th>
-                                <th align="left" width="60px">Canal</th>
+                                <th align="left">Pedido</th>
+                                <th align="left">Hora</th>                                
+                                <th align="left">Canal</th>
                                 <th align="left" width="50%">Detalle</th>
                                 <th align="right">Estado</th>
                                 <th align="right">Importe</th>
+                                <th align="right">Abonado</th>
                             </thead>
                             <tbody>
                                 <template is="dom-repeat" items="{{listPagosApp}}" as="item">
                                     <tr class$="{{item.classTr}}">
                                         <td data-id="{{index}}"><span>{{displayIndex(index)}}</span></td>
+                                        <td>{{item.idpedido}}</td>
                                         <td>{{item.fecha}}</td>
                                         <td>
                                             <div>
-                                                <p>{{item.canal}}</p>
-                                                <p>Mesa: {{item.nummesa}}</p>
+                                                <p>{{item.canal}} {{ item.des_mesa }}</p>                                                
                                             </div>
                                         </td>
                                         <td>
@@ -40,6 +59,15 @@
                                             <div>{{item.data_transaction.descripcion}}</div>
                                         </td>
                                         <td align="right">{{item.importe}}</td>
+                                        <td>
+                                            <div hidden$="[[!item.ispagado]]">
+                                                <i class="text-success fa fa-circle"></i>
+                                                <span> {{ item.check_pago_fecha }}  </span>
+                                            </div>
+                                            <div hidden$="[[item.ispagado]]">
+                                                <i class="fa fa-circle text-secondary"></i>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -62,15 +90,29 @@ function xIniPagosApp() {
 
 function xLoadRegistroPagoApp() {
     const fecha = new Date().toISOString().slice(0,10);
-    $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=110', data:{f: fecha}})
+
+    txt_fecha_de.value = fecha;
+    txt_fecha_a.value = fecha;
+    showData();    
+    
+}
+
+function showData() {
+    var f_de = xDevolverFechaFormatInputDate(txt_fecha_de.value);
+    var f_a = xDevolverFechaFormatInputDate(txt_fecha_a.value);
+
+
+
+    $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=110', data:{f_de: f_de, f_a: f_a}})
 		.done((res) => {
 			const _res = JSON.parse(res);
 			console.log(_res.datos);
 			var sumTotal=0, canal = '';
 			xThisPagosApp.listPagosApp = _res.datos.map( x => {                
                 x.data_transaction = JSON.parse(x.data_transaction);
-                x.data_cliente = JSON.parse(x.data_cliente);
-                x.data_operacion = JSON.parse(x.data_operacion);
+                x.des_mesa = x.nummesa.toString() === '0' ? '' : ' Mesa ' + x.nummesa;
+                // x.data_cliente = JSON.parse(x.data_cliente);
+                // x.data_operacion = JSON.parse(x.data_operacion);
 
                 if (!x.data_transaction.error) {
                     sumTotal += parseFloat(x.importe);				
@@ -78,14 +120,17 @@ function xLoadRegistroPagoApp() {
 
                 // x.datos = JSON.parse(x.datos);
                 x.importe = parseFloat(x.importe).toFixed(2);
-                x.nomcliente = x.data_cliente.nombres;
-                x.canal = x.data_operacion.mesa ? 'LOCAL' : '';
-                x.nummesa = x.data_operacion.mesa;
+                x.nomcliente = x.cliente;
+                x.ispagado = x.check_pagado.toString() === '0' ? false : true;
+                // x.canal = x.data_operacion.mesa ? 'LOCAL' : '';
+                // x.nummesa = x.data_operacion.mesa;
                 x.classTr = x.data_transaction.error ? 'xColorRow_Rojo' : '';
                 // canal = x.canal.split(' ');
                 // x.canal = canal.length > 0 ? canal[canal.length - 1] : x.canal;
 				return x;
-			});
+            });
+            
+            console.log('xThisPagosApp.listPagosApp', xThisPagosApp.listPagosApp);
 			xThisPagosApp.sumList = numeroConComas(sumTotal.toFixed(2));
 			// xPopupLoad.xclose();
 		});

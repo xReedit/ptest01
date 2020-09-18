@@ -1,6 +1,8 @@
 <!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <dom-module id="x-control-mesas">
+
+	
 	<!-- <script type="text/javascript" src="../../js/rxjs.umd.js"></script>
 	<script rel="preload" type="text/javascript" src="../../js/socket.io.js"></script> -->
 	
@@ -210,7 +212,7 @@
 										</table>
 										</div>
 									</td>
-									<td class="xBordeIzq pd-l-10">
+									<td class="xBordeIzq pd-l-10">										
 										<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor pos-union" title="Unir items">
 										<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor pd-l-10-a" title="Separar items">
 										<div class="xtd-derecha" id="xBody">
@@ -239,6 +241,9 @@
 											</tr>
 										</table>
 										</div>
+										</div>
+										<div class="d-flexx justify-content-end align-items-center" style="position: sticky; width: 100%;" hidden$="[[ !isAddItemRow ]]">
+											<button class="btn btn-success" style="margin-top: -80px;" onclick="xArmarSqlAddLUlI()" ><i class="fa fa-check"></i> Confirmar</button>
 										</div>
 									</td>
 								</tr>
@@ -318,7 +323,7 @@
 		</paper-dialog>
 		<br>
 		<div class="xContent d-flex">
-			<!--button onclick="xGeneralActualizaItemInactivo();">aaa</button-->
+			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->
 			<div class="grid" id="_gridCM">
 				<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
@@ -692,15 +697,84 @@ function xIniControlMesa(){
 		// event.stopPropagation();
 		e.stopPropagation();
 		e.stopImmediatePropagation()
-	})
+	})	
+
+	$(document).on('click', '.btn-add-item', function(e) {
+		// agregar item al pedido desde item
+			console.log('agrega item');
+			xobj_row_item=$(this).parents('tr')[0];
+
+			const _tipoConsumo = xobj_row_item.dataset.idtipoconsumo;
+			var _cantidad = parseInt(xobj_row_item.dataset.cantidad) + 1;
+			var _punitario = parseFloat(xobj_row_item.dataset.punitario);
+			var _importeTotal = parseFloat(_cantidad * _punitario).toFixed(2);
+
+			// seteamos
+			xobj_row_item.dataset.cantidad = _cantidad;
+			xobj_row_item.dataset.total = _importeTotal;
+			xobj_row_item.dataset.total_r = _importeTotal;
+
+			$(xobj_row_item).find('#td_cant').text(xCeroIzq(_cantidad, 2));
+			$(xobj_row_item).find('#td_importe').text(_importeTotal);
+			
+			// setear a select tipo consumo 
+			$("#select_ulTPC").val(_tipoConsumo);
+
+			xThisCM.isAddItemRow = true;
+			handlerFnMiPedidoControl(e);
+
+			console.log('xArrayPedidoObj', xArrayPedidoObj);
+
+			// xArmarSqlAddLUlI();
+			
+
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			return;	
+	});
 
 	//$(".td_op").on('click',function(e){
 	$(document).on('click', '.td_op', function(e) {
 		if($(this).attr('data-procede')!='0'){return;}
-		if(xAgrupar_item_activo==true){return;}
-		xArrayItemEliminar=[];
+
+		// const opItem = $(this).attr('data-op');
 		xpass_op=$(this).attr('data-op');
 		xobj_row_item=$(this).parent();
+
+		//agrega item
+		// if ( xpass_op === 'itempedido' ) {
+
+		// 	console.log('agrega item');
+		// 	const _tipoConsumo = xobj_row_item.data().idtipoconsumo;
+		// 	var _cantidad = xobj_row_item.data().cantidad + 1;
+		// 	var _punitario = parseFloat(xobj_row_item.data().punitario);
+		// 	var _importeTotal = parseFloat(_cantidad * _punitario).toFixed(2);
+
+		// 	// seteamos
+		// 	xobj_row_item.data().cantidad = _cantidad;
+		// 	xobj_row_item.data().total = _importeTotal;
+		// 	xobj_row_item.data().total_r = _importeTotal;
+
+		// 	$(xobj_row_item).find('#td_cant').text(xCeroIzq(_cantidad, 2));
+		// 	$(xobj_row_item).find('#td_importe').text(_importeTotal);
+			
+		// 	// setear a select tipo consumo 
+		// 	$("#select_ulTPC").val(_tipoConsumo);
+		// 	handlerFnMiPedidoControl(e);
+
+		// 	console.log('xArrayPedidoObj', xArrayPedidoObj);
+
+		// 	// xArmarSqlAddLUlI();
+			
+
+		// 	e.stopPropagation();
+		// 	e.stopImmediatePropagation();
+		// 	return;
+		// }
+
+		if(xAgrupar_item_activo==true){return;}
+		xArrayItemEliminar=[];
+		
 		//var xcantEliminar=xobj_row_item.attr('data-cant_descontar');
 		//if(isNaN(parseInt(xcantEliminar))){xcantEliminar=parseFloat(xobj_row_item.find('#td_cant').text());}
 		xArrayItemEliminar={'procede':xobj_row_item.attr('data-descontar'),
@@ -1148,7 +1222,7 @@ function xAnularPedido(){
 			$(xObj_miPedido).attr('data-abrir-detalle','0');
 			$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 		}
-
+		
 		dialog_detalle.close();
 	})
 }
@@ -1169,6 +1243,7 @@ function xCambiarMesa(){
 		dialog_cambiar_mesa.close();
 		txt_num_mesa_change.value='';
 		xPopupLoad.xclose()
+		
 		dialog_detalle.close();
 
 		if($("#dialog_cambiar_mesa #titulo_cambiar_mesa").text().indexOf('todos')<0){return;}
@@ -1182,6 +1257,7 @@ function xCambiarMesa(){
 		$(xObj_miPedido).attr('data-abrir-detalle','0');
 		$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 
+		console.log('pintar pedido from xCambiarMesa');
 		xPintarEstadoPedido(); // pinta nuevamente el cambio de mesa
 	});
 }
@@ -1260,6 +1336,8 @@ function xNuevoPedidoCM(){
 	xDtSubTotales=new Array();
 	guardandoPedido_cp = 0;
 	console.log('send p cero', guardandoPedido_cp);
+
+	xThisCM.isAddItemRow = false;
 	xLoadArrayPedido();
 }
 
@@ -1377,11 +1455,12 @@ function _cpStockItemModificado(item){
 	}
 }
 
+// agrega nuevo item desde el mismo pedido
 function xArmarSqlAddLUlI(){
-	console.log('send p', guardandoPedido_cp);
+	// console.log('send p', guardandoPedido_cp);
 	if ( guardandoPedido_cp === 1 ) {return;}
 	guardandoPedido_cp = 1;
-	console.log('send p', guardandoPedido_cp);
+	// console.log('send p', guardandoPedido_cp);
 
 	var xRowLi='';
 	var xli_id_pedido;
@@ -1606,11 +1685,11 @@ async function xRegistrarClientePagoCP(){
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
 			xLoadDetallesPedido(xObj_miPedido);
-			if (isSocket) {
+			// if (isSocket) {
 				_cpSocketPintarPedido(null);
 				// notificar al usuario de la cuenta
 				_cpSocketEmitPedidoPagoCliente(xarr_list_cliente_usuario_pedido);
-			}
+			// }
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
 
 		}).fail(enProcesoGuardarPago = false);
@@ -1635,10 +1714,10 @@ async function xRegistrarClientePagoCP(){
 			enProcesoGuardarPago = false;
 			xRegistrarPagoCM(xCantRow);	
 
-			if (isSocket) {
+			// if (isSocket) {
 				// notificar al usuario de la cuenta
 				_cpSocketEmitPedidoPagoCliente(xarr_list_cliente_usuario_pedido);
-			}
+			// }
 
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
 		}).fail(enProcesoGuardarPago = false);
@@ -1650,8 +1729,9 @@ function xRegistrarPagoCM(xcant_rp){
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=509', data:{idclie:xidclie,tt:xMoneda(xtt_pedidos),idp:xidp,xArrayItems:arrayItems,ArrayPago:xRpt_pago[0].xtipo_pagos,idtipo_consumo:idtpc}})
 	// .done( function (xidC) {
 		var xnum_mesa_obj=parseInt($(xObj_miPedido).attr('data-nummesa'));
+		var xsolo_confirmar_pago=parseInt($(xObj_miPedido).attr('data-isconfirmarpago'));
 		if(xcant_rp==0){
-			if(xnum_mesa_obj!=0){
+			if(xnum_mesa_obj!=0 && xsolo_confirmar_pago.toString() === '0'){
 				$(xObj_miPedido).removeClass('xOcupado');
 				$(xObj_miPedido).removeClass('xDespachado');
 				$(xObj_miPedido).addClass('xNeutro');
@@ -1688,6 +1768,31 @@ async function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago)
 	}
 	xRpt_pago=[];
 }
+
+
+// consultar si mesa tiene pedidos despues de haber registrado pago por app
+function isPedidoInMesa(xObj_miPedido, nummesa) {
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:nummesa, p:'', confirmar_pago: 0}})
+	.done( function (dtDpedido) {
+		var xdtDpedido=$.parseJSON(dtDpedido);
+		xdtDpedido=xdtDpedido.datos;
+
+		// si no tiene mas pedidos lo quita
+		if ( !xdtDpedido[0] ) {
+			$(xObj_miPedido).removeClass('xOcupado');
+			$(xObj_miPedido).removeClass('xDespachado');
+			$(xObj_miPedido).addClass('xNeutro');
+			$(xObj_miPedido).find(".importe").text('.');
+			$(xObj_miPedido).find(".tiempo").text('disponible');
+			$(xObj_miPedido).attr('data-hora','');
+			$(xObj_miPedido).attr('data-estado','b');
+			$(xObj_miPedido).attr('data-abrir-detalle','0');
+			$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
+		}
+	});
+}
+
+
 ////////////////////
 //////////////////////
 
@@ -1714,19 +1819,21 @@ function xLoadDetallesPedido (obj){
 	var xp_sel_numpedido=$(obj).attr('data-numpedido');
 	var xp_sel_correlativo_dia=$(obj).attr('data-correlativo');
 	var xp_sel_idcategoria=$(obj).attr('data-idcat');
+	var xp_sel_is_confirmar_pago=$(obj).attr('data-isconfirmarpago');
 	var xtitulo='';
 
 	if(xp_sel_nummesa=='0'){xtitulo='PEDIDO '+xCeroIzq(xp_sel_correlativo_dia,5)}else{xtitulo='MESA '+xCeroIzq(xp_sel_nummesa,2)}	
 
 	//armar cantidad de pedidos
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago}})
 	.done( function (dtDpedido) {
 
 		var isDelivery = false;
 		var isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = '', isLlamoRepartidorRed = false,infoFacturacion = ''; // si el pedido es delivery y viene de la app
 		var labelInfoPedido = '', labelInfoComprobante = '';
 
-		isPedidoPagadoFromApp = false;
+		// si es solo para confirmar aunque no sea delivery
+		isPedidoPagadoFromApp = xp_sel_is_confirmar_pago.toString() === '1' ? true : false;
 		xdtDpedido=$.parseJSON(dtDpedido);
 
 		xdtDpedido=xdtDpedido.datos;
@@ -1918,7 +2025,7 @@ function xLoadDetallesPedido (obj){
 		$("#xBody div").remove();
 		$("#xBody").append('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
 	
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:xp_sel_nummesa, p:xp_sel_numpedido}})
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago}})
 		.done( function (dtPbdet) {
 			var xdtPbdet=$.parseJSON(dtPbdet);
 			xArrayDtOrdenFiltro=xdtPbdet.datos;
@@ -1931,6 +2038,10 @@ function xLoadDetallesPedido (obj){
 		})
 		xPopupLoad.xclose();
 		dialog_detalle.open();
+
+		xThisCM.isAddItemRow = false;
+		xNuevoPedidoCM();
+		
 				
 
 		event.stopPropagation();
@@ -2169,7 +2280,7 @@ function xLoadMipedidoBD(dt){
 
 					//seccion
 					if(xArraySeccion[xDtBd[i].idseccion_index]==null){xArraySeccion[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
-					xCadenaItemArray=String('<tr class="row xCursor" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+
+					xCadenaItemArray=String('<tr class="row xCursor" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+
 							'" data-idpedido="'+xDtBd[i].idpedido+
 							'" data-idcliente="'+xDtBd[i].idcliente+
 							'" data-punitario="'+xDtBd[i].punitario+
@@ -2191,11 +2302,15 @@ function xLoadMipedidoBD(dt){
 							'" data-idbus = "' + xDtBd[i].idseccion +
 							'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+
 									'<td width="50px" class="click_row_dt_p" id="cant_descontar"><paper-checkbox class="check_item"></paper-checkbox><span id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2)+'</span></td>'+
-									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+xDtBd[i].descripcion+'</td>'+									
+									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+ xDtBd[i].descripcion +																			
+									'</td>'+									
 									'<td class="click_row_dt_p" align="right" id="td_importe">'+xDtBd[i].ptotal+'</td>'+
-									'<td align="center" class="td_op" data-op="borrar" data-procede=0>'+
-										'<img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'">'+
+									'<td align="center" style="width: 35px" class="rowadditem" data-op="itempedido" data-procede=0>' +
+										'<div class="btn-add-item btn-sm-add-row" data-op="itempedido" title="Agregar Uno"><i class="fa fa-plus" data-op="itempedido"></i></div>'+
 									'</td>'+
+									'<td align="center" style="width: 20px" class="td_op" data-op="borrar" data-procede=0>'+
+										'<img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'">'+										
+									'</td>'+									
 								'</tr>');
 
 					//xCantItems=parseInt(xCantItems)+parseInt(xDtBd[i].cantidad);
@@ -2559,10 +2674,14 @@ async function xLoadMesas(){
 }
 
 function xPintarMesas() {
+	console.log('pintar mesa');
 	const selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x =>
 	x.idtipo_consumo)[0];
 	const selector_tpc_local = 'tpc' + selector_tpc_local_id;
 	xIdFiltro1 = selector_tpc_local_id;	
+
+	// limpiar grid
+	// $('.grid .xMiCardPedido').remove();
 
 	const NumMesa = parseInt(xm_log_get('datos_org_all_sede')[0].mesas);
 	var xcont_mesa=1, xCadenaNumMesa = '';
@@ -2599,6 +2718,7 @@ function xPintarMesas() {
 
 	iIniIsotope = true;
 
+	console.log('pintar pedido from xPintarMesa');
 	// setTimeout(() => {		
 		xPintarEstadoPedido();
 	// }, 500);
@@ -2617,15 +2737,18 @@ function xPintarEstadoPedido() {
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501'})
 		.done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
-			var xdtPe=JSON.parse(dtPe)
-			, xCadenaTPC=''
+			var xdtPe=JSON.parse(dtPe);
+			console.log('xPintarEstadoPedido xdtPe', xdtPe);
+			var xCadenaTPC=''
 			, xcont_mesa=1
 			, xindex
 			, xtxtEstado='', xtxtEstadoDespachado='', itemList
 			, xtxtHora='', xtxt_subtota_total=0;
 
 			xCadenaNewItem='';
+
 			xdtPe=xdtPe.datos.map( x => {x.actualizado = false; return x;});
+			// xdtPe=xdtPe.datos;
 
 			// console.log(xdtPe);
 			// for (var i = 0; i < NumMesa; i++) {
@@ -2641,6 +2764,12 @@ function xPintarEstadoPedido() {
 				// itemList = xdtPe.filter(x => parseInt(x.nummesa) === parseInt(xcont_mesa))[0];
 				itemList = xdtPe.filter(x => xCeroIzq(x.nummesa, 2) === element.textContent || xCeroIzq(x.correlativo_dia, 4) === element.textContent)[0]
 				if ( itemList ) {
+					if (itemList.confirmar_pago === '1'  && itemList.nummesa !== '0' ) { 
+						// chequeamos si la mesa tiene pedido despues de haber pagado por app
+						isPedidoInMesa(_eparent, itemList.nummesa);
+						return;
+					}
+
 					xindex = 0;
 					xtxtEstado = 'xOcupado';
 					xtxtEstadoDespachado = parseInt(itemList.despachado) === 0 ? '' : 'xDespachado';
@@ -2672,6 +2801,7 @@ function xPintarEstadoPedido() {
 					_eparent.attr('data-hora',itemList.hora);
 					_eparent.attr('data-p',itemList.idpedido);
 					_eparent.attr('data-nummesa',itemList.nummesa);
+					_eparent.attr('data-isconfirmarpago',itemList.confirmar_pago);					
 					_eparent.attr('data-numpedido',itemList.numpedido);
 					_eparent.attr('data-correlativo',itemList.correlativo_dia);
 					_eparent.attr('data-estado','a');
@@ -2703,6 +2833,30 @@ function xPintarEstadoPedido() {
 			var xref_reserva='';
 			if ( pasoRedibujado ) { return; }
 			// xdtPe.filter(x => parseInt(x.nummesa) === 0 || parseInt(x.reserva) === 1).map(itemList => {
+
+			try {
+				// actualizamos pedidos pagados desde el app
+				xdtPe.filter(x => x.confirmar_pago == "1").map(x => {
+					// const element = $('.xMiCardPedido#'+x.idpedido);					
+					var element = document.getElementById(x.idpedido);					
+					if ( element ) {
+						element = $(element);
+						if ( x.nummesa == "0"  ) {
+							element.addClass('xInfo');
+							element.find('.iconPedido').addClass('fa fa-credit-card fa-2x');
+							element.find('.tipo').text('Pago App');
+						} else {
+							// si es pago en mesa
+							x.actualizado = true;
+							x.dibujado = true;
+						}
+					}
+				});				
+			} catch (error) {
+				console.log(error);
+			}
+			
+
 			xdtPe.filter(x => !x.actualizado).map(itemList => {
 				// if (itemList) {
 					if ( itemList.dibujado ) { return; }
@@ -2716,7 +2870,12 @@ function xPintarEstadoPedido() {
 					}
 
 					xidtipo_c='tpc'+xidtipo_c;
-					var _stylePedido = 'xOcupado ', xEstadoMiPedido = 'a', xIconPedido = '', xnomCliente = '', _labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>', labelTitle = 'Pedido';					
+					var _stylePedido = 'xOcupado ', 
+					xEstadoMiPedido = 'a', 
+					xIconPedido = '<i class="iconPedido"></i>', 
+					xnomCliente = '', 
+					_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>',
+					labelTitle = 'Pedido';					
 
 					if ( itemList.json_datos_delivery ) {
 
@@ -2727,7 +2886,7 @@ function xPintarEstadoPedido() {
 								_stylePedido = 'xWarning ';
 								xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
 								_labelIdpedido = '<p class="xfont10">' + xnomCliente + '</p>';
-								xIconPedido = '<i class="fa fa-user fa-2x"></i>';
+								xIconPedido = '<i class="iconPedido fa fa-user fa-2x"></i>';
 								labelTitle = 'Cliente Pasa Recoger';
 								xEstadoMiPedido = 'r';
 							}
@@ -2738,7 +2897,7 @@ function xPintarEstadoPedido() {
 									_stylePedido = 'xWarning ';
 									xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
 									_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>';
-									xIconPedido = '<i class="fa fa-clock-o fa-2x"></i>';
+									xIconPedido = '<i class="iconPedido fa fa-clock-o fa-2x"></i>';
 									labelTitle = 'Pedido Programado  '  + itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.dia + ' ' + itemList.json_datos_delivery.p_header.arrDatosDelivery.tiempoEntregaProgamado.hora;
 									xEstadoMiPedido = 'p';
 								}
@@ -2749,7 +2908,7 @@ function xPintarEstadoPedido() {
 								_stylePedido = 'xInfo ';
 								xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
 								_labelIdpedido = '<p class="fs-15 xBold pb-8"> #' + itemList.idpedido + '</p>';
-								xIconPedido = '<i class="fa fa-credit-card fa-2x"></i>';
+								xIconPedido = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
 								labelTitle = 'Pedido Pagado';
 								xEstadoMiPedido = 't';
 							}
@@ -2760,23 +2919,45 @@ function xPintarEstadoPedido() {
 
 					}
 
+					// si ya pago desde el app y solo falta confirmar pago para registrar
+					var numBold = itemList.tipo_consumo_titulo.toUpperCase() === 'LOCAL' ? '' : xCeroIzq(itemList.correlativo_dia,4);
+					var _tituloMesa = numBold === '' ?  'Mesa ' : '';
+					var _referencia = _tituloMesa === '' ?  `<p class="fs-9 pb-2">${itemList.referencia}</p>` : ''; // si es en mesa no pone referencia
+
+					if ( itemList.confirmar_pago.toString() === "1") {
+						_stylePedido = 'xInfo ';
+						_labelIdpedido = _tituloMesa.trim() === 'Mesa' ? '<p class="fs-15 xBold pb-8">'+ _tituloMesa + xCeroIzq(itemList.nummesa, 2) + '</p>' : _labelIdpedido;
+						xIconPedido = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
+						labelTitle = 'Pago App';
+						xEstadoMiPedido = 't';
+					}
+
 					xtxt_subtota_total = itemList.des_tipo_consumo.toUpperCase() === 'DELIVERY' ? '-'  :  'S/. ' + xMoneda(xArmarSubtotalesFromTotal(itemList));
-					xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido '+_stylePedido+xidtipo_c+' xCursor"'
+					
+
+					xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido '+_stylePedido+xidtipo_c+' xCursor" id="'+ itemList.idpedido +'"'
 						+' data-estado="'+ xEstadoMiPedido +'" data-tpc="'+xidtipo_c+'" data-hora="'+itemList.hora+'" data-p="'+itemList.idpedido+'"'
 						+' data-nummesa="'+itemList.nummesa+'" data-correlativo="'+itemList.correlativo_dia+'"'
+						+' data-isconfirmarpago="'+itemList.confirmar_pago +'"'
 						+' data-numpedido="'+itemList.numpedido+'"  data-abrir-detalle="1" onclick="xLoadDetallesPedido(this)">'+ // onclick="xLoadDetallesPedido(this)"
 						xIconPedido + 
 						'<p class="tipo">' + labelTitle + '</p>'+
-						'<h3 class="numero xBold">'+xCeroIzq(itemList.correlativo_dia,4)+ '</h3>'+
+						'<h3 class="numero xBold">'+ numBold + '</h3>'+
 						_labelIdpedido +						
+						_referencia +
 						'<p class="tiempo xfont11"></p>'+xref_reserva+	
 						'<p class="importe xBold">'+xtxt_subtota_total+'</p>'+
 					'</div>');
 
 					itemList.dibujado = true;
 					itemList.actualizado = true;
+					// itemList.actualizado = x.confirmar_pago ? x.confirmar_pago == "0" ? true : false : true;
 				// }
 			});
+
+			if ( xdtPe.length > 0 ) {
+				xdtPe[xdtPe.length - 1].actualizado = true;
+			}
 
 			if(xCadenaNewItem!=''){
 				var $itemsNew=$(xCadenaNewItem);		
@@ -2806,7 +2987,9 @@ function xPintarEstadoPedido() {
 }
 
 function _cpSocketPintarPedido(pedido) {	
-	console.log('nbuevo pedido', pedido);
+	// console.log('nbuevo pedido', pedido);
+	pNotificaNuevoPedido(pedido); // notifica el pedido nuevo desde la app
+	console.log('pintar pedido from _cpSocet');
 	xPintarEstadoPedido()
 }
 
@@ -2975,6 +3158,7 @@ function xVerificarSiActualizaItems(){
 }
 function xActualizarItems(){
 	if (!isSocket)  {
+		console.log('pintar pedido from xActualizarItems');
 		xPintarEstadoPedido();
 	}
 
@@ -3136,6 +3320,7 @@ Polymer({
 		dt_item:Object,
 		xdtPedDet: Object,
 		isLoadMesasIsotope: Boolean,
+		isAddItemRow: Boolean,
 		listRepartidor: []
 		// hidden_container_registro_pago: boolean = false,
 		// valid_form_cliente_pago: boolean = false,

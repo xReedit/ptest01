@@ -1,5 +1,5 @@
-<script src="../../../../js/qr.min.js"></script>
 <dom-module id="x-carta-virtual-mesas">
+    <script src="../../../../js/qrious.js"></script>
     <template is="dom"> 
 
         <paper-dialog oncontextmenu = "null" id="dialog_qr" modal class="dialog-redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation">			            
@@ -40,10 +40,20 @@
                         <img src="{{item_o.codigo}}" alt="">                        
                         <span>{{item_o.titulo}}</span>
                     </div>
-                </template>
+                </template>                
             </div>
-
+            <br>
             <br><br>
+            <div class="xLinea2"></div>
+                <br>
+                <h4>LINK DELIVERY para compartir.</h4>
+                <span>De clic en este link para copiarlo y compartirlo con sus clientes por sus redes sociales, los llevara directo a visualizar su carta desde donde podrá realizar su pedido</span>
+                <p class="text-info xCursor" title="Copiar" onclick="copiarUrl()" id="urlcopy">{{url_delivery}}</p>
+                <br>
+                <span>Además puede acortar el enlaze con este servicio: <a href="https://bitly.com/" target="_blank" class="text-info">Short URL</a></span>
+                <br>
+            <br><div class="xLinea2"></div>
+            <br>
             <h3>Modelo de afiche</h3>
             <p>Toca para descargar.</p>
             <div class="xLinea2"></div>           
@@ -117,6 +127,7 @@
             xThisCartaVMesas.qrDelivery.codigo = `https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl=${_cod}`;
             xThisCartaVMesas.qrDelivery.titulo = 'Delivery';
             xThisCartaVMesas.qrDelivery.codigo_qr = _cod;
+            xThisCartaVMesas.url_delivery = _cod;
 
             listOther.push(xThisCartaVMesas.qrLLevar);
             listOther.push(xThisCartaVMesas.qrDelivery);
@@ -218,6 +229,18 @@
         return navigator.clipboard.write(data)
     }
 
+    function copiarUrl() {
+        var text = document.getElementById('urlcopy').innerText;
+        var elem = document.createElement("textarea");
+        document.body.appendChild(elem);
+        elem.value = text;
+        elem.select();
+        document.execCommand("copy");
+        document.body.removeChild(elem);
+
+        
+    }
+
     Polymer({
             is: 'x-carta-virtual-mesas',
             properties: {
@@ -228,6 +251,7 @@
                 qrDelivery: Object,
                 objListOtherQr: Object,
                 objQrSelected: Object,
+                url_delivery: String,
                 imgAfiche: String
             },
             attached: function () {                

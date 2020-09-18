@@ -146,19 +146,24 @@
   	</style>
  </head>
  <body oncontextmenu="return false" unresolved class="fullbleed layout vertical">
-		<x-dialog id="xLoad"></x-dialog>
-
-		<div class="xInvisible">			
-			<!-- notifica llamado cliente -->
-			<audio id="notificaLlamadoCliente" autobuffer>
-				<source src="../../sound/notifica-llamado.mp3" type="audio/mpeg"/>		
-			</audio>
-		
-			<!-- notifica pago cliente -->
-			<audio id="notificaPagoCliente" autobuffer>
-			  <source src="../../sound/notifica-pago.mp3" type="audio/mpeg"/>      
-			</audio>
-		  </div>
+	<x-dialog id="xLoad"></x-dialog>
+	
+	<div class="xInvisible">			
+		<!-- notifica llamado cliente -->
+		<audio id="notificaLlamadoCliente" autobuffer preload="auto">
+			<source src="../../sound/notifica-llamado.mp3" type="audio/mpeg"/>		
+		</audio>
+	
+		<!-- notifica pago cliente -->
+		<audio id="notificaPagoCliente" autobuffer preload="auto">
+		  <source src="../../sound/notifica-pago.mp3" type="audio/mpeg"/>      
+		</audio>
+   
+		<!-- notifica Pedido -->
+		<audio id="notificaNuevoPedido" autobuffer preload="auto">
+			<source src="../../sound/notifica-pedido.wav" type="audio/mpeg"/>		
+		</audio>
+	  </div>
 
 	<paper-drawer-panel>
 	  <paper-header-panel drawer>

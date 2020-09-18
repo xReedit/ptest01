@@ -228,6 +228,7 @@ function handlerFnMiPedido(e) {
 
 //agregar item desde control de pedidos
 $(document.body).on('click', '#content_item_pedido div.xBtn_li', handlerFnMiPedidoControl); // control de mesas
+// $(document.body).on('click', '.btn-sm-add-row', handlerFnMiPedidoControl); // control de mesas mismo pedido
 $(document.body).on('click', '#accordion div.xBtn_contet_li2', handlerFnMiPedidoControl); // venta rapida
 // $(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
 $(document.body).on('click', '#accordion div.content_li', function(e) {
@@ -240,13 +241,32 @@ function handlerFnMiPedidoControl(e) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {		
 
 		var _nomClassXcant_li = 'xcant_li';
-		const _thisObj = e.target || e;
+		var _thisObj = e.target || e;
+		const isRowItemPedido = _thisObj.dataset.op === 'itempedido' ? true : false;
+		
+		if ( isRowItemPedido ) { // viene del pedido item control pedido
+			_thisObj = $(_thisObj).parents('tr')[0];			
+		}
+
 		const _objParentLi = _thisObj.dataset.index ? _thisObj : _thisObj.parentElement.dataset.index ? _thisObj.parentElement : _thisObj.parentElement.parentElement.dataset.index ? _thisObj.parentElement.parentElement : _thisObj.parentElement.parentElement.parentElement;
 		const _dataSetObj = _objParentLi.dataset;
 		// const _isLi = _dataSetObj.isli ? true : false; // si viene del li ventarapida sumar al click
-		const _viene_venta_rapida = _dataSetObj.ventarapida; // _thisObj.parentElement.parentElement.dataset.ventarapida || 0;
-		const _itemIndex = _dataSetObj.index// _thisObj.parentElement.parentElement.dataset.index;
+		const _viene_venta_rapida = _dataSetObj.ventarapida; // _thisObj.parentElement.parentElement.dataset.ventarapida || 0;		
+		var _itemIndex = _dataSetObj.index// _thisObj.parentElement.parentElement.dataset.index;
 		
+
+		if ( isRowItemPedido ) { // viene del pedido item control pedido
+			// _thisObj = $(_thisObj).parents('tr')[0];
+			const idItemRowPedido = _thisObj.dataset.iditem.toString();
+			xGeneralDataCarta.map((x, i) => {
+				if (x.iditem.toString() === idItemRowPedido) {
+					_itemIndex = i;
+				}
+			});
+		} else {
+			_itemIndex = _dataSetObj.index// _thisObj.parentElement.parentElement.dataset.index;			
+		}
+
 		xidTipoConsumo = $("#select_ulTPC option:selected").val();
 		itemPedidos_objItemSelected = xGeneralDataCarta[_itemIndex];
 		
@@ -267,8 +287,9 @@ function handlerFnMiPedidoControl(e) {
 		// if(element_cant_li_sel.length==0){element_cant_li_sel=$(this).parent().find('.xcant_li2');}
 		// var element_li_add__print= $(this).parent().parent();
 		
-		var xsigno= _thisObj.textContent != '+' && _thisObj.textContent != '-' ? _dataSetObj.signo : _thisObj.textContent // signo si viene de ventarapida solo click en item suma //$(this).text(),
-		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
+		var xsigno= _thisObj.textContent != '+' && _thisObj.textContent != '-' ? _dataSetObj.signo : _thisObj.textContent; // signo si viene de ventarapida solo click en item suma //$(this).text(),
+		xsigno = isRowItemPedido ? '+' : xsigno;
+		var objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
 		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),		
 		, xcant_max = itemPedidos_objItemSelected.stock_actual // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),

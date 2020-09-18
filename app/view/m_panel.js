@@ -324,6 +324,7 @@ function xOpenPage(xop, parametro){
 			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
 			return; 		
 		case 41: xruta = '/indicadores'; break;
+		case 42: xruta = '/mozo_virtual'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);
