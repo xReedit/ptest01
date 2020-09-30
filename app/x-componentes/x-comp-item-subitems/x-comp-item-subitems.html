@@ -242,6 +242,8 @@
             itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
         }
 
+        console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);
+
         itemPedidos_objItemSelected.des = itemPedidos_objItemSelected.des ? itemPedidos_objItemSelected.des : itemPedidos_objItemSelected.des_item;
         xThisComSubItem.desProducto = itemPedidos_objItemSelected.des;
         xThisComSubItem.detalleProducto = itemPedidos_objItemSelected.detalle;
@@ -485,7 +487,7 @@
             cantRpt += parseInt(objTpc.precio_total); 
           }
         });
-
+        cantRpt = cantRpt === 0 ? parseInt(itemPedidos_objItemSelected.precio_unitario) : cantRpt;
         return parseFloat(cantRpt).toFixed(2);
     }
 

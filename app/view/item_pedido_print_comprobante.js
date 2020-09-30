@@ -492,9 +492,9 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 		}
 	})
 	.done((UltimoIdPrint)=> {	
-		var _isSocket = isSocket ? isSocket : false;
-		if ( _isSocket ) {
-			var dataSend = {			
+		// var _isSocket = isSocket ? isSocket : false;
+		// if ( _isSocket ) {
+			var dataSend = {
 				detalle_json: _data,
 				idprint_server_estructura: _idprint_server_estructura,
 				tipo: _tipo,
@@ -504,8 +504,8 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 			}
 	
 			_cpSocketEmitPrinterOnly(dataSend);
-			return;
-		}
+			// return;
+		// }
 
 		// console.log(x);
 		
@@ -522,7 +522,10 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 				}
 			})
 		}, 2500);
-	});	
+	}).fail(function(e) {
+		alert( "error", e );
+		console.log('error', e);
+	  });	
 }
 
 function xReturnCorrelativoComprobante(_obj) {	

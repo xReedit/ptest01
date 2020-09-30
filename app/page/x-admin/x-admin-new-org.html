@@ -95,11 +95,14 @@
 									<br><br>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="TIEMPO LIMITE EN MINUTOS PARA TOMAR PEDIDO" id="pwa_time_limit" name="pwa_time_limit" espaciar>
 									<paper-checkbox id="check_pwa"><span>PWA con sockets</span></paper-checkbox>
+									<br>
+									<paper-checkbox id="check_isprinter_socket"><span>Servidor de impresion adminte socket?</span></paper-checkbox>
 		
 									<div class="xInvisible">
 										<input type="text" class="xMiInput xPasarEnter2" placeholder="RUN LOCAL?" id="sys_local" name="sys_local">
 										<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="pwa" name="pwa">
 										<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="facturacion_e_activo" name="facturacion_e_activo">
+										<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="isprinter_socket" name="isprinter_socket">
 									</div>
 		
 									<br><br>
@@ -403,10 +406,12 @@ function transferenciaCompleta(xfile){
 
 		const _printServerCheck = check_print_server.checked ? 1 : 0;
 		const _pwaCheck = check_pwa.checked ? 1 : 0;
+		const _CheckisPrinterSocket = check_isprinter_socket.checked ? 1 : 0;
 		const _check_habilita_facturacion = check_habilita_facturacion.checked ? 1 : 0;
 
 		$("#frm_sede #sys_local").val(_printServerCheck);
 		$("#frm_sede #pwa").val(_pwaCheck);
+		$("#frm_sede #isprinter_socket").val(_CheckisPrinterSocket);
 		$("#frm_sede #facturacion_e_activo").val(_check_habilita_facturacion);		
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede", $("#frm_sede").serialize(), function (id) {
@@ -478,6 +483,7 @@ function transferenciaCompleta(xfile){
 		$("#frm_sede #sys_local").val(dataSede.sys_local);
 		$("#frm_sede #ip_server_local").val(dataSede.ip_server_local);
 		$("#frm_sede #pwa").val(dataSede.pwa);
+		$("#frm_sede #pwa").val(dataSede.isprinter_socket);		
 		$("#frm_sede #finicio").val(dataSede.finicio);
 		$("#frm_sede #pwa_time_limit").val(dataSede.pwa_time_limit);
 		$("#frm_sede #url_api_fac").val(dataSede.url_api_fac);
@@ -485,6 +491,7 @@ function transferenciaCompleta(xfile){
 
 		check_print_server.checked = dataSede.ip_server_local === "0" ? false : true;
 		check_pwa.checked = dataSede.pwa === "0" ? false : true;
+		check_isprinter_socket.checked = dataSede.isprinter_socket === "0" ? false : true;
 		check_habilita_facturacion.checked = dataSede.facturacion_e_activo === "0" ? false : true;
 		check_habilita_delivery.checked = dataSede.pwa_habilitar_delivery_app === "0" ? false : true;
 		check_afiliado_delivery.checked = dataSede.pwa_comercio_afiliado === "0" ? false : true;

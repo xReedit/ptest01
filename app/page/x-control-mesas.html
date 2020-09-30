@@ -2580,6 +2580,7 @@ async function xSumarTotalPedidos(viene_borrar ){
 
 	if(viene_borrar==1){//si viene de borrar items y ya no queda mas items = mesa disponible
 		if(xtt_pedidos==0){//cierra pedido
+			console.log('sumar pedidos neutro');
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
@@ -2748,6 +2749,8 @@ function xPintarEstadoPedido() {
 			xCadenaNewItem='';
 
 			xdtPe=xdtPe.datos.map( x => {x.actualizado = false; return x;});
+
+			if ( pasoRedibujado ) { return; }
 			// xdtPe=xdtPe.datos;
 
 			// console.log(xdtPe);
@@ -2920,7 +2923,7 @@ function xPintarEstadoPedido() {
 					}
 
 					// si ya pago desde el app y solo falta confirmar pago para registrar
-					var numBold = itemList.tipo_consumo_titulo.toUpperCase() === 'LOCAL' ? '' : xCeroIzq(itemList.correlativo_dia,4);
+					var numBold = itemList.reserva.toString() === '0' && itemList.tipo_consumo_titulo.toUpperCase() === 'LOCAL' ? '' : xCeroIzq(itemList.correlativo_dia,4);
 					var _tituloMesa = numBold === '' ?  'Mesa ' : '';
 					var _referencia = _tituloMesa === '' ?  `<p class="fs-9 pb-2">${itemList.referencia}</p>` : ''; // si es en mesa no pone referencia
 
@@ -2977,10 +2980,20 @@ function xPintarEstadoPedido() {
 
 			xCadenaNewItem='';
 
-			xResetMesaDefault(xdtPe.map(x => {
+			// no reservas
+			const _valsReset = []
+			xdtPe.map(x => {
 				const _val = x.nummesa == 0 ? '|'+xCeroIzq(x.correlativo_dia,4)+'|' : '|'+xCeroIzq(x.nummesa,2)+'|';
-				return _val;
-			}).join(','));
+				_valsReset.push(_val);
+			}); 
+
+
+			xResetMesaDefault(_valsReset.join(','));
+
+			// xResetMesaDefault(xdtPe.filter(x => x.reserva.toString() === "0").map(x => {
+			// 	const _val = x.nummesa == 0 ? '|'+xCeroIzq(x.correlativo_dia,4)+'|' : '|'+xCeroIzq(x.nummesa,2)+'|';
+			// 	return _val;
+			// }).join(','));
 		});
 
 		$('.grid').isotope('updateSortData'); //.isotope('layout');
@@ -3165,6 +3178,7 @@ function xActualizarItems(){
 }
 
 function xResetMesaDefault(_num) {
+	// if (_num === '') {return; }
 	$(".xMiCardPedido.xOcupado .numero").each(function(index,element){
 		const _eparent = $(element).parent();
 		const _t_find = '|'+element.textContent+'|';

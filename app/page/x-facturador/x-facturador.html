@@ -1,6 +1,8 @@
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <dom-module id="x-facturador">
     <script src="../../view/xm_all.js"></script>
+
+
     <template is="dom-bind">
         <paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation"
             exit-animation="fade-out-animation">
@@ -45,6 +47,9 @@
                 <br>                
                 <hr class="xLinea3">
                 <br>
+                <div class="w-100 d-flexx justify-content-end">
+                    <button class="btn btn-sm btn-success" onclick="xAddItem();">+ Agregar</button>
+                </div>
                 <table class="xtable4" width="100%">
                     <thead>
                         <th class="xSinBorde" width="10px">Cant</th>
@@ -107,7 +112,10 @@
             </div>
         </div>
         <br><br>
-    </template>
+    </template>    
+    <!-- <script rel="prefetch" type="text/javascript" src="../../view/socket.master.service.js"></script> -->
+    <script rel="prefetch" type="text/javascript" src="../../view/socket.service.p.js"></script>
+
     <script type="text/javascript" src="../../shared/validar.numdoc.js"></script>
     <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
     <script type="text/javascript" src="../../view/deNumALetras.js"></script>
@@ -118,6 +126,8 @@
     <script type="text/javascript" src="../../view/manager_storage.js"></script>
     <script type="text/javascript" src="../../view/cliente.service.js"></script>    
     <script type="text/javascript" src="../../view/cpe_interno.js"></script>
+    
+
     <style type="text/css">
         :root {
             --font-size: 12px;
@@ -137,7 +147,7 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='';
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true;
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -560,6 +570,7 @@
         attached: function () {
             xThisFacturador = this;
             xIniFacturador();
+            _cpSocketOpen();
         }
     })
 </script>

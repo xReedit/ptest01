@@ -235,6 +235,10 @@
 					</table>
 				</div>
 			</div>
+
+			<div id="content_dynamic">
+
+			</div>
 			<br><br>
 
 		</div>
@@ -349,6 +353,7 @@
 		loadMovimientoCaja();
 		loadAnulados();
 		loadIfCierreCaja()
+		contenidoDinamico();
 
 		loadMozoVirtual();
 		loadPagoAPP();
@@ -378,6 +383,17 @@
 		setTimeout(() => {
 			xPopupLoad.xclose();
 		}, 600);
+	}
+
+	function contenidoDinamico() {
+		$.ajax({
+				type: 'POST',
+				url: '../../bdphp/log_005.php?op=18',
+				data: dataFiltro
+			})
+			.done(function (res) {				
+				$('#content_dynamic').html(res).trigger('create');
+			});
 	}
 
 	function loadVentasDia(){
