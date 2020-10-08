@@ -1215,6 +1215,7 @@ function xAnularPedido(){
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
+			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 			$(xObj_miPedido).find(".importe").text('.');
 			$(xObj_miPedido).find(".tiempo").text('disponible');
 			$(xObj_miPedido).attr('data-hora','');
@@ -1250,6 +1251,7 @@ function xCambiarMesa(){
 		$(xObj_miPedido).removeClass('xOcupado');
 		$(xObj_miPedido).removeClass('xDespachado');
 		$(xObj_miPedido).addClass('xNeutro');
+		$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 		$(xObj_miPedido).find(".importe").text('.');
 		$(xObj_miPedido).find(".tiempo").text('disponible');
 		$(xObj_miPedido).attr('data-hora','');
@@ -1280,13 +1282,20 @@ async function xImprimirPrecuenta(){
 	xmunp_pc=xmunp_pc.replace('CO-','');
 	xmunp_pc=xmunp_pc.replace('|','');
 	xmunp_pc=xmunp_pc.replace(/\s/g,'');
-	xmesa_pc=xmesa_pc[1];
+	// xmesa_pc=xmesa_pc[1]; 
+	// po si no sale el numero de mesa
+	xmesa_pc=xdtDpedido[0].nummesa;
 
 	const isDelivery = datosDelivery ? 1 : 0;
 
 	xArrayPrintEncaLi_pre_cuenta={'m':xmesa_pc, 'r':'', 'num_pedido':xmunp_pc,'reservar':0, 'solo_llevar':0,'correlativo_dia':xmunp_pc,'precuenta':true, 'delivery': isDelivery, 'arrDatosDelivery': datosDelivery};
 
 	xMandarImprimirOtroDoc(xArrayPrintEncaLi_pre_cuenta,xDtPrint,xArrayItemPreCuenta,arrSumSubtTotales,-1);
+
+	// update bd print
+	xUpdatePrintPrecuentaPedido(checkItemsSeleccionados.idPedidosSeleccionados.split(',')[0]);
+	// _cpSocketEmitPrinterPrecuenta(null);
+	_cpSocketPintarPedido(null); // vuelve a pintar las mesas
 }
 
 function xImprimirComprobante() {
@@ -1735,6 +1744,7 @@ function xRegistrarPagoCM(xcant_rp){
 				$(xObj_miPedido).removeClass('xOcupado');
 				$(xObj_miPedido).removeClass('xDespachado');
 				$(xObj_miPedido).addClass('xNeutro');
+				$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 				$(xObj_miPedido).find(".importe").text('.');
 				$(xObj_miPedido).find(".tiempo").text('disponible');
 				$(xObj_miPedido).attr('data-hora','');
@@ -1782,6 +1792,7 @@ function isPedidoInMesa(xObj_miPedido, nummesa) {
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
+			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 			$(xObj_miPedido).find(".importe").text('.');
 			$(xObj_miPedido).find(".tiempo").text('disponible');
 			$(xObj_miPedido).attr('data-hora','');
@@ -2584,6 +2595,7 @@ async function xSumarTotalPedidos(viene_borrar ){
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
+			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 			$(xObj_miPedido).find(".importe").text('.');
 			$(xObj_miPedido).find(".tiempo").text('disponible');
 			$(xObj_miPedido).attr('data-hora','');
@@ -2689,6 +2701,7 @@ function xPintarMesas() {
 	for (var i = 0; i < NumMesa; i++) {
 		xtxtEstado = 'xNeutro';
 		xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
+			'<div class="show-led-precuenta xInvisible">p</div>' +
 			'<p class="tipo">Mesa</p>' +
 			'<h3 class="numero xBold">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
 			'<p class="tiempo xfont11">disponible</p>' +
@@ -2797,6 +2810,15 @@ function xPintarEstadoPedido() {
 					_eparent.addClass('xOcupado');
 					_eparent.addClass('xCursor');
 					_eparent.addClass(xtxtEstadoDespachado);
+
+					// si ya se imprimio precuenta de la mesa
+					if ( itemList.is_precuenta.toString() === '1' ) {
+						_eparent.find('.show-led-precuenta').removeClass('xInvisible');
+					} else {
+						_eparent.find('.show-led-precuenta').addClass('xInvisible');
+					}
+
+
 					// _eparent.addClass(xidtpc_item_up);
 
 					xtxt_subtota_total = itemList.des_tipo_consumo.toUpperCase() === 'DELIVERY' ? '-'  :  'S/. ' + xMoneda(xArmarSubtotalesFromTotal(itemList));
@@ -3188,6 +3210,7 @@ function xResetMesaDefault(_num) {
 			_eparent.removeClass('xDespachado');
 			_eparent.removeClass('xCursor');
 			_eparent.addClass('xNeutro');
+			_eparent.find('.show-led-precuenta').addClass('xInvisible');
 			// _eparent.addClass('tpc1');
 			_eparent.find(".importe").text('-');
 			_eparent.find(".tiempo").text('disponible')

@@ -330,6 +330,7 @@ function xOpenPage(xop, parametro){
 			const url_s = 'https://comercio.papaya.com.pe/'; 
 			window.open(url_s, "Seguimiento de Delivery");// produccion
 		break;
+		case 45: xruta = '/orden_pedido'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

@@ -96,7 +96,7 @@
 <script>
 	var xThisComDatosDelivery, xIdCliente_pedido, xClientePedidoFnac, arrCompDatosAdjuntoDelivery = [], _inputAutocompleteDel,
 	_inputAutocompleteDelObj, compDirSelectCliente, calcCosto, direcionSelected, compDirSearch, dataSede,
-	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia;
+	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp;
 	
 	function xCompDatosDelInit() {
 		calcCosto = new calcCostoEntrega();
@@ -165,17 +165,18 @@
 		// primero chequeamos si el comercio o sede esta activo para busqueda
 		comercioHabilitadoBusquedaGoogleApi = dataSede.pwa_habilitar_busqueda_mapa === '1'; // comercio afiliado a papaya express		
 		comercioHabilitadoCalcDistancia = dataSede.pwa_delivery_hablitar_calc_costo_servicio === '1';		
+		comercioHabilitadoCalcDistanciaSoloApp = dataSede.pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';		
 		const comercioPropioreparto = dataSede.pwa_delivery_servicio_propio === '1';		
 
 		xThisComDatosDelivery.showapigoogle = comercioHabilitadoBusquedaGoogleApi;
 
 		// si el comercio tiene su propio reparto 
 		// y no es necesario el calculo de distancia no es necesario traer las ultimas comisiones
-		if ( comercioPropioreparto && !comercioHabilitadoCalcDistancia ) {return; }
+		if ( comercioPropioreparto && !comercioHabilitadoCalcDistancia && !comercioHabilitadoCalcDistanciaSoloApp) {return; }
 		// comercioHabilitadoBusquedaGoogleApi = true; // comercio afiliado a papaya express		
 
 		const _dirEstablecimineto = dataSede;
-		if (_dirEstablecimineto.pwa_delivery_hablitar_calc_costo_servicio.toString() === "1") {
+		// if (_dirEstablecimineto.pwa_delivery_hablitar_calc_costo_servicio.toString() === "1") {
 			const _dataSend = {
 				codigo_postal: _dirEstablecimineto.codigo_postal
 			};			
@@ -196,11 +197,11 @@
 						dataSede.c_km = _data.c_km;
 						
 					});
-		}
+		// }
 	}
 
 	function calcularDistancia() {
-		if ( !comercioHabilitadoCalcDistancia ) { return; }
+		if ( !comercioHabilitadoCalcDistancia && !comercioHabilitadoCalcDistanciaSoloApp ) { return; }
 		
 		var origen = {
 					lat: dataSede.latitude,
@@ -219,13 +220,16 @@
 					calcCosto.costoDistancia(distanciaKm, dataSede);
 					dataSede.c_servicio = calcCosto.getImporteDistance();
 					xThisComDatosDelivery.costoentrega = parseFloat(dataSede.c_servicio).toFixed(2);
-					xThisComDatosDelivery.showcostoentrega = true;
+					xThisComDatosDelivery.showcostoentrega = comercioHabilitadoCalcDistancia;
 					console.log('calcCosto.getImporteDistance()', calcCosto.getImporteDistance());
 
 					// agregamos a los subtotales
-					localStorage.setItem('::app3_woDUS::cxe', dataSede.c_servicio.toString());
+					if ( comercioHabilitadoCalcDistancia ) {
+						localStorage.setItem('::app3_woDUS::cxe', dataSede.c_servicio.toString());
+					}
+
 					xSumarTotal(); // esto de venta rapida
-				}, 500);
+				}, 700);
 
 
 	}

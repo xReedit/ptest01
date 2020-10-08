@@ -554,3 +554,14 @@ function xReturnCorrelativoComprobante(_obj) {
 
 	return _rpt;
 }
+
+
+function xUpdatePrintPrecuentaPedido(_id) {
+	$.ajax({
+		url: '../../bdphp/log_003.php?op=6',
+		type: 'POST',		
+		data: {
+			id: _id			
+		}
+	});
+}

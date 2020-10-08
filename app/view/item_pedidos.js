@@ -820,6 +820,7 @@ function xSumaCantArray(ArrySum){
 //imprimir otros documentos --- -1 precuenta - -2 factura
 //xArrayCuerpo debe tener estructura de mod impresion, (como sub pedido ::app3_sys_dta_pe)
 function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,xidDoc){
+	console.log('viene b');
 	var xIdPrint=0;
 	var xArrayBodyPrint=[];
 	var xArrayImpresoras=xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
@@ -876,6 +877,7 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 //xArrayCuerpo debe tener estructura de mod impresion, (como sub pedido ::app3_sys_dta_pe)
 // xArraySubTotales ya esta calculado los subtotales
 function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, xArraySubTotales,xidDoc){
+	console.log('vienen a');
 	var xArrayImpresoras=xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
 	var xDtTipoDoc=xm_log_get('app3_woIpPrintO');//JSON.parse(window.localStorage.getItem("::app3_woIpPrintO"));
 	var xPrintLocal=window.localStorage.getItem("::app3_woIpPrintLo");

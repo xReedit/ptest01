@@ -309,12 +309,12 @@ function darFormatoSubTotalesComisionRepartidor(sedeInfo, arrTotales, costoEntre
     // si repartidores propio muestra comisiciones y propina
     if ( sedeInfo.pwa_delivery_servicio_propio === '1') {
 
-      rowTotal.importe = arrTotales.filter(x => x.descripcion !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+      rowTotal.importe = arrTotales.filter(x => x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
       return arrTotales;
 
     } else {
       // -2 = servicio deliver -3 = propina
-      rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && x.descripcion !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+      rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
       return arrTotales.filter(x => x.id !== -2 && x.id !== -3);
     }
   }

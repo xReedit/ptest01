@@ -27,8 +27,15 @@
 
 
 		<paper-dialog id="dialog_detalle" class="dialog_redondo" style="width: 90%; max-width: 550px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-			<div class="xContent">
-				<h4 id="dlg_des_item_detalle">Item</h4>
+			<div class="xContent">								
+				<div class="d-flexx justify-content-between align-items-center">
+					<div>
+						<h4 id="dlg_des_item_detalle">Item</h4>
+					</div>
+					<div class="pb-2">
+						<paper-checkbox id="check_visible_cliente" onchange="updateVisible()"><span class="fs-12 text-secondary"><strong>No</strong> visible para el cliente.</span></paper-checkbox><br>
+					</div>
+				</div>
 				<div class="xLinea2"></div>
 
 				<paper-tabs selected="{{selectedDetalle}}" id="tab_detalle">
@@ -254,7 +261,7 @@ var xThisCarta
 , xIdCartaAnterior
 , xIdObjImgDet='' //foto o detalle;
 , xidCategoria ///remplazar luego por el select
-, xFechaUltimaCarta, xdebounce, xe_debounce=false, xdtCAct, itemSelectSubItem;
+, xFechaUltimaCarta, xdebounce, xe_debounce=false, xdtCAct, itemSelectSubItem, xIdObjCartaLista;
 
 //var xIdCartaUpdate='';
 
@@ -677,6 +684,7 @@ function xItemDetalle(obj, e){
 
 function xItemDetalleOpciones(index, obj, e){
 	itemSelectSubItem = xdtCAct[index];
+	check_visible_cliente.checked = itemSelectSubItem.is_visible_cliente.toString() === '1';
 	xCompSubItemContet.iditem = itemSelectSubItem.iditem;
 	xCompSubItemContet.loadSubItemIni();
 	
@@ -694,6 +702,7 @@ function xItemDetalleOpciones(index, obj, e){
 	// foto
 	xObjImgDet=obj;
 	xIdObjImgDet=$(obj).parents('tr').attr('data-id');
+	xIdObjCartaLista=$(obj).parents('tr').attr('data-idborrar');
 	var xval_des=$(obj).parent().text();
 	var xval_img = $(obj).parents('tr').find("#td_img").text();
 	xval_img = xval_img === '' ? '' : URL_IMG_CARTA + xval_img;
@@ -862,18 +871,21 @@ function xLoadListadoCartaActual(){
 
 			if(xidSeccionArray!=xdtCAct[i].idseccion){
 				xidSeccionArray=xdtCAct[i].idseccion;
-				xSeccionArray[xCountArray]={'des':xdtCAct[i].des_seccion, 'id':xdtCAct[i].idseccion, 'idcarta':xdtCAct[i].idcarta , 'print':xdtCAct[i].imprimir};
+				const _isVisibleSeccion = xdtCAct[i].is_visible_cliente_seccion.toString() === '0'? false : true;
+				xSeccionArray[xCountArray]={'des':xdtCAct[i].des_seccion, 'id':xdtCAct[i].idseccion, 'idcarta':xdtCAct[i].idcarta , 'print':xdtCAct[i].imprimir, 'is_visible_cliente': _isVisibleSeccion};
 				xCountArray++;
 			}
 		}
 
-		for (var z = 0; z < xSeccionArray.length; z++) {
+		for (var z = 0; z < xSeccionArray.length; z++) {			
 			xidSeccionArray=xSeccionArray[z].id;
+			const _checkIsVisible = xSeccionArray[z].is_visible_cliente ? 'checked = "true"' : '';
 			xClassCheckPrint='xImgCheck';
 			if(xSeccionArray[z].print==1){xClassCheckPrint='xImgNoCheck'}
 			if(xSeccionArray[z].ver_stock_cero==1){xClassCheckPrintCero='xImgNoCheck'}
-			xCadenaSeccionList=String('<div class="xSeccion" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xidSeccionArray +'"><br><br>'+
+			xCadenaSeccionList=String('<div class="xSeccion" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xidSeccionArray +'"><br><br>'+			
 			'<input type="text" value="'+xSeccionArray[z].des+'" data-dessec="'+ xSeccionArray[z].des+'" tabindex="1" data-id="'+xidSeccionArray+'" data-print="'+xSeccionArray[z].print+'" style="width:100%" class="xMiInput xfont20 xPasarEnter2 des_seccion txt_modifica_bd_sec" placeholder="SECCION" onChange="conMayusculas(this)" id="seccion_des">'+
+			'<div style="margin-bottom: -35px;"><div><paper-checkbox id="check_visible_cliente_seccion" data-idseccion="'+ xSeccionArray[z].id +'" '+  _checkIsVisible +' onchange="updateVisibleSeccion(this)"><span class="fs-12 text-secondary"><strong>No</strong> visible para el cliente.</span></paper-checkbox><br></div></div>'+
 			'<br><div class="xCursor xDerecha xfont12">'+
 				'<img src="../../images/_prit_2.png" style="margin-left:7px; margin-top:3px;" class="'+xClassCheckPrint+'" onclick="xCheckImgPrint(this)" title="Mostrar en impresion" id="xseccio_print">'+
 				'<img src="../../images/_see_2.png" style="margin-left:7px; margin-top:3px;" class="'+xClassCheckPrintCero+'" onclick="xVerSiStockCero(this)" title="Mostrar items si su stock es cero" id="xseccio_ver_si_stock_cero">'+
@@ -1158,6 +1170,32 @@ function xfiltrarCartaHistorial() {
 			xloadCartaHistorial();			
 		}, 900);
 	}
+
+function updateVisible() {
+	const val = check_visible_cliente.checked ? 1 : 0;
+	xdtCAct[index].is_visible_cliente = val;
+
+	const _filtro = txt_buscar.value;
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=19', data:{id: xIdObjCartaLista, check: val}})
+	.done(res => {
+		console.log('ok');
+	});
+
+}
+
+function updateVisibleSeccion(obj) {
+	// console.log('idesccion', $(obj).attr('data-idseccion'));
+	const val = obj.checked ? 1 : 0;
+	const _id = $(obj).attr('data-idseccion');
+	
+
+	// const _filtro = txt_buscar.value;
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1901', data:{id: _id, check: val}})
+	.done(res => {
+		console.log('ok');
+	});
+
+}
 
 
 // function addSubItem() {

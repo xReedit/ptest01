@@ -553,7 +553,7 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xVisible720{display: none;visibility:hidden;}
 .xVisible920{display: none;visibility:hidden;}
 
-.xMiCard{display: table; margin: 0 auto; text-align: left; border: 1px solid #DDD; background: white;}
+.xMiCard{display: table; margin: 0 auto; text-align: left; border: 3px solid #DDD; background: white;}
 .xMiCard.xradius{border-radius: 5px;}
 .xMiCard .xEncanezadoCard{border-bottom: 1px solid #DDD; padding:15px;}
 .xMiCard .xEncanezadoCard .xencabezado_img{vertical-align: middle;}
@@ -1199,8 +1199,8 @@ ul.list_add_item2 li {
     font-size: 13px;
 }
 .li_nofocus{outline:none;}
-
-.xtitulo_li2{width: 235px;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+/* min-width: 235px; */
+.xtitulo_li2{overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 /*ul.list_add_item2 li:last-child { border-bottom: none;}*/
 .list_add_item2 li:hover{background: #fff9c4; color: #212121}
 .list_add_item2 li:hover .xBtn_li2{visibility: visible; z-index: 1000;}
@@ -1289,6 +1289,16 @@ ul.list_add_item2 li {
     border-radius: 5px;
     margin: 0 auto;
     width: 12px;
+}
+
+.show-led-precuenta {
+    position: fixed;
+    background: gold;
+    border-radius: 50%;
+    padding: 5px;
+    font-size: 10px;
+    line-height: 7px;
+    color: black;
 }
 
 /* control de pedidos */
