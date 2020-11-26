@@ -1247,7 +1247,7 @@ function xCambiarMesa(){
 		
 		dialog_detalle.close();
 
-		if($("#dialog_cambiar_mesa #titulo_cambiar_mesa").text().indexOf('todos')<0){return;}
+		if($("#dialog_cambiar_mesa #titulo_cambiar_mesa").text().indexOf('todos')<0){xPintarEstadoPedido(); return;}
 		$(xObj_miPedido).removeClass('xOcupado');
 		$(xObj_miPedido).removeClass('xDespachado');
 		$(xObj_miPedido).addClass('xNeutro');
@@ -1259,7 +1259,7 @@ function xCambiarMesa(){
 		$(xObj_miPedido).attr('data-abrir-detalle','0');
 		$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 
-		console.log('pintar pedido from xCambiarMesa');
+		// console.log('pintar pedido from xCambiarMesa');
 		xPintarEstadoPedido(); // pinta nuevamente el cambio de mesa
 	});
 }
@@ -1868,6 +1868,7 @@ function xLoadDetallesPedido (obj){
 		console.log('datosDelivery', datosDelivery);		
 
 		$('#btnLlamarRepartidorP').addClass('xInvisible');
+		$('#content-info-delivery').addClass('xInvisible');
 		
 
 		if (isDelivery) {			
@@ -2292,6 +2293,7 @@ function xLoadMipedidoBD(dt){
 					//seccion
 					if(xArraySeccion[xDtBd[i].idseccion_index]==null){xArraySeccion[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
 					xCadenaItemArray=String('<tr class="row xCursor" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+
+							'" data-i="'+ i +
 							'" data-idpedido="'+xDtBd[i].idpedido+
 							'" data-idcliente="'+xDtBd[i].idcliente+
 							'" data-punitario="'+xDtBd[i].punitario+
@@ -2389,7 +2391,11 @@ function xEliminarItemPedido(){
 		}
 
 		if(xprecio_descontar>0){
-			xobj_row_item.find('#td_importe').text(xMoneda(parseFloat(xArrayItemEliminar.precio_total-xArrayItemEliminar.precio_unitario)));
+			const importeTotalRow = parseFloat(xArrayItemEliminar.precio_total-xArrayItemEliminar.precio_unitario);
+			xobj_row_item.find('#td_importe').text(xMoneda(importeTotalRow));
+			$(xobj_row_item).attr('data-totalr', importeTotalRow);
+			$(xobj_row_item).attr('data-total', importeTotalRow);
+			// xobj_row_item.data.total = importeTotalRow;
 			xtd_importe_row=parseFloat(xtd_importe_row-xArrayItemEliminar.precio_unitario)
 			obj_row_mod.find('#td_importe').text(xMoneda(parseFloat(xMoneda(xtd_importe_row))));
 			if(xtd_importe_row<=0){$(obj_row_mod).fadeTo(500, 0, function () {$(this).remove();})}

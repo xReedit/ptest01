@@ -284,7 +284,11 @@ function xOpenPage(xop, parametro){
 		case 22:xruta='/resumen_caja';break;
 		case 23:xruta='/zona_despacho';break;
 		case 24:xruta='/items_borrados';break;
-		case 25: xruta = '/facturador'; break;
+		case 25: 
+			// xruta = '/facturador'; 
+			window.open('#/facturador', "Facturador");
+			return;
+			break;
 		case 26: xruta = '/c_electronico'; break;
 		case 28: xruta = '/adm_dashboard'; break;
 		case 29: xruta = '/us_contador'; break;
@@ -451,7 +455,7 @@ function cambiarClaveUs() {
 	});
 }
 
-function keyChangePass() {
+function keyChangePass(event) {
 	if (event.keyCode===13) changePass();
 }
 

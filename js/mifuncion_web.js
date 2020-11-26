@@ -374,6 +374,20 @@ function xDesMes(mes){
 	return rpt;
 	}
 
+function xDesDiaSemana(diaSemana, isFecha = false) {	
+	var dias = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+
+	if ( isFecha ) {
+		dias = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
+		const f = new Date(diaSemana);
+		return dias[f.getDay()];
+	} else {
+		return dias[diaSemana - 1];
+	}
+
+
+}
+
 function xMayusculaPrimera(string){ return string.charAt(0).toUpperCase() + string.slice(1); }
 
 //solo mayusculas

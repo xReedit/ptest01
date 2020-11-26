@@ -137,7 +137,7 @@
 			console.log(e);
 			txt_delivery_referencia.value = '';
 			xThisComDatosDelivery.showdir = true;
-			if (e.detail.referencia) {
+			if (e.detail.direccion) {
 				direcionSelected = e.detail;
 				txt_delivery_referencia.value =  direcionSelected.referencia;
 				xThisComDatosDelivery.showdir = false;
@@ -201,6 +201,7 @@
 	}
 
 	function calcularDistancia() {
+		if ( !comercioHabilitadoBusquedaGoogleApi ) { return; }
 		if ( !comercioHabilitadoCalcDistancia && !comercioHabilitadoCalcDistanciaSoloApp ) { return; }
 		
 		var origen = {

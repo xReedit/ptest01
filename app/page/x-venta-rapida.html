@@ -50,20 +50,19 @@
 	  <paper-dialog id="dialog_nuevo_pedido" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<h2>Nuevo Pedido</h2>
 			<p>
-			  Tiene un pededido pendiente de confirmacion. Si continua se borrara el
-			  pedido actual.
+			  Si tiene un pededido pendiente de confirmacion se borrara para generar uno nuevo.
 			</p>
-			<br />
+			<br/>
 			<!--
 			  <button class="xBoton2 xRojo" onclick="xNuevoPedidoMP();">Si, nuevo pedido</button>
 			-->
 			<div class="buttons">
 			  <button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
-			  <button class="xBoton2 xRojo" onclick="xNuevoPedidoVR();">
+			  <button class="xBoton2 xRojo" onclick="xNuevoPedidoDialogVR();">
 				Nuevo pedido.
 			  </button>
 			</div>
-		  </paper-dialog>
+		</paper-dialog>
 <!-- 
 		<paper-dialog id="dialog_item" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xdlgBody" id="_xdlgBody">
@@ -519,6 +518,7 @@ function xIniVentaRapida(){
 		$('body').addClass('loaded');		
 		xPopupLoad=document.getElementById('xLoad');
 
+		localStorage.removeItem('::app3_woDUS::cxe');
 		// var xDatos_p = xm_log_get("sede_generales"); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 
 		xArrayRegla=xm_log_get('reglas_de_carta');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
@@ -547,6 +547,15 @@ function xIniVentaRapida(){
 				// $('#div_btn_data_delivery').removeClass('xInvisible');
 				xsolo_llevar = 1;
 			}
+
+			//borrar datos del delivery si acaso fue selccionado
+			localStorage.removeItem('::app3_woDUS::cxe');
+			xCompDatosDelivery.resetValInit();
+			xSumarTotal();
+
+
+			// si hay item seleccionados entonces cambia el tipo de consumo
+			xChangeTipoConsumoItems(e.target.value);
 		});
 
 		$("#x-main").removeClass('xContent');
@@ -809,6 +818,40 @@ function xIniVentaRapida(){
 	});	
 
 }
+
+function xValidarPedidoonBtnVR() {
+	var countLocal=0, countLlevar=0, countDelivery=0;
+	xnum_mesa_valido = true;
+	xArrayPedidoObj.filter(i => i).map(tpc => {
+		// console.log(tpc)
+		for (const i in tpc) {
+			if (tpc.hasOwnProperty(i)) {
+				const item_s = tpc[i];
+
+				if ( typeof item_s !== 'object' ) { continue; }
+				if ( item_s.cantidad === 0 ) { continue; }
+
+				if ( tpc.des.toLowerCase().indexOf('local') > -1 ) {
+					xnum_mesa_valido = false;
+					xsolo_llevar = 0;
+					xdelivery = 0;
+					countLocal++;
+				}
+
+				if ( tpc.des.toLowerCase().indexOf('llevar') > -1 ) {
+					countLlevar++;
+				}
+
+				if ( tpc.des.toLowerCase().indexOf('delivery') > -1 ) {
+					countDelivery++;
+				}
+			}
+		}
+	});
+
+	xsolo_llevar = countLocal === 0 && countDelivery === 0 ? 1 : 0;
+	xdelivery = countDelivery > 0 ? 1 : 0;
+}
 /*function xCheckPrint(xcode){
 	$(".xcheck_print").attr('checked',false)
 	xcode == 118 ? $("#check_no_p").attr('checked',true) : $("#check_p").attr('checked',true);
@@ -896,7 +939,12 @@ function xIrARegistrarPago(){
           return;
         }
       }
-    }
+	}
+	
+	// if (xnum_mesa_valido == false) {
+    //       alert("Numero de mesa no es valido.");          
+    //       return;
+    //     }
 
 	xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
 	
@@ -910,6 +958,8 @@ function xIrARegistrarPago(){
 function xEnviarACuenta(){	
 	if ( guardando_vr ) {return;}
 	guardando_vr = true;
+
+	xReservar = check_reserva.checked ? 1 : 0;
 
 	if(xenviar_cuenta==true){
 	if(xnum_mesa_valido==false && xdelivery === 0 && xReservar === 0 && xsolo_llevar === 0){
@@ -934,25 +984,46 @@ function xEnviarACuenta(){
 	}
 }
 
+function xNuevoPedidoDialogVR() {
+	// xPopupLoad.xopen();
+	xNuevoPedidoVR();
+	if (isSocket) {
+		xLoadCartaVR();		
+	}	
+}
 
-
-function xNuevoPedidoVR(){
+function xNuevoPedidoVR() {
 		
 	localStorage.removeItem('::app3_woDUS::cxe');
 	window.localStorage.removeItem("::app3_sys_dta_pe");
 	xCompDatosDelivery.resetValInit();
 	//xArrayPedido=new Array();
-	//xDtSubTotales=new Array();
+	//xDtSubTotales=new Array()
+	xLimpiarItemSeleccionadosSubItems();
+	xLoadArrayPedido();
 	xPopupLoad.xopen();
-	xLoadArrayPedido();	
+		
 
 	// reset pedido socket si no se envio
+	// if (isSocket) {
+	// 	_cpSocketRestoreFromPedidoStorage();
+	// 	setTimeout(() => {
+	// 		// xLoadCartaVR();
+	// 		xPopupLoad.xclose();
+	// 	}, 500);
+	// } else {
+	// 	xLoadCartaVR();
+	// }
+	 
 	if (isSocket) {
-		_cpSocketRestoreFromPedidoStorage();
+		// restablece los valores a 0 no vuelve a cargar la carta
+		// _cpSocketRestoreFromPedidoStorage();
+		_resetCeroItemcarta();
 		setTimeout(() => {
-			xLoadCartaVR();
+			// xLoadCartaVR();
+			xPopupLoad.xclose();
 		}, 500);
-	} else {
+	} else  {
 		xLoadCartaVR();
 	}
 
@@ -988,6 +1059,11 @@ function xNuevoPedidoVR(){
 	dialog_nuevo_pedido.close();
 	//tt_pedido=0;
 	
+}
+
+// despues de hacer pedido
+function _resetCeroItemcarta() {	
+	$('.xcant_li2.cant_fixed_li').text('');
 }
 
 
@@ -1123,10 +1199,16 @@ async function xGuardarPedidoVR(responde){
 	xVerificarImprimirComanda=false;
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj)
 
+	// datos de la sede
+	var dataSede = xm_log_get('datos_org_all_sede')[0];
+	const _isComercioAppDeliveryMapa = dataSede.pwa_habilitar_busqueda_mapa;
+
 	// si no hay referencia obtiene el nombre del cliente
 	xref = xref === '' ? DatosCliente.nombres ? DatosCliente.nombres : DatosCliente.nombre || '' : xref;
 
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
+
+	// isComercioAppDeliveryMapa = si acaso esta habilitado para busqueda con mapa entonces adjunta el detalle del pedido en el json_datos_delivery
 	xarr_header = {
 		idclie: xid_cliente_pago || '',
 		referencia: xref,
@@ -1135,12 +1217,14 @@ async function xGuardarPedidoVR(responde){
 		reservar: xReservar,
 		tipo_consumo: xIdTpc_pe,
 		subtotales_tachados: xLocal_SubTotal_Quitados,
-		arrDatosDelivery: arrDatosAdjuntoDelivery
+		arrDatosDelivery: arrDatosAdjuntoDelivery,
+		isComercioAppDeliveryMapa: _isComercioAppDeliveryMapa
 	}
 	xarr_comprobante = ComprobanteSeleccionado;
 	xarr_body = xArrayPedidoObj;
 	xarr_subtotales = xLocal_xDtSubTotales;
 	// xarr_subtotales = xGeneralArraySubTotales;
+	
 	
 	if (xEstadoPedido === 2) { // pago total 
 		xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
@@ -1150,7 +1234,9 @@ async function xGuardarPedidoVR(responde){
 		p_from = 'a'; //registra solo pedido	
 	}
 
-	xPopupLoad.xopen();
+	xPopupLoad.xopen(); // quitar comentario
+
+
 	// xValPago.setResetFormaPago();
 
 	// xarr_tipo_pago = xEstadoPedido === 2 ?  xRpt_pago[0].xtipo_pagos : [];
@@ -1158,12 +1244,18 @@ async function xGuardarPedidoVR(responde){
 	//xArrayGuardarPedido={'idcategoria':xidCategoriaVR ,'mesa':xmesa,'referencia':xref,'ImporteTotal':tt_pedido,'reservar':xReservar,'arrPedido':xArrayPedidoObj,'arrSubTotales':xGeneralArraySubTotales};
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=30401', data:{arr:xArrayGuardarPedido,estado_p:xEstadoPedido}})
 	// >>>$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:p_from, p_header:xarr_header, p_body: xarr_body, p_subtotales: xarr_subtotales, p_tipo_pago: xarr_tipo_pago, estado_p:xEstadoPedido}})
+
 	xarr_body = xarr_body.filter(x => x).map(x => x);
+
+	// enviamos el body a homologacion con papaya express
+	const _p_body_homologacion = xEstructuraExpress(xarr_body, xdelivery, _isComercioAppDeliveryMapa);
+
 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
 		data:{
 			p_from:p_from, 
 			p_cliente: JSON.stringify(xarr_cliente), 
 			p_body: JSON.stringify(xarr_body), 
+			p_body_h: JSON.stringify(_p_body_homologacion), 
 			p_header: JSON.stringify(xarr_header), 
 			p_tipo_pago: JSON.stringify(xarr_tipo_pago), 
 			p_subtotales: JSON.stringify(xarr_subtotales), 
@@ -1177,7 +1269,9 @@ async function xGuardarPedidoVR(responde){
 		// console.log(xarr_header);
 		// console.log(idP);
 		// return;
+		
 		const _arrRpt = xm_all_SetResponseLog_001(idP);
+		
 		// xIdPedido=idP.split('|');
 		// var xrpt_correlativo=xIdPedido[0];
 		// var xCorrelativo_dia=xCeroIzq(xIdPedido[xIdPedido.length-1],5);
@@ -1195,6 +1289,7 @@ async function xGuardarPedidoVR(responde){
 			m: xCeroIzq(xmesa,2),
 			r: xMayusculaPrimera(xSoloMinuscula(xref)),
 			num_pedido: xNumPedido,
+			idpedido: _arrRpt.idpedido, // para imprimir codigo barra cuando sea delivery
 			reservar: xReservar,
 			solo_llevar: xsolo_llevar,
 			delivery: xdelivery,
@@ -1576,6 +1671,8 @@ function xVerMipedidoVR(){
 	xCadenaGrupo=String('<table width="100%" class="xtb_pedido" data-TablaName="pedido_detalle" id="tb_pedido_detalle">'+xCadenaGrupo+'</table></div></div>');
 	$("#xBody").html(xCadenaGrupo).trigger('create');
 	xValidarReglaCarta();
+
+	xValidarPedidoonBtnVR();
 }
 
 function xValidarReglaCarta(){

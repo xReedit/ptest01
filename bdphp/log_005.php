@@ -14,9 +14,9 @@
 
 	date_default_timezone_set('America/Lima');
 
-	$g_ido = $_SESSION['ido'];
-	$g_idsede = $_SESSION['idsede'];
-	$g_idusuario = $_SESSION['idusuario'];
+	$g_ido = isset($_SESSION['ido']) ? $_SESSION['ido'] : 0;
+	$g_idsede = isset($_SESSION['idsede']) ? $_SESSION['idsede'] : 0;
+	$g_idusuario = isset($_SESSION['idusuario']) ? $_SESSION['idusuario'] : 0;
 	$fecha_now = date("d/m/Y");
 	$hora_now = date("H:i:s");
 	
@@ -141,23 +141,24 @@
 			// $filtroFecha = $fecha === '' ? ' and cierre=0 ' : " AND SUBSTRING_INDEX(fecha,' ',1) = '".$fecha."' ";
 			// $filtroFechaCount = $fecha === '' ? '' : " and (SUBSTRING_INDEX(c.fecha,' ',1)= '".$fecha."')";
 
-			$sql = "
-				select c.*, if(LENGTH(c.ruc)>8, 'PJ', 'PN') as tipo from cliente c 
-				LEFT join pedido p on p.idcliente = c.idcliente
-				where (p.idorg=".$g_ido." or c.idorg=".$g_ido.")".$filtro." and c.nombres != '' and c.estado=0
-				order by c.nombres asc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];
+			// $sql = "
+			// 	select c.*, if(LENGTH(c.ruc)>8, 'PJ', 'PN') as tipo from cliente c 
+			// 	LEFT join pedido p on p.idcliente = c.idcliente
+			// 	where (p.idorg=".$g_ido." or c.idorg=".$g_ido.")".$filtro." and c.nombres != '' and c.estado=0
+			// 	order by c.nombres asc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];
 			
-			$sqlCount="
-				SELECT count(c.idcliente) as d1 from cliente c
-				LEFT join pedido p on p.idcliente = c.idcliente
-				where (p.idorg=".$g_ido." or c.idorg=".$g_ido.")".$filtro." and c.nombres != '' and c.estado=0";            
+			// $sqlCount="
+			// 	SELECT count(c.idcliente) as d1 from cliente c
+			// 	LEFT join pedido p on p.idcliente = c.idcliente
+			// 	where (p.idorg=".$g_ido." or c.idorg=".$g_ido.")".$filtro." and c.nombres != '' and c.estado=0";            
 				
 			// echo $sqlCount;
             
-			$rowCount = $bd->xDevolverUnDato($sqlCount);
+			// $rowCount = $bd->xDevolverUnDato($sqlCount);
 			
-			$rpt = $bd->xConsulta($sql);            
-            print $rpt."**".$rowCount;
+			// $rpt = $bd->xConsulta($sql);            
+			// print $rpt."**".$rowCount;
+			echo 'restaurar';
 			break;
 		case 401:// historial cliente
 			$sql = "select idcliente, STR_TO_DATE(fecha, '%d/%m/%Y') fecha, fecha as fecha_mostrar, total  from registro_pago where idcliente=".$_POST['i']." and estado=0";
@@ -547,6 +548,74 @@
 			$id = $_POST['id'];
 			$sql="update seccion set is_visible_cliente = $check where idseccion=$id";
 			$bd->xConsulta($sql);
+			break;
+		
+		case 20: // orden de pago			
+			$arrItem=$_POST['item'];
+			$sql="call procedure_orden_pedido($g_idsede, $g_idusuario,'".$arrItem."')";
+			$bd->xConsulta($sql);
+			break;
+		case 2001: // guadar adelanto
+			$idOrden = $_POST['id'];
+			$concepto = $_POST['concepto'];
+			$importe = $_POST['importe'];
+			$idtipo_pago = $_POST['idtipo_pago'];
+
+			if ( $concepto !== '' ) {
+				$sql = "insert into orden_pedido_adelanto (idorden_pedido, idtipo_pago, concepto, importe, fecha_hora) values ($idOrden, $idtipo_pago, '$concepto', '$importe', DATE_FORMAT(now(),'%d/%m/%Y %H:%i:%s'))";
+				$bd->xConsulta_NoReturn($sql);
+			}
+
+
+			$sql = "select tp.descripcion des_tipo_pago, opa.* from orden_pedido_adelanto opa inner join tipo_pago tp on tp.idtipo_pago = opa.idtipo_pago where opa.idorden_pedido = $idOrden";
+			$bd->xConsulta($sql);
+
+			break;
+		case 2002: // guadar nota
+			$idOrden = $_POST['id'];
+			$nota = $_POST['nota'];			
+
+			if ( $nota !== '' ) {
+				$sql = "insert into orden_pedido_notas (idorden_pedido, nota, fecha_hora) values ($idOrden, '$nota', DATE_FORMAT(now(),'%d/%m/%Y %H:%i:%s'))";
+				$bd->xConsulta_NoReturn($sql);
+			}
+
+
+			// registra ingreso en caja
+
+
+			$sql = "select * from orden_pedido_notas where idorden_pedido = $idOrden";
+			$bd->xConsulta($sql);
+			break;
+		case 30: // lista orden pedido
+			$mm = $_POST['m'];
+			$yy = $_POST['y'];
+			$sql= "
+			select STR_TO_DATE(fecha_entrega, '%Y-%m-%d') fentrega, DAY(fecha_entrega) dia, DAYOFWEEK(fecha_entrega) dia_semana, DATE_FORMAT(fecha_entrega, '%H:%i') hora, format(COALESCE(opaa.adelanto, 0), 2) total_adelanto, op.*
+			from orden_pedido  op 
+				left join (select idorden_pedido, sum(importe) adelanto from orden_pedido_adelanto opa group by opa.idorden_pedido) as opaa on opaa.idorden_pedido = op.idorden_pedido
+			where op.idsede = $g_idsede and (MONTH(op.fecha_entrega) = $mm and YEAR(op.fecha_entrega) = $yy)
+			order by date(op.fecha_entrega) 
+			";
+			$bd->xConsulta($sql);			
+			// print $aa['success'];
+			break;
+
+		case 3001: // lista orden pedido
+			$mm = $_GET['month'];
+			$yy = $_GET['year'];
+			$sql= "
+			select STR_TO_DATE(fecha_entrega, '%Y-%m-%d') date,concat(count(fecha_entrega), ' Ordenes') title, 'true' badge
+			from orden_pedido  op 				
+			where op.idsede = $g_idsede and (MONTH(op.fecha_entrega) = $mm and YEAR(op.fecha_entrega) = $yy)
+			group by STR_TO_DATE(fecha_entrega, '%Y-%m-%d')
+			order by date(op.fecha_entrega)
+			";
+			// $aa = $bd->xConsulta($sql);
+
+			$aabd = $bd->xConsulta3($sql);
+			echo $aabd;
+			
 			break;
 	}
 ?>

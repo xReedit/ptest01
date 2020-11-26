@@ -29,7 +29,10 @@
                     <br>
                     <div class="xInvisible" id="contentClie">
                         <div style="width:260px;">
-                            <input autofocus type="number" class="xMiInput" placeholder="RUC Cliente" pattern="[0-9]*" required id="txt_ruc" onkeyup="validarDocumentoCliente(this.value, event)" espaciar>
+                            <div class="w-100 d-flexx justify-content-end">
+                                <input autofocus type="number" class="xMiInput" placeholder="RUC Cliente" pattern="[0-9]*" required id="txt_ruc" onkeyup="validarDocumentoCliente(this.value, event)" espaciar>
+                                <button class="btn btn-sm btn-success" onclick="validarDocumentoCliente(null, null, true);">Buscar</button>
+                            </div>
                             <div class="xInvisible" id="progress_cliente">
                                 <paper-progress indeterminate style="width: 100%; float: left; margin-top: -6px"></paper-progress>
                             </div>
@@ -229,8 +232,12 @@
     
     }
 
-    function validarDocumentoCliente(valor, e){
-        if (e.keyCode !== 13) return;
+    function validarDocumentoCliente(valor, e, btnBuscar=false){
+        if ( !btnBuscar ) {
+            if (e.keyCode !== 13) return;
+        }
+        valor = valor ? valor : txt_ruc.value;
+
         xNuevoCliente();
         $("#txt_msj").addClass('xInvisible');        
 
