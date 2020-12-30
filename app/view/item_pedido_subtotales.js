@@ -261,7 +261,7 @@ function darFormatoSubTotalesDelivery(arrTotales = null) {
     // console.log(arrTotales);
     var rowTotal = arrTotales[arrTotales.length - 1];
     // -2 = servicio deliver -3 = propina
-    rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && x.descripcion !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+    rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
 	xLocal_xDtSubTotales =  arrTotales.filter(x => x.id !== -2 && x.id !== -3);
 	return xLocal_xDtSubTotales;
   }

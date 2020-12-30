@@ -1,7 +1,7 @@
 <!--link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html" !-->
 <dom-module id="x-caja">
-	<script rel="preload" type="text/javascript" src="../../../js/socket.io.js"></script>
+	<!-- <script rel="preload" type="text/javascript" src="../../../js/socket.io.js"></script> -->
 
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 	<template>
@@ -149,6 +149,7 @@
 <script type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 
+<!-- <script type="text/javascript" src="../../view/socket.master.service.js"></script> -->
 <script type="text/javascript" src="../../view/socket.service.p.js"></script>
 <script>
 var xThisCaja
@@ -782,9 +783,15 @@ Polymer({
     	xThisCaja=this;
 		xIniCaja();
 		// _cpSocketIsConnect();
+
+		setTimeout(() => {				
+			// xIniControlMesa();
+			
+			_cpSocketOpen();
+		}, 1000);
 	},
 	detached:function(){
-		// _cpSocketClose();
+		_cpSocketClose();
 	}
 })
 </script>

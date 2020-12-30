@@ -1,4 +1,6 @@
 
+*{font-family:'Open Sans';}
+
 .d-flexx {
   display: flex;
 }

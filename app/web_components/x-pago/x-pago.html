@@ -531,7 +531,7 @@
 			return;
 		}
 
-		if (xThisPago.ComprobanteRequiereCliente && e.keyCode !== 13) {
+		if (xThisPago.ComprobanteRequiereCliente && e.keyCode !== 13 && tecla === true) {
 			// si requeiere cliente
 			if (xThisPago.tipoComprovanteSelecionado.codsunat === '01') { // si es factura acepta solo ruc
 				xThisPago.placeholder_clie = 'Cliente RUC';
@@ -1007,6 +1007,13 @@
 	// 	})
 	// }
 
+	function xResetValuesInit() {
+		xRpts = [];
+		_inputAutocompleteObj.inputValue = '';
+
+		xThisPago.clienteModel = {};		
+	}
+
 	function xLoadTipoPago() {
 		$.ajax({
 				type: 'POST',
@@ -1321,6 +1328,7 @@
 		},
 		setResetFormaPago: ()=> {
 			xCompTableFP.resetFormaPago();
+			xResetValuesInit();
 		}
 	})
 </script>

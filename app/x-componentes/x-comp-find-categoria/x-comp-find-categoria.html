@@ -20,6 +20,7 @@
         function getAllCategoria() {
             $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=3'})
 	        .done( function (dtValues) {
+                console.log('aaaaaaaaaaaaaaaaa load componente categoria');
                 dtValues=$.parseJSON(dtValues);	
                 xThisComCategoria.list=dtValues.datos;
                 xThisComCategoria.categorias = xThisComCategoria.list[0];

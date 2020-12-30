@@ -1,5 +1,9 @@
 <link rel="import" href="../x-componentes/pagination-input/pagination-input.html">
 <dom-module id="x-historial_venta">
+
+	<script type="text/javascript" src="../view/socket.master.service.js"></script>
+	<script type="text/javascript" src="../view/socket.service.p.js"></script>
+
 	<template>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
 		<paper-dialog id="dialog_motivo_anular_historial" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -60,7 +64,7 @@
 						<br><br>
 						<div class="xDerecha">
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div></paper-button>
-							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 100px;" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div></paper-button>
+							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 100px;" onclick="xImprimirPrecuentaHistorial();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div></paper-button>
 							<paper-button disabled="[[xYaTieneComprobante]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>							
 							<paper-button hidden$="[[!xIsPuedeReimprimirCPE]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="reImprimirComprobante();"><img src="../../images/_print_vr.png"><p>Reimprimir Comprobante</p></div></paper-button>
 						</div>
@@ -528,7 +532,7 @@ function xMandarCocinarImpresionComprobante_historial() {
 		
 }
 
-function xImprimirPrecuenta(){
+function xImprimirPrecuentaHistorial(){
 	//generar estructura de array impresion
 	var xArrayItemPreCuenta=[];
 	var xDtBd=xArrayDtOrdenFiltro;
@@ -600,7 +604,16 @@ Polymer({
 		this.xYaPedidoCerrado = true;
 		this.isCierreCaja = false;
     	xThisHistVenta=this;
-    	xIniHistVenta();
+		xIniHistVenta();
+		
+		setTimeout(() => {				
+			// xIniControlMesa();
+			
+			_cpSocketOpen();
+		}, 1000);
+	},
+	detached:function(){			
+		_cpSocketClose();
     }
 })
 </script>

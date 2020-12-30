@@ -324,6 +324,11 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	var xCuentaImpresorasEvaluadas = 0;
 	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
 	const var_size_font_tall_comanda = xImpresoraPrint[0].var_size_font_tall_comanda;
+
+	// colocar en encabezado si va a imprimir subtotales
+	xArrayEnca.is_print_subtotales = xImpresoraPrint[0].isprint_subtotales_comanda;
+	// colocar en encabezado si va a imprimir la copia en formato corto
+	xArrayEnca.isprint_copy_short = xImpresoraPrint[0].isprint_copy_short;	
 	
 	//si existe impresora local // saca una copia de todo el pedido
 	if(xPrintLocal!=undefined && xPrintLocal!=''){

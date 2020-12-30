@@ -36,6 +36,7 @@
 
 			<hr>
 
+			<button class="btn btn-sm btn-success" onclick="callInterval()"><i class="fa fa-adjust"></i></button>
 			<button class="btn btn-sm btn-success" onclick="callInterval()"><span class="fs-10">Refrescar</span></button>
 			<button class="btn btn-sm btn-info pl-2" hidden$="{{!showBtnCierreCaja}}" onclick="reImprimirCierre()"><span class="fs-10">Imprimir Cierre</span></button>
 			<button class="btn btn-sm btn-warning pl-2" hidden$="{{!showBtnCierreCaja}}" onclick="dialog_meta.open()"><span class="fs-10">Establecer Meta</span></button>
@@ -404,8 +405,8 @@
 			})
 			.done(function (res) {				
 				dataMetdataVentasDia = JSON.parse(res).datos;		
-				// console.log('dataMetdataVentasDia', dataMetdataVentasDia);
 				crosVenta = crossfilter(dataMetdataVentasDia);
+				// console.log('dataMetdataVentasDia', dataMetdataVentasDia);
 				// console.log('dataMetdataVentasDia', dataMetdataVentasDia);
 				cocinarDataVentasDia();
 			});

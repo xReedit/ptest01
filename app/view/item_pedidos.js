@@ -565,21 +565,23 @@ function restarCantSubItemView(_elItem, isExistSubItemView = null) {
       }
 
     } else {
-      // si no envia o no existe el subitemview a restar toma el ultimo
+	  // si no envia o no existe el subitemview a restar toma el ultimo
       const lentSubItemView = _elItem.subitems_view.length;
       const _SubItemView = _elItem.subitems_view[lentSubItemView - 1];
-      const precioDescontar = _SubItemView.precio / _SubItemView.cantidad_seleccionada;
-
-      _SubItemView.cantidad_seleccionada --;
-      _SubItemView.precio -= precioDescontar;
-
-      if ( _SubItemView.cantidad_seleccionada <= 0 ) {
-        // borrar el item
-        _elItem.subitems_view = _elItem.subitems_view.filter((subView) => subView.cantidad_seleccionada > 0);
-      }
-
-      // para restar en el back end
-      _elItem.subitems_selected = _SubItemView.subitems;
+	  if ( _SubItemView ) {
+		  const precioDescontar = _SubItemView.precio / _SubItemView.cantidad_seleccionada;
+	
+		  _SubItemView.cantidad_seleccionada --;
+		  _SubItemView.precio -= precioDescontar;
+	
+		  if ( _SubItemView.cantidad_seleccionada <= 0 ) {
+			// borrar el item
+			_elItem.subitems_view = _elItem.subitems_view.filter((subView) => subView.cantidad_seleccionada > 0);
+		  }
+	
+		  // para restar en el back end
+		  _elItem.subitems_selected = _SubItemView.subitems;
+	  }
     }
   }
 

@@ -197,6 +197,10 @@
 									<paper-checkbox id="check_habilitar_pedidos_programados"><span>Habilitar pedidos programados</span></paper-checkbox>
 									<hr><br>
 
+									<p>Comercio acepta pedidos programados solo del dia? -para los comercios que cambiar carta diario-</p><br>
+									<paper-checkbox id="check_pwa_pedido_programado_solo_del_dia"><span>Habilitar pedidos programados solo del dia</span></paper-checkbox>
+									<hr><br>
+
 									<p>Servicio de reparto papaya express solo para pedidos desde la App?</p><br>
 									<paper-checkbox id="check_pwa_delivery_reparto_solo_app"><span>Habilitar servicio delivery solo pedidos desde la app</span></paper-checkbox>
 									<hr><br>
@@ -293,6 +297,7 @@
 										<input type="text" id="pwa_delivery_comercio_paga_entrega" name="pwa_delivery_comercio_paga_entrega">
 										<input type="text" id="pwa_delivery_habilitar_llamar_repartidor_papaya" name="pwa_delivery_habilitar_llamar_repartidor_papaya">
 										<input type="text" id="pwa_delivery_habilitar_pedido_programado" name="pwa_delivery_habilitar_pedido_programado">
+										<input type="text" id="pwa_pedido_programado_solo_del_dia" name="pwa_pedido_programado_solo_del_dia">
 										<input type="text" id="pwa_habilitar_busqueda_mapa" name="pwa_habilitar_busqueda_mapa">
 										<input type="text" id="pwa_delivery_reparto_solo_app" name="pwa_delivery_reparto_solo_app">
 										
@@ -510,6 +515,8 @@ function transferenciaCompleta(xfile){
 		check_habilitar_comercio_paga_entrega.checked  = dataSede.pwa_delivery_comercio_paga_entrega === "0" ? false : true;
 		check_habilitar_llamar_repartidor.checked  = dataSede.pwa_delivery_habilitar_llamar_repartidor_papaya === "0" ? false : true;
 		check_habilitar_pedidos_programados.checked  = dataSede.pwa_delivery_habilitar_pedido_programado === "0" ? false : true;
+		check_pwa_pedido_programado_solo_del_dia.checked  = dataSede.pwa_pedido_programado_solo_del_dia === "0" ? false : true;
+		
 		check_habilitar_busqueda_mapa.checked = dataSede.pwa_habilitar_busqueda_mapa === "0" ? false : true;
 		check_pwa_delivery_reparto_solo_app.checked = dataSede.pwa_delivery_reparto_solo_app === "0" ? false : true;
 
@@ -679,6 +686,7 @@ function transferenciaCompleta(xfile){
 		const _check_habilitar_comercio_paga_entrega = check_habilitar_comercio_paga_entrega.checked ? 1 : 0;
 		const _check_habilitar_llamar_repartidor = check_habilitar_llamar_repartidor.checked ? 1 : 0;
 		const _check_habilitar_pedidos_programados = check_habilitar_pedidos_programados.checked ? 1 : 0;
+		const _check_pwa_pedido_programado_solo_del_dia = check_pwa_pedido_programado_solo_del_dia.checked ? 1 : 0;		
 		const _check_habilitar_busqueda_mapa = check_habilitar_busqueda_mapa.checked ? 1 : 0;
 		const _check_pwa_delivery_reparto_solo_app = check_pwa_delivery_reparto_solo_app.checked ? 1 : 0;
 		
@@ -725,6 +733,8 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_comercio_paga_entrega").val(_check_habilitar_comercio_paga_entrega);
 		$("#formDatosAPP #pwa_delivery_habilitar_llamar_repartidor_papaya").val(_check_habilitar_llamar_repartidor);
 		$("#formDatosAPP #pwa_delivery_habilitar_pedido_programado").val(_check_habilitar_pedidos_programados);
+		$("#formDatosAPP #pwa_pedido_programado_solo_del_dia").val(_check_pwa_pedido_programado_solo_del_dia);
+		
 		$("#formDatosAPP #pwa_habilitar_busqueda_mapa").val(_check_habilitar_busqueda_mapa);
 		$("#formDatosAPP #pwa_delivery_reparto_solo_app").val(_check_pwa_delivery_reparto_solo_app);
 

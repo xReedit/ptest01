@@ -265,7 +265,7 @@
 									maxlength="50"
 									onchange="conMayusculas(this)"
 									data-val="referencia"
-									id="txt_ref"									
+									id="txt_ref_vr"									
 									/>
 								</td>
 								</tr>
@@ -526,7 +526,7 @@ function xIniVentaRapida(){
 		xNumMesasBd=parseInt(xDtPrint[0].mesas);
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
-		console.log('isSocket', isSocket);
+		// console.log('isSocket', isSocket);
 
 		xLoadArrayPedido();
 		
@@ -860,7 +860,7 @@ function xValidarPedidoonBtnVR() {
 }*/
 
 function _getCategoria(categoria) {
-	console.log(categoria);
+	// console.log(categoria);
 	xidCategoriaVR = categoria.idcategoria;
 	setLocalSotrage('::app3_cat_defualt', JSON.stringify(categoria));
 	xLoadCartaVR();
@@ -877,7 +877,7 @@ function detectEvent(e) {
 		if(evt.keyCode==69 || evt.keyCode==82 && xkey_control==true){
 			switch(evt.keyCode){
 				case 69:xNuevoPedidoVR();return document.defaultAction;xkey_control=false;break;
-				case 82:$("#txt_ref").focus();return document.defaultAction;xkey_control=false;break;
+				case 82:$("#txt_ref_vr").focus();return document.defaultAction;xkey_control=false;break;
 			}
 		}else{xkey_control=false;}
 	*/
@@ -1039,7 +1039,7 @@ function xNuevoPedidoVR() {
 	$("#btn_registrar_pago").addClass('xInvisible');
 	$("#btn_enviar_cuenta").addClass('xInvisible');
 	$("#txt_mesa").val('');
-	$("#txt_ref").val('');
+	$("#txt_ref_vr").val('');
 	xedit_detalle_item=false;
 	check_reserva.checked=false;
 	$("#txt_bus_item").focus();
@@ -1131,7 +1131,7 @@ function xRegistrarPagoVR(xidclie,xidp){
 
 async function xGuardarPedidoVR(responde){
 	var xmesa=$("#txt_mesa").val()
-	, xref=$("#txt_ref").val()
+	, xref=$("#txt_ref_vr").val()
 	, xtotal=$(".xPedidoTotal").text()
 	, xCantidad_descontar=0
 	, xItem_descontar=''
@@ -1308,7 +1308,7 @@ async function xGuardarPedidoVR(responde){
 		}else{
 			xPopupLoad.xclose();
 			if (isSocket) { _cpSocketClearStorage(); }
-			xNuevoPedidoVR();
+			xNuevoPedidoVR();			
 		}
 
 		// notifica nuevo pedido
@@ -1624,7 +1624,7 @@ function xVerMipedidoVR(){
 					});
 				}
 
-				xCadenaItemArray=String('<tr class="xPedidoItem row xCursor" onclick="xOpenDlgItemVR('+ i +','+ n.iditem  +');" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'">'+
+				xCadenaItemArray=String('<tr class="xPedidoItem row xCursor" onclick="xOpenDlgItemVR('+ i +','+ n.iditem.toString()  +', this);" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'">'+
 					'<td width="90%">'+xCeroIzq(n.cantidad,2)+' | '+n.des+' '+xIndicacionItem+'</td>'+
 					'<td class="xInvisible" data-ColumName="cantidad" id="cant_descontar">'+xCeroIzq(n.cantidad,2)+'</td>'+
 					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+					
@@ -1802,7 +1802,10 @@ function setValuesStorage() {
 	// toogleFullscreen.checked = parseInt(valScreen) === 0 ? false : true;
 }
 
-function xOpenDlgItemVR(tpc, id) {
+// 51220 -> se puso el parametro elObjRow para sacar el id, en algunas items al parecer redondeaba o ponia otro numero de id
+function xOpenDlgItemVR(tpc, idItemRow, elObjRow) {
+	// console.log('rowItem', idItemRow);
+	const id = elObjRow.dataset.id; //idItemRow.toString();
 	// itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
 	// xCompSubitems.item_select = itemPedidos_objItemSelected;
 	xCompSubitems.openDialog(tpc, id);

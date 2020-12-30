@@ -5,7 +5,8 @@
 		<!-- <button onclick="enviarCpe()"> ennivar cpe </button>
 		<button onclick="abrirToast()"> abrir toast </button> -->
 		<!-- <button onclick="pruebaFecht()"> prueb fecht </button> -->
-		<!-- <bottom onclick="pruebaFecht()">aaaaaaaaaaaa</bottom> -->
+		<!-- <bottom onclick="pruebaBorrarCache()">aaaaaaaaaaaa qqqqq new update</bottom>
+		<button>aaa</button> -->
 		<!-- <bottom onclick="dialog_requiere_cambio_pas.open()">cambiar clave</bottom> -->
 		<div id="xBodyOp">
 		</div>
@@ -45,6 +46,15 @@
 <script>
 var xThisHome;
 var xArray_us_home;
+
+
+// async function pruebaBorrarCache() {
+// 	// await fetch('/thing/stuck/in/cache', {cache: 'reload', credentials: 'include'});
+// 	// Cache.call();
+// 	alert('nueva version');
+
+// }
+
 function xUs(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1111'})
 		.done( function (dt) {

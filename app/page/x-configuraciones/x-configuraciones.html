@@ -32,6 +32,7 @@
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION" onChange="conMayusculas(this)" id="nombre" name="nombre" espaciar required>
 					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required> -->
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="ciudad" name="ciudad" espaciar required>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="ESLOGAN" id="eslogan" name="eslogan" maxlength="100" espaciar>
 					<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas" espaciar>
 										
@@ -298,6 +299,24 @@
 										</select>
 									</td>
 								</tr>
+								<tr>
+									<td>
+										<h3>Comanda muestra subtotales?</h3>
+										<span>Si en la comanda muestra subtotales del pedido, es recomendable que muestre si es una sola impresora</span>
+									</td>
+									<td>
+										<paper-checkbox id="check_isprint_subtotales_comanda"></paper-checkbox> Si<br>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<h3>La copia en formato corto (Ahorro de papel)</h3>
+										<span>Si se imprime una copia de la comanda que este muestro en formato corto, es decir solo datos necesarios - ayuda a ahorrar papel -</span>
+									</td>
+									<td>
+										<paper-checkbox id="check_isprint_copy_short"></paper-checkbox> Si<br>
+									</td>
+								</tr>
 
 							</table>
 							<br><br>
@@ -314,6 +333,9 @@
 									<input type="text" id="var_size_font" name="var_size_font">
 									<input type="text" id="var_margen_iz" name="var_margen_iz">
 									<input type="text" id="var_size_font_tall_comanda" name="var_size_font_tall_comanda">
+									<input type="text" id="isprint_subtotales_comanda" name="isprint_subtotales_comanda">
+									<input type="text" id="isprint_copy_short" name="isprint_copy_short">
+									
 									<!-- <input type="text" id="papel_size" name="papel_size"> -->
 									<!-- <input type="text" id="img64" name="img64"> -->
 
@@ -1370,12 +1392,20 @@ function xLoadConf(){
 		$("#td_img64").val(xdtPrint[0].var_size_font);
 		$("#sel_size_font_comanda").val(xdtPrint[0].var_size_font_tall_comanda).change();
 
+		check_isprint_subtotales_comanda.checked = xdtPrint[0].isprint_subtotales_comanda.toString() === "0" ? false : true;
+		check_isprint_copy_short.checked = xdtPrint[0].isprint_copy_short.toString() === "0" ? false : true;
+		
+
 		xLoadPorcentaje();
 		xLoadAdicionales();
 	});
 }
 function xGuardarCambioPrint(){
 	xPopupLoad.xopen();
+
+	const _check_isprint_subtotales_comanda = check_isprint_subtotales_comanda.checked ? 1 : 0;
+	const _check_isprint_copy_short = check_isprint_copy_short.checked ? 1 : 0;	
+
 	$("#frm_conf_print #idconf_print").val(xIdConf);
 	$("#frm_conf_print #ip_print").val($("#td_ip").val());
 	$("#frm_conf_print #num_copias").val($("#td_copia").val());
@@ -1386,6 +1416,10 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #var_size_font_tall_comanda").val($("#sel_size_font_comanda").val());
 	$("#frm_conf_print #idsede").val(xThisConfig.xt_idsede);
 	$("#frm_conf_print #idorg").val(xThisConfig.xt_org);
+	$("#frm_conf_print #isprint_subtotales_comanda").val(_check_isprint_subtotales_comanda);
+	$("#frm_conf_print #isprint_copy_short").val(_check_isprint_copy_short);
+	
+	
 	// $("#frm_conf_print #papel_size").val($("#select_papel_caja").val());
 	// $("#frm_conf_print #img64").val($("#td_img64").val());
 
@@ -1654,9 +1688,10 @@ function xModificarSede(obj){
 	$("#frm_sede #idsede").val(xThisConfig.dt_sede[xids].idsede);
 	$("#frm_sede #nombre").val(xThisConfig.dt_sede[xids].nom_sede);
 	$("#frm_sede #ciudad").val(xThisConfig.dt_sede[xids].ciudad);
+	$("#frm_sede #direccion").val(xThisConfig.dt_sede[xids].dir_sede);
 	$("#frm_sede #eslogan").val(xThisConfig.dt_sede[xids].eslogan);
 	$("#frm_sede #mesas").val(xThisConfig.dt_sede[xids].mesas);
-	$("#frm_sede #telefono").val(xThisConfig.dt_sede[xids].telefono);
+	$("#frm_sede #telefono").val(xThisConfig.dt_sede[xids].sedetelefono);
 	$("#frm_sede #ubigeo").val(xThisConfig.dt_sede[xids].ubigeo);
 	$("#frm_sede #codigo_del_domicilio_fiscal").val(xThisConfig.dt_sede[xids].codigo_del_domicilio_fiscal);
 	dialog_add_sede.open();
