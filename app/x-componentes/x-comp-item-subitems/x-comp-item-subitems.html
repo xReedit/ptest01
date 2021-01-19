@@ -14,14 +14,16 @@
             <!-- descripcion producto -->
 
             <!-- body -->
-            <div class="pt-55 body-content">
-                <span class="fs-12 color-secundario">{{detalleProducto}}</span>
-                <div class="xLinea2"></div>
+            <div class="body-content">
+                <div hidden$ = "[[ !isShowDetalleProducto ]]" class="pb-10">
+                    <span class="fs-12 color-secundario">{{detalleProducto}}</span>
+                    <!-- <div class="xLinea2"></div> -->
+                </div>                
                 <br>
                 <!-- sub items -->
-                <div>
+                <div hidden$="[[ !isExistSubitems ]]">
                     <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
-                        <div class="pb-10">
+                        <div>
                             <div class="xtitulo-subitems">
                                 <div>
                                     <p class="xBold">{{contentSub.des}}</p>
@@ -56,12 +58,13 @@
                                 </template>
                             </div>
                         </div>
-                    </template>
+                    </template> 
+                    <br><br>
                 </div>
                 <!-- sub items -->
 
                 <!-- otras indicaciones -->
-                <div class="xreferencia_item pt-5">
+                <div class="xreferencia_item">
                     <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
                     <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia" id="txt_referencia">
                     <hr>
@@ -209,6 +212,8 @@
 
     .body-content {
         position: relative;
+        top: 35px;
+        margin-bottom: 35px;
     }
 
     #contetStock {
@@ -230,9 +235,9 @@
 
 </style>
 <script>
-    var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario;    
+    var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario, keyStorageListSubItem = '::app3_listSubItem';    
 
-    function xOpenDlgItemVR_comp(tpc, id) {
+    async function xOpenDlgItemVR_comp(tpc, id) {
         
         xThisComSubItem.isOptionRequeridosComplet = false;
 
@@ -241,7 +246,7 @@
             itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
         }
 
-        console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);
+        // console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);
 
         itemPedidos_objItemSelected.des = itemPedidos_objItemSelected.des ? itemPedidos_objItemSelected.des : itemPedidos_objItemSelected.des_item;
         xThisComSubItem.desProducto = itemPedidos_objItemSelected.des;
@@ -249,7 +254,7 @@
         xThisComSubItem.stockProducto = itemPedidos_objItemSelected.stock_actual;        
         _precioProductoUnitario = itemPedidos_objItemSelected.precio;
         
-
+        xThisComSubItem.isShowDetalleProducto = xThisComSubItem.detalleProducto !== '';
         _precioProductoIni = compGetTotalItemTPC();
         xThisComSubItem.precioProducto = _precioProductoIni;
 
@@ -258,6 +263,9 @@
         // xThisComSubItem.cantSubItemSelect = itemPedidos_objItemSelected.subitem_cant_select;
         // xThisComSubItem.isSubItemReq = itemPedidos_objItemSelected.subitem_cant_select === '1' ? true : false; 
         
+        // 180121 consulta en storage si ya tiene cargado los subitems si no hay consulta en la bd si tiene subitems
+        await getSubtItemsItem(itemPedidos_objItemSelected.iditem2);
+
         // itemPedidos_objItemSelected.subitems_selected = [];
 
         if (  itemPedidos_objItemSelected.subitems ) {
@@ -272,12 +280,16 @@
             xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
             
             isExistSubitems = true;
+            
             $('.contet-subitem').removeClass('xhidden');
         } else {
             xThisComSubItem.listContentSub = [];
             isExistSubitems = false;
             $('.contet-subitem').addClass('xhidden');
         }
+
+        xThisComSubItem.isExistSubitems = isExistSubitems;
+        
 
         cocinarListSubItemsView();
 
@@ -303,6 +315,55 @@
 
         dialog_item_comp.open();
         // objOptionItemSelect.checked = false;
+    }
+
+    async function getSubtItemsItem(_iditem) {
+        var repSubItem = [];
+
+        // consulta primero en el storage
+        var listStorageSubItem = JSON.parse(localStorage.getItem(keyStorageListSubItem));
+        if ( listStorageSubItem ) {
+            repSubItem = listStorageSubItem.filter(x => x.iditem === _iditem)[0];            
+
+            if ( repSubItem ) {
+                repSubItem = repSubItem.subitems;
+                itemPedidos_objItemSelected.subitems = repSubItem;
+                return repSubItem;
+            }
+        } else {
+            listStorageSubItem = [];
+        }
+
+
+        await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20051', data:{'iditem': _iditem}})
+	    .done( function (dtCarta) {
+            var xdt_rpt = $.parseJSON(dtCarta)            
+            var repSubItemBD = [], newItemSubItem = {};
+
+            xdt_rpt = xdt_rpt.datos ? xdt_rpt.datos : [];            
+
+            xdt_rpt.map(x => {
+                if ( x.subitems ) {
+                    x.subitems = JSON.parse(x.subitems);
+                    x.subitems.map(s => {
+                        repSubItemBD.push(s);
+                    });
+                } else {
+                    repSubItemBD = null;
+                }
+            })
+
+            itemPedidos_objItemSelected.subitems = repSubItemBD;        
+            newItemSubItem.iditem = _iditem,
+            newItemSubItem.subitems = repSubItemBD;            
+            listStorageSubItem.push(newItemSubItem);
+
+            localStorage.setItem(keyStorageListSubItem, JSON.stringify(listStorageSubItem));
+
+            return repSubItem;
+        });
+        
+        return repSubItem;
     }
 
     // chequea si todas las opciones requeridas ya estan marcadas
@@ -667,10 +728,12 @@
             cantSubItemSelect: Number,
             isSubItemReq: Boolean,
             isExistSubItems: Boolean,
-            isOptionRequeridosComplet: Boolean // si hay opciones requeridas por marcar
+            isOptionRequeridosComplet: Boolean, // si hay opciones requeridas por marcar
+            isShowDetalleProducto: Boolean
 		},
 		attached: function () {
             xThisComSubItem = this;				
+            this.isShowDetalleProducto = false;
             xThisComSubItem.cantSubItemSelect = 0 ;
         },
         openDialog: function(tpc, id) {

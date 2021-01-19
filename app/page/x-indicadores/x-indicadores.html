@@ -1,4 +1,5 @@
 <dom-module id="x-indicadores">
+	<link rel="import" href="../../x-componentes/pagination-input/pagination-input.html">
 	<link rel="import" href="../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
 	<script type="text/javascript" src="../../../js/raphael.2.1.0.min.js"></script>
 	<script type="text/javascript" src="../../../js/justgage.js"></script>
@@ -237,6 +238,44 @@
 				</div>
 			</div>
 
+			<hr>
+			<br>
+			<div>
+				<div class="w-100">
+					<p class="text-left fs-16 fw-600">Calificacion de los clientes</p>
+					<hr>
+					<table class="w-100">
+						<thead>
+							<th align="left">Fecha</th>
+							<th align="left">Pedido</th>
+							<th align="left">Canal</th>
+							<th align="right">Cliente</th>
+							<th align="right">Calificacion</th>
+							<th align="right">Comentario</th>
+						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{listCalificacionCliente}}" as="item">
+								<tr>
+									<td align="left">{{ item.fecha_hora }}</td>
+									<td align="left">
+										<span> {{ item.idpedido }} </span>
+										<span> {{ item.correlativo_dia }} </span>										
+									</td>									
+									<td align="left"> {{ item.descripcion }} </td>
+									<td align="right">{{ item.nombre }}</td>
+									<td align="right"> <span  class$="[[ item.class_calificaicon ]]">{{ item.calificacion }}</span> </td>
+									<td align="right">{{ item.comentario }}</td>
+								</tr>
+							  </template>
+						</tbody>
+					</table>
+					<br>
+					<div class="xDerecha">
+						<pagination-input id="paginator" current-page="1" page-count="5" current-page-changed="onChangePagination_re($event)"></pagination-input>
+					</div>
+				</div>
+			</div>
+
 			<div id="content_dynamic">
 
 			</div>
@@ -330,16 +369,32 @@
 	var xThis, compSede, dataMeta, dataVentasDia
 	, dataVentasCanalConsumo, dataCaja, metaDiaria=0, grafico_meta_diaria = null
 	, porcentajeMedaDia = 0, crosVenta, crosCanalConsumo, crosCaja,sumImporteTotal = 0
-	, dataFiltro = {}, idsCierres = [];
+	, dataFiltro = {}, idsCierres = [], data_pagination = {}, p_rows=0, p_desde=0;
 
     function initIndicadores() {
+
+		iniFiltros();
+		xIniPagination();
+
 		xThisI.showBtnCierreCaja = false;
 		compSede = document.getElementById('compSedeIndicador');
+		compSede.addEventListener('getValorIncial', function (e) {
+			// console.log('event: ', e.detail.sedes); // true
+			dataFiltro.idsede = e.detail.sedes.idsede;
+			iniLoaddata();
+		});
+
+		xThisI.$.paginator.addEventListener('page-limit-change', (e) => {
+            // console.log('page-limit-change', e.detail.value);
+            data_pagination = e.detail.value; // datos del componente
+			p_desde = data_pagination.pageDesde; // para el # de fila   			
+            loadCalificacionCliente();          
+        });
 
 		// compSede.
 
 
-		iniFiltros();
+		// iniFiltros();
 		$('body').addClass('loaded');
 		// iniLoaddata();
 		
@@ -347,6 +402,12 @@
 		$("#Titulo_page").text("INDICADORES");
 		// loadVentasDia();
 	}
+
+	function xIniPagination() {        
+        xThisI.$.paginator.currentPage = 1;
+        xThisI.$.paginator.pageRows = p_rows;
+        xThisI.$.paginator.listRows = [10,20,30,40];
+    }
 
 	function iniLoaddata() {
 		loadMestasSede();
@@ -357,7 +418,8 @@
 		contenidoDinamico();
 
 		loadMozoVirtual();
-		loadPagoAPP();
+		loadPagoAPP();		
+		loadCalificacionCliente();
 	}
 	
 	function changeFecha(val) {
@@ -375,7 +437,7 @@
 			idsede: 0,
 			fecha: 0
 		}
-		iniLoaddata();
+		// iniLoaddata();
 	}
 
 	function callInterval() {		
@@ -516,6 +578,35 @@
 			});
 	}
 
+	function loadCalificacionCliente() {
+		// data_pagination.pageFilter = p_filter;    
+		// data_pagination.pageFecha = p_fecha;
+		
+		dataFiltro.pagination = data_pagination;
+		$.ajax({
+				type: 'POST',
+				url: '../../bdphp/log_005.php?op=16062',
+				data: dataFiltro
+			})
+			.done(function (res) {				
+				res = res.split('**');
+				p_rows = res[1];
+				res = JSON.parse(res[0]);
+				var _listRes = res.datos;
+
+				_listRes.map(x => {
+					const _calificacion = parseFloat(x.calificacion);
+					if ( _calificacion >=4 ) { x.class_calificaicon = 'badge bg-success text-white'; }
+					if ( _calificacion < 4 ) { x.class_calificaicon = 'badge bg-warning'; }
+					if ( _calificacion < 3 ) { x.class_calificaicon = 'badge bg-danger text-white'; }
+				});
+				xThisI.listCalificacionCliente = _listRes;				
+				console.log('xThisI.listCalificacionCliente', xThisI.listCalificacionCliente);
+
+				xThisI.$.paginator.pageRows = p_rows;
+			});
+	}
+
 	function reImprimirCierre() {
 		var _ids = idsCierres.map(x => x.idprint_server_detalle).join(',');
 		
@@ -537,6 +628,8 @@
 
 			});
 	}
+
+	
 
 	function cocinarDataVentasDia() {
 		
@@ -727,6 +820,7 @@
 			listPedidosItemAnulados: [],
 			listMozoVirtual: [],
 			listPagosApp: [],
+			listCalificacionCliente: [],
 			showBtnCierreCaja: Boolean,
 			metaD: Number,
 			xt_org: Number,

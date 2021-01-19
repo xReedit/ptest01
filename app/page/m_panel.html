@@ -33,6 +33,9 @@
 	<link rel="stylesheet" href="../../css/mibootstra.css">
 
 	<link rel="stylesheet" href="../../css/font-awesome-4.7.0/css/font-awesome.min.css">
+
+	<!-- animate -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 	
 
 
@@ -220,6 +223,7 @@
 	<link rel="import" href="../web_components/iron-icons/maps-icons.html">	
 	<link rel="import" href="../web_components/x-pass/x-pass.html">
 	<link rel="import" href="../web_components/x-pago/x-pago.html">	
+	<link rel="import" href="../x-componentes/x-comp-list-notification/x-comp-list-notification.html">
 	</div>
 
 
@@ -228,8 +232,18 @@
       <source src="../../sound/notifica1.ogg" type="audio/ogg"/>
       <source src="../../sound/notifica1.mp3" type="audio/mpeg"/>
 	</audio>	
+
+	<!-- alerta de notificaciones -->
+	<audio id="alertaNotificaciones" autobuffer>
+		<source src="../../sound/notifica-alertas.mp3" type="audio/mpeg"/>		
+	</audio>
+	
   </div>
+  
 	<x-dialog id="xLoad"></x-dialog>
+
+	  <!-- dialog lista de notificaciones -->
+	  <x-comp-list-notification id="dialogListNotification"></x-comp-list-notification>
 
 	<paper-dialog id="dialog_us" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 		<div class="xContent">
@@ -297,11 +311,20 @@
 						<span class="title xtitulo_bar" id="xtitulo_bar"></span>						
 
 						
-						<div class="xIzquierda">
-							<h2 class="xboldEncabezado xNoVisibleMenos920 text_puntos_2" id="Titulo_page"></h2>
-						</div>
-						<div class="xAlinearce">
-							<div class="xAlinearce">
+						<div class="d-flexx align-items-center">
+							<div class="pr-2">
+								<h2 class="xboldEncabezado xNoVisibleMenos920 text_puntos_2" id="Titulo_page"></h2>
+							</div>
+
+							<!-- btn alerta notificaciones -->
+							<div id="divIconNotification" class="xInvisible d-flexx align-items-start animate__animated animate__heartBeat animate__delay-3s animate__repeat-3" onclick="showNotificationList()">
+								<div class="xbell-notifica">
+									<i class="fa fa-bell animate__animated animate__swing animate__infinite"></i>
+								</div>
+								<span class="badge badge-danger xbell-count">1</span>
+							</div>
+
+							<div >
 								<paper-icon-button id="BtnUs" icon="account-box" title="Usuario" onclick="xAbrirDialogUs(this)"></paper-icon-button>
 							</div>
 						</div>

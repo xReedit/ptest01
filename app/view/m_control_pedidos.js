@@ -81,7 +81,7 @@ function xIniControlPedido(){
 	$("#en_nom_sede").text(xDatos_p[0].des_sede);
 	$("#en_nom_us").text(window.localStorage.getItem('::app3_woNus').toLowerCase());*/
 }
-// var axxx = 0;
+var axxx = 0;
 function xOpenPage(xop, parametro){
 	if (xRouterTime_cp) return;
 	xRouterTime_cp = true;
@@ -89,8 +89,8 @@ function xOpenPage(xop, parametro){
 		xRouterTime_cp = false;
 	}, 1000);
 
-	// axxx++;
-	// console.log('control pedidos router run ', axxx);	
+	axxx++;
+	console.log('control pedidos router run ', axxx);	
 	if(parametro==null){parametro='';}
 	var xruta='';
 	switch(xop){

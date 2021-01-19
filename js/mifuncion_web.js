@@ -729,3 +729,47 @@ function xBuscarAttrTbData2(tb,BuscarEn,filter,clase){
 function xOrdernarArray(xArray,xOrdenPor){
 
 }
+
+
+// comvierte y rezisea imagen a base64 que viene del input inputFileImgToBase64(e, 500, 500).then(res => {
+async function inputFileImgToBase64(e, maxW, maxH) {
+
+	var file = e.target.files[0]; // document.querySelector('input[type=file]')['files'][0];	
+
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onload = (e) => {
+
+			// resolve(reader.result)
+			var img = document.createElement("img");
+			img.src = e.target.result;
+			img.onload = (e) => {
+				var canvas = document.createElement("canvas");
+				var ctx = canvas.getContext("2d");
+				ctx.drawImage(img, 0, 0);
+	
+				var iw=img.width;
+				var ih=img.height;
+				var scale=Math.min((maxW/iw),(maxH/ih));
+				var iwScaled = iw > maxW ? iw*scale : iw;
+				var ihScaled = ih > maxH ? ih*scale : ih;
+
+				// var iwScaled = iw > maxW ? maxW : iw;
+				// var ihScaled = ih > maxH ? maxH : ih;
+				
+				canvas.width=iwScaled;
+				canvas.height=ihScaled;
+				
+				var ctx = canvas.getContext("2d");
+				ctx.drawImage(img,0,0,iwScaled,ihScaled);
+				
+				// var resBase64 = canvas.toDataURL("image/jpeg",0.5);
+				var resBase64 = canvas.toDataURL(file.type);
+				resolve(resBase64);
+			}
+		};
+		reader.onerror = error => reject(error);
+	});
+	
+}

@@ -218,7 +218,7 @@
 
 					<div id="div_datos_print">
 						<div>
-							<table id="tb_print">
+							<table id="tb_print">								
 								<tr>
 									<td>
 										<h3>IP Impresora</h3>
@@ -302,7 +302,7 @@
 								<tr>
 									<td>
 										<h3>Comanda muestra subtotales?</h3>
-										<span>Si en la comanda muestra subtotales del pedido, es recomendable que muestre si es una sola impresora</span>
+										<span>Si en la comanda muestra subtotales del pedido, es recomendable <br>que muestre si es una sola impresora</span>
 									</td>
 									<td>
 										<paper-checkbox id="check_isprint_subtotales_comanda"></paper-checkbox> Si<br>
@@ -311,10 +311,19 @@
 								<tr>
 									<td>
 										<h3>La copia en formato corto (Ahorro de papel)</h3>
-										<span>Si se imprime una copia de la comanda que este muestro en formato corto, es decir solo datos necesarios - ayuda a ahorrar papel -</span>
+										<span>Si se imprime una copia de la comanda que este muestro en formato corto, es decir <br>solo datos necesarios - ayuda a ahorrar papel</span>
 									</td>
 									<td>
 										<paper-checkbox id="check_isprint_copy_short"></paper-checkbox> Si<br>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<h3>Imprimir todo en formato corto (Ahorro de papel)</h3>
+										<span>Se imprime todas las comanda en formato corto, es decir solo <br>datos necesarios - ayuda a ahorrar papel</span>
+									</td>
+									<td>
+										<paper-checkbox id="check_isprint_all_short"></paper-checkbox> Si<br>
 									</td>
 								</tr>
 
@@ -335,6 +344,7 @@
 									<input type="text" id="var_size_font_tall_comanda" name="var_size_font_tall_comanda">
 									<input type="text" id="isprint_subtotales_comanda" name="isprint_subtotales_comanda">
 									<input type="text" id="isprint_copy_short" name="isprint_copy_short">
+									<input type="text" id="isprint_all_short" name="isprint_all_short">
 									
 									<!-- <input type="text" id="papel_size" name="papel_size"> -->
 									<!-- <input type="text" id="img64" name="img64"> -->
@@ -1394,6 +1404,7 @@ function xLoadConf(){
 
 		check_isprint_subtotales_comanda.checked = xdtPrint[0].isprint_subtotales_comanda.toString() === "0" ? false : true;
 		check_isprint_copy_short.checked = xdtPrint[0].isprint_copy_short.toString() === "0" ? false : true;
+		check_isprint_all_short.checked = xdtPrint[0].isprint_all_short.toString() === "0" ? false : true;
 		
 
 		xLoadPorcentaje();
@@ -1405,6 +1416,7 @@ function xGuardarCambioPrint(){
 
 	const _check_isprint_subtotales_comanda = check_isprint_subtotales_comanda.checked ? 1 : 0;
 	const _check_isprint_copy_short = check_isprint_copy_short.checked ? 1 : 0;	
+	const _check_isprint_all_short = check_isprint_all_short.checked ? 1 : 0;
 
 	$("#frm_conf_print #idconf_print").val(xIdConf);
 	$("#frm_conf_print #ip_print").val($("#td_ip").val());
@@ -1418,6 +1430,7 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #idorg").val(xThisConfig.xt_org);
 	$("#frm_conf_print #isprint_subtotales_comanda").val(_check_isprint_subtotales_comanda);
 	$("#frm_conf_print #isprint_copy_short").val(_check_isprint_copy_short);
+	$("#frm_conf_print #isprint_all_short").val(_check_isprint_all_short);
 	
 	
 	// $("#frm_conf_print #papel_size").val($("#select_papel_caja").val());

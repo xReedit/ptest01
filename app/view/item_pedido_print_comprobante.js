@@ -514,19 +514,20 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 
 		// console.log(x);
 		
+		// quitamos esperar respuesta // para que no sobrecargue
 		// // esperar respuesta // si hay algun error
-		setTimeout(() => {		
-			$.ajax({
-				url: '../../bdphp/log_003.php?op=101',
-				type: 'POST',
-				data: {id: UltimoIdPrint}
-			})
-			.done((x) => {
-				if ( parseInt(x) === 1 ) {
-					alert('Error con la impresora: Verifique el ip, que este prendida y que tenga papel');
-				}
-			})
-		}, 2500);
+		// setTimeout(() => {		
+		// 	$.ajax({
+		// 		url: '../../bdphp/log_003.php?op=101',
+		// 		type: 'POST',
+		// 		data: {id: UltimoIdPrint}
+		// 	})
+		// 	.done((x) => {
+		// 		if ( parseInt(x) === 1 ) {
+		// 			alert('Error con la impresora: Verifique el ip, que este prendida y que tenga papel');
+		// 		}
+		// 	})
+		// }, 2500);
 	}).fail(function(e) {
 		alert( "error", e );
 		console.log('error', e);

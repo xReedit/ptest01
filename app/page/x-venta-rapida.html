@@ -91,7 +91,7 @@
 						</div>
 					
 					<div style="display: grid; text-align: center;">
-						<paper-toggle-button id="toogleTouch" class="x-toogle" onclick="xActivarTouch(this)"></paper-toggle-button>
+						<paper-toggle-button id="toogleTouch" class="x-toogle" onclick="xActivarTouch(this)" checked="true"></paper-toggle-button>
 						<span class="xfont8 xColorRow_Plomo2">Touch?</span>
 					</div>
 							
@@ -501,7 +501,7 @@ var xThisVentaRapida
 ,xReservar = 0
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
-xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=false
+xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=true
 , xCadenaTC='', xCompSubitems, isSocket = false;
 
 // , xCompSubitemsEdit
@@ -816,6 +816,8 @@ function xIniVentaRapida(){
 		e.stopImmediatePropagation()
 		e.cancelBubble=true;
 	});	
+
+	isTouch = true;
 
 }
 
@@ -1189,7 +1191,7 @@ async function xGuardarPedidoVR(responde){
 	DatosCliente.idcliente = xid_cliente_pago;
 
 	// si es nuevo cliente recarga el componente input cliente
-	if (_idCLienteCompara != xid_cliente_pago) {
+	if ( xid_cliente_pago && _idCLienteCompara != xid_cliente_pago) {
 		xValPago.reloadInputDatalientes();
 	}
 

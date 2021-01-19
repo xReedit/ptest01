@@ -1,7 +1,7 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
 var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
 var xparam_time_ruter = false;
-var componentsLoadPanel = false;
+var componentsLoadPanel = false, dialogListNotification;
 
 // alert('aaa')
 
@@ -50,40 +50,7 @@ window.onload = () => {
 	}, 4000);
 };
 
-// $(document).on('ready',function(){
-// $(document).ready(function() {
-// $(document).on('pageinit', function() {	
-// window.onload = () => {
-// 	console.log(
-// 		"Native HTML Imports?", 'import' in document.createElement('link'),
-// 		"Native Custom Elements v0?", 'registerElement' in document, 
-// 		"Native Shadow DOM v0?", 'createShadowRoot' in document.createElement('div'));
-// // $(this).one('pageshow',function(){	
-// 	// confirm('from pageshow');
 
-
-//   $("#PanelDe").on("transitionend", function(a) {
-//     if (this.selected == "main") {
-//       $("#PanelDe").css("z-index", "0");
-//     }
-//   });
-
-// //   alert('aaaaaa');
-//   console.log('aaaaaaaaa');
-
-  
-  
-
-
-// //   if ( !$.browser.webkit ) { e.preventDefault(); }
-// 	// xIniDocument();
-
-// 	// setTimeout(() => {
-// 	// 	xLiberarRouter();
-// 	// }, 200);
-// 	// xConstAjax();
-// // });
-// };
 
 window.addEventListener("error", function (e) {
 	console.log(e.error.message, "from", e.error.stack);
@@ -116,7 +83,13 @@ function xIniDocument(){
 	//setInterval(function(){ xVerificarSession(); }, 5000);
 
  	xPopupLoad=document.getElementById('xLoad');
- 	xdialogus = document.getElementById('dialog_us');
+	 xdialogus = document.getElementById('dialog_us');
+	 
+	 dialogListNotification = document.getElementById('dialogListNotification');
+
+	 dialogListNotification.addEventListener('xShowNotifications', (res) => {
+		 console.log('recibi alerta de notifiacion desde el panel');
+	 });
 
  	//xVerificarSession();
  	//xSoloAccPedido();
@@ -148,6 +121,16 @@ function xIniDocument(){
  	//xRefreshNotificaciones=setInterval(function () {xNotificaciones()},10000);
 	/*$('#xMainContent1').perfectScrollbar();
 	$('#xMainContent2').perfectScrollbar();		*/
+ }
+
+ function showNotificationList() {
+	var pAudioNotificaAlert=document.getElementById('alertaNotificaciones');
+	pAudioNotificaAlert.autobuffer = true;
+	pAudioNotificaAlert.muted = false;
+	pAudioNotificaAlert.load();
+	pAudioNotificaAlert.play();
+
+	dialogListNotification.xopen();
  }
 
 /*function xOpenNewWindow(){
@@ -253,6 +236,8 @@ function xOpenPage(xop, parametro){
 		//case 9:	xruta='/control_pedidos';break;
 		case 9:	
 			document.location.href='m_control_pedidos.html';
+			// del componente categoria
+			localStorage.removeItem('::app3_comp_cat');
 			xLiberarRouter();
 			return;break;
 		case 10:xruta='/detalle_pedido';break;
@@ -339,7 +324,7 @@ function xOpenPage(xop, parametro){
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);
 	if (router == undefined) { router = document.querySelector('app-router'); }
-	router.go(xruta+parametro);
+	router.go(xruta);
 
 	xScrolUp(0);
 	//PanelDe.closeDrawer();

@@ -1258,6 +1258,10 @@ function xCargarCategoriaActual(responde){
 //para control_pedido cada que lo solicite
 // xidCategoria  obligatorio en venta rapida y control de pedidos 
 function xGeneralLoadItems(xidCategoria, x_rpt){
+	console.log('pasa cargando log.php205');
+	// borrar localstorage subitems al volver cargar la carta
+	localStorage.removeItem('::app3_listSubItem');
+
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205', data:{'idcategoria': xidCategoria}})
 	.done( function (dtCarta) {
 		var xdt_rpt=$.parseJSON(dtCarta)

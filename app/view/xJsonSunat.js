@@ -171,7 +171,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         
 
         let codigo_tipo_afectacion_igv = "20";
-        let total_base_igv = 0;
+        let total_base_igv = 0.01;
         let total_igv = 0;
         let total_valor_item = parseFloat(x.precio_total).toFixed(2);
         if (!isExoneradoIGV) {// con igv

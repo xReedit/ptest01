@@ -149,7 +149,7 @@
 </style>
 
 <script>	
-var xThisProPor,xidAlmacenbUS,xObjRowSel,xPrecio_item, xObjImgDet, xIdObjImgDet;
+var xThisProPor,xidAlmacenbUS,xObjRowSel,xPrecio_item, xObjImgDet, xIdObjImgDet, filtroStokMin = 'no';
 function xIniProPor(){
 	xPopupLoad=document.getElementById('xLoad');
 	xm_LogChequea(function(){
@@ -160,6 +160,9 @@ function xIniProPor(){
 		$("#Titulo_page").text("Productos y porciones");
 
 		xLoadAlmacenes();
+
+		var xDesFiltro1=getUrlParameter('stock_minimo','?');
+		filtroStokMin = xDesFiltro1 ? xDesFiltro1 : 'no';		
 	})
 
 	$("#ctrl_open_file").change(function(e) {
@@ -400,7 +403,15 @@ function xLoadProductos(xid_filtro){
 		$("#tb_productos .row").remove();
 		$("#tb_productos").append(xCadenaPro).trigger('create');
 		xSumarTotales()
+		
+		
+		if ( filtroStokMin === 'si' ) {
+			xBuscarXTxt('stock minimo');
+		}
+		
 		xPopupLoad.xclose();
+
+
 }
 function xSumarTotales(){
 	var xtotal_row=xContarCantRowVisible($("#tb_productos"),'.sumar_stock');
