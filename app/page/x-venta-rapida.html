@@ -74,6 +74,44 @@
 			</div>
 			<br/><br/>
 		</paper-dialog> -->
+
+
+		<paper-dialog id="dialog_opciones_adcionales" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			
+			<div>
+				<h4>Opciones Adicionales</h4>				
+			</div>
+			<br>
+
+			<div>
+
+				<div>
+					<paper-toggle-button id="toogleFullscreen" class="x-toogle" onclick="xActivarFullSreen(this)"></paper-toggle-button>					
+					<span class="fs-13">Fullscreen</span>
+					<p class="fs-12 text-secondary">Activar pantalla completa.</p>
+				</div><br>
+	
+				<div>					
+					<paper-toggle-button id="toogleShowOpciones" class="x-toogle" onclick="xActivarFirstOptionsItem(this)"></paper-toggle-button>					
+					<span class="fs-13">Ver opciones primero</span>
+					<p class="fs-12 text-secondary">Si el producto tiene opciones por escoger, escoger antes de agregar.</p>
+				</div><br>
+				
+				<div>					
+					<paper-toggle-button  id="toogleTouch" onclick="xActivarTouch(this)" checked="true"></paper-toggle-button>
+					<span class="fs-13">Touch?</span>					
+					<p class="fs-12 text-secondary">Al tocar el producto o item se agrega sin necesidad de dar clic en el signo "+"</p>
+				</div><br><br>
+
+				
+				<button class="btn btn-sm btn-secondary" dialog-dismiss> Cerrar </button>
+				<!-- <div class="xBoton2 xPlomo"dialog-dismiss>Cerrar</div> -->
+			</div>
+
+
+			
+			<br/><br/>
+		</paper-dialog>
 		  
 	  	<div class="tool-bar-vr">
 			<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDeVR();"></paper-icon-button>
@@ -85,15 +123,24 @@
 						</div>
 						
 		
-					<div style="display: grid; text-align: center;">
+					<div style="display: grid; text-align: center; cursor: pointer;" onclick="dialog_opciones_adcionales.open()">							
+						<span class="fs-15" title="Opciones Adicionales"> <i class="fa fa-cog"></i> </span>
+					</div>
+					
+					<!-- <div style="display: grid; text-align: center;">
 							<paper-toggle-button id="toogleFullscreen" class="x-toogle" onclick="xActivarFullSreen(this)"></paper-toggle-button>
 							<span class="xfont8 xColorRow_Plomo2">Fullscreen?</span>
-						</div>
+					</div>
+
+					<div style="display: grid; text-align: center;">
+						<paper-toggle-button id="toogleTouch" class="x-toogle" onclick="xActivarFirstOptionsItem(this)"></paper-toggle-button>
+						<span class="xfont8 xColorRow_Plomo2">Opciones primero</span>
+					</div>
 					
 					<div style="display: grid; text-align: center;">
 						<paper-toggle-button id="toogleTouch" class="x-toogle" onclick="xActivarTouch(this)" checked="true"></paper-toggle-button>
 						<span class="xfont8 xColorRow_Plomo2">Touch?</span>
-					</div>
+					</div> -->
 							
 			</div>
 		</div>
@@ -443,7 +490,7 @@
 	}
 
 	.paper-toggle-button-0[checked] .toggle-bar.paper-toggle-button {
-		background: #eeeeee;
+		background: grey;
 	}	
 
 </style>
@@ -501,7 +548,7 @@ var xThisVentaRapida
 ,xReservar = 0
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
-xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=true
+xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=true, isShowOpcionesPrimero = false
 , xCadenaTC='', xCompSubitems, isSocket = false;
 
 // , xCompSubitemsEdit
@@ -1791,13 +1838,25 @@ function xActivarTouch(obj) {
 	window.localStorage.setItem('::app3_sys_vr_touch', valTouch);
 }
 
+function xActivarFirstOptionsItem(obj) {
+	isShowOpcionesPrimero = !isShowOpcionesPrimero;	
+
+	const valTouch = isShowOpcionesPrimero ? 1 : 0;
+	
+	window.localStorage.setItem('::app3_sys_vr_show_opcion', valTouch);
+}
+
 function setValuesStorage() {
 	// const valScreen = window.localStorage.getItem('::app3_sys_vr_fullscreen') ? window.localStorage.getItem('::app3_sys_vr_fullscreen') : 0;
 	const valTouch = window.localStorage.getItem('::app3_sys_vr_touch') ? window.localStorage.getItem('::app3_sys_vr_touch') : 0;
+	const valShowOpcionesPrimero = window.localStorage.getItem('::app3_sys_vr_show_opcion') ? window.localStorage.getItem('::app3_sys_vr_show_opcion') : 0;
 
 	isTouch = parseInt(valTouch) === 0 ? false : true;
+	isShowOpcionesPrimero = parseInt(valShowOpcionesPrimero) === 0 ? false : true;
 	try {		
 		toogleTouch.checked = isTouch;
+		toogleShowOpciones.checked = isShowOpcionesPrimero;
+
 	} catch (error) {
 		
 	}

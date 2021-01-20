@@ -239,6 +239,8 @@
 
     async function xOpenDlgItemVR_comp(tpc, id) {
         
+        const _idItem = itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem;
+
         xThisComSubItem.isOptionRequeridosComplet = false;
 
         // itemPedidos_objItemSelected = xThisComSubItem.item_select
@@ -264,7 +266,7 @@
         // xThisComSubItem.isSubItemReq = itemPedidos_objItemSelected.subitem_cant_select === '1' ? true : false; 
         
         // 180121 consulta en storage si ya tiene cargado los subitems si no hay consulta en la bd si tiene subitems
-        await getSubtItemsItem(itemPedidos_objItemSelected.iditem2);
+        await getSubtItemsItem(_idItem);
 
         // itemPedidos_objItemSelected.subitems_selected = [];
 
@@ -360,10 +362,12 @@
 
             localStorage.setItem(keyStorageListSubItem, JSON.stringify(listStorageSubItem));
 
+            repSubItem = repSubItemBD;
+
             return repSubItem;
         });
         
-        return repSubItem;
+        // return repSubItem;
     }
 
     // chequea si todas las opciones requeridas ya estan marcadas
@@ -741,6 +745,14 @@
         },
         refreshSubItems: function () {
             xRefresSubItems_comp();
+        },
+        getSubtItemsItemById: (_id)=> {
+            return new Promise((resolve, reject) => {
+                // var rptSubItems = await getSubtItemsItem(_id);
+                // return rptSubItems?.length > 0 ? true : false;
+                resolve(getSubtItemsItem(_id));
+            });            
+            // return rptSubItems;
         }
 	})
 </script>

@@ -129,6 +129,8 @@ function xIniDocument(){
 	pAudioNotificaAlert.muted = false;
 	pAudioNotificaAlert.load();
 	pAudioNotificaAlert.play();
+	
+	
 
 	dialogListNotification.xopen();
  }

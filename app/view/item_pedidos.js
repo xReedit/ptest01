@@ -233,15 +233,24 @@ $(document.body).on('click', '#accordion div.xBtn_contet_li2', handlerFnMiPedido
 // $(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
 $(document.body).on('click', '#accordion div.content_li', function(e) {
 	if (!isTouch) return; // desde venta rapida activa el touch
-		
+	
 	handlerFnMiPedidoControl(e);
 }); // venta rapida
 
-function handlerFnMiPedidoControl(e) {
+$(document.body).on('click', '.list_add_item ul li', function(e) {
+	// if (!isTouch) return; // desde venta rapida activa el touch
+	if ( e.target.className.indexOf('xbtn_li_editar') > -1 ) {
+		return;
+	}
+	handlerFnMiPedidoControl(e);
+}); // lista control de pedidos
+
+async function handlerFnMiPedidoControl(e) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {		
 
 		var _nomClassXcant_li = 'xcant_li';
 		var _thisObj = e.target || e;
+		var isLoadingSubItems = false;
 		const isRowItemPedido = _thisObj.dataset.op === 'itempedido' ? true : false;
 		
 		if ( isRowItemPedido ) { // viene del pedido item control pedido
@@ -277,9 +286,33 @@ function handlerFnMiPedidoControl(e) {
 			_nomClassXcant_li = 'xcant_li2';
 
 			//si tiene subtiems lanza el popup opciones // en control de pedidos no lanza subopciones
-			if (itemPedidos_objItemSelected.subitems) { xCompSubitems.openDialog(null, _itemIndex);  return; } 
+			if (isShowOpcionesPrimero && itemPedidos_objItemSelected.subitems) { 
+				xCompSubitems.openDialog(null, _itemIndex);  
+				return; 
+			} 
+			// else {
+
+			// 	if (isShowOpcionesPrimero) { 
+			// 		// isLoadingSubItems = true;
+			// 		// pedir al control devolver si tiene subitems para mostar dialog
+			// 		// xCompSubitems.getSubtItemsItemById(itemPedidos_objItemSelected.iditem);
+			// 		// console.log('data', _data);
+			// 		xCompSubitems.getSubtItemsItemById(itemPedidos_objItemSelected.iditem).then(resSubItems => {
+			// 			resSubItems = resSubItems?.length > 0 ? true : false;
+			// 			if ( resSubItems ) {
+			// 				xCompSubitems.openDialog(null, _itemIndex);  
+			// 				return; 
+			// 			}
+			// 			//  else {
+			// 			// 	isLoadingSubItems = false;
+			// 			// }		
+			// 		});
+			// 	} 
+			// }
+			
 		}
 
+		// if ( isLoadingSubItems ) {return; }
 
 		xidItem = itemPedidos_objItemSelected.idcarta_lista; // $(this).parents('.xmenu_item_2').attr('data-id'); // iditem lista de la carta
 		var element_cant_li_sel = _objParentLi.getElementsByClassName(_nomClassXcant_li); // _thisObj.parentElement.getElementsByClassName(_nomClassXcant_li) //$(this).parent().find(_nomClassXcant_li);		
@@ -1264,7 +1297,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205', data:{'idcategoria': xidCategoria}})
 	.done( function (dtCarta) {
-		var xdt_rpt=$.parseJSON(dtCarta)
+		var xdt_rpt=JSON.parse(dtCarta)
 		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
 		xGeneralDataCarta=xdt_rpt.datos;
 		console.log('xGeneralDataCarta', xGeneralDataCarta);
@@ -1287,7 +1320,7 @@ function xGeneralSeccionMiPedido(xidCategoria, x_rpt){
 	// if(xGeneralDataSeccion!=undefined){if(x_rpt){return x_rpt(false);}else{return;}}//si ya esta cargado, pasa, tiene que actualizar manual
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2041', data:{'idcategoria': xidCategoria}})
 	.done( function (dtSecciones_mp) {
-		var xdtSecciones_mp=$.parseJSON(dtSecciones_mp)
+		var xdtSecciones_mp=JSON.parse(dtSecciones_mp)
 		if(!xdtSecciones_mp.success){alert(xdtSecciones_mp.error); return;}
 		xGeneralDataSeccion=xdtSecciones_mp.datos;
 

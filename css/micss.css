@@ -1079,7 +1079,7 @@ input:checked ~ .xMenuPopup{display: none;}
 
 .xNoScroll{overflow: hidden; overflow: none; overflow-x:none;overflow-x: hidden;}
 .xPanelDrawDerecha{margin-right: -180px; position: absolute; float: right;}
-.xAddItemPedido{position: absolute;right: 0; top: 0; bottom: 0; width: 300px; background: #e0e0e0; padding: 20px; z-index: 100; overflow-y:auto; display: none;}
+.xAddItemPedido{position: absolute;right: 0; top: 0; bottom: 0; width: 400px; background: #e0e0e0; padding: 20px; z-index: 100; overflow-y:auto; display: none;}
 .tablaFlat{margin:0; border:0px #FFFFFF; text-align: left; width: 100%;}
 .tablaFlat td{border-top: 1px solid #757575; font-size: 12px;}
 
@@ -1207,11 +1207,11 @@ ul.list_add_item ul li {
     border: none;
     border-bottom: 1px solid #C2C8D1;
     color: #424242;
-    padding: 8px 25px 5px;
+    padding: 14px 25px 12px;
     left: 0;
     right: 0;
     margin-left: -40px; margin-right: -29px;
-    font-size: 10px;
+    font-size: 15px;
 }
 .xtitulo_li{width: 208px;overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 #xinput_li{display: none;}
@@ -1221,9 +1221,9 @@ ul.list_add_item ul li:last-child { border-bottom: none;}
 .list_add_item ul li:hover .xcant_li{visibility: visible;}
 .list_add_item ul li:hover .xicon3{visibility: visible;}
 .list_add_item ul li .cant_fixed_li{visibility: visible;}
-.xBtn_contet_li{margin-top: -21px; position: absolute; right: 21px;}
-.xBtn_li{font-weight: 700; display: inline-block; visibility: hidden;  text-align: middle; font-size: 15px; cursor: pointer; padding: 0px 10px 0px 10px; height: 26px; line-height: 26px;}
-.xcant_li{font-size: 12px; visibility: hidden; color: #1565c0}
+.xBtn_contet_li{margin-top: -28px; position: absolute; right: 21px;}
+.xBtn_li{font-weight: 700; display: inline-block; visibility: hidden;  text-align: middle; font-size: 22px; cursor: pointer; padding: 0px 10px 0px 10px; height: 26px; line-height: 26px;}
+.xcant_li{font-size: 15px; visibility: hidden; color: #1565c0}
 .xBtn_li:hover{background: #bdbdbd;}
 
 .list_add_item2{transition: all 0.3pxs ease-in-out;position: relative;}
@@ -1248,6 +1248,10 @@ ul.list_add_item2 li {
 .list_add_item2 li:hover .xcant_li2{visibility: visible;}
 .list_add_item2 li:hover .xicon3{visibility: visible;}
 .list_add_item2 li .cant_fixed_li{visibility: visible;}
+
+.li_tocuh {
+    line-height: 30px;
+}
 
 .xitem_seleccionado_li{background: #fff9c4; color: #212121}
 .xitem_seleccionado_li .xBtn_li2{visibility: visible; z-index: 1000;}
@@ -1339,11 +1343,11 @@ ul.list_add_item2 li {
     font-size: 10px;
     line-height: 7px;
     color: black;
-    position: fixed;
+    position: absolute;
 }
 
 .show-led-print {
-    position: fixed;
+    position: absolute;
     float: right;
     background: darkturquoise;
     border-radius: 50%;
@@ -1534,7 +1538,7 @@ ul.list_add_item2 li {
 	}
 
 	.paper-toggle-button-0[checked] .toggle-bar.paper-toggle-button {
-		background: #eeeeee;
+		background: grey;
     }
     
 /* css de venta rapida chrome 80*/
