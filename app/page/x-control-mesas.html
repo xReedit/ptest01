@@ -1,5 +1,6 @@
 <!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 <dom-module id="x-control-mesas">
 
 	
@@ -210,6 +211,11 @@
 												<td align="right" class="td_importe" id="td_importe">120.00</td>
 											</tr>
 										</table>
+										<br>
+
+										<!-- <button class="btn btn-sm btn-warning"><i class="fa fa-sort-amount-desc"></i> Aplicar Descuento</button> -->
+										<x-comp-descuento id="component_descuento_pedido" importeventa$="[[ importeTotalPedido ]]"></x-comp-descuento>
+
 										</div>
 									</td>
 									<td class="xBordeIzq pd-l-10">										
@@ -488,7 +494,7 @@ var xThisCM,
 	xImporteTotalSeleccionados = 0,  // obtiene el total de los pedidos seleccionados
 	datosDelivery = null, 
 	isSocket = false, isPedidoOpenDeliveryCliente = false, arrTotalesDeliveryCliente, xid_pedido_selected, optionDeliveryCliente, xdtDpedido
-	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0;
+	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true;
 function xIniControlMesa(){
@@ -513,7 +519,7 @@ function xIniControlMesa(){
 	xPopupLoad=document.getElementById('xLoad');
 	//xm_LogChequea(function(){ inicia en m_control_pedidos.js		
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
-		// console.log('isSocket', isSocket);
+
 
 		firstLoad_mesas=true;
 		
@@ -705,7 +711,7 @@ function xIniControlMesa(){
 
 	$(document).on('click', '.btn-add-item', function(e) {
 		// agregar item al pedido desde item
-			// console.log('agrega item');
+
 			xobj_row_item=$(this).parents('tr')[0];
 
 			const _tipoConsumo = xobj_row_item.dataset.idtipoconsumo;
@@ -730,8 +736,6 @@ function xIniControlMesa(){
 			handlerFnMiPedidoControl(e);
 			
 
-
-			// console.log('xArrayPedidoObj', xArrayPedidoObj);
 
 			// xArmarSqlAddLUlI();
 			
@@ -861,6 +865,18 @@ function xIniControlMesa(){
 		xRegistrarClientePagoCP();
 	});
 
+
+	xCompDescuentoPedido=document.getElementById('component_descuento_pedido');
+	xCompDescuentoPedido.addEventListener('changeDescuento', function (e) {		
+		const _rptDsc = e.detail;
+		arrSubtTotalesDescuento = colocarDescuentoSubtotales(_rptDsc.value, arrSumSubtTotales, _rptDsc.descripcion, _rptDsc.isAgregar);
+		
+		xSumarTotalPedidos(null, true);
+
+		e.stopPropagation();
+		e.stopImmediatePropagation()
+	});
+
 	// xValPago.addEventListener('xContainerPagoVisible', function (e) {		
 	// 	xThisCM.hidden_container_registro_pago = e.detail;
 	// });
@@ -966,7 +982,6 @@ function xIniControlMesa(){
 				
 		
 		setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));		
-		// console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', cuentaEventoLoadIni ++);
 		// xLoadDataUlAdd();
 		// $("#titulo_categoria").text(e.detail.categorias.descripcion);
 	});
@@ -985,7 +1000,7 @@ function xIniControlMesa(){
 
 // 12118 // seleccionar idcarta al hacer pedido desde aca (control de mesas)
 function _getCategoria(categoria) {
-	// console.log(categoria);
+
 	xidCategoriaPD = categoria.idcategoria;
 	setLocalSotrage('::app3_cat_defualt', JSON.stringify(categoria));
 	xLoadDataUlAdd();
@@ -1149,7 +1164,7 @@ function xCheckPedidos(){
 
 function empty() {
 	// nothing
-	console.log('nada de kues updonws');
+
 }
 function detectEvent(e) {
 	var evt = e || window.event;
@@ -1285,7 +1300,7 @@ function xCambiarMesa(){
 		$(xObj_miPedido).attr('data-abrir-detalle','0');
 		$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 
-		// console.log('pintar pedido from xCambiarMesa');
+
 		xPintarEstadoPedido(); // pinta nuevamente el cambio de mesa
 	});
 }
@@ -1371,7 +1386,7 @@ function xNuevoPedidoCM(){
 	xArrayPedido=new Array();
 	xDtSubTotales=new Array();
 	guardandoPedido_cp = 0;
-	// console.log('send p cero', guardandoPedido_cp);
+
 
 	xThisCM.isAddItemRow = false;
 	xLoadArrayPedido();
@@ -1499,10 +1514,10 @@ function _cpStockItemModificado(item){
 
 // agrega nuevo item desde el mismo pedido
 function xArmarSqlAddLUlI(){
-	// console.log('send p', guardandoPedido_cp);
+
 	if ( guardandoPedido_cp === 1 ) {return;}
 	guardandoPedido_cp = 1;
-	// console.log('send p', guardandoPedido_cp);
+
 
 	var xRowLi='';
 	var xli_id_pedido;
@@ -1552,7 +1567,7 @@ function xArmarSqlAddLUlI(){
 	if (xsolo_llevar==="0" && xdelivery==="0" && (xli_nummesa==="" || xli_nummesa==="0") ) {
 		alert("Indique numero de mesa. Coloque cero(0) si no corresponde");
 		guardandoPedido_cp = 0;
-		// console.log('send p cero', guardandoPedido_cp);
+
 		// xPopupLoad.xclose();
 		return;
 	}
@@ -1608,7 +1623,7 @@ function xArmarSqlAddLUlI(){
 
 		}).fail(() => {
 			guardandoPedido_cp = 0;
-			console.log('send p cero', guardandoPedido_cp);
+
 		});
 
 		// regresa xocupado
@@ -1708,8 +1723,8 @@ async function xRegistrarClientePagoCP(){
 	xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
 	
 	// cambio para sumar los costos negativos, si es que es delivery y el comercio paga
-	// xarr_subtotal = arrSumSubtTotales;
-	xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
+	xarr_subtotal = arrSumSubtTotales;
+	// xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
 	
 	
 
@@ -1736,6 +1751,8 @@ async function xRegistrarClientePagoCP(){
 				// notificar al usuario de la cuenta
 				_cpSocketEmitPedidoPagoCliente(xarr_list_cliente_usuario_pedido);
 			// }
+
+			xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
 
 		}).fail(enProcesoGuardarPago = false);
@@ -1765,6 +1782,7 @@ async function xRegistrarClientePagoCP(){
 				_cpSocketEmitPedidoPagoCliente(xarr_list_cliente_usuario_pedido);
 			// }
 
+			xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
 		}).fail(enProcesoGuardarPago = false);
 	}
@@ -2591,7 +2609,7 @@ function xValidarCant_change(obj){
 	if(parseInt($(obj).val())>parseInt($(obj).attr('max'))){$(obj).val($(obj).attr('max'))}
 }
 
-async function xSumarTotalPedidos(viene_borrar ){
+async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 	var xcadena_pe='';
 	xtt_pedidos=0;
 	var xtt_pedidos_det=0;
@@ -2620,6 +2638,7 @@ async function xSumarTotalPedidos(viene_borrar ){
 	
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
 	arrSumSubtTotales = isPedidoOpenDeliveryCliente ? arrTotalesDeliveryCliente : xLocal_xDtSubTotales;
+	arrSumSubtTotales = viene_dsct ? arrSubtTotalesDescuento : arrSumSubtTotales;
 	xLocal_xDtSubTotales = arrSumSubtTotales;
 
 	var htmlSubtotales='';	
@@ -2655,18 +2674,22 @@ async function xSumarTotalPedidos(viene_borrar ){
 	xcadena_pe=String(xcadena_pe+'<tr class="total"><td colspan="4">CONSUMO TOTAL</><td align="right"><P class="xfont18" id="tt_consumo_t"><b>'+xMoneda(xtt_pedidos)+'</b></p></td></tr>');
 
 	xtt_dif=parseFloat(xImporteTotalSeleccionados)-parseFloat(xtt_pedidos_det);
-	ImporteDiferencia = xtt_dif;
+	ImporteDiferencia = viene_dsct ? 0 : xtt_dif;
 
 	
-	xcadena_pe=String(xcadena_pe+htmlSubtotales+'<tr class="total"><td colspan="4">DIFERENCIA</><td align="right"><P class="xfont18 xColorRow_Rojo"><b>'+xMoneda(xtt_dif)+'</b></p></td></tr>');
+	xcadena_pe=String(xcadena_pe+htmlSubtotales+'<tr class="total"><td colspan="4">DIFERENCIA</><td align="right"><P class="xfont18 xColorRow_Rojo"><b>'+xMoneda(ImporteDiferencia)+'</b></p></td></tr>');
 
 	$("#tb_pedidos").append(xcadena_pe).trigger('create');
 	xtt_pedidos=xtt_pedidos_det;
 
+	xThisCM.importeTotalPedido = xtt_pedidos;
+	
+
 
 
 	// if(viene_borrar==1){//si viene de borrar items y ya no queda mas items = mesa disponible
-		if(parseFloat(xtt_pedidos)==0){//cierra pedido
+	// y si no viene de descuento
+		if(parseFloat(xtt_pedidos)==0 && !viene_dsct){//cierra pedido
 			// console.log('sumar pedidos neutro');
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
@@ -2689,6 +2712,9 @@ async function xSumarTotalPedidos(viene_borrar ){
 		}else{
 			$(xObj_miPedido).find(".importe").text(xMoneda(xtt_pedidos));
 		}
+
+	// si mofica el importe y que no venga de descuento resetea componente
+	if ( !viene_dsct ) {  xCompDescuentoPedido.reset(); }
 	// }
 	//actualizar importe en grid;
 	//xtt_pedidos
@@ -2771,7 +2797,7 @@ async function xLoadMesas(){
 }
 
 function xPintarMesas() {
-	console.log('pintar mesa');
+	// console.log('pintar mesa');
 	const selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x =>
 	x.idtipo_consumo)[0];
 	const selector_tpc_local = 'tpc' + selector_tpc_local_id;
@@ -2818,7 +2844,7 @@ function xPintarMesas() {
 
 	iIniIsotope = true;
 
-	console.log('pintar pedido from xPintarMesa');
+	
 	// setTimeout(() => {		
 		xPintarEstadoPedido();
 	// }, 500);
@@ -2838,7 +2864,7 @@ function xPintarEstadoPedido() {
 		.done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
 			var xdtPe=JSON.parse(dtPe);
-			// console.log('xPintarEstadoPedido xdtPe', xdtPe);
+
 			var xCadenaTPC=''
 			, xcont_mesa=1
 			, xindex
@@ -2852,9 +2878,9 @@ function xPintarEstadoPedido() {
 			if ( pasoRedibujado ) { return; }
 			// xdtPe=xdtPe.datos;
 
-			console.log('evalua');
 
-			// console.log(xdtPe);
+
+
 			// for (var i = 0; i < NumMesa; i++) {
 			$(".xMiCardPedido .numero").each(function(index,element){
 				xindex=-1;
@@ -2960,7 +2986,7 @@ function xPintarEstadoPedido() {
 			try {
 				// actualizamos pedidos pagados desde el app
 				xdtPe.filter(x => x.confirmar_pago == "1").map(x => {
-					console.log('pagado');
+
 					// const element = $('.xMiCardPedido#'+x.idpedido);					
 					var element = document.getElementById(x.idpedido);					
 					if ( element ) {
@@ -2983,7 +3009,7 @@ function xPintarEstadoPedido() {
 
 			xdtPe.filter(x => !x.actualizado).map(itemList => {
 				// if (itemList) {
-					// console.log(' llega a');
+
 					if ( itemList.dibujado ) { return; }
 
 					// 291220
@@ -2991,14 +3017,13 @@ function xPintarEstadoPedido() {
 					$(".xMiCardPedido .tipo").each(function(index,element){
 						if (element.textContent.toLowerCase() !== 'mesa' ) {
 							if (element.parentElement.dataset.numpedido === itemList.numpedido) {
-								// console.log(' elimina');
+
 								$(".grid").isotope('remove',$(element.parentElement)).isotope('layout');
 							}
 							// element.parentElement.remove();
 						}
 					});
 
-					// console.log(' llega b');
 
 					const  datosDelivery = itemList.json_datos_delivery;
 					
@@ -3116,7 +3141,7 @@ function xPintarEstadoPedido() {
 			}
 
 			if(xCadenaNewItem!=''){
-				// console.log('actualiza');
+
 				var $itemsNew=$(xCadenaNewItem);		
 				$('.grid').append($itemsNew).isotope( 'appended', $itemsNew );				
 			}
@@ -3154,9 +3179,9 @@ function xPintarEstadoPedido() {
 }
 
 function _cpSocketPintarPedido(pedido) {	
-	// console.log('nbuevo pedido', pedido);
+
 	pNotificaNuevoPedido(pedido); // notifica el pedido nuevo desde la app
-	console.log('pintar pedido from _cpSocet');
+
 
 	pasoRedibujado = false;
 	xPintarEstadoPedido()
@@ -3365,7 +3390,7 @@ function xVerificarSiActualizaItems(){
 }
 function xActualizarItems(){
 	if (!isSocket)  {
-		// console.log('pintar pedido from xActualizarItems');
+
 		xPintarEstadoPedido();
 	}
 
@@ -3473,12 +3498,11 @@ function getAllRepartidor() {
 function selectRepartidor() {
 	const index = xThisCM.$.selectRepartidor.value;            
     const _repartidor = xThisCM.listRepartidor[index];
-	// console.log('_repartidor', _repartidor);
-	// console.log('idpedido', xid_pedido_selected);
+
 	
 	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1301', data:{idrepartidor: _repartidor.idrepartidor, idpedido: xid_pedido_selected }})
 	        .done( function (res) {	
-				// console.log(res);
+
 				xdtDpedido[0].idrepartidor = _repartidor.idrepartidor;
 				_cpSocketNoiticaRepartidorFromComercio(xdtDpedido[0]);
 			});
@@ -3530,7 +3554,8 @@ Polymer({
 		xdtPedDet: Object,
 		isLoadMesasIsotope: Boolean,
 		isAddItemRow: Boolean,
-		listRepartidor: []
+		listRepartidor: [],
+		importeTotalPedido: Number,
 		// hidden_container_registro_pago: boolean = false,
 		// valid_form_cliente_pago: boolean = false,
 		// valid_monto_pago: boolean = false
@@ -3548,7 +3573,7 @@ Polymer({
 		// 	xIniControlMesa();
 		// }
 		xbuscar_mesa = false;
-		console.log('entra');
+
 		
 		// _cpSocketIsConnect();
 		setTimeout(() => {				

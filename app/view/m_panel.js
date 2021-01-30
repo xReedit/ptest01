@@ -259,7 +259,7 @@ function xOpenPage(xop, parametro){
 			if(window.innerWidth<=850){
 				xruta='/venta_rapida';
 			}else{
-				window.open('#/venta_rapida', "Venta rapida");return;
+				window.open('#/venta_rapida', "Pundo de Venta");return;
 			}
 			console.log(window.innerWidth);
 			break;

@@ -273,13 +273,96 @@ function getImporteTotalSubTotalesDelivery(arrTotales = null) {
     return rowTotal.importe;
   }
 
+// descripcionDesct == '10%' cupon
+function colocarDescuentoSubtotales(importeDesct, arrTotales, descripcionDesct = '', isAgregaDesct = true) {
+	// si se agrega
+
+	var rowTotal = arrTotales[arrTotales.length - 1];	
+	var rowIgv = arrTotales.filter(x => x.descripcion === 'I.G.V')[0];
+	var rowSubTotal = arrTotales[0];
+
+	importeDesct = isAgregaDesct ? importeDesct : 0;
+
+	// if ( isAgregaDesct ) {		
+		var arrDescuento = arrTotales.filter(x => x.id === 6)[0];
+		const importeDsc = arrDescuento ? arrDescuento.importe * -1 : 0;
+
+		// if ( importeDesct === 0 ) {
+			// rowTotal.importe = rowTotal.importe + importeDsc - parseFloat(rowIgv.importe);
+			// return;
+		// } else {
+			rowTotal.importe = rowTotal.importe + importeDsc;
+		// }
+		
+		// rowTotal.importe = arrTotales.filter(x => x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+
+
+		if ( arrDescuento ) {
+			arrDescuento.importe = -importeDesct;
+			arrDescuento.descripcion = 'Descuento ' + descripcionDesct;
+		} else {
+			const postionInsert = arrTotales.length - 1;
+			const _row = {
+				descripcion: 'Descuento ' + descripcionDesct,
+				esImpuesto: 1,
+				id: 6,
+				importe: - importeDesct,
+				quitar: false,
+				tachado: false,
+				visible: false,
+				visible_cpe: false
+			};
+			arrTotales.splice(postionInsert, 0, _row);		
+		}
+
+	// } else {
+	// 	// si se quita
+	// 	arrTotales = arrTotales.filter(x => x.id !== 6);		
+	// }
+
+	// const rowTotal = arrTotales[arrTotales.length - 1];	
+	
+	rowTotal.importe = rowTotal.importe - importeDesct;
+
+	// si tiene igv
+	const xCartaSubtotalesIgv = xm_log_get('carta_subtotales');
+	const _rowIGVConfig = xCartaSubtotalesIgv.filter(x => x.descripcion === 'I.G.V')[0];
+	
+	if ( _rowIGVConfig.activo.toString() === "0" ) { // si esta activo
+		var rowIgv = arrTotales.filter(x => x.descripcion === 'I.G.V')[0];
+		var importeIgvRow = parseFloat(rowIgv.importe);
+		// if ( importeIgvRow > 0 ) {
+			const _importeIgvDsc = (rowTotal.importe * (parseFloat(_rowIGVConfig.monto) / 100)).toFixed(2);
+			rowIgv.importe = _importeIgvDsc;
+			rowSubTotal.importe = parseFloat(rowTotal.importe) - _importeIgvDsc;
+
+			if ( importeDesct > 0 ) {
+				// rowTotal.importe += parseFloat(_importeIgvDsc);
+			}
+			
+			// sub total cambia a importe(con descuento)  - igv
+			// arrTotales[0].importe = rowTotal.importe - _importeIgvDsc;
+
+		// }
+	} else {
+
+		// si no esta afecto al igv
+		// arrTotales = arrTotales.filter(x => x.id !== 6);		
+		rowTotal.importe = arrTotales.filter(x => x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+
+	}
+
+	// rowTotal.importe = arrTotales.filter(x => x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+
+	
+    return arrTotales;
+
+}
 
 
 // quitamos servicio delivery y propina del subtotal
   // flagSolicitaRepartidor = cuando comercio con repartidor propio solicita repartidor de la red papaya express
 function darFormatoSubTotalesComisionRepartidor(sedeInfo, arrTotales, costoEntrega, flagSolicitaRepartidor = false) {
-    console.log('aaa');
-
     // si tiene sus propios repartidores no da formato no quita nada
     if ( sedeInfo.pwa_delivery_servicio_propio === '1' && !flagSolicitaRepartidor ) { return arrTotales; }
 

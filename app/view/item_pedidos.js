@@ -1300,7 +1300,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 		var xdt_rpt=JSON.parse(dtCarta)
 		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
 		xGeneralDataCarta=xdt_rpt.datos;
-		console.log('xGeneralDataCarta', xGeneralDataCarta);
+		// console.log('xGeneralDataCarta', xGeneralDataCarta);
 		if(x_rpt){return x_rpt(xGeneralDataCarta);}
 	})
 }
@@ -1310,6 +1310,13 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 function xLimpiarItemSeleccionadosSubItems() {
 	xGeneralDataCarta.filter(x => x.subitems_selected).map( x => {
 		x.subitems_selected = [];
+	});
+}
+
+function xLimpiarItemIndicaciones() {
+	xGeneralDataCarta.filter(x => x.indicaciones).map( x => {
+		x.indicaciones = '';
+		x.xindicaciones = '';
 	});
 }
 

@@ -56,33 +56,81 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
     // Importe total a pagar siempre ultimo es es el total
 	const index_total = xArraySubTotales.length-1;
-    const importe_total_pagar = xArraySubTotales[index_total].importe;
+    let importe_total_pagar = parseFloat(xArraySubTotales[index_total].importe);
+    let importe_total_pagar_calc_igv = importe_total_pagar;
     const importe_total_igv = xArraySubTotales.filter(x => x.descripcion === 'I.G.V').map( x => x.importe)[0] || 0;
+    const itemDescuento = xArraySubTotales.filter(x => x.id === 6 )[0];    
+    const isHayDescuento = !!itemDescuento;
+    var _base = 0;
     
     //verifica si esta exonerado al igv /*/ caso de la selva u otros ubigeos exonerados del igv
     // const isExoneradoIGV = true;
     // let total_valor_de_venta_operaciones_gravadas = 0,total_valor_de_venta_operaciones_exoneradas = 0, leyenda = [];
     let totales = {};
+    let descuento = [];
+    let descuentoEnTotal = 0;
+
+    if (  isHayDescuento ) {
+        descuentoEnTotal = parseFloat(itemDescuento.importe) * -1;
+        // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
+        // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
+        _base = importe_total_pagar - parseFloat(importe_total_igv) + descuentoEnTotal;
+        const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
+
+        descuento = [
+            {
+            "codigo": "02",
+            "descripcion": "Descuento Global afecta a la base imponible",
+            "porcentaje": porcentaje_dsc,
+            "monto": descuentoEnTotal,
+            "base": _base
+            }
+        ];
+
+    }
+
 
     if ( isExoneradoIGV ) { // exonerado del igv
      
         //totales
+        // totales = {
+        //     "total_descuentos": descuentoEnTotal,
+        //     "total_exportacion": 0.00,
+        //     "total_operaciones_gravadas": 0.00,
+        //     "total_operaciones_inafectas": 0.00,
+        //     "total_operaciones_exoneradas": importe_total_pagar,
+        //     "total_operaciones_gratuitas": 0.00,
+        //     "total_igv": 0.00,
+        //     "total_impuestos": 0.00,
+        //     "total_valor": importe_total_pagar,
+        //     "total_venta": importe_total_pagar
+        // }
+
         totales = {
+            "total_descuentos": descuentoEnTotal,
             "total_exportacion": 0.00,
             "total_operaciones_gravadas": 0.00,
             "total_operaciones_inafectas": 0.00,
-            "total_operaciones_exoneradas": importe_total_pagar,
+            "total_operaciones_exoneradas": importe_total_pagar + descuentoEnTotal,
             "total_operaciones_gratuitas": 0.00,
             "total_igv": 0.00,
             "total_impuestos": 0.00,
             "total_valor": importe_total_pagar,
             "total_venta": importe_total_pagar
         }
+
+
+        
     } else {
 
-        const total_operaciones_gravadas = xArraySubTotales[0].importe; // el subtotal
+        const total_operaciones_gravadas = descuentoEnTotal > 0 ? (importe_total_pagar_calc_igv - parseFloat(importe_total_igv)) + descuentoEnTotal : xArraySubTotales[0].importe; // el subtotal
+        // const total_operaciones_gravadas = xArraySubTotales[0].importe; // el subtotal
+        const _total_valor = descuentoEnTotal > 0 ? _base - descuentoEnTotal : importe_total_pagar - parseFloat(importe_total_igv);
+        const _total_venta = importe_total_pagar_calc_igv;
 
         totales = {
+            "total_descuentos": descuentoEnTotal,
+            "total_descuentos": 0.00,
             "total_exportacion": 0.00,
             "total_operaciones_gravadas": total_operaciones_gravadas,
             "total_operaciones_inafectas": 0.00,
@@ -90,10 +138,12 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "total_operaciones_gratuitas": 0.00,
             "total_igv": importe_total_igv,
             "total_impuestos": importe_total_igv,
-            "total_valor": total_operaciones_gravadas,
-            "total_venta": importe_total_pagar
+            "total_valor": _total_valor,
+            "total_venta": _total_venta
         }
     }
+
+    totales.total_descuentos = descuentoEnTotal;
 
 
     // fecha actual del servidor
@@ -139,6 +189,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "correo_electronico": "",
                 "telefono": ""
             },
+            "descuentos": descuento,
             "totales": totales,
             "items": xitems,
             "extras":{
@@ -174,12 +225,21 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         let total_base_igv = 0.01;
         let total_igv = 0;
         let total_valor_item = parseFloat(x.precio_total).toFixed(2);
+        let _precio_unitario = x.punitario || x.precio_total;
+        let _valor_unitario = _precio_unitario;
+
+
         if (!isExoneradoIGV) {// con igv
         //   valor_referencial_unitario_por_item_en_operaciones_no_onerosas_y_codigo = { monto_de_valor_referencial_unitario: "01" };
+        //   total_base_igv = parseFloat(x.precio_total); //parseFloat(x.precio_total) - total_igv;  // cambio x error 3103 IGV // 12/07/2020
+        //   _precio_unitario = parseFloat(_precio_unitario) + parseFloat(total_igv); 
+
           codigo_tipo_afectacion_igv = "10";
           total_igv = parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
-          total_base_igv = parseFloat(x.precio_total) - total_igv;
-          total_valor_item = parseFloat(total_base_igv);
+          _valor_unitario = parseFloat(_precio_unitario) - (parseFloat(_precio_unitario) * procentaje_IGV); 
+          total_base_igv = parseFloat(_precio_unitario) * x.cantidad;
+          total_valor_item = _valor_unitario *  x.cantidad;
+
         } else {
             total_base_igv = parseFloat(x.precio_total); // cambio x error 3105 IGV // 12/07/2020
         }
@@ -192,9 +252,9 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
             "codigo_producto_gsl": "90101500",
             "unidad_de_medida": "NIU",
             "cantidad": x.cantidad,
-            "valor_unitario": x.punitario || x.precio_total,
+            "valor_unitario": _valor_unitario,
             "codigo_tipo_precio": "01",
-            "precio_unitario": x.punitario || x.precio_total,
+            "precio_unitario": _precio_unitario,
             "codigo_tipo_afectacion_igv": codigo_tipo_afectacion_igv,
             "total_base_igv": total_base_igv,
             "porcentaje_igv": ValorIGV,

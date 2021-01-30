@@ -1049,6 +1049,7 @@ function xNuevoPedidoVR() {
 	//xArrayPedido=new Array();
 	//xDtSubTotales=new Array()
 	xLimpiarItemSeleccionadosSubItems();
+	xLimpiarItemIndicaciones();
 	xLoadArrayPedido();
 	xPopupLoad.xopen();
 		
@@ -1066,7 +1067,7 @@ function xNuevoPedidoVR() {
 	 
 	if (isSocket) {
 		// restablece los valores a 0 no vuelve a cargar la carta
-		// _cpSocketRestoreFromPedidoStorage();
+		_cpSocketRestoreFromPedidoStorage();
 		_resetCeroItemcarta();
 		setTimeout(() => {
 			// xLoadCartaVR();
