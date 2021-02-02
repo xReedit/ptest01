@@ -494,7 +494,7 @@ var xThisCM,
 	xImporteTotalSeleccionados = 0,  // obtiene el total de los pedidos seleccionados
 	datosDelivery = null, 
 	isSocket = false, isPedidoOpenDeliveryCliente = false, arrTotalesDeliveryCliente, xid_pedido_selected, optionDeliveryCliente, xdtDpedido
-	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento;
+	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true;
 function xIniControlMesa(){
@@ -814,7 +814,7 @@ function xIniControlMesa(){
 		xcant_item=parseFloat(xobj_row_item.find('#td_cant').text());
 		$("#txt_bus_cant").attr('max',xcant_item);*/
 		//xOp_permiso();
-		if(xCronometro_us==0){pass_us.open();}else{xOp_permiso();}
+		if(xCronometro_us==0){xPSupervisor.setVal('Pe1'); pass_us.open();}else{xOp_permiso();}
 
 		// event.stopPropagation();
 		e.stopPropagation();
@@ -906,7 +906,7 @@ function xIniControlMesa(){
 	})
 
 	$("#dialog_motivo_anular #txt_motivo_anular").keyup(function(e){
-		if(e.keyCode==13){dialog_motivo_anular.close();pass_us.open();}
+		if(e.keyCode==13){dialog_motivo_anular.close(); xPSupervisor.setVal('Pe1'); pass_us.open();}
 	})
 
 	$("#dialog_cambiar_mesa #txt_num_mesa_change").keyup(function(e){
@@ -1220,6 +1220,7 @@ function xOpenAnularPedido(){
 	if(xidpedid_txt_change==''){xCheckPedidos();}
 	if(xidpedid_txt_change==''){return;}
 	xpass_op='anular_pedido';
+	xPSupervisor.setVal('Pe1');
 	dialog_motivo_anular.open();
 	//pass_us.open();
 }

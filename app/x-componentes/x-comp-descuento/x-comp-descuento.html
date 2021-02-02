@@ -1,7 +1,7 @@
 
 <dom-module id="x-comp-descuento">
 	<template>
-        <x-pass id="pass_us_dsct" titulo="Usuario autorizado" valor="Pe5"></x-pass>
+        <!-- <x-pass id="pass_us_dsct" titulo="Usuario autorizado" valor="Pe5"></x-pass> -->
         <div>
             <!-- boton visible -->
             <div class="animate__animated animate__fadeIn animate__faster" hidden$="[[ showDetalle ]]">
@@ -78,7 +78,7 @@
 
 </style>
 <script>
-    var xThisCompDesc, datauSPerDsc, paseAccPer = false, keyDscStorage = '::app3_sys_tpdsc', tipoDscSelected, importeInicial = 0, lastValCalc = 0;
+    var xThisCompDesc, datauSPerDsc, paseAccPer = false, keyDscStorage = '::app3_sys_tpdsc', tipoDscSelected, importeInicial = 0, lastValCalc = 0, xPermisoSupervisorDsc;
 
     function xShowDetalleDsc() {        
         xThisCompDesc.showDetalle = !xThisCompDesc.showDetalle;
@@ -102,9 +102,9 @@
         paseAccPer = datauSPerDsc.per.indexOf('Pe5') > -1;
         if ( !paseAccPer ) {
 
-            xPSupervisorDesc=document.getElementById('pass_us_dsct');
-            xPSupervisorDesc.setVal('Pe5');
-            xPSupervisorDesc.addEventListener('xSend', function (e) {
+            // xPSupervisorDesc=document.getElementById('pass_us_dsct');
+            xPSupervisor.setVal('Pe5');
+            xPSupervisor.addEventListener('xSendPe5', function (e) {
                 var p=e.detail.xRpts[0].p;
                 if(p===1){
                     xPermisoSupervisorDsc=e.detail.xRpts[0].us;                                        
