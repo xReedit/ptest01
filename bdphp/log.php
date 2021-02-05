@@ -1771,8 +1771,10 @@
 			// 	WHERE (p.idorg=".$g_ido." AND p.idsede=".$g_idsede.") and (p.estado=0) and p.nummesa=0
 			// 	GROUP BY p.idpedido
 			// ";
+			$arrItemPedido = $_POST['objPedido'];	
+			$arrItemPedido = isset($arrItemPedido) ? $arrItemPedido == 0 ? 'null' : "'".json_encode($arrItemPedido)."'" : 'null';
 
-			$sql="CALL procedure_refresh_mesas_501(".$g_ido.",".$g_idsede.");";
+			$sql="CALL procedure_refresh_mesas_501(".$g_ido.",".$g_idsede.", ".$arrItemPedido.");";
 			$bd->xConsulta($sql);
 			break;
 		case 50101://count cantidad de pedidos para actualizar

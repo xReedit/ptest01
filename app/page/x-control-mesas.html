@@ -2851,7 +2851,7 @@ function xPintarMesas() {
 	// }, 500);
 }
 
-function xPintarEstadoPedido() {
+function xPintarEstadoPedido(_objPedido = 0) {
 	const selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x => x.idtipo_consumo)[0];
 	const selector_tpc_local = 'tpc' + selector_tpc_local_id;
 	xIdFiltro1 = selector_tpc_local_id;
@@ -2861,7 +2861,8 @@ function xPintarEstadoPedido() {
 	, xCadenaPedidoOtros=''
 	, xidtipo_c='tpc1';				
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501'})
+	console.log('vuelve a pintar bd');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
 		.done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
 			var xdtPe=JSON.parse(dtPe);
@@ -2874,7 +2875,7 @@ function xPintarEstadoPedido() {
 
 			xCadenaNewItem='';
 
-			xdtPe=xdtPe.datos.map( x => {x.actualizado = false; return x;});
+			xdtPe=xdtPe.datos.map( x => {x.actualizado = false; return x;});			
 
 			if ( pasoRedibujado ) { return; }
 			// xdtPe=xdtPe.datos;
@@ -2893,7 +2894,7 @@ function xPintarEstadoPedido() {
 				xcont_mesa = element.textContent; //numero mesa
 				
 				// itemList = xdtPe.filter(x => parseInt(x.nummesa) === parseInt(xcont_mesa))[0];
-				itemList = xdtPe.filter(x => xCeroIzq(x.nummesa, 2) === element.textContent || xCeroIzq(x.correlativo_dia, 4) === element.textContent)[0]
+				itemList = xdtPe.filter(x => xCeroIzq(x.nummesa, 2) === element.textContent || xCeroIzq(x.correlativo_dia, 4) === element.textContent)[0];
 				if ( itemList ) {
 					if (itemList.confirmar_pago === '1'  && itemList.nummesa !== '0' ) { 
 						// chequeamos si la mesa tiene pedido despues de haber pagado por app
@@ -3168,7 +3169,10 @@ function xPintarEstadoPedido() {
 			}); 
 
 
-			xResetMesaDefault(_valsReset.join(','));
+			// si actualiza todo
+			if ( _objPedido === 0 ) {
+				xResetMesaDefault(_valsReset.join(','));
+			}
 
 			// xResetMesaDefault(xdtPe.filter(x => x.reserva.toString() === "0").map(x => {
 			// 	const _val = x.nummesa == 0 ? '|'+xCeroIzq(x.correlativo_dia,4)+'|' : '|'+xCeroIzq(x.nummesa,2)+'|';
@@ -3184,8 +3188,29 @@ function _cpSocketPintarPedido(pedido) {
 	pNotificaNuevoPedido(pedido); // notifica el pedido nuevo desde la app
 
 
+	console.log('nuevo pedido socket' , pedido);
+	var _objPedido = 0;
+	var dt_pedido = pedido;
+
+	if ( pedido ) {
+		if ( pedido.idpedido ) { // desde el cliente
+			_objPedido = {
+				idpedido: dt_pedido.idpedido,
+				nummesa: dt_pedido.p_header.m === '' ? 0 : dt_pedido.p_header.m
+			}
+		 
+		} else {
+			dt_pedido = JSON.parse(pedido.detalle_json);
+			_objPedido = {
+				idpedido: dt_pedido.Array_enca.idpedido,
+				nummesa: dt_pedido.Array_enca.m === '' ? 0 : dt_pedido.Array_enca.m
+			}
+		}
+	
+	}
+
 	pasoRedibujado = false;
-	xPintarEstadoPedido()
+	xPintarEstadoPedido(_objPedido)
 }
 
 function _cpSocketPintarFlagPedidoImpreso(listPedidos) {

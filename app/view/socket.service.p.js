@@ -26,13 +26,13 @@ function listenSocketP() {
     setTimeout(() => {    
         $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=14', data: { socketId:  this.socketCP._socket.id}})
         .done( function (res) {
-            console.log(res);
+            // console.log(res);
         });
     }, 1200);
 
     // restore si hay
     this.socketCP.listen('nuevoPedido').subscribe(res => {
-        console.log('nuevoPedido msocket', res);
+        // console.log('nuevoPedido msocket', res);
         try {                
             _cpSocketPintarPedido(res);
         } catch (error) {}            
