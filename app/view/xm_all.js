@@ -756,6 +756,20 @@ function pantallaCompleta() {
 	}
 }
 
+
+// enviar correos electronicos
+async function xSendEmailClienteSES(params) {
+	const _url = URL_SERVER +'delivery/send-email-ses';
+        await $.ajax({
+				type: 'POST',
+                url: _url,
+                data: { msj: params}
+			})
+			.done((res) => {				
+				return res;
+			});
+}
+
 // async function getTemplate(filepath) {
 // 	return await fetch(filepath)
 // 		.then(response => {

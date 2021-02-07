@@ -130,6 +130,11 @@
 			  <tr id="Seccion_resumen_vendido"></tr>
 			</table>
 		</div>
+
+
+		<div class="xInvisible">
+			<div id="div_datos" style="max-width:500px;">
+		</div>
 	</template>
 </dom-module>
 <style>
@@ -164,7 +169,7 @@ var xThisCaja
 , id_supervisor = 0
 , xlo_idorg
 , xlo_idsede
-, xlo_us, isSocket;
+, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0;
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -331,6 +336,9 @@ function xGetDataCierre(idBitacora) {
 		});
 
 		xArrayCierrePrint = arrRpt;
+		xEscribirDatosHtml();
+		// xLoadDataCierrePrintHtml();
+
 		console.log('arrPrint', arrRpt);
 
 		xPopupLoad.xclose();
@@ -419,6 +427,7 @@ function xVerificar(){
 				if ( isNumIntentosAgotado ) {
 					xRpt='<h3>NUMERO DE INTENTOS DE CIERRE AGOTADO, POR FAVOR LLAME AL SUPERVISOR.</h3>';
 				} else {
+					numImtentosUs = xCeroIzq(res.numintentos,2);
 					labelItentos = '<br><span class="xBold xfont14">Intentos de cierre '+ xCeroIzq(res.numintentos,2) + ' de '+ xCeroIzq(res.numintentos_permitidos,2)+'</span> ';
 					if(calTotal<-1){xRpt='<h3>Existe sobrante en caja.'+ labelItentos +'</h3>';}
 					if(calTotal>1){xRpt='<h3>Existe faltante en caja.'+ labelItentos +'</h3>';}
@@ -770,13 +779,91 @@ function xReImprimirCierre(){
 	xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);
 }
 
+function xEscribirDatosHtml(){
+
+	xArrayCierrePrint.map((i, index) => {
+		var sum_t1=0,sum_t2=0,sum_t3=0;
+		for (const key in i) {
+			if (typeof i[key] === 'object') {				
+				sum_t1+=isNaN(parseFloat(i[key].t1)) ? 0 : parseFloat(i[key].t1);
+				sum_t2+=isNaN(parseFloat(i[key].t2)) ? 0 : parseFloat(i[key].t2);
+				sum_t3+=isNaN(parseFloat(i[key].t3)) ? 0 : parseFloat(i[key].t3);
+			}
+		}
+		// i.map(e => {
+		// 	if (typeof e === 'object') {				
+		// 		sum_t1+=isNaN(parseFloat(e.t1)) ? 0 : parseFloat(e.t1.replace(',', ''));
+		// 		sum_t2+=isNaN(parseFloat(e.t2)) ? 0 : parseFloat(e.t2.replace(',', ''));
+		// 		sum_t3+=isNaN(parseFloat(e.t3)) ? 0 : parseFloat(e.t3.replace(',', ''));
+		// 	}
+		// });
+		// i.t1 = sum_t1;
+		// i.t2 = sum_t2;
+		// i.t3 = sum_t3;
+
+		xArraySumT[index]={'t1': sum_t1 == 0 ? '': sum_t1 ,'t2': sum_t2 == 0 ? '': sum_t2,'t3':sum_t3.toFixed(2)}
+
+	});
+
+
+	var xtabla_datos='',xtabla_encabezados='', xbody_datos='', count_row=0, xtabla_sum='';
+	const sedeDatos = xm_log_get('datos_org_sede')[0];
+	for (a in xArrayCierrePrint) {
+		xtabla_datos='';xtabla_encabezados='';count_row=0;xtabla_sum='';
+
+		xtabla_encabezados='<thead><th align="left">'+xArrayCierrePrint[a].des+'</th><th align="right">'+xArrayCierrePrint[a].t1+'</th><th align="right">'+xArrayCierrePrint[a].t2+'</th><th align="right">'+xArrayCierrePrint[a].t3+'</th></thead>';
+
+		$.map(xArrayCierrePrint[a], function(xn_p, z) {
+			if (typeof xn_p==="object"){
+				count_row++;
+				xtabla_datos=String(xtabla_datos+'<tr><td>'+xn_p.des+'</td><td align="right" class="t1">'+xn_p.t1+'</td><td class="t2" align="right">'+xn_p.t2+'</td><td class="t3" align="right">'+xn_p.t3+'</td><tr>');
+			}
+		})
+		xtabla_sum=String('<tr><td></td><td align="right"><strong>'+xArraySumT[a].t1+'</strong></td><td align="right"><strong>'+xArraySumT[a].t2+'</strong></td><td align="right"><strong>'+xArraySumT[a].t3+'</strong></td></tr>');
+
+		if(count_row===0){continue;}
+		xbody_datos=String(xbody_datos+'<table class="xtable2 xMarginTop" width="100%">'+xtabla_encabezados+xtabla_datos+xtabla_sum+'</table><br><br>');
+
+	};
+
+	const _fechaNow = xDevolverFecha() + ' | ' + xDevolverHora();
+
+	xbody_datos = `<div style = "line-height: 1;">
+				<h3>CIERRE DE CAJA - ${_fechaNow}</h3>				
+				<h3>Local: ${sedeDatos.sedenombre}</h3>				
+				<h3>Ciudad: ${sedeDatos.sedeciudad} </h3>
+				<h4>Usuario: ${xNomUsario}</h4>
+				<p>Intentos: <strong>${numImtentosUs}</strong></p>
+				<p>Supervisor: <trong>${nom_supervisor}</strong></p>
+				<br><br>
+				</div>${xbody_datos}
+				<br><br>
+				<p>papaya.com.pe</p>`;
+
+	$("#div_datos").append(xbody_datos).trigger('create');
+	// xPopupLoad.xclose();
+
+	// enviar a correo electronico;
+	if (!sedeDatos.email_cierre) { return; }
+	const _msjSend = {
+            to: sedeDatos.email_cierre,
+            asunto: 'CIERRE DE CAJA | '+ sedeDatos.sedenombre + ' | ' + xDevolverFecha(),
+            titulo: 'Cierre de caja',
+            htmlContent: div_datos.outerHTML
+        }
+
+	xSendEmailClienteSES(_msjSend);
+}
+
+
 Polymer({
 	is:'x-caja',
 	properties:{
 		//xpage_selected:String,
 		xt_org:Number,
 		xt_idsede:Number,
-		xt_idus:Number
+		xt_idus:Number,
+		winchaCierre: []
 	},
 	attached:function(){
 		this.selected=0;

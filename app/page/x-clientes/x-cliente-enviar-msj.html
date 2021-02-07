@@ -507,22 +507,25 @@
     }
 
     function sendEmailClient(_cliente) {
-        console.log('content_plantilla_correo');
+        // console.log('content_plantilla_correo');
         const _msjSend = {
             to: _cliente.email,
             asunto: txt_correo_titulo.value,
             titulo: txt_correo_titulo.value,
             htmlContent: content_plantilla_correo.outerHTML
         }
-        const _url = URL_SERVER +'delivery/send-email';
-        $.ajax({
-				type: 'POST',
-                url: _url,
-                data: { msj: _msjSend}
-			})
-			.done((res) => {				
-				console.log(res);
-			});
+
+        xSendEmailClienteSES(_msjSend);
+        
+        // const _url = URL_SERVER +'delivery/send-email';
+        // $.ajax({
+		// 		type: 'POST',
+        //         url: _url,
+        //         data: { msj: _msjSend}
+		// 	})
+		// 	.done((res) => {				
+		// 		console.log(res);
+		// 	});
     }
 
     // guardar logo
