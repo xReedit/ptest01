@@ -3,12 +3,16 @@ session_start();
 $op=$_GET['op'];
 $timeSpan = '';
 
+$fecha = new DateTime();
+$timeSpan = $fecha->getTimestamp();
+
 switch ($op) {
 	case '4': // logo comercio desde plantilla correo que viene en formato base64
         $path = '../../repositorio/img_correo/';
-        $fecha = new DateTime();
-        $timeSpan = $fecha->getTimestamp();
 		break;
+    case '5'
+        $path = '../../repositorio/gif_update/';
+        break;
 }
 
 

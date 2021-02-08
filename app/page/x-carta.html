@@ -1113,6 +1113,7 @@ function xItemGuardarFoto(){
 		xhr.send(file);
 	})
 };
+
 function transferenciaCompleta(xfile){
 	xfile=xIdOrg+xIdSede+xfile;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=207', data:{i:xIdObjImgDet,d:xfile}})
@@ -1122,6 +1123,7 @@ function transferenciaCompleta(xfile){
 		xPopupLoad.xclose();
 	})
 }
+
 function xCheckImgPrint(obj){
 	var xid=$(obj).parent().parent().find("#seccion_des").attr('data-id');
 	var xval;

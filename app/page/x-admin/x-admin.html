@@ -1,4 +1,5 @@
 <link rel="import" href="./x-repartidores.html">
+<link rel="import" href="./x-admin-change-sys.html">
 <dom-module id="x-admin">
 	<template>
 
@@ -112,6 +113,7 @@
 					<paper-tab>Establecimientos</paper-tab>					
 					<paper-tab>Registro de Contadores CPC</paper-tab>
 					<paper-tab>Repartidores</paper-tab>
+					<paper-tab>Actualizaciones Sistema</paper-tab>
 				</paper-tabs>
 				<div class="xLinea2"></div>
 				<br><br>
@@ -235,6 +237,11 @@
 								</template>
 							</tbody>
 						</table>
+					</div>
+
+					<!-- cambios en el sistema -->
+					<div id="div_change_sys">
+						<x-admin-change-sys></x-admin-change-sys>
 					</div>
 
 				</iron-pages>

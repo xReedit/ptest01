@@ -19,6 +19,9 @@ switch ($op) {
 	case '3': // logo comercio app para la aplicacion delivery
 		$fileName = $_SERVER['HTTP_X_FILE_NAME'];
 		$path = '../../print/logo/';
+		break;
+	case '5':
+		$path = '../../repositorio/gif_update/';
 		break;		
 }
 
