@@ -471,6 +471,7 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 /// enviar a print server
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	// _data = JSON.stringify(JSON.stringify(_data)); si no es prueba
+
 	switch (_idprint_server_estructura) {
 		case 3: //pruebas
 			break;

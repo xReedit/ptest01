@@ -29,16 +29,30 @@
                     <br>
                     <div class="xInvisible" id="contentClie">
                         <div style="width:260px;">
-                            <div class="w-100 d-flexx justify-content-end">
-                                <input autofocus type="number" class="xMiInput" placeholder="RUC Cliente" pattern="[0-9]*" required id="txt_ruc" onkeyup="validarDocumentoCliente(this.value, event)" espaciar>
+                            <div class="w-100 d-flexx">
+                                <div class="pr-2">
+                                    <input autofocus type="number" class="xMiInput" placeholder="RUC Cliente" pattern="[0-9]*" required id="txt_ruc" onkeyup="validarDocumentoCliente(this.value, event)" espaciar>
+
+                                    <div class="xInvisible" id="progress_cliente">
+                                        <paper-progress indeterminate style="width: 100%; float: left; margin-top: -6px"></paper-progress>
+                                    </div>
+                                    <div>
+                                        <span class="xColorRow_Rojo xInvisible" id="txt_msj" style="padding-left: 7px; float: left; margin-top: -3px"></span>
+                                    </div>
+                                </div>
+                                
+                                <paper-icon-button hidden$="[[!isShowSearchSunat]]" icon="icons:refresh" title="Obtner datos actualizados"
+                                    onclick="validarDocumentoCliente(null, null, true, true)"
+                                    style="
+                                        position: relative;
+                                        right: 2px;
+                                        float: right;
+                                        background: springgreen;
+                                        border-radius: 5px;">
+                                </paper-icon-button>   
+
                                 <button class="btn btn-sm btn-success" onclick="validarDocumentoCliente(null, null, true);">Buscar</button>
-                            </div>
-                            <div class="xInvisible" id="progress_cliente">
-                                <paper-progress indeterminate style="width: 100%; float: left; margin-top: -6px"></paper-progress>
-                            </div>
-                            <div>
-                                <span class="xColorRow_Rojo xInvisible" id="txt_msj" style="padding-left: 7px; float: left; margin-top: -3px"></span>
-                            </div>
+                            </div>                            
                         </div>
                         <!-- <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" required="[[!formValid]]" id="txt_nombres" espaciar> -->
                         <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
@@ -232,7 +246,7 @@
     
     }
 
-    function validarDocumentoCliente(valor, e, btnBuscar=false){
+    function validarDocumentoCliente(valor, e, btnBuscar=false, buscarSoloSunat = false){
         if ( !btnBuscar ) {
             if (e.keyCode !== 13) return;
         }
@@ -250,7 +264,7 @@
         };
         
         $("#progress_cliente").removeClass("xInvisible");
-        xGetFindCliente(rpt.numdoc, rpt.servicio, (new_rpt) => {
+        xGetFindCliente(rpt.numdoc, rpt.servicio, buscarSoloSunat, (new_rpt) => {
             if (new_rpt.success) {
                 if ( new_rpt.nombres === "" ) {
                     rpt.valid = false;
@@ -261,6 +275,8 @@
                     NumDocNoValid(rpt);
                     return;
                 }
+
+                xThisFacturador.isShowSearchSunat = new_rpt.buscarSunat;
 
                 rpt.valid = true;
                 rpt.msj = "ok";
@@ -573,8 +589,10 @@
             modificarCliente: boolean = false,
             cpe_show: boolean = false,
             fecha_manual: boolean = false,
+            isShowSearchSunat: Boolean
         },
         attached: function () {
+            this.isShowSearchSunat = false;
             xThisFacturador = this;
             xIniFacturador();
             _cpSocketOpen();

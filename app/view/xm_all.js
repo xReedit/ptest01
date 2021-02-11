@@ -555,13 +555,22 @@ function xm_log_get(seccion){
 }
 
 //3
-async function xGetFindCliente(valor, servicio, callback) {
+async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 	var esFacturacionElectronica=false;
 	var rpt = [];
 	var token = "XXeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.1tLS4vhIGufCW5H5vJ4bmNxhf43x-Vaik4oRwaDXi7E";
 	var label_num = servicio === "dni" ? "ndni" : "ruc"; 
 	var _url_servicio;
 	var num_doc = valor;
+	var buscarSunat = false;
+
+		if ( buscarSoloSunat ) {
+			xVerificarRucChangeSunat(valor, (rpt) => {
+				callback(rpt);
+			});
+			return;
+		}
+
 				
 		//primero busca en local
 		var dt = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=602', data:{doc: valor}});
@@ -569,13 +578,31 @@ async function xGetFindCliente(valor, servicio, callback) {
 			dt = JSON.parse(dt);			
 			if (dt.datos.length > 0) { // si tiene los datos en el local
 				dt = dt.datos[0];
-				rpt = {success: true, idcliente:dt.idcliente, nombres: dt.nombres, direccion: dt.direccion, num_doc: dt.ruc, telefono: dt.telefono, msg: 'ok'};
-				// responde(rpt); 
+
+				// show boton buscar en sunat
+				buscarSunat = label_num === 'ruc';
+
+				rpt = {success: true, idcliente:dt.idcliente, nombres: dt.nombres, direccion: dt.direccion, num_doc: dt.ruc, telefono: dt.telefono, msg: 'ok', buscarSunat: buscarSunat};							
+
+				// dt.count_search las veces que se busco la bd pasado 5 veces busca cambios en la sunat
+				// if ( buscarSunat && dt.countSearch > 5 ) {
+				// 	xVerificarRucChangeSunat(valor, (rpt) => {
+				// 		callback(rpt);
+				// 	});
+				// } else {
+				// 	// responde(rpt); 
+				// }
 				callback(rpt);
+
+
+
+
+
 				// return rpt;
 			} else {
 							
 				xValidarToken(token, (t)=> {
+					token = t;
 					if (t==="error"){ // algo paso con el servicio
 						if (!esFacturacionElectronica) { // si no esta habilitado para facturacion electronica 
 							rpt = {success: true, idcliente:'', nombres:'', direccion:'',num_doc:'', telefono: '', msg: 'ok'};
@@ -585,11 +612,12 @@ async function xGetFindCliente(valor, servicio, callback) {
 							// responde(rpt); return;
 						}
 						
-						// return rpt;
+						// return rpt;						
+
 						callback(rpt);
 					}
 			
-					token = t;
+					// token = t;
 					_url_servicio = "../../consulta/"+servicio+"/api/service.php?"+label_num+"="+valor+"&token="+token;
 					
 								
@@ -625,7 +653,7 @@ async function xGetFindCliente(valor, servicio, callback) {
 							}
 						}
 
-						rpt = { success: dt.haydatos, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, telefono: telefono, msg: dt.msg };
+						rpt = { success: dt.haydatos, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, telefono: telefono, msg: dt.msg, buscarSunat: buscarSunat };
 
 						// responde(rpt);
 						callback(rpt);
@@ -643,6 +671,55 @@ async function xGetFindCliente(valor, servicio, callback) {
 		// });
 	// });
 }
+
+function xVerificarRucChangeSunat(valor, callback) {
+	var token = "XXeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.1tLS4vhIGufCW5H5vJ4bmNxhf43x-Vaik4oRwaDXi7E";
+	xValidarToken(token, (t)=> {
+		token = t;
+		var rpt = {};
+		_url_servicio = "../../consulta/ruc/api/service.php?ruc="+valor+"&token="+token;		
+						
+					$.ajax({ type: 'POST', url: _url_servicio})
+					.done( function (dt) {
+						// responde (JSON.parse(dt));
+						dt = JSON.parse(dt);
+						console.log(dt);
+						var nombres='', direccion='', telefono='';
+						var num_doc = valor;
+						var fnacimiento = '';
+
+						if (dt.success && dt.haydatos) {			
+							// if (servicio === 'ruc') {
+								nombres = dt.result.RazonSocial;
+								direccion = dt.result.Direccion;
+							// } else {
+								
+							// 	const ap_paterno = dt.result.ApellidoPaterno || '';
+							// 	const ap_materno = dt.result.ApellidoMaterno || '';
+							// 	const apellidos = ap_paterno === '' ? dt.result.apellidos || '' : ap_paterno + ' ' + ap_materno;
+							// 	nombres = dt.result.Nombres + " " + apellidos;
+							// 	nombres = nombres===' '? '' : nombres;
+							// 	direccion = '';								
+							// 	fnacimiento = dt.result.FechaNacimiento || '';
+							// }
+						} else {
+							// if (!esFacturacionElectronica) { // si no esta habilitado para facturacion electronica 
+								rpt = {success: true, idcliente:'', nombres:'', direccion:'',num_doc:num_doc, telefono: telefono, msg: 'ok'};
+								// responde(rpt); return;
+								// return rpt;
+								callback(rpt);
+							// }
+						}
+
+						// _rebusqueda =busca ruc para informar de cambios 
+						rpt = { success: dt.haydatos, idcliente: "", nombres: nombres, direccion: direccion, num_doc: num_doc, f_nac: fnacimiento, telefono: telefono, msg: dt.msg, buscarSunat: false };
+
+						// responde(rpt);
+						callback(rpt);
+					});
+	});	
+}
+
 
 //1
 function xValidarToken(token, callback) {

@@ -50,7 +50,20 @@
 								style="position: relative;
 								right: 10px;
 								margin-top: -48px;
-								float: right;">
+								float: right;">								
+							</paper-icon-button>
+
+							<paper-icon-button hidden$="[[!isShowSearchSunat]]" icon="icons:refresh" title="Obtner datos actualizados"
+								onclick="xValidarDNIRUC(null, event, false, true)"
+								style="
+								position: relative;
+								right: 50px;
+								margin-top: -42px;
+								float: right;
+								background: springgreen;
+								padding: 2px;
+								border-radius: 5px;
+							">
 							</paper-icon-button>
 
 							<div class="xInvisible" id="progress_cliente">
@@ -520,7 +533,7 @@
 
 	/// 0918 ///
 
-	async function xValidarDNIRUC(valor, e, tecla=true) {
+	async function xValidarDNIRUC(valor, e, tecla=true, buscarSoloSunat = false) {
 		var servicio = 'ruc';
 		valor = valor ? valor : sel_cliente.value;
 		xThisPago.mensajeErrorDocumento = '';
@@ -612,10 +625,11 @@
 			// xThisPago.hidden_container_cliente = true;
 
 
-			xGetFindCliente(valor, servicio, (rpt) => {
+			xGetFindCliente(valor, servicio, buscarSoloSunat, (rpt) => {
 				if (rpt.success) {
 					xThisPago.valid_form_cliente_pago = true; // cliente valido
 					xThisPago.hidden_container_cliente = false;
+					xThisPago.isShowSearchSunat = rpt.buscarSunat;
 					// $("#datos_cliente").removeClass("xInvisible");
 					// xThisPago.$.clie_nombres.focus();
 					// var testele = document.getElementById('clie_nombres');
@@ -1215,11 +1229,13 @@
 			dt_tp_comprobante: Object,
 			clienteModel: Object,
 			dataClientes: Object,
+			isShowSearchSunat: Boolean
 		},
 		attached: function () {
 			//this.total='83.00';
 			this.modoSoloComprobante = false;
-			this.diferencia = '--';
+			this.diferencia = '--'
+			this.isShowSearchSunat = false;
 			//this.placeholder_clie='Cliente | Publico en General';		
 			xThisPago = this;
 			xIiniPago();

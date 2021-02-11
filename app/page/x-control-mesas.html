@@ -494,7 +494,7 @@ var xThisCM,
 	xImporteTotalSeleccionados = 0,  // obtiene el total de los pedidos seleccionados
 	datosDelivery = null, 
 	isSocket = false, isPedidoOpenDeliveryCliente = false, arrTotalesDeliveryCliente, xid_pedido_selected, optionDeliveryCliente, xdtDpedido
-	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor;
+	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true;
 function xIniControlMesa(){
@@ -3194,10 +3194,18 @@ function _cpSocketPintarPedido(pedido) {
 
 	if ( pedido ) {
 		if ( pedido.idpedido ) { // desde el cliente
-			_objPedido = {
-				idpedido: dt_pedido.idpedido,
-				nummesa: dt_pedido.p_header.m === '' ? 0 : dt_pedido.p_header.m
-			}
+						
+			if ( pedido.isFromVR ) {
+				_objPedido = {
+					idpedido: dt_pedido.idpedido,
+					nummesa: dt_pedido.m === '' ? 0 : dt_pedido.m
+				}		
+			} else {
+				_objPedido = {
+					idpedido: dt_pedido.idpedido,
+					nummesa: dt_pedido.p_header.m === '' ? 0 : dt_pedido.p_header.m
+				}
+			}			
 		 
 		} else {
 			dt_pedido = JSON.parse(pedido.detalle_json);
@@ -3208,6 +3216,14 @@ function _cpSocketPintarPedido(pedido) {
 		}
 	
 	}
+
+	// para no volver a cargar la misma mesa se pone 0 en 600ms
+	if ( lastIdPedidoPrint === _objPedido.idpedido ) { return; }
+	lastIdPedidoPrint = _objPedido.idpedido;
+
+	setTimeout(() => {
+		lastIdPedidoPrint = 0;
+	}, 600);
 
 	pasoRedibujado = false;
 	xPintarEstadoPedido(_objPedido)

@@ -1344,7 +1344,8 @@ async function xGuardarPedidoVR(responde){
 			solo_llevar: xsolo_llevar,
 			delivery: xdelivery,
 			correlativo_dia: xCorrelativo_dia,
-			arrDatosDelivery: arrDatosAdjuntoDelivery
+			arrDatosDelivery: arrDatosAdjuntoDelivery,
+			isFromVR: true
 		};
 
 
@@ -1362,7 +1363,7 @@ async function xGuardarPedidoVR(responde){
 		}
 
 		// notifica nuevo pedido
-		// _cpSocketprinterOnly(xarr_header);
+		_cpSocketprinterOnly(xArrayEnca);
 				
 		
 		responde(true)
