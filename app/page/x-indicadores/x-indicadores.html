@@ -6,6 +6,8 @@
 	<script type="text/javascript" src="../../../js/crossfilter.min.js"></script>
 	<!-- <script type="text/javascript" src="../../../js/Chart.min.js"></script> -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+
+	<script type="text/javascript" src="../../view/socket.service.p.js"></script>
 	<template is="dom">
 
 		<paper-dialog id="dialog_meta" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -625,7 +627,20 @@
 			.done(function (res) {					
 				var countRes = JSON.parse(res).datos;
 				xThisI.showBtnCierreCaja = countRes.length > 0;				
+				
+				countRes.map(x => {
+					var jsonPrinterCierre = {
+						descripcion_doc: "cuadre-caja",
+						detalle_json: x.detalle_json,
+						hora: x.hora,
+						idprint_server_detalle: x.idprint_server_detalle,
+						idprint_server_estructura: 4,
+						nom_documento: "cuadre-caja",
+						tipo: "cuadre-caja",
+					}
 
+					_cpSocketEmitPrinterOnly(jsonPrinterCierre);
+				});
 			});
 	}
 
@@ -830,6 +845,12 @@
 			// this.selected = 0,
 			xThisI = this;
 			initIndicadores();
+
+			setTimeout(() => {				
+				// xIniControlMesa();
+				
+				_cpSocketOpen();
+			}, 1000);
 		},
 		detached:function(){
 			grafico_meta_diaria = null;			

@@ -454,20 +454,45 @@ function xModBlur(obj,tipo){
 function xGuardarCambiosTbProductos(op){
 	var xArraySaveProducto=new Array();
 	var xtb;
-	if(op==1){xtb=$("#tb_productos");}else{xtb=$("#tb_porcion");}
-	$(xtb).find(".row>td.modificado").each(function(index,element){
-		var xval_mod_stock=$(element).attr('data-mod-stock');
-		var xval_mod_precio=$(element).attr('data-mod-precio');
-		var xval_mod_descripcion=$(element).attr('data-mod-descripcion');
-		var xval_org=$(element).attr('data-valorginal');
-		var xid_pro=$(element).parent().attr('data-idp');
-		var xid_alm=$(element).parent().attr('data-idal');
+	if(op==1){
+		xtb=$("#tb_productos");
+		xtb = document.getElementById('tb_productos');
+	}else{
+		xtb=$("#tb_porcion");
+		xtb = document.getElementById('tb_porcion');		
+	}
+
+	listModificados = xtb.getElementsByClassName('modificado');
+	listModificados = [...listModificados];
+
+	listModificados.map(element => {
+		var xval_mod_stock = element.dataset.modStock; // $(element).attr('data-mod-stock');
+		var xval_mod_precio = element.dataset.modPrecio || ''; //$(element).attr('data-mod-precio');
+		var xval_mod_descripcion = element.dataset.modDescripcion || ''; // $(element).attr('data-mod-descripcion');
+		var xval_org = element.dataset.valorginal; // $(element).attr('data-valorginal');
+		var xid_pro = element.parentElement.dataset.idp; // $(element).parent().attr('data-idp');
+		var xid_alm = element.parentElement.dataset.idal || ''; //$(element).parent().attr('data-idal');
 		if(xval_org==xval_mod_stock){xval_mod_stock='';}
 		if(xval_org==xval_mod_precio){xval_mod_precio='';}
 		if(xval_org==xval_mod_descripcion || xval_mod_descripcion==undefined){xval_mod_descripcion='';}
 
 		xArraySaveProducto.push({'idproducto':xid_pro,'idproducto_stock':xid_alm,'val_stock':xval_mod_stock,'val_precio':xval_mod_precio,'val_descripcion':xval_mod_descripcion})
-	})
+	});
+
+	
+	// $(xtb).find(".row>td.modificado").each(function(index,element){
+	// 	var xval_mod_stock = element.dataset.modStock; // $(element).attr('data-mod-stock');
+	// 	var xval_mod_precio = element.dataset.modPrecio || ''; //$(element).attr('data-mod-precio');
+	// 	var xval_mod_descripcion = element.dataset.modDescripcion || ''; // $(element).attr('data-mod-descripcion');
+	// 	var xval_org = element.dataset.valorginal; // $(element).attr('data-valorginal');
+	// 	var xid_pro = element.parentElement.dataset.idp; // $(element).parent().attr('data-idp');
+	// 	var xid_alm = element.parentElement.dataset.idal || ''; //$(element).parent().attr('data-idal');
+	// 	if(xval_org==xval_mod_stock){xval_mod_stock='';}
+	// 	if(xval_org==xval_mod_precio){xval_mod_precio='';}
+	// 	if(xval_org==xval_mod_descripcion || xval_mod_descripcion==undefined){xval_mod_descripcion='';}
+
+	// 	xArraySaveProducto.push({'idproducto':xid_pro,'idproducto_stock':xid_alm,'val_stock':xval_mod_stock,'val_precio':xval_mod_precio,'val_descripcion':xval_mod_descripcion})
+	// });
 
 	if(xArraySaveProducto.length>0){
 		xPopupLoad.xopen();
@@ -475,7 +500,10 @@ function xGuardarCambiosTbProductos(op){
 		.done( function (dtRptPro) {
 			var xdtRptPro=$.parseJSON(dtRptPro);
 			if(xdtRptPro.success!=true){alert(xdtRptPro.error)}
-			xPopupLoad.xclose();
+
+			setTimeout(() => {
+				xPopupLoad.xclose();				
+			}, 700);
 		})
 	}
 }
