@@ -50,8 +50,8 @@
             </div>
 
             <div class="xContentCard border-bottom" style="padding: 20px;">            
-                <div class="flexbox">
-                    <div class="left">
+                <div class="div-content-grid" >
+                    <div>
                         <p class="fs-18 text-secondary fw-600">Total de ventas hoy</p>
                         <p class="fs-50 color-text-principal fw-600"> S/. {{ dtVentasHoy.sumImporteTotalHoyShow }}</p>                        
                         <p class="text-secondary">Día anterior <span class="fw-600">S/. {{ dtVentasHoy.sumImporteTotalAyer }}</span></p>                                                
@@ -79,14 +79,14 @@
                             <div class="content-dato ml-2" rojo$="[[dtVentasHoy.m_rojo]]" ambar$="[[dtVentasHoy.m_ambar]]" verde$="[[dtVentasHoy.m_verde]]">                                
                                 <div class="text-right">
                                     <p class="fs-30 fw-600 pb-1"> <span><i class="fa fa-flag"></i></span> {{ dtVentasHoy.porcentaje_diaria }}%</p>                                                        
-                                    <p>Meta Diaria</p>
+                                    <p>Meta Diaria S/. {{ dtVentasHoy.meta_diaria }}</p>
                                 </div>
                             </div>
                         </div>
                         <br>
                     </div>
 
-                    <div class="right">
+                    <div>
                         <canvas id="myChart"></canvas>
                         <br>
                     </div>
@@ -96,8 +96,9 @@
 
             <!-- tipo de pago -->
             <div class="xContentCard" style="padding: 20px;">            
-                <div class="flexbox">
-                    <div class="left p-3">
+                <!-- <div class="flexbox"> -->
+                <div class="div-content-grid">
+                    <div class="p-3">
 
                         <template is="dom-repeat" items="{{listTipoPago}}" as="tpc">
                             <div class="pb-3 border-bottom mb-2">
@@ -110,15 +111,15 @@
                                          <p class="fs-28 color-text-principal fw-600 pl-2"> S/. {{ tpc.importe_hoy }}</p>
                                          
                                          
-                                         <p hidden$="[[ !tpc.showAyer ]]" class="fs-25 pl-2 lblInfo" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]"> 
-                                            <span hidden$="[[!tpc.entero]]"><i class="fa fa-plus"></i></span>
-                                            <!-- <span hidden$="[[tpc.entero]]"><i class="fa fa-minus"></i></span> -->
-                                            <span class="fw-600"> {{ tpc.porcentaje }}%</span>
-                                         </p>
-                                     </div>
+                                        </div>
+                                        <p hidden$="[[ !tpc.showAyer ]]" class="fs-25 pl-2 lblInfo" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]"> 
+                                           <span hidden$="[[!tpc.entero]]"><i class="fa fa-plus"></i></span>
+                                           <!-- <span hidden$="[[tpc.entero]]"><i class="fa fa-minus"></i></span> -->
+                                           <span class="fw-600"> {{ tpc.porcentaje }}%</span>
+                                        </p>
 
                                      <!-- icon -->                                     
-                                     <div class="ico-dato-m text-white mr-2" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]">
+                                     <div class="ico-dato-m mr-2" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]">
                                         <span hidden$="[[!tpc.entero]]"><i class="fa fa-level-up"></i></span>
                                         <span hidden$="[[tpc.entero]]"><i class="fa fa-level-down"></i></span>
                                      </div>
@@ -135,7 +136,8 @@
                     </div>
 
                     <!-- totales pedidos -->
-                    <div class="right p-3">
+                    <!-- <div class="right p-3"> -->
+                    <div>
                         <table width="100%">  
                             <thead>
                                 <th width="35%"></th>
@@ -144,7 +146,7 @@
                                 <th align="right"><span class="fs-12 text-secondary">Incremento</span></th>
                             </thead>
                             <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-15 text-secondary">Pedidos realizados</p> </td>
+                                <td> <p class="fw-600 fs-14 text-secondary">Pedidos realizados</p> </td>
                                 <td align="right"> <p class="fw-600 fs-15 color-text-principal">{{ listPedidosTotales.pedidos_totales.hoy }}</p> </td>
                                 <td align="right">                                     
                                     <p class="fw-600 fs-15 text-secondary"> {{ listPedidosTotales.pedidos_totales.ayer }} </p>
@@ -155,7 +157,7 @@
                                             {{ listPedidosTotales.pedidos_totales.porcentaje }}% 
                                         </p>
                                         <!-- icon -->                                     
-                                        <div class="ico-dato-m text-white mr-2" verde$="[[listPedidosTotales.pedidos_totales.entero]]" rojo$="[[ !listPedidosTotales.pedidos_totales.entero ]]">
+                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.pedidos_totales.entero]]" rojo$="[[ !listPedidosTotales.pedidos_totales.entero ]]">
                                             <span hidden$="[[!listPedidosTotales.pedidos_totales.entero]]"><i class="fa fa-level-up"></i></span>
                                             <span hidden$="[[listPedidosTotales.pedidos_totales.entero]]"><i class="fa fa-level-down"></i></span>
                                          </div>
@@ -165,10 +167,10 @@
 
                             <!-- tiket promedio -->
                             <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-15 text-secondary">Ticket promedio</p> </td>
-                                <td align="right"> <p class="fw-600 fs-15 color-text-principal"> S/. {{ listPedidosTotales.ticket_promedio.hoy }}</p> </td>
+                                <td> <p class="fw-600 fs-14 text-secondary">Ticket promedio</p> </td>
+                                <td align="right"> <p class="fw-600 fs-15 color-text-principal"> S/ {{ listPedidosTotales.ticket_promedio.hoy }}</p> </td>
                                 <td align="right">                                     
-                                    <p class="fw-600 fs-15 text-secondary"> S/. {{ listPedidosTotales.ticket_promedio.ayer }} </p>
+                                    <p class="fw-600 fs-15 text-secondary"> S/ {{ listPedidosTotales.ticket_promedio.ayer }} </p>
                                 </td>
                                 <td align="right" class="text-right">
                                     <div class="align-items-center" style="display: inline-flex;">
@@ -176,7 +178,7 @@
                                             {{ listPedidosTotales.ticket_promedio.porcentaje }}% 
                                         </p>
                                         <!-- icon -->                                     
-                                        <div class="ico-dato-m text-white mr-2" verde$="[[listPedidosTotales.ticket_promedio.entero]]" rojo$="[[ !listPedidosTotales.ticket_promedio.entero ]]">
+                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.ticket_promedio.entero]]" rojo$="[[ !listPedidosTotales.ticket_promedio.entero ]]">
                                             <span hidden$="[[!listPedidosTotales.ticket_promedio.entero]]"><i class="fa fa-level-up"></i></span>
                                             <span hidden$="[[listPedidosTotales.ticket_promedio.entero]]"><i class="fa fa-level-down"></i></span>
                                          </div>
@@ -185,7 +187,7 @@
                             </tr>
 
                             <!-- cantidad Pedidos Anulados -->
-                            <tr class="border-bottom mb-2" style="height: 67px;">
+                            <!-- <tr class="border-bottom mb-2" style="height: 67px;">
                                 <td> <p class="fw-600 fs-15 text-secondary">Cantidad Pedidos Anulados</p> </td>
                                 <td align="right"> <p class="fw-600 fs-15 color-text-principal text-danger"> {{ listPedidosTotales.pedidos_anulados.hoy }}</p> </td>
                                 <td align="right">                                     
@@ -196,19 +198,19 @@
                                         <p class="fs-20 fw-600 pr-2 lblInfo" verde$="[[listPedidosTotales.pedidos_anulados.entero]]" rojo$="[[ !listPedidosTotales.pedidos_anulados.entero ]]">  
                                             {{ listPedidosTotales.pedidos_anulados.porcentaje }}% 
                                         </p>
-                                        <!-- icon -->                                     
-                                        <div class="ico-dato-m text-white mr-2" verde$="[[listPedidosTotales.pedidos_anulados.entero]]" rojo$="[[ !listPedidosTotales.pedidos_anulados.entero ]]">
+                                                                           
+                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.pedidos_anulados.entero]]" rojo$="[[ !listPedidosTotales.pedidos_anulados.entero ]]">
                                             <span hidden$="[[!listPedidosTotales.pedidos_anulados.entero]]"><i class="fa fa-level-up"></i></span>
                                             <span hidden$="[[listPedidosTotales.pedidos_anulados.entero]]"><i class="fa fa-level-down"></i></span>
                                          </div>
                                     </div>
                                 </td>
-                            </tr>
+                            </tr> -->
 
                             <!-- importe Pedidos Anulados -->
                             <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-15 text-secondary">Importe Pedidos Anulados</p> </td>
-                                <td align="right"> <p class="fw-600 fs-15 color-text-principal text-danger"> S/. {{ listPedidosTotales.pedidos_anulados.importe_hoy }}</p> </td>
+                                <td> <p class="fw-600 fs-14 text-secondary">Importe Pedidos Anulados</p> </td>
+                                <td align="right"> <p class="fw-600 fs-15 color-text-principal text-danger"> S/ {{ listPedidosTotales.pedidos_anulados.importe_hoy }}</p> </td>
                                 <td colspan="2">                                                                         
                                 </td>                                
                             </tr>
@@ -243,7 +245,7 @@
     }
 
     .content-dato[entero] {
-        background: #4DCD82;
+        background: #00D179;
     }
 
     .content-dato[rojo] {
@@ -255,7 +257,7 @@
     }
 
     .content-dato[verde] {
-        background: #4DCD82;
+        background: #00D179;
     }
 
     .ico-dato-l {
@@ -272,7 +274,9 @@
     }
 
     .ico-dato-m[rojo] {
-        background: #dfacac;
+        background: #f9d8d8;
+        color: #f16471;
+        
     }
 
     .ico-dato-m[ambar] {
@@ -280,15 +284,22 @@
     }
 
     .ico-dato-m[verde] {
-        background: #8fe5b3;
+        background: #c7f5d4;
+        color: #00D179;
     }
 
     .lblInfo[verde]{
-        color: #4DCD82;
+        color: #00D179;
     }
 
     .lblInfo[rojo]{
         color: #ff5252;
+    }
+
+    .div-content-grid {
+        display: grid;    
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-gap: 1rem;
     }
 
 
@@ -296,7 +307,7 @@
         background: #C0F7D0;         
     } */
 
-    .flexbox {
+    /* .flexbox {
 		display: flex;
 		flex-direction: column;
 		padding: 5px;
@@ -305,9 +316,7 @@
 		}
 
 		.flexbox>div {
-		/* text-align: center; */
-		/* padding: 20px 0; */
-		/* margin: 5px; */
+		
 		}
 
 		@media(min-width:576px) {
@@ -347,15 +356,14 @@
 		}
 		.flexbox>.right {
 			order: 3;
-			/* flex: 1; */
 		}
 		.flexbox>.next {
 			order: 2;
 		}
-        }
+        } */
         
     .color-text-principal {
-        color: #5dc2e7;
+        color: #34C8EC;
         line-height: initial;
     }
 
@@ -453,6 +461,7 @@
             entero: true,
             signo: '+',
             porcentaje_diaria: 0,
+            meta_diaria: 0,
             m_rojo: false,
             m_ambar: false,
             m_verde: false,
@@ -474,6 +483,7 @@
         _dtVentasHoy.sumImporteTotalHoyShow = numeroConComas(xMoneda(_dtVentasHoy.sumImporteTotalHoy));
         _dtVentasHoy.sumImporteTotalAyer = numeroConComas(xMoneda(_dtVentasHoy.sumImporteTotalAyer));
         _dtVentasHoy.diferencia = numeroConComas(xMoneda(_dtVentasHoy.diferencia));
+        _dtVentasHoy.meta_diaria = numeroConComas(xMoneda(metaDiaria))
 
         // xThisI2.dtVentasHoy = JSON.parse( JSON.stringify(_dtVentasHoy) );
         calcularPorcentajeMetaDiaria(); // aca lo parsea
@@ -512,9 +522,9 @@
         var _dtTipoPago = [];
         _listTipoPago.map(tp => {
             // importe ayer
-            var importeHoy = tp.value
+            var importeHoy = parseFloat(tp.value.split(',').join(''));
             var importeAyer = _listTipoPagoAyer.filter(c => c.key === tp.key)[0];
-            importeAyer = importeAyer ? importeAyer.value * 1: 0;
+            importeAyer = importeAyer ? parseFloat(importeAyer.value.split(',').join('')) * 1: 0;
             var _diferencia = importeHoy - importeAyer;
             var _porcentaje = Math.round((_diferencia / importeHoy) * 100);
             var _entero = _porcentaje > 0
@@ -524,7 +534,7 @@
             // importeAyer = importeAyer.toFixed(2);
             var _item = {
                 key: des_icon[0].toLowerCase(),
-                importe_hoy: numeroConComas(importeHoy),
+                importe_hoy: numeroConComas(importeHoy.toFixed(2)),
                 showAyer: importeAyer !== 0,
                 importe_ayer: importeAyer === 0 ? '-' : numeroConComas(importeAyer.toFixed(2)),                
                 importe_diferencia: _diferencia,
@@ -711,6 +721,8 @@
         _dtVentasHoy.m_rojo = false;
         _dtVentasHoy.m_ambar = false;
         _dtVentasHoy.m_verde = false;
+        // _dtVentasHoy.meta_diaria = metaDiaria;
+        _dtVentasHoy.meta_diaria = numeroConComas(xMoneda(metaDiaria))
 
         if ( _dtVentasHoy.porcentaje_diaria < 30 ) { _dtVentasHoy.m_rojo = true;  }
         if ( _dtVentasHoy.porcentaje_diaria > 30 && _dtVentasHoy.porcentaje_diaria < 80 ) { _dtVentasHoy.m_ambar = true;  }

@@ -1690,10 +1690,25 @@ async function xRegistrarClientePagoCP(){
 	const _idCLienteCompara = xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente;
 	var ComprobanteSeleccionado = xRpt_pago[0].comprobante;
 	// var xid_cliente_pago=DatosCliente.idcliente;
+	
+
+	// para que registr cliente
 	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	
 	var xidpedido_seleccionados='';
 	
 	DatosCliente.idcliente = xid_cliente_pago;
+
+	// si es delivery compara y coloca datos del cliente
+	if ( xdtDpedido[0].pwa_is_delivery.toString() === "1" ) {
+		var dtDeliveryCliente = xdtDpedido[0].json_datos_delivery.p_header.arrDatosDelivery;
+		DatosCliente.direccion = DatosCliente.direccion !== '' ? DatosCliente.direccion : dtDeliveryCliente.direccion;
+		DatosCliente.nombres = DatosCliente.nombres !== '' ? DatosCliente.nombres : dtDeliveryCliente.nombre;
+		DatosCliente.telefono = dtDeliveryCliente.telefono;
+		DatosCliente.referencia = dtDeliveryCliente.referencia;
+	}
+
+	//
 
 	// si es nuevo cliente recarga el componente input cliente
 	if (_idCLienteCompara != xid_cliente_pago) {

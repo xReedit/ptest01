@@ -55,8 +55,20 @@
                             </div>                            
                         </div>
                         <!-- <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" required="[[!formValid]]" id="txt_nombres" espaciar> -->
-                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
+                        
+                        <!-- posibilidad de buscar cliente -->
+                        <div style="padding: 0px 5px;">
+                            <x-comp-find-input-cliente id="clie_nombres" 
+                                        label="Nombres | Razon Social | Buscar"
+                                        class="xPasarEnter2" espaciar>
+                            </x-comp-find-input-cliente>
+                        </div>
+
                         <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" required id="txt_direccion" espaciar>
+                        
+                        
+                        <input type="text" class="xMiInput xInvisible" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
+                        
                     </div>
                 </form>
                 <br>                
@@ -164,7 +176,7 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true;
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, _inputAutocomplete;
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -184,6 +196,22 @@
         fact_getAllImpresoras();
         $('body').addClass('loaded');
         $("#Titulo_page").text("Facturador");
+
+        _inputAutocomplete = document.getElementById('clie_nombres');
+		_inputAutocompleteObj = _inputAutocomplete.$.input_clie_nombres_auto;
+		_inputAutocomplete.addEventListener('input-autocomplete-selected', (event) => {
+			const cliente = event.detail;
+			// xThisPago.clienteModel = cliente;
+			// xThisPago.tipoPagoRequiereCliente = false;
+			// xThisPago.valid_form_cliente_pago = true;			
+			
+			xIdCliente_pago = cliente.idcliente;
+			$("#txt_ruc").val(cliente.ruc);
+			$("#txt_direccion").val(cliente.direccion);
+            $("#txt_nombres").val(cliente.nombres);
+			// EmitirValidacionFormCliente();
+            validarDocumentoCliente(null, null, true)
+		});
 
         $('.xPasarEnter2').on('keyup', function (e) {
             var code = e.which;
@@ -290,6 +318,7 @@
                 xIdCliente_pago = new_rpt.idcliente;
                 $("#txt_nombres").val(new_rpt.nombres);
                 $("#txt_direccion").val(new_rpt.direccion);
+                _inputAutocompleteObj.inputValue = new_rpt.nombres;
             } else {
                 rpt.valid = false;
                 rpt.msj = new_rpt.msg;
@@ -433,13 +462,14 @@
         arr_comprobante = cnf_ComprobanteSel;
         
         if (_arrCliente.length === 0 ){// si no hay cliente
-            const nombres_cliente = $("#txt_nombres").val();
+            var nombres_cliente = $("#txt_nombres").val();
             const direccion_cliente = $("#txt_direccion").val();
             _arrCliente = {};
             _arrCliente.idcliente=0;
             _arrCliente.num_doc = '00000000';
             // _arrCliente.nombres = 'PUBLICO EN GENERAL';
             // _arrCliente.direccion = '';
+            nombres_cliente = nombres_cliente === '' ? _inputAutocompleteObj.inputValue :  nombres_cliente;
             _arrCliente.nombres = nombres_cliente === '' ? 'PUBLICO EN GENERAL' : nombres_cliente;
             _arrCliente.direccion = direccion_cliente;            
         }else {

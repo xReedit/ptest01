@@ -143,6 +143,9 @@
 								<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="telefono" name="telefono" espaciar required>
 								<input type="email" class="xMiInput xPasarEnter2" placeholder="EMAIL CONTACTO" id="email" name="email" espaciar required>								
 								<br><br><br>
+								<div class="xInvisible">
+									<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
+								</div>
 								<div class="xBoton2 xAzul" onclick="xGuardarOrg();">Guardar Cambios</div>
 								<!-- <div class="xBoton2 xAzul" onclick="xGenerarTk();">Generar Token</div> -->
 							</form>
@@ -1562,7 +1565,7 @@ function xLoadAdicionales(){
 
 			if(dtAd[i].estado==0){xCheck_ac='checked';}
 			
-			xCadenaAd=String(xCadenaAd+'<tr class="row" data-t="conf_print_adicionales" data-id="'+dtAd[i].idconf_print_adicionales+'"><td><paper-checkbox class="check_adicional" '+xCheck_ac+'></paper-checkbox></td><td>'+dtAd[i].descripcion+'</td><td>'+dtAd[i].des_tipo_consumo+'</td><td>'+nivel+'</td><td>'+dtAd[i].des_seccion+'</td><td>'+dtAd[i].importe+'</td><td><div class="xDeleteRow" onClick="xBorrarRegistro(this)" title="Borrar"></div></td></tr>');
+			xCadenaAd=String(xCadenaAd+'<tr class="row" data-t="conf_print_adicionales" data-id="'+dtAd[i].idconf_print_adicionales+'"><td><paper-checkbox class="check_adicional" '+xCheck_ac+'></paper-checkbox></td><td>'+dtAd[i].descripcion+'</td><td>'+dtAd[i].des_tipo_consumo+'</td><td>'+nivel+'</td><td>'+dtAd[i].des_seccion+'</td><td>'+dtAd[i].importe+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
 		};
 		$("#tb_Adicionales").append(xCadenaAd).trigger('create');
 	});

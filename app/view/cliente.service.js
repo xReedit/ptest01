@@ -17,3 +17,12 @@ async function ClienteService_Guardar(xarr_cliente) {
 
     return rpt;
 }
+
+// solo registra cliente en la sede
+function ClienteServiceSaveSede(_idcliente) {
+    $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'h', idcliente: _idcliente}})
+    .done( function (res) {
+        console.log('ok');
+        // return rpt;
+    });
+}

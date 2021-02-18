@@ -240,7 +240,7 @@
 			if ( e.keyCode === 13 || !tecla) { // buscar cliente
 				xIdCliente_pedido = '';
 				$("#progress_cliente_del").removeClass("xInvisible");
-				xGetFindCliente(valor, 'dni', (rpt)=>{
+				xGetFindCliente(valor, 'dni', false, (rpt)=>{
 					if (rpt.success) {
 						xIdCliente_pedido=rpt.idcliente;
 						xThisComDatosDelivery.idclientedni = xIdCliente_pedido === '' ? 0 : xIdCliente_pedido;
