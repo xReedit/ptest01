@@ -96,7 +96,7 @@
 <script>
 	var xThisComDatosDelivery, xIdCliente_pedido, xClientePedidoFnac, arrCompDatosAdjuntoDelivery = [], _inputAutocompleteDel,
 	_inputAutocompleteDelObj, compDirSelectCliente, calcCosto, direcionSelected, compDirSearch, dataSede,
-	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp;
+	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp, _dirEstablecimineto;
 	
 	function xCompDatosDelInit() {
 		calcCosto = new calcCostoEntrega();
@@ -175,7 +175,22 @@
 		if ( comercioPropioreparto && !comercioHabilitadoCalcDistancia && !comercioHabilitadoCalcDistanciaSoloApp) {return; }
 		// comercioHabilitadoBusquedaGoogleApi = true; // comercio afiliado a papaya express		
 
-		const _dirEstablecimineto = dataSede;
+		// _dirEstablecimineto = dataSede;
+		_dirEstablecimineto = {
+			'idsede': dataSede.idsede,
+			'idorg': dataSede.idorg,
+			'nombre': dataSede.nombre,
+			'ciudad': dataSede.ciudad,
+			'direccion': dataSede.direccion,
+			'telefono': dataSede.telefono,
+			'eslogan': dataSede.eslogan,
+			'mesas': dataSede.mesas,
+			'maximo_pedidos_x_hora': dataSede.maximo_pedidos_x_hora,
+			'authorization_api_comprobante': dataSede.authorization_api_comprobante,
+			'id_api_comprobante': dataSede.id_api_comprobante,
+			'facturacion_e_activo': dataSede.facturacion_e_activo,
+			'logo64': ""
+		}
 		// if (_dirEstablecimineto.pwa_delivery_hablitar_calc_costo_servicio.toString() === "1") {
 			const _dataSend = {
 				codigo_postal: _dirEstablecimineto.codigo_postal
@@ -305,6 +320,22 @@
 		id_cliente = xIdCliente_pedido === "" ? await ClienteService_Guardar(DatosCliente) :xIdCliente_pedido;
 		DatosCliente.idcliente = id_cliente;
 
+		_dirEstablecimineto = {
+			'idsede': dataSede.idsede,
+			'idorg': dataSede.idorg,
+			'nombre': dataSede.nombre,
+			'ciudad': dataSede.ciudad,
+			'direccion': dataSede.direccion,
+			'telefono': dataSede.telefono,
+			'eslogan': dataSede.eslogan,
+			'mesas': dataSede.mesas,
+			'maximo_pedidos_x_hora': dataSede.maximo_pedidos_x_hora,
+			'authorization_api_comprobante': dataSede.authorization_api_comprobante,
+			'id_api_comprobante': dataSede.id_api_comprobante,
+			'facturacion_e_activo': dataSede.facturacion_e_activo,
+			'logo64': "",			
+		}
+
 		var resData = {
 			idcliente: DatosCliente.idcliente,
 			dni: DatosCliente.num_doc,
@@ -326,7 +357,7 @@
 			},
 			propina: {},
 			direccionEnvioSelected: DatosCliente,
-			establecimiento: dataSede,
+			establecimiento: _dirEstablecimineto,
 			subTotales: {},
 			pasoRecoger: false,
 			buscarRepartidor: true,

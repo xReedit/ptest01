@@ -322,6 +322,7 @@ function xOpenPage(xop, parametro){
 			window.open(url_s, "Seguimiento de Delivery");// produccion
 		break;
 		case 45: xruta = '/orden_pedido'; break;
+		case 46: xruta = '/indicadores2'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

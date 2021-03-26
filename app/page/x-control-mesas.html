@@ -1705,7 +1705,7 @@ async function xRegistrarClientePagoCP(){
 		DatosCliente.direccion = DatosCliente.direccion !== '' ? DatosCliente.direccion : dtDeliveryCliente.direccion;
 		DatosCliente.nombres = DatosCliente.nombres !== '' ? DatosCliente.nombres : dtDeliveryCliente.nombre;
 		DatosCliente.telefono = dtDeliveryCliente.telefono;
-		DatosCliente.referencia = dtDeliveryCliente.referencia;
+		DatosCliente.referencia = dtDeliveryCliente.referencia;		
 	}
 
 	//
@@ -1728,7 +1728,7 @@ async function xRegistrarClientePagoCP(){
 
 	// xtt_pedidos = total a pagar
 	xarr_cliente = {'cliente':DatosCliente, 'i': xcheckItemsSeleccionados.idPedidosSeleccionados };
-	xarr_header = {'idclie':DatosCliente.idcliente, 'ImporteTotal': xMoneda(xtt_pedidos) , 'tipo_consumo': xcheckItemsSeleccionados.tipoConsumo, 'idPedidoSeleccionados': xcheckItemsSeleccionados.idPedidosSeleccionados};
+	xarr_header = {'idclie':DatosCliente.idcliente, 'ImporteTotal': xMoneda(xtt_pedidos) , 'tipo_consumo': xcheckItemsSeleccionados.tipoConsumo, 'idPedidoSeleccionados': xcheckItemsSeleccionados.idPedidosSeleccionados, 'is_from_client_pwa': xdtDpedido[0].is_from_client_pwa};
 	xarr_comprobante = ComprobanteSeleccionado;
 	// xarr_items_seleccionados = xArraySql_dt_p; // items seleccionados
 	xarr_items_seleccionados = xcheckItemsSeleccionados.arrayPedidosSeleccionados; // items seleccionados

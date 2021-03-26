@@ -35,13 +35,31 @@
         var xThisComSede;
 
         function getAllSedes() {
+            var addRowLast = {};
             xThisComSede.clasecss = xThisComSede.clasecss === '' ? 'xTextRow2 xCursor' : xThisComSede.clasecss;
 
             $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=1'})
 	        .done( function (dtSede) {
                 dtSede=$.parseJSON(dtSede);	
+
+                
+                
+                
+                // xThisComSede.sedes = xThisComSede.listSede[0];
+                xThisComSede.sedes = dtSede.datos[0];
+                
+                // add row al final
+                if ( xThisComSede.addrowlast ) {
+                    addRowLast.idorg  = xThisComSede.sedes.idorg;                    
+                    addRowLast.idsede  = -1;
+                    addRowLast.nombre  = xThisComSede.addrowlast;
+                    addRowLast.ciudad = '';
+
+                    dtSede.datos.push(addRowLast);
+                }
+
                 xThisComSede.listSede=dtSede.datos;
-                xThisComSede.sedes = xThisComSede.listSede[0];
+
                 xThisComSede.getValorIncial(xThisComSede.sedes);
             });
         }
@@ -57,6 +75,7 @@
         properties: {
             listSede: [],
             clasecss: String,
+            addrowlast: String, // si agrega row al final de otra opcion como all sedes
             sedes: {
                 type: Object,
                 // value : {},

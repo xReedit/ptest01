@@ -1,6 +1,14 @@
 <dom-module id="x-indicadores2">
+    <link rel="import" href="../../x-componentes/pagination-input/pagination-input.html">
     <link rel="import" href="../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
     <link rel="import" href="../../x-componentes/x-comp-option-group/x-comp-option-group.html">
+    <link rel="import" href="./x-indicadores-is-caja.html">
+    <link rel="import" href="./x-indicadores-top-productos.html">
+    <link rel="import" href="./x-indicadores-top-colaborador.html">
+    <link rel="import" href="./x-indicadores-versus.html">
+
+    <script type="text/javascript" src="../../view/socket.service.p.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
 
     <script type="text/javascript" src="../../../js/crossfilter.min.js"></script>
@@ -22,207 +30,398 @@
 
 
 
+        <!-- lista de pedidos anulados -->
+        <paper-dialog id="dialog_pedidos_anulados" style="overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<h4>Pedidos Anulados</h4>
+			
+            <div>
+                <table class="width= 100%">
+                    <thead>
+                        <th>Fecha</th>
+                        <th>Borrado por</th>
+                        <th>Item</th>                        
+                        <th>Importe</th>
+                    </thead>
+                    <tbody>
+                        <template is="dom-repeat" items="{{listpedidosBorrados}}" as="item">
+                            <tr>
+                                <td> {{ item.fecha }} {{ item.hora }} </td>
+                                <td> {{ item.usuario }} </td>
+                                <td> 01 {{ item.descripcion }} </td>
+                                <td> {{ item.importe }} </td>
+                            </tr>
+                        </template>                        
+                    </tbody>
+                </table>
+            </div>
+
+			<br>
+			<hr>
+			<br>			
+			<div class="xBoton2 xPlomo divLeft23" dialog-dismiss>Cerrar</div>
+			<br><br>
+		</paper-dialog>
+
+
+
         <br>
         <div class="xMiCard xradius" style="width:90%; max-width: 1250px;">
 			<div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
-                <div class="d-flexx align-items-center">                                                                         
-                    <div style="max-width: 350px;" class="pr-2">
-                        <p class="fs-9 text-secondary">Local</p>
-                        <div class="d-flexx align-items-baseline">
-                            <x-comp-find-sede id="compSedeIndicador" clasecss="comp-sede-template-1 beige xCursor" onchange="changeSede(sedes)"></x-comp-find-sede>					
+                <div class="div-content-head-op">
 
-                            <div class="ml-2 xCursor xBoton_flat_2 beige text-secondary" title="Mas Opciones">
-                                <i class="fa fa-cog fa-1x"></i>
-                                <span class="fs-12">Opciones</span>
-                            </div>                        
+                    <div class="d-flexx align-items-center">                                                                         
+                        <div style="max-width: 350px;" class="pr-2">
+                            <p class="fs-11 text-secondary">Local</p>
+                            <div class="d-flexx align-items-baseline">
+                                <x-comp-find-sede id="compSedeIndicador" clasecss="comp-sede-template-1 beige xCursor" addrowlast="TODOS LOCALES" onchange="changeSede(sedes)"></x-comp-find-sede>					
+    
+                                <!-- <div class="ml-2 xCursor xBoton_flat_2 beige text-secondary" title="Mas Opciones">
+                                    <i class="fa fa-cog fa-1x"></i>
+                                    <span class="fs-12">Opciones</span>
+                                </div>                         -->
+                            </div>
                         </div>
                     </div>
-                </div>                
+
+                    <div>
+                        <p class="fs-11 text-secondary">Fecha</p>
+                        <input type="date" class="xMiInput" name="" id="date_fecha"  onchange="changeFecha(event);">
+                    </div>
+                    <div>                        
+                        <p class="fs-11 text-secondary">Estadisticas</p>
+                        <x-comp-option-group listop="{{listOpciones}}" onclick="changeOption(this)"></x-comp-option-group>                        
+                    </div>
+                </div>
+                
+                
+
             </div>	
 
+
+            <!-- versus -->
+
+            <div hidden$="[[!showVersus]]">
+                <x-indicadores-versus id="pageVersusIndicadores"></x-indicadores-versus>
+            </div>
             
-            <div class="xContentCard border-bottom" style="padding: 20px;">            
-                <div class="w-100">
-                    Estadisticas
-                    <br>                    
-                    <x-comp-option-group listop="{{listOpciones}}" onclick="changeOption(this)"></x-comp-option-group>
-                </div>
-            </div>
 
-            <div class="xContentCard border-bottom" style="padding: 20px;">            
-                <div class="div-content-grid" >
-                    <div>
-                        <p class="fs-18 text-secondary fw-600">Total de ventas hoy</p>
-                        <p class="fs-50 color-text-principal fw-600"> S/. {{ dtVentasHoy.sumImporteTotalHoyShow }}</p>                        
-                        <p class="text-secondary">Día anterior <span class="fw-600">S/. {{ dtVentasHoy.sumImporteTotalAyer }}</span></p>                                                
+            <div hidden$="[[showVersus]]">
 
-                        <br>
-                        <div class="d-flexx">
-                            <div class="content-dato" entero$="[[dtVentasHoy.entero]]">
-                                <div class="ico-dato-l">
-                                    <i hidden$="[[!dtVentasHoy.entero]]" class="fa fa-level-up fa-2x" aria-hidden="true"></i>
-                                    <i hidden$="[[dtVentasHoy.entero]]" class="fa fa-level-down fa-2x" aria-hidden="true"></i>
-                                </div>
-                                <div class="text-right">
-                                    <p class="fs-30 fw-600 pb-1"> 
-                                        <span hidden$="[[!dtVentasHoy.entero]]"><i class="fa fa-plus"></i></span>
-                                        <!-- <span hidden$="[[dtVentasHoy.entero]]"><i class="fa fa-minus"></i></span> -->
-                                        {{ dtVentasHoy.porcentaje }}%</p>
-                                    <p>
-                                        <span hidden$="[[!dtVentasHoy.entero]]">Aumento</span>
-                                        <span hidden$="[[dtVentasHoy.entero]]">Menos</span>
-                                        <span class="fw-600">S/. {{ dtVentasHoy.diferencia }}</span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="content-dato ml-2" rojo$="[[dtVentasHoy.m_rojo]]" ambar$="[[dtVentasHoy.m_ambar]]" verde$="[[dtVentasHoy.m_verde]]">                                
-                                <div class="text-right">
-                                    <p class="fs-30 fw-600 pb-1"> <span><i class="fa fa-flag"></i></span> {{ dtVentasHoy.porcentaje_diaria }}%</p>                                                        
-                                    <p>Meta Diaria S/. {{ dtVentasHoy.meta_diaria }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <br>
-                    </div>
-
-                    <div>
-                        <canvas id="myChart"></canvas>
-                        <br>
+            
+            
+                <div class="xContentCard" style="padding: 5px 0px 5px 0px; background: lightgray; border-bottom: 2px solid #9e9e9e;">            
+                    <div class="w-100">                    
+                        <paper-tabs class="fs-17 fw-100" selected="{{selected_conf}}" id="tab_cnf" scrollable>
+                            <paper-tab>Ventas</paper-tab>
+                            <paper-tab>I/S Caja</paper-tab>                        
+                            <paper-tab>Top Productos</paper-tab>
+                            <paper-tab>Top Colaboradores</paper-tab>
+                        </paper-tabs>                    
                     </div>
                 </div>
-            </div>
-            <br>
 
-            <!-- tipo de pago -->
-            <div class="xContentCard" style="padding: 20px;">            
-                <!-- <div class="flexbox"> -->
-                <div class="div-content-grid">
-                    <div class="p-3">
+                <div class="pt-4">
+                    <iron-pages selected="{{selected_conf}}">
 
-                        <template is="dom-repeat" items="{{listTipoPago}}" as="tpc">
-                            <div class="pb-3 border-bottom mb-2">
-                                 <p class="pb-2"> Total de venta con <span class="fw-600"> {{tpc.key}} </span> </p>
+                    
+                        <div>
 
-                                 <div class="d-flexx justify-content-between align-items-center">
-                                     
-                                     <div class="d-flexx align-items-center">
-                                         <img src$="[[ tpc.img ]]" alt="">
-                                         <p class="fs-28 color-text-principal fw-600 pl-2"> S/. {{ tpc.importe_hoy }}</p>
-                                         
-                                         
+                            <div class="xContentCard border-bottom" style="padding: 20px;">            
+                                <div class="div-content-grid" >
+                                    <div>
+                                        <p class="fs-18 text-secondary fw-600">Total de ventas [[ ragoTitulo ]]</p>
+                                        <p class="fs-50 color-text-principal fw-600"> S/. {{ dtVentasHoy.sumImporteTotalHoyShow }}</p>                        
+                                        <p class="text-secondary">[[ ragoSubTitulo ]] anterior <span class="fw-600">S/. {{ dtVentasHoy.sumImporteTotalAyer }}</span></p>
+                
+                                        <br>
+                                        <div class="d-flexx">
+                                            <div class="content-dato" entero$="[[dtVentasHoy.entero]]">
+                                                <div class="ico-dato-l">
+                                                    <i hidden$="[[!dtVentasHoy.entero]]" class="fa fa-level-up fa-2x" aria-hidden="true"></i>
+                                                    <i hidden$="[[dtVentasHoy.entero]]" class="fa fa-level-down fa-2x" aria-hidden="true"></i>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="fs-30 fw-600 pb-1"> 
+                                                        <span hidden$="[[!dtVentasHoy.entero]]"><i class="fa fa-plus"></i></span>
+                                                        <!-- <span hidden$="[[dtVentasHoy.entero]]"><i class="fa fa-minus"></i></span> -->
+                                                        {{ dtVentasHoy.porcentaje }}%</p>
+                                                    <p>
+                                                        <span hidden$="[[!dtVentasHoy.entero]]">Aumento</span>
+                                                        <span hidden$="[[dtVentasHoy.entero]]">Menos</span>
+                                                        <span class="fw-600">S/. {{ dtVentasHoy.diferencia }}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                
+                                            <div class="content-dato ml-2 xCursor" rojo$="[[dtVentasHoy.m_rojo]]" ambar$="[[dtVentasHoy.m_ambar]]" verde$="[[dtVentasHoy.m_verde]]" onclick="dialog_meta.open()"> 
+                                                <div class="text-right">
+                                                    <p class="fs-30 fw-600 pb-1"> <span><i class="fa fa-flag"></i></span> {{ dtVentasHoy.porcentaje_diaria }}%</p>                                                        
+                                                    <p>Meta S/. {{ dtVentasHoy.meta_diaria }}</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p hidden$="[[ !tpc.showAyer ]]" class="fs-25 pl-2 lblInfo" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]"> 
-                                           <span hidden$="[[!tpc.entero]]"><i class="fa fa-plus"></i></span>
-                                           <!-- <span hidden$="[[tpc.entero]]"><i class="fa fa-minus"></i></span> -->
-                                           <span class="fw-600"> {{ tpc.porcentaje }}%</span>
-                                        </p>
+                                        <br>
+                                    </div>
+                
+                                    <div>
+                                        <canvas id="myChart"></canvas>
+                                        <br>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+            
+                            <!-- tipo de pago -->
+                            <div class="xContentCard border-bottom" style="padding: 20px;">            
+                                <!-- <div class="flexbox"> -->
+                                <div class="div-content-grid">
+                                    <div class="p-3">
+                
+                                        <template is="dom-repeat" items="{{listTipoPago}}" as="tpc">
+                                            <div class="tableDivIndicador">
+                                                <p class="pb-2"> Total de venta con <span class="fw-600"> {{tpc.key}} </span> </p>
+                
+                                                <div class="d-flexx justify-content-between align-items-center">
+                                                    
+                                                    <div class="d-flexx align-items-center">
+                                                        <img src$="[[ tpc.img ]]" alt="">
+                                                        <p class="fs-28 color-text-principal fw-600 pl-2"> S/. {{ tpc.importe_hoy }}</p>
+                                                        
+                                                        
+                                                        </div>
+                                                        <p hidden$="[[ !tpc.showAyer ]]" class="fs-25 pl-2 lblInfo" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]"> 
+                                                        <span hidden$="[[!tpc.entero]]"><i class="fa fa-plus"></i></span>
+                                                        <!-- <span hidden$="[[tpc.entero]]"><i class="fa fa-minus"></i></span> -->
+                                                        <span class="fw-600"> {{ tpc.porcentaje }}%</span>
+                                                        </p>
+                
+                                                    <!-- icon -->                                     
+                                                    <div class="ico-dato-m mr-2" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]">
+                                                        <span hidden$="[[!tpc.entero]]"><i class="fa fa-level-up"></i></span>
+                                                        <span hidden$="[[tpc.entero]]"><i class="fa fa-level-down"></i></span>
+                                                    </div>
+                
+                                                </div>
+                
+                                                <div hidden$="[[ !tpc.showAyer ]]">
+                                                    <p class="text-secondary">[[ ragoSubTitulo ]] anterior S/.{{ tpc.importe_ayer }}</p>
+                                                </div>
+                
+                                            </div>
+                                        </template>
+                                        
+                                    </div>
+                
+                                    <!-- totales pedidos -->
+                                    <!-- <div class="right p-3"> -->
+                                    <div>
+                                        <table width="100%">  
+                                            <thead>
+                                                <th width="35%"></th>
+                                                <th align="right"><span class="fs-12 text-secondary">Hoy</span></th>
+                                                <th align="right"><span class="fs-12 text-secondary">[[ ragoSubTitulo ]] Anterior</span> </th>
+                                                <th align="right"><span class="fs-12 text-secondary">Incremento</span></th>
+                                            </thead>
+                                            <tr class="border-bottom mb-2" style="height: 67px;">
+                                                <td> <p class="fw-600 fs-14 text-secondary">Pedidos realizados</p> </td>
+                                                <td align="right"> <p class="fw-600 fs-15 color-text-principal">{{ listPedidosTotales.pedidos_totales.hoy }}</p> </td>
+                                                <td align="right">                                     
+                                                    <p class="fw-600 fs-15 text-secondary"> {{ listPedidosTotales.pedidos_totales.ayer }} </p>
+                                                </td>
+                                                <td align="right" class="text-right">
+                                                    <div class="align-items-center" style="display: inline-flex;">
+                                                        <p class="fs-15 fw-600 pr-2 lblInfo" verde$="[[listPedidosTotales.pedidos_totales.entero]]" rojo$="[[ !listPedidosTotales.pedidos_totales.entero ]]">  
+                                                            {{ listPedidosTotales.pedidos_totales.porcentaje }}% 
+                                                        </p>
+                                                        <!-- icon -->                                     
+                                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.pedidos_totales.entero]]" rojo$="[[ !listPedidosTotales.pedidos_totales.entero ]]">
+                                                            <span hidden$="[[!listPedidosTotales.pedidos_totales.entero]]"><i class="fa fa-level-up"></i></span>
+                                                            <span hidden$="[[listPedidosTotales.pedidos_totales.entero]]"><i class="fa fa-level-down"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                
+                                            <!-- tiket promedio -->
+                                            <tr class="border-bottom mb-2" style="height: 67px;">
+                                                <td> <p class="fw-600 fs-14 text-secondary">Ticket promedio</p> </td>
+                                                <td align="right"> <p class="fw-600 fs-15 color-text-principal">{{ listPedidosTotales.ticket_promedio.hoy }}</p> </td>
+                                                <td align="right">                                     
+                                                    <p class="fw-600 fs-15 text-secondary"> {{ listPedidosTotales.ticket_promedio.ayer }} </p>
+                                                </td>
+                                                <td align="right" class="text-right">
+                                                    <div class="align-items-center" style="display: inline-flex;">
+                                                        <p class="fs-15 fw-600 pr-2 lblInfo" verde$="[[listPedidosTotales.ticket_promedio.entero]]" rojo$="[[ !listPedidosTotales.ticket_promedio.entero ]]">  
+                                                            {{ listPedidosTotales.ticket_promedio.porcentaje }}% 
+                                                        </p>
+                                                        <!-- icon -->                                     
+                                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.ticket_promedio.entero]]" rojo$="[[ !listPedidosTotales.ticket_promedio.entero ]]">
+                                                            <span hidden$="[[!listPedidosTotales.ticket_promedio.entero]]"><i class="fa fa-level-up"></i></span>
+                                                            <span hidden$="[[listPedidosTotales.ticket_promedio.entero]]"><i class="fa fa-level-down"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
 
-                                     <!-- icon -->                                     
-                                     <div class="ico-dato-m mr-2" verde$="[[tpc.entero]]" rojo$="[[ !tpc.entero ]]">
-                                        <span hidden$="[[!tpc.entero]]"><i class="fa fa-level-up"></i></span>
-                                        <span hidden$="[[tpc.entero]]"><i class="fa fa-level-down"></i></span>
-                                     </div>
+                
+                                            <!-- importe Pedidos Anulados -->
+                                            <tr class="border-bottom mb-2" style="height: 67px;">
+                                                <td> <p class="fw-600 fs-14 text-secondary">Importe Pedidos Anulados</p> </td>
+                                                <td align="right"> <p class="fw-600 fs-15 color-text-principal text-danger">{{ listPedidosTotales.pedidos_anulados.importe_hoy }}</p> </td>
+                                                <td colspan="2">   
+                                                    <span class="fw-600 fs-14 xCursor text-info" onclick="dialog_pedidos_anulados.open()"> Ver Anulados </span>                                                                      
+                                                </td>                                
+                                            </tr>
+                                            
+                                        </table>
+                                    </div>
+                                </div>
+                                <br>
+                            </div><br>
 
-                                 </div>
 
-                                 <div hidden$="[[ !tpc.showAyer ]]">
-                                     <p class="text-secondary">Dia anterior S/.{{ tpc.importe_ayer }}</p>
-                                 </div>
+                            <!-- canal de consumo -->
+                            <div class="xContentCard border-bottom" style="padding: 20px;">
+                                <p class="fs-18 text-secondary fw-600">Canales de Consumo</p><br>
+                                <div class="div-content-grid align-items-center" >
+
+                                    <!-- grafico -->
+                                    <div>
+                                        <canvas id="myChartCanalConsumo"></canvas>
+                                        <br>
+                                    </div>
+                                    
+                                    <!-- lista -->
+                                    <div>
+
+                                        <table width="100%" class="xtableIndicadores">
+                                            <thead>
+                                                <th width="35%"></th>
+                                                <th align="right">Cantidad</th>
+                                                <th align="right">Importe</th>
+                                            </thead>
+                                            <tbody>
+                                                <template is="dom-repeat" items="{{listCanalConsumo}}" as="tpc">
+                                                    <tr class="h-tr-50">
+                                                        <td><span class="fw-600 fs-14 text-secondary">{{ tpc.key }}</span></td>
+                                                        <td align="right"><span class="fw-600 fs-14 text-secondary">{{ tpc.value }}</span></td>
+                                                        <td align="right"><span class="fw-600 fs-14 color-text-principal">S/. {{ tpc.importe }}</span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+
+                                </div>
 
                             </div>
-                         </template>
-                        
-                    </div>
+                            <br>
 
-                    <!-- totales pedidos -->
-                    <!-- <div class="right p-3"> -->
-                    <div>
-                        <table width="100%">  
-                            <thead>
-                                <th width="35%"></th>
-                                <th align="right"><span class="fs-12 text-secondary">Hoy</span></th>
-                                <th align="right"><span class="fs-12 text-secondary">Ayer</span> </th>
-                                <th align="right"><span class="fs-12 text-secondary">Incremento</span></th>
-                            </thead>
-                            <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-14 text-secondary">Pedidos realizados</p> </td>
-                                <td align="right"> <p class="fw-600 fs-15 color-text-principal">{{ listPedidosTotales.pedidos_totales.hoy }}</p> </td>
-                                <td align="right">                                     
-                                    <p class="fw-600 fs-15 text-secondary"> {{ listPedidosTotales.pedidos_totales.ayer }} </p>
-                                </td>
-                                <td align="right" class="text-right">
-                                    <div class="align-items-center" style="display: inline-flex;">
-                                        <p class="fs-20 fw-600 pr-2 lblInfo" verde$="[[listPedidosTotales.pedidos_totales.entero]]" rojo$="[[ !listPedidosTotales.pedidos_totales.entero ]]">  
-                                            {{ listPedidosTotales.pedidos_totales.porcentaje }}% 
-                                        </p>
-                                        <!-- icon -->                                     
-                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.pedidos_totales.entero]]" rojo$="[[ !listPedidosTotales.pedidos_totales.entero ]]">
-                                            <span hidden$="[[!listPedidosTotales.pedidos_totales.entero]]"><i class="fa fa-level-up"></i></span>
-                                            <span hidden$="[[listPedidosTotales.pedidos_totales.entero]]"><i class="fa fa-level-down"></i></span>
-                                         </div>
+
+                            <!-- comprobantes y calificaciones -->
+                            <div class="xContentCard border-bottom" style="padding: 20px;">     
+                                <div class="div-content-grid">
+                                    <div >
+                                        <p class="fs-18 text-secondary fw-600">Comprobantes Emitidos</p><br>
+                
+                                        <table width="100%" class="xtableIndicadores">
+                                            <thead>                                             
+                                                <th>Comprobante</th>
+                                                <th>Cant</th>
+                                                <th align="right">Importe</th>
+                                            </thead>
+                                            <tbody>
+                                                <template is="dom-repeat" items="{{listComprobantes}}" as="item">
+                                                    <tr class="h-tr-50">                                                    
+                                                        <td> <span class="fw-600 fs-14 text-secondary"> {{ item.descripcion }} </span></td>
+                                                        <td> <span class="fw-600 fs-14 text-secondary">{{ item.cantidad }} </span></td>
+                                                        <td align="right"> <span class="fw-600 fs-14 color-text-principal">S/. {{ item.total }} </span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                </td>
-                            </tr>
-
-                            <!-- tiket promedio -->
-                            <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-14 text-secondary">Ticket promedio</p> </td>
-                                <td align="right"> <p class="fw-600 fs-15 color-text-principal"> S/ {{ listPedidosTotales.ticket_promedio.hoy }}</p> </td>
-                                <td align="right">                                     
-                                    <p class="fw-600 fs-15 text-secondary"> S/ {{ listPedidosTotales.ticket_promedio.ayer }} </p>
-                                </td>
-                                <td align="right" class="text-right">
-                                    <div class="align-items-center" style="display: inline-flex;">
-                                        <p class="fs-20 fw-600 pr-2 lblInfo" verde$="[[listPedidosTotales.ticket_promedio.entero]]" rojo$="[[ !listPedidosTotales.ticket_promedio.entero ]]">  
-                                            {{ listPedidosTotales.ticket_promedio.porcentaje }}% 
-                                        </p>
-                                        <!-- icon -->                                     
-                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.ticket_promedio.entero]]" rojo$="[[ !listPedidosTotales.ticket_promedio.entero ]]">
-                                            <span hidden$="[[!listPedidosTotales.ticket_promedio.entero]]"><i class="fa fa-level-up"></i></span>
-                                            <span hidden$="[[listPedidosTotales.ticket_promedio.entero]]"><i class="fa fa-level-down"></i></span>
-                                         </div>
+                
+                                    <div >
+                                        <p class="fs-18 text-secondary fw-600">Calificacion de los clientes. </p><br>        
+                                        <div class="text-center w-100">
+                                            <h1>{{ sedeCalificacion }} <span class="fa fa-star fa-spin text-warning"></span></h1>
+                                        </div>
                                     </div>
-                                </td>
-                            </tr>
+                                </div> 
+                                <br>      
+                            </div>
+                            <br><br>
 
-                            <!-- cantidad Pedidos Anulados -->
-                            <!-- <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-15 text-secondary">Cantidad Pedidos Anulados</p> </td>
-                                <td align="right"> <p class="fw-600 fs-15 color-text-principal text-danger"> {{ listPedidosTotales.pedidos_anulados.hoy }}</p> </td>
-                                <td align="right">                                     
-                                    <p class="fw-600 fs-15 text-secondary"> {{ listPedidosTotales.pedidos_anulados.ayer }} </p>
-                                </td>
-                                <td align="right" class="text-right">
-                                    <div class="align-items-center" style="display: inline-flex;">
-                                        <p class="fs-20 fw-600 pr-2 lblInfo" verde$="[[listPedidosTotales.pedidos_anulados.entero]]" rojo$="[[ !listPedidosTotales.pedidos_anulados.entero ]]">  
-                                            {{ listPedidosTotales.pedidos_anulados.porcentaje }}% 
-                                        </p>
-                                                                           
-                                        <div class="ico-dato-m mr-2" verde$="[[listPedidosTotales.pedidos_anulados.entero]]" rojo$="[[ !listPedidosTotales.pedidos_anulados.entero ]]">
-                                            <span hidden$="[[!listPedidosTotales.pedidos_anulados.entero]]"><i class="fa fa-level-up"></i></span>
-                                            <span hidden$="[[listPedidosTotales.pedidos_anulados.entero]]"><i class="fa fa-level-down"></i></span>
-                                         </div>
-                                    </div>
-                                </td>
-                            </tr> -->
-
-                            <!-- importe Pedidos Anulados -->
-                            <tr class="border-bottom mb-2" style="height: 67px;">
-                                <td> <p class="fw-600 fs-14 text-secondary">Importe Pedidos Anulados</p> </td>
-                                <td align="right"> <p class="fw-600 fs-15 color-text-principal text-danger"> S/ {{ listPedidosTotales.pedidos_anulados.importe_hoy }}</p> </td>
-                                <td colspan="2">                                                                         
-                                </td>                                
-                            </tr>
                             
-                        </table>
+
+                            <!-- calificacion detalle -->
+                            <div class="xContentCard border-bottom" style="padding: 20px;"> 
+                                <p class="fs-18 text-secondary fw-600">Calificacion de los clientes detalle. </p><br>
+                
+                                        <table class="xtableIndicadores w-100">
+                                            <thead>
+                                                <th align="left">Fecha</th>
+                                                <th align="left">Canal</th>
+                                                <th align="left">Cliente</th>
+                                                <th align="right">Calificacion</th>
+                                                <th align="left">Comentario</th>
+                                            </thead>
+                                            <tbody>
+                                                <template is="dom-repeat" items="{{listCalificacionCliente}}" as="item">
+                                                    <tr>
+                                                        <td align="left">
+                                                            <span>{{ item.fecha_hora }}</span>  
+                                                        </td>    
+                                                        <td>
+                                                            <span>{{ item.descripcion }}</span>  
+                                                        </td>                                                
+                                                        <td align="left">
+                                                            <span> {{ item.nombre }} </span>										                                                        
+                                                            
+                                                        </td>									                                                    
+                                                        <td align="right"> <span  class$="[[ item.class_calificaicon ]]">{{ item.calificacion }}</span> </td>
+                                                        <td align="left"><span class="fs-11"> {{ item.comentario }} </span></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                        <br>
+                                        <div class="xDerecha">
+                                            <pagination-input id="paginator" current-page="1" page-count="5" current-page-changed="onChangePagination_re($event)"></pagination-input>
+                                        </div>
+                                        <br><br>
+                            </div>
+
                     </div>
-                </div>
+
+
+                    <!-- ie caja -->
+                    <div class="xContentCard" style="padding: 20px;">
+                        <x-indicadores-is-caja rango="[[ rangoSelected ]]" id="cajaIndicadores"></x-indicadores-is-caja>
+                    </div>
+
+                    <!-- top de productos -->
+                    <div class="xContentCard" style="padding: 20px;">
+                        <x-indicadores-top-productos rango="[[ rangoSelected ]]" id="topProductosIndicadores"></x-indicadores-top-productos>
+                    </div>
+
+                    <!-- top colaboradores -->
+                    <div class="xContentCard" style="padding: 20px;">
+                        <x-indicadores-top-colaborador rango="[[ rangoSelected ]]" id="topColaboradoresIndicadores"></x-indicadores-top-colaborador>                    
+                    </div>
+
+                </iron-pages>
+
+
+                <br><br>
             </div>
-
-
+            <br><br>
         </div>
-            
+        
+        </div>
+        <br><br>
     </template>
 </dom-module>
 <style>
@@ -302,6 +501,39 @@
         grid-gap: 1rem;
     }
 
+    .div-content-head-op {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        grid-gap: 1rem;
+    }
+
+    .h-tr-67 {
+        height: 67px;
+    }
+
+    .h-tr-50 {
+        height: 50px;
+    }
+
+    .xtableIndicadores th {
+        font-size: 12px;
+        color: #6c757d !important;
+    }
+
+    .xtableIndicadores tr {
+        border: none;
+        border-top: 1px solid #dee2e6 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .tableDivIndicador {
+        padding-bottom: 1rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }    
+
 
     /* .ico-dato-l[entero] {
         background: #C0F7D0;         
@@ -369,8 +601,12 @@
 
 </style>
 <script>
-    var xThisI2, _listOp, dataFiltro, dataMetdataVentasDia, crosVenta, metaDiaria, _dtVentasHoy;
+    var xThisI2, _listOp, dataFiltro, dataMetdataVentasDia, crosVenta, metaDiaria, _dtVentasHoy, _dtPedidoTotales, _listTipoConsumo = []
+    , rangoFecha = 'fecha', configParamsChart = {}, ctxChar, ctxCharConsumo, myBarChartPrincipal, pageIndicadoresCaja, pageIndicadoresTopProducto, pageIndicadoresTopColaboradores, pageIndicadoresVersus
+    , data_pagination = {}, p_rows=0, p_desde=0;
     function initIndicadores2() {
+
+        xThisI2.sedeCalificacion = xm_log_get('datos_org_all_sede')[0].calificacion;
 
         _listOp = [{descripcion: 'Hoy', activo: true, value: 0},
         {descripcion: 'Semana', activo: false, value: 1}, {descripcion: 'Mes', activo: false, value: 2}]
@@ -379,26 +615,124 @@
 
         dataFiltro = {
             idsede: 0,
+            rango: 'fecha',  // fecha, semana, mes
             intervalo: 0 // hoy, semana, mes
         }
+
+        pageIndicadoresCaja = document.getElementById('cajaIndicadores');
+        pageIndicadoresTopProducto = document.getElementById('topProductosIndicadores');
+        pageIndicadoresTopColaboradores = document.getElementById('topColaboradoresIndicadores');
+        pageIndicadoresVersus = document.getElementById('pageVersusIndicadores');
+
+        xThisI2.rangoSelected = dataFiltro;
+
+        xThisI2.selected_conf=0;
 
         // meta diaria
         loadMestasSede();
 
         $('body').addClass('loaded');
         $("#Titulo_page").text("Indicadores");
+
+
+        ctxChar = document.getElementById('myChart').getContext('2d');        
+        ctxCharConsumo = document.getElementById('myChartCanalConsumo').getContext('2d');	
+        
+        
+        $("#tab_cnf").on('iron-select',function(){
+            // console.log('selecte tab', xThisI2.selected_conf);
+            updatePageTab();
+        });
+
+
+        xThisI2.$.paginator.currentPage = 1;
+        xThisI2.$.paginator.pageRows = p_rows;
+        xThisI2.$.paginator.listRows = [10,20,30,40];
+
+        xThisI2.$.paginator.addEventListener('page-limit-change', (e) => {
+            // console.log('page-limit-change', e.detail.value);
+            data_pagination = e.detail.value; // datos del componente
+			p_desde = data_pagination.pageDesde; // para el # de fila   			
+            loadCalificacionCliente();          
+        });
     }
 
     function changeOption(e) {
-        console.log('e', e.optionselected);
+        // console.log('e', e.optionselected);
+        date_fecha.disabled = false;
+        switch (e.optionselected) {
+            case 0:
+                rangoFecha = 'fecha';
+                xThisI2.ragoSubTitulo = 'Dia ';
+                xThisI2.ragoTitulo = 'Hoy';
+                break;        
+            case 1:
+                rangoFecha = 'semana';
+                xThisI2.ragoSubTitulo = 'Semana ';
+                xThisI2.ragoTitulo = ' Semana Actual';
+                date_fecha.val
+                date_fecha.disabled = true;
+                dataFiltro.fecha = 0;
+                break;
+            case 2:
+                rangoFecha = 'mes';
+                xThisI2.ragoSubTitulo = 'Mes ';
+                xThisI2.ragoTitulo = ' Mes Actual';
+                break;
+        }
+
         dataFiltro.intervalo = e.optionselected;
-        xloadDataVentas();
+        dataFiltro.rango = rangoFecha;
+        xThisI2.rangoSelected = dataFiltro;      
+        
+        if ( xThisI2.showVersus ) {
+            pageIndicadoresVersus.ragoTitulo = e.optionselected === 2 ? 'Ultimos Meses' :  xThisI2.ragoTitulo;
+        }
+
+        updatePageTab();
+    }
+
+    function updatePageTab() {
+
+        if ( xThisI2.showVersus ) {
+            pageIndicadoresVersus.showData();
+            return;
+        }
+
+        switch(xThisI2.selected_conf){
+                case 0: xloadDataVentas(); break;
+                case 1: pageIndicadoresCaja.ragoTitulo = xThisI2.ragoTitulo; pageIndicadoresCaja.showData();break;            
+                case 2: pageIndicadoresTopProducto.ragoTitulo = xThisI2.ragoTitulo; pageIndicadoresTopProducto.showData();break;            
+                case 3: pageIndicadoresTopColaboradores.ragoTitulo = xThisI2.ragoTitulo; pageIndicadoresTopColaboradores.showData();break;            
+            }
+
+        
     }
 
     function changeSede(val) {
         dataFiltro.idsede = val.idsede;
-        loadMestasSede();
+        if ( val.idsede !== -1 ) {
+            xThisI2.showVersus = false;
+            loadMestasSede();
+        } else {
+            // versus
+            xThisI2.showVersus = true;
+            pageIndicadoresVersus.showData();
+        }
     }
+
+    function changeFecha(val) {
+		dataFiltro.fecha = xDevolverFechaFormatInputDate(val.target.value);
+        var nomMes = xDevolverFechaParte_Dada(dataFiltro.fecha, 'mmmm');
+        updatePageTab();
+        
+        xThisI2.ragoTitulo = rangoFecha === 'mes' ? primeraConMayusculas(nomMes.toLowerCase()) : xThisI2.ragoSubTitulo;
+        pageIndicadoresTopColaboradores.ragoTitulo = xThisI2.ragoTitulo;
+        pageIndicadoresTopProducto.ragoTitulo = xThisI2.ragoTitulo;
+        pageIndicadoresCaja.ragoTitulo = xThisI2.ragoTitulo;
+        pageIndicadoresVersus.ragoTitulo = xThisI2.ragoTitulo;
+		// xloadDataVentas();
+	}
     
     function loadMestasSede() {		
 		$.ajax({
@@ -413,12 +747,14 @@
 					metaDiaria = dataMeta.diaria;				
 					xloadDataVentas();
 				} else {
-					dialog_meta.open();
+                    dialog_meta.open();
 				}
+                loadCalificacionCliente(); 
 			});
 	}
 
     function xloadDataVentas() {
+        xPopupLoad.xopen();
         $.ajax({
 				type: 'POST',
 				url: '../../bdphp/log_005.php?op=40',
@@ -431,6 +767,8 @@
                 
                 xDataVentas_tipo_pago();
                 xloadDataPedidos();
+
+                xloadDComprobantesEmitidos();
 			});
     }
 
@@ -447,6 +785,32 @@
                 // crosVenta = crossfilter(_dta);
                 
                 tablaInfoPedidos(_data);
+
+                // pedidos anulados
+                $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_005.php?op=4002',
+                    data: dataFiltro
+                })
+                .done(function (res) {	
+                    const _data = JSON.parse(res).datos;	
+                    tablaInfoPedidosAnulados(_data);
+
+                    xPopupLoad.xclose();
+                });
+			});
+    }
+
+    function xloadDComprobantesEmitidos() {
+        $.ajax({
+				type: 'POST',
+				url: '../../bdphp/log_005.php?op=4007',
+				data: dataFiltro
+			})
+			.done(function (res) {				
+                // console.log(res);
+                const _data = JSON.parse(res).datos;		
+                xThisI2.listComprobantes = _data;                
 			});
     }
 
@@ -475,7 +839,7 @@
 
         // diferencia
         _dtVentasHoy.diferencia = _dtVentasHoy.sumImporteTotalHoy - _dtVentasHoy.sumImporteTotalAyer;
-        _dtVentasHoy.porcentaje = Math.round((_dtVentasHoy.diferencia / _dtVentasHoy.sumImporteTotalHoy) * 100);
+        _dtVentasHoy.porcentaje = Math.round((_dtVentasHoy.diferencia / _dtVentasHoy.sumImporteTotalAyer) * 100);
         _dtVentasHoy.entero = _dtVentasHoy.diferencia < 0 ? false : true;
         _dtVentasHoy.signo = _dtVentasHoy.entero ? '+' : '-';
 
@@ -488,20 +852,22 @@
         // xThisI2.dtVentasHoy = JSON.parse( JSON.stringify(_dtVentasHoy) );
         calcularPorcentajeMetaDiaria(); // aca lo parsea
 
-        console.log('_dtVentasHoy', _dtVentasHoy);
+        // console.log('_dtVentasHoy', _dtVentasHoy);
 
-        tablaTipoPago(dataMetdataVentasDia);                
+        tablaTipoPago(dataMetdataVentasDia);    
         
-        // grafico por horas
-        var crosVentaHoy = crossfilter(dataMetdataVentasDia.filter(x => x.hoy.toString() === "1"));
-        var ddHoraHoy = crosVentaHoy.dimension(item => item.hora);
-        var byHora = ddHoraHoy.group().reduceSum(item => parseFloat(item.importe));
-        var _listHora = byHora.all(); //.map(x => {x.value = numeroConComas(x.value.toFixed(2)); return x});
+        switch (dataFiltro.rango) {
+            case 'fecha': graficoVentasHoraHoy(dataMetdataVentasDia); break;        
+            case 'semana': graficoVentasSemana(dataMetdataVentasDia); break;
+            case 'mes': graficoVentasMes(dataMetdataVentasDia); break;
+        }        
 
-        graficoVentasHoraHoy(_listHora);
+        
         
 
     }
+
+    
 
     // dataMetdataVentasDia / dia, semana, mes
     function tablaTipoPago(dataMetdataVentasDia) {
@@ -526,7 +892,8 @@
             var importeAyer = _listTipoPagoAyer.filter(c => c.key === tp.key)[0];
             importeAyer = importeAyer ? parseFloat(importeAyer.value.split(',').join('')) * 1: 0;
             var _diferencia = importeHoy - importeAyer;
-            var _porcentaje = Math.round((_diferencia / importeHoy) * 100);
+            var _porcentaje = Math.round((_diferencia / importeAyer) * 100);
+            // var _porcentaje = Math.round((importeHoy / importeAyer) * 100);
             var _entero = _porcentaje > 0
             
             var des_icon = tp.key.split(':');
@@ -548,11 +915,27 @@
         });
 
         xThisI2.listTipoPago = JSON.parse( JSON.stringify(_dtTipoPago) );
+
+        cocinarCanalConsumoHoy(crosVentaHoy);
+    }
+
+    function tablaInfoPedidosAnulados(data) {
+        // -> cantidad anulados
+        xThisI2.listpedidosBorrados = JSON.parse(JSON.stringify(data));
+        var crosVentaAnuladas = crossfilter(data);
+        var ddIdPedidoAnulados = crosVentaAnuladas.dimension(item => item.idpedido_borrados);
+        var countPedidosAnuladosHoy = ddIdPedidoAnulados.group().all().length;        
+        var importePedidosAnuladosHoy = ddIdPedidoAnulados.group().reduceSum(item => parseFloat(item.importe));
+        importePedidosAnuladosHoy = importePedidosAnuladosHoy.all().filter(x => x.key).map(x => x.value).reduce((a, b) => a + b, 0);
+
+        _dtPedidoTotales.pedidos_anulados.hoy = xCeroIzq(countPedidosAnuladosHoy, 2);        
+        _dtPedidoTotales.pedidos_anulados.importe_hoy = numeroConComas(importePedidosAnuladosHoy.toFixed(2));
+        xThisI2.listPedidosTotales = JSON.parse(JSON.stringify(_dtPedidoTotales));
     }
 
     function tablaInfoPedidos(data) {
 
-        var _dtPedidoTotales = {
+        _dtPedidoTotales = {
             pedidos_totales:{hoy: 0, ayer: 0, porcentaje: 0, entero: false},
             ticket_promedio:{hoy: 0, ayer: 0, porcentaje: 0, entero: false},
             pedidos_anulados:{hoy: 0, ayer: 0, porcentaje: 0, entero: false, importe_hoy: 0}            
@@ -564,16 +947,25 @@
         var lisPedidos = ddIdPedido.group().all();
         var cantidadPedidosHoy = lisPedidos.length;
 
+        cocinarCanalConsumoHoyFromAPP(data);
+       
+
+        // ventas agrupadas por idpedido
+        // var ddByIdPedido = crosVentaHoy.dimension(item => item.idpedido);
+        // console.log('ddByIdPedido.group().all()', ddByIdPedido.group().all());
+
         // -> importe total
         var importeTotalPedidosHoy = ddIdPedido.group().reduceSum(item => parseFloat(item.importe_item));
         importeTotalPedidosHoy = importeTotalPedidosHoy.all().map(x => x.value).reduce((a, b) => a + b, 0);
-        console.log('importeTotalPedidosHoy', importeTotalPedidosHoy);
+        // console.log('importeTotalPedidosHoy', importeTotalPedidosHoy);
 
         // -> cantidad anulados
         var ddIdPedidoAnulados = crosVentaHoy.dimension(item => item.anulado.toString() === "1");
         var countPedidosAnuladosHoy = ddIdPedidoAnulados.group().all().length;        
         var importePedidosAnuladosHoy = ddIdPedidoAnulados.group().reduceSum(item => parseFloat(item.importe_item));
         importePedidosAnuladosHoy = importePedidosAnuladosHoy.all().filter(x => x.key).map(x => x.value).reduce((a, b) => a + b, 0);
+
+
 
 
 
@@ -586,7 +978,7 @@
         // -> importe total
         var importeTotalPedidosAyer = ddIdPedido.group().reduceSum(item => parseFloat(item.importe_item));
         importeTotalPedidosAyer = importeTotalPedidosAyer.all().map(x => x.value).reduce((a, b) => a + b, 0);
-        console.log('importeTotalPedidosAyer', importeTotalPedidosAyer);
+        // console.log('importeTotalPedidosAyer', importeTotalPedidosAyer);
 
         // -> cantidad anulados
         ddIdPedidoAnulados = crosVentaAyer.dimension(item => item.anulado.toString() === "1");
@@ -615,33 +1007,110 @@
         _dtPedidoTotales.pedidos_anulados.entero = _dtPedidoTotales.pedidos_anulados.porcentaje > 0;
         _dtPedidoTotales.pedidos_anulados.importe_hoy = numeroConComas(importePedidosAnuladosHoy.toFixed(2));
 
-        console.log('_dtPedidoTotales', _dtPedidoTotales);
+        // console.log('_dtPedidoTotales', _dtPedidoTotales);
 
         xThisI2.listPedidosTotales = JSON.parse(JSON.stringify(_dtPedidoTotales));
-
-        
 
         
     }
 
 
 
+    // desde registro de pagos
+    function cocinarCanalConsumoHoy(dataVentasHoy) {
+		// canal de comsumo
+        _listTipoConsumo = [];        
+		var ddCanalTitulo = dataVentasHoy.dimension(item => item.destpc);        
+        var ddCanalImporte = ddCanalTitulo.group().reduceSum(item => parseFloat(item.importe));
+
+        // titulo
+        ddCanalTitulo.group().all().map(x => {
+            _listTipoConsumo.push(x);
+        });
+
+
+        // importe
+        ddCanalImporte.all().map(x => {
+            const itemTpc = _listTipoConsumo.filter( i => i.key === x.key)[0];
+            itemTpc.importe = x.value;
+        });
+
+        // grafico
+        xThisI2.listCanalConsumoChart = _listTipoConsumo;
+        graficoCanalesConsumo();
+
+        // console.log('listTipoConsumo', _listTipoConsumo);
+
+	}
+
+    // desde pedidos
+    function cocinarCanalConsumoHoyFromAPP(data) {
+		// canal de comsumo        
+        var _dataApp = data.filter(x => x.hoy.toString() === "1" && x.is_from_client_pwa.toString() === "1");
+        var dataVentasHoyApp = crossfilter(_dataApp);
+		var ddCanalTituloApp = dataVentasHoyApp.dimension(item => item.idpedido );        
+        var ddCanalImporte = ddCanalTituloApp.groupAll().reduceSum(item => parseFloat(item.importe));
+        var ddCanalCount = ddCanalTituloApp.groupAll().reduceCount();
+        var itemTpc = { "key": 'APP', "value": ddCanalCount.value(), "importe": ddCanalImporte.value() }
+
+        _listTipoConsumo.push(itemTpc);
+
+
+        _listTipoConsumo.map(x => {
+            x.key = primeraConMayusculas(x.key.toLowerCase());
+            x.importe = numeroConComas(parseFloat(x.importe).toFixed(2));
+        })
+
+        // tabla
+        xThisI2.listCanalConsumo = _listTipoConsumo;
+
+        // console.log('listTipoConsumo APP', _listTipoConsumo);
+
+	}
 
 
 
 
+    function graficoCanalesConsumo(){
+		// var ctxCharConsumo = document.getElementById('myChartCanalConsumo').getContext('2d');		
+		var myBarChart = new Chart(ctxCharConsumo, {
+			type: 'pie',
+			data: {
+				labels: xThisI2.listCanalConsumoChart.map(x => x.key.split(' ').pop()),
+				datasets: [{
+					label: 'Importe',
+					data: xThisI2.listCanalConsumoChart.map(x => x.value),
+					backgroundColor: ["#DBF2F2", "#D7ECFB", "#EBE0FF", "#FFF5DD", "#FFECD9", "#FFE0E6"],
+					borderColor: ["#87D5D5", "#89C8F3", "#A67AFF", "#CCCED2", "#FFDC8A", "#FBB773"],
+					borderWidth: 2
+				}],
+			},			
+			options: {				
+				legend: {
+					display: true,					
+					position: 'bottom'
+				}
+			}			
+		});
+
+	}
 
 
 
+    function graficoVentasHoraHoy(dataMetdataVentasDia){
 
-    function graficoVentasHoraHoy(dtGraficoHora){
+        // grafico por horas
+        var crosVentaHoy = crossfilter(dataMetdataVentasDia.filter(x => x.hoy.toString() === "1"));
+        var ddHoraHoy = crosVentaHoy.dimension(item => item.hora);
+        var byHora = ddHoraHoy.group().reduceSum(item => parseFloat(item.importe));
+        var dtGraficoHora = byHora.all(); //.map(x => {x.value = numeroConComas(x.value.toFixed(2)); return x});
 
-		var ctx = document.getElementById('myChart').getContext('2d');		
-        var gradient = ctx.createLinearGradient(0, 0, 0, 250);
+		var gradient = ctxChar.createLinearGradient(0, 0, 0, 250);
         gradient.addColorStop(0, 'rgba(168,240,255, 1)');   
         gradient.addColorStop(1, 'rgba(168,240,255, 0)');
 
-		var myBarChart = new Chart(ctx, {
+		// myBarChartPrincipal = new Chart(ctx, {
+        configParamsChart = {
 			type: 'line',
 			data: {
 				labels: dtGraficoHora.map(x => x.key),
@@ -676,15 +1145,270 @@
 						}]
 				}
 			}			
-		});
+		};
+
+        myBarChartPrincipal = null;
+        myBarChartPrincipal = new Chart(ctxChar, configParamsChart);         
 	}
 
+    function graficoVentasSemana(dataMetdataVentasDia) {
+        // grafico semana
+        var crosVentaHoy = crossfilter(dataMetdataVentasDia);
+        var ddNumDia = crosVentaHoy.dimension(item => item.num_semana +'.'+ item.num_dia);
+        
+        aaa = ddNumDia.group().reduceSum(d => parseFloat(d.importe));
+
+
+        var _dataDiasSemana = aaa.reduce(
+            function (p,v) {
+                p.semana_actual = v.hoy;
+                p.num_dia = v.num_dia
+                p.nom_dia = v.nom_dia;
+                p.num_semana = v.num_semana;
+                p.importe += parseFloat(v.importe);
+                return p;
+            },
+            function (p,v) {
+                p.semana_actual = v.hoy;
+                p.num_dia = v.num_dia
+                p.nom_dia = v.nom_dia;
+                p.num_semana = v.num_semana;
+                p.importe -= parseFloat(v.importe);
+                return p;
+            },
+            function initial() {
+                return {nom_dia: '', num_dia: 0, num_semana: 0, semana_actual: 0, importe: 0};
+            }
+        );
+
+        dias = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
+        numdias = [2, 3, 4, 5, 6, 7, 1];
+
+        var semanaActual = _dataDiasSemana.all().filter(x => x.value.semana_actual === "1").map(x => x.value)
+        var semanaAnterior = _dataDiasSemana.all().filter(x => x.value.semana_actual === "0").map(x => x.value)
+        var listDiaSemanaToGrafico = [], itemDayWeek;
+
+        numdias.map(nd => {
+            itemDayWeek = {};
+            // semana actual
+            var d = semanaActual.filter(x => parseInt(x.num_dia) === nd)[0];            
+            itemDayWeek.num_dia = nd;
+            itemDayWeek.value = d ? d.importe : 0;
+            itemDayWeek.semana_actual = true;
+
+            listDiaSemanaToGrafico.push(itemDayWeek);
+
+            // semana anterior
+            itemDayWeek = {};
+            d = semanaAnterior.filter(x => parseInt(x.num_dia) === nd)[0];            
+            itemDayWeek.num_dia = nd;
+            itemDayWeek.value = d ? d.importe : 0;
+            itemDayWeek.semana_actual = false;
+
+            listDiaSemanaToGrafico.push(itemDayWeek);
+            
+        });
+
+
+
+        // var ctx = document.getElementById('myChart').getContext('2d');		
+        var gradient = ctxChar.createLinearGradient(0, 0, 0, 260);
+        gradient.addColorStop(0, 'rgba(33,150,243,1)');   
+        gradient.addColorStop(1, 'rgba(33,150,243,0)');
+
+        var gradient2 = ctxChar.createLinearGradient(0, 0, 0, 260);
+        gradient2.addColorStop(0, 'rgba(149,117,205,1)');   
+        gradient2.addColorStop(1, 'rgba(149,117,205,0)');
+
+        
+
+
+        var lineMeta = [dataMeta.diaria, dataMeta.diaria, dataMeta.diaria, dataMeta.diaria ,dataMeta.diaria, dataMeta.diaria, dataMeta.diaria];
+
+
+
+		// var myBarChartSemana = new Chart(ctx, {
+        configParamsChart = {
+			type: 'line',
+			data: {
+				labels: ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"],
+				datasets: [{
+					label: 'Semana Anterior',
+					data: listDiaSemanaToGrafico.filter(x => !x.semana_actual).map(x => x.value),
+                    // backgroundColor: ["#A9F1FF"],
+                    backgroundColor : gradient2, 
+					borderColor: ["#7e57c2"],
+					borderWidth: 2
+				},
+                {
+					label: 'Semana Actual',
+					data: listDiaSemanaToGrafico.filter(x => x.semana_actual).map(x => x.value),
+                    // backgroundColor: ["#A9F1FF"],
+                    backgroundColor : gradient, 
+					borderColor: ["#2196f3"],
+					borderWidth: 2
+				},
+                {
+					label: 'Meta Diaria',
+					data: lineMeta,
+					borderWidth: 2,
+                    borderDash: [5, 5],
+				}
+                ],
+			},			
+			options: {				
+				legend: {
+					display: true,					
+					position: 'top'
+                },
+                scales: {
+						xAxes: [{
+							gridLines: {
+                                display: true,
+                                drawBorder: true,
+                                drawOnChartArea: false,                                
+                            }
+						}],
+						yAxes: [{
+							gridLines: {
+                                display: true,
+                                drawBorder: true,
+                                drawOnChartArea: false,
+                            }
+						}]
+				}
+			}			
+		};
+
+        updateChartPrincipal();
+
+        // myBarChartPrincipal.config = configParamsChart;
+        // myBarChartPrincipal.legend.options = configParamsChart.options;
+        // myBarChartPrincipal.update(); 
+        
+        // myBarChartPrincipal.render({
+        //     duration: 800,
+        //     lazy: false,
+        //     easing: 'easeOutBounce'
+        // });
+    }
+
+
+    function graficoVentasMes(dataMetdataVentasDia) {
+        // grafico mes
+        var crosVentaHoy = crossfilter(dataMetdataVentasDia);
+        var ddNumMes = crosVentaHoy.dimension(item => item.num_mes);
+        var importeByMes = ddNumMes.group().reduceSum(item => parseFloat(item.importe));
+        var dtGraficoMes = importeByMes.all(); //.map(x => {x.value = numeroConComas(x.value.toFixed(2)); return x});
+
+        // var ctx = document.getElementById('myChart').getContext('2d');		
+        var gradient = ctxChar.createLinearGradient(0, 0, 0, 260);
+        gradient.addColorStop(0, 'rgba(33,150,243,1)');   
+        gradient.addColorStop(1, 'rgba(33,150,243,0)');
+
+        
+        
+        var lineMeta = [];
+        dtGraficoMes.map(x => {
+            lineMeta.push(metaDiaria);
+        })
+
+		configParamsChart = {
+			type: 'line',
+			data: {
+				labels: dtGraficoMes.map(x => primeraConMayusculas(xDesMes(parseInt(x.key)-1).toLowerCase())),
+				datasets: [{
+					label: 'Importe',
+					data: dtGraficoMes.map(x =>  x.value.toFixed(2)),
+                    // backgroundColor: ["#A9F1FF"],
+                    backgroundColor : gradient, 
+					borderColor: ["#57D2FE"],
+					borderWidth: 2
+				},
+                {
+					label: 'Meta Mensual',
+					data: lineMeta,
+					borderWidth: 2,
+                    borderDash: [5, 5],
+				}],
+			},			
+			options: {				
+				legend: {
+					display: false,					
+					position: 'bottom'
+                },
+                scales: {
+						xAxes: [{
+							gridLines: {
+                                display: true,
+                                drawBorder: true,
+                                drawOnChartArea: false,                                
+                            }
+						}],
+						yAxes: [{
+							gridLines: {
+                                display: true,
+                                drawBorder: true,
+                                drawOnChartArea: false,
+                            }
+						}]
+				}
+			}			
+		};
+
+        updateChartPrincipal();
+        // myBarChartPrincipal.config = configParamsChart;
+        // myBarChartPrincipal.update(); 
+
+        // myBarChartPrincipal.render({
+        //     duration: 800,
+        //     lazy: false,
+        //     easing: 'easeOutBounce'
+        // });
+    }
+
+    function updateChartPrincipal() {
+        myBarChartPrincipal.config = configParamsChart;
+        myBarChartPrincipal.legend.options.display = configParamsChart.options.legend.display;
+        myBarChartPrincipal.legend.options.position = configParamsChart.options.legend.position;
+        myBarChartPrincipal.update(); 
+    }
+
+    
+
+    
 
 
 
 
+    function loadCalificacionCliente() {
+		// data_pagination.pageFilter = p_filter;    
+		// data_pagination.pageFecha = p_fecha;
+		
+		dataFiltro.pagination = data_pagination;
+		$.ajax({
+				type: 'POST',
+				url: '../../bdphp/log_005.php?op=16062',
+				data: dataFiltro
+			})
+			.done(function (res) {				
+				res = res.split('**');
+				p_rows = res[1];
+				res = JSON.parse(res[0]);
+				var _listRes = res.datos;
 
+				_listRes.map(x => {
+					const _calificacion = parseFloat(x.calificacion);
+					if ( _calificacion >=4 ) { x.class_calificaicon = 'badge bg-success text-white'; }
+					if ( _calificacion < 4 ) { x.class_calificaicon = 'badge bg-warning'; }
+					if ( _calificacion < 3 ) { x.class_calificaicon = 'badge bg-danger text-white'; }
+				});
+				xThisI2.listCalificacionCliente = _listRes;				
+				// console.log('xThisI.listCalificacionCliente', xThisI.listCalificacionCliente);
 
+				xThisI2.$.paginator.pageRows = p_rows;
+			});
+	}
 
 
 
@@ -716,6 +1440,15 @@
     }
     
     function calcularPorcentajeMetaDiaria() {
+        var multiplicadorRango = 1;
+        switch (dataFiltro.rango) {
+            case 'fecha': multiplicadorRango = 1; break;
+            case 'semana': multiplicadorRango = 7; break;
+            case 'mes': multiplicadorRango = 30; break;
+        }
+
+        metaDiaria = dataMeta.diaria * multiplicadorRango;
+
         _dtVentasHoy.porcentaje_diaria = ((parseFloat(_dtVentasHoy.sumImporteTotalHoy) /  metaDiaria) * 100).toFixed(1);
 
         _dtVentasHoy.m_rojo = false;
@@ -737,15 +1470,36 @@
             listOpciones: Object,
             listTipoPago: Object,
             listPedidosTotales: Object,
-            dtVentasHoy: Object,            
+            listCanalConsumoChart: [],
+            listCanalConsumo: [],
+            listpedidosBorrados: [],
+            listComprobantes: [],
+            listCalificacionCliente: [],
+            sedeCalificacion: String,
+            dtVentasHoy: Object,    
+            ragoSubTitulo: String,
+            ragoTitulo: String,
+            rangoSelected: String,
+            selected_conf: Number,
+            showVersus: Boolean,
 		},
 		attached: function () {
 			// this.selected = 0,
+            this.ragoSubTitulo = 'Dia ';
+            this.ragoTitulo = 'Hoy';
+            this.selected_conf=0;
+            this.showVersus = false;
 			xThisI2 = this;
 			initIndicadores2();
+
+            setTimeout(() => {				
+				// xIniControlMesa();
+				
+				_cpSocketOpen();
+			}, 1000);
 		},
 		detached:function(){
-			// grafico_meta_diaria = null;			
-		}
+			// grafico_meta_diaria = null;
+            _cpSocketClose(); }
 	})
 </script>

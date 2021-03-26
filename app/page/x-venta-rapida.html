@@ -1374,6 +1374,18 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 	if ( xRpt_pago.length > 0 ) {
 		var arr_cliente = xRpt_pago[0].cliente;
 		var arr_comprobante = xRpt_pago[0].comprobante;
+
+		if (xRpt_pago[0].idcliente === '' && xdelivery === 1) {  
+			// arr_cliente = xarr_cliente.cliente; 
+			arr_cliente = {
+				"idcliente": 0,
+				"num_doc": "",
+				"nombres": xarr_cliente.cliente.nombre,
+				"direccion": xarr_cliente.cliente.direccion,
+				"telefono": xarr_cliente.cliente.telefono,
+				"referencia": xarr_cliente.cliente.referencia
+			}
+		}
 		// correlativo = correlativo ? correlativo === '' ? arr_comprobante.correlativo : '' : '';
 		// correlativo comprobante
 		// if ( arr_comprobante ) {

@@ -420,7 +420,7 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 	const _data = {
 		Array_enca: xArrayEncabezado,
 		Array_print: xImpresoraPrint,
-		ArrayItem: xArrayCuerpo,
+		ArrayItem: xArrayCuerpo.filter(x => !null), //xArrayCuerpo, para borrar los null
 		ArraySubTotales: xArraySubtotal	
 	}
 
