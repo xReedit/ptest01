@@ -2490,6 +2490,9 @@ function xEliminarItemPedido(){
 			xobj_row_item.find('#td_importe').text(xMoneda(importeTotalRow));
 			$(xobj_row_item).attr('data-totalr', importeTotalRow);
 			$(xobj_row_item).attr('data-total', importeTotalRow);
+
+			$(xobj_row_item).attr('data-cantidad', xcantidad_remove);
+			$(xobj_row_item).attr('data-cantidadr', xcantidad_remove);
 			// xobj_row_item.data.total = importeTotalRow;
 			xtd_importe_row=parseFloat(xtd_importe_row-xArrayItemEliminar.precio_unitario)
 			obj_row_mod.find('#td_importe').text(xMoneda(parseFloat(xMoneda(xtd_importe_row))));
@@ -2942,6 +2945,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					_eparent.addClass('xCursor');
 					_eparent.addClass(xtxtEstadoDespachado);
 					_eparent.find('.show-ico-mozo').removeClass('xInvisible');
+					_eparent.find('.show-led-print').removeClass('xInvisible');
 					_eparent.find('.show-mozo-pedido').addClass('pintar');
 
 					// si ya se imprimio precuenta de la mesa
@@ -3251,7 +3255,11 @@ function _cpSocketPintarFlagPedidoImpreso(listPedidos) {
 		pedidoEnca = x.item.data.Array_enca;
 		var elementFind = xBuscarPedidoDom(pedidoEnca.m, pedidoEnca.num_pedido)
 		// elementFind.find('.show-led-print').removeClass('xInvisible');
-		$(elementFind).find('.show-led-print').removeClass('xInvisible')
+		if ( elementFind ) {
+			if ($(elementFind).find('.importe').val() !== '') {
+				$(elementFind).find('.show-led-print').removeClass('xInvisible')
+			}
+		}
 	});
 
 	

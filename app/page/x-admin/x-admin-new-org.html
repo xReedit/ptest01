@@ -42,7 +42,7 @@
 							</thead>
 							<tbody>
 								<template is="dom-repeat" items="{{ListSedesPorOrg}}" as="item">
-									<tr data-id="{{index}}">
+									<tr data-id="{{index}}" onClick="xAdmNewModificarSede(this)" class="xCursor">
 										<td>{{displayIndex(index)}}</td>
 										<td>{{item.nombre}}</td>
 										<td>{{item.ciudad}}</td>										
@@ -280,6 +280,16 @@
 									<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
 									<img id="imgLogo" src="" alt="" style="max-width: 310px;">
 
+									<br><br><br><br>
+									<p>Establecimiento acepta Resevas?</p><br>
+									<paper-checkbox id="check_pwa_acepta_reservas"><span>Habilitar resevas de papaya express</span></paper-checkbox>
+									<hr><br>
+
+									<p>Establecimiento muestra los items como supermercado o estanes? Solo para establecimientos delivery (mercados, licorerias ...)</p><br>
+									<paper-checkbox id="check_pwa_show_item_view_mercado"><span>Habilitar vista de items como supermercado</span></paper-checkbox>
+									<hr><br>
+							
+
 									<div class="xInvisible">
 										<input type="text" id="idorg" name="idorg" value$="{{xIdOrg}}">
 										<input type="text" id="idsede" name="idsede" value$="{{xIdSede}}">
@@ -300,6 +310,8 @@
 										<input type="text" id="pwa_pedido_programado_solo_del_dia" name="pwa_pedido_programado_solo_del_dia">
 										<input type="text" id="pwa_habilitar_busqueda_mapa" name="pwa_habilitar_busqueda_mapa">
 										<input type="text" id="pwa_delivery_reparto_solo_app" name="pwa_delivery_reparto_solo_app">
+										<input type="text" id="pwa_acepta_reservas" name="pwa_acepta_reservas">
+										<input type="text" id="pwa_show_item_view_mercado" name="pwa_show_item_view_mercado">
 										
 									</div>
 								</form>
@@ -477,7 +489,7 @@ function transferenciaCompleta(xfile){
 	}
 
 	function xAdmNewModificarSede(obj) {
-		const index = obj.parentElement.dataId;
+		const index = obj.dataId !== undefined ? obj.dataId : obj.parentElement.dataId;
 		const dataSede = xThisAdminNew.ListSedesPorOrg[index];
 
 		xThisAdminNew.xIdSede = xThisAdminNew.ListSedesPorOrg[index].idsede;
@@ -520,6 +532,9 @@ function transferenciaCompleta(xfile){
 		check_habilitar_busqueda_mapa.checked = dataSede.pwa_habilitar_busqueda_mapa === "0" ? false : true;
 		check_pwa_delivery_reparto_solo_app.checked = dataSede.pwa_delivery_reparto_solo_app === "0" ? false : true;
 
+		check_pwa_acepta_reservas.checked = dataSede.pwa_acepta_reservas === "0" ? false : true;
+		check_pwa_show_item_view_mercado.checked = dataSede.pwa_show_item_view_mercado === "0" ? false : true;		
+
 
 		selTipo.value = dataSede.tipo;
 
@@ -553,6 +568,9 @@ function transferenciaCompleta(xfile){
 		$("#formDatosAPP #pwa_delivery_habilitar_pedido_programado").val(dataSede.pwa_delivery_habilitar_pedido_programado);		
 		$("#formDatosAPP #pwa_habilitar_busqueda_mapa").val(dataSede.pwa_habilitar_busqueda_mapa);
 		$("#formDatosAPP #pwa_delivery_reparto_solo_app").val(dataSede.pwa_delivery_reparto_solo_app);
+
+		$("#formDatosAPP #pwa_acepta_reservas").val(dataSede.pwa_acepta_reservas);
+		$("#formDatosAPP #pwa_show_item_view_mercado").val(dataSede.pwa_show_item_view_mercado);
 			
 		// check dias que atienden
 		$('.dia_atencion').each((i, e) => {e.checked = false});
@@ -689,6 +707,9 @@ function transferenciaCompleta(xfile){
 		const _check_pwa_pedido_programado_solo_del_dia = check_pwa_pedido_programado_solo_del_dia.checked ? 1 : 0;		
 		const _check_habilitar_busqueda_mapa = check_habilitar_busqueda_mapa.checked ? 1 : 0;
 		const _check_pwa_delivery_reparto_solo_app = check_pwa_delivery_reparto_solo_app.checked ? 1 : 0;
+
+		const _check_pwa_acepta_reservas = check_pwa_acepta_reservas.checked ? 1 : 0;
+		const _check_pwa_show_item_view_mercado = check_pwa_show_item_view_mercado.checked ? 1 : 0;
 		
 
 		var dias_atienden = '';
@@ -737,6 +758,9 @@ function transferenciaCompleta(xfile){
 		
 		$("#formDatosAPP #pwa_habilitar_busqueda_mapa").val(_check_habilitar_busqueda_mapa);
 		$("#formDatosAPP #pwa_delivery_reparto_solo_app").val(_check_pwa_delivery_reparto_solo_app);
+
+		$("#formDatosAPP #pwa_acepta_reservas").val(_check_pwa_acepta_reservas);
+		$("#formDatosAPP #pwa_show_item_view_mercado").val(_check_pwa_show_item_view_mercado);
 
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede",$("#formDatosAPP").serialize(),function(xUltimoId){
