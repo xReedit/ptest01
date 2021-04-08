@@ -288,7 +288,11 @@
 									<p>Establecimiento muestra los items como supermercado o estanes? Solo para establecimientos delivery (mercados, licorerias ...)</p><br>
 									<paper-checkbox id="check_pwa_show_item_view_mercado"><span>Habilitar vista de items como supermercado</span></paper-checkbox>
 									<hr><br>
-							
+
+									<!-- si es comercio con carta estable desde que hora podra recibir reservas -->									
+									<p>Si recibe reservas antes del horario de atención, especificar en formato 24hr. Al abrir el servidor de impresion se imprimiran las reservas hechas antes del horario de apertura.</p><br>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="DESDE QUE HORA RECIBE RESERVAS" onChange="conMayusculas(this)" id="pwa_acepta_reserva_desde" name="pwa_acepta_reserva_desde" espaciar required>									
+									<br><br>
 
 									<div class="xInvisible">
 										<input type="text" id="idorg" name="idorg" value$="{{xIdOrg}}">
@@ -508,7 +512,7 @@ function transferenciaCompleta(xfile){
 		$("#frm_sede #finicio").val(dataSede.finicio);
 		$("#frm_sede #pwa_time_limit").val(dataSede.pwa_time_limit);
 		$("#frm_sede #url_api_fac").val(dataSede.url_api_fac);
-		$("#frm_sede #costo_restobar_fijo_mensual").val(dataSede.costo_restobar_fijo_mensual);
+		$("#frm_sede #costo_restobar_fijo_mensual").val(dataSede.costo_restobar_fijo_mensual);		
 
 		check_print_server.checked = dataSede.ip_server_local === "0" ? false : true;
 		check_pwa.checked = dataSede.pwa === "0" ? false : true;
@@ -571,6 +575,7 @@ function transferenciaCompleta(xfile){
 
 		$("#formDatosAPP #pwa_acepta_reservas").val(dataSede.pwa_acepta_reservas);
 		$("#formDatosAPP #pwa_show_item_view_mercado").val(dataSede.pwa_show_item_view_mercado);
+		$("#formDatosAPP #pwa_acepta_reserva_desde").val(dataSede.pwa_acepta_reserva_desde);
 			
 		// check dias que atienden
 		$('.dia_atencion').each((i, e) => {e.checked = false});
