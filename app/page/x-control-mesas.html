@@ -2741,14 +2741,20 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 }
 
 function quitarSubTotal(obj, index) {
-	const tachado = $(obj).attr('data-tachado');
+	const tachado = obj.dataset.tachado;
 	var idQuitar = xLocal_xDtSubTotales[index].id || "";
 	
 	if ( tachado === "true") {
 		idQuitar = idQuitar + ",";
 		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(idQuitar,''); 
+		xLocal_xDtSubTotales[index].tachado = false;		
+		obj.dataset.tachado = false;
+		xLocal_xDtSubTotales[index].importe_tachado = parseFloat();
 	} else {
 		xLocal_SubTotal_Quitados += idQuitar + ',';	
+		xLocal_xDtSubTotales[index].tachado = true;
+		xLocal_xDtSubTotales[index].importe_tachado = xLocal_xDtSubTotales[index].importe;
+		obj.dataset.tachado = true;
 	}
 
 	// recorremos los items seleccionados o visibles y asignamos el valor del tachado

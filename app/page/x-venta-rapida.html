@@ -1806,7 +1806,7 @@ function quitarSubTotal(obj, index) {
 	const tachado = $(obj).attr('data-tachado');
 	const idQuitar = xLocal_xDtSubTotales[index].id;
 	
-	if ( tachado === "true") {
+	if ( tachado == "true") {
 		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(idQuitar+",",''); 
 	} else {
 		if (xLocal_SubTotal_Quitados.indexOf(idQuitar) >=0 ) { return; }

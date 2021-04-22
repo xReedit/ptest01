@@ -125,7 +125,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 							} else { // nivel pedido
 								if (x.tipoconsumo !== c.idtipo_consumo) {return}
 								sumItem = parseFloat(c.monto);						
-						}
+							}
 		
 							// si esta para tachar al item no suma
 							// evalua uno por uno
@@ -269,6 +269,11 @@ function darFormatoSubTotalesDelivery(arrTotales = null) {
 function getImporteTotalSubTotalesDelivery(arrTotales = null) {
     // console.log(arrTotales);
     var rowTotal = arrTotales[arrTotales.length - 1];
+	rowTotal.importe = arrTotales.filter(x => x.descripcion.toLowerCase() !== 'total').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+	// quitamos los tachados
+	const importeTachado = arrTotales.filter(x => x.tachado).map(x => parseFloat(x.importe_tachado)).reduce((a, b) => a + b, 0);	
+	rowTotal.importe = (parseFloat(rowTotal.importe) - importeTachado).toFixed(2);
+
     // -2 = servicio deliver -3 = propina
     return rowTotal.importe;
   }

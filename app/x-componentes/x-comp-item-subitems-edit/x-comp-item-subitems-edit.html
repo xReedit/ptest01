@@ -85,8 +85,11 @@
                         <br><br>
                         <h4>Condiciones</h4>
                         <hr>
+                        
                         <label for="txt_sub_condicion_cant">Cuantos subitem u opciones se pueden seleccionar?</label>
                         <input type="number" style="width: 100px;" onkeyup="addSubItemItem();" class="xMiInput" id="txt_sub_condicion_cant" placeholder="Cant" onChange="conMayusculas(this)">
+                        <br><br>
+                        <paper-checkbox id="xcheck_show_cant_item" onchange="addSubItemItem();">Cantidad seleccionable en las opciones? Es decir el cliente podrá seleccionar mas de uno en cada opción.</paper-checkbox>
                         <br><br>
                         <paper-checkbox id="xcheck_subitem_required" onchange="addSubItemItem();">Es obligatorio que se seleccione?</paper-checkbox>
                         <br>
@@ -181,6 +184,7 @@
                 });
 
                 xcheck_subitem_required.checked = parseInt(xThisComSubItemEdit.contentSelect.subitem_required_select) === 1 ? true : false;
+                xcheck_show_cant_item.checked = parseInt(xThisComSubItemEdit.contentSelect.show_cant_item) === 1 ? true : false;
                 txt_sub_condicion_cant.value = xThisComSubItemEdit.contentSelect.subitem_cant_select;
         }
 
@@ -274,6 +278,7 @@
                 iditem_subitem_content: iditemContentSelect,
                 cant_select: txt_sub_condicion_cant.value,
                 required_select: xcheck_subitem_required.checked ? 1 : 0,
+                show_cant_item: xcheck_show_cant_item.checked ? 1 : 0,
                 is_sum_cant_subitems:  isSumCantSubItems ? 1 : 0,
                 cantidad: sumCantSubiTems
             } 	
@@ -529,6 +534,7 @@
                 xThisComSubItemEdit.cantidadSubItems = 0;
 
                 xcheck_subitem_required.checked = false;
+                xcheck_show_cant_item.checked = false;
                 txt_sub_condicion_cant.value = '';
 
                 this.selected=0; 
