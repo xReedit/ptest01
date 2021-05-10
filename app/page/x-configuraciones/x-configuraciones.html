@@ -499,6 +499,7 @@
 						</table>
 						<div class="xInvisible">
 							<select id="sel_impr_Sec"></select>
+							<select id="sel_impr_Sec_otro"></select>
 						</div>
 						<br>
 						<br>
@@ -855,6 +856,17 @@ function xIniConf(){
 		return false;
 	});
 
+	$(document).on('change',".xsel_sec_print_otro",function(e){
+		var xid_secc_row=$(this).attr('data-id');
+		var xid_secc_print=this.value;
+		xGuardarCambiosSeccionPrint(xid_secc_row,xid_secc_print,0, true);
+
+		event.stopPropagation();
+		e.stopPropagation();
+		e.stopImmediatePropagation()
+		return false;
+	});
+
 	$(document).on('change',".xsel_sec_print_papel",function(e){
 		var xid_print = $(this).attr('data-id');
 		var xid_papel_value = this.value;
@@ -1092,7 +1104,7 @@ function xLoadImpresorasConf(){
 				'<td  data-campo="img64"><span onclick="xModRow(this,4);">' + xdtImp[i].img64 + '</span></td>' +
 				'<td  data-papel="papel" data-id="'+xdtImp[i].idimpresora+'">'+
 					'<select class="xsel_sec_print_papel" data-id="'+xdtImp[i].idimpresora+'">'+$("#select_papel_zona")[0].innerHTML + '</select>'+
-				'</td>'+
+				'</td>'+				
 				'<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td></tr>')
 			xcandena_sel_print=xcandena_sel_print+'<option value="'+xdtImp[i].idimpresora+'">'+xdtImp[i].descripcion+'</option>';
 
@@ -1103,8 +1115,9 @@ function xLoadImpresorasConf(){
 		$("#tb_impresoras .row").remove();
 		$("#tb_impresoras").append(xcadena_impr).trigger('create');
 
-		xcandena_sel_print=xcandena_sel_print+'<option value=0>Ninguno</option>';
+		xcandena_sel_print=xcandena_sel_print+'<option value="0">Ninguno</option>';
 		$("#sel_impr_Sec").html(xcandena_sel_print).trigger('create');
+		$("#sel_impr_Sec_otro").html(xcandena_sel_print).trigger('create');
 		$("#sel_impr_Sec_bodega").html(xcandena_sel_print).trigger('create');
 		//encabezado pie de pagina logo
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=307'})
@@ -1248,18 +1261,25 @@ function xLoadSecciones(){
 		//var xsel_impr=$("#sel_impr_Sec");
 		xdtSec=xdtSec.datos
 		for (var i = 0; i < xdtSec.length; i++) {
+			const idImpresoraOtro = xdtSec[i].idimpresora_otro;
 			imgIcono = xdtSec[i].img != '' ? xdtSec[i].img : i+'.png';
 			//sel_impr_Sec.value=xdtSec[i].idimpresora;
 			//$("#sel_impr_Sec > option")[0].css('checked','true')
 			//sel_impr_Sec.options[xdtSec[i].idimpresora].selected=true;
 
 			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected','selected');
+			$("#sel_impr_Sec_otro  option[value="+xdtSec[i].idimpresora_otro+"]").attr('selected','selected');
 			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+xdtSec[i].idseccion+'">'+
 												'<td onclick="openImgIconDialog(this, 0)"> <img class="img-ico-seccion xCursor" src="'+ xRutaIconSeccion + imgIcono+'" alt="img-ico">'+xdtSec[i].plato+'</td>'+
 												'<td><select class="xsel_sec_print" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec")[0].innerHTML+'</select></td>'+
+												'<td>'+
+													'<select class="xsel_sec_print_otro" data-id="'+xdtSec[i].idseccion+'">'+$("#sel_impr_Sec_otro")[0].innerHTML+'</select>'+
+												'</td>' +
 												'<td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td>'+
 												'</tr>')
+			
 			$("#sel_impr_Sec  option[value="+xdtSec[i].idimpresora+"]").attr('selected',false);
+			$("#sel_impr_Sec_otro  option[value="+xdtSec[i].idimpresora_otro+"]").attr('selected',false);
 		};
 		$("#tb_sec_impr .row").remove();
 		$("#tb_sec_impr").append(xCadena_sec).trigger('create');
@@ -1297,9 +1317,10 @@ function xLoadSecciones_bodega(){
 	})
 }
 
-function xGuardarCambiosSeccionPrint(id_row,id_print,xes_bodega){
+function xGuardarCambiosSeccionPrint(id_row,id_print,xes_bodega, otra_impresora_seccion = false){
 	var xnum_op;
 	if(xes_bodega===1){xnum_op='40101';}else{xnum_op='4010';}
+	if ( otra_impresora_seccion ) { xnum_op='40100'; }
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op='+xnum_op,data:{ids:id_row,idp:id_print}})
 }
 

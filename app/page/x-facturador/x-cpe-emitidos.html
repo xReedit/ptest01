@@ -120,7 +120,20 @@
                                             <td class="xNoVisibleMenos720">{{item.nom_comprobante}} - {{ item.numero }}</td>
                                             <td>{{item.nomcliente}}</td>
                                             <td align="right" class="ximporte_row">{{item.total}}</td>
-                                            <td><span class$={{item.class_estado}}>{{item.nom_estado}}</span></td>
+                                            <td>                                                
+                                                <div id="rowitem">
+                                                    <div id="row_estado">
+                                                        <span class$={{item.class_estado}}>{{item.nom_estado}}</span>
+                                                        <template is="dom-if" if="{{_isEqualTo(item)}}">
+                                                            <button class="xBoton_flat_2 xCursor" data-id="{{index}}" onclick="reenviarComprobante(this)"> Reenviar</button>
+                                                        </template>                                                
+                                                    </div>
+                                                    <div id="row_loading" class="xInvisible">
+                                                        <i class="fa fa-circle-o-notch fa-spin"></i>
+                                                    </div>
+                                                </div>
+                                                
+                                            </td>
                                             <td>
                                                 <div data-id="{{index}}">
                                                     <img class="xzoom-1 xCursor" hidden$="{{!item.ico_pdf}}" onclick="verDocuemnto('pdf', this)" src="../../../images/001-pdf.png" width="16px" alt="">
@@ -252,6 +265,8 @@
     function xExportarExcel() {
         tableToExcel('testTable', 'Comprobantes');
     }
+
+    
 
     function xIniCpe() {
         xThisCpe.ListCpe = [];
@@ -402,6 +417,7 @@
                 x.btn_enviar = btn_enviar;
                 x.btn_anular = btn_anular;
                 x.style_reporte = style_reporte;
+                x.isReenviandoLoading = false;
             })
                                
             p_upadate = false;  // para que no vuelva a llamar esta funcion
@@ -571,6 +587,32 @@
             xIniCpe();
         });
     }
+
+    async function reenviarComprobante(obj) {
+        const _idIndex = obj.dataId;
+        const objRow = obj.parentElement.parentElement;
+        const rowEstado = $(obj.parentElement.parentElement).find('#row_estado');
+        const rowLoading = $(obj.parentElement.parentElement).find('#row_loading');
+        var _rowCpe = xThisCpe.ListCpe[_idIndex];
+
+        _rowCpe.isReenviandoLoading = true;
+        rowEstado.addClass('xInvisible');
+        rowLoading.removeClass('xInvisible');
+        console.log('_rowCpe', _rowCpe);
+
+        const rpt = await xSoapSunat_SendSunat(_rowCpe.external_id, _rowCpe.idce)
+        if (rpt.ok) {
+            // _rowCpe.nom_estado = 'Aceptado';
+            xLoadCpeEmitidos('6');
+        } else {
+            alert( rpt.msj_error );
+        }
+
+        _rowCpe.isReenviandoLoading = false;
+        rowLoading.addClass('xInvisible');
+        rowEstado.removeClass('xInvisible');
+        console.log('rpt', rpt);
+    }
     
 
 
@@ -583,15 +625,26 @@
             listSedeUsContador:[],
             nom_sede: '',
             isContador: false,
+            isReenviandoLoading: false
         },
         attached: function () {
             this.selected = 0,
+            this.isReenviandoLoading = false;
             xThisCpe = this;
             xIniCpe();
         },
         displayIndex: function (index) {
             return xCeroIzq(parseInt( p_desde ) + (index + 1), 1);
-        },            
+        },
+        _isEqualTo : (item) => {
+            return item.nom_estado === 'Registrado' && item?.json_xml?.length > 1;
+        },
+        _isEqualToLoading : (item) => {
+            return item.isReenviandoLoading;
+        },
+        // reenviarComprobante: (item) => {
+        // console.log('item', item);
+        // }         
     })
 </script>
     

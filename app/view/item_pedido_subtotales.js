@@ -186,7 +186,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 	if (_costoServicio) {
 		rpt = {};
 		rpt.id = -2;
-        rpt.descripcion = 'Entrega';
+        rpt.descripcion = 'ENTREGA';
         rpt.isDeliveryApp = true;
         rpt.esImpuesto = 0;
         rpt.visible = true;

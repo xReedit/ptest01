@@ -356,6 +356,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	}
 
 	//evalua impresoras y secciones, despachos o areas, la seccion en que impresora se imprime
+	console.log('xArrayCuerpo', xArrayCuerpo);
 	for (var z = 0; z < xArrayImpresoras.length; z++) {
 		xIdPrint=xArrayImpresoras[z].idimpresora;
 		xArrayBodyPrint=[];
@@ -367,12 +368,17 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 				if (typeof xn_p=="object"){
 					if (xn_p.imprimir_comanda==='0') return;// si no se muestra en comanda
 					if(xIdPrint==xn_p.idimpresora){
-						//if(xArrayBodyPrint.length==0){
 						if(xArrayBodyPrint[i]===undefined){
 							xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
 						}
-						//try {xArrayBodyPrint[i][xn_p.iditem]=xn_p;}
-						//catch(err) {console.log(err);}
+						xArrayBodyPrint[i][xn_p.iditem]=xn_p;
+					}
+
+					// una seccion puede imprimir en varias impresoras
+					if(xIdPrint.toString() == xn_p.idimpresora_otro.toString()){
+						if(xArrayBodyPrint[i]===undefined){
+							xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
+						}
 						xArrayBodyPrint[i][xn_p.iditem]=xn_p;
 					}
 				}

@@ -29,171 +29,10 @@
 			</div>			
 		</paper-dialog>
 
-		<!-- detalle del registro pago -->
-		<paper-dialog id="dialog_registro_detalle" class="dialog_redondo" style="overflow: auto; overscroll-behavior: auto; min-width: 50%; max-width: 700px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-			<div class="mb-2">
-				<div>
-					<div class="d-flexx justify-content-between" style="align-items: end;">						
-						<div style="zoom: 0.9;">
-							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div></paper-button>
-							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 100px;" onclick="xImprimirPrecuentaHistorial();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div></paper-button>
-							<paper-button disabled="[[xYaTieneComprobante]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>							
-							<paper-button hidden$="[[!xIsPuedeReimprimirCPE]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="reImprimirComprobante();"><img src="../../images/_print_vr.png"><p>Reimprimir Comprobante</p></div></paper-button>
-						</div>
-						<button class="btn btn-sm btn-secondary ml-2" dialog-dismiss>X</button>
-					</div>					
-					<hr>
-					
-										
-					<label for="txt_comprobante" class="xfont10">Comprobante Emitido:</label>
-					<p><span id="txt_comprobante" class="xfont20">- </span><span id="txt_ref" class="xfont16 xColorRow_Morado xpadingLateralIz"></span></p>
-					<div class="xLinea2"></div>
-
-					<label for="txt_cliente" class="xfont10">Cliente:</label>
-					<p><span id="txt_cliente" class="xfont20">- </span><span id="txt_ref" class="xfont16 xColorRow_Morado xpadingLateralIz"></span></p>
-					<div class="xLinea2"></div><br>
-					<div class="x_div_linea	">
-						<div>
-						<label for="txt_mesa" class="xfont10">Mesa:</label>
-						<p id="txt_mesa" class="xfont20">00</p>
-						</div>
-						<div>
-						<label for="txt_mozo" class="xfont10">Atendido por:</label>
-						<p id="txt_mozo" class="xfont20"></p>
-						</div>
-						<div>
-						<label for="txt_correlativo" class="xfont10">Correlativo:</label>
-						<p id="txt_correlativo" class="xfont20" style="white-space: pre-wrap; width: 50px;">CO-0000</p>
-						</div>
-						<div>
-						<label for="txt_tpc" class="xfont10">Tiempo de atencion:</label>
-						<p id="txt_tpc" class="xfont20"></p>
-						</div>
-						<div>
-						<label for="txt_cat" class="xfont10"></label>
-						<p id="txt_cat" class="xfont20">-</p>
-						</div>
-					</div>
-					<div class="xLinea2"></div><br><br>
-					<div id="xBody"></div>						
-				</div>				
-			</div>						
-		</paper-dialog>
-
 
 
 		<br>
-		<div class="xMiCard xradius" style="width:90%; max-width: 1450px;">
-			<div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
-                <div class="div-content-head-op d-flexx justify-content-between">
-					<div>
-						<p class="fs-12 text-secondary">Fecha</p>
-						<div class="d-flexx">
-							<input type="date" class="xMiInput" style="width:200px;" id="txt_fecha">										
-						</div>
-					</div>
-
-					<div class="d-flexx">
-						<div class="div-dato-registro">
-							<p class="fw-600 text-secondary fs-12">Metodos de Pago</p>
-							<div class="d-flexx justify-content-center">
-								<template is="dom-repeat" items="{{listCantidadPagos}}" as="item">
-									<div>
-										<p class="fs-11 pr-2 m-0">{{item.id}}: <span class="fw-600">{{item.cantidad}} </span></p>
-									</div>
-								</template>
-							</div>
-						</div>
-						<div class="div-dato-registro">
-							<p class="fw-600 text-secondary fs-12">Comprobantes Emitos</p>
-							<p class="fw-600 text-secondary fs-20">{{ numComprobantesEmitidos }}</p>
-						</div>
-						<div class="div-dato-registro">
-							<p class="fw-600 text-secondary fs-12">Importe Total</p>
-							<p class="fw-600 text-secondary fs-20"> S/. {{ importeTotalRegistrado }}</p>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="xContentCard border-bottom" style="padding: 20px;">            
-				<div class="div-content-grid" >
-					
-					<div>
-						<div>
-							<!-- busqueda -->
-							<input type="text" class="xMiInput" width="100%" placeholder="Buscar ..." onkeyup="buscarEnLista(this.value)">
-						</div>
-					</div>
-					<br>
-
-					<table width = "100%">
-						<thead>
-							<th>#</th>
-							<th>Fecha</th>
-							<th>U. Caja</th>
-							<th>Canal</th>
-							<th>Correlativo</th>
-							<th>Cliente</th>
-							<th width="15px"></th>
-							<th>T. Pago</th>
-							<th align="right" style="min-width: 100px;">importe</th>
-							<th></th>
-						</thead>
-						<tbody>
-							<template is="dom-repeat" items="[[listRegistro]]" as="item">
-								<tr>
-									<td>
-										<span class="fw-600 mr-1">
-											{{item.num}}
-										</span>										
-											<i class="fa fa-lock" hidden$="[[!item.isCierre]]"></i>
-										
-									</td>
-									<td>
-										<p>{{ item.fecha_des }}</p>
-										<p>{{ item.hora }}</p>
-									</td>
-									<td>
-										<p class="fs-12">{{ item.us_caja }}</p>
-									</td>
-									<td>
-										<p class="fs-12">{{ item.des_consumo }}</p>
-										<p class="badge badge-success" hidden$="[[ !item.isScanCodigo ]]">App</p>
-									</td>
-									<td>
-										<p>{{ item.correlativo_dia }}</p>
-									</td>
-									<td>
-										<p class="fs-11">{{ item.nom_cliente }}</p>
-										<p class="fs-10 text-secondary">{{ item.referencia_pedido }}</p>
-									</td>
-									<td>
-										<span class="badge badge-today">{{ item.des_comprobante }}</span>
-									</td>
-									<td>
-										<div class="d-flexx">
-											<template is="dom-repeat" items="[[item.listIconsPago]]" as="icon">
-												<img width="18px" class="mr-1" src$="{{ icon.icon }}" alt="">
-											</template>
-										</div>
-									</td>									
-									<td align="right">
-										<p class="fw-600 text-info fs-15">S/. {{ item.total }}</p>
-									</td>
-									<td>
-										<button class="xBoton_flat_2 xCursor" onclick="xloadDetallePago(this)" data-id="{{index}}">Ver</button>
-									</td>
-								</tr>
-
-							</template>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-
-		
-		<!-- <div class="xMiCard xradius" style="width:85%">
+		<div class="xMiCard xradius" style="width:85%">
 			<div class="xEncanezadoCard xFondoRowAmarillo2">
 				<p>El Registro de pago muestra todos los pedidos que fueron cancelados o pagaddos por dia y solo es informativo. Seleccione o escriba una fecha.</p>
 				<div class="d-flexx">
@@ -204,7 +43,9 @@
 				<div class="xdivEnLinea2">
 					<div class="itemsDiv">
 						<br>
-						
+						<!--div>
+							<table id="tb_historial_total" width="100%"></table>
+						</div-->
 						<table width="100%" id="tb_historial">
 							<thead>
 								<th>#</th>
@@ -231,12 +72,12 @@
 						<br>
 						<hr>
 						
-						
+						<!-- Comprobante -->
 						<br>
 						<label for="txt_comprobante" class="xfont10">Comprobante Emitido:</label>
 						<p><span id="txt_comprobante" class="xfont20">- </span><span id="txt_ref" class="xfont16 xColorRow_Morado xpadingLateralIz"></span></p>
 						<div class="xLinea2"></div><br>
-						
+						<!-- Comprobante -->
 
 						<br>
 						<label for="txt_cliente" class="xfont10">Cliente:</label>
@@ -268,23 +109,12 @@
 						<div id="xBody"></div>						
 					</div>
 				</div>
-				<br>				
+				<br>
+				<!-- <button class="btn btn-sm btn-secondary" hidden$="[[ !isCierreCaja ]]" onclick="reImprimirCierre()">Reimprimir Cierre de Caja</button> -->
 			</div>
-		</div> -->
+		</div>
 		<br><br>
 	</template>
-
-<style>
-	.div-dato-registro {
-		border-radius: 8px;
-		background: white;
-		padding: 5px 15px 5px 15px;
-		text-align: center;
-		border: 1px solid #bdbdbd;
-		margin-left: 10px;
-	}
-</style>
-
 <script  type="text/javascript" src="../view/xJsonSunat.js"></script>
 <script  type="text/javascript" src="../view/deNumALetras.js"></script>
 <script  type="text/javascript" src="../view/item_pedido_estructura.js"></script>
@@ -307,15 +137,15 @@ var xArrayDtOrdenFiltro=[];
 var xTotalItemSel;
 var xidregistro_pago_sel;
 var xDtPrint,xPSupervisor,xEstado_registro_pago=0,xhtml_anulado='', xdt_h=[],
-	arrSumSubtTotales = [], xRpt_pago = [], index_historial, x_icon_facturado, xdt_pdE, listRegistroMaster; // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
+	arrSumSubtTotales = [], xRpt_pago = [], index_historial, x_icon_facturado, xdt_pdE; // calcula y obtiene array de subtotales si los ubiera { igv, servio, taper etc..}
 
 var data_pagination={}, p_rows=0, p_fecha='';
 
-	// function xIniPagination() {
-	// 	xThisHistVenta.$.paginator.currentPage = 1;
-	// 	xThisHistVenta.$.paginator.pageRows = p_rows;
-	// 	xThisHistVenta.$.paginator.listRows = [30,60,90,120];
-	// }
+	function xIniPagination() {
+		xThisHistVenta.$.paginator.currentPage = 1;
+		xThisHistVenta.$.paginator.pageRows = p_rows;
+		xThisHistVenta.$.paginator.listRows = [30,60,90,120];
+	}
 
 	function xIniHistVenta(){
 	xPopupLoad=document.getElementById('xLoad');
@@ -335,19 +165,19 @@ var data_pagination={}, p_rows=0, p_fecha='';
 		xloadHistorial();        
 	})
 
-	// xIniPagination();
+	xIniPagination();
 
-	// xThisHistVenta.$.paginator.addEventListener('page-limit-change', (e) => {
-	// 	data_pagination = e.detail.value; // datos del componente		
-	// 	p_desde = data_pagination.pageDesde; // para el # de fila		
-	// 	xloadHistorial();
-	// });
+	xThisHistVenta.$.paginator.addEventListener('page-limit-change', (e) => {
+		data_pagination = e.detail.value; // datos del componente		
+		p_desde = data_pagination.pageDesde; // para el # de fila		
+		xloadHistorial();
+	});
 
 	$("#txt_fecha").on('change',function(){
 		var d = $(this).val().split('-');
 		xfecha_historial=d[2]+'/'+d[1]+'/'+d[0];
 		p_fecha = xfecha_historial; //d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
-        // xThisHistVenta.$.paginator.currentPage = 1;        
+        xThisHistVenta.$.paginator.currentPage = 1;        
 		xloadHistorial();
 	})
 	$("#dialog_motivo_anular_historial").on('iron-overlay-closed',function(){
@@ -429,7 +259,7 @@ function xloadHistorial(){
 	xPopupLoad.xopen();
 
 	// paginacion    
-    data_pagination.pageFecha = p_fecha !== '' ? p_fecha : xDevolverFecha();
+    data_pagination.pageFecha = p_fecha;
 	let xDataRes = [];
 	//
 
@@ -437,101 +267,44 @@ function xloadHistorial(){
 	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20001', data:{pagination:data_pagination}})
 	.done( function (res) {
-		// res = res.split('**');
-		// p_rows = res[1];
-		// res = $.parseJSON(res[0]);
+		res = res.split('**');
+		p_rows = res[1];
+		res = $.parseJSON(res[0]);
 		
-		res = JSON.parse(res);
-		
-		
-		
-		xdt_h=res.datos;
-		var xNumRegistro = xdt_h.length + 1 || 0;
-		var listTipoPago = [], importeTotalRegistrado = 0, numTotalComprobantes = 0;
+		xdt_h=res;
+		var xcadena_h='',ximg_estado,xclass_anulado,xget_icon_facturado, isFacturaEmitido = false;
+		if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}
+		xdt_h=xdt_h.datos;
 
-		xdt_h.map((x, index) => {
-			const _fecha = x.fecha.split(' ');
-			var _listIconsPago = [];
-			x.isFacturaEmitido = x.idce !== null;
-			x.isPedidoApp = parseInt(x.app) === 1;
-			x.isScanCodigo = parseInt(x.scan_qr) !== 0;
-			x.isCierre = parseInt(x.cierre) !== 0;
-			x.icon_pago.split(',').map(i => {
-				_listIconsPago.push({icon: `../../images/${i}`})
-			});			
-			x.listIconsPago = _listIconsPago;
-			x.referencia_pedido = x.referencia_pedido === x.nom_cliente ? '' : x.referencia_pedido;
-			x.fecha_des = _fecha[0];
-			x.hora = _fecha[1];
-			x.des_comprobante = x.comprobante === '' ? '' : x.comprobante === 'B' ? 'Boleta' : 'Factura';
-			x.charbusqueda = `${x.us_caja} ${x.correlativo_dia} ${x.des_pago} ${x.des_consumo} ${x.nom_usuario} ${x.referencia_pedido} ${x.total} ${x.des_comprobante}`;
-			x.charbusqueda = x.charbusqueda.toLowerCase();
+		var xcount_row=0;
+		xThisHistVenta.isCierreCaja = false;
+		for (var i = 0; i < xdt_h.length; i++) {
+			xcount_row++;
+			ximg_estado='';xclass_anulado='';
 
-			x.des_pago.split(',').map(t => {
-				const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === t.toLowerCase())[0];
-				if ( ishayTP ) {
-					ishayTP.cantidad ++;
-				} else {
-					const _rowTPC = {id: primeraConMayusculas(t.toLowerCase()), cantidad: 1};
-					listTipoPago.push(_rowTPC);
-				}
-			});
-			importeTotalRegistrado = importeTotalRegistrado + parseFloat(x.total);
-			numTotalComprobantes += x.comprobante !== '' ? 1 : 0;
+			if(xdt_h[i].cierre==="1"){ximg_estado='<img src="../../images/candado.png" style="width:10px; heigh:10px; padding-right:2px; padding-top:4px;" class="xIzquierda EnLinea">'; xThisHistVenta.isCierreCaja = true;}
+			if(xdt_h[i].estado==="1"){xclass_anulado='xrow_anulado';}
 
-			// tipo de pago
+			isFacturaEmitido = xdt_h[i].idce === null ? false : true;
+			xget_icon_facturado = xdt_h[i].idce === null ? '' : x_icon_facturado;
 
-			
-			xNumRegistro --;
-			x.num = xCeroIzq(xNumRegistro);
-		});
+			xdt_h[i].isFacturaEmitido = isFacturaEmitido;
+			xdt_h[i].isCerrado = xdt_h[i].cierre==="1";
 
-		// console.log('xdt_h', xdt_h);
-		// console.log('listTipoPago', listTipoPago);
+			xcadena_h=String(xcadena_h+'<tr class="row xCursor  '+xclass_anulado+'" data-index='+ i +' data-id="'+xdt_h[i].idregistro_pago+'" data-idpedidos='+xdt_h[i].idpedido+' data-estado="'+xdt_h[i].estado+'" data-motivoa="'+xdt_h[i].motivo_anular+'" onclick="xloadDetallePago(this);">'+
+				'<td id="row_historial'+ i +'">'+ximg_estado+xCeroIzq(xcount_row,3)+xget_icon_facturado+'</td>'+
+				// '<td><img src="../../images/factura-check.png" width="16px"></td>'+
+				'<td>'+xdt_h[i].hora+'</td><td align="right" class="td_total">'+xdt_h[i].total+'</td>'+
+				'</tr>');
+		};
 
-		listRegistroMaster = xdt_h;
-		xThisHistVenta.listRegistro = listRegistroMaster;
-		
-		xThisHistVenta.listCantidadPagos = listTipoPago;
-		xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
-		xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 5);
+		p_upadate = false;  // para que no vuelva a llamar esta funcion
+        xThisHistVenta.$.paginator.pageRows = p_rows;   
+
+		$("#tb_historial .row").remove();
+		$("#tb_historial").append(xcadena_h).trigger('create');
 
 		xPopupLoad.xclose();
-		// return;
-
-		// var xcadena_h='',ximg_estado,xclass_anulado,xget_icon_facturado, isFacturaEmitido = false;
-		// if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}
-		// xdt_h=xdt_h.datos;
-
-		// var xcount_row=0;
-		// xThisHistVenta.isCierreCaja = false;
-		// for (var i = 0; i < xdt_h.length; i++) {
-		// 	xcount_row++;
-		// 	ximg_estado='';xclass_anulado='';
-
-		// 	if(xdt_h[i].cierre==="1"){ximg_estado='<img src="../../images/candado.png" style="width:10px; heigh:10px; padding-right:2px; padding-top:4px;" class="xIzquierda EnLinea">'; xThisHistVenta.isCierreCaja = true;}
-		// 	if(xdt_h[i].estado==="1"){xclass_anulado='xrow_anulado';}
-
-		// 	isFacturaEmitido = xdt_h[i].idce === null ? false : true;
-		// 	xget_icon_facturado = xdt_h[i].idce === null ? '' : x_icon_facturado;
-
-		// 	xdt_h[i].isFacturaEmitido = isFacturaEmitido;
-		// 	xdt_h[i].isCerrado = xdt_h[i].cierre==="1";
-
-		// 	xcadena_h=String(xcadena_h+'<tr class="row xCursor  '+xclass_anulado+'" data-index='+ i +' data-id="'+xdt_h[i].idregistro_pago+'" data-idpedidos='+xdt_h[i].idpedido+' data-estado="'+xdt_h[i].estado+'" data-motivoa="'+xdt_h[i].motivo_anular+'" onclick="xloadDetallePago(this);">'+
-		// 		'<td id="row_historial'+ i +'">'+ximg_estado+xCeroIzq(xcount_row,3)+xget_icon_facturado+'</td>'+
-		// 		// '<td><img src="../../images/factura-check.png" width="16px"></td>'+
-		// 		'<td>'+xdt_h[i].hora+'</td><td align="right" class="td_total">'+xdt_h[i].total+'</td>'+
-		// 		'</tr>');
-		// };
-
-		// p_upadate = false;  // para que no vuelva a llamar esta funcion
-        // xThisHistVenta.$.paginator.pageRows = p_rows;   
-
-		// $("#tb_historial .row").remove();
-		// $("#tb_historial").append(xcadena_h).trigger('create');
-
-		// xPopupLoad.xclose();
 		//xloadHistorialTotal();
 	});
 	
@@ -573,24 +346,15 @@ function xloadHistorial(){
 }
 
 function xloadDetallePago(obj){
-
-	xPopupLoad.xopen();
-
 	$("#tb_historial tr").removeClass('xitem_seleccionado_li');
-	
-	// $(obj).addClass('xitem_seleccionado_li');
-	// index_historial=$(obj).attr('data-index');
-	// xidregistro_pago_sel=$(obj).attr('data-id');
-	// xEstado_registro_pago=parseInt($(obj).attr('data-estado'));
-	// xTotalItemSel=$(obj).find('.td_total').text();
-
-	const _indexRow = obj.dataId;
-	const rowItem = xThisHistVenta.listRegistro[_indexRow];
-
-	index_historial = _indexRow;
-	xidregistro_pago_sel = rowItem.idregistro_pago;
-	xEstado_registro_pago = rowItem.estado;
-	xTotalItemSel = rowItem.total;
+	$(obj).addClass('xitem_seleccionado_li');
+	index_historial=$(obj).attr('data-index');
+	// var xIdpedidos=$(obj).attr('data-idpedidos');
+	// var xnon_clie=$(obj).attr('data-cliente');
+	// xmotio_anular=$(obj).attr('data-motivoa');
+	xidregistro_pago_sel=$(obj).attr('data-id');
+	xEstado_registro_pago=parseInt($(obj).attr('data-estado'));
+	xTotalItemSel=$(obj).find('.td_total').text();
 
 
 	
@@ -610,7 +374,7 @@ function xloadDetallePago(obj){
 		xdt_pdE=$.parseJSON(dt_pdE);
 		if(!xdt_pdE.success){xPopupLoad.xclose();alert(xdt_pdE.error);return;}
 		xdt_pdE=xdt_pdE.datos[0];
-		// console.log('datos pedido ', xdt_pdE);
+		console.log('datos pedido ', xdt_pdE);
 		// var xdt_pdE = xdt_h[index_historial];
 		// var comprobanteEmitido = xdt_pdE.comprobante +' '+ (xdt_pdE.serie==="0" ? '' : xdt_pdE.serie || '') + '-'+ (xdt_pdE.correlativo === "0" ? '' : xCeroIzqNumComprobante(xdt_pdE.correlativo) || '');
 		var comprobanteEmitido = xdt_pdE.num_comprobante;
@@ -640,15 +404,7 @@ function xloadDetallePago(obj){
 			xArrayDtOrdenFiltro=xdtPbdet.datos;
 			xThisHistVenta.xdtPedDet=xArrayDtOrdenFiltro;
 			xLoadMipedidoBDHistorial(xArrayDtOrdenFiltro)
-
-			
 		})
-
-		setTimeout(() => {			
-			xPopupLoad.xclose();
-			dialog_registro_detalle.open();
-		}, 500);
-
 	})
 }
 function xLoadMipedidoBDHistorial(dt){
@@ -745,7 +501,7 @@ function xSumarTotalesHis(){
 				xcadena_total=String(xcadena_total+'<tr><td>'+xdt_tpp[i].tipo_pago+'</td><td align="right">'+xdt_tpp[i].importe+'</td></tr>');
 			};
 			
-			xcadena_total='<div class="d-flexx justify-content-end mb-2"><table width="30%" id="tb_totales" class="xRowPading4">'+xcadena_total+'</table></div><br>'+xhtml_anulado;
+			xcadena_total='<div><table width="30%" id="tb_totales" class="xRowPading4 xDerecha">'+xcadena_total+'</table></div><br>'+xhtml_anulado;
 			$("#xBody").append(xcadena_total).trigger('create');
 		})
 	})
@@ -824,57 +580,13 @@ function reImprimirComprobante() {
 	xPopupLoad.xopen()	
 	const _cpe = xdt_pdE.num_comprobante;
 	$.ajax({ type: 'POST', 
-		url: '../../bdphp/log_005.php?op=1702',
+		url: '../../bdphp/log_005.php?op=1701',
 		data:{comprobante: _cpe}})
 	.done( function (res) {
-		var _detalle_json = JSON.parse(res).datos;
-		_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
-
-		const rowItem = xThisHistVenta.listRegistro[index_historial];
-		const _dataPrint = {
-			detalle_json: _detalle_json.detalle_json,
-			idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
-			hora: xDevolverHora(),
-			nomUs: rowItem.nom_usuario,
-			nom_documento: "comprobante"
-		}
-
-		_cpSocketprinterOnly(_dataPrint);
-
 		setTimeout(() => {
 			xPopupLoad.xclose()
 		}, 1500);
 	});
-}
-
-function buscarEnLista(val) {
-	// console.log('val', val);
-	val = val.toLowerCase();
-	const _listBusqueda = listRegistroMaster.filter(x => x.charbusqueda.indexOf(val) > -1 )
-	var _numRegisterBusqueda = _listBusqueda.length + 1 || 0;
-	var importeTotalRegistrado = 0, numTotalComprobantes = 0, listTipoPago = [];
-	
-	// numerar
-	_listBusqueda.map(x => {
-		_numRegisterBusqueda --;
-		x.num = xCeroIzq(_numRegisterBusqueda);
-		x.des_pago.split(',').map(t => {
-				const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === t.toLowerCase())[0];
-				if ( ishayTP ) {
-					ishayTP.cantidad ++;
-				} else {
-					const _rowTPC = {id: primeraConMayusculas(t.toLowerCase()), cantidad: 1};
-					listTipoPago.push(_rowTPC);
-				}
-			});
-		importeTotalRegistrado = importeTotalRegistrado + parseFloat(x.total);
-		numTotalComprobantes += x.comprobante !== '' ? 1 : 0;
-	})
-	xThisHistVenta.listRegistro = _listBusqueda;
-
-	xThisHistVenta.listCantidadPagos = listTipoPago;
-	xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
-	xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 5);
 }
 
 Polymer({
@@ -884,12 +596,7 @@ Polymer({
 		isCierreCaja: Boolean,
 		xYaTieneComprobante: boolean = true,
 		xYaPedidoCerrado: boolean = true,
-		xIsPuedeReimprimirCPE: boolean = false,
-		listRegistro: [],
-		importeTotalRegistrado: Number,
-		numComprobantesEmitidos: Number,
-		listCantidadPagos: []
-
+		xIsPuedeReimprimirCPE: boolean = false
 	},
 	attached:function(){
 		this.xIsPuedeReimprimirCPE = false;
@@ -907,10 +614,7 @@ Polymer({
 	},
 	detached:function(){			
 		_cpSocketClose();
-    },
-	displayIndex: function(index) {
-            return xCeroIzq(index + 1,1);
-        }
+    }
 })
 </script>
 </dom-module>

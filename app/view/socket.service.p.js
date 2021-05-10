@@ -68,7 +68,10 @@ function listenSocketP() {
     this.socketCP.listen('notificar-pago-pwa').subscribe(res => {
         try { // puede venir de zona de despacho                             
             console.log('notifica pago', res);
-            _cpSocketPintarPedido(null);
+            if ( !res.isdelivery ) { // pago en mesa
+                _cpSocketPintarPedido(null);
+            }
+
             _cpSocketPintarNumerosPagosNotificados();
             pNotificaPago(res);
         } catch (error) {}

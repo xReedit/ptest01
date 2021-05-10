@@ -286,7 +286,7 @@ async function xSoapSunat_SendSunat(external_id, idce) {
             let data = {};
             data.idce = idce;
             data.estado_api = 0; // se registro correctamente
-            data.estado_sunat = 0; // aun no se envia ( si es boleta va en resumen)
+            data.estado_sunat = 0; // se envio correctamente
             data.msj = "Aceptada";
             // data.numero = numero_comp;
             data.external_id = external_id;

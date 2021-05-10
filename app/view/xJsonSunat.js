@@ -320,7 +320,9 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             res.data.idregistro_pago = _idregistro_p;
             res.data.viene_facturador = _viene_facturador;
             res.data.idtipo_comprobante_serie = idtipo_comprobante_serie;
-            res.data.jsonxml = errSoap ? json_xml : ''; // si hay un error al enviar a sunat guarda jsonxml para enviarlo luego
+            res.data.jsonxml = json_xml;
+            // res.data.jsonxml = errSoap ? json_xml : ''; // si hay un error al enviar a sunat guarda jsonxml para enviarlo luego
+
             
             CpeInterno_Registrar(res);
 

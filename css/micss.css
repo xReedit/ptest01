@@ -225,6 +225,10 @@ paper-dialog.xStandar{height:auto;width:40%;}
 .xMiBoton_icon:hover{border:1px solid #CCC; background: #EEEEEE;}
 .xMiBoton_icon[disabled]{pointer-events:none;opacity:0.43;}
 
+.xMiBoton_icon_v{font-family: 'Open Sans'; border-radius: 5px; border: 1px solid transparent; width: 60px; vertical-align: top; text-align: center; padding: 10px; cursor: pointer; display: inline-block; margin-right: 15px;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
+.xMiBoton_icon_v:hover{border:1px solid #CCC; background: #EEEEEE;}
+.xMiBoton_icon_v[disabled]{pointer-events:none;opacity:0.43;}
+
 .xMiBoton_icon_lateral{font-family: 'Open Sans';  display: table;vertical-align: middle; border-radius: 5px; border: 1px solid transparent; width: auto; text-align: left; padding: 5px; cursor: pointer;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
 .xMiBoton_icon_lateral p{display: table-cell; vertical-align: middle; text-align: left; border-left:1px solid #CCC; font-size: 10px; line-height: 15px; padding-left: 3px;}
 .xMiBoton_icon_lateral img{display: table-cell; vertical-align: middle; text-align: left; padding-right: 3px;}
@@ -605,20 +609,74 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
 .xHeaderPersiste .xcolor1{opacity: 0.9}
 
 
-.xMiCardPedido{
+/* .xMiCardPedido{
     border: 1px solid rgba(33,33,33,0.2); width: 120px; border-radius: 5px; padding: 5px; margin:5px; margin-bottom: 10px; text-align: center; line-height: 15px;
     display: inline-block;
-}
+} 
 .xMiCardPedido.xNeutro{background: #f3e5f5}
 .xMiCardPedido.xDisponible{background: #b2ff59}
 .xMiCardPedido.xOcupado{background: #9c27b0; color: #fff;}
+*/
+
+.xMiCardPedido{
+    border: 1px solid #B7B7B7; width: 120px; border-radius: 8px; padding: 10px; margin:5px; margin-bottom: 10px; text-align: center; line-height: 15px;
+    display: inline-block;
+}
+
+.xMiCardPedido.otroCard {
+    width: 280px;
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    background: #F3E5F5;
+}
+
+
+.xMiCardPedido.xNeutro{background: white}
+.xMiCardPedido.xNeutro .tipo {color: #6c757d !important;}
+.xMiCardPedido.xNeutro .tiempo {color: #6c757d !important;}
+
+.xMiCardPedido.xDisponible{background: #b2ff59}
+.xMiCardPedido.xOcupado{background: #6a1b9a; color: #fff;}
+.xMiCardPedido.xOcupado .tipo {color: white !important;}
+.xMiCardPedido.xOcupado .show-mozo-pedido { 
+    background: #424242;
+    opacity: .8;
+ }
+ .xMiCardPedido.xOcupado .show-led-print { display: none; }
+
+ .xMiCardPedido.otroCard.xOcupado {
+    background: #F3E5F5;
+    color: black;
+ }
+ .xMiCardPedido.otroCard.xOcupado .tipo {color: black !important;}
+
+ .xMiCardPedido.otroCard .content-a {
+     text-align: left;
+ }
+
+.xMiCardPedido.otroCard .content-a .refTitulo {
+    line-height: normal;
+}
+
+.xMiCardPedido.otroCard .content-b {
+    border-left: 1px solid #B8B8B8;
+    margin-left: 8px;
+}
+
+ .xMiCardPedido.otroCard .content-b .content-importe {
+    height: 100%;
+    /* margin-top: 32%; */
+    position: relative;
+    top: calc(50% - 20px);
+}
+
 .xMiCardPedido.xWarning{
     color: #212529;
     background-color: #ffc107;}
 
 .xMiCardPedido.xInfo{
     color: #fff;
-    background-color: #17a2b8;
+    background-color: #1565c0;
     }
 .xMiCardPedido.xDespachado{background: #00897b; color: #fff;}
 .xMiCardPedido:hover{transition: transform .07s ease-in-out; transform: scale(1.08); z-index: 10;border: 1px solid rgba(33,33,33,0.8);-webkit-box-shadow:1px 1px 1px -1px rgba(125,125,125,1);-moz-box-shadow:1px 1px 1px -1px rgba(125,125,125,1);box-shadow:1px 1px 1px -1px rgba(125,125,125,1);}
@@ -1339,7 +1397,7 @@ ul.list_add_item2 li {
 .show-led-precuenta {    
     background: gold;
     border-radius: 50%;
-    padding: 5px;
+    padding: 3px;
     font-size: 10px;
     line-height: 7px;
     color: black;

@@ -327,13 +327,17 @@
 			$sql = "update item_subitem_content set 
 						subitem_required_select = ".$arrItem['required_select']."
 						, subitem_cant_select=".$arrItem['cant_select']."
-						, is_sum_cant_subitems = ".$arrItem['is_sum_cant_subitems']."
 						, show_cant_item = ".$arrItem['show_cant_item']."
+						, is_sum_cant_subitems = ".$arrItem['is_sum_cant_subitems']."
 					where iditem_subitem_content=".$arrItem['iditem_subitem_content'];
 			// $sql = "update item_subitem_content set is_sum_cant_subitems = ".$arrItem['is_sum_cant_subitems']."  where iditem_subitem_content=".$arrItem['iditem_subitem_content'];
 			$bd->xConsulta_NoReturn($sql);
 
-			$sql = "update item_subitem_content_detalle set subitem_required_select = ".$arrItem['required_select'].", subitem_cant_select=".$arrItem['cant_select']." where iditem_subitem_content=".$arrItem['iditem_subitem_content']." and iditem=".$arrItem['iditem'];
+			$sql = "update item_subitem_content_detalle set 
+						subitem_required_select = ".$arrItem['required_select']."
+						, subitem_cant_select=".$arrItem['cant_select']." 
+						, show_cant_item = ".$arrItem['show_cant_item']."
+					where iditem_subitem_content=".$arrItem['iditem_subitem_content']." and iditem=".$arrItem['iditem'];
 			$bd->xConsulta_NoReturn($sql);
 			
 			// cantidad cambia si es fija si no es nd
@@ -356,7 +360,7 @@
 		case 803: // subitems // content
 			// $sql = "select * from item_subitem_content where iditem = ".$_POST['i']. " and estado=0";
 			$sql = "select isubd.iditem_subitem_content_detalle, isub.iditem_subitem_content, isub.iditem, isub.titulo, isub.compartido, isub.is_sum_cant_subitems, isubd.subitem_required_select, isubd.subitem_cant_select 
-				, isub.show_cant_item
+				, isubd.show_cant_item
 				from item_subitem_content_detalle isubd
 				inner join item_subitem_content isub on isubd.iditem_subitem_content = isub.iditem_subitem_content
 				where isubd.iditem =".$_POST['i']." and isubd.estado=0";
@@ -617,6 +621,11 @@
 			SELECT idorg, idsede, idprint_server_estructura, descripcion_doc, detalle_json,fecha,hora, idusuario 
 				from print_server_detalle 
 			where idprint_server_estructura = 2 and CONCAT(detalle_json->>'$.ArrayComprobante.inicial',detalle_json->>'$.ArrayComprobante.serie','-', detalle_json->>'$.ArrayComprobante.correlativo') = '$c'";
+			$bd->xConsulta($sql);
+			break;
+		case 1702: // reimprimir comprobante
+			$c = $_POST['comprobante'];			
+			$sql = "select idprint_server_detalle, detalle_json from print_server_detalle where CONCAT(detalle_json->>'$.ArrayComprobante.inicial',detalle_json->>'$.ArrayComprobante.serie','-', detalle_json->>'$.ArrayComprobante.correlativo') = '$c'";
 			$bd->xConsulta($sql);
 			break;
 		case 18: // contenido dinamico

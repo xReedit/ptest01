@@ -28,7 +28,7 @@ function pNotificaPago(res) {
     canalPedido = canalPedido === '' ? res.isdelivery ? ' Pedido Delivery ' : ' Pedido Para LLevar ' : canalPedido;
 
     PNotify.success({
-      title: 'Confirmar Pago',
+      title: 'Pago por Aplicacion',
       text: hora + '<strong>' + canalPedido + '</strong> <p>'+ _datos.nom_cliente +'</p><p> Pagó con tarjeta desde la aplicación el importe de: <strong>S/. '+ _datos.importe  +'</strong> </p>',
       textTrusted: true,
       // icon: 'fas fa-info-circle',
@@ -38,7 +38,7 @@ function pNotificaPago(res) {
         Confirm: {
           confirm: true,
           buttons: [{
-            text: 'Confirmar',
+            text: 'Listo',
             primary: true,
             click: function(notice) {
               notice.close();

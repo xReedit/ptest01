@@ -58,6 +58,7 @@ function handlerFnMiPedido(e) {
 		, xIdSeccionItem = itemPedidos_objItemSelected.idseccion // _xmenu_item_2.attr('data-idseccion')
 		, xIdSeccionItem_index = itemPedidos_objItemSelected.idseccion_index // _xmenu_item_2.attr('data-idseccionindex')
 		, xRowidimpresora = itemPedidos_objItemSelected.idimpresora // _xmenu_item_2.attr('data-idimpresora')
+		, xRowidimpresora_otro = itemPedidos_objItemSelected.idimpresora_otro
 		, xRowidporcion = itemPedidos_objItemSelected.idprocede // _xmenu_item_2.attr('data-idprocede')
 		, xRowProcede = itemPedidos_objItemSelected.procede // _xmenu_item_2.attr('data-procede')
 		, xRowProcede_index = itemPedidos_objItemSelected.procede_index // _xmenu_item_2.attr('data-procedeindex')//para odernar al momento de imprimir: primero carta luego 1 bodega
@@ -143,8 +144,21 @@ function handlerFnMiPedido(e) {
 		
 		const mySubItemView = checkMySubitemView(xidTipoConsumo, xidItem);		
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
-		xArrayPedidoObj[xidTipoConsumo][xidItem]={'idcategoria':xidCategoria, 'idseccion':xIdSeccionItem, 'idseccion_index':xIdSeccionItem_index, 'des_seccion':xDesSeccion, 'iditem':xidItem, 'idtipo_consumo':xidTipoConsumo, 'stock_actual': xStockActual, 'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
-			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal ,'precio_print':'','indicaciones':xIndicaciones,'iditem2':xidItem2,'idimpresora':xRowidimpresora, 'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0
+		xArrayPedidoObj[xidTipoConsumo][xidItem]={
+			'idcategoria':xidCategoria, 
+			'idseccion':xIdSeccionItem, 
+			'idseccion_index':xIdSeccionItem_index, 
+			'des_seccion':xDesSeccion, 
+			'iditem':xidItem, 
+			'idtipo_consumo':xidTipoConsumo, 
+			'stock_actual': xStockActual, 
+			'cantidad':xCantActual, 'precio':xPrecioItem, 'des':xDesItem,
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,
+			'precio_print':'','indicaciones':xIndicaciones,
+			'iditem2':xidItem2,
+			'idimpresora':xRowidimpresora, 
+			'idimpresora_otro':xRowidimpresora_otro, 
+			'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0
 			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
 			,'detalle': itemPedidos_objItemSelected.detalle
 			,'subitems': itemPedidos_objItemSelected.subitems
@@ -333,6 +347,7 @@ async function handlerFnMiPedidoControl(e) {
 		, xli_des_ref = itemPedidos_objItemSelected.indicaciones || '' //$(this).parent().parent().find('#xinput_li').val();
 		, xli_precio = itemPedidos_objItemSelected.precio //$(element_li_add__print).attr('data-punitario'),
 		, xli_idimpresora = itemPedidos_objItemSelected.idimpresora //$(element_li_add__print).attr('data-idimpresora'),
+		, xli_idimpresora_otro = itemPedidos_objItemSelected.idimpresora_otro //$(element_li_add__print).attr('data-idimpresora'),
 		, xli_idprocede = itemPedidos_objItemSelected.idprocede //$(element_li_add__print).attr('data-idprocede'),
 		, xli_Procede = itemPedidos_objItemSelected.procede //$(element_li_add__print).attr('data-procede'),
 		, xli_Procede_index = itemPedidos_objItemSelected.procede_index // $(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodeg,
@@ -391,7 +406,12 @@ async function handlerFnMiPedidoControl(e) {
 		var mySubItemView = checkMySubitemView(xli_tipoconsumo, xli_tipoconsumo);
 
 		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
-			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal, 'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 'iditem2': xidItem2, 'idimpresora': xli_idimpresora, 'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
+			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,
+			'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 
+			'iditem2': xidItem2, 
+			'idimpresora': xli_idimpresora, 
+			'idimpresora_otro': xli_idimpresora_otro, 
+			'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
 			,'pwa': isSocket ? 1 : 0, isporcion: itemPedidos_objItemSelected.isporcion
 			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
 			,'detalle': itemPedidos_objItemSelected.detalle
@@ -984,7 +1004,7 @@ function xSumaCantArray(ArrySum){
 					_xcantidad = _xcantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
 				} 
 				
-				const importe_calculado_unitario = _xcantidad * _xprecio_unitario;
+				const importe_calculado_unitario = parseFloat(parseFloat(_xcantidad * _xprecio_unitario).toFixed(2));
 
 				// let xp_print;
 				// if (n.precio_print === '') { xp_print = n.precio_total_calc; } // cuando es igual a vacio viene de una regla de carta

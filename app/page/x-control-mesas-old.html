@@ -295,9 +295,9 @@
 							<br>
 							<!-- style="margin-top: 12px;display: inline-flex;" -->
 							<div class="xDerecha pos-fotter-btn">
-								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p class="fs-10">Pre-cuenta</p></div>
-								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p class="fs-10">Cambiar mesa</p></div>
-								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p class="fs-10">Anular</p></div>
+								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div>
+								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p>Cambiar de mesa</p></div>
+								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div>
 							</div>
 							<button class="xBoton2 xAzul" id="btn_registrar_pago" onclick="xIrPage(1);">F10 | Listo, pagar</button>
 							<button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
@@ -2838,9 +2838,9 @@ function xPintarMesas() {
 		xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
 			'<div class="show-led-print xInvisible" title="Impreso"> <i class="fa fa-print"></i> </div>' +
 			'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +			
+			'<p class="tipo">Mesa</p>' +
 			'<p class="show-mozo-pedido" title="Atendido por"><span class="fs-8 pr-1 show-ico-mozo xInvisible"><i class="fa fa-user-circle"></i></span> <span id="nommozo">-</span></p>' +
-			'<p class="tipo text-secondary">Mesa</p>' +
-			'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
+			'<h3 class="numero">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
 			'<p class="tiempo xfont11">disponible</p>' +
 			'<p class="importe xBold">-</p>' +
 			'</div>'
@@ -2855,7 +2855,6 @@ function xPintarMesas() {
 		$('.grid').isotope({
 		  itemSelector: '.xMiCardPedido',
 		  layoutMode: 'fitRows',
-		//   percentPosition: true,
 		  getSortData: {
 			  tpc: '[data-tpc]',
 			estado: '[data-estado]',
@@ -3067,7 +3066,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					xidtipo_c = itemList.idtipo_consumo;
 					if (parseInt(itemList.reserva) === 1) {
 						xidtipo_c = '99';
-						// xref_reserva = '<p class="ref_reserva xfont12">' + itemList.referencia + '</p>';
+						xref_reserva = '<p class="ref_reserva xfont12">' + itemList.referencia + '</p>';
 					}
 
 					xidtipo_c='tpc'+xidtipo_c;
@@ -3106,10 +3105,10 @@ function xPintarEstadoPedido(_objPedido = 0) {
 	
 							// si ha sido pagado con tarjeta
 							if ( itemList.json_datos_delivery.p_header.arrDatosDelivery.metodoPago.idtipo_pago === 2 ) {
-								_stylePedido = 'xOcupado ';
+								_stylePedido = 'xInfo ';
 								xnomCliente = itemList.json_datos_delivery.p_header.arrDatosDelivery.nombre;
 								_labelIdpedido = '<p class="fs-15 pb-8"> #' + itemList.idpedido + '</p>';
-								// xIconPedido = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
+								xIconPedido = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
 								labelTitle = 'Pedido Pagado';
 								xEstadoMiPedido = 't';
 							}
@@ -3121,113 +3120,41 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					}
 
 					// si ya pago desde el app y solo falta confirmar pago para registrar
-					var _isOtroCardClass = 'otroCard ';
 					var numBold = itemList.reserva.toString() === '0' && itemList.tipo_consumo_titulo.toUpperCase() === 'LOCAL' ? '' : xCeroIzq(itemList.correlativo_dia,4);
-					var NumidPedido = itemList.idpedido;
-					var fechaHoraPedido = itemList.fecha +' '+ itemList.hora;
-					var _labelNumIdFecha =  '<p class="tiposubt fs-11 fw-100">ID:'+ NumidPedido +' F: '+ fechaHoraPedido +'</p>';
-					var _tituloMesa = numBold === '' ?  'Mesa ' : 'Pedido';
-					var _itemReferencia = itemList.referencia === '' ? '.' : xMayusculaPrimera(itemList.referencia.toLowerCase());
-					var _referencia =  `<p class="refTitulo fs-17 pb-2 pt-2">${ _itemReferencia }</p>`; // si es en mesa no pone referencia
-					var _nomMozo = itemList.nommozo ? xMayusculaPrimera(itemList.nommozo.toLowerCase()) : 'Cliente';
-					_nomMozo = 'Atendido por: ' + _nomMozo;
+					var _tituloMesa = numBold === '' ?  'Mesa ' : '';
+					var _referencia = _tituloMesa === '' ?  `<p class="fs-9 pb-2">${itemList.referencia}</p>` : ''; // si es en mesa no pone referencia
 
-					var isClientePedidoFromApp = itemList.json_datos_delivery ? itemList.json_datos_delivery.p_header ? itemList.json_datos_delivery.p_header.isCliente === 1 : false : false;		
-					var _isDeliveryPedido = itemList?.json_datos_delivery?.p_header?.delivery === 1;
-					var _iconApp = isClientePedidoFromApp ? '<span class="badge badge-success mr-1">APP</span>' : '-'
-
-					var _iconTopTpc = '<i class="fa fa-shopping-bag ml-2 text-secondary" aria-hidden="true"></i>';					
-
-					var isClientePedidoFromAppPagoTarjeta = itemList?.json_datos_delivery?.p_header?.arrDatosDelivery?.metodoPago?.idtipo_pago === 2 ? true : false;		
-					var _iconAppTarjeta = isClientePedidoFromAppPagoTarjeta ? '<span class="badge badge-info">Tarjeta</span>' : '-'
-
-					if ( isClientePedidoFromApp && !isClientePedidoFromAppPagoTarjeta ) {
-						const _desTipoPagoAPP = itemList?.json_datos_delivery?.p_header?.arrDatosDelivery?.metodoPago ? itemList?.json_datos_delivery?.p_header?.arrDatosDelivery?.metodoPago.descripcion : '';
-						if ( _desTipoPagoAPP  !== '') {
-							switch (_desTipoPagoAPP.toLowerCase()) {
-								case 'efectivo':
-									_iconAppTarjeta = '<span class="badge badge-secondary">Efectivo</span>'
-									break;		
-								case 'yape':
-									_iconAppTarjeta = '<span class="badge badge-warning">Yape</span>'
-									break;							
-								default:
-									_iconAppTarjeta = '<span class="badge badge-danger">'+ _desTipoPagoAPP +'</span>';
-									break;
-							}
-						}
+					if ( itemList.confirmar_pago.toString() === "1") {
+						_stylePedido = 'xInfo ';
+						_labelIdpedido = _tituloMesa.trim() === 'Mesa' ? '<p class="fs-15 pb-8">'+ _tituloMesa + xCeroIzq(itemList.nummesa, 2) + '</p>' : _labelIdpedido;
+						xIconPedido = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
+						labelTitle = 'Pago App';
+						xEstadoMiPedido = 't';
 					}
-
-					if ( _isDeliveryPedido  ) {
-						_iconTopTpc = '<i class="fa fa-motorcycle ml-2 text-secondary" aria-hidden="true"></i>';
-					}
-
-					if (parseInt(itemList.reserva) === 1) {
-						_iconTopTpc = '<i class="fa fa-clock-o ml-2 text-secondary" aria-hidden="true"></i>';
-					}
-
-					
 
 					xtxt_subtota_total = itemList.des_tipo_consumo.toUpperCase() === 'DELIVERY' ? '-'  :  'S/. ' + xMoneda(xArmarSubtotalesFromTotal(itemList));
 
-					if ( xtxt_subtota_total === '-'  ) {
-						xtxt_subtota_total = 'S/. ' + xMoneda(itemList?.json_datos_delivery?.p_subtotales.pop().importe);
-					}
-					
-					
 
 					// si ya se imprimio comanda
 					var xShowFlagPrinterComanda = 'xInvisible';
 					if ( itemList.is_printer.toString() === '1' ) {
 						xShowFlagPrinterComanda = '';						
 					}
-
-					if ( itemList.confirmar_pago.toString() === "1" && itemList.nummesa.toString() !== '0') {
-						_isOtroCardClass = '';
-						_labelNumIdFecha = '';
-						_iconTopTpc = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
-						_stylePedido = 'xInfo ';
-						_labelIdpedido = '';// _tituloMesa.trim() === 'Mesa' ? '<p class="fs-15 pb-8">'+ _tituloMesa + '</p>' : _labelIdpedido;						
-						_tituloMesa = '';
-						
-						// xIconPedido = '<i class="iconPedido fa fa-credit-card fa-2x"></i>';
-						 _referencia =  `<p class="refTitulo fs-28 pb-2 pt-2">${ xCeroIzq(itemList.nummesa, 2) }</p>`; 
-						 _nomMozo = '';
-						xEstadoMiPedido = 't';
-						xref_reserva = 'Mesa Pago App';
-
-						_iconApp = '';
-						_iconAppTarjeta = '';
-						// _nomMozo = 'Cliente pago por la app';
-					}
 					
 
-					
-
-					xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido xOcupado '+ _isOtroCardClass +_stylePedido+xidtipo_c+' xCursor" id="'+ itemList.idpedido +'"'
+					xCadenaNewItem=String(xCadenaNewItem+'<div class="xMiCardPedido '+_stylePedido+xidtipo_c+' xCursor" id="'+ itemList.idpedido +'"'
 						+' data-estado="'+ xEstadoMiPedido +'" data-tpc="'+xidtipo_c+'" data-hora="'+itemList.hora+'" data-p="'+itemList.idpedido+'"'
 						+' data-nummesa="'+itemList.nummesa+'" data-correlativo="'+itemList.correlativo_dia+'"'
 						+' data-isconfirmarpago="'+itemList.confirmar_pago +'"'
 						+' data-numpedido="'+itemList.numpedido+'"  data-abrir-detalle="1" onclick="xLoadDetallesPedido(this)">'+ // onclick="xLoadDetallesPedido(this)"
-						'<div class="content-a">'+
-							xIconPedido + 
-							'<div class="show-led-print '+ xShowFlagPrinterComanda +'" title="Impreso"> <i class="fa fa-print"></i> </div>' +
-							'<p class="tipo fw-600">'+ _tituloMesa +' '+ numBold + _iconTopTpc+'</p>'+
-							_labelNumIdFecha +
-							// '<h3 class="numero">'+ _referencia + '</h3>'+
-							// _labelIdpedido +						
-							_referencia +
-							'<p class="tiempo xfont11"></p>'+xref_reserva +	
-							'<p class="fs-11">'+  _nomMozo +'</p>'+
-						'</div>'+
-						'<div class="content-b">'+
-							'<div class="d-flexx justify-content-center">'+
-							_iconApp + _iconAppTarjeta +
-							'</div>'+
-							'<div class="content-importe">' +
-							'<p class="importe xBold fs-15">'+ xtxt_subtota_total +'</p>'+
-							'</div>' +
-						'</div>'+
+						xIconPedido + 
+						'<div class="show-led-print '+ xShowFlagPrinterComanda +'" title="Impreso"> <i class="fa fa-print"></i> </div>' +
+						'<p class="tipo">' + labelTitle + '</p>'+
+						'<h3 class="numero">'+ numBold + '</h3>'+
+						_labelIdpedido +						
+						_referencia +
+						'<p class="tiempo xfont11"></p>'+xref_reserva+	
+						'<p class="importe xBold">'+xtxt_subtota_total+'</p>'+
 					'</div>');
 
 					itemList.dibujado = true;

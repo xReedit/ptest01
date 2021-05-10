@@ -88,10 +88,10 @@
                         <!-- <th class="xSinBorde" width="10px"></th> -->
                     </thead>
                     <tr class="xSinBorde" data-id="">                        
-						<td><input type="number" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cant" onChange="conMayusculas(this)" required id="cant_item" autofocus></td>
-						<td><input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_item"></td>
-                        <td><input type="number" class="xMiInput xAlinearDerecha punitario" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"  placeholder="P. Unitario" id="punitario" name="precio" required></td>
-                        <td><input type="number" class="xMiInput xAlinearDerecha xprecio" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"   placeholder="P. Total" id="ptotal" name="total" required readonly></td>
+						<td><input type="number" pattern="[0-9]+" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cant" required id="cant_item" autofocus></td>
+						<td><input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion"  onChange="conMayusculas(this)" required id="des_item"></td>
+                        <td><input type="number" pattern="[0-9]+" class="xMiInput xAlinearDerecha punitario" onblur="xRetornaMoneda(this)"  placeholder="P. Unitario" id="punitario" name="precio" required></td>
+                        <td><input type="number" class="xMiInput xAlinearDerecha xprecio"  onblur="xRetornaMoneda(this)"   placeholder="P. Total" id="ptotal" name="total" required readonly></td>
 						<!-- <td><paper-fab icon="add" onclick="xAddItem()" title="Agregar item"></paper-fab></td> -->
                     </tr>        
                     <template is="dom-repeat" items="{{arrItems}}" as="item">
@@ -176,7 +176,7 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, _inputAutocomplete;
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, _inputAutocomplete, xCartaSubtotales;
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -191,6 +191,8 @@
         xThisFacturador.fecha_manual = false
 
         const arrEstructura = xm_log_get('estructura_pedido');
+        xCartaSubtotales = xm_log_get('carta_subtotales');
+        
         IdTpConsumo = arrEstructura[0].idtipo_consumo;
 
         fact_getAllImpresoras();
@@ -233,14 +235,18 @@
                 return false;
             }
         });
+
         $(".punitario").on('keyup', function (e) {
             var code = e.which;
             xCalcTotal();
             if (code == 13 || code == 186) {
                 $("#punitario").val(xMoneda(this.value));
                 $("#ptotal").focus();
-                xAddItem();
             }
+            //     $("#punitario").val(xMoneda(this.value));
+            //     $("#ptotal").focus();
+            //     xAddItem();
+            // }
         });
         $(".xprecio").on('keyup', function (e) {
             var code = e.which;
@@ -374,6 +380,7 @@
         const xPUnitario = $("#punitario").val();
         const xPTotal = $("#ptotal").val();
         if (xCan_item === '' || xDes_item === '' || xPUnitario === '' || xPTotal === '') { return }
+        if ( parseFloat(xPUnitario) === 0 ) {return; }
 
 
         const id = xCeroIzq(_arrItems.length + 1, 3);
@@ -414,6 +421,7 @@
     function xValidarBtnProcesar() {
         // si es boleta y el total no pasa de 700 no requiere cliente
         if (_arrTotal.length > 0) {
+            if ( !cnf_ComprobanteSel ) {return; }
             if ( cnf_ComprobanteSel.codsunat === "03" && _listValid && parseFloat(_arrTotal[2].importe) <= 700) {
                 xThisFacturador.formValid = true;
                 xThisFacturador.modificarCliente = true; // si se pude modificar cliente           
@@ -425,7 +433,6 @@
     }
 
     function xCalcularTotal() {
-        var xCartaSubtotales = xm_log_get('carta_subtotales');
         _arrTotal = [];
 
         const SumaLista = this._arrItems.map( x => parseFloat(x.ptotal)).reduce((a,b) => a+b, 0);
@@ -436,7 +443,7 @@
         _arrTotal.push({ 'descripcion': 'Sub Total', 'importe': xMoneda(SumaLista) });
 
         xCartaSubtotales.map(x => {
-            if (x.es_impuesto === '1') {
+            if (x.es_impuesto.toString() === '1') {
                 const impuesto = parseFloat(x.monto);
                 const importeCalc = x.activo === '0' ? parseFloat(SumaLista * (impuesto / 100)).toFixed(2) : '0.00';
                 _arrTotal.push({'descripcion': x.descripcion, 'importe': importeCalc});
