@@ -381,7 +381,7 @@ function darFormatoSubTotalesComisionRepartidor(sedeInfo, arrTotales, costoEntre
         esImpuesto: 0,
         id: -4,
         importe: - costoEntrega,
-        quitar: false,
+        quitar: true, // para que no imprima en comprobante o comanda
         tachado: false,
         visible: false,
         visible_cpe: false
@@ -412,10 +412,12 @@ function darFormatoSubTotalesComisionRepartidor(sedeInfo, arrTotales, costoEntre
 	function darFormatoSubTotalesParaFacturacion(arrTotales, isSumar = true) {
 		const rowCostoEntrega = arrTotales.filter(x => x.id === -4)[0];
 		if ( rowCostoEntrega ) {
+			const rowTotal = arrTotales[arrTotales.length - 1];
+			var _rowTotalImporte = parseFloat(rowTotal.importe);
 			if ( isSumar  ) {
-				const rowTotal = arrTotales[arrTotales.length - 1];
-				rowTotal.importe += (rowCostoEntrega.importe * -1); // este dato es negativo
+				_rowTotalImporte += (rowCostoEntrega.importe * -1); // este dato es negativo
 			}
+			rowTotal.importe = _rowTotalImporte.toFixed(2);
 		  return arrTotales.filter(x => x.id !== -4); // quitamos costo de entrega que paga el comericio
 		}
 		return arrTotales;

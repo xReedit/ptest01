@@ -38,7 +38,7 @@ class calcCostoEntrega {
             travelMode: google.maps.TravelMode.DRIVING
           };
 
-        console.log('request', request);
+        // console.log('request', request);
         var km = 0;
         directionsService.route(request,function(result, status) {
             console.log('status', result);
@@ -51,7 +51,7 @@ class calcCostoEntrega {
 
         setTimeout(() => {                
             this.setDistance(km);
-        }, 500);
+        }, 800);
     }
 
     costoDistancia(distancia_km, dirEstablecimiento) {

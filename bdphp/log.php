@@ -1522,8 +1522,17 @@
 			$nummesa=$_POST['m'];
 			$numpedido=$_POST['p'];
 			$isConfirmarPago= isset($_POST['confirmar_pago']) ? $_POST['confirmar_pago'] : 0;
+
+			$lastIdPedido = $_POST['lastIdPedido'];
+
+
+			if ( !isset($lastIdPedido)  ) {
+				$sql = "call lastIdPedidoSede($g_idsede, 1)";
+				$lastIdPedido = $bd->xDevolverUnDatoSP($sql);
+			}
+
 			// 0 idpedido
-			$sql="CALL procedure_bus_pedido_bd_3051(".$nummesa.",'".$numpedido."', 0,".$g_ido.",".$g_idsede.",".$isConfirmarPago.");";
+			$sql="CALL procedure_bus_pedido_bd_3051(".$nummesa.",'".$numpedido."', 0,".$g_ido.",".$g_idsede.",".$isConfirmarPago.",".$lastIdPedido.");";
 			
 			// $condicion='p.nummesa='.$nummesa;
 			// if($nummesa==0){
@@ -1851,9 +1860,23 @@
 			";
 			$bd->xConsulta($sql);
 			break;
+		case 50701:// ultimo id peiddo cobrado
+			$sql = "call lastIdPedidoSede($g_idsede, 1)";
+			echo $bd->xDevolverUnDatoSP($sql);
+			break;
 		case 507:// load detalle del pedido
 			$nummesa=$_POST['m'];
 			$numpedido=$_POST['p'];
+			$lastIdPedido = $_POST['lastIdPedido'];
+
+
+			if ( !isset($lastIdPedido)  ) {
+				$sql = "call lastIdPedidoSede($g_idsede, 1)";
+				$lastIdPedido = $bd->xDevolverUnDatoSP($sql);
+			}
+
+			
+
 			$isConfirmarPago= isset($_POST['confirmar_pago']) ? $_POST['confirmar_pago'] : 0;
 			$isQyueryConfirmar = '';
 			
@@ -1893,7 +1916,7 @@
 					left JOIN usuario AS u on p.idusuario = u.idusuario
 					left join cliente as c on p.idcliente = c.idcliente
 					left join repartidor as r on r.idrepartidor = p.idrepartidor
-				WHERE (p.idsede=".$g_idsede." and ".$condicion.") and ".$isQyueryConfirmar;				
+				WHERE p.idpedido > $lastIdPedido and (p.idsede=".$g_idsede." and ".$condicion.") and ".$isQyueryConfirmar;				
 
 				// AND (p.estado IN(0,1) OR (p.confirmar_pago = 1))
 
@@ -2955,27 +2978,30 @@
 			// 	where (idorg=".$g_ido." and idsede=".$g_idsede.") ".$filtroFecha."
 			// 	order by idregistro_pago desc limit ".$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];				
 
-			$sql="
-				select rp.idregistro_pago, rp.fecha, rp.total, rp.estado, rp.cierre, rp.idce, rp.estado 
-				, tc.descripcion des_consumo, u.nombres us_caja, COALESCE(c.nombres, '') nom_cliente
-				, COALESCE(left(ce.numero,1), '') comprobante
-				, GROUP_CONCAT(DISTINCT tp.img) icon_pago, GROUP_CONCAT(DISTINCT tp.descripcion) des_pago, GROUP_CONCAT(LPAD(p.correlativo_dia, 4, '0')) correlativo_dia
-				, p.flag_is_cliente app
-				, if( p.flag_is_cliente = 1, 'CLIENTE', u2.nombres) nom_usuario
-				, p.referencia referencia_pedido
-				, COALESCE(p.idregistra_scan_qr, 0) scan_qr
-				from registro_pago rp
-					inner join tipo_consumo tc on tc.idtipo_consumo = rp.idtipo_consumo 
-					inner join usuario u on u.idusuario = rp.idusuario 
-					inner join registro_pago_detalle rpd on rpd.idregistro_pago = rp.idregistro_pago
-					inner join tipo_pago tp on rpd.idtipo_pago = tp.idtipo_pago 	
-					inner join pedido p on p.idregistro_pago = rp.idregistro_pago
-					left join usuario u2 on u2.idusuario = p.idusuario 
-					left join ce on ce.idce = rp.idce 		
-					left join cliente c on c.idcliente = p.idcliente 
-				where (rp.idsede=".$g_idsede.") and SUBSTRING_INDEX(rp.fecha,' ',1) = '".$fecha."'
-				group by rp.idregistro_pago
-				order by rp.idregistro_pago desc";
+			// $sql="
+			// 	select rp.idregistro_pago, rp.fecha, rp.total, rp.estado, rp.cierre, rp.idce, rp.estado 
+			// 	, tc.descripcion des_consumo, u.nombres us_caja, COALESCE(c.nombres, '') nom_cliente
+			// 	, COALESCE(left(ce.numero,1), '') comprobante
+			// 	, GROUP_CONCAT(DISTINCT tp.img) icon_pago, GROUP_CONCAT(DISTINCT tp.descripcion) des_pago, GROUP_CONCAT(LPAD(p.correlativo_dia, 4, '0')) correlativo_dia
+			// 	, p.flag_is_cliente app
+			// 	, if( p.flag_is_cliente = 1, 'CLIENTE', u2.nombres) nom_usuario
+			// 	, p.referencia referencia_pedido
+			// 	, COALESCE(p.idregistra_scan_qr, 0) scan_qr
+			// 	from registro_pago rp
+			// 		inner join tipo_consumo tc on tc.idtipo_consumo = rp.idtipo_consumo 
+			// 		inner join usuario u on u.idusuario = rp.idusuario 
+			// 		inner join registro_pago_detalle rpd on rpd.idregistro_pago = rp.idregistro_pago
+			// 		inner join tipo_pago tp on rpd.idtipo_pago = tp.idtipo_pago 	
+			// 		inner join pedido p on p.idregistro_pago = rp.idregistro_pago
+			// 		left join usuario u2 on u2.idusuario = p.idusuario 
+			// 		left join ce on ce.idce = rp.idce 		
+			// 		left join cliente c on c.idcliente = p.idcliente 
+			// 	where (rp.idsede=".$g_idsede.") and SUBSTRING_INDEX(rp.fecha,' ',1) = '".$fecha."'
+			// 	group by rp.idregistro_pago
+			// 	order by rp.idregistro_pago desc";
+
+			//100521
+			$sql = "call procedure_registro_pagos_20001($g_idsede, '$fecha')";
 				
 				// .$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];			
 			

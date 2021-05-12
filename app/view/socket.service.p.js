@@ -67,7 +67,7 @@ function listenSocketP() {
     // NOTIFICAR PAGO CLIENTE FROM APP
     this.socketCP.listen('notificar-pago-pwa').subscribe(res => {
         try { // puede venir de zona de despacho                             
-            console.log('notifica pago', res);
+            // console.log('notifica pago', res);
             if ( !res.isdelivery ) { // pago en mesa
                 _cpSocketPintarPedido(null);
             }
@@ -87,7 +87,7 @@ function listenSocketP() {
 
     // NOTIFICAR QUE SE IMPRIMIO PRECUENTA DE MESA
     this.socketCP.listen('notifica-impresion-precuenta').subscribe(res => {
-        console.log('listen notifica-impresion-precuenta');
+        // console.log('listen notifica-impresion-precuenta');
         try {
             _cpSocketPintarPedido(null);
         } catch (error) {}
@@ -96,7 +96,7 @@ function listenSocketP() {
 
     // NOTIFICAR QUE SE IMPRIMIO comanda del pedido para poner el flag
     this.socketCP.listen('notifica-impresion-comanda').subscribe(pedido => {
-        console.log('notifica-impresion-comanda', pedido);
+        // console.log('notifica-impresion-comanda', pedido);
         try {
             _cpSocketPintarFlagPedidoImpreso(pedido);
         } catch (error) {}
@@ -169,7 +169,7 @@ function _cpSocketComercioLLamaRepartidorPapaya() {
 // requiere idcliente
 function _cpSocketEmitPedidoPagoCliente(listIdCliente) {
     // if (!isSocket) { return; }
-    console.log('listIdCliente', listIdCliente);
+    // console.log('listIdCliente', listIdCliente);
     this.socketCP.emit('pedido-pagado-cliente', listIdCliente);
 }
 

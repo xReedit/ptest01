@@ -464,7 +464,7 @@ function xloadHistorial(){
 			x.fecha_des = _fecha[0];
 			x.hora = _fecha[1];
 			x.des_comprobante = x.comprobante === '' ? '' : x.comprobante === 'B' ? 'Boleta' : 'Factura';
-			x.charbusqueda = `${x.us_caja} ${x.correlativo_dia} ${x.des_pago} ${x.des_consumo} ${x.nom_usuario} ${x.referencia_pedido} ${x.total} ${x.des_comprobante}`;
+			x.charbusqueda = `${x.us_caja} ${x.correlativo_dia} ${x.des_pago} ${x.des_consumo} ${x.nom_usuario} ${x.nom_cliente} ${x.referencia_pedido} ${x.total} ${x.des_comprobante}`;
 			x.charbusqueda = x.charbusqueda.toLowerCase();
 
 			x.des_pago.split(',').map(t => {
@@ -647,7 +647,7 @@ function xloadDetallePago(obj){
 		setTimeout(() => {			
 			xPopupLoad.xclose();
 			dialog_registro_detalle.open();
-		}, 500);
+		}, 800);
 
 	})
 }

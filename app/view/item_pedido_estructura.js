@@ -126,7 +126,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
         group.push({
           id: index.toString(),
           cantidad: cantidad,
-          des: x.descripcion,
+          des: x.descripcion.toUpperCase(),
           punitario: x.punitario,
           precio_total: x.importe,
           seccion: seccion

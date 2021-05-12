@@ -496,7 +496,7 @@ var xThisCM,
 	isSocket = false, isPedidoOpenDeliveryCliente = false, arrTotalesDeliveryCliente, xid_pedido_selected, optionDeliveryCliente, xdtDpedido
 	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
-var EstadoLoadMesas=false, firstLoad_mesas=true;
+var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0;
 function xIniControlMesa(){
 
 	// if ( cuentaEventoLoadIniPrincipal > 0 ) { return; }
@@ -528,6 +528,7 @@ function xIniControlMesa(){
 		xNuevoPedidoCM();
 		xTraerDtTipoConsumo();
 		xLoadDtPrintCM();
+		xLoadLastIdPedidoCobrado();
 		xLoadMesas();
 		xRefreshHora=setInterval(function () {xCalcularTiempoPedido()},2000);
 
@@ -996,6 +997,18 @@ function xIniControlMesa(){
 
 	/// laad repartidores
 	getAllRepartidor();
+}
+
+
+//100521
+// motivo: acelerar la consulta de pedido detalle
+function xLoadLastIdPedidoCobrado() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50701'})
+	.done( function (res) {
+		console.log('id last pedido', res);
+		localStorage.setItem('::app3_woLastIdP', res);
+		lastIdPedidoCobrado = res;
+	});
 }
 
 // 12118 // seleccionar idcarta al hacer pedido desde aca (control de mesas)
@@ -1858,7 +1871,8 @@ async function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago)
 
 // consultar si mesa tiene pedidos despues de haber registrado pago por app
 function isPedidoInMesa(xObj_miPedido, nummesa) {
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:nummesa, p:'', confirmar_pago: 0}})
+	// const _lastIdPedidoCobrado = localStorage.getItem('::app3_woLastIdP');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:nummesa, p:'', confirmar_pago: 0, lastIdPedido: lastIdPedidoCobrado}})
 	.done( function (dtDpedido) {
 		var xdtDpedido=$.parseJSON(dtDpedido);
 		xdtDpedido=xdtDpedido.datos;
@@ -1917,7 +1931,8 @@ function xLoadDetallesPedido (obj){
 	if(xp_sel_nummesa=='0'){xtitulo='PEDIDO '+xCeroIzq(xp_sel_correlativo_dia,5)}else{xtitulo='MESA '+xCeroIzq(xp_sel_nummesa,2)}	
 
 	//armar cantidad de pedidos
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago}})
+	// const _lastIdPedidoCobrado = localStorage.getItem('::app3_woLastIdP');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado}})
 	.done( function (dtDpedido) {
 
 		var isDelivery = false;
@@ -2127,7 +2142,8 @@ function xLoadDetallesPedido (obj){
 		$("#xBody div").remove();
 		$("#xBody").append('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
 	
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago}})
+
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado}})
 		.done( function (dtPbdet) {
 			var xdtPbdet=$.parseJSON(dtPbdet);
 			xArrayDtOrdenFiltro=xdtPbdet.datos;
