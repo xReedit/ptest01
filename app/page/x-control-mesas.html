@@ -1005,7 +1005,7 @@ function xIniControlMesa(){
 function xLoadLastIdPedidoCobrado() {
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50701'})
 	.done( function (res) {
-		console.log('id last pedido', res);
+		// console.log('id last pedido', res);
 		localStorage.setItem('::app3_woLastIdP', res);
 		lastIdPedidoCobrado = res;
 	});
@@ -1680,6 +1680,7 @@ function xIrPage(op){
 			xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
 			component_pago.setVal(xMoneda(xtt_pedidos));
 			component_pago.setIsPedidoPagadoFromAPP(isPedidoPagadoFromApp);
+			xValPago.setIsPedidoPagadoFromAPP(isPedidoPagadoFromApp);
 		break;
 	}
 	content_page.selected=op;
@@ -1940,7 +1941,10 @@ function xLoadDetallesPedido (obj){
 		var labelInfoPedido = '', labelInfoComprobante = '';
 
 		// si es solo para confirmar aunque no sea delivery
+		// isPedidoPagadoFromApp se utliza en comp-find-tipo-pago-option
+		// para saber si solo muestra tarjeta
 		isPedidoPagadoFromApp = xp_sel_is_confirmar_pago.toString() === '1' ? true : false;
+		localStorage.setItem('::app3_papp', xp_sel_is_confirmar_pago.toString());
 		xdtDpedido=$.parseJSON(dtDpedido);
 
 		xdtDpedido=xdtDpedido.datos;
@@ -2902,7 +2906,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 	, xCadenaPedidoOtros=''
 	, xidtipo_c='tpc1';				
 
-	console.log('vuelve a pintar bd');
+	// console.log('vuelve a pintar bd');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
 		.done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
@@ -2949,7 +2953,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					xtxtHora = itemList.hora;
 
 					// retorna el total + subtotales
-					xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
+					// xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
 					
 					// xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xOcupado ' + xtxtEstadoDespachado + ' ' + selector_tpc_local + ' xCursor'
 					// 	+' data-estado="a" data-tpc="' + selector_tpc_local + '" data-hora="' + itemList.hora + '"' 
@@ -2986,7 +2990,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 
 
 					// _eparent.addClass(xidtpc_item_up);
-
+					// retorna el total + subtotales
 					xtxt_subtota_total = itemList.des_tipo_consumo.toUpperCase() === 'DELIVERY' ? '-'  :  'S/. ' + xMoneda(xArmarSubtotalesFromTotal(itemList));
 					_eparent.find(".importe").text(xtxt_subtota_total);
 					_eparent.attr('data-hora',itemList.hora);
@@ -3060,9 +3064,11 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					// buscamos si este numpedioo ya esta pintado, si ya esta pintado lo removemos para actualizarlo, para que no se duplique vista de pedido					
 					$(".xMiCardPedido .tipo").each(function(index,element){
 						if (element.textContent.toLowerCase() !== 'mesa' ) {
-							if (element.parentElement.dataset.numpedido === itemList.numpedido) {
+							const _elementDivMiCardPedido = element.parentElement.parentElement; 
+							const _numPedidoMiCardPedido = _elementDivMiCardPedido.dataset.numpedido; // $(element).parents('.xMiCardPedido')[0].dataset.numpedido;
+							if (_numPedidoMiCardPedido === itemList.numpedido) {
 
-								$(".grid").isotope('remove',$(element.parentElement)).isotope('layout');
+								$(".grid").isotope('remove',$(_elementDivMiCardPedido)).isotope('layout');
 							}
 							// element.parentElement.remove();
 						}

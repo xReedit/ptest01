@@ -239,7 +239,7 @@ function xOpenPage(xop, parametro){
 		case 9:	
 			document.location.href='m_control_pedidos.html';
 			// del componente categoria
-			localStorage.removeItem('::app3_comp_cat');
+			clearStorageVariablesComp();
 			xLiberarRouter();
 			return;break;
 		case 10:xruta='/detalle_pedido';break;
@@ -332,6 +332,13 @@ function xOpenPage(xop, parametro){
 	xScrolUp(0);
 	//PanelDe.closeDrawer();
 }
+
+// se libera para tomar la ultima actulizacion
+function clearStorageVariablesComp() {
+	localStorage.removeItem('::app3_comp_cat'); // categorias
+	localStorage.removeItem('::::app3_comp_tpp_all'); // tipos de pago
+}
+
 function xBtn_Regresar(){
 	parent.history.back();
 	xScrolUp(0);

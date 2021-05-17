@@ -102,7 +102,7 @@
 					<!-- <paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
 						class="btnAdd2"></paper-fab>
 					<br> -->
-					<x-comp-table-forma-pago id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="{{pedidoPagadoFromAPP}}"></x-comp-table-forma-pago>
+					<x-comp-table-forma-pago id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="[[pedidoPagadoFromAPP]]"></x-comp-table-forma-pago>
 					<br>
 
 					<!-- <table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
@@ -497,6 +497,7 @@
 		var xdif_text='', xPase=0;
 		xCompTableFP=document.getElementById('comp-table-fp');
 		xCompTableFP.addEventListener('xCompTableChange', function (e) {
+			// console.log('valor table pago ', e.detail);
 			const evento = e.detail.evento;
 			xtipoP = e.detail.datos;
 			
@@ -703,7 +704,7 @@
 	function xSelectedTpComprobante(event) {
 		// var idTipoComprobante = parseInt(valor);	
 		const _selObj = event ? event : objSelComprobante.getValorSelecionado();
-		console.log('comprobante sel ', _selObj);
+		// console.log('comprobante sel ', _selObj);
 
 		xThisPago.ComprobanteRequiereCliente = parseInt(_selObj.requiere_cliente) === 0 ? false : true; //requiere
 		
@@ -1136,7 +1137,7 @@
 			xThisPago.$.sel_cliente.focus();
 			$("#form_pago_cliente #sel_cliente").focus();
 		}, 500);
-		console.log('focus');
+		// console.log('focus');
 	}
 
 	function _reloadDatalientes() {
@@ -1247,7 +1248,9 @@
 		setIsPedidoPagadoFromAPP: function (val = false) {
 			// Si el epdido ya fue pagado con tarjeta desde papaya express
 			this.pedidoPagadoFromAPP = val;
-			xCompTableFP.setRsetList()
+			xCompTableFP.setRsetList();
+
+			console.log('set this.pedidoPagadoFromAPP', this.pedidoPagadoFromAPP);
 		},
 		setVal: function (val) {
 			// xThisPago.total = val;
@@ -1318,7 +1321,7 @@
 				xThisPago.$.sel_cliente.focus;
 				$("#form_pago_cliente #sel_cliente").focus();
 			}, 500);
-			console.log('focus');
+			// console.log('focus');
 		},
 		setModoSoloComprobante: function () {
 			// solo para ingresar datos del cliente e imprimir comprabantes

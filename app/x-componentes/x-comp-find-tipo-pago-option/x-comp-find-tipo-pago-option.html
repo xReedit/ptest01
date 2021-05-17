@@ -4,17 +4,18 @@
 	<template is="dom-bind">
 		<div style="display: flex">
 			<div class="content_div_op_pago" id="_content_div_op_pago" style="display: flex" disabled$="{{deshabilitado}}">
-				<template is="dom-repeat" items="{{list}}" as="categoria">
+				<template is="dom-repeat" items="{{listOptionPago}}" as="categoria">
 					<div class="xMiBoton_icon_option"
 						data-id="{{categoria.idtipo_pago}}" 
 						data-index="{{index}}" 	
 						data-reqcliente="{{categoria.requiere_cliente}}"
 						data-limite="{{categoria.limite}}"
+						data-descripcion="{{categoria.descripcion}}"
 						selected$="{{categoria.seleccionado}}"
 						hidden$ = "{{categoria.hidden}}"
 						onclick="selectOption(this)">
 						<img src="{{categoria.logo}}">
-						<p>[[categoria.descripcion]]</p>
+						<p>{{categoria.descripcion}}</p>
 					</div>					
 				</template>
 			</div>
@@ -28,18 +29,85 @@
 
 	</template>
 	<script>
-		var xThisComTipoPagoOption;
+		var xThisComTipoPagoOption, _ispagoappop = false;
 
 		function getAllTipoPagoOption() {
-			const op = xThisComTipoPagoOption.ispagoapp ? 601 : 6;
+			// const op = xThisComTipoPagoOption.ispagoappop ? 601 : 6;
+			xThisComTipoPagoOption.listOptionPago = [];
+
+			// _ispagoappop = isPedidoPagadoFromApp || false;
+			_ispagoappop = xThisComTipoPagoOption.ispagoappop || false;
+
+			var getListTppAll = localStorage.getItem('::app3_comp_tpp_all');
+            getListTppAll = getListTppAll ? JSON.parse(getListTppAll) : null;
+			
+			if ( getListTppAll ) {
+				cocinanarDataTppALL(getListTppAll);
+				return;
+			}
+			
+			// url: '../../bdphp/log_componentes.php?op='+op
 			$.ajax({
 					type: 'GET',
-					url: '../../bdphp/log_componentes.php?op='+op
+					url: '../../bdphp/log_componentes.php?op=602'
 				})
 				.done(function (dtValues) {
-					dtValues = $.parseJSON(dtValues);
-					let yaEncontroPrimero=false, index_primero=0;
-					xThisComTipoPagoOption.list = dtValues.datos.map((x, index) => {
+					dtValues = JSON.parse(dtValues);
+					// console.log('dtValues pagos', dtValues);
+
+					dtValues = dtValues.datos;
+					localStorage.setItem('::app3_comp_tpp_all', JSON.stringify(dtValues));
+					cocinanarDataTppALL(dtValues);
+
+					// let yaEncontroPrimero=false, index_primero=0;
+					// xThisComTipoPagoOption.listOptionPago = dtValues.datos.map((x, index) => {
+					// 	// x.clase = 'xMiBoton_icon_option';						
+					// 	x.logo='../../images/'+x.img;
+					// 	x.descripcion = xMayusculaPrimera(x.descripcion.toLowerCase());
+					// 	x.hidden = xThisComTipoPagoOption.novisibles.indexOf(x.idtipo_pago) > -1 ? true : false;
+					// 	// xThisComTipoPagoOption.hiddenIconBorrar = true;
+					// 	if (!x.hidden && !yaEncontroPrimero) {
+					// 		yaEncontroPrimero=true;
+					// 		x.seleccionado = true;
+					// 		index_primero = index;							
+							
+					// 		// xThisComTipoPagoOption.hiddenIconBorrar = index === 0 ? true : false;
+					// 	} else {x.seleccionado = false;}
+					// 	return x;
+					// });
+
+					// xThisComTipoPagoOption.list_tipo_pago = xThisComTipoPagoOption.list[index_primero];
+					// xThisComTipoPagoOption.list_tipo_pago.index = index_primero;
+					
+					// xThisComTipoPagoOption.idselect = xThisComTipoPagoOption.list_tipo_pago.idtipo_pago;
+					// xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.list_tipo_pago.requiere_cliente;
+					// xThisComTipoPagoOption.limite = xThisComTipoPagoOption.list_tipo_pago.limite;
+					
+					// xThisComTipoPagoOption.valIdInt = xThisComTipoPagoOption.list_tipo_pago;
+					// xThisComTipoPagoOption.getValorIncial(xThisComTipoPagoOption.list_tipo_pago);
+				});
+		}
+
+		function cocinanarDataTppALL(_dtValues) {
+			let yaEncontroPrimero=false, index_primero=0, _listOption;
+
+			xThisComTipoPagoOption.listOptionPago = [];
+
+			// const op = _ispagoappop ? 601 : 6;
+			// _ispagoappop = isPedidoPagadoFromApp || false;
+			
+			_ispagoappop = xThisComTipoPagoOption.ispagoappop || false;
+			// console.log('=== _ispagoappop ', _ispagoappop);
+			let dtValues = _dtValues.filter(x => {
+				if (_ispagoappop) {
+					return x.idtipo_pago.toString() === '4' ;
+				} else {
+					return x.idtipo_pago.toString() !== '4' ;
+				}
+			});
+			
+			
+			_listOption = dtValues.map((x, index) => {
 						// x.clase = 'xMiBoton_icon_option';						
 						x.logo='../../images/'+x.img;
 						x.descripcion = xMayusculaPrimera(x.descripcion.toLowerCase());
@@ -55,16 +123,18 @@
 						return x;
 					});
 
-					xThisComTipoPagoOption.list_tipo_pago = xThisComTipoPagoOption.list[index_primero];
-					xThisComTipoPagoOption.list_tipo_pago.index = index_primero;
-					
-					xThisComTipoPagoOption.idselect = xThisComTipoPagoOption.list_tipo_pago.idtipo_pago;
-					xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.list_tipo_pago.requiere_cliente;
-					xThisComTipoPagoOption.limite = xThisComTipoPagoOption.list_tipo_pago.limite;
-					
-					xThisComTipoPagoOption.valIdInt = xThisComTipoPagoOption.list_tipo_pago;
-					xThisComTipoPagoOption.getValorIncial(xThisComTipoPagoOption.list_tipo_pago);
-				});
+			xThisComTipoPagoOption.listOptionPago = JSON.parse(JSON.stringify(_listOption));
+
+			// console.log('xThisComTipoPagoOption.listOptionPago', xThisComTipoPagoOption.listOptionPago);
+			xThisComTipoPagoOption.list_tipo_pago = xThisComTipoPagoOption.listOptionPago[index_primero];
+			xThisComTipoPagoOption.list_tipo_pago.index = index_primero;
+			
+			xThisComTipoPagoOption.idselect = xThisComTipoPagoOption.list_tipo_pago.idtipo_pago;
+			xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.list_tipo_pago.requiere_cliente;
+			xThisComTipoPagoOption.limite = xThisComTipoPagoOption.list_tipo_pago.limite;
+			
+			xThisComTipoPagoOption.valIdInt = xThisComTipoPagoOption.list_tipo_pago;
+			xThisComTipoPagoOption.getValorIncial(xThisComTipoPagoOption.list_tipo_pago);
 		}
 
 		// function selectOptionTipoPagoOption() {
@@ -77,8 +147,8 @@
 			const index=obj.dataIndex;	
 			const idSelect = obj.dataId;
 			xThisComTipoPagoOption.idselect = idSelect;
-			xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.list[index].requiere_cliente;
-			xThisComTipoPagoOption.limite = xThisComTipoPagoOption.list[index].limite;
+			xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.listOptionPago[index].requiere_cliente;
+			xThisComTipoPagoOption.limite = xThisComTipoPagoOption.listOptionPago[index].limite;
 			
 
 			$(obj).parent().find('.xMiBoton_icon_option').each((i,e) => {								
@@ -89,11 +159,12 @@
 		}
 
 		function xSelectViewOption(_index) {
-			xThisComTipoPagoOption.list.map(x => {x.seleccionado=''; return x;});
-			xThisComTipoPagoOption.list[_index].seleccionado=true;
-			xThisComTipoPagoOption.list_tipo_pago = xThisComTipoPagoOption.list[_index];
+			xThisComTipoPagoOption.listOptionPago.map(x => {x.seleccionado=''; return x;});
+			xThisComTipoPagoOption.listOptionPago[_index].seleccionado=true;
+			xThisComTipoPagoOption.list_tipo_pago = xThisComTipoPagoOption.listOptionPago[_index];
 
 			// xThisComTipoPagoOption.fire('onchange', xThisComTipoPagoOption.list_tipo_pago);			
+			xThisComTipoPagoOption.getValorIncial(xThisComTipoPagoOption.list_tipo_pago);
 		}
 
 		Polymer({
@@ -101,23 +172,28 @@
 			properties: {
 				// idTipoIngreso: {type : Number, notify: true, reflectToAttribute: true},
 				novisibles: {type: String, value:''},
-				ispagoapp: {type: Boolean, value:false, reflectToAttribute: true, notify: true},
+				ispagoappop: Boolean,
 				deshabilitado: {type: Boolean, value:false},
 				hiddenIconBorrar: {type: Boolean, value:true},
 				idselect: {type: Number, value:1},
 				reqcliente: {type: Number, value:0},				
 				limite: {type: Number, value:1},
-				list: [],
-				list_tipo_pago: {
+				listOptionPago: {
 					type: Object,
-					// value : {},
 					reflectToAttribute: true,
-					notify: true,
-					value: function () {
-						return {};
-					},
-					observer: 'tipoPagoNameChanged'
+					notify: true
 				},
+				// list_tipo_pago: {
+				// 	type: Object,
+				// 	// value : {},
+				// 	reflectToAttribute: true,
+				// 	notify: true,
+				// 	value: function () {
+				// 		return {};
+				// 	},
+				// 	observer: 'tipoPagoNameChanged'
+				// },
+				list_tipo_pago: [],
 				valIdInt: {
 					type: Object,
 					notify: true,
@@ -136,10 +212,11 @@
 				return categoria;
 			},
 			getTipoPagoOption() {
-				return this.list.filter(x => x.seleccionado)[0];
+				return this.listOptionPago.filter(x => x.seleccionado)[0];
 			},
 			attached: function () {
 				xThisComTipoPagoOption = this;
+				xThisComTipoPagoOption.listOptionPago = [];
 				getAllTipoPagoOption();
 			},
 			getValorIncial: function (val) {
@@ -149,11 +226,15 @@
 			},
 			setResetFirstOption: ()=> {
 				const index=0;
-				xThisComTipoPagoOption.list.map(x => {x.seleccionado=''});
-				xThisComTipoPagoOption.list[index].seleccionado=true;
+				if ( !xThisComTipoPagoOption.listOptionPago || xThisComTipoPagoOption.listOptionPago.length === 0) {return; }
+				xThisComTipoPagoOption.listOptionPago.map(x => {x.seleccionado=''});
+				xThisComTipoPagoOption.listOptionPago[index].seleccionado=true;
 				$('#_content_div_op_pago div.xMiBoton_icon_option').each((i,e) => {
 					e.dataIndex === index ? $(e).attr('selected', true) : $(e).removeAttr('selected');
 				});
+			},
+			detached: function () {
+				xThisComTipoPagoOption.listOptionPago = [];
 			}
 		})
 	</script>

@@ -32,7 +32,7 @@ function listenSocketP() {
 
     // restore si hay
     this.socketCP.listen('nuevoPedido').subscribe(res => {
-        // console.log('nuevoPedido msocket', res);
+        console.log('nuevoPedido msocket', res);
         try {                
             _cpSocketPintarPedido(res);
         } catch (error) {}            
@@ -95,11 +95,12 @@ function listenSocketP() {
 
 
     // NOTIFICAR QUE SE IMPRIMIO comanda del pedido para poner el flag
+    // 170521 quitamos esta accion - no es necesario
     this.socketCP.listen('notifica-impresion-comanda').subscribe(pedido => {
-        // console.log('notifica-impresion-comanda', pedido);
-        try {
-            _cpSocketPintarFlagPedidoImpreso(pedido);
-        } catch (error) {}
+        console.log('notifica-impresion-comanda', pedido);
+        // try {
+        //     _cpSocketPintarFlagPedidoImpreso(pedido);
+        // } catch (error) {}
     });
 
 
