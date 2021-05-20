@@ -2907,6 +2907,10 @@ function xPintarEstadoPedido(_objPedido = 0) {
 	, xidtipo_c='tpc1';				
 
 	// console.log('vuelve a pintar bd');
+	if (typeof _objPedido === 'object') {
+		_objPedido.lastIdPedido = lastIdPedidoCobrado
+	} 
+
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
 		.done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
