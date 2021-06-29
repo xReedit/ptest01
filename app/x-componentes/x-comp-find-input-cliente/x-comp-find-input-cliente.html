@@ -6,7 +6,8 @@
 		<paper-input-autocomplete 
 			id="input_clie_nombres_auto" 
 			label="{{label}}" value="{{inputValue}}"
-			search-property="nombres"	
+			search-property="nombres"
+			onkeyup="searchClienteInput(this)"	
 			on-autocomplete-selected="xchangeCliente"
 			autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete>
 	</template>
@@ -27,8 +28,9 @@
 			getAllClientes();
 		}
 
-		function getAllClientes() {
-			$.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=701'})
+		function getAllClientes(val_input = '') {		
+			if (val_input.length < 3  ) { return; }	
+			$.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=70101', data: {val: val_input}})
 			.done( function (DtProv) {
 				var xDtProv=JSON.parse(DtProv);
 				xThisComInputCliente.list_cliente=xDtProv.datos;
@@ -52,6 +54,14 @@
 				// _autocompleteComp.source = JSON.parse(JSON.stringify(xDtProv.datos));
 				// _autocompleteComp.remoteSource = true;
 			});
+		}
+
+		function searchClienteInput() {
+			const valInput = event.target.value;
+			console.log('valInput', valInput);
+
+			if (valInput.length < 3  ) { return; }
+			getAllClientes(valInput);
 		}
 
 		Polymer({
@@ -94,6 +104,7 @@
 			},
 			xchangeCliente: ()=> {
 				const cliente = event.target.value;
+				console.log('aaaaaaaaaaaaaaa');
 				event.target.fire('input-autocomplete-selected', cliente);
 			}
 			// getValorIncial: function (val) {

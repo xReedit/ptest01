@@ -204,7 +204,17 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         console.log(JSON.stringify(jsonData));
 
-        hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);        
+        // no esperar respuesta para agilizar 0621
+        // hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);        
+
+        xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
+
+        hash.ok = true;
+        hash.qr = '';
+        hash.hash = "www.papaya.com.pe";
+        hash.external_id = '';
+
+
     })
     
     return hash;
@@ -295,6 +305,12 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     //xPopupLoad.xopen();
     xm_all_xToastOpen("Conectando con Sunat...");
 
+    setTimeout(() => {        
+        xm_all_xToastClose();
+    }, 500);
+    
+
+
     await fetch(_url, {
         method: 'POST',
         headers: _headers,
@@ -356,9 +372,9 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         console.log(correlativo_error);
     });
     
-    setTimeout(() => {        
-        xm_all_xToastClose();
-    }, 500);
+    // setTimeout(() => {        
+    //     xm_all_xToastClose();
+    // }, 500);
     
     return rpt;
 }

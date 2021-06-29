@@ -182,12 +182,13 @@ async function xSoapSunat_ConsultarTicketResumen(ticket) {
 
 // esto se utiliza al cierre de caja
 // envia al servicio de la api los documentos documentos que no se enviaron por error de conexion u otro
-async function xSoapSunat_EnviarDocumentApi(json_xml, idce) {    
+async function xSoapSunat_EnviarDocumentApi(json_xml, idce, numDoc = '#') {    
     const _url = URL_COMPROBANTE + '/documents';
     let _headers = HEADERS_COMPROBANTE;
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
     let rpt = {};
+    json_xml.numero_documento = numDoc;
     const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
     json_xml = JSON.stringify(json_xml);
 

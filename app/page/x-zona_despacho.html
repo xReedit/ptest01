@@ -526,16 +526,22 @@ function xVerDetallePD(obj){
 
 			if(xarr_pedido[e]===null){continue;}
 			$.map(xarr_pedido[e], function(tp_c, z) {
-				//TIPO CONSUMO
-				xcadena_tp_c='<div id="ref_pedido" class="referencia xFondoRowIndigo">'+
-						'<p>'+xarr_pedido[e].des_tipo_consumo+'<br><span class="xBold">'+xarr_pedido[e].referencia+'</span></p>'+
-					'</div>'+
-				'<div id="body_pedido">'+
-				'<table width="100%" class="xtabla_pedido_despacho">';
+				
+				const _referenciaPedido = xarr_pedido[e].referencia;
 
 				if (typeof tp_c==="object"){
+					
+
 					//BODY
 					$.map(tp_c, function(n_seccion, z) {
+
+						//TIPO CONSUMO
+						xcadena_tp_c='<div id="ref_pedido" class="referencia xFondoRowIndigo">'+
+								'<p>'+tp_c.des_tipo_consumo+'<br><span class="xBold">'+_referenciaPedido+'</span></p>'+
+							'</div>'+
+						'<div id="body_pedido">'+
+						'<table width="100%" class="xtabla_pedido_despacho">';
+
 						if (typeof n_seccion==="object"){
 							//items
 							$.map(n_seccion, function(items, z) {
@@ -549,10 +555,13 @@ function xVerDetallePD(obj){
 							xcadena_item='';
 						}
 					})
-					xcadena_secc=String(xcadena_tp_c+xcadena_secc);
-					//tipo_consumo_secciones_items
-					xcadena_pedido=String(xcadena_pedido+xcadena_secc+'</table>');
-					xcadena_secc='';
+
+					if (xcadena_secc !== '' ) {
+						xcadena_secc=String(xcadena_tp_c+xcadena_secc);
+						//tipo_consumo_secciones_items
+						xcadena_pedido=String(xcadena_pedido+xcadena_secc+'</table>');
+						xcadena_secc='';
+					}
 				}
 			});
 			//botones pie
@@ -698,16 +707,24 @@ function xActualizarPedidosZona(){
 
 			if(xarr_pedido[e]===null){continue;}
 			$.map(xarr_pedido[e], function(tp_c, z) {
-				//TIPO CONSUMO
-				xcadena_tp_c='<div id="ref_pedido" class="referencia xFondoRowIndigo">'+
-						'<p>'+xarr_pedido[e].des_tipo_consumo+'<br><span class="xBold">'+xarr_pedido[e].referencia+'</span></p>'+
-					'</div>'+
-				'<div id="body_pedido">'+
-				'<table width="100%" class="xtabla_pedido_despacho">';
-
+				
+				const _referenciaPedido = xarr_pedido[e].referencia;
+				
 				if (typeof tp_c==="object"){
+
+					
+						
 					//BODY
 					$.map(tp_c, function(n_seccion, z) {
+
+						//TIPO CONSUMO
+						xcadena_tp_c='<div id="ref_pedido" class="referencia xFondoRowIndigo">'+
+								'<p>'+tp_c.des_tipo_consumo+'<br><span class="xBold">'+_referenciaPedido+'</span></p>'+
+							'</div>'+
+						'<div id="body_pedido">'+
+						'<table width="100%" class="xtabla_pedido_despacho">';
+
+
 						if (typeof n_seccion==="object"){
 							//items
 							$.map(n_seccion, function(items, z) {
@@ -720,11 +737,14 @@ function xActualizarPedidosZona(){
 							xcadena_secc=String(xcadena_secc+'<tr><td class="xSinBorde xBold des_seccion" data-id="'+n_seccion.idseccion+'">'+n_seccion.des_seccion+'</td></tr>'+xcadena_item);
 							xcadena_item='';
 						}
-					})
-					xcadena_secc=String(xcadena_tp_c+xcadena_secc);
-					//tipo_consumo_secciones_items
-					xcadena_pedido=String(xcadena_pedido+xcadena_secc+'</table>');
-					xcadena_secc='';
+					});
+
+					if (xcadena_secc !== '' ) {
+						xcadena_secc=String(xcadena_tp_c+xcadena_secc);
+						//tipo_consumo_secciones_items
+						xcadena_pedido=String(xcadena_pedido+xcadena_secc+'</table>');
+						xcadena_secc='';
+					}
 				}
 			});
 
