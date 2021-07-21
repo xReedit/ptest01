@@ -88,9 +88,25 @@
 								<paper-textarea autofocus label="Direccion" max-rows="2" id="clie_direccion"
 									onChange="conMayusculas(this)" class="xPasarEnter2 clie_direccion"></paper-textarea>
 
-								<paper-textarea autofocus label="Telefono whatsapp" max-rows="1" id="clie_telefono"
-									onChange="conMayusculas(this)"
-									class="xPasarEnter2"></paper-textarea>
+								<div>
+									<paper-textarea autofocus label="Telefono WhatsApp" max-rows="1" id="clie_telefono"
+										onChange="conMayusculas(this)"
+										class="xPasarEnter2"></paper-textarea>
+									<!-- <div class="bg-warning">
+										No Imprimir
+									</div> -->
+								</div>
+								<div class="d-flexx align-items-center justify-content-between">
+									<p style="line-height: 18px;">Se enviara el comprobante al <br> WhatsApp de este número.</p>
+									<div>
+										<div hidden="[[!isBtnPrinterCpe]]" class="btn btn-sm border btn-print-cpe" style="background: lightgray" id="btn-print-no" onclick="xSetisPrinterCpe(true)"> <i class="fa fa-check fs-15 text-success fs-600 mr-1"></i>Imprimir Comprobante</div>
+										<div hidden$="[[isBtnPrinterCpe]]" class="btn btn-sm btn-warning border btn-print-cpe" id="btn-print-si" onclick="xSetisPrinterCpe(false)"> <i class="fa fa-close fs-15 text-danger fs-600 mr-1"></i>Imprimir Comprobante</div>
+									</div>
+								</div>
+
+								<!-- <input type="text" placeholder="Telefono WhatsApp" id="clie_telefono" onChange="conMayusculas(this)" class="xPasarEnter2 xTextRow2 fs-20 w-100 mr-1" espaciar> -->
+								
+
 							</div>
 						</form>
 					</div>
@@ -196,10 +212,18 @@
 	</template>
 
 	<style type="text/css">
+		
+		/* .btn-print-cpe {
+			float: right;
+			margin-top: -48px;
+			margin-right: 2px;
+		} */
+
 		.xEnca_pago {
-			background: #1a237e;
+			background: #23369e;
 			text-align: center;
 			padding: 10px;
+			border-radius: 5px 5px 0px 0px;
 		}
 
 		.xEnca_pago .ptotal {
@@ -249,9 +273,10 @@
 				font-size: 13px;
 			}
 
-			;
+			
 		}
 
+		
 		@media screen and (max-width:720px) {
 			.ancho_ini {
 				width: 100%;
@@ -294,6 +319,9 @@
 
 		xEnterTxtImporte = 0;
 
+		// si se imprime comprobante
+		xGetIsPrinterCpe();
+
 		_inputAutocomplete = document.getElementById('clie_nombres');
 		_inputAutocompleteObj = _inputAutocomplete.$.input_clie_nombres_auto;
 		_inputAutocomplete.addEventListener('input-autocomplete-selected', (event) => {
@@ -305,6 +333,7 @@
 			xIdCliente_pago = cliente.idcliente;
 			$("#sel_cliente").val(cliente.ruc);
 			$("#clie_direccion").val(cliente.direccion);
+			$("#clie_telefono").val(cliente.telefono);		
 			EmitirValidacionFormCliente();
 		});
 
@@ -560,6 +589,8 @@
 			// $("#clie_nombres").val('');
 			_inputAutocompleteObj.inputValue = '';
 			$("#clie_direccion").val('');
+			$("#clie_telefono").val('');
+			
 			xIdCliente_pago = '';
 			EmitirValidacionFormCliente();
 			return;
@@ -585,6 +616,8 @@
 			// $("#clie_nombres").val('');
 			_inputAutocompleteObj.inputValue = '';
 			$("#clie_direccion").val('');
+			$("#clie_telefono").val('');
+			
 			xIdCliente_pago = '';
 			return;
 		}
@@ -612,6 +645,8 @@
 				// $("#clie_nombres").val('');
 				_inputAutocompleteObj.inputValue = '';
 				$("#clie_direccion").val('');
+				$("#clie_telefono").val('');
+				
 				// $("#datos_cliente").addClass("xInvisible");
 				xThisPago.hidden_container_cliente = true;
 
@@ -652,6 +687,10 @@
 				// $("#clie_nombres").val(rpt.nombres);
 				_inputAutocompleteObj.inputValue = rpt.nombres;
 				$("#clie_direccion").val(rpt.direccion);
+				$("#clie_telefono").val(rpt.telefono);
+
+				xThisPago.changeDatosClienteSave = rpt;
+				
 
 				$("#progress_cliente").addClass("xInvisible");
 				EmitirValidacionFormCliente();
@@ -717,6 +756,8 @@
 		
 		_inputAutocompleteObj.inputValue = '';
 		$("#clie_direccion").val('');
+		$("#clie_telefono").val('');
+		
 
 				
 		xThisPago.tipoComprovanteSelecionado = _selObj;		
@@ -970,8 +1011,17 @@
 			'idcliente': xIdCliente_pago,
 			'num_doc': $("#sel_cliente").val(),
 			'nombres': _inputAutocompleteObj.inputValue, //$("#clie_nombres").val(),
-			'direccion': $("#clie_direccion").val()
+			'direccion': $("#clie_direccion").val(),
+			'telefono': $("#clie_telefono").val(),
 		}
+
+		const _clienteRptBD = xThisPago.changeDatosClienteSave;
+		let is_update_cliente = true;
+		if ( _clienteRptBD ) {
+			is_update_cliente = _clienteRptBD?.direccion !== xThisPago.clienteModel.direccion;
+			is_update_cliente = _clienteRptBD.telefono !== xThisPago.clienteModel.telefono;
+		} 
+		
 
 		// if ( xThisPago.clienteModel.nombres === '' ) {
 		// 	xThisPago.clienteModel.idcliente = $("#sel_cliente").val();
@@ -996,7 +1046,9 @@
 			'nota_compra': nom_nota,
 			'nomcliente': nom_nota,
 			'xtipo_pagos': xtipoP,
-			'paseEnterTxt': xEnterTxtImporte
+			'paseEnterTxt': xEnterTxtImporte,
+			'is_printer_cpe': xThisPago.isBtnPrinterCpe,
+			'is_update_cliente': is_update_cliente
 		});
 
 		if (xPase == 0) {
@@ -1144,6 +1196,18 @@
 		_inputAutocomplete.reloadllClientes();
 	}
 
+	function xGetIsPrinterCpe() {
+		let _isPrinterCpeVal = parseInt(localStorage.getItem('::app3_sys_print_cpe'));
+		_isPrinterCpeVal = isNaN(_isPrinterCpeVal) ? 1 : _isPrinterCpeVal;
+		xThisPago.isBtnPrinterCpe = _isPrinterCpeVal === 1;
+	}
+
+	function xSetisPrinterCpe(val) {
+		const _val = !val ? 1 : 0;
+		localStorage.setItem('::app3_sys_print_cpe', _val);
+		xThisPago.isBtnPrinterCpe = !val;
+	}
+
 	// function _selectCliente(event) {
 	// 	console.log('cliente selected', event.cliente);
 	// }
@@ -1230,13 +1294,17 @@
 			dt_tp_comprobante: Object,
 			clienteModel: Object,
 			dataClientes: Object,
-			isShowSearchSunat: Boolean
+			isShowSearchSunat: Boolean,
+			isBtnPrinterCpe: Boolean,
+			changeDatosClienteSave: Object
 		},
 		attached: function () {
 			//this.total='83.00';
 			this.modoSoloComprobante = false;
 			this.diferencia = '--'
 			this.isShowSearchSunat = false;
+			this.isBtnPrinterCpe = false;
+			this.changeDatosClienteSave = null;
 			//this.placeholder_clie='Cliente | Publico en General';		
 			xThisPago = this;
 			xIiniPago();
@@ -1250,7 +1318,7 @@
 			this.pedidoPagadoFromAPP = val;
 			xCompTableFP.setRsetList();
 
-			console.log('set this.pedidoPagadoFromAPP', this.pedidoPagadoFromAPP);
+			// console.log('set this.pedidoPagadoFromAPP', this.pedidoPagadoFromAPP);
 		},
 		setVal: function (val) {
 			// xThisPago.total = val;
@@ -1276,6 +1344,8 @@
 			// $("#clie_nombres").val('');
 			_inputAutocompleteObj.inputValue = '';
 			$("#clie_direccion").val('');
+			$("#clie_telefono").val('');
+			
 			xIdCliente_pago = '';
 
 			xThisPago.$.sel_cliente.value = '';

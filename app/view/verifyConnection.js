@@ -24,7 +24,7 @@ window.addEventListener("focus", function (event) {
 
 	setTimeout(() => {
 		updateConnectionStatusFocus();
-	}, 3000);
+	}, 10000);
 });
 
 $(window).blur(function () {

@@ -1,6 +1,9 @@
+/// _socketSuperMaster se declara en xm_all.js
+
 class socketService {
     dataSocket = {};
-    _socket;
+    _socket = _socketSuperMaster;
+    _idConexSocket;
 
     isSocketConnectSource = new rxjs.BehaviorSubject(false);
     isSocketConnect$ = this.isSocketConnectSource.asObservable();
@@ -10,6 +13,11 @@ class socketService {
     }
 
     connectSocket(){
+        
+        // verificar si hay una conexion activa con estos datos dataSocket
+        this._idConexSocket = localStorage.getItem('app3_us_skt') || '';
+        
+        
         this.getDataClient();
         
         if ( this._socket && this._socket.connected)  {
@@ -29,11 +37,13 @@ class socketService {
         this.listenStatus();
 
         console.log('socket master connect'); 
+        _socketSuperMaster = this._socket;        
     }
 
     disconnectSocket() {
         this._socket.disconnect();
         console.log('socket master disconnect'); 
+        _socketSuperMaster = null;
     }
 
     getDataClient() {
@@ -42,6 +52,7 @@ class socketService {
             idorg: dtUs.ido,
             idsede: dtUs.idsede,
             idusuario: dtUs.idus,
+            // socketid: this._idConexSocket,
             isFromApp: 0
         }
     }
@@ -71,6 +82,7 @@ class socketService {
         this._socket.on('connect', () => {
             console.log('socket connect');
           this.statusConexSocket(true, 'connect');
+          localStorage.setItem('app3_us_skt', _socketSuperMaster.id);
         });
 
         this._socket.on('connect_failed', (res) => {

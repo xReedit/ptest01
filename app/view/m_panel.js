@@ -116,6 +116,8 @@ function xIniDocument(){
  		/*debugger
  		xIdAccDirecto=getUrlParameter('dir','?');
 		 if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */
+
+		 localStorage.setItem('::app3_sys_last_s', btoa(xm_log_get('datos_org_sede')[0].idsede));
  	});
 
  	//xRefreshNotificaciones=setInterval(function () {xNotificaciones()},10000);
@@ -179,35 +181,9 @@ function xOpenPage(xop, parametro){
 	}
 
 	setLocalSotrage('::app3_sys_route', 1);
-
-	// var _route_count = getLocalStorage('::app3_sys_route') || 0;
-	// setLocalSotrage('::app3_sys_route', 1);
-	// if (parseInt(_route_count) === 1) {
-	// 	if (xparam_time_ruter) return;
-	// 	xparam_time_ruter = true;
-	// 	setLocalSotrage('::app3_sys_route', _route_count);
-	// 	setTimeout(() => {			
-	// 		setLocalSotrage('::app3_sys_route', 0);
-	// 		xparam_time_ruter = false;
-	// 	}, 4000);
-	// 	setLocalSotrage('::app3_sys_route', 0);s
-	// 	return;
-	// }
-	// if (parseInt(_route_count) > 1) return;
-
-	// _route_count = 1;
 	
 	aapasa++;
-	// xparam_router = parseInt(getLocalStorage('::app3_sys_route')) || 0;
-	// if (xparam_router === xop) return;
-	// xparam_router = xop;
-	// setLocalSotrage('::app3_sys_route', xparam_router);
-	// const _route_count = getLocalStorage('::app3_sys_route') || xop;	
-	// if (parseInt(_route_count) === parseInt(xop)) {
-	//  	// removeLocalStorage('::app3_sys_route');
-	// 	return;
-	// }
-	// setLocalSotrage('::app3_sys_route', _route_count);
+
 	console.log('paso el router ', aapasa);
 	xop = parseInt(xop);
 	if(parametro==null){parametro='';}
@@ -323,6 +299,7 @@ function xOpenPage(xop, parametro){
 		break;
 		case 45: xruta = '/orden_pedido'; break;
 		case 46: xruta = '/indicadores2'; break;
+		case 47: xruta = '/facturacion'; break;	
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);
@@ -494,6 +471,10 @@ function xNewUs() {
 
 function xPasarAMenuAcc() {
 	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{xOpenPage(1);}
+}
+
+function showNotificationPago() {
+	xOpenPage(47);
 }
 
 // function pruebaFecht() {

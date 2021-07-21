@@ -38,7 +38,7 @@
 			<div class="xLinea2"></div><br>
 			<div class="xMiBoton_icon xInvisible" id="btn_op21" data-id='E' data-op="7"><img src="../../images/_config.png"><p>Datos del sistema</p></div>
 			<div class="xMiBoton_icon xInvisible" id="btn_op22" data-id='F' data-op="6"><img src="../../images/_usuario.png"><p>Usuarios</p></div>
-		</div-->
+		</div-->		
 	</template>
 </dom-module>
 <!-- <script type="text/javascript" src="../view/verifyConnection.js"></script> -->
@@ -153,6 +153,11 @@ function xVerificarAcc(){
 		};
 
 		var xHtmlOpView='';
+
+		// facturacion del servicios		
+		xOpView[xOpView.length - 1][-1] = {op: '<div class=\"xMiBoton_icon\" data-id=\"F1\" data-op=\"47\"><img src=\"../../images/_e_facturacion.png\"><p>Facturación</p></div>'};
+
+
 		for (i in xOpView) {
 			xHtmlOpView=String(xHtmlOpView+'<div><h3>'+xOpView[i].titulo+'</h3><div class="xLinea2"></div><br>')
 
@@ -163,6 +168,7 @@ function xVerificarAcc(){
 			})
 			xHtmlOpView=String(xHtmlOpView+'</div><br>');
 		};
+		
 
 		$("#xBodyOp").html(xHtmlOpView).trigger('create');
 	//})

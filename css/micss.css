@@ -464,7 +464,7 @@ tr.xSinBorde>td{border-bottom:0px;}
 }
 
 .xTextRow{font-size:18px;border:none;border-bottom:solid 2px #42a5f5;width:100px;text-align:center; width: auto;}
-.xTextRow2{border:none;border-bottom:1px solid #616161;display:inline-block;width:100%;text-align:center;background:transparent;outline:none;box-shadow:none;transition:box-shadow 0.28s;}
+.xTextRow2{border:none;border-bottom:1px solid #616161;display:inline-block;width:100%;background:transparent;outline:none;box-shadow:none;transition:box-shadow 0.28s;}
 .xTextRow2.tiz{border:none;border-bottom:solid 2px #42a5f5;width:100px;text-align:left;}
 .xTextRow2:focus{border-bottom:1px solid #2979FF;box-shadow:0 2px 0px 0 rgba(0, 0, 0, 0.14),
 0 1px 0px 0 rgba(0, 0, 0, 0.12),
@@ -1621,6 +1621,14 @@ ul.list_add_item2 li {
     border-radius: 2px;
     cursor: pointer;
     background-color: #ffd740;
+}
+
+.xbell-notifica-pago {    
+    color: white;
+    padding: 1px 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    background-color: #ff4070;
 }
 
 .xbell-count {

@@ -1,6 +1,7 @@
 var xul;
 var xdialog;
 
+
 window.onerror = function (error, url, line) {
 	console.log(error);
 	// controller.sendLog({ acc: 'error', data: 'ERR:' + error + ' URL:' + url + ' L:' + line });
@@ -80,7 +81,7 @@ window.addEventListener('WebComponentsReady', function (e) {
 				.done( function (dt) {
 					if(dt==1){
 						var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
-						window.localStorage.clear();
+						// window.localStorage.clear();
 						// document.location.href='app/page/m_panel.html';
 						// location.href='app/page/m_panel.html';
 						// confirm('eee');

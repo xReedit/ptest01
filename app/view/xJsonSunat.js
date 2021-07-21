@@ -158,8 +158,11 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         hora_actual = rptDate[1];    
 
         const direccionEmisor = xArrayEncabezado[0].sededireccion === '' ? xArrayEncabezado[0].direccion : xArrayEncabezado[0].sededireccion;
+        const nomComercioEmisor = xArrayEncabezado[0].nombre;
+        // console.log('xArrayEncabezado[0]', xArrayEncabezado);
 
         // "numero_documento": xArrayComprobante.correlativo,
+        const telefonoCliente = xArrayCliente?.telefono || '';
 
         var jsonData = {                    
             "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
@@ -187,7 +190,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "ubigeo": "150101",
                 "direccion": xArrayCliente.direccion,
                 "correo_electronico": "",
-                "telefono": ""
+                "telefono": `${telefonoCliente}`
             },
             "descuentos": descuento,
             "totales": totales,
@@ -202,17 +205,17 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         }
 
-        console.log(JSON.stringify(jsonData));
+        // console.log(JSON.stringify(jsonData));
 
-        // no esperar respuesta para agilizar 0621
-        // hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);        
+        hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);        
 
-        xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
+        // xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
 
-        hash.ok = true;
-        hash.qr = '';
-        hash.hash = "www.papaya.com.pe";
-        hash.external_id = '';
+        // hash.ok = true;
+        // hash.qr = '';
+        // hash.hash = "www.papaya.com.pe";
+        // hash.external_id = '';
+        // hash.correlativo_comprobante = xCeroIzqNumberComprobante(res.data.number).split('-')[1] 
 
 
     })
@@ -283,7 +286,8 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
 
 // tipo_documento = 01 > factura se envia de manera individual 
 // idtipo_comprobante_serie => guardar el correlativo
-async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie, guardarError=true) {
+// nomComercio para notificar mensaje whatsapp
+async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie, guardarError=true, nomComercio = '') {
     const dtSede = xm_log_get("datos_org_sede")[0];
     const url_api_fac_sede = dtSede.url_api_fac || '';
     const URL_COMPROBANTE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[0].value : url_api_fac_sede;
@@ -294,6 +298,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     var rpt = {};
     const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
     const nomCliente = json_xml.datos_del_cliente_o_receptor.apellidos_y_nombres_o_razon_social;
+    const telefonoCliente = json_xml.datos_del_cliente_o_receptor.telefono;
     const idclienteComprobante = json_xml.extras.idcliente;
     const totalComprobante = json_xml.totales.total_venta;
     const totalesJson = json_xml.totales;
@@ -318,7 +323,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     }).then(function (response) {
         return response.json();
     }).then(function (res) { 
-        console.log(res);
+        // console.log(res);
         const errSoap = res.response ? res.response.error_soap : false;
         // if (res.success || !errSoap) { // respuesta ok
             rpt.ok = true; 
@@ -341,6 +346,19 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
             
             CpeInterno_Registrar(res);
+
+            // enviar socket url pdf whatsapp
+            if ( telefonoCliente !== '' ) {
+                const _payloadPdf = {
+                    telefono: telefonoCliente,
+                    external_id: rpt.external_id,
+                    numero_comprobante: res.data.number,
+                    comercio: nomComercio
+                };
+                xSendWhatsAppPdfComrpobante(_payloadPdf);
+            }
+
+
 
             
     }).catch(async function (error) { // error de conexion o algo pero imprime
@@ -377,5 +395,11 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     // }, 500);
     
     return rpt;
+}
+
+function xSendWhatsAppPdfComrpobante(payload) {    
+    console.log('external_id', payload);
+    
+    _cpSocketComprobanteWhatApp(payload)
 }
 

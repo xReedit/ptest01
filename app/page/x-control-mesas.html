@@ -844,6 +844,7 @@ function xIniControlMesa(){
 	xValPago.setObjConntet($("#dialog_detalle"));
 	xValPago.addEventListener('xSend', function (e) {
 		xRpt_pago=e.detail.xRpts;
+		console.log('xRpt_pago', xRpt_pago);
 		var p=e.detail.xRpts[0].ok;
 		// if(p==0){
 		// 	// $("#btn_pago").attr('disabled', true);
@@ -1707,7 +1708,8 @@ async function xRegistrarClientePagoCP(){
 	
 
 	// para que registr cliente
-	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	// var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	var xid_cliente_pago = xRpt_pago[0].is_update_cliente ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	
 	var xidpedido_seleccionados='';
 	

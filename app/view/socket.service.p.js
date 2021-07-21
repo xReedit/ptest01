@@ -180,6 +180,15 @@ function _cpSocketSavePedidoStorage(pedido) {
 }
 
 
+function _cpSocketComprobanteWhatApp(payload) {
+    // if (!isSocket) { return; }
+    // localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
+    console.log('restobar-send-comprobante-url-ws', payload);
+    this.socketCP.emit('restobar-send-comprobante-url-ws', payload);
+}
+
+
+
 
 
 // solo para el caso de nuevo pedido en venta rapida o al cerrar panel lateral

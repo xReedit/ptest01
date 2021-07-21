@@ -27,7 +27,7 @@
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script src="../view/xm_all.js"></script>
 
-	<script  type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAknWQFyVH1RpR2OAL0vRTHTapaIpfKSqo&libraries=places"></script>
+	<script defer type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAknWQFyVH1RpR2OAL0vRTHTapaIpfKSqo&libraries=places"></script>
 	
 	<!-- boostrap -->
 	<link rel="stylesheet" href="../../css/mibootstra.css">
@@ -224,6 +224,7 @@
 	<link rel="import" href="../web_components/x-pass/x-pass.html">
 	<link rel="import" href="../web_components/x-pago/x-pago.html">	
 	<link rel="import" href="../x-componentes/x-comp-list-notification/x-comp-list-notification.html">
+	<link rel="import" href="../x-componentes/x-comp-dialog-alert-pago-servicio/x-comp-dialog-alert-pago-servicio.html">
 	<link rel="import" href="../x-componentes/x-comp-show-updates-sytem/x-comp-show-updates-sytem.html">
 	
 	</div>
@@ -243,6 +244,9 @@
   </div>
   
 	<x-dialog id="xLoad"></x-dialog>
+
+  	  <!-- dialog notifica pago servico -->
+	  <x-comp-dialog-alert-pago-servicio></x-comp-dialog-alert-pago-servicio>
 
 	  <!-- dialog lista de notificaciones -->
 	  <x-comp-list-notification id="dialogListNotification"></x-comp-list-notification>
@@ -319,6 +323,14 @@
 						<div class="d-flexx align-items-center">
 							<div class="pr-2">
 								<h2 class="xboldEncabezado xNoVisibleMenos920 text_puntos_2" id="Titulo_page"></h2>
+							</div>
+
+							<!-- btn alerta de pago -->
+							<div id="divIconNotificationPago" class="xInvisible d-flexx align-items-start animate__animated animate__heartBeat animate__delay-3s animate__repeat-3" onclick="showNotificationPago()" style="margin-right: 5px;">
+								<div class="xbell-notifica-pago">
+									<i class="fa fa-credit-card animate__animated animate__flash animate__infinite"></i>
+								</div>
+								<span class="badge badge-danger xbell-count">1</span>
 							</div>
 
 							<!-- btn alerta notificaciones -->

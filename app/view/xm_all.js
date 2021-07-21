@@ -1,3 +1,4 @@
+var _socketSuperMaster = null;
 var xh_sys,
     // xLamarVoz=0,
     xIdUsuario="",
@@ -441,10 +442,12 @@ function xCerrarSessionAll(){
 function setClearLocalStorage() {
 	var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
 	var touchVR = window.localStorage.getItem('::app3_sys_vr_touch');	
+	var lasIdSede = window.localStorage.getItem('::app3_sys_last_s');
 	window.localStorage.clear();
 
 	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL); }
 	if (touchVR) {window.localStorage.setItem('::app3_sys_vr_touch', touchVR); }
+	if (lasIdSede) {window.localStorage.setItem('::app3_sys_last_s', lasIdSede); }
 	document.location.href='../../logueese.html';
 };
 

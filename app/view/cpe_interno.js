@@ -82,7 +82,7 @@ async function CpeInterno_SaveBD(dataSave) {
     await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: dataSave}})
     .done( function (res) {
         rptSave = JSON.parse(res).datos[0];
-        console.log(res);
+        // console.log(res);
     });
     return rptSave;
 }

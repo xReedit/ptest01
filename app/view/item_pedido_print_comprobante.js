@@ -65,6 +65,15 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 		return xArrayEncabezado;
 	}
 
+	// si se chequea imprimir comprobante esta activado
+	let _isPrinterCpeVal = parseInt(localStorage.getItem('::app3_sys_print_cpe'));
+	_isPrinterCpeVal = isNaN(_isPrinterCpeVal) ? 1 : _isPrinterCpeVal;
+
+	if ( _isPrinterCpeVal === 0 ) {
+		return xArrayEncabezado;
+	}
+	
+
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){
 		if(rpt_print==false){return false;}
 		xPopupLoad.titulo="Imprimiendo...";
