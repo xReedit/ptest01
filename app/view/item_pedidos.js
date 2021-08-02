@@ -380,7 +380,7 @@ async function handlerFnMiPedidoControl(e) {
 
 		if(xsigno=='+'){
 			//omitir para seguir vendiendo sin stock, da change a despues			
-			if ( !isSocket ) {
+			if ( !isSocket || isRowItemPedido ) {
 				if(xcant<xcant_max){xcant++;}			
 			} else {
 				xSotockSocket = xcant_max > 0 ? xSotockSocket - 1 : 0;

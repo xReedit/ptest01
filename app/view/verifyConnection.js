@@ -24,7 +24,7 @@ window.addEventListener("focus", function (event) {
 
 	setTimeout(() => {
 		updateConnectionStatusFocus();
-	}, 10000);
+	}, 500);
 });
 
 $(window).blur(function () {
@@ -37,6 +37,7 @@ async function updateConnectionStatusFocus() {
 	var rpt_conex = await comprobarConexion();
 	if (rpt_conex) {
 		const _data_res = xm_log_get('app3_us')._sys_sessid;
+		console.log('_data_res _sys_sessid', _data_res);
 		const _restore_conex = await restoreConexion(_data_res);
 		if (_restore_conex) {
 			// recuperar localstorage
@@ -125,6 +126,7 @@ async function comprobarConexion() {
 }
 
 async function restoreConexion(_data) {
+	console.log('reconexion', _data);
 	restaurandoConexion = false;
 	await $.ajax({
 			type: 'POST',

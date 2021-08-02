@@ -1,4 +1,6 @@
 <dom-module id="x-admin-new-org">
+	<link rel="import" href="../../x-componentes/x-comp-select-plan/x-comp-select-plan.html">
+
 	<template>
 		<br>
 		<div class="xMiCard xradius" style="width:calc(100% - 10%)">
@@ -119,12 +121,32 @@
 
 									<p>COMISION FIJO MENSUAL</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="COSTO FIJO MENSUAL" id="costo_restobar_fijo_mensual" name="costo_restobar_fijo_mensual" espaciar>
+									<br><br><br><br>
+
+
+									<!-- configuracioon cobro del servicio -->
+									<p class="fw-600">COBRO DEL SERVICIO</p>
+									<hr>
+									<p>Plan contratado:</p>
+									<x-comp-select-plan clasecss="selected-template-1" id="compPlanSelect" onchange="changePlan(planes)"></x-comp-select-plan>					
+									
 									<br><br>
+									
+									<p>Ultimo mes que pago, formato (año-mes-dia)</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="YYYY-MM-DD" id="umf_pago" name="umf_pago" espaciar>
+
+									<br><br>
+									<p>Tipo de Contribuyente, PN = PERSONA NATURAL  O PJ= PERSONA JURIDICA</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="PN O PJ" id="tipo_contribuyente" name="tipo_contribuyente" espaciar>
+
+
 		
 									<div class="xInvisible">
+										<input type="text" id="idsede_plan_contratado" name="idsede_plan_contratado" value$="{{xIdSede}}">
 										<input type="text" id="idorg" name="idorg" value$="{{xIdOrg}}">
 										<input type="text" id="idsede" name="idsede" value$="{{xIdSede}}">
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="TIPO" id="tipo" name="tipo" espaciar>
+										<input type="text" placeholder="TIPO" id="tipo" name="tipo" espaciar>
+										
 									</div>
 								</form>						
 								
@@ -351,12 +373,17 @@
 	</template>
 </dom-module>
 <script>
-	var xThisAdminNew, xPopupLoad;
+	var xThisAdminNew, xPopupLoad, xCompPlanSelect;
 
 	function xIniAdminNew() {		
 		xPopupLoad = document.getElementById('xLoad');
 		xThisAdminNew.selected_conf=0;
+
+
+		xCompPlanSelect = document.getElementById('compPlanSelect');
+
 		xLoadAdmDatosOrg();
+		
 
 
 		$("#ctrl_open_file").change(function(e) {
@@ -513,6 +540,12 @@ function transferenciaCompleta(xfile){
 		$("#frm_sede #pwa_time_limit").val(dataSede.pwa_time_limit);
 		$("#frm_sede #url_api_fac").val(dataSede.url_api_fac);
 		$("#frm_sede #costo_restobar_fijo_mensual").val(dataSede.costo_restobar_fijo_mensual);		
+		
+		$("#frm_sede #idsede_plan_contratado").val(dataSede.idsede_plan_contratado);		
+		$("#frm_sede #umf_pago").val(dataSede.umf_pago);		
+		$("#frm_sede #tipo_contribuyente").val(dataSede.tipo_contribuyente);
+		
+		xCompPlanSelect.setPlan(dataSede.idsede_plan_contratado);
 
 		check_print_server.checked = dataSede.ip_server_local === "0" ? false : true;
 		check_pwa.checked = dataSede.pwa === "0" ? false : true;
@@ -807,6 +840,13 @@ function transferenciaCompleta(xfile){
 					console.log('xThisAdminNew.ListSedesHorario', xThisAdminNew.ListSedesHorario);
 				});
 	}
+
+	function changePlan(val) {
+		console.log('changePlan', val)
+		idsede_plan_contratado.value = val.idsede_plan_contratado;
+	}
+
+	
 
 	
 	Polymer({

@@ -44,6 +44,13 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	//comprobante electronico // ponemos el pie de pagina para el comprobante
 	if (showPrint) { xArrayComprobante.pie_pagina_comprobante = xImpresoraPrint[0].pie_pagina_comprobante; }	
 
+	//310721
+	// obtenemos el numero del comprobante / para que no demore en esperar repuesta
+	const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
+	xArrayComprobante.correlativo = numComprobante; 
+	// console.log('xArrayComprobante.correlativo', xArrayComprobante.correlativo);
+	
+
 	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
 	if (!rptPrint.ok) { // si el documento electronico no es valido		
 		alert(rptPrint.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
@@ -586,4 +593,24 @@ function xUpdatePrintPrecuentaPedido(_id) {
 			id: _id			
 		}
 	});
+}
+
+
+async function xGetCorrelativoComprobante(_obj){
+	const result = await $.ajax({
+		type: 'POST',
+		url: '../../bdphp/log_002.php',
+		data: {
+			op: '103001',
+			i: _obj.idtipo_comprobante_serie
+		}
+	})
+
+	const rpt = JSON.parse(result)
+	if ( rpt.success ) {		
+		return rpt.datos[0].num;
+	} else {
+		return '#';
+	}
+	
 }

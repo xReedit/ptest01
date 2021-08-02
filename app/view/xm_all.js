@@ -620,7 +620,7 @@ async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 						callback(rpt);
 					}
 			
-					// token = t;
+					// token = t;					
 					_url_servicio = "../../consulta/"+servicio+"/api/service.php?"+label_num+"="+valor+"&token="+token;
 					
 								

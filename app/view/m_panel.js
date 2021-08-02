@@ -84,6 +84,8 @@ function xIniDocument(){
 
  	xPopupLoad=document.getElementById('xLoad');
 	 xdialogus = document.getElementById('dialog_us');
+
+	 var xComptitulo_bar = document.getElementById('xtitulo_bar');
 	 
 	 dialogListNotification = document.getElementById('dialogListNotification');
 
@@ -118,6 +120,8 @@ function xIniDocument(){
 		 if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */
 
 		 localStorage.setItem('::app3_sys_last_s', btoa(xm_log_get('datos_org_sede')[0].idsede));
+
+		 xComptitulo_bar.init();
  	});
 
  	//xRefreshNotificaciones=setInterval(function () {xNotificaciones()},10000);
@@ -168,15 +172,16 @@ function xOneOptionPage(_codOne) {
 
 var aapasa=0;
 function xOpenPage(xop, parametro){	
-	// alert('open ' + xop);
 	var _route_count = getLocalStorage('::app3_sys_route') || 0;
+	console.log('open ' + xop);
+	console.log('app3_sys_route ' + _route_count);
 	
 	if (parseInt(_route_count) === 1) {	
 		if (xparam_time_ruter) return
 		xparam_time_ruter = true;
 		setTimeout(() => {
 			xLiberarRouter();
-		}, 200);		
+		}, 500);		
 		return;
 	}
 
@@ -464,31 +469,22 @@ function xNewUs() {
 		} else {
 			xPasarAMenuAcc();
 		}
+	} else {		
+		xPasarAMenuAcc();
 	}
+
 
 	// return xNuevoUs;
 }
 
 function xPasarAMenuAcc() {
-	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{xOpenPage(1);}
+	xLiberarRouter();
+	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{
+		setLocalSotrage('::app3_sys_route', 0);
+		xOpenPage(1);}
 }
 
 function showNotificationPago() {
 	xOpenPage(47);
 }
 
-// function pruebaFecht() {
-// 	const _data_res = xm_log_get('app3_us')._sys_sessid;
-// 	fetch('../../bdphp/log.php?op=-11111', {
-// 		method: 'POST',
-// 		headers: {"Content-Type": "application/json; charset=utf-8"},
-// 		body: JSON.stringify(_data_res)
-// 	})
-// 	.then(function (response) {
-// 		return response.json();
-// 	})
-// 	.then(res => {
-// 		console.log('restaurando', res);
-// 		restaurandoConexion = true;
-// 	}) /*mas acciones a realizar*/
-// }

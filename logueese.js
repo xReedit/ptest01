@@ -77,6 +77,8 @@ window.addEventListener('WebComponentsReady', function (e) {
 			case 1://
 				break;
 			case 2:
+				// localStorage.removeItem('::app3_woDUS');
+
 				$.ajax({ type: 'POST', url: 'bdphp/log.php?op=-1', data:{u:u, p:p}})
 				.done( function (dt) {
 					if(dt==1){

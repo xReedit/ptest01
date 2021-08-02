@@ -105,7 +105,10 @@
 		}
 
 		function xCompSedeToll_buscarSede(idbuscar) {			
-			const _arrSede = xThisComToolSede.listSede.filter(x=> x.idsede === idbuscar).map( x => x)[0];
+			let _arrSede = xThisComToolSede.listSede.filter(x=> x.idsede === idbuscar).map( x => x)[0];
+			// if (!_arrSede) {
+			// 	_arrSede = xThisComToolSede.listSede[0];
+			// }
 			$("#txt_sede").text(_arrSede.nombre + ' | ' + _arrSede.ciudad);
 		}		
 
@@ -139,6 +142,11 @@
 			},
 			attached: function () {
 				xThisComToolSede = this;
+				// setTimeout(() => {					
+					// xCompSedeToll_getAllSedes();
+				// }, 500);
+			},
+			init:() => {
 				xCompSedeToll_getAllSedes();
 			},
 			getValorIncial: function (sede) {

@@ -207,15 +207,19 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         // console.log(JSON.stringify(jsonData));
 
-        hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);        
+        // espera respuesta numero comprobante
+        // hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);        
 
-        // xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
 
-        // hash.ok = true;
-        // hash.qr = '';
-        // hash.hash = "www.papaya.com.pe";
-        // hash.external_id = '';
-        // hash.correlativo_comprobante = xCeroIzqNumberComprobante(res.data.number).split('-')[1] 
+        // 310721 // para que sea mas rapido
+        // no espera respuesta porque ya se sabe el numero del comprobante
+        xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
+
+        hash.ok = true;
+        hash.qr = '';
+        hash.hash = "www.papaya.com.pe";
+        hash.external_id = '';
+        hash.correlativo_comprobante =  xArrayComprobante.correlativo;
 
 
     })
@@ -312,7 +316,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
     setTimeout(() => {        
         xm_all_xToastClose();
-    }, 500);
+    }, 1000);
     
 
 
@@ -393,6 +397,8 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     // setTimeout(() => {        
     //     xm_all_xToastClose();
     // }, 500);
+
+    console.log('rpt cpe', rpt);
     
     return rpt;
 }
