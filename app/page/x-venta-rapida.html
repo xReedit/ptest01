@@ -1297,6 +1297,7 @@ async function xGuardarPedidoVR(responde){
 
 	xarr_body = xarr_body.filter(x => x).map(x => x);
 
+	console.log('paso A');
 	// enviamos el body a homologacion con papaya express
 	const _p_body_homologacion = xEstructuraExpress(xarr_body, xdelivery, _isComercioAppDeliveryMapa);
 
@@ -1319,7 +1320,7 @@ async function xGuardarPedidoVR(responde){
 		// console.log(xarr_header);
 		// console.log(idP);
 		// return;
-		
+		console.log('paso b');
 		const _arrRpt = xm_all_SetResponseLog_001(idP);
 		
 		// xIdPedido=idP.split('|');
@@ -1349,6 +1350,7 @@ async function xGuardarPedidoVR(responde){
 		};
 
 
+		console.log('paso c');
 		if ( p_from === 'ab' ) {
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
 		}
@@ -1366,11 +1368,13 @@ async function xGuardarPedidoVR(responde){
 		_cpSocketprinterOnly(xArrayEnca);
 				
 		
-		responde(true)
+		console.log('FIN');
+		responde(true);
 	}).fail(guardando_vr = false);
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
+	console.log('paso d');
 	if ( xRpt_pago.length > 0 ) {
 		var arr_cliente = xRpt_pago[0].cliente;
 		var arr_comprobante = xRpt_pago[0].comprobante;
@@ -1391,8 +1395,11 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 		// if ( arr_comprobante ) {
 		// 	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
 		// }
-		arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
+
+		// quitar
+		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
 		
+		console.log('paso E');
 		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
 		xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
 		// if (!rpt.ok) { // si el documento electronico no es valido

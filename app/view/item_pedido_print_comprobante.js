@@ -46,11 +46,14 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 
 	//310721
 	// obtenemos el numero del comprobante / para que no demore en esperar repuesta
+	// console.log('paso F');
+	xm_all_xToastOpen("Conectando con Sunat...");
 	const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
 	xArrayComprobante.correlativo = numComprobante; 
 	// console.log('xArrayComprobante.correlativo', xArrayComprobante.correlativo);
 	
 
+	// console.log('paso H');
 	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
 	if (!rptPrint.ok) { // si el documento electronico no es valido		
 		alert(rptPrint.msj_error + ". Mande a imprimir el comprobante desde Registro de pagos");
@@ -58,7 +61,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 		return rptPrint;
 	}
 
-	console.log(rptPrint);
+	// console.log(rptPrint);
 	xArrayEncabezado[0].hash = rptPrint.hash; // que es realidad el qr
 	xArrayEncabezado[0].external_id = rptPrint.external_id;
 	// correlativo comprobante;	
@@ -83,17 +86,18 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 
     xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubTotales,xArrayComprobante,xArrayCliente,function(rpt_print){
 		if(rpt_print==false){return false;}
-		xPopupLoad.titulo="Imprimiendo...";
-		xPopupLoad.xopen();
-        setTimeout(function(){ xPopupLoad.xclose()}, 3000);
+		// xPopupLoad.titulo="Imprimiendo...";
+		// xPopupLoad.xopen();
+        // setTimeout(function(){ xPopupLoad.xclose()}, 3000);
         return true;
 	});
 }
 
 // aca
 function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,xArrayComprobante,xArrayCliente,callback){
-	xPopupLoad.titulo="Imprimiendo...";	
+	// xPopupLoad.titulo="Imprimiendo...";	
 
+	// console.log('paso REGISTRAR PRINT_COMPROBANTE');
 	// formato de impresion items comprobante donde no se tiene en cuenta el tipo de consumo solo seccion e items
 	let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal, true); // cpe = true subtotal + adicional
 	_arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);

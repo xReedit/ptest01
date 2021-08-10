@@ -795,6 +795,14 @@ function delay(callback, ms) {
 	};
 }
 
+function xDelay(delayInms) {
+	return new Promise(resolve => {
+	  setTimeout(() => {
+		resolve(2);
+	  }, delayInms);
+	});
+  }
+
 function setImportHTML(_linkImport) {
 
 	_linkImport = _linkImport.trim().split(',');

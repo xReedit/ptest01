@@ -148,8 +148,16 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
     // fecha actual del servidor
     // cabecera
-    await $.ajax({type: 'POST', url: '../../bdphp/log_001.php', data:{'p_from':'z'}})
-    .done( function (rptDate) {        
+
+    
+    // console.log('paso I');
+    // $.ajax({type: 'POST', url: '../../bdphp/log_001.php', data:{'p_from':'z'}})
+    // .done( function (rptDate) {        
+        
+        const _fecha = xSetInputDate(xDevolverFecha());
+        const _hora = xDevolverHora();
+        
+        rptDate = `${_fecha}|${_hora}`;
         rptDate=rptDate.split('|');
 
         const fecha_manual = xArrayComprobante.fecha_manual || null; // para regularizar desde facturador
@@ -205,26 +213,37 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         }
 
+
+        const _viene_facturador = typeof idregistro_pago === "object" ? 1 : 0; 
+
+        
         // console.log(JSON.stringify(jsonData));
 
         // espera respuesta numero comprobante
         // hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);        
 
-
-        // 310721 // para que sea mas rapido
-        // no espera respuesta porque ya se sabe el numero del comprobante
-        xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
-
-        hash.ok = true;
-        hash.qr = '';
-        hash.hash = "www.papaya.com.pe";
-        hash.external_id = '';
-        hash.correlativo_comprobante =  xArrayComprobante.correlativo;
-
-
-    })
+        // console.log('paso j');
+        if ( _viene_facturador === 1 ) { // si viene del facturador espera respuesta
+            hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);                    
+        } else {
+            // 310721 // para que sea mas rapido
+            // no espera respuesta porque ya se sabe el numero del comprobante
+            xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
     
-    return hash;
+            hash.ok = true;
+            hash.qr = '';
+            hash.hash = "www.papaya.com.pe";
+            hash.external_id = '';
+            hash.correlativo_comprobante =  xArrayComprobante.correlativo;
+
+        }
+
+        // console.log('paso k');
+
+        return hash;
+
+    // });
+    
 }
 
 

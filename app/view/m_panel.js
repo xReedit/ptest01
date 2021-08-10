@@ -171,22 +171,24 @@ function xOneOptionPage(_codOne) {
 }
 
 var aapasa=0;
-function xOpenPage(xop, parametro){	
-	var _route_count = getLocalStorage('::app3_sys_route') || 0;
-	console.log('open ' + xop);
-	console.log('app3_sys_route ' + _route_count);
+async function xOpenPage(xop, parametro){	
+	// var _route_count = getLocalStorage('::app3_sys_route') || 0;
+	// console.log('open ' + xop);
+	// console.log('app3_sys_route ' + _route_count);
 	
-	if (parseInt(_route_count) === 1) {	
-		if (xparam_time_ruter) return
-		xparam_time_ruter = true;
-		setTimeout(() => {
-			xLiberarRouter();
-		}, 500);		
-		return;
-	}
+	// if (parseInt(_route_count) === 1) {	
+	// 	if (xparam_time_ruter) return
+	// 	xparam_time_ruter = true;
+	// 	setTimeout(() => {
+	// 		xLiberarRouter();
+	// 	}, 500);		
+	// 	return;
+	// }
 
-	setLocalSotrage('::app3_sys_route', 1);
-	
+	// setLocalSotrage('::app3_sys_route', 1);
+	// console.log('aa');
+	await xDelay(100);
+	// console.log('b');
 	aapasa++;
 
 	console.log('paso el router ', aapasa);

@@ -79,6 +79,7 @@ function CpeInterno_ErrorValidacionSunat(_idregistro_p, dataSave) {
 // guardar en la base de datos el comprobante
 async function CpeInterno_SaveBD(dataSave) {
     let rptSave = '';
+    // console.log('guardar registro compronbante CpeInterno_SaveBD');
     await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '1', data: dataSave}})
     .done( function (res) {
         rptSave = JSON.parse(res).datos[0];
