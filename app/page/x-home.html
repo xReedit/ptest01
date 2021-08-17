@@ -7,7 +7,8 @@
 		<!-- <button onclick="pruebaFecht()"> prueb fecht </button> -->
 		<!-- <bottom onclick="pruebaBorrarCache()">aaaaaaaaaaaa qqqqq new update</bottom>
 		<button>aaa</button> -->
-		<!-- <bottom onclick="dialog_requiere_cambio_pas.open()">cambiar clave</bottom> -->
+		<!-- <bottom onclick="dialdog_requiere_cambio_pas.open()">cambiar clave</bottom> -->
+		<button onclick="goFecht()">go fecht</button>
 		<div id="xBodyOp">
 		</div>
 		<!--div id="Div_op1">
@@ -181,6 +182,16 @@ function abrirToast() {
 	toast.text = "aaaaaaaaaaa";	
 	toast.show();
 }
+
+async function goFecht() {	
+	fechApi = new httpFecht();
+	
+	const respa = await fechApi.ajaxPost('../../bdphp/log_001.php');
+	console.log('resp ajaxPost', respa);
+	
+	const resp = await fechApi.postJson('../../bdphp/log_001.php', {p_from: 'z'});
+	console.log('resp', resp);
+  }
 
 Polymer({
 	is:'x-home',

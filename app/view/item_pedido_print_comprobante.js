@@ -48,8 +48,11 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	// obtenemos el numero del comprobante / para que no demore en esperar repuesta
 	// console.log('paso F');
 	xm_all_xToastOpen("Conectando con Sunat...");
-	const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
-	xArrayComprobante.correlativo = numComprobante; 
+	if ( xArrayComprobante.correlativo === '' ) {
+		const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
+		xArrayComprobante.correlativo = numComprobante; 
+	}
+	
 	// console.log('xArrayComprobante.correlativo', xArrayComprobante.correlativo);
 	
 

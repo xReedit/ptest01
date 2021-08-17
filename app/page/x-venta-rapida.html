@@ -2,11 +2,14 @@
 
 <!-- <link rel="import" href="../x-componentes/x-comp-item-subitems-edit-list/x-comp-item-subitems-edit-list.html"> -->
 <dom-module id="x-venta-rapida">		
+	<script src="../view/httpFech.js"></script>
 	<link rel="import" href="../web_components/x-pago/x-pago.html">
 	<link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 	<link rel="import" href="../web_components/paper-progress/paper-progress.html">
 	<link rel="import" href="../x-componentes/x-comp-datos-delivery/x-comp-datos-delivery.html">
 	<link rel="import" href="../x-componentes/x-comp-item-subitems/x-comp-item-subitems.html">
+
+
 
 	<template>
 			<!-- <paper-toolbar id="panel_toolbarx">
@@ -1278,10 +1281,10 @@ async function xGuardarPedidoVR(responde){
 	
 	if (xEstadoPedido === 2) { // pago total 
 		xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
-		p_from = 'ab'; // registra pedido y pago
+		p_from = '12'; // registra pedido y pago
 	} else {
 		xarr_tipo_pago = [];
-		p_from = 'a'; //registra solo pedido	
+		p_from = '1'; //registra solo pedido	
 	}
 
 	xPopupLoad.xopen(); // quitar comentario
@@ -1301,27 +1304,45 @@ async function xGuardarPedidoVR(responde){
 	// enviamos el body a homologacion con papaya express
 	const _p_body_homologacion = xEstructuraExpress(xarr_body, xdelivery, _isComercioAppDeliveryMapa);
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
-		data:{
-			p_from:p_from, 
-			p_cliente: JSON.stringify(xarr_cliente), 
-			p_body: JSON.stringify(xarr_body), 
-			p_body_h: JSON.stringify(_p_body_homologacion), 
-			p_header: JSON.stringify(xarr_header), 
-			p_tipo_pago: JSON.stringify(xarr_tipo_pago), 
-			p_subtotales: JSON.stringify(xarr_subtotales), 
-			p_comprobante: JSON.stringify(xarr_comprobante), 
-			estado_p: xEstadoPedido
-		}		
-	})
-	.done( function (idP) {
+	const dataSendPedido = {
+		p_from:p_from, 
+		p_cliente: xarr_cliente, 
+		p_body: xarr_body, 
+		p_body_h: _p_body_homologacion, 
+		p_header: xarr_header, 
+		p_tipo_pago: xarr_tipo_pago, 
+		p_subtotales: xarr_subtotales, 
+		p_comprobante: xarr_comprobante, 
+		estado_p: xEstadoPedido
+	}
+
+	console.log('dataSendPedido', dataSendPedido);
+	
+
+	// fecth
+
+	const idP = await goSendPedidoFecht(dataSendPedido);
+	// return;
+
+	// $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
+	// 	data:{
+	// 		p_from:p_from, 
+	// 		p_cliente: JSON.stringify(xarr_cliente), 
+	// 		p_body: JSON.stringify(xarr_body), 
+	// 		p_body_h: JSON.stringify(_p_body_homologacion), 
+	// 		p_header: JSON.stringify(xarr_header), 
+	// 		p_tipo_pago: JSON.stringify(xarr_tipo_pago), 
+	// 		p_subtotales: JSON.stringify(xarr_subtotales), 
+	// 		p_comprobante: JSON.stringify(xarr_comprobante), 
+	// 		estado_p: xEstadoPedido
+	// 	}		
+	// })
+	// .done( function (idP) {
 		
-		// console.log(xarr_body);
-		// console.log(xarr_header);
-		// console.log(idP);
-		// return;
-		console.log('paso b');
-		const _arrRpt = xm_all_SetResponseLog_001(idP);
+		
+		console.log('paso b', idP);
+		// const _arrRpt = xm_all_SetResponseLog_001(idP);
+		_arrRpt = idP;
 		
 		// xIdPedido=idP.split('|');
 		// var xrpt_correlativo=xIdPedido[0];
@@ -1330,7 +1351,8 @@ async function xGuardarPedidoVR(responde){
 
 		const xrpt_correlativo=_arrRpt.correlativo_comprobante;
 		const xCorrelativo_dia=xCeroIzq(_arrRpt.correlativo_dia,5);
-		const xsub_sql_descontar='';
+		xsub_sql_descontar='';
+		// const xsub_sql_descontar='';
 		const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 
 		xNumPedido=xCeroIzq(_arrRpt.numpedido,5);
@@ -1351,7 +1373,8 @@ async function xGuardarPedidoVR(responde){
 
 
 		console.log('paso c');
-		if ( p_from === 'ab' ) {
+		// if ( p_from === '12' ) {
+		if (xrpt_correlativo !== ''){
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
 		}
 		
@@ -1370,7 +1393,15 @@ async function xGuardarPedidoVR(responde){
 		
 		console.log('FIN');
 		responde(true);
-	}).fail(guardando_vr = false);
+	
+	
+	// }).fail(guardando_vr = false);
+}
+
+async function goSendPedidoFecht(_data) {
+	const _fetchApi = new httpFecht();
+	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
+	return rpt;	
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
@@ -1392,9 +1423,9 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 		}
 		// correlativo = correlativo ? correlativo === '' ? arr_comprobante.correlativo : '' : '';
 		// correlativo comprobante
-		// if ( arr_comprobante ) {
-		// 	arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-		// }
+		if ( arr_comprobante ) {
+			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		}
 
 		// quitar
 		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
@@ -2071,6 +2102,8 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
   function xClosePanelDeVR() {
 	$(".itemsDivx.a").removeClass('open');
   }
+
+  
 
 
 Polymer({

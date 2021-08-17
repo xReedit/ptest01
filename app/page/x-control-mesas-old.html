@@ -1587,17 +1587,29 @@ function xArmarSqlAddLUlI(){
 
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj);
 
+	const dataSendPedido = {
+		p_from:'1', 
+		p_header: xarr_header, 
+		p_body: xarr_body, 
+		p_subtotales: xarr_subtotales, 
+		estado_p:0
+	}
+
+	const idP = await goSendPedidoFecht(dataSendPedido);
 	
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=30401', data:{arr:xArrayGuardarPedido,idpedido:0}})
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
-		data:{
-			p_from:'a', 
-			p_header: JSON.stringify(xarr_header), 
-			p_body: JSON.stringify(xarr_body), 
-			p_subtotales: JSON.stringify(xarr_subtotales), 
-			estado_p:0}})
-		.done( function (a) {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
+	// 	data:{
+	// 		p_from:'a', 
+	// 		p_header: JSON.stringify(xarr_header), 
+	// 		p_body: JSON.stringify(xarr_body), 
+	// 		p_subtotales: JSON.stringify(xarr_subtotales), 
+	// 		estado_p:0
+	// 	}})
+	// 	.done( function (a) {
+
+
 			if(xVerificarImprimirComanda==true){
 				xLLamarPrintAddLUlI();
 				// xMandarImprimir(xArrayPrintEncaLi,xDtPrint,xArrayPedidoObj,function(rpt){
@@ -1622,10 +1634,10 @@ function xArmarSqlAddLUlI(){
 			xSumarTotalPedidos(1);
 			
 
-		}).fail(() => {
-			guardandoPedido_cp = 0;
+		// }).fail(() => {
+		// 	guardandoPedido_cp = 0;
 
-		});
+		// });
 
 		// regresa xocupado
 		$(xObj_miPedido).removeClass('xDespachado');
@@ -1646,12 +1658,6 @@ function xLLamarPrintAddLUlI() {
 	});
 }
 
-// function aaa() {
-// 	$.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'aaaaaa'}})
-// 	.done( function (a) {
-// 		console.log(a);
-// 	})
-// }
 
 
 function xIrPage(op){
