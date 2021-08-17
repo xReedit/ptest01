@@ -40,6 +40,7 @@
 
     function xIniCompAlertPago() {
         const i = atob(localStorage.getItem('::app3_sys_last_s'));
+        if ( !i ) { return; }
         $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=5000', data:{i:i}})
 		.done( function (dt) {
 			const _dt  = JSON.parse(dt).datos[0];

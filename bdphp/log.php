@@ -4,6 +4,10 @@
 	// session_regenerate_id(true); 
 	session_start();	
 	//header("Cache-Control: no-cache,no-store");
+
+	header("Access-Control-Allow-Origin: *");
+	header("Access-Control-Allow-Headers: *");
+
 	header('content-type: text/html; charset: utf-8');
 	header('Content-Type: text/event-stream');
 	header('Cache-Control: no-cache');
