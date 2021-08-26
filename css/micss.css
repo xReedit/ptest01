@@ -218,7 +218,7 @@ paper-card.medio{background:#F5F5F5;}
 .FrmSave paper-input,paper-textarea,paper-dropdown-menu{margin-top:-20px;margin-bottom:5px;font-size:9px;}
 .customTolTip{width:200px;word-wrap:break-word;}
 paper-dialog.xStandar{height:auto;width:40%;}
-.dialog_redondo{ border-radius: 5px; padding: 8px; border: 1px solid #bdbdbd;}
+.dialog_redondo{ border-radius: 5px; padding: 8px; border: 1px solid #bdbdbd; overflow:auto; }
 
 .xMiBoton_icon{font-family: 'Open Sans'; border-radius: 5px; border: 1px solid transparent; width: 60px; vertical-align: top; text-align: center; padding: 10px; cursor: pointer; display: inline-block; margin-right: 15px;-webkit-touch-callout:none;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
 .xMiBoton_icon p{border-top:1px solid #CCC; font-size: 12px; line-height: 15px;}

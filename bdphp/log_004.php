@@ -12,7 +12,8 @@
 
 	include('log_006.php');
 
-	$op = $_GET['op'];	
+	$op = $_GET['op'];
+	$g_idsede = $_SESSION['idsede'];	
 	
     switch ($op) {
 		case '1': //lista sede
@@ -198,6 +199,12 @@
 			$sql = "update sede set pwa_delivery_img = '".$img. "' where idsede = ".$idsede;
 			$bd->xConsulta($sql);
 			break;
+		case 60401: // img-mini
+			$idsede = $_POST['idsede'];
+			$img = $_POST['d'];
+			$sql = "update sede set img_mini = '".$img. "' where idsede = ".$idsede;
+			$bd->xConsulta($sql);
+			break;
 		
 		case 700: //horario de trabajo
 			$sql = "insert into sede_horario_trabajo (idsede, de, a) values (".$_POST['idsede'].", '".$_POST['de']."', '".$_POST['a']."')";
@@ -233,6 +240,16 @@
 		case 1001: // guardar registro actualizacion
 			$item = $_POST['item'];
 			$sql = "insert into notificacion_cambios_sistema (fecha, titulo, descripcion, imagen) values (curdate(), '".$item['titulo']."', '".$item['descripcion']."', '".$item['imagen']."')";			
+			$bd->xConsulta($sql);
+			break;
+
+		case 11: // metodos de pago aceptados
+			$sql = "select idtipo_pago, descripcion from tipo_pago where upper(descripcion) != 'APLICACION'";
+			$bd->xConsulta($sql);
+			break;
+		case 1101: // metodos de pago aceptados
+			$ids = $_POST["ids"];
+			$sql = "update sede set metodo_pago_aceptados='$ids' where idsede=$g_idsede";
 			$bd->xConsulta($sql);
 			break;
 		

@@ -8,7 +8,10 @@
 	<link rel="import" href="../web_components/paper-progress/paper-progress.html">
 	<link rel="import" href="../x-componentes/x-comp-datos-delivery/x-comp-datos-delivery.html">
 	<link rel="import" href="../x-componentes/x-comp-item-subitems/x-comp-item-subitems.html">
+	<link rel="import" href="../x-componentes/x-comp-canal-consumo/x-comp-canal-consumo.html">
+	<link rel="import" href="../x-componentes/x-pedidos-por-pagar/x-pedidos-por-pagar.html">
 
+	
 
 
 	<template>
@@ -118,6 +121,10 @@
 		  
 	  	<div class="tool-bar-vr">
 			<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDeVR();"></paper-icon-button>
+			<span onclick="xOpenPedidosCuentaPendientes()" class="xCursor fs-15 fw-600 pr-2" title="Pedidos por Cobrar">			
+				<i class="fa fa-files-o"></i>
+			</span>
+			<!-- <paper-icon-button paper-drawer-toggle onclick="xOpenPedidosCuentaPendientes();"></paper-icon-button> -->
 			<span class="title xtitulo_bar xfont18">Punto de Venta</span>			
 			<div class="xDerecha" style="display: flex; padding-top: 8px; margin-right: 10px;">
 
@@ -220,7 +227,12 @@
 			<br><br><br>
 		</paper-dialog>
 
-		<div style="display: contents; background: #eeeeee; width:100%;">
+		<!-- pedidos pendietes por cobrar -->
+		<div id="contentPedidosPendientesCobrar" class="xInvisible">
+			<x-pedidos-por-pagar id="pedido_pagar_cuenta"></x-pedidos-por-pagar>
+		</div>
+
+		<div style="display: contents; background: #eeeeee; width:100%;" id="contentVentaRapida">
 			<!-- <div class="xEncanezadoCard xFondoRowAmarillo2">				 -->
 				<!-- <p class="xDerecha" style="margin-top:-20px;"><strong id="titulo_categoria"></strong></p> -->
 				<!-- <div style="width: 150px;">					
@@ -327,7 +339,9 @@
 				  			<h4>PEDIDO</h4> -->
 				  		</div><br>
 				  		<div class="xCentradoDiv">
-								<select class="xMiInput" id="select_ulTPC"></select>
+								
+								<x-comp-canal-consumo id="compCanalConsumo"></x-comp-canal-consumo>
+								<select class="xMiInput xInvisible" id="select_ulTPC"></select>
 								<!-- <div id="div_btn_data_delivery" class="EnLinea xInvisible" style="text-align: center;">
 									<paper-button onclick="dialog_datos_delivery.open()">
 										<iron-icon title="Datos Adicionales" class="btn_apunte_deliver EnLinea"
@@ -552,7 +566,7 @@ var xThisVentaRapida
 ,xsolo_llevar = 0
 ,xid_cliente_pago = 0,
 xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=true, isShowOpcionesPrimero = false
-, xCadenaTC='', xCompSubitems, isSocket = false;
+, xCadenaTC='', xCompSubitems, isSocket = false, xCompCanalConsumo, xDataPagoPedidoPendiente, _pedido_pagar_cuenta;
 
 // , xCompSubitemsEdit
 
@@ -584,6 +598,10 @@ function xIniVentaRapida(){
 		
 		xThisVentaRapida.xt_nombre_sede = xDtPrint[0].des_sede;
 		xThisVentaRapida.xt_eslogan = xDtPrint[0].eslogan;
+
+		
+
+		
 
 		$(document.body).on('change', '#select_ulTPC', function(e) {
 			// $('#div_btn_data_delivery').addClass('xInvisible');
@@ -619,11 +637,43 @@ function xIniVentaRapida(){
 		xCount_cant_ico = 0;
 
 	// })
+
+	
+
 	$(document.body).on('change', '#check_reserva', function(e) {
 		xReservar = e.target.checked ? 1 : 0;
 		xenviar_cuenta=true;
 		$("#btn_enviar_cuenta").removeClass('xInvisible');
 	});
+
+	xCompCanalConsumo = document.getElementById('compCanalConsumo');
+	xCompCanalConsumo.addEventListener('getValorIncial', (e)=>{
+		const itemTpcSelected = e.detail?.values || null;
+		if ( !itemTpcSelected ) {return; }
+
+		select_ulTPC.value = itemTpcSelected.idtipo_consumo;
+
+		xdelivery = 0; 
+			xsolo_llevar = 0;
+			if (itemTpcSelected.descripcion.toLowerCase() === "delivery") {
+				// $('#div_btn_data_delivery').removeClass('xInvisible');
+				xdelivery = 1;
+			}
+			if (itemTpcSelected.descripcion.toLowerCase().indexOf('llevar')>-1) {
+				// $('#div_btn_data_delivery').removeClass('xInvisible');
+				xsolo_llevar = 1;
+			}
+
+			//borrar datos del delivery si acaso fue selccionado
+			localStorage.removeItem('::app3_woDUS::cxe');
+			xCompDatosDelivery.resetValInit();
+			xSumarTotal();
+
+
+			// si hay item seleccionados entonces cambia el tipo de consumo
+			xChangeTipoConsumoItems(itemTpcSelected.idtipo_consumo);
+	});
+
 
 	compFindCategoria=document.getElementById('compFindCategoria');
 	compFindCategoria.addEventListener('getValorIncial', function (e) {
@@ -825,7 +875,10 @@ function xIniVentaRapida(){
 		// }
 
 		if(p!==0){
-			if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoVR();}
+			if(e.detail.xRpts[0].paseEnterTxt==1){
+				
+				xRegistrarClientePagoVR();
+			}
 		}
 
 	});
@@ -839,6 +892,24 @@ function xIniVentaRapida(){
 	
 	xValPago.addEventListener('xListoRegistraPago', function (e) {		
 		xRegistrarClientePagoVR();
+	});
+
+
+	_pedido_pagar_cuenta = document.getElementById('pedido_pagar_cuenta');
+	_pedido_pagar_cuenta.addEventListener('total_pagar_cuenta', (e) => {
+		xDataPagoPedidoPendiente = e.detail 
+		const _tt_pedido = e.detail.tt_pedido;
+		// xIrARegistrarPago();
+
+		xValPago.setVisiblePanel1(); 
+		xThisVentaRapida.$.dialog_pagar_vr.open()
+		$("#component_pago_vr").focus(); component_pago_vr.setVal(xMoneda(_tt_pedido));
+	});
+
+
+	_pedido_pagar_cuenta.addEventListener('close_pedidos_pendientes', (e) => {
+		$(contentPedidosPendientesCobrar).addClass('xInvisible');
+		$(contentVentaRapida).removeClass('xInvisible');
 	});
 
 	// xValPago.addEventListener('xContainerPagoVisible', function (e) {		
@@ -973,6 +1044,8 @@ function xValPagoMostrarContainerPago() {
 
 
 function xIrARegistrarPago(){
+	if(!tt_pedido || tt_pedido==0){return;}
+	xDataPagoPedidoPendiente = null; // no viene de cuenta pendiente
 	if(xregistrar_pago==false){return;}
 	if ( guardando_vr ) {return;}
 
@@ -1008,6 +1081,7 @@ function xIrARegistrarPago(){
 	$("#component_pago_vr").focus(); component_pago_vr.setVal(xMoneda(tt_pedido));
 }
 function xEnviarACuenta(){	
+	if(!tt_pedido || tt_pedido==0){return;}
 	if ( guardando_vr ) {return;}
 	guardando_vr = true;
 
@@ -1136,6 +1210,11 @@ function xRegistrarClientePagoVR(){
 	xid_cliente_pago=xRpt_pago[0].idcliente;
 	xPopupLoad.titulo="Guardando...";
 	xPopupLoad.xopen();
+
+	if ( xDataPagoPedidoPendiente ) {
+		pagarCompPeiddoCuentaPendiente(xDataPagoPedidoPendiente);
+		return;
+	}
 
 	xGuardarPedidoVR(function(){
 		// xPopupLoad.xclose();
@@ -1285,6 +1364,7 @@ async function xGuardarPedidoVR(responde){
 	} else {
 		xarr_tipo_pago = [];
 		p_from = '1'; //registra solo pedido	
+		xarr_comprobante = null;
 	}
 
 	xPopupLoad.xopen(); // quitar comentario
@@ -1398,6 +1478,87 @@ async function xGuardarPedidoVR(responde){
 	// }).fail(guardando_vr = false);
 }
 
+async function pagarCompPeiddoCuentaPendiente(data) {
+
+	if(data.tt_pedido==0){return;}	
+
+	var DatosCliente = xRpt_pago[0].cliente;
+
+	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
+	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	var xidpedido_seleccionados = '';	
+	
+	DatosCliente.idcliente = xid_cliente_pago;
+
+	// si es nuevo cliente recarga el componente input cliente
+	if ( xid_cliente_pago && _idCLienteCompara != xid_cliente_pago) {
+		xValPago.reloadInputDatalientes();
+	}			
+
+	const xarr_cliente = {'cliente':DatosCliente, 'i': data.checkItemsSeleccionados.idPedidosSeleccionados };
+
+	const xarr_header = {
+		'idclie':DatosCliente.idcliente,
+		'ImporteTotal': xMoneda(data.tt_pedido),
+		'tipo_consumo': data.checkItemsSeleccionados.tipoConsumo,
+		'idPedidoSeleccionados': data.checkItemsSeleccionados.idPedidosSeleccionados,
+		'is_from_client_pwa': data.is_from_client_pwa
+	};
+
+	const xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
+
+	var ComprobanteSeleccionado = xRpt_pago[0].comprobante;
+
+	const xarr_comprobante = ComprobanteSeleccionado;
+	const xarr_subtotal = data.arr_subtotal;
+
+	xarr_subtotales = xarr_subtotal;
+
+	const dataSendPedido = {
+			p_from:'3', 
+			p_cliente: xarr_cliente, 
+			p_header: xarr_header, 
+			p_tipo_pago: xarr_tipo_pago, 
+			p_subtotales: xarr_subtotal, 
+			p_comprobante: xarr_comprobante
+		}
+
+	xPopupLoad.xopen(); // quitar comentario
+
+	const idP = await goSendPedidoFecht(dataSendPedido);
+	const _arrRpt = idP;
+
+	const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
+	const xrpt_correlativo = _arrRpt.correlativo_comprobante;
+
+
+	if (xrpt_correlativo !== ''){
+			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
+		}
+		
+
+	dialog_pagar_vr.close();		
+
+	if(xVerificarImprimirComanda==true){
+		guardando_vr = true;
+		xLLamarPrintVR();
+	}else{
+		xPopupLoad.xclose();
+		if (isSocket) { _cpSocketClearStorage(); }
+		xNuevoPedidoVR();			
+	}
+
+
+	//quitar obj pedido
+	_pedido_pagar_cuenta.quitarObjPedido();
+	
+	// notifica nuevo pedido
+	// _cpSocketprinterOnly(xArrayEnca);
+
+	
+	
+}
+
 async function goSendPedidoFecht(_data) {
 	const _fetchApi = new httpFecht();
 	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
@@ -1432,7 +1593,10 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 		
 		console.log('paso E');
 		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
-		xCocinarImprimirComprobante(xArrayPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
+
+		// si es pedido de cuenta pendiente
+		const _arrPedidoObj = xDataPagoPedidoPendiente ? xCargarDatosAEstructuraImpresion(xDataPagoPedidoPendiente.checkItemsSeleccionados.arrayPedidosSeleccionados) : xArrayPedidoObj;
+		xCocinarImprimirComprobante(_arrPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
 		// if (!rpt.ok) { // si el documento electronico no es valido
 		// 	alert(rpt.msj + 'Mande a imprimir desde Registro de pagos');
 		// 	return;
@@ -2101,6 +2265,12 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
 
   function xClosePanelDeVR() {
 	$(".itemsDivx.a").removeClass('open');
+  }
+
+  function xOpenPedidosCuentaPendientes() {
+	$(contentVentaRapida).addClass('xInvisible');
+	$(contentPedidosPendientesCobrar).removeClass('xInvisible');
+	_pedido_pagar_cuenta.loadPedidosPendientesCobrar();
   }
 
   

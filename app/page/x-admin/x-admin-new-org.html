@@ -301,6 +301,12 @@
 									<input type="text" class="xMiInput" placeholder="Logo" maxlength="200" onclick="xSeleccionarFoto();" id="pwa_delivery_img" readonly>
 									<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
 									<img id="imgLogo" src="" alt="" style="max-width: 310px;">
+									<br><br>
+									
+									<p>Imagen para app delivery: Imagen pequeña max 150px de ancho</p>								
+									<input type="text" class="xMiInput" placeholder="Logo" maxlength="200" onclick="xSeleccionarFotoMini();" id="img_mini" readonly>
+									<input type="file" class="xInvisible xobj_subir_foto_mini" id="ctrl_open_file_mini" accept="image/*"/>
+									<img id="imgLogoMini" src="" alt="" style="max-width: 310px;">
 
 									<br><br><br><br>
 									<p>Establecimiento acepta Resevas?</p><br>
@@ -387,25 +393,47 @@
 
 
 		$("#ctrl_open_file").change(function(e) {
-		for (var i = 0; i < e.originalEvent.srcElement.files.length; i++) {
-			var file = e.originalEvent.srcElement.files[i];
-			$("#pwa_delivery_img").val(file.name);
-			//$("#ctrl_open_file").after(img);
+			for (var i = 0; i < e.originalEvent.srcElement.files.length; i++) {
+				var file = e.originalEvent.srcElement.files[i];
+				$("#pwa_delivery_img").val(file.name);
+				//$("#ctrl_open_file").after(img);
 
-			if (file) {
-				var reader = new FileReader();
-				reader.onload = function (e) {
-					$('#imgLogo').attr('src', e.target.result);
+				if (file) {
+					var reader = new FileReader();
+					reader.onload = function (e) {
+						$('#imgLogo').attr('src', e.target.result);
+					}
+					reader.readAsDataURL(file);
+					// xConvertBase64Img();
 				}
-				reader.readAsDataURL(file);
-				// xConvertBase64Img();
 			}
-		}
-	});
+		});
+
+
+		$("#ctrl_open_file_mini").change(function(e) {
+			for (var i = 0; i < e.originalEvent.srcElement.files.length; i++) {
+				var file = e.originalEvent.srcElement.files[i];
+				$("#img_mini").val(file.name);
+				//$("#ctrl_open_file").after(img);
+
+				if (file) {
+					var reader = new FileReader();
+					reader.onload = function (e) {
+						$('#imgLogoMini').attr('src', e.target.result);
+					}
+					reader.readAsDataURL(file);
+					// xConvertBase64Img();
+				}
+			}
+		});
 	}
 
 	function xSeleccionarFoto(){
 		$("#ctrl_open_file").click();
+	}
+
+	function xSeleccionarFotoMini(){
+		$("#ctrl_open_file_mini").click();
 	}
 
 	
@@ -431,6 +459,32 @@ function transferenciaCompleta(xfile){
 	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=604', data:{idsede: xThisAdminNew.xIdSede, d: xfile}})
 	.done( function (a) {
 		$("#pwa_delivery_img").val(xfile);
+		xPopupLoad.xclose();
+	})
+}
+
+function xItemGuardarFotoMini(){
+	$(".xobj_subir_foto_mini").each(function(index, element) {
+	if($(this).val()==''){return}
+	file=this.files[0]; name = file.name; size = file.size; type = file.type;
+	nomfile=xThisAdminNew.xIdOrg+xThisAdminNew.xIdSede+name;
+	xhr = new XMLHttpRequest();
+	xhr.upload.addEventListener ('load', transferenciaCompletaMini(nomfile), false);
+
+	xhr.open('POST','upload.php?op=3',true);
+
+	xhr.setRequestHeader("Cache-Control", "no-cache");
+	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+	xhr.setRequestHeader("X-File-Name", nomfile);
+	xhr.send(file);
+	});
+};
+
+function transferenciaCompletaMini(xfile){
+	// xfile=xThisAdminNew.xIdOrg+xThisAdminNew.xIdSede+xfile;
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=60401', data:{idsede: xThisAdminNew.xIdSede, d: xfile}})
+	.done( function (a) {
+		$("#img_mini").val(xfile);
 		xPopupLoad.xclose();
 	})
 }
@@ -809,6 +863,7 @@ function transferenciaCompleta(xfile){
 				.done((res) => {
 					// console.log(res);
 					xItemGuardarFoto();
+					xItemGuardarFotoMini();
 					xPopupLoad.xclose();
 				})
 		});

@@ -6,48 +6,50 @@
 		<div>
 			<paper-fab icon="add" hidden$="[[ispagoapp]]" onclick="_addRow()" title="Agregar Tipo de Pago" tabindex="0" class="btnAdd2"></paper-fab>
 			<br>
-			<table class$="{{_class}}" style="width: 100%;" id="table_op_fp">
-				<thead>
-					<th width="70%" align="left">Forma de pago</th>
-					<th align="left">Monto</th>
-				</thead>
-				<tbody>
-					<template is="dom-repeat" items="{{listTabla}}" as="item">
-						<tr>
-							<td>
-
-								<div style="display: flex">
-									<x-comp-find-tipo-pago-option										
-										class="tpf_option"
-										novisibles$={{item.novisibles}} 
-										deshabilitado$="{{item.deshabilitado}}"
-										ispagoappop$="[[ispagoapp]]"
-										onclick="xCalcImporte()" 
-										id="comp-pago-option">
-									</x-comp-find-tipo-pago-option>
-									
-									<div class="xMiBoton_icon_option" hidden$="{{item.hiddenIconBorrar}}" data-index="{{index}}"
-										onclick="_borrarRow(this)">
-										<paper-icon-button src="../../../images/delete.png" alt="delete" title="Borrar">
-										</paper-icon-button>
+			<!-- <div> -->
+				<table class$="{{_class}}" style="width: 100%;" id="table_op_fp">
+					<thead>
+						<th align="left">Forma de pago</th>
+						<th align="left">Monto</th>
+					</thead>
+					<tbody>											
+						<template is="dom-repeat" items="{{listTabla}}" as="item">
+							<tr>
+								<td>
+	
+									<div style="display: flex">
+										<x-comp-find-tipo-pago-option										
+											class="tpf_option"
+											novisibles$={{item.novisibles}} 
+											deshabilitado$="{{item.deshabilitado}}"
+											ispagoappop$="[[ispagoapp]]"
+											onclick="xCalcImporte()" 
+											id="comp-pago-option">
+										</x-comp-find-tipo-pago-option>
+										
+										<div class="xMiBoton_icon_option" hidden$="{{item.hiddenIconBorrar}}" data-index="{{index}}"
+											onclick="_borrarRow(this)">
+											<paper-icon-button src="../../../images/delete.png" alt="delete" title="Borrar">
+											</paper-icon-button>
+										</div>
 									</div>
-								</div>
-							</td>
-							<td>
-								<input type="number" min="1"									
-									id$="{{item.idText}}"
-									pattern="[0-9]+([\.,][0-9]+)?" step="any"
-									class="xMiInput xfont16 xtxtCentro xmonto" 
-									onblur="xRetornaMoneda(this)" 
-									onkeyup="xCalcImporte()"
-									disabled="{{item.deshabilitado}}"
-									onclick="this.select();"
-									value$="{{item.importe}}" anchofull autofocus>
-							</td>
-						</tr>
-					</template>
-				</tbody>
-			</table>
+								</td>
+								<td>
+									<input type="number" min="1"									
+										id$="{{item.idText}}"
+										pattern="[0-9]+([\.,][0-9]+)?" step="any"
+										class="xMiInput xfont16 xtxtCentro xmonto" 
+										onblur="xRetornaMoneda(this)" 
+										onkeyup="xCalcImporte()"
+										disabled="{{item.deshabilitado}}"
+										onclick="this.select();"
+										value$="{{item.importe}}" anchofull>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			<!-- </div> -->
 		</div>
 	</template>
 	<script>
@@ -122,11 +124,17 @@
 			xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
 			setTimeout(() => {
 				xCalcImporte();
-				xThisComTableFP.focus();
-				$('table input.xmonto').last().focus();
-				$('table input.xmonto').last().select();
+				// xThisComTableFP.focus();
+				if ( isSynOsWinOrMac() ) {
+					$('table input.xmonto').last().focus();
+					$('table input.xmonto').last().select();
+				}
 				// $('table input.xxmonto:last-child').focus();
 				// $('table input.xxmonto:last-child').select();
+
+				// $('table input.xmonto').last().blur();
+
+				// chekFocusPago.focus=true;
 			}, 200);
 			// xCalcImporte();
 		}

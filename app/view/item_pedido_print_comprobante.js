@@ -10,7 +10,11 @@ var xImpresoraPrint;
 // showPrint = true; es false si lo mando desde facturador.
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
 	let rptPrint = {}
-	if (xArrayComprobante && xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = false; return rptPrint;} // ninguno no imprime
+	if ( !!xArrayComprobante ) {
+		if (xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = false; return rptPrint;} // ninguno no imprime
+	} else {
+		rptPrint.imprime = false; return rptPrint;
+	}
 	
 	// busca impresora donde imprimir
 	if (showPrint) {
@@ -47,8 +51,18 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	//310721
 	// obtenemos el numero del comprobante / para que no demore en esperar repuesta
 	// console.log('paso F');
-	xm_all_xToastOpen("Conectando con Sunat...");
-	if ( xArrayComprobante.correlativo === '' ) {
+
+	// si es diferente a ticket
+	if ( xArrayComprobante.codsunat !== "0" ) {
+		xm_all_xToastOpen("Conectando con Sunat...");
+	}
+	
+
+	const _viene_facturador = typeof idregistro_pago === "object" ? true : false;
+
+	// || xArrayComprobante.correlativo === '#' cuando viene del facturador
+	if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#') {
+		// estas lineas lo eliminaremos
 		const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
 		xArrayComprobante.correlativo = numComprobante; 
 	}
@@ -609,7 +623,8 @@ async function xGetCorrelativoComprobante(_obj){
 		url: '../../bdphp/log_002.php',
 		data: {
 			op: '103001',
-			i: _obj.idtipo_comprobante_serie
+			i: _obj.idtipo_comprobante_serie,
+			obj: _obj
 		}
 	})
 

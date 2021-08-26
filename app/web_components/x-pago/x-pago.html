@@ -835,8 +835,10 @@
 			xThisPago.hidden_container_pago = !xThisPago.hidden_container_pago;
 			if (!xThisPago.hidden_container_pago) {
 				// $('.xmonto').last().focus();
-				$('table#table_op_fp input.xmonto').last().focus();
-				$('table#table_op_fp input.xmonto').last().select();
+				if ( isSynOsWinOrMac() ) {
+					$('table#table_op_fp input.xmonto').last().focus();
+					$('table#table_op_fp input.xmonto').last().select();
+				}
 			}
 			xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
 			xFireSend(true);

@@ -497,6 +497,7 @@
             const arrCpeFac = {
                 idcliente: _arrCliente.idcliente,
                 idcomprobante: arr_comprobante.idtipo_comprobante,
+                idtipo_comprobante_serie: arr_comprobante?.idtipo_comprobante_serie || null,
                 num_comprobante: arr_comprobante.correlativo,
                 subtotal: _arrTotal[0].importe,
                 igv: _arrTotal[1].importe,

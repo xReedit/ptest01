@@ -33,7 +33,11 @@
 
 		function getAllTipoPagoOption() {
 			// const op = xThisComTipoPagoOption.ispagoappop ? 601 : 6;
+
+			
+
 			xThisComTipoPagoOption.listOptionPago = [];
+
 
 			// _ispagoappop = isPedidoPagadoFromApp || false;
 			_ispagoappop = xThisComTipoPagoOption.ispagoappop || false;
@@ -91,6 +95,13 @@
 		function cocinanarDataTppALL(_dtValues) {
 			let yaEncontroPrimero=false, index_primero=0, _listOption;
 
+			let metodosPagosAceptados = xm_log_get('datos_org_sede')[0]?.metodo_pago_aceptados || null;
+			metodosPagosAceptados = metodosPagosAceptados ? metodosPagosAceptados === '' ? null : metodosPagosAceptados: metodosPagosAceptados;
+			
+			// metodosPagosAceptados += '4'; // agrega el pago app por defecto
+			// metodosPagosAceptados = metodosPagosAceptados.split(',');
+
+
 			xThisComTipoPagoOption.listOptionPago = [];
 
 			// const op = _ispagoappop ? 601 : 6;
@@ -108,6 +119,12 @@
 			
 			
 			_listOption = dtValues.map((x, index) => {
+					
+					// no aceptado
+					if ( metodosPagosAceptados ) {
+						if ( metodosPagosAceptados.indexOf(x.idtipo_pago) < 0 ) { x.visible = false; return x; } 
+					}
+						
 						// x.clase = 'xMiBoton_icon_option';						
 						x.logo='../../images/'+x.img;
 						x.descripcion = xMayusculaPrimera(x.descripcion.toLowerCase());
@@ -120,8 +137,12 @@
 							
 							// xThisComTipoPagoOption.hiddenIconBorrar = index === 0 ? true : false;
 						} else {x.seleccionado = false;}
+
+						x.visible = true;
 						return x;
 					});
+
+			_listOption = _listOption.filter(x => x.visible);
 
 			xThisComTipoPagoOption.listOptionPago = JSON.parse(JSON.stringify(_listOption));
 

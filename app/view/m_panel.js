@@ -189,9 +189,16 @@ async function xOpenPage(xop, parametro){
 
 	// setLocalSotrage('::app3_sys_route', 1);
 	// console.log('aa');
-	await xDelay(100);
+	xPopupLoad.xopen();
+	xPopupLoad.titulo = "Abriendo ...";
+	await xDelayHere(100);
 	// console.log('b');
 	aapasa++;
+
+	setTimeout(() => {
+		xPopupLoad.xclose();
+		xPopupLoad.titulo = "Guardando ...";
+	}, 500);
 
 	console.log('paso el router ', aapasa);
 	xop = parseInt(xop);
@@ -241,10 +248,10 @@ async function xOpenPage(xop, parametro){
 		//case 16:xruta='/venta_rapida';break;
 		case 16:
 			//var myWindow = window.open('#/venta_rapida', "Venta rapida");return;
-			if(window.innerWidth<=850){
-				xruta='/venta_rapida';
-			}else{
+			if ( isSynOsWinOrMac() ) {
 				window.open('#/venta_rapida', "Pundo de Venta");return;
+			}else{
+				xruta='/venta_rapida';
 			}
 			console.log(window.innerWidth);
 			break;
@@ -316,6 +323,8 @@ async function xOpenPage(xop, parametro){
 	router.go(xruta);
 
 	xScrolUp(0);
+
+	
 	//PanelDe.closeDrawer();
 }
 
@@ -491,4 +500,12 @@ function xPasarAMenuAcc() {
 function showNotificationPago() {
 	xOpenPage(47);
 }
+
+function xDelayHere(delayInms) {
+	return new Promise(resolve => {
+	  setTimeout(() => {
+		resolve(2);
+	  }, delayInms);
+	});
+  }
 

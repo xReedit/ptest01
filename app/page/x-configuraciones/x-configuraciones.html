@@ -190,6 +190,35 @@
 								<th width="5px"></th>
 							</thead>
 						</table>
+
+						<br><br>
+						<hr>
+						<br><br>
+						<div>
+							<h3>Metodos de Pago Aceptatos.</h3>
+							
+							<table>
+								<thead>
+									<th align="left">Metodo</th>
+									<th></th>
+								</thead>
+								<tbody>									
+									<template is="dom-repeat" items="{{listMetodoPagos}}" as="itemT">
+										<tr>
+											<td> {{itemT.descripcion}}</td>
+											<!-- <td> <input type="checkbox" class="checkTP" checked$="[[itemT.aceptado]]" id="cccc" onchange="updateMetodoPagoAceptado()" data-idt = "{{itemT}}"> </td> -->
+											<td><paper-checkbox 
+												class="checkTP" 
+												checked$="{{itemT.aceptado}}" 
+												data-idt="{{itemT.idtipo_pago}}"
+												onchange="updateMetodoPagoAceptado()"></paper-checkbox></td>											
+										</tr>										
+									</template>
+								</tbody>
+							</table>
+
+						</div>
+
 					</div>
 
 					<div id="div_regla">
@@ -744,6 +773,8 @@ function xIniConf(){
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 
 		loadIconSeccion();
+
+		xloadMetodosPagos();
 	})
 	
 	// compFindSede=document.getElementById('compFindCategoria');
@@ -914,6 +945,8 @@ function loadIconSeccion() {
 
 	console.log('xThisConfig.listIconSeccion', xThisConfig.listIconSeccion);
 }
+
+
 
 
 // dialog borrar
@@ -1830,6 +1863,46 @@ function updateIconSeccion(obj) {
 	})
 }
 
+function xloadMetodosPagos() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=11'})
+	.done( function (res) {
+		res = JSON.parse(res);
+
+		const metodosPagosIds =  xm_log_get('datos_org_sede')[0]?.metodo_pago_aceptados || '';
+
+		const aceptados = metodosPagosIds.split(',');
+		let listMetodoPagosAceptados = [];
+		xThisConfig.listMetodoPagos = [];
+
+		res.datos.map(x => {
+			x.aceptado = !!aceptados.filter(t => parseInt(t) === parseInt(x.idtipo_pago))[0];
+			x.aceptado_a = x.aceptado ? 1 : 0;
+			listMetodoPagosAceptados.push(x);			
+		});
+
+		xThisConfig.listMetodoPagos = listMetodoPagosAceptados;
+
+
+		console.log('xThisConfig.listMetodoPagos', xThisConfig.listMetodoPagos);
+	});
+	
+}
+
+function updateMetodoPagoAceptado() {
+	let idAceptados = '';
+	$('.checkTP').each((i, e) => {		
+		idAceptados += e.checked ? `${e.dataIdt},`: '';
+	});
+	
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1101', data:{ids: idAceptados}});
+}
+
+function checkboxChanged(event) {
+		if(event.target.checked) {
+			console.log(event.target.value);
+		}
+	}
+
 
 
 Polymer({
@@ -1841,7 +1914,11 @@ Polymer({
 		dt_sede:Object,
 		dt_cat:Object,
 		dt_impr:Object,
-		listIconSeccion: []
+		listIconSeccion: [],
+		listMetodoPagos: {
+			type: Object,				
+			notify: true
+		}
 	},
 	attached:function(){
 		this.selected_conf=0;
@@ -1851,6 +1928,6 @@ Polymer({
 	},
 	detached:function(){
 		// _cpSocketClose();
-	}
+	}	
 })
 </script>
