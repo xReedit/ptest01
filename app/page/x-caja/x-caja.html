@@ -43,7 +43,7 @@
       		<iron-pages selected="{{selected}}">
 	      		<div id="ingreso_caja">
 					<br>
-					<form id="form_ingreso">
+					<form id="form_ingreso" onsubmit="return false">
 						<select class="xTextRow2 xfont18 xCursor" id="selecie" style="width:200px">
 							<option value="1">INGRESO A CAJA</option>
 							<option value="2">SALIDA DE CAJA</option>
@@ -109,9 +109,35 @@
 			            </div>
 			            <!-- <button onclick="xCocinarResumenBoletas();">Enviar Resumen</button> -->
 					</div>
+
+					<br><br>
+					<div class="xTxtCierreCajaContenedor mt-2" hidden$="[[ !isShowLastCierres ]]">
+						<hr>
+						<p class="fw-600 fs-18">Ultimos cierres de caja</p>
+						<br>
+						<table width="100%">
+							<thead>
+								<th align="left">Fecha</th>
+								<th align="left">Usuario</th>
+								<th></th>
+							</thead>
+							<tbody>
+								<template is="dom-repeat" items="{{listCierres}}" as="item">
+									<tr>
+										<td>{{ item.fecha }}  {{ item.hora }}</td>									
+										<td>{{ item.usuario }}</td>
+										<td>
+											<button class="btn btn-sm btn-info" data-id="[[item.idprint_server_detalle]]" onclick="reImprimirCierreHistory(this)" >Re-imprimir</button>
+										</td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
+					<br><br>
 				</div>
       		</iron-pages>
-
+			  <br><br><br>
 
 		</div>
 		<!--Cierre de caja-->
@@ -169,7 +195,7 @@ var xThisCaja
 , id_supervisor = 0
 , xlo_idorg
 , xlo_idsede
-, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0;
+, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false;
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -263,16 +289,19 @@ function xIniCaja(){
 	$("#tab_caja").on('iron-select',function(){
 		switch(xThisCaja.selected){
 			case 0:xLoadResumenIS();break;
+			case 1: xloadLastCierres();break;
 		}
 	})
 
 }
 function xGuardarIngreso(){
+	if ( guadandoIngresoSalida ) { return; }
 	//$("#form_ingreso #idorg").val(xIdOrg);
 	//$("#form_ingreso #idsede").val(xIdSede);
 	//$("#form_ingreso #idusuario").val(xIdUsuario);
+	guadandoIngresoSalida = true;
 	xvalidateFormInput('form_ingreso',function(a){
-		if(a===false){return;}
+		if(a===false){guadandoIngresoSalida = false; return;}
 		var xvalIE=$("#form_ingreso #selecie").val();
 		xPopupLoad.xopen();
 		$("#form_ingreso #fecha").val(xDevolverFecha()+' '+xDevolverHora());
@@ -288,6 +317,7 @@ function xGuardarIngreso(){
 			$("#form_ingreso #motivo").val('');
 			$("#form_ingreso #monto").val('');
 			xLoadResumenIS();
+			guadandoIngresoSalida = false;
 		})
 	})
 }
@@ -410,6 +440,7 @@ function xVerificar(){
 		if(isConforme){
 			xRpt='<h3>OK cuadre conforme.</h3>';xColor='#060'; 
 			xArmarArrayPrint(res.idbitacora);
+			xloadLastCierres()
 		} else {
 			if(xPermisoSupervisor==1){//supervisor
 				if(!isNaN(calTotal)){
@@ -772,7 +803,7 @@ function xCerrarTerminal(){
 	xCerrarSession();
 }
 
-function xReImprimirCierre(){
+function xReImprimirCierre(obj){
 	dialog_erro_print.close();
 	xPopupLoad.titulo="Enviando...";
 	xPopupLoad.xopen();
@@ -855,6 +886,43 @@ function xEscribirDatosHtml(){
 	xSendEmailClienteSES(_msjSend);
 }
 
+function xloadLastCierres() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12'})
+	.done(function (res) {		
+		res = JSON.parse(res).datos;
+		xThisCaja.listCierres = res;
+		xThisCaja.isShowLastCierres = res.length > 0;
+		// console.log('xThisCaja.listCierres', xThisCaja.listCierres);
+	});
+}
+
+function reImprimirCierreHistory(obj) {	
+	const _cpe = obj.dataId;
+	xPopupLoad.xopen()	
+	$.ajax({ type: 'POST', 
+		url: '../../bdphp/log_005.php?op=1703',
+		data:{idprint: _cpe}})
+	.done( function (res) {
+		var _detalle_json = JSON.parse(res).datos;
+		_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
+
+		// const rowItem = xThisHistVenta.listRegistro[index_historial];
+		const _dataPrint = {
+			detalle_json: _detalle_json.detalle_json,
+			idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
+			hora: xDevolverHora(),
+			nomUs: 'Caja',
+			nom_documento: "cuadre-caja"
+		}
+
+		_cpSocketprinterOnly(_dataPrint);
+
+		setTimeout(() => {
+			xPopupLoad.xclose()
+		}, 1500);
+	});
+}
+
 
 Polymer({
 	is:'x-caja',
@@ -863,10 +931,13 @@ Polymer({
 		xt_org:Number,
 		xt_idsede:Number,
 		xt_idus:Number,
-		winchaCierre: []
+		winchaCierre: [],
+		listCierres: [],
+		isShowLastCierres: Boolean,
 	},
 	attached:function(){
 		this.selected=0;
+		this.isShowLastCierres = false;
     	xThisCaja=this;
 		xIniCaja();
 		// _cpSocketIsConnect();

@@ -70,22 +70,32 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     let descuento = [];
     let descuentoEnTotal = 0;
 
+    
     if (  isHayDescuento ) {
         descuentoEnTotal = parseFloat(itemDescuento.importe) * -1;
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
-        _base = importe_total_pagar - parseFloat(importe_total_igv) + descuentoEnTotal;
-        const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
 
-        descuento = [
-            {
-            "codigo": "02",
-            "descripcion": "Descuento Global afecta a la base imponible",
-            "porcentaje": porcentaje_dsc,
-            "monto": descuentoEnTotal,
-            "base": _base
-            }
-        ];
+        // _base = importe_total_pagar - parseFloat(importe_total_igv) + descuentoEnTotal;
+        // const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
+
+        // 040921// si hay descuentos no se registra en factura, la sunat no tiene claro que le importe el descuento, no hay ejemplos y xml da error
+        // solo el igv
+        // descuento = [
+        //     {
+        //     "codigo": "00",
+        //     "descripcion": "Descuento Global afecta a la base imponible",
+        //     "porcentaje": porcentaje_dsc,
+        //     "monto": descuentoEnTotal,
+        //     "base": _base
+        //     }
+        // ];
+
+
+
+        importe_total_pagar += descuentoEnTotal;
+
+        descuentoEnTotal = 0;
 
     }
 
@@ -223,12 +233,13 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         // hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);        
 
         // console.log('paso j');
-        if ( _viene_facturador === 1 ) { // si viene del facturador espera respuesta
+        // si viene del facturador espera respuesta o si el numero comprobante es #
+        if ( _viene_facturador === 1 || xArrayComprobante.correlativo === '#') {
             hash = xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);                    
         } else {
             // 310721 // para que sea mas rapido
             // no espera respuesta porque ya se sabe el numero del comprobante
-            xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie);
+            xSendApiSunat(jsonData, idregistro_pago, xidtipo__comprobante_serie, true, nomComercioEmisor);
     
             hash.ok = true;
             hash.qr = '';
@@ -335,7 +346,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
     setTimeout(() => {        
         xm_all_xToastClose();
-    }, 1000);
+    }, 2000);
     
 
 

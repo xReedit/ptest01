@@ -1,4 +1,5 @@
 <link rel="import" href="../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
+<link rel="import" href="../x-componentes/pagination-input/pagination-input.html">
 <dom-module id="x-compras">
 	<template>
 		<paper-dialog id="dialog_additem_pro" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -37,6 +38,36 @@
 			</div>
 		</paper-dialog>
 
+
+		<paper-dialog modal id="dialog_detalle_compora" style="min-width: 400px" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="d-flexx justify-content-between">
+				<p class="fw-600 fs-18">Detalles de compra</p>
+				<button class="btn btn-sm btn-secondary" dialog-dismiss> <span class="pl-1 pr-1 fw-600"> x </span> </button>
+			</div>
+			<div class="m-3">
+				<table width="100%">
+					<thead>
+						<th align="left">Cant</th>
+						<th align="left">Producto</th>
+						<th align="right">Precio</th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="{{ListDetalleCompra}}" as="item">
+							<tr>								
+								<td align="left">{{ item.cantidad }}</td>
+								<td align="left">{{ item.producto }}</td>
+								<td align="right"> {{ item.precio }}</td>
+							</tr>
+						</template>
+						<tr>
+							<td colspan="2" align="right"><span class="fw-600 fs-18"> Total </span></td>
+							<td align="right"> <span class="fw-600 fs-18"> {{ sumListDetalleCompra }} </span> </td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</paper-dialog>
+
 		<paper-dialog class="dialog_redondo" id="dialog_registrar_pago" style="width: 345px;" modal
 			entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div>
@@ -56,75 +87,139 @@
 
 		<br>
 		<div class="xMiCard xradius" style="width:80%">
-			<div class="xInvisible">
-					<form id="frm_compra" method="post" action="#">
-						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
-						<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
-						<input type="text" id="idproveedor" name="idproveedor">
-						<input type="text" id="idalmacen" name="idalmacen">
 
-						<input type="text" id="f_compra" name="f_compra">
-						<input type="text" id="f_registro" name="f_registro">
-						<input type="text" id="f_pago" name="f_pago">
-						<input type="text" id="total" name="total">
-						<input type="text" id="a_pagar" name="a_pagar">
-						<input type="text" id="nota_de_compra" name="nota_de_compra">
-						<input type="text" id="idtipo_pago" name="idtipo_pago">
-					</form>
-			</div>
-			<div class="xEncanezadoCard xFondoRowIndigo2 xCursor xHoverOpaco xTransicion3s" id="div_proveedor" style="height:25px;">
-				<p><strong>Datos del proveedor</strong></p>
-				<br>
-				<div class="xInvisible" id="div_ínput">
-					<form id="frm_proveedor" method="post" action="#">
-						<input type="text" id="descripcion" name="descripcion" placeholder="Nombre / Razon social" onChange="conMayusculas(this)" class="xMiInput xPasarEnter2" style="width:40%" inline>
-						<input type="text" id="dni" name="dni" placeholder="DNI / RUC" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" inline>
-						<input type="text" id="direccion" name="direccion" placeholder="Direccion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)">						
-						<div class="xInvisible">
-							<input type="text" id="idorg" name="idorg">
-							<input type="text" id="idsede" name="idsede">
-							<input type="text" id="idproveedor" name="idproveedor">
-						</div>
-					</form>
-					<br><br>
-				</div>				
-			</div>
-			<div class="xEncanezadoCard xFondoRowAmarillo4">
-				<p>Estos productos ingresa a:</p>
-				<select id="sel_alamcen" class="xTextRow2" inline></select>
-			</div>
-			<div class="xContentCard">
-				<table class="xtable4" width="100%" id="tb_input" data-TablaName="producto_historial_precio">
-					<thead>
-						<th class="xSinBorde" width="10px">Cant</th>
-						<th class="xSinBorde" width="60%">Producto</th>
-						<th class="xSinBorde" width="30px" align="right">Precio compra</th>
-						<th class="xSinBorde" width="10px"></th>
-					</thead>
-					<tr class="xSinBorde" data-id="">
-						<td><input type="number" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cantidad" onChange="conMayusculas(this)" required id="cant_item" autofocus></td>
-						<td><input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_item"></td>
-						<td><input type="text" class="xMiInput xAlinearDerecha xprecio" placeholder="Precio" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"  placeholder="Precio" id="precio_item" name="precio" required></td>
-						<td><paper-fab icon="add" onclick="xAddItemCompra()" title="Agregar item"></paper-fab></td>
-					</tr>
-					<tr class="tt_row"></tr>
-				</table>
-				<div class="xDerecha">
-					<h3 id="tt_row"></h3>
-				</div>
+			<div id="divCompra" class="xInvisible">
 				<div class="xInvisible">
-					<table id="tb_update_precio" data-TablaName="producto"></table>
-					<table id="tb_compra_items" data-TablaName="compra_items"></table>
-					<table id="tb_compra_pago" data-TablaName="compra_pago"></table>
-					<!-- <table id="tb_almacen_items" data-TablaName="almacen_items"></table> -->
+						<form id="frm_compra" method="post" action="#">
+							<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
+							<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
+							<input type="text" id="idproveedor" name="idproveedor">
+							<input type="text" id="idalmacen" name="idalmacen">
+	
+							<input type="text" id="f_compra" name="f_compra">
+							<input type="text" id="f_registro" name="f_registro">
+							<input type="text" id="f_pago" name="f_pago">
+							<input type="text" id="total" name="total">
+							<input type="text" id="a_pagar" name="a_pagar">
+							<input type="text" id="nota_de_compra" name="nota_de_compra">
+							<input type="text" id="idtipo_pago" name="idtipo_pago">
+						</form>
+				</div>
+				<div class="xEncanezadoCard xFondoRowIndigo2 xCursor xHoverOpaco xTransicion3s" id="div_proveedor" style="height:25px;">
+					<p><strong>Datos del proveedor</strong></p>
+					<br>
+					<div class="xInvisible" id="div_ínput">
+						<form id="frm_proveedor" method="post" action="#">
+							<input type="text" id="descripcion" name="descripcion" placeholder="Nombre / Razon social" onChange="conMayusculas(this)" class="xMiInput xPasarEnter2" style="width:40%" inline>
+							<input type="text" id="dni" name="dni" placeholder="DNI / RUC" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" inline>
+							<input type="text" id="direccion" name="direccion" placeholder="Direccion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)">						
+							<div class="xInvisible">
+								<input type="text" id="idorg" name="idorg">
+								<input type="text" id="idsede" name="idsede">
+								<input type="text" id="idproveedor" name="idproveedor">
+							</div>
+						</form>
+						<br><br>
+					</div>				
+				</div>
+				<div class="xEncanezadoCard xFondoRowAmarillo4">
+					<p>Estos productos ingresa a:</p>
+					<select id="sel_alamcen" class="xTextRow2" inline></select>
+				</div>
+				<div class="xContentCard">
+					<table class="xtable4" width="100%" id="tb_input" data-TablaName="producto_historial_precio">
+						<thead>
+							<th class="xSinBorde" width="10px">Cant</th>
+							<th class="xSinBorde" width="60%">Producto</th>
+							<th class="xSinBorde" width="30px" align="right">Precio compra</th>
+							<th class="xSinBorde" width="10px"></th>
+						</thead>
+						<tr class="xSinBorde" data-id="">
+							<td><input type="number" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cantidad" onChange="conMayusculas(this)" required id="cant_item" autofocus></td>
+							<td><input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_item"></td>
+							<td><input type="text" class="xMiInput xAlinearDerecha xprecio" placeholder="Precio" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"  placeholder="Precio" id="precio_item" name="precio" required></td>
+							<td><paper-fab icon="add" onclick="xAddItemCompra()" title="Agregar item"></paper-fab></td>
+						</tr>
+						<tr class="tt_row"></tr>
+					</table>
+					<div class="xDerecha">
+						<h3 id="tt_row"></h3>
+					</div>
+					<div class="xInvisible">
+						<table id="tb_update_precio" data-TablaName="producto"></table>
+						<table id="tb_compra_items" data-TablaName="compra_items"></table>
+						<table id="tb_compra_pago" data-TablaName="compra_pago"></table>
+						<!-- <table id="tb_almacen_items" data-TablaName="almacen_items"></table> -->
+					</div>
+				</div>
+
+				<div class="xPieCard">				
+					<br>
+					<div>
+						<div class="xBoton2 xAzul" disabled$="[[!habilitarPago]]" onclick="xOpenRegistrarPago();">Listo, definir pago</div>
+						<div class="xBoton2 xPlomo ml-2" onclick="goList();">Atras</div>
+					</div>
+					<br><br>
 				</div>
 			</div>
-			<div class="xPieCard">				
+
+
+
+			<!-- list compras -->
+			<div id="divList" style="padding: 30px;">
+				<p class="fw-600 fs-20">Listado de compras</p>
 				<br>
-				<div class="xBoton2 xAzul" disabled$="[[!habilitarPago]]" onclick="xOpenRegistrarPago();">Listo, definir pago</div>
+				<div class="d-flexx justify-content-between align-content-center">				
+					<input type="text" class="xMiInput xfont18 xitem2" style="width:80%; bottom: -2px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos()"
+						id="txt_buscar" enlinea>           
+						
+					<button class="btn btn-sm btn-info" onclick="goCompra()">+ Nuevo</button>
+				</div>
+				
 				<br><br>
+				<table width="100%" id="tb_list_cpe">
+					<thead>
+						<th align="left">#</th>
+						<th align="left">fecha</th>
+						<th align="left">Tipo Pago</th>
+						<th align="left">Almacen</th>
+						<th align="right">Total</th>					
+						<th>.</th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="{{ListCpe}}" as="item">
+							<tr class="animated fadeIn fast" id="{{index}}">
+								<td data-id="{{index}}">														
+									<span>{{displayIndex(index)}}</span>
+								</td>
+								<td align="left">{{item.f_registro}}</td>
+								<td align="left">{{item.des_tipo_pago}}</td>
+								<td align="left">{{item.des_almacen}}</td>
+								<td align="right" class="ximporte_row"> <span class="fw-600 fs-15"> {{item.total}} </span> </td>						
+								<td align="right">
+									<button class="btn btn-sm btn-success" data-id="{{item.idcompra}}"  onclick="xloadDetalleCompra(this)">Ver</button>							
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+				<br>                            
+				<div class="d-flexx justify-content-between">   
+					<div>
+						<span class="fw-600 fs-18"> Total S/.{{ sumListCompra }} </span>
+					</div>                             
+					<pagination-input id="paginator" class="xDerecha" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>                                
+				</div>
+
+
+				
 			</div>
+
+
+		
+			<br><br>
 		</div>
+
 	</template>
 </dom-module>
 <script>
@@ -145,13 +240,18 @@ var xThis
 , xsel_proveedor
 , xsel_almacen
 , xRpt_pago
-, sel_idTipoPago;
+, sel_idTipoPago
+, p_rows_re=0, p_rows=0, p_fecha=''
+, p_filter='', p_desde=0, data_pagination={}
+, data_pagination_re={}, xdebounce, xe_debounce=false;
 
 function xIniCompras(){
 	//xloadProductoItem();
 	//xLoadFamilias();
 	//xLoadProveedores();
 	//xVerificarSession();
+	xIniPagination();
+
 	xPopupLoad=document.getElementById('xLoad');
 	xm_LogChequea(function(){
 		xm_log_get('ini_us');
@@ -207,7 +307,7 @@ function xIniCompras(){
 		if(p==0){
 			// $("#btn_pago").attr('disabled', true);
 
-		}else{
+		}else{			
 			xRegistrar_compra();
 			// btn_pago.removeAttribute("disabled")
 			// if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrar_compra();}
@@ -230,7 +330,41 @@ function xIniCompras(){
 	})
 
 	$("#dialog_pago").on('iron-overlay-opened',function(){component_pago_pro.setFocusTxt();})
+
+	$("#txt_fecha").on('change', function () {
+            var d = $(this).val().split('-');            
+            p_fecha = d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
+            xThis.$.paginator.currentPage = 1;            
+            xLoadCpeEmitidos('6');
+            // xIniPagination();
+        });
+
+	xThis.$.paginator.addEventListener('page-limit-change', (e) => {
+            // console.log('page-limit-change', e.detail.value);
+            data_pagination = e.detail.value; // datos del componente
+            p_desde = data_pagination.pageDesde; // para el # de fila            
+            lastPos = $(window).scrollTop();
+            xLoadCpeEmitidos('6');            
+        }); 
+           
 }
+
+
+function xfiltrarDatos() {
+        // if ( xThis.$.txt_buscar.value.length < 3 ) return;
+        if ( xe_debounce ) return;
+        xe_debounce = true;
+        clearTimeout(xdebounce);
+
+        xdebounce = setTimeout(() => {            
+            xLoadCpeEmitidos('6');
+            // clearTimeout(xdebounce);
+            xe_debounce = false;
+            xThis.$.paginator.currentPage = 1;            
+            // xIniPagination();
+        }, 900);
+    }
+
 function xEnterInInputDlg(e){
 	var code=e.which;
 	if ( code==13||code==186 ) {
@@ -316,7 +450,7 @@ function xAddItemLista(){
 
 function xRegistrar_compra(){
 	var xTb_items=$("#tb_input");
-	if (xTb_items.find('.row').length===0) { alert('No tiene ningun producto en la lista de compras'); return; }
+	if (xTb_items.find('.row').length===0) { return; }
 	//proveedor
 	var xobj_proveedor=$("#frm_proveedor #descripcion");
 	xsel_almacen=$("#sel_alamcen option:selected").val();
@@ -388,6 +522,7 @@ function xGuardarRegistroCompra(){
 			xPopupLoad.xclose();
 			dialog_registrar_pago.close();
 			xNuevaCompra();
+			xLoadCpeEmitidos();
 		})
 	})
 }
@@ -606,6 +741,80 @@ function xCargarFamiliaInput(){
 		    }
 		});
 }
+
+function xIniPagination() {        
+	xThis.$.paginator.currentPage = 1;
+	xThis.$.paginator.pageRows = p_rows;
+	xThis.$.paginator.listRows = [10,20,30,40];
+    }
+
+function xLoadCpeEmitidos(op) {                
+        p_filter = xThis.$.txt_buscar.value;      
+        // p_fecha  = xThis.$.txt_fecha.value;
+        //p_fecha = p_fecha == "" ? xDevolverFecha() : p_fecha;
+                
+        data_pagination.pageFilter = p_filter;    
+        data_pagination.pageFecha = p_fecha;
+
+        let xDataRes = [];
+        // console.log(data_pagination);
+
+        $.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=13', data: { op: '13', pagination: data_pagination} })
+        .done(function (res) {
+            res = res.split('**');
+            p_rows = res[1];
+            res = $.parseJSON(res[0]);
+            xDataRes = res.datos;			
+            
+			xThis.sumListCompra = xDataRes.map(x => parseFloat(x.total)).reduce((a,b) => a + b, 0);			
+			xThis.sumListCompra = xThis.sumListCompra.toFixed(2);
+                               
+            p_upadate = false;  // para que no vuelva a llamar esta funcion
+            xThis.$.paginator.pageRows = p_rows;    
+            // xThis.$.paginator.listRows = [10, 20, 30, 40];                 
+            // console.log('datos', xDataRes);
+
+			xThis.ListCpe = [];                
+			xThis.ListCpe = xDataRes; 
+			setTimeout(() => {
+				$(window).scrollTop(lastPos);
+			}, 5);
+            
+
+            
+        });
+
+    }
+	
+function xloadDetalleCompra(obj) {
+	const _idcompra = obj.dataId;	
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1301', data: { id: _idcompra } })
+        .done(function (res) {
+			res = JSON.parse(res).datos;
+			xThis.sumListDetalleCompra = 0;
+
+			if (res.length === 0)  { return; };
+			xThis.sumListDetalleCompra = res.map(x => parseFloat(x.precio)).reduce((a, b) => a +b , 0);
+			xThis.sumListDetalleCompra = xThis.sumListDetalleCompra.toFixed(2);
+			xThis.ListDetalleCompra = res;
+
+			dialog_detalle_compora.open();
+			// xPopupLoad.xclose();
+
+		});
+}
+
+function goList() {
+	$(divCompra).addClass('xInvisible');
+	$(divList).removeClass('xInvisible');
+}
+
+function goCompra() {
+	$(divList).addClass('xInvisible');
+	$(divCompra).removeClass('xInvisible');
+}
+
+
 ///
 
 Polymer({
@@ -618,11 +827,18 @@ Polymer({
 		dtProFam:Object,
 		dtProProveedor:Object,
 		habilitarPago: false,
+		ListCpe: [],
+		ListDetalleCompra: [],
+		sumListDetalleCompra: Number,
+		sumListCompra: Number
 	},
 	attached:function(){
     	xThis=this;
     	xIniCompras();
     	this.selected_page=0;
-    }
+    },
+	displayIndex: function (index) {
+            return xCeroIzq(parseInt( p_desde ) + (index + 1), 1);
+        }
 })
 </script>

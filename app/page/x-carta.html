@@ -1,4 +1,5 @@
 <link rel="import" href="../x-componentes/x-comp-item-subitems-edit/x-comp-item-subitems-edit.html">;
+<link rel="import" href="../x-componentes/x-comp-productos-enlazados-item-carta/x-comp-productos-enlazados-item-carta.html">;
 <dom-module id="x-carta">
 	<template>
 		<!-- <paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -42,6 +43,7 @@
 					<paper-tab>DESCRIPCION</paper-tab>
 					<paper-tab>SUBITEMS</paper-tab>
 					<paper-tab>FOTO</paper-tab>
+					<paper-tab>ENLAZADOS</paper-tab>
 				</paper-tabs>
 				<div class="xLinea2"></div>
 				<br>
@@ -72,6 +74,14 @@
 						<br><br>
 						<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFoto();">Listo, guardar</div>
 						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+					</div>
+
+					<!-- productos enlazados -->
+					<div>
+						<x-comp-productos-enlazados-item-carta></x-comp-productos-enlazados-item-carta>
+						<br><br>
+						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+						<br><br><br>
 					</div>
 
 				</iron-pages>
@@ -1175,7 +1185,7 @@ function xfiltrarCartaHistorial() {
 
 function updateVisible() {
 	const val = check_visible_cliente.checked ? 1 : 0;
-	xdtCAct[index].is_visible_cliente = val;
+	// xdtCAct[index].is_visible_cliente = val;
 
 	const _filtro = txt_buscar.value;
 	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=19', data:{id: xIdObjCartaLista, check: val}})

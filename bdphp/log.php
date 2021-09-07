@@ -585,12 +585,14 @@
 								$id_item=$bd->xConsulta_UltimoId($sql);
 							}
 							else{//actualizar
-								$sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item;
+								// $sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item;
+								$sql_update_item="update item set descripcion='".$item['des_item']."', precio='".$item['precio_item']."' where iditem=".$id_item;
 								// echo $sql_update_item;
 								$bd->xConsulta_NoReturn($sql_update_item);
 							}
 						} else {//actualizar
-								$sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item.";";
+							 // $sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item.";";
+								$sql_update_item="update item set descripcion='".$item['des_item']."', precio='".$item['precio_item']."' where iditem=".$id_item.";";
 								$bd->xConsulta_NoReturn($sql_update_item);
 								// echo $sql_update_item;
 							}
@@ -2570,10 +2572,12 @@
 			$bd->xConsulta($sql);
 			break;
 		case 70011://resumne de ingresos y salidas de caja no cerradas
+			// GROUP by fecha, motivo agregamos porque enm algunos comercios esta duplicando
 			$sql="
 				SELECT  fecha, IF(tipo=1,'INGRESO','SALIDA') AS des_tipo,tipo,motivo,monto
 					FROM ie_caja
 				WHERE (idorg=".$g_ido." AND idsede=".$g_idsede.") AND idusuario=".$_SESSION['idusuario']." AND cierre=0
+				GROUP by fecha, motivo
 				ORDER BY idie_caja desc
 			";
 			$bd->xConsulta($sql);
@@ -2704,7 +2708,7 @@
 			where (tpcs.idorg=".$g_ido.") and tpcs.estado=0
 			";
 			$bd->xConsulta($sql);
-			break;
+			break;		
 		case 17://recetas y costos  //load items platos de la carta
 			$sql="
 				SELECT i.iditem, concat(IFNULL(s.descripcion,'----'),' | ',i.descripcion) AS descripcion, i.precio, i.costo, format(i.precio-i.costo,2) as rentabilidad
