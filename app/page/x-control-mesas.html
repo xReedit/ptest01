@@ -1914,9 +1914,13 @@ async function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago)
 		// correlativo comprobante
 		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
 
-		if ( arr_comprobante ) {
+		// if ( arr_comprobante ) {
+			// arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+			// }
+
+		try {
 			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-		}
+		} catch (error) {}
 		
 		xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
 		xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente, _idregistro_pago,-2);

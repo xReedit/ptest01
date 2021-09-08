@@ -182,6 +182,15 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         // "numero_documento": xArrayComprobante.correlativo,
         const telefonoCliente = xArrayCliente?.telefono || '';
 
+
+        // para evitar que me
+        // const _isNotIntNumComprobante = isNaN(parseInt(xArrayComprobante.correlativo));
+        // if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante) {
+        //     // estas lineas lo eliminaremos
+        //     const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
+        //     xArrayComprobante.correlativo = numComprobante; 
+        // }
+
         var jsonData = {                    
             "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
             "numero_documento": xArrayComprobante.correlativo,
@@ -273,6 +282,23 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         let total_igv = 0;
         let total_valor_item = parseFloat(x.precio_total).toFixed(2);
         let _precio_unitario = x.punitario || x.precio_total;
+
+
+
+        // verificamos que el precio del item no sea igual 0
+        const _pTotal = parseFloat(x.precio_total);
+        var _pUnitario = parseFloat(_precio_unitario);
+        const _cantidad = parseFloat(x.cantidad);
+        if ( _pTotal === 0 ) { return; }
+
+        // chequeamos que la cantidad * punitario = ptotal
+        const _totalCalc = _cantidad * _pUnitario;
+        if ( _totalCalc !==  _pTotal) {
+            _pUnitario = _pTotal / _cantidad;
+            _precio_unitario = _pUnitario.toFixed(2);            
+        }
+
+
         let _valor_unitario = _precio_unitario;
 
 
@@ -290,6 +316,9 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         } else {
             total_base_igv = parseFloat(x.precio_total); // cambio x error 3105 IGV // 12/07/2020
         }
+
+        
+
         
         //const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
         var jsonItem = {

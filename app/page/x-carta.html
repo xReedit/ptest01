@@ -78,7 +78,7 @@
 
 					<!-- productos enlazados -->
 					<div>
-						<x-comp-productos-enlazados-item-carta></x-comp-productos-enlazados-item-carta>
+						<x-comp-productos-enlazados-item-carta id="compItemProductoRelacionado" iditem$="[[idItemSelected]]"></x-comp-productos-enlazados-item-carta>
 						<br><br>
 						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
 						<br><br><br>
@@ -354,9 +354,23 @@ function xInicarta(){
 	$("#tab_carta").on('iron-select',function(){
 		switch(xThisCarta.selected){
 		//case 0:;break;
-			case 1:xloadCartaHistorial();break;		
+			case 1:xloadCartaHistorial();break;						
 		}
 	});
+
+	
+	// $("#tab_detalle").on('iron-select',function(){
+	// 	switch(xThisCarta.selectedDetalle){
+	// 		case 3: // itemrelacionados		
+	// 			const _compItemProductoRelacionado = document.getElementById('compItemProductoRelacionado');
+	// 			_compItemProductoRelacionado.getProductosRelacionadosItem();
+	// 			break;	
+	// 		// default :
+	// 		// 	_compItemProductoRelacionado.resetListProductoRelacionadosItem();
+	// 		// break;
+								
+	// 	}
+	// });
 	
 }
 function xPasaEnterClass(){//actualiza controles input para pasa enter
@@ -686,7 +700,10 @@ function xItemDetalle(obj, e){
 	$("#dialog_detalle #dlg_det_item").val(xval_det);
 
 	
+	
 	dialog_detalle.open();
+
+	
 
 	e.stopPropagation();
 	e.stopImmediatePropagation();
@@ -704,6 +721,8 @@ function xItemDetalleOpciones(index, obj, e){
 	var xval_des=itemSelectSubItem.des_item.trim();
 
 	dlg_des_item_detalle.textContent = xval_des;
+
+	xThisCarta.idItemSelected = xIdObjImgDet;
 
 	// detalle
 	// $("#dialog_detalle #dlg_des_item").val(xval_des);
@@ -725,7 +744,10 @@ function xItemDetalleOpciones(index, obj, e){
 		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
 	}	
 	$("#ctrl_open_file").val('');
-
+	
+	
+	const _compItemProductoRelacionado = document.getElementById('compItemProductoRelacionado');
+	_compItemProductoRelacionado.getProductosRelacionadosItem();
 	
 	dialog_detalle.open();
 
@@ -1277,6 +1299,7 @@ Polymer({
 		dt_item:Object,
 		dt_seccion:Object,
 		ListHistorial: [],
+		idItemSelected: Number
 		// ListSubItems: [],
 		// cantidadSubItems: 0
 	},

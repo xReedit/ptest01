@@ -61,8 +61,9 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	const _viene_facturador = typeof idregistro_pago === "object" ? true : false;
 
 	// || xArrayComprobante.correlativo === '#' cuando viene del facturador
-	const _isNotIntNumComprobante = isNaN(parseInt(xArrayComprobante.correlativo));
-	if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante) {
+	const _numIntCorrelativo = parseInt(xArrayComprobante.correlativo);
+	const _isNotIntNumComprobante = isNaN(_numIntCorrelativo);
+	if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante || _numIntCorrelativo == 0) {
 		// estas lineas lo eliminaremos
 		const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
 		xArrayComprobante.correlativo = numComprobante; 

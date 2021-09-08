@@ -1584,9 +1584,11 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 		}
 		// correlativo = correlativo ? correlativo === '' ? arr_comprobante.correlativo : '' : '';
 		// correlativo comprobante
-		if ( arr_comprobante ) {
-			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-		}
+		// if ( arr_comprobante ) {
+			try {				
+				arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+			} catch (error) {}
+		// }
 
 		// quitar
 		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
