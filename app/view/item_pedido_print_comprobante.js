@@ -5,7 +5,7 @@
 // xArrayCliente datos del cliente nombre dni ruc direccion
 
 
-var xImpresoraPrint;
+var xImpresoraPrint, _numIntCorrelativoBD;
 // idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
 // showPrint = true; es false si lo mando desde facturador.
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
@@ -60,16 +60,19 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 
 	const _viene_facturador = typeof idregistro_pago === "object" ? true : false;
 
+	console.log('xArrayComprobante.correlativo A', xArrayComprobante.correlativo);
+
 	// || xArrayComprobante.correlativo === '#' cuando viene del facturador
-	const _numIntCorrelativo = parseInt(xArrayComprobante.correlativo);
-	const _isNotIntNumComprobante = isNaN(_numIntCorrelativo);
-	if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante || _numIntCorrelativo == 0) {
+	_numIntCorrelativoBD = parseInt(xArrayComprobante.correlativo);
+	const _isNotIntNumComprobante = isNaN(_numIntCorrelativoBD);
+	if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante || _numIntCorrelativoBD == 0) {
 		// estas lineas lo eliminaremos
 		const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
 		xArrayComprobante.correlativo = numComprobante; 
+		_numIntCorrelativoBD = numComprobante;
 	}
 	
-	// console.log('xArrayComprobante.correlativo', xArrayComprobante.correlativo);
+	console.log('xArrayComprobante.correlativo B', xArrayComprobante.correlativo);
 	
 
 	// console.log('paso H');
@@ -123,6 +126,8 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
+
+	comprobarNumCorrelativoComprobante(xArrayComprobante);
 
 	const _data = {
 		Array_enca: xArrayEncabezado,
@@ -178,6 +183,8 @@ function xImprimirComprobanteAhoraPrintPreSelect(xArrayEncabezado, xArrayCuerpo,
 
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
+
+	comprobarNumCorrelativoComprobante(xArrayComprobante);
 
 	const _data = {
 		Array_enca: xArrayEncabezado,
@@ -637,4 +644,14 @@ async function xGetCorrelativoComprobante(_obj){
 		return '#';
 	}
 	
+}
+
+function comprobarNumCorrelativoComprobante(xArrayComprobante) {
+	console.log('numero en comprobancion A', xArrayComprobante.correlativo);
+	const _numIntCorrelativo = parseInt(xArrayComprobante.correlativo);
+    const _isNotIntNumComprobante = isNaN(_numIntCorrelativoBD);
+    if ( _isNotIntNumComprobante ) { // si viene con B001-00
+        xArrayComprobante.correlativo = _numIntCorrelativoBD;
+		console.log('numero en comprobancion B', xArrayComprobante.correlativo)
+    }
 }

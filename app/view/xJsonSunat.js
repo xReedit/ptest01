@@ -30,6 +30,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
 
 
+    console.log('xArrayComprobante.correlativo C', xArrayComprobante.correlativo);
     // cambio para sumar los costos negativos, si es que es delivery y el comercio paga
 	xArraySubTotales = darFormatoSubTotalesParaFacturacion(xArraySubTotales, false);
 
@@ -190,6 +191,10 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         //     const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
         //     xArrayComprobante.correlativo = numComprobante; 
         // }
+
+        console.log('xArrayComprobante.correlativo D', xArrayComprobante.correlativo);
+
+        comprobarNumCorrelativoComprobante(xArrayComprobante);
 
         var jsonData = {                    
             "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
@@ -378,6 +383,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     }, 2000);
     
 
+    console.log('xArrayComprobante.correlativo E numero_comp', numero_comp);
 
     await fetch(_url, {
         method: 'POST',
@@ -389,6 +395,8 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         // console.log(res);
         const errSoap = res.response ? res.response.error_soap : false;
         // if (res.success || !errSoap) { // respuesta ok
+            console.log('xArrayComprobante.correlativo F res api', res.data.number);
+
             rpt.ok = true; 
             rpt.qr = res.data.qr;
             rpt.hash = res.data.hash;
@@ -449,6 +457,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         rpt.external_id = '';
         const correlativo_error = await CpeInterno_Error(data, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);        
         rpt.correlativo_comprobante = correlativo_error.correlativo;
+        console.log('xArrayComprobante.correlativo F error res api', rpt.correlativo_comprobante);
         rpt.facturacion_correlativo_api = correlativo_error.facturacion_correlativo_api;
         console.log(correlativo_error);
     });
