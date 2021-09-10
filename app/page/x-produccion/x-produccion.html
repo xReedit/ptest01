@@ -1,11 +1,13 @@
 <dom-module id="x-produccion">
     <link rel="import" href="../../x-componentes/x-comp-find-producto-almacen/x-comp-find-producto-almacen.html">
     <script src="../../view/httpFech.js"></script>
+    <script src="../../view/item_pedido_print_comprobante.js"></script>
+    <script rel="prefetch" type="text/javascript" src="../../view/socket.service.p.js"></script>
 	<template is="dom-bind">
 
-        <paper-dialog modal id="dialog_detalle_produccion" style="min-width: 500px" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <paper-dialog modal id="dialog_detalle_produccion" style="min-width: 400px" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="d-flexx justify-content-between">
-				<p class="fw-600 fs-18">Detalles de compra</p>
+				<p class="fw-600 fs-18">Detalles de produccion</p>
 				<button class="btn btn-sm btn-secondary" dialog-dismiss> <span class="pl-1 pr-1 fw-600"> x </span> </button>
 			</div>
             <div>
@@ -84,7 +86,7 @@
                         <tbody>
                             <template is="dom-repeat" items="{{listProduccion}}" as="item">
                                 <tr data-id="[[index]]">
-                                    <td data-id="{{index}}"><span>{{displayIndex(index)}}</span></td>
+                                    <td data-id="{{index}}"><span>{{ item.idproduccion_producto }}</span></td>
                                     <td>{{ item.fecha }}</td>
                                     <td> {{ item.usuario }} </td>
                                     <td>{{ item.detalle }}</td>
@@ -144,6 +146,7 @@
                         <br>
                         <div class="d-flexx">
                             <button class="btn btn-info" disabled$="[[isDisabledGuardar]]" onclick="guardarProduccion()">Guardar Produccion</button>
+                            <button class="btn btn-success ml-2" hidden$="[[!isGuardadoProduccion]]" onclick="cocinarImpresionProduccion()"> Imprimir </button>
                             <button class="btn btn-secondary ml-2" onclick="goDetalleProduccion()"> Atras </button>
                         </div>
                     </div>
@@ -155,9 +158,10 @@
 
             </div>
         </div>
+        <br><br>
 	</template>
 	<script>
-		var xThisPageProduccion, _idAlmacenProduccion, compProductoAlmacen, rowItemAdd = {}, listItemProduccion = [];
+		var xThisPageProduccion, _idAlmacenProduccion, compProductoAlmacen, rowItemAdd = {}, listItemProduccion = [], lastIdProduccion;
 		
         function xIniPageProduccion() {
             compProductoAlmacen = document.getElementById('compProductoAlmacen');
@@ -359,9 +363,33 @@
             const _httpFech = new httpFecht();
             const rpt = await _httpFech.postJson('../../bdphp/log_009.php', _dataSend)            
             xThisPageProduccion.isDisabledGuardar = true;
+            lastIdProduccion = rpt.respuesta;
 
             xPopupLoad.xclose();
+
+            xThisPageProduccion.isGuardadoProduccion = true;
+
             xlistaProduccion();
+
+            
+        }
+
+        function cocinarImpresionProduccion() {
+            const printer = xgetImpresora(-6);                        
+            const _dataPrintD = {
+                lista : xThisPageProduccion.listItemAddProduccion,
+                impresora: printer,
+                subtotales: [],
+                encabezado: {
+                    tipo: 'PRODUCCION',
+                    titulo: 'PRODUCCION',
+                    correlativo_lista: lastIdProduccion,
+                    otro: `ALMACEN PRODUCCION`,
+                    observaciones: txt_detalle.value
+                }
+            }
+
+            xImprimirCualquierLista(_dataPrintD);
         }
 
 
@@ -391,6 +419,11 @@
 
         function goDetalleProduccion() {
             xThisPageProduccion.showDetalleProduccion = !xThisPageProduccion.showDetalleProduccion;
+
+            if (!xThisPageProduccion.showDetalleProduccion) {
+                xThisPageProduccion.listItemAddProduccion = [];
+                listItemProduccion = [];
+            }
         }
 
 
@@ -406,13 +439,17 @@
                 listProduccion: [],
                 observacionesProduccion: String,
                 fechaProduccion: String,
-                showDetalleProduccion: Boolean
+                showDetalleProduccion: Boolean,
+                isGuardadoProduccion: Boolean
 			},
 			attached: function () {                
                 this.isDisabledGuardar = true;
                 this.showDetalleProduccion = false;
+                this.isGuardadoProduccion = false;
 				xThisPageProduccion = this;				
 				xIniPageProduccion();
+
+                _cpSocketOpen(); // conectamos para mandar a imprimir
                 
 			},
             ready: () => {

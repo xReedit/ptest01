@@ -1,7 +1,44 @@
+<link rel="import" href="../x-componentes/x-comp-find-almacen/x-comp-find-almacen.html">
+<link rel="import" href="../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
+<link rel="import" href="../x-componentes/x-comp-find-producto-almacen/x-comp-find-producto-almacen.html">
+<script src="../view/httpFech.js"></script>
+<script src="../view/item_pedido_print_comprobante.js"></script>
+<script rel="prefetch" type="text/javascript" src="../view/socket.service.p.js"></script>
 <dom-module id="x-distribuicion">
     <template>
+
+        <paper-dialog modal id="dialog_detalle_distribuicion" style="min-width: 400px" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="d-flexx justify-content-between">
+				<p class="fw-600 fs-18">Detalles de Distribuicion</p>
+				<button class="btn btn-sm btn-secondary" dialog-dismiss> <span class="pl-1 pr-1 fw-600"> x </span> </button>
+			</div>
+            <div>
+                <p><span class="fw-600">De: </span> {{ desdeDistribuicion }} <span class="fw-600">A:</span> {{ hastaDistribuicion }}</p>
+                <p><span class="fw-600">Fecha: </span> {{ fechaDistribuicion }}</p>
+                <p><span class="fw-600">Obersvaciones: </span> {{ observacionesDistribuicion }} </p>
+            </div>
+            <hr>            
+			<div>
+				<table width="100%">
+					<thead>
+                        <th align="left">Producto</th>						
+						<th align="center">Cantidad</th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="{{listItemAddDistribuicionD}}" as="item">
+							<tr>								
+								<td align="left">{{ item.descripcion }}</td>								
+								<td align="center">{{ item.cantidad }}</td>
+							</tr>
+						</template>						
+					</tbody>
+				</table>
+			</div>
+            <br><br>
+		</paper-dialog>
+
         <br>
-        <div class="xMiCard xradius" style="width:80%">
+        <!-- <div class="xMiCard xradius" style="width:80%">
             <div class="xEncanezadoCard xFondoRowAmarillo4">
                 <table class="xtable4">
                     <tr>
@@ -38,8 +75,7 @@
                     <tr class="tt_row"></tr>
                 </table>
                 <br><br>
-                <div class="xInvisible">
-                    <!--table id="tb_almacen_items_update" data-TablaName="almacen_items"></table-->
+                <div class="xInvisible">                    
                     <table id="tb_almacen_items" data-TablaName="producto_stock"></table>
                 </div>
             </div>
@@ -48,7 +84,140 @@
                 <div class="xBoton2 xAzul" onclick="xGuardarDistribuicion();">Listo, guardar distribuicion</div>
                 <br><br>
             </div>
+        </div> -->
+
+
+        <br>
+        <div class="xMiCard xradius" style="width:90%; max-width: 1250px;">
+            <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                <div class="div-content-head-op">
+                    <p class="fw-600 fs-18">Distribuición</p>                    
+                    <p Class="text-secondary">Distribuir productos de un almacen a otro, o de un local a otro local.</p>
+                </div>                
+            </div>
+            <div class = "p-3 mb-5">
+                <!-- lista -->
+                <div hidden$="[[ showDetalleDistribuicion ]]">
+                    <div class="d-flexx justify-content-between align-items-center">
+                        <p class="fs-15 fw-600">Listado de Distribuicion</p>                    
+                        <button class="btn btn-sm btn-info" onclick="goDetalleDistribuicion()"> + Nuevo</button>
+                    </div>
+                    <br>
+                    <table width="100%">
+                        <thead>
+                            <th>#</th>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>De</th>
+                            <th>A</th>
+                            <th>Observaciones</th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="{{listDistribuicion}}" as="item">
+                                <tr data-id="[[index]]">
+                                    <td data-id="{{index}}"><span>{{ item.iddistribuicion }}</span></td>
+                                    <td>{{ item.fecha }}</td>
+                                    <td> {{ item.usuario }} </td>
+                                    <td>{{ item.desde }}</td>
+                                    <td>{{ item.hasta }}</td>
+                                    <td>{{ item.detalle }}</td>
+                                    <td align="right"><button class="btn btn-sm btn-success" data-id="{{item.iddistribuicion}}"  onclick="xloadDetalleDistribuicion(this)">Ver</button></td>
+                                </tr>
+                            </template>                            
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <!-- nuevo -->
+                <div hidden$="[[ !showDetalleDistribuicion ]]">
+                    <br>
+                    <div class="d-flexx">
+                        <div>
+                            <p class="fw-600">Distribuir De:</p>
+                            <select id="sel_alamcenDE" inline class="selected-template-1"></select>
+                        </div>
+                        <div class="pl-3">
+                            <p class="fw-600">A:</p>
+                            <div class="d-flexx">
+                                <select id="selectA" class="selected-template-1" onchange="setIsToAlmacen()">
+                                    <option value="0">Almacen</option>
+                                    <option value="1">Local</option>
+                                </select>
+                                <!-- alamacen -->
+                                <div hidden$="[[!isToAlmacen]]" class="pl-1">
+                                    <select id="sel_alamcenA" inline class="selected-template-1"></select>
+                                </div>
+                                <!-- sede / local -->
+                                <div hidden$="[[isToAlmacen]]" class="pl-1">
+                                    <x-comp-find-sede id="sedeComp" clasecss="selected-template-1"></x-comp-find-sede>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br><br>
+                    
+                    <table width="100%">
+                        <thead>
+                            <td width="60%">Producto</td>
+                            <td>Stock</td>
+                            <td>Cantidad</td>
+                            <td></td>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <!-- <input type="text" class="xMiInput xPasarEnter2 fs-12" id="des_item" onkeyup="xloadProductoProduccion(this)"> -->
+                                    <x-comp-find-producto-almacen 
+                                        id="compProductoAlmacenDistribuicion"
+                                        onlynomfamilia="true"
+                                        idalmacenfiltro$="[[idAlmacenDistribuicionFiltro]]"></x-comp-find-producto-almacen>
+                                </td>
+                                <td>
+                                    <input type="number" readonly="true" class="xMiInput xPasarEnter2 fs-12" id="text_stock_producto" placeholder="Stock Actual">
+                                </td>
+                                <td>
+                                    <input type="number" class="xMiInput xPasarEnter2 fs-12" id="text_cantidad_producto" placeholder="Cantidad">
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" onclick="addProductoListDistribuicion()">+</button>
+                                </td>                                
+                            </tr>
+
+                            <template is="dom-repeat" items="{{listItemAddDistribuicion}}" as="item">
+                                <tr data-id="[[item.idproducto_stock]]">
+                                    <td>{{ item.descripcion }}</td>
+                                    <td align="right" colspan="2" > {{ item.cantidad }} </td>
+                                    <td>
+                                        <span class="xDeleteRow ml-2" title="Anular" onclick="removeItemListDistribuicion(this);"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+
+                    <br><br><br>
+                    <div>
+                        <textarea name="" id="txt_detalle" cols="30" maxlength="150" rows="2" placeholder="Observaciones"></textarea>
+                        <br>
+                        <hr>
+                        <br>
+                        <div class="d-flexx">
+                            <button class="btn btn-info" disabled$="[[isDisabledGuardar]]" onclick="guardarDistribuicionNew()">Guardar Distribuicion</button>
+                            <button class="btn btn-success ml-2" hidden$="[[!isGuardadoDistribuicion]]" onclick="cocinarImpresionDistribuicion()"> Imprimir </button>
+                            <button class="btn btn-secondary ml-3" onclick="goDetalleDistribuicion()"> Atras </button>
+                        </div>
+                    </div>
+
+                </div>
+
+
+
+
+            </div>
         </div>
+        <br><br>
     </template>
 </dom-module>
 <script>
@@ -59,9 +228,12 @@
     var xIdProducto_sel;
     var xIdAlmacen_item_pro_sel;
     var xnom_producto_sel;
-    var xidAlmacen = 0;
+    var xidAlmacen = 0, _compAlmacenDe, listItemDistribuicion = [], rowItemAdd = {}, compProductoAlmacen, lastIdDistribuicion;
 
     function xIniDistribuicion() {
+        compProductoAlmacen = document.getElementById('compProductoAlmacenDistribuicion');
+
+
         xPopupLoad = document.getElementById('xLoad');
         xm_LogChequea(function () {
             xm_log_get('ini_us');
@@ -71,6 +243,8 @@
 
             //xloadProductoItem();
             xloadAlamcen();
+
+            xlistaDistribuicion();
             $('body').addClass('loaded');
         })
 
@@ -109,9 +283,24 @@
         });
 
         $("#sel_alamcenDE").on('change', function () {
-            xidAlmacen = $("#sel_alamcenDE option:selected").val();
-            xloadProductoItem();
+            xThisDisttribucion.idAlmacenDistribuicionFiltro = $("#sel_alamcenDE option:selected").val();
+            // xloadProductoItem();
         })
+
+        const _compProductoAlmacenDistribuicion = document.getElementById('compProductoAlmacenDistribuicion');
+        _compProductoAlmacenDistribuicion.addEventListener('productoSeleted', (e) => {
+            console.log('e', e.detail);
+
+            text_stock_producto.value = e.detail.stock || 0;
+        })
+
+        $("#text_cantidad_producto").on('keyup',function(e){
+                var code=e.which;
+                if ( code==13||code==186 ) {
+                    addProductoListDistribuicion();
+                }
+            });
+
 
     }
 
@@ -335,6 +524,154 @@
         $("#txt_stock").val('');
         $("#des_item").focus();
     }
+
+
+    function setIsToAlmacen(){
+        xThisDisttribucion.isToAlmacen = !xThisDisttribucion.isToAlmacen;
+    }
+
+
+    function addProductoListDistribuicion() {
+            const _productoSelected = compProductoAlmacen.getProductoSeletedAlmacen();                        
+            if ( !_productoSelected ) {        
+                return;
+            } else {
+                rowItemAdd.cantidad = text_cantidad_producto.value;
+                if ( parseFloat(rowItemAdd.cantidad) > parseFloat(_productoSelected.stock) ) {
+                    alert('Cantidad mayor al disponible');
+                    return;
+                }
+                rowItemAdd.descripcion = _productoSelected.label;
+                rowItemAdd.idproducto_stock = _productoSelected.value;
+                rowItemAdd.idproducto = _productoSelected.idproducto;
+                setItemListDistribuicion();
+            }
+
+        }
+
+        function removeItemListDistribuicion(obj) {
+            const xRowObj=obj.parentNode.parentNode;
+            const indexPS = xRowObj.dataId;
+
+            listItemDistribuicion = listItemDistribuicion.filter(x => x.idproducto_stock !== indexPS);
+            setListListDistribuicion();
+
+            // $(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
+        }
+
+    function setItemListDistribuicion() {
+            // console.log('rowItemAdd', rowItemAdd);
+            listItemDistribuicion = xThisDisttribucion.listItemAddDistribuicion || [];
+            listItemDistribuicion.push(rowItemAdd);
+            setListListDistribuicion();
+
+            compProductoAlmacen.resetText();
+            text_cantidad_producto.value = '';
+            text_stock_producto.value = '';
+            compProductoAlmacen.focusText();
+
+        }
+
+    function setListListDistribuicion() {
+        xThisDisttribucion.isDisabledGuardar = listItemDistribuicion.length === 0;
+        xThisDisttribucion.listItemAddDistribuicion = JSON.parse(JSON.stringify(listItemDistribuicion));
+        }   
+        
+        
+
+        async function guardarDistribuicionNew() {
+            xPopupLoad.xopen();
+
+            if ( xThisDisttribucion.listItemAddDistribuicion.length === 0 ) { return; }
+
+            const _sedeComp = document.getElementById('sedeComp');
+            const _idsedeA = _sedeComp.getSede();
+
+            const xIdAlmacen_A = $("#sel_alamcenA option:selected").val();
+            const _dataSend = {
+                op: 4,
+                list: xThisDisttribucion.listItemAddDistribuicion,
+                detalle: txt_detalle.value,
+                idalmacen_de: xThisDisttribucion.idAlmacenDistribuicionFiltro,
+                is_to_sede: xThisDisttribucion.isToAlmacen ? 0 : 1,
+                idalmacen_a: xIdAlmacen_A,
+                idsede_a: _idsedeA.idsede
+            }
+
+            // console.log('_dataSend', _dataSend);
+
+            const _httpFech = new httpFecht();
+            const rpt = await _httpFech.postJson('../../bdphp/log_009.php', _dataSend)            
+            xThisDisttribucion.isDisabledGuardar = true;
+            lastIdDistribuicion = rpt.respuesta;
+
+            xPopupLoad.xclose();
+
+            xThisDisttribucion.isGuardadoDistribuicion = true;
+
+            xlistaDistribuicion();
+
+            
+        }
+
+        function cocinarImpresionDistribuicion() {
+            const printer = xgetImpresora(-5);
+            const _sedeComp = document.getElementById('sedeComp');
+            const _idsedeA = _sedeComp.getSede();
+            const adondelabel = xThisDisttribucion.isToAlmacen ? sel_alamcenA.selectedOptions[0].text : 'LOCAL ' + _idsedeA.nombre;
+            const _dataPrintD = {
+                lista : xThisDisttribucion.listItemAddDistribuicion,
+                impresora: printer,
+                subtotales: [],
+                encabezado: {
+                    tipo: 'DISTRIBUICION',
+                    titulo: 'DISTRIBUICION',
+                    correlativo_lista: lastIdDistribuicion,
+                    otro: `De: ${sel_alamcenDE.selectedOptions[0].text} -> A: ${adondelabel}`,
+                    observaciones: txt_detalle.value
+                }
+            }
+
+            xImprimirCualquierLista(_dataPrintD);
+        }
+
+
+        function xlistaDistribuicion() {
+            $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=401'})
+            .done( function (res) {
+                var _resList=JSON.parse(res);
+                xThisDisttribucion.listDistribuicion=_resList.datos;                                
+            });
+        }
+
+        function xloadDetalleDistribuicion(obj) {
+            const xRowObj=obj.parentNode.parentNode;
+            const itemDistribuicion = xThisDisttribucion.listDistribuicion[xRowObj.dataId];
+
+            $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=402', data: {id: itemDistribuicion.iddistribuicion}})
+            .done( function (res) {
+                var _resList=JSON.parse(res);
+                xThisDisttribucion.listItemAddDistribuicionD=_resList.datos;                                                
+                xThisDisttribucion.observacionesDistribuicion = itemDistribuicion.detalle;
+                xThisDisttribucion.fechaDistribuicion = itemDistribuicion.fecha;
+                xThisDisttribucion.desdeDistribuicion = itemDistribuicion.desde;
+                xThisDisttribucion.hastaDistribuicion = itemDistribuicion.hasta;
+
+                dialog_detalle_distribuicion.open();
+            });
+        }
+
+
+        function goDetalleDistribuicion() {
+            xThisDisttribucion.showDetalleDistribuicion = !xThisDisttribucion.showDetalleDistribuicion;
+            if (!xThisDisttribucion.showDetalleDistribuicion) {
+                xThisDisttribucion.listItemAddDistribuicion = [];
+                listItemDistribuicion = [];
+                xThisDisttribucion.isGuardadoDistribuicion = false;
+            }
+        }
+
+
     Polymer({
         is: 'x-distribuicion',
         properties: {
@@ -342,10 +679,30 @@
             xt_idsede: Number,
             xt_idus: Number,
             dtProItem: Object,
+            idAlmacenDistribuicionFiltro: Number,
+            listDistribuicion: [],
+            listItemAddDistribuicion: [],
+            listItemAddDistribuicionD: [],
+            showDetalleDistribuicion: Boolean,
+            isToAlmacen: Boolean,
+            isDisabledGuardar: Boolean,
+            fechaDistribuicion: String,
+            observacionesDistribuicion: String,
+            desdeDistribuicion: String,
+            hastaDistribuicion: String,
+            isGuardadoDistribuicion: Boolean        
         },
         attached: function () {
+            this.isDisabledGuardar = true;
+            this.showDetalleDistribuicion = false;
+            this.isToAlmacen=true;
+            this.isGuardadoDistribuicion = false;
             xThisDisttribucion = this;
             xIniDistribuicion();
-        }
+            _cpSocketOpen(); // conectamos para mandar a imprimir
+        },
+        displayIndex: function (index) {
+                return xCeroIzq(index + 1, 1);
+            },
     })
 </script>

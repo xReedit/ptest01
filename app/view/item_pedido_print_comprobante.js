@@ -518,7 +518,30 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 		});	
 }
 
+// imprimir cualquier lista
+function xImprimirCualquierLista(dataToPrinter) {
+	xPopupLoad.titulo="Imprimiendo...";
+	xPopupLoad.xopen();
 
+	// const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	dataToPrinter.encabezado.nom_us = xm_log_get('app3_us').nomus;
+
+	const _data = {
+		Array_enca: dataToPrinter.encabezado,
+		Array_print: dataToPrinter.impresora,
+		ArrayItem: dataToPrinter.lista, //xArrayCuerpo, para borrar los null
+		ArraySubTotales: dataToPrinter.subtotales	
+	}
+
+	// if (_sys_local === 1) {
+		xSendDataPrintServer(_data,5,'listado');
+		setTimeout(() => {			
+			// callback(false);
+			xPopupLoad.xclose();
+		}, 300);
+		// return;
+	// }
+}
 
 /// enviar a print server
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
