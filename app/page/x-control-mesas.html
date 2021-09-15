@@ -1793,6 +1793,8 @@ async function xRegistrarClientePagoCP(){
 			p_subtotales: xarr_subtotal, 
 			p_comprobante: xarr_comprobante
 		}
+
+
 		const idP = await goSendPedidoFecht(dataSendPedido);
 		const _arrRpt = idP;
 
@@ -1838,8 +1840,10 @@ async function xRegistrarClientePagoCP(){
 			p_subtotales: xarr_subtotal, 
 			p_comprobante: xarr_comprobante
 		}
+
 		const idP = await goSendPedidoFecht(dataSendPedido);
 		const _arrRpt = idP;
+		
 
 		// $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
 		// 	data:{

@@ -307,9 +307,42 @@ async function xSoapSunat_SendSunat(external_id, idce) {
         // no elimina, puede que el problema de conexion persista pero los datos estan bien
         // cunado se restablece la conexion lo enviara.
         else {
+
             rpt.ok = false;
             rpt.error = 'Problema de conexion Sunat persistente.';
             rpt.msj_error = res.message || res.response.description;
+
+            // 11092021
+            // si el error es de comprobante registrado con otros datos - erro se produce por sunat no sincroniza bien los datos
+            // entonces le decimos que fue acepta 
+            if ( rpt.msj_error.toLowerCase() === 'el comprobante fue registrado previamente con otros datos' ) {
+
+                // ok
+                rpt.ok = true;
+
+                let data = {};
+                data.idce = idce;
+                data.estado_api = 0; // se registro correctamente
+                data.estado_sunat = 0; // se envio correctamente
+                data.msj = "Aceptada";
+                // data.numero = numero_comp;
+                data.external_id = external_id;
+
+                if (res.response.length != 0) {
+                    // data.estado_sunat = res.response.code;
+                    data.msj = res.response.description;
+                }
+
+                data.pdf = res.links.pdf != "" ? 1 : 0;
+                data.cdr = res.links.cdr != "" ? 1 : 0;
+                data.xml = res.links.xml != "" ? 1 : 0;
+
+                CpeInterno_UpdateRegistro(data);
+
+            }
+
+            
+            
         }
         // else {
         //     // error de ingreso de datos / anula comprobante
