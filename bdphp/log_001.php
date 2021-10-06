@@ -806,15 +806,20 @@
 		$idtipo_comprobante_serie = $x_array_comprobante['idtipo_comprobante_serie'];
 		if ($x_array_comprobante['idtipo_comprobante'] != "0"){ // 0 = ninguno | no imprimir comprobante
 
+			$sql_doc_correlativo = "call procedure_get_num_comprobante($idtipo_comprobante_serie)";
+			$correlativo_comprobante = $bd->xDevolverUnDatoSP($sql_doc_correlativo);		
 			
-			$sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
-			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
+			// $sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+			// $correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
+			
+			// $sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+			// $bd->xConsulta_NoReturn($sql_doc_correlativo);		
+			
+			
 			
 			// $sql_update_value_correlativo = "update tipo_comprobante_serie set facturacion_correlativo_api=1 where idtipo_comprobante_serie=".$idtipo_comprobante_serie;
 			// $bd->xConsulta_NoReturn($sql_update_value_correlativo);
 			
-			$sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
-			$bd->xConsulta_NoReturn($sql_doc_correlativo);			
 
 		// 		// $sql_doc_correlativo = "update tipo_comprobante_serie set correlativo = ".$correlativo_comprobante." where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
 		// 		// $bd->xConsulta_NoReturn($sql_doc_correlativo);			
@@ -873,13 +878,13 @@
 
 
 		// echo $sql_pago_pedido;
-        // $bd->xConsulta_NoReturn($sql_pago_pedido);
-		// $bd->xConsulta_NoReturn($cadena_tp);
-		// $bd->xConsulta_NoReturn($sql_subtotales);
+        $bd->xConsulta_NoReturn($sql_pago_pedido);
+		$bd->xConsulta_NoReturn($cadena_tp);
+		$bd->xConsulta_NoReturn($sql_subtotales);
 
 
 		
-		$bd->xMultiConsultaNoReturn($sql_pago_pedido.$cadena_tp.$sql_subtotales);
+		// $bd->xMultiConsultaNoReturn($sql_pago_pedido.$cadena_tp.$sql_subtotales);
 		// echo $cadena_tp;
 				
 		
@@ -966,12 +971,14 @@
 		$idtipo_comprobante_serie = $x_array_comprobante['idtipo_comprobante_serie'];
 		if ($x_array_comprobante['idtipo_comprobante'] != "0"){ // 0 = ninguno | no imprimir comprobante
 
-	
-			$sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
-			$correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
+			$sql_doc_correlativo = "call procedure_get_num_comprobante($idtipo_comprobante_serie)";
+			$correlativo_comprobante = $bd->xDevolverUnDatoSP($sql_doc_correlativo);	
 
-			$sql_update_value_correlativo = "update tipo_comprobante_serie set facturacion_correlativo_api=1 where idtipo_comprobante_serie=".$idtipo_comprobante_serie;
-			$bd->xConsulta_NoReturn($sql_update_value_correlativo);
+			// $sql_doc_correlativo="select correlativo + 1  from tipo_comprobante_serie where idtipo_comprobante_serie = ".$idtipo_comprobante_serie;
+			// $correlativo_comprobante = $bd->xDevolverUnDato($sql_doc_correlativo);		
+
+			// $sql_update_value_correlativo = "update tipo_comprobante_serie set facturacion_correlativo_api=1 where idtipo_comprobante_serie=".$idtipo_comprobante_serie;
+			// $bd->xConsulta_NoReturn($sql_update_value_correlativo);
 			
 		// 	// if ($x_array_comprobante['codsunat'] == "0") { // si no es factura electronica
 		// 		// guardamos el correlativo //
@@ -1067,12 +1074,12 @@
 		// $sql_pedido_update='update pedido set total=total-'.$tt.' where idpedido in ('++')';
 				
 		// echo $sql_subtotales;
-        // $bd->xConsulta_NoReturn($sql_pago_pedido);
-		// $bd->xConsulta_NoReturn($cadena_tp);
-		// $bd->xConsulta_NoReturn($sql_subtotales);
+        $bd->xConsulta_NoReturn($sql_pago_pedido);
+		$bd->xConsulta_NoReturn($cadena_tp);
+		$bd->xConsulta_NoReturn($sql_subtotales);
 		// print $correlativo_comprobante;
 
-		$bd->xMultiConsultaNoReturn($sql_pago_pedido.$cadena_tp.$sql_subtotales);
+		// $bd->xMultiConsultaNoReturn($sql_pago_pedido.$cadena_tp.$sql_subtotales);
 
 		$x_respuesta = json_encode(array('correlativo_comprobante' => $correlativo_comprobante, 'idregistro_pago' => $idregistro_pago));
 		print $x_respuesta;

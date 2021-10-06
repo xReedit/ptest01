@@ -2,6 +2,14 @@
 <link rel="import" href="../../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
 
 <dom-module id="x-orden-pedido">
+    <script src="../../view/httpFech.js"></script>
+    <script src="../../view/item_pedido_print_comprobante.js"></script>
+    <script src="../../view/item_pedido_estructura.js"></script>
+    <script src="../../view/item_pedido_subtotales.js"></script>
+    <script src="../../view/deNumALetras.js"></script>
+    <script src="../../view/xJsonSunat.js"></script>
+    <script src="../../view/cpe_interno.js"></script>
+    <script rel="prefetch" type="text/javascript" src="../../view/socket.service.p.js"></script>
     <template is="dom">
         <!-- <div class="p-20">
             <h2>Orden de pedido</h2>
@@ -24,6 +32,12 @@
 				<button class="xBoton2 xAzul" onclick="xRegistrarAdelanto();">Registrar Adelanto</button>
 			</div>
         </paper-dialog>
+
+        <paper-dialog id="dialog_comprobante" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">
+				<x-pago id="component_pago"></x-pago>
+			</div>			
+		</paper-dialog>
         
 
         <paper-dialog class="dialog_redondo" id="dialog_nota" entry-animation="scale-up-animation"
@@ -53,8 +67,8 @@
                 <div class="p-2" style="background: beige; color: #424242;">
                     <!-- <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../../images/_otros_ingresos.png"><p>Adelantos</p></div></paper-button>
                     <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../../images/_apuntar_cuenta_vr.png"><p>Notas o cambios</p></div></paper-button> -->
-                    <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../../images/001-pdf.png"><p>Imprimir PDF</p></div></paper-button>
-                    <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>
+                    <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="cocinarImpresionOrdenPedido();" id="btn_anular_pedido"><img src="../../../images/_print_1_vr.png"><p>Imprimir</p></div></paper-button>
+                    <paper-button disabled$="[[!isDisabledFacturar]]" ><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xAbrirDialogComprobante();" id="btn_anular_pedido"><img src="../../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>
                 </div>
             <div class="xLinea2"></div>
             <div class="xContentCard" style="padding: 20px;">            
@@ -182,7 +196,7 @@
 </dom-module>
 <script>
     var xThisOrden, xPopupLoad, idOrdenPedido, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, tipoPagoSelected, compTipoPagoSelected;
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, tipoPagoSelected, compTipoPagoSelected, xRpt_pago = [];
     
     function xIniOrdenPedido() {
         xThisOrden.formValid = false;
@@ -254,6 +268,24 @@
             txt_fecha_cpe_manual = d[1] === undefined ? '' : $(this).val();                        
             // xIniPagination();
         });
+
+
+        xValPago=document.getElementById('component_pago');	
+        xValPago.addEventListener('xSend', function (e) {
+            xRpt_pago=e.detail.xRpts;
+            var p=e.detail.xRpts[0].ok;
+            // if(p!=0){			
+            //     if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoCP();}
+            // }
+        });
+        xValPago.addEventListener('xCancelarCerrar', function (e) {		
+            xThisOrden.$.dialog_comprobante.close()
+        });
+        
+        xValPago.addEventListener('xListoRegistraPago', function (e) {		
+            // console.log('imprimir comprobante');
+            xMandarCocinarImpresionComprobante_OrdenPedido();
+        });
     }
 
     function xCalcTotal() {
@@ -322,6 +354,7 @@
         xThisOrden.totalPendiente = 0;
         xThisOrden.correlativoOrden = '';
         xThisOrden.showNotaAdelanto = false;
+        xthisOrden.isDisabledFacturar = false;
     }
 
     function xCalcularTotal() {
@@ -445,6 +478,7 @@
             xThisOrden.totalAdelanto = parseFloat(xThisOrden.totalAdelanto).toFixed(2);
             xThisOrden.totalPendiente = parseFloat(xThisOrden.arrTotales[xThisOrden.arrTotales.length - 1].importe) - parseFloat(xThisOrden.totalAdelanto);
             xThisOrden.totalPendiente = xThisOrden.totalPendiente.toFixed(2);
+            xThisOrden.isDisabledFacturar = parseInt(xThisOrden.totalPendiente) <= 0;
             dialog_adelanto.close();
         });
     }
@@ -504,6 +538,67 @@
         xRegistrarAdelanto(true);
     }
 
+    function cocinarImpresionOrdenPedido() {
+        const _arrTotales = JSON.parse(JSON.stringify(xThisOrden.arrTotales));
+        _arrTotales.push({descripcion: 'Adelanto', importe: xThisOrden.totalAdelanto });
+        _arrTotales.push({descripcion: 'Pendiente', importe: xThisOrden.totalPendiente });
+
+        const printer = xgetImpresora(-7);                        
+            const _dataPrintD = {
+                lista : xThisOrden.arrItems,
+                impresora: printer,
+                subtotales: _arrTotales,
+                encabezado: {
+                    tipo: 'ORDEEN DE PEDIDO',
+                    titulo: 'ORDEN DE PEDIDO',
+                    correlativo_lista: idOrdenPedido,
+                    otro: `PEDIDO`,
+                    observaciones: '',
+                    nombres : frm_nombres.value,
+                    direccion : frm_direccion.value,
+                    telefono : frm_telefono.value,
+                    fecha_entrega: f_entrega.value,
+                    nota: txt_nota.value,                    
+                }
+            }
+
+            console.log('_dataPrintD', _dataPrintD);
+
+            xImprimirCualquierLista(_dataPrintD, 6, 'orden_pedido');
+    }
+
+    function xAbrirDialogComprobante() {
+        // dialog_comprobante.open()
+        const _total = xThisOrden.arrTotales[xThisOrden.arrTotales.length - 1].importe;
+        xThisOrden.$.component_pago.setVal(xMoneda(_total));
+	    xValPago.setModoSoloComprobante();
+        xThisOrden.$.dialog_comprobante.open();
+    }
+
+    function xMandarCocinarImpresionComprobante_OrdenPedido() {		
+        var arr_cliente = xRpt_pago[0].cliente;	
+        var arr_comprobante = xRpt_pago[0].comprobante;
+        const arrayItems = xCargarDatosAEstructuraImpresion(xThisOrden.arrItems);
+        const arrSumSubtTotales = xThisOrden.arrTotales;
+        xPopupLoad.xopen();
+        // se envia f = genera el correlativo
+
+        $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'f', p_comprobante: arr_comprobante}})
+        .done( function (xrpt_correlativo) {
+            const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
+            arr_comprobante.correlativo = xCeroIzqNumComprobante(_arrRpt.correlativo_comprobante);
+            xCocinarImprimirComprobante(arrayItems, arrSumSubtTotales, arr_comprobante, arr_cliente, '',-2);
+            
+            // arr_comprobante.correlativo = xCeroIzqNumComprobante(xrpt_correlativo);
+            
+            // para modificar el estado del boton
+            
+            xThisOrden.$.dialog_comprobante.close();
+            xPopupLoad.xclose();
+        })
+            
+    }
+
 
     Polymer({
 			is: 'x-orden-pedido',
@@ -519,12 +614,16 @@
                 correlativoOrden: '',
                 showNotaAdelanto: false,
                 setfechaorden: String,
-                setidorden: Number
+                setidorden: Number,
+                isDisabledFacturar: Boolean,
 			},
 			attached: function () {
+                this.isDisabledFacturar = false;
 				xThisOrden = this;
                 xThisOrden.showNotaAdelanto = false;
 				xIniOrdenPedido();
+                
+                _cpSocketOpen(); // conectamos para mandar a imprimir
 			},
 			displayIndex: function (index) {
 				return xCeroIzq(index + 1, 1);

@@ -858,6 +858,8 @@ async function xSendEmailClienteSES(params) {
 			});
 }
 
+
+
 // async function getTemplate(filepath) {
 // 	return await fetch(filepath)
 // 		.then(response => {

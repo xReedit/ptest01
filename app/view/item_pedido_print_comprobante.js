@@ -519,7 +519,7 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 }
 
 // imprimir cualquier lista
-function xImprimirCualquierLista(dataToPrinter) {
+function xImprimirCualquierLista(dataToPrinter, idestructura = 5, titulo = 'listado') {
 	xPopupLoad.titulo="Imprimiendo...";
 	xPopupLoad.xopen();
 
@@ -534,7 +534,7 @@ function xImprimirCualquierLista(dataToPrinter) {
 	}
 
 	// if (_sys_local === 1) {
-		xSendDataPrintServer(_data,5,'listado');
+		xSendDataPrintServer(_data, idestructura, titulo);
 		setTimeout(() => {			
 			// callback(false);
 			xPopupLoad.xclose();

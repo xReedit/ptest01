@@ -52,10 +52,11 @@
 		</paper-dialog>
 
 		<br><br>
-		<div class="xMiCard xradius animated fadeIn" style="width:85%">
+		<div class="xMiCard xradius animated fadeIn myDivToPrint" style="width:85%" id="myDivToPrint">
 			<div class="xContentCard">
-				<div class="xDerecha" style="text-align: right">
+				<div class="xDerecha xBtnNoPrint" style="text-align: right">
 					<button class="xBoton2 xAzul" onclick="window.history.back()">Regresar</button>
+					<button class="xBoton2 xVerde" onclick="imprimirFile()">Imprimir</button>
 					<button class="xBoton2 xRojo" hidden$="{{dataEnca.debaja}}" onclick="dialog_baja.open()">Dar de baja</button>
 					
 				</div>
@@ -63,7 +64,7 @@
 					<h3>{{dataEnca.nombres}} | {{dataEnca.dni}}</h3>
 					<p>Cargo: <strong>{{dataEnca.descargo}}</strong></p>
 					<p>Profesion: <strong>{{dataEnca.profesion}}</strong></p>
-					<div class="xDerecha" style="text-align: right"><h3>Junio 2019</h3></div>					
+					<div class="xDerecha" style="text-align: right"><h3> {{ dataEnca.mes_corresponte }} </h3></div>					
 					<p>Area: <strong>{{dataEnca.area}}</strong></p>
 					<p>F. Ingreso: <strong>{{dataEnca.f_ingreso}} | {{dataEnca.tiempo_laborando}} DE SERVICIO.</strong></p>
 					<div hidden$="{{!dataEnca.debaja}}">
@@ -77,7 +78,7 @@
 					<div id="div_ingresos" class="xitem1 xBordeDe" style="height: 50vh; overflow-y: auto;">
 						<div hidden$="{{dataEnca.debaja}}">
 							<paper-fab mini icon="add" onclick="_newIngreso()" title="Agregar" tabindex="0"
-								class="xDerecha"
+								class="xDerecha xBtnNoPrint"
 								style="top: 30px; margin: -5px;"></paper-fab>
 							<h4>Ingresos</h4>
 						</div>
@@ -114,7 +115,7 @@
 					<div id="div_descuentos" class="xitem2">
 						<div hidden$="{{dataEnca.debaja}}">
 							<paper-fab mini icon="add" onclick="_newDescuento()" title="Agregar" tabindex="0"
-								class="xDerecha"
+								class="xDerecha xBtnNoPrint"
 								style="top: 30px; margin: -5px;"></paper-fab>
 							<h4>Descuentos</h4>
 						</div>
@@ -156,11 +157,26 @@
 		</div>
 	</template>
 </dom-module>
-<!-- <style>
-	.paper-dialog-0>*:first-child {
+<style>
+	/* .paper-dialog-0>*:first-child {
 		margin-top: -7px;
-	}
-</style> -->
+	} */
+
+	/* @media print {
+    .myDivToPrint {
+        background-color: white;
+        height: 100%;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        margin: 0;
+        padding: 15px;
+        font-size: 14px;
+        line-height: 18px;
+    } 
+	} */
+</style>
 <script>
 	var xThisPColFile, dataUrl, _mesactivo;
 
@@ -180,11 +196,13 @@
 			url: '../../bdphp/log_005.php?op=503', data:{id: dataUrl.id, mes: dataUrl.mes}
 		})
 		.done((res) => {
-			const _res = JSON.parse(res);			
+			const _res = JSON.parse(res);		
+			console.log('_res', _res);	
 			xThisPColFile.dataEnca = _res.datos.map(x => {
 				x.tiempo_laborando = xTiempoTrascurridoYYMMDD(x.laborando);
 				x.fecha_baja = x.fecha_baja === null ? '' : x.fecha_baja;
 				x.debaja = x.fecha_baja !='' ? true : false;
+				x.mes_corresponte = xDesMes(parseInt(x.mes_activo.split('/')[0]) + 1) +' '+x.mes_activo.split('/')[1];
 				return x;
 			})[0];
 
@@ -276,6 +294,17 @@
 		xBorrarItem(xObjBorrar);
 		dialog_borrar.close();
 		xloadDetallesPlanilla();
+	}
+
+	function imprimirFile() {
+		$('.xBtnNoPrint').attr('hidden', true);
+		setTimeout(() => {
+			PrintElemDiv('myDivToPrint', 'Boleta de Pago');
+		}, 500);
+
+		setTimeout(() => {
+			$('.xBtnNoPrint').attr('hidden', false);
+		}, 2000);
 	}
 
 	Polymer({

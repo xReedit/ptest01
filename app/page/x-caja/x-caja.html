@@ -73,6 +73,40 @@
 							<th align="right">Importe</th>
 						</thead>
 					</table>
+
+					<div hidden$="[[ !isShowListaAdelantoOrden ]]">
+						<br><br>
+						<div class="xLinea2"></div>
+						<br>
+						<h3>Adelantos de ordernes de pedido</h3>
+						<br>
+						<table>
+							<thead>
+								<th>Fecha</th>
+								<th>Usuario</th>
+								<th># Orden</th>
+								<th>Cliente</th>
+								<th>Detalle</th>
+								<th>Importe</th>
+								<th>.</th>
+							</thead>
+							<tbody>
+								<template is="dom-repeat" items="{{listAdelantoOrden}}" as="item">
+									<tr>
+										<td>{{ item.fecha_hora }}</td>
+										<td>{{ item.usuario }}</td>
+										<td>{{ item.numero }}</td>
+										<td>{{ item.cliente_nom }}</td>
+										<td>{{ item.concepto }}</td>
+										<td>{{ item.importe }}</td>
+										<td>
+											<button class="btn btn-sm btn-success" data-id="[[index]]" onclick="recibirAdelanto(this)">Recibir</button>
+										</td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
 				</div>
 
 				<!--Cierre de caja-->
@@ -204,6 +238,7 @@ function xIniCaja(){
 	if(xIdSede=='' || xIdSede==undefined){	xIdSede=window.localStorage.getItem('::app3_woS');}*/
 	xm_LogChequea(function(){
 		xm_log_get('ini_us');
+		console.log('xUsAc_Ini', xUsAc_Ini);
 		$('body').addClass('loaded');
 
 
@@ -311,7 +346,7 @@ function xGuardarIngreso(){
 		//var xx=$("#form_ingreso").serialize();
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=ie_caja",$("#form_ingreso").serialize(),function(aa){
-			console.log(aa);
+			// console.log(aa);
 			xPopupLoad.xclose();
 			//$("#form_ingreso").reset();
 			$("#form_ingreso #motivo").val('');
@@ -402,7 +437,19 @@ function xLoadResumenIS(){
 		};
 		$("#tb_resumen_ie .row").remove();
 		$("#tb_resumen_ie").append(xcadena_resumen_ie).trigger('create');
-	})
+	});
+
+	xLoadAdelantoOrdenPedido();
+}
+
+function xLoadAdelantoOrdenPedido() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=15'})
+	.done( function (resAdelanto) {
+		const _resAdelanto = JSON.parse(resAdelanto).datos;
+		xThisCaja.listAdelantoOrden = _resAdelanto;
+		console.log('xThisCaja.listAdelantoOrden', xThisCaja.listAdelantoOrden);
+		xThisCaja.isShowListaAdelantoOrden = xThisCaja.listAdelantoOrden.length > 0;
+	});
 }
 
 function xSumarTotal(){
@@ -923,6 +970,21 @@ function reImprimirCierreHistory(obj) {
 	});
 }
 
+function recibirAdelanto(obj) {
+	const indexList = obj.dataId;
+	const item = xThisCaja.listAdelantoOrden[indexList];
+	item.fecha_guardar = xDevolverFecha()+' '+xDevolverHora();
+
+	$.ajax({ type: 'POST', 
+		url: '../../bdphp/log_004.php?op=1501',
+		data:{data: item}})
+	.done( function (res) {
+		// console.log(res);
+		xLoadResumenIS();
+	});
+
+}
+
 
 Polymer({
 	is:'x-caja',
@@ -934,10 +996,13 @@ Polymer({
 		winchaCierre: [],
 		listCierres: [],
 		isShowLastCierres: Boolean,
+		listAdelantoOrden: [],
+		isShowListaAdelantoOrden: Boolean,
 	},
 	attached:function(){
 		this.selected=0;
 		this.isShowLastCierres = false;
+		this.isShowListaAdelantoOrden = false;
     	xThisCaja=this;
 		xIniCaja();
 		// _cpSocketIsConnect();

@@ -625,7 +625,7 @@
 			break;
 		case 1702: // reimprimir comprobante
 			$c = $_POST['comprobante'];			
-			$sql = "select idprint_server_detalle, detalle_json from print_server_detalle where CONCAT(detalle_json->>'$.ArrayComprobante.inicial',detalle_json->>'$.ArrayComprobante.serie','-', detalle_json->>'$.ArrayComprobante.correlativo') = '$c'";
+			$sql = "select idprint_server_detalle, detalle_json from print_server_detalle where idsede = $g_idsede and CONCAT(detalle_json->>'$.ArrayComprobante.inicial',detalle_json->>'$.ArrayComprobante.serie','-', detalle_json->>'$.ArrayComprobante.correlativo') = '$c'";
 			$bd->xConsulta($sql);
 			break;
 		case 1703: // reimprimir cuadre de caja
@@ -662,7 +662,7 @@
 			$idtipo_pago = $_POST['idtipo_pago'];
 
 			if ( $concepto !== '' ) {
-				$sql = "insert into orden_pedido_adelanto (idorden_pedido, idtipo_pago, concepto, importe, fecha_hora) values ($idOrden, $idtipo_pago, '$concepto', '$importe', DATE_FORMAT(now(),'%d/%m/%Y %H:%i:%s'))";
+				$sql = "insert into orden_pedido_adelanto (idorden_pedido, idtipo_pago, idusuario, concepto, importe, fecha_hora) values ($idOrden, $idtipo_pago, $g_idusuario, '$concepto', '$importe', DATE_FORMAT(now(),'%d/%m/%Y %H:%i:%s'))";
 				$bd->xConsulta_NoReturn($sql);
 			}
 
@@ -1205,6 +1205,5 @@
 					order by idsede_pago_confirmacion desc";
 				$bd->xConsulta($sql);
 				break;
-
 	}
 ?>

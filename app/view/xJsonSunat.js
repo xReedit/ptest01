@@ -177,7 +177,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         hora_actual = rptDate[1];    
 
         const direccionEmisor = xArrayEncabezado[0].sededireccion === '' ? xArrayEncabezado[0].direccion : xArrayEncabezado[0].sededireccion;
-        const nomComercioEmisor = xArrayEncabezado[0].nombre;
+        const nomComercioEmisor = xArrayEncabezado[0].sedenombre;
         // console.log('xArrayEncabezado[0]', xArrayEncabezado);
 
         // "numero_documento": xArrayComprobante.correlativo,
@@ -196,6 +196,10 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         comprobarNumCorrelativoComprobante(xArrayComprobante);
 
+        const _nomCliente = xArrayCliente?.nombres || 'PUBLICO EN GENERAL';
+        const _fechaMetodoPago = xArrayComprobante.forma_de_pago?.fecha_de_pago || '';
+        const _fechaVencimiento = _fechaMetodoPago !== '' ? _fechaMetodoPago : fecha_actual;
+
         var jsonData = {                    
             "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
             "numero_documento": xArrayComprobante.correlativo,
@@ -204,7 +208,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "codigo_tipo_operacion": "0101",
             "codigo_tipo_documento": `${xtipo_de_documento_comprobante}`,
             "codigo_tipo_moneda": "PEN",
-            "fecha_de_vencimiento": `${fecha_actual}`,
+            "fecha_de_vencimiento": `${_fechaVencimiento}`,
             "numero_orden_de_compra": "",
             "datos_del_emisor": {
                 "codigo_pais": "PE",
@@ -212,12 +216,12 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "direccion": `${direccionEmisor} `+ ' | ' + `${xArrayEncabezado[0].sedeciudad}`,
                 "correo_electronico": "",
                 "telefono": `${xArrayEncabezado[0].telefono}`,
-                "codigo_del_domicilio_fiscal": xArrayEncabezado[0].codigo_del_domicilio_fiscal
-            },
+                "codigo_del_domicilio_fiscal": xArrayEncabezado[0].codigo_del_domicilio_fiscal                
+            },  
             "datos_del_cliente_o_receptor":{
                 "codigo_tipo_documento_identidad": `${xtipo_de_documento_identidad_cliente}`,
                 "numero_documento": `${xnum_doc_cliente}`,
-                "apellidos_y_nombres_o_razon_social": `${xArrayCliente.nombres === "" ? "PUBLICO EN GENERAL" : xArrayCliente.nombres}`,
+                "apellidos_y_nombres_o_razon_social": `${_nomCliente.trim() === "" ? "PUBLICO EN GENERAL" : _nomCliente}`,
                 "codigo_pais": "PE",
                 "ubigeo": "150101",
                 "direccion": xArrayCliente.direccion,
@@ -228,7 +232,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "totales": totales,
             "items": xitems,
             "extras":{
-                "forma_de_pago": "",
+                "forma_de_pago": xArrayComprobante.forma_de_pago,
                 "observaciones": "",
                 "vendedor": "",
                 "caja": "",
@@ -458,6 +462,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         const correlativo_error = await CpeInterno_Error(data, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);        
         rpt.correlativo_comprobante = correlativo_error.correlativo;
         console.log('xArrayComprobante.correlativo F error res api', rpt.correlativo_comprobante);
+        console.log('error res api', error);
         rpt.facturacion_correlativo_api = correlativo_error.facturacion_correlativo_api;
         console.log(correlativo_error);
     });

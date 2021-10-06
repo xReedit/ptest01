@@ -23,7 +23,8 @@
 					url: '../../bdphp/log_componentes.php?op=9'
 				})
 				.done(function (dtValues) {
-					dtValues = $.parseJSON(dtValues);
+					dtValues = JSON.parse(dtValues);
+					console.log('dtValues', dtValues);
 					xThisComColaborador.list = dtValues.datos;
 					xThisComColaborador.list_colaborador = xThisComColaborador.list[0];
 					xThisComColaborador.list_colaborador.index = 0;

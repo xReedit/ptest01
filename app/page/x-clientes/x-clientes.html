@@ -82,8 +82,11 @@
 									autocomplete="off" onChange="conMayusculas(this)" id="nombres" name="nombres" espaciar required>
 								<input type="number" class="xMiInput xPasarEnter2" placeholder="RUC | DNI" value$="[[selItemClie.ruc]]"
 									autocomplete="off" onChange="conMayusculas(this)" id="ruc" name="ruc" espaciar required>
-								<input type="date" class="xMiInput xPasarEnter2" placeholder="FECHA CUMPLEAÑOS"
-									id="f_nac_show"  autocomplete="off" espaciar required>
+								<div class="pt-1">
+									<span class="fs-10 text-secondary">Fecha cumpleaños</span>
+									<input type="date" class="xMiInput xPasarEnter2" placeholder="FECHA CUMPLEAÑOS"
+										id="f_nac_show"  autocomplete="off" espaciar required>
+								</div>
 								<input type="number" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)"
 									id="telefono" value$="[[selItemClie.telefono]]" autocomplete="off" name="telefono" espaciar required>
 								<input type="email" class="xMiInput xPasarEnter2" placeholder="EMAIL" value$="[[selItemClie.email]]"
@@ -467,13 +470,22 @@
 			xPopupLoad.xopen();
 
 			$.post("../../bdphp/ManejoBD_IUD.php?tb=cliente", $("#form_new_cliente").serialize(),
-				function (a) {
+				function (idcliente) {
 					xPopupLoad.xclose();
 					$("#form_new_cliente").reset();
 					xPopupLoad.xclose();
+
+					const _dataSend = {
+						idcliente: idcliente
+					}
+
+					$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=14', data:{data: _dataSend}})
+					.done( function (DtItems) {						
+						getAllListClientes();
+					})
 					
-					getAllListClientes();
 					dialog_new_cliente.close();
+					
 				})
 		})
 
