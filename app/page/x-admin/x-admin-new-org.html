@@ -101,11 +101,14 @@
 									<paper-checkbox id="check_isprinter_socket"><span>Servidor de impresion adminte socket?</span></paper-checkbox>
 		
 									<div class="xInvisible">
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="RUN LOCAL?" id="sys_local" name="sys_local">
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="pwa" name="pwa">
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="facturacion_e_activo" name="facturacion_e_activo">
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="CON PWA Y SOCKETS" id="isprinter_socket" name="isprinter_socket">
+										<input type="text" id="sys_local" name="sys_local">
+										<input type="text" id="pwa" name="pwa">
+										<input type="text" id="facturacion_e_activo" name="facturacion_e_activo">
+										<input type="text" id="isprinter_socket" name="isprinter_socket">
+										<input type="text" id="speech_disabled" name="speech_disabled">
 									</div>
+
+
 		
 									<br><br>
 									<p><strong>Temporal (url_api_fac)</strong></p>							
@@ -138,6 +141,11 @@
 									<br><br>
 									<p>Tipo de Contribuyente, PN = PERSONA NATURAL  O PJ= PERSONA JURIDICA</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="PN O PJ" id="tipo_contribuyente" name="tipo_contribuyente" espaciar>
+
+									
+									<br><br>
+									<p><strong>Mozo Virtual por Voz</strong></p>							
+									<paper-checkbox id="check_speech_disabled"><span>Habilitar Mozo Virtual por Voz?</span></paper-checkbox>
 
 
 		
@@ -514,10 +522,12 @@ function transferenciaCompletaMini(xfile){
 		const _pwaCheck = check_pwa.checked ? 1 : 0;
 		const _CheckisPrinterSocket = check_isprinter_socket.checked ? 1 : 0;
 		const _check_habilita_facturacion = check_habilita_facturacion.checked ? 1 : 0;
+		const _check_speech_disabled = check_speech_disabled.checked ? 1 : 0;
 
 		$("#frm_sede #sys_local").val(_printServerCheck);
 		$("#frm_sede #pwa").val(_pwaCheck);
 		$("#frm_sede #isprinter_socket").val(_CheckisPrinterSocket);
+		$("#frm_sede #speech_disabled").val(_check_speech_disabled);		
 		$("#frm_sede #facturacion_e_activo").val(_check_habilita_facturacion);		
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede", $("#frm_sede").serialize(), function (id) {
@@ -625,6 +635,8 @@ function transferenciaCompletaMini(xfile){
 
 		check_pwa_acepta_reservas.checked = dataSede.pwa_acepta_reservas === "0" ? false : true;
 		check_pwa_show_item_view_mercado.checked = dataSede.pwa_show_item_view_mercado === "0" ? false : true;		
+
+		check_speech_disabled.checked = dataSede.speech_disabled === "0" ? false : true;
 
 
 		selTipo.value = dataSede.tipo;

@@ -1,5 +1,6 @@
 
 <link rel="import" href="../../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
+<link rel="import" href="../../x-componentes/x-comp-find-item-producto/x-comp-find-item-producto.html">
 
 <dom-module id="x-orden-pedido">
     <script src="../../view/httpFech.js"></script>
@@ -97,6 +98,8 @@
                     <div class="w-100 d-flexx justify-content-end">
                         <button class="btn btn-sm btn-success" onclick="xAddItem();">+ Agregar</button>
                     </div>
+
+                    
                     <table class="xtable4" width="100%">
                         <thead>
                             <th class="xSinBorde" width="60%">Descripcion</th>
@@ -106,8 +109,11 @@
                             <!-- <th class="xSinBorde" width="10px"></th> -->
                         </thead>
                         <tr class="xSinBorde" data-id="">                        
-                            <td><input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_item"></td>
-                            <td><input type="number" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cant" onChange="conMayusculas(this)" required id="cant_item" autofocus></td>
+                            <td>
+                                <!-- <input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_item"> -->
+                                <x-comp-find-item-producto id="compItemProducto"></x-comp-find-item-producto>
+                            </td>
+                            <td><input type="number" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cant" onChange="conMayusculas(this)" onkeyup="xCalcTotal()" required id="cant_item" autofocus></td>
                             <td><input type="number" class="xMiInput xAlinearDerecha punitario" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"  placeholder="P. Unitario" id="punitario" name="precio" required></td>
                             <td><input type="number" class="xMiInput xAlinearDerecha xprecio" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"   placeholder="P. Total" id="ptotal" name="total" required readonly></td>
                             <!-- <td><paper-fab icon="add" onclick="xAddItem()" title="Agregar item"></paper-fab></td> -->
@@ -197,6 +203,7 @@
 <script>
     var xThisOrden, xPopupLoad, idOrdenPedido, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
     var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, tipoPagoSelected, compTipoPagoSelected, xRpt_pago = [];
+    var compItemProducto, elementItemProdcutoSeleted;
     
     function xIniOrdenPedido() {
         xThisOrden.formValid = false;
@@ -217,6 +224,15 @@
         compTipoPagoSelected = document.getElementById('compTipoPago');
         compTipoPagoSelected.addEventListener('getValorIncial', (e) => {
             selectTipoPago(e.target);
+        });
+
+        compItemProducto = document.getElementById('compItemProducto');
+        compItemProducto.addEventListener('elementSeleted', (e) => {
+            // console.log('elementSeleted', e.detail);
+            elementItemProdcutoSeleted = e.detail;
+            let _label  = elementItemProdcutoSeleted.label ? elementItemProdcutoSeleted.label.split('|')[elementItemProdcutoSeleted.label.split('|').length - 1] : e.target.valueInput;            
+            elementItemProdcutoSeleted.descripcion = _label.trim();
+            punitario.value = elementItemProdcutoSeleted.precio || 0;
         });
 
         fact_getAllImpresoras();
@@ -300,7 +316,7 @@
 
     function xAddItem() {
         const xCan_item = $("#cant_item").val();
-        const xDes_item = $("#des_item").val();
+        const xDes_item = elementItemProdcutoSeleted.descripcion; // $("#des_item").val();
         const xPUnitario = $("#punitario").val();
         const xPTotal = $("#ptotal").val();
         if (xCan_item === '' || xDes_item === '' && xPUnitario === '' && xPTotal === '') { return }
@@ -339,7 +355,9 @@
         $("#des_item").val('');
         $("#punitario").val('');
         $("#ptotal").val('');
-        $("#des_item").focus();
+        // $("#des_item").focus();
+        compItemProducto.resetText();
+        compItemProducto.focusText();
     }
 
     function xNuevoOrden() {
@@ -354,7 +372,7 @@
         xThisOrden.totalPendiente = 0;
         xThisOrden.correlativoOrden = '';
         xThisOrden.showNotaAdelanto = false;
-        xthisOrden.isDisabledFacturar = false;
+        xThisOrden.isDisabledFacturar = false;
     }
 
     function xCalcularTotal() {

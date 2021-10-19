@@ -273,7 +273,7 @@ paper-dialog.xStandar{height:auto;width:40%;}
     font-family: 'Open Sans';
     border-radius: 5px;
     border: 2px solid #CCC;
-    width: 60px;
+    /* width: 60px; */
     vertical-align: top;
     text-align: center;
     padding: 7px;
@@ -302,6 +302,7 @@ paper-dialog.xStandar{height:auto;width:40%;}
     background: #EEEEEE;    
     opacity: 1;
 }
+
 /* .xMiBoton_icon_option img {
     display: table-cell;
     vertical-align: middle;

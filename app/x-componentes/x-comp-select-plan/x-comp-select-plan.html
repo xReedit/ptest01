@@ -85,7 +85,7 @@
             return this.planes;
         },
         setPlan(val) {
-            xThisComPlan.$.compFindlistPlan.value = val;
+            xThisComPlan.$.compFindlistPlan.value = parseInt(val) - 1;
         },
         attached: function() {
             xThisComPlan=this;	
