@@ -317,6 +317,7 @@ async function xOpenPage(xop, parametro){
 		case 46: xruta = '/indicadores2'; break;
 		case 47: xruta = '/facturacion'; break;	
 		case 48: xruta = '/produccion_producto'; break;	
+		case 49: xruta = '/promociones'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

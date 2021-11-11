@@ -436,6 +436,7 @@
 
     function xGuardarOrdenPedido() {
         // encabezado
+        xPopupLoad.xopen();
         const dHeader = {
             'nombres' : frm_nombres.value,
             'direccion' : frm_direccion.value,
@@ -460,6 +461,10 @@
             idOrdenPedido = res.idorden;
             xThisOrden.correlativoOrden = xCeroIzq(res.correlativo, 4);
             xThisOrden.showNotaAdelanto = true;
+
+            setTimeout(() => {
+                xPopupLoad.xclose();
+            }, 200);
         });
     }
 

@@ -293,9 +293,9 @@
 				num_doc: txt_delivery_dni.value,
 				nombre: _inputAutocompleteDelObj.inputValue,
 				direccion: direcionSelected.direccion, // txt_delivery_direccion.value === '' ? direcionSelected.direccion : txt_delivery_direccion.value,
-				referencia: txt_delivery_referencia.value,
-				telefono: txt_delivery_telefono.value,
-				paga_con: txt_delivery_paga.value,
+				referencia: removeSpecialChar(txt_delivery_referencia.value),
+				telefono: removeSpecialChar(txt_delivery_telefono.value),
+				paga_con: removeSpecialChar(txt_delivery_paga.value),
 				f_nac: xClientePedidoFnac, // hasta aca antes
 				ciudad: direcionSelected.ciudad,
 				provincia: direcionSelected.provincia,
@@ -309,12 +309,12 @@
 		} else {
 			DatosCliente = {
 				idcliente: xIdCliente_pedido,
-				num_doc: txt_delivery_dni.value,
-				nombre: _inputAutocompleteDelObj.inputValue,
-				direccion: txt_delivery_direccion.value, // txt_delivery_direccion.value === '' ? direcionSelected.direccion : txt_delivery_direccion.value,
-				referencia: txt_delivery_referencia.value,
-				telefono: txt_delivery_telefono.value,
-				paga_con: txt_delivery_paga.value,
+				num_doc: removeSpecialChar(txt_delivery_dni.value),
+				nombre: removeSpecialChar(_inputAutocompleteDelObj.inputValue),
+				direccion: removeSpecialChar(txt_delivery_direccion.value), // txt_delivery_direccion.value === '' ? direcionSelected.direccion : txt_delivery_direccion.value,
+				referencia: removeSpecialChar(txt_delivery_referencia.value),
+				telefono: removeSpecialChar(txt_delivery_telefono.value),
+				paga_con: removeSpecialChar(txt_delivery_paga.value),
 				f_nac: xClientePedidoFnac, // hasta aca antes				
 			}		
 		}

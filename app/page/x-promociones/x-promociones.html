@@ -1,22 +1,93 @@
 <dom-module id="x-promociones">    
+    <link rel="import" href="../../x-componentes/x-comp-find-item-producto/x-comp-find-item-producto.html">
+    <link rel="import" href="../../x-componentes/x-comp-find-seccion/x-comp-find-seccion.html">
+    <link rel="import" href="../../x-componentes/x-comp-img-upload/x-comp-img-upload-2.html">
+    <script src="../../view/httpFech.js"></script>
     <template>
+
+        <paper-dialog modal id="dialog_img_gif_promo" class="dialog_redondo" style="min-width: 300px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">												
+				
+                <div class="div-content-img">
+                    <template is="dom-repeat" items="{{listIconGif}}" as="item">                        
+                        <img data-id="[[index]]" src$="[[item.path]]" alt$="[[item.titulo]]" class="xCursor" onclick="selectOptionIcoGif(this)">
+                    </template>
+                </div>
+
+                <hr>
+                <br><br>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+			</div>
+		</paper-dialog>
+
         <br>
-        <div class="xMiCard xradius" style="width:85%; max-width: 1100px;">
+        <div class="xMiCard xradius" style="width:94%; max-width: 1300px;">
 			<div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
                 <div class="d-flexx justify-content-between align-items-center">
-                    <p class="fs-18">Ofertas. Promociones. Descuentos</p>                    
+                    <p class="fs-18">Promociones. Descuentos</p>                    
                 </div>                
             </div>	
-            <div class="xContentCard" style="padding: 20px;">            
+            <div class="xContentCard" style="padding: 20px;">        
+                
+                <!-- lista -->
+                <div class="w-100" hidden$="[[!isShowListaPromo]]" class="animate__animated animate__fadeIn">
+                    <div class="d-flexx justify-content-between align-items-center">
+                        <p class="fw-600 fs-18">Lista</p>
+                        <button class="btn btn-sm btn-success" onclick="xNewPromocion()">+ Agregar</button>
+                    </div>
+                    <br>
+                    <table class="w-100">
+                        <thead>
+                            <th>Activo</th>
+                            <th>Fecha</th>
+                            <th width="30%">Titulo</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th aling="right"></th>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="{{dataPromociones}}" as="item">
+                                <tr data-id="[[item.idpromocion]]">
+                                    <td>
+                                        <paper-toggle-button checked$="[[item.check_activo]]" onchange="xDisabledPromo(this)">Toggle</paper-toggle-button>
+                                    </td>
+                                    <td>{{ item.fecha_registro }}</td>
+                                    <td width="30%">
+                                       <p class="fw-600"> {{ item.parametros.header.titulo }}</p>
+                                       <p class="text-secondary fs-10"> {{ item.parametros.header.descripcion }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="fw-600"> {{ item.parametros.body.f_inicio }}</p>
+                                        <p class="text-secondary fs-10"> {{ item.parametros.body.h_inicio }}</p>
+                                     </td>
+                                    <td>
+                                        <p class="fw-600"> {{ item.parametros.body.f_fin }}</p>
+                                        <p class="text-secondary fs-10"> {{ item.parametros.body.h_fin }}</p>
+                                     </td>
+                                     <td aling="right">
+                                         <button class="btn btn-sm btn-info" onclick="xModificarPromo(this)">Modificar</button>                                                                                    
+                                     </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <br><br><br>
+                </div>
+
+                <!-- detalle -->
+            <div hidden$="[[isShowListaPromo]]" class="animate__animated animate__fadeIn">
                 <div class="w-100">
-                    <p class="fs-18">Nueva Promo</p>
+                    <div class="d-flexx justify-content-between align-items-center">
+                        <p class="fs-18">Detalle Promoción</p>
+                        <button class="btn btn-secondary ml-2" onclick="backListPromo()">Atras</button>                
+                    </div>
                     <hr>
                     <br>
                     <div class="conent-grid-two">                        
                         <div class="div-child">
                             <p class="fw-600">Tipo</p>
-                            <select id="select_promo" class="selected-template-1 w-100">
-                                <template is="dom-repeat" items="{{listPromos}}" as="item" onchange="selectOptionPromo()">
+                            <select id="select_promo" class="selected-template-1 w-100" onchange="selectOptionPromo()">
+                                <template is="dom-repeat" items="{{listPromos}}" as="item">
                                     <option value="[[index]]">[[item.titulo]] </option>
                                 </template>
                             </select>
@@ -31,24 +102,34 @@
 
                             <div>
                                 <p class="fw-600">Titulo</p>
-                                <input type="text" class="selected-template-1 w-100" placeholder="Titulo" onChange="conMayusculas(this)">
+                                <input type="text" class="selected-template-1 w-100" placeholder="Titulo" onChange="conMayusculas(this)" id="titulo" onKeyUp="xValidFormPromo()" required >
+                                <br><br>
+                                <p class="fw-600">Descripcion</p>
+                                <textarea class="selected-template-1 w-100" maxlength="150" rows="4" id="descripcion" onKeyUp="xValidFormPromo()" required></textarea>                                
                             </div>
+                            <br>
+                            <div>
+                                <p class="fw-600">Imagen Promocional</p>
+                                <p class="text-secondary">Esta imagen se mostrará en la aplicación de delivery "Papaya Expres". *Debe coincindir en el recuadro.</p>
+                                <x-comp-img-upload-2 id="compImgPromo" medidasimg="[[medidaImg]]"></x-comp-img-upload-2>
+                            </div>
+                            <br>
 
                         </div>
                         <div class="div-child">
-                            <p class="text-secondary fs-16">Parametros</p>
+                            <p class="fs-16">Parametros</p>
                             <br>
                             <div>
                                 <div>
                                     <p class="fw-600">Dias de la semana</p>
                                     <div style="display: grid;">
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="0">Lunes</paper-checkbox>
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="1">Martes</paper-checkbox>
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="2">Miercoles</paper-checkbox>
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="3">Jueves</paper-checkbox>
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="4">Viernes</paper-checkbox>
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="5">Sabado</paper-checkbox>
-                                        <paper-checkbox id="check_dia" class="mr-1" data-id="6">Domingo</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="0">Domingo</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="1">Lunes</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="2">Martes</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="3">Miercoles</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="4">Jueves</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="5">Viernes</paper-checkbox>
+                                        <paper-checkbox class="mr-1 check_dia" data-id="6">Sabado</paper-checkbox>                                        
                                     </div>
                                 </div>    
                                 <div class="pt-3">
@@ -56,11 +137,11 @@
                                     <div class="d-flexx">
                                         <div class="mr-1">
                                             <p class="text-secondary">Fecha de Inicio</p>
-                                            <input type="date" class="selected-template-1" id="f_ini">
+                                            <input type="date" id="f_ini" class="selected-template-1" onKeyUp="xValidFormPromo()" required>
                                         </div>                                        
                                         <div>
                                             <p class="text-secondary">Fecha de Fin</p>
-                                            <input type="date" class="selected-template-1" id="f_fin">
+                                            <input type="date" id="f_fin" class="selected-template-1" onKeyUp="xValidFormPromo()" required>
                                         </div>
                                     </div>
                                 </div>                            
@@ -69,25 +150,25 @@
                                     <div class="d-flexx">
                                         <div class="mr-1">
                                             <p class="text-secondary">Hora de Inicio</p>
-                                            <input type="time" class="selected-template-1" id="h_ini">
+                                            <input type="time" class="selected-template-1" id="h_ini" onKeyUp="xValidFormPromo()" required>
                                         </div>                                        
                                         <div>
                                             <p class="text-secondary">Hora de Fin</p>
-                                            <input type="time" class="selected-template-1" id="h_fin">
+                                            <input type="time" class="selected-template-1" id="h_fin" onKeyUp="xValidFormPromo()" required>
                                         </div>
                                     </div>
                                 </div>                            
 
-                                <div class="pt-3">
+                                <div class="pt-3" id="div_num_primeros_pedidos">
                                     <p class="fw-600">Cantidad de pedidos</p>
                                     <p class="text-secondary">Si se limita a los primeros x pedidos. Colocar cero (0) si es ílimitado.</p>
-                                    <input type="number" class="selected-template-1" placeholder="Titulo" onChange="conMayusculas(this)" value="0">
+                                    <input type="number" class="selected-template-1" placeholder="Titulo" onChange="conMayusculas(this)" value="0" id="num_primeros_pedidos">
                                 </div>
 
-                                <div class="pt-3">
+                                <div class="pt-3" id="div_importe_consumo_min">
                                     <p class="fw-600">Importe mínimo de consumo</p>
                                     <p class="text-secondary">Ej: Si el importe total del pedido supera los S/100.00 entonces aplica a la promoción. Colocar cero (0) sino corresponde.</p>
-                                    <input type="number" class="selected-template-1" placeholder="Titulo" onChange="conMayusculas(this)" value="0">
+                                    <input type="number" class="selected-template-1" placeholder="Titulo" onChange="conMayusculas(this)" value="0" id="importe_consumo_min">
                                 </div>
 
                                 <div class="pt-3">
@@ -95,10 +176,142 @@
                                     <p class="text-secondary">la promocion solo aplica para los pedidos realizados desde la aplicacion Papaya Expres (Delivery o Mozo Virtual).</p>
                                     <paper-checkbox id="check_solo_app" class="mr-1" data-id="6">Solo App</paper-checkbox>
                                 </div>
+
+                                <div class="pt-3">
+                                    <p class="fw-600">Icono de Seccion</p>
+                                    <button class="btn btn-sm btn-secondary" onclick="dialog_img_gif_promo.open()"> Seleccionar </button>
+                                    <!-- <select id="select_ico" class="selected-template-1 w-100" onchange="selectOptionIcoGif()">
+                                        <template is="dom-repeat" items="{{listIconGif}}" as="item">
+                                            <option value="[[index]]">[[item.titulo]] </option>
+                                        </template>
+                                    </select> -->
+                                    <br><br>
+                                    <div>
+                                        <div>
+                                            <img src="" alt="" id="promo_img_ico_gif">
+                                        </div>                                        
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <br><br>
+                <div class="xLinea2"></div>
+                <br><br>
+                
+                <div class="w-100">
+                    <div>
+                        <div>
+                            <p class="fs-16">Lista</p>
+                            <p class="text-secondary">Agregue las secciones o items de la carta, o productos de bodega que forman parte de la promoción.</p>
+                        </div>
+                    </div>
+                    <br>
+
+                    <h4 hidden$="[[ !isShowNxN ]]">2x1 o 3x2 solo aplica a productos o items.</h4>
+                    <table width="100%">
+                        <thead>
+                            <th>Tipo</th>
+                            <th>Producto / Item / Seccion</th>
+                            <th hidden$="[[ !isShowProductoItem ]]">
+                                <span hidden$="[[ isShowNxN ]]">Cantidad</span>
+                                <span hidden$="[[ !isShowNxN ]]">Lleva</span>
+                            </th>   
+                            <th hidden$="[[ !isShowNxN ]]">Solo Paga x</th>                         
+                            <th hidden$="[[ !isShowProductoItem ]]">Precio</th>
+                            <th>% Desct</th>
+                            <th hidden$="[[ !isShowProductoItem ]]">P. Final</th>                            
+                            <th aling="right"></th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td width="8%">
+                                    <select class="selected-template-1" onchange="selectedTipo(this)">
+                                        <option value="0">Item / Producto</option>                                                                                
+                                        <option value="2" hidden$="[[ isShowNxN ]]">Sección</option>
+                                    </select>
+                                </td>
+                                <td width="45%">
+                                    <div hidden$="[[ !isShowProductoItem ]]">
+                                        <x-comp-find-item-producto clasecss="selected-template-1 w-100" id="compItemProducto"></x-comp-find-item-producto>
+                                    </div>
+                                    <div hidden$="[[ isShowProductoItem ]]">
+                                        <x-comp-find-seccion clasecss="selected-template-1 w-100" id="compFindSeccion"></x-comp-find-seccion>
+                                    </div>
+                                </td width="10%">
+                                <td hidden$="[[ !isShowProductoItem ]]">
+                                    <select id="sel_cant" class="selected-template-1">
+                                        <option value="0" hidden$="[[ isShowNxN ]]">Todos</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>                                        
+                                    </select>
+                                </td>
+                                <td hidden$="[[ !isShowNxN ]]">
+                                    <select id="sel_cant_x" class="selected-template-1">                                        
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>                                        
+                                    </select>
+                                </td>   
+                                <td hidden$="[[ !isShowProductoItem || !isShowNxN]]">
+                                    <p>{{ itemProductoSeleted.precio }}</p>
+                                </td>
+                                <td width="10%">
+                                    <input type="number" class="selected-template-1" id="imp_desct" onkeyup="precioFinalProductoItem()">
+                                </td>
+                                <td hidden$="[[ !isShowProductoItem ]]">
+                                    <p>{{ precioFinal }}</p>
+                                </td>
+                                <td aling="right">
+                                    <button class="btn btn-sm btn-info" onclick="addListDescuentoItem()">+</button>
+                                </td>
+                            </tr> 
+                            
+                            <template is="dom-repeat" items="{{listItemsDescuento}}" as="item">
+                                <tr data-id="[[index]]">
+                                    <td>{{ item.tipo }}</td>
+                                    <td>{{ item.descripcion }}</td>
+                                    <td hidden$="[[ !isShowProductoItem ]]">{{ item.elementCantidadShow }}</td>
+                                    <td hidden$="[[ !isShowNxN ]]"> {{ item.cantidad_x }} </td>
+                                    <td hidden$="[[ !isShowProductoItem ]]">{{ item.precio }}</td>
+                                    <td>{{ item.porc_descuento }}%</td>
+                                    <td hidden$="[[ !isShowProductoItem ]]">{{ item.precio_final }}</td>
+                                    <td><span class="xDeleteRow ml-2" title="Anular" onclick="removeItemListPromo(this);"></span></td>
+                                </tr>
+                            </template>                                                    
+                        </tbody>
+                    </table>
+
+                    <div hidden$="[[ !isShowError ]]" class="animate__animated animate__shakeX">
+                        <p class="fw-600 text-danger">{{ isShowMsjError }}</p>
+                    </div>
+
+
+                    
+                </div>
+
+                <br><br>
+                <!-- <div class="xLinea2"></div> -->
+                <br><br>
+                <x-comp-button-succes id="btnSucces" disabled$="[[!isFormValid]]" loader="{{isShowLoaderSave}}"></x-comp-button-succes>                
+                <!-- <button class="btn btn-success" disabled$="[[!isFormValid]]" onclick="guardarPromo()">Listo, guardar.</button> -->
+                <button class="btn btn-secondary ml-2" onclick="backListPromo()">Atras</button>                
+                <br><br><br><br>
+            </div>
+
             </div>
         </div>
         <br><br>
@@ -114,14 +327,70 @@
     }
 
     .div-child {
-        max-width: 300px;
+        max-width: 360px;
     }
+
+    .div-content-img {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 560px;
+        margin-bottom: 20px;
+    }
+
+    .div-content-img img {
+        padding-right: 10px;
+        margin: auto;
+    }
+
+
 </style>
 <script>
-    var xThisProm;
+    var xThisProm, btnSucces, compItemProducto, compFindSeccion, compImgPromo, tipoElementId = 0, tipoElementNom = 'Item', _listItemsDescuento = [], diasSemana = '', idPromoSelected = 0, firstIconGif = '';
 
     function xIniPromociones() {
+
+        xThisProm.medidaImg = {
+            width: 350,
+            height: 180
+        }
+
+        xThisProm.isShowListaPromo = true;
+
+        // xThisProm.medidaImg = {
+        //     width: 300,
+        //     height: 150
+        // }
+
         xLoadListaPromocion();
+        xLoadDataPromociones();
+        xloadGifPromo();
+
+        btnSucces = document.getElementById('btnSucces');
+        btnSucces.addEventListener('onclix', ()=> {
+            guardarPromo();
+        });
+
+
+        compItemProducto = document.getElementById('compItemProducto');
+        compItemProducto.addEventListener('elementSeleted', (e) => {
+            // console.log('itejm producto', e.detail);
+            xThisProm.itemProductoSeleted = e.detail || null;
+            precioFinalProductoItem();
+        });
+
+        compFindSeccion = document.getElementById('compFindSeccion');
+        compImgPromo = document.getElementById('compImgPromo');
+
+        $('.check_dia').on('change', () => {
+            diasSemana = '';
+            $('.check_dia').each((i, e) => {
+                diasSemana += e.checked ? i.toString() + ',': '';            
+            });
+        });
+
+        _listItemsDescuento = [];
+
+        xThisProm.isFormValid = false;
     }
 
     function xLoadListaPromocion() {
@@ -129,7 +398,7 @@
         .done(res => {
             const _listPromos = JSON.parse(res).datos;
             xThisProm.listPromos = _listPromos;
-            console.log('xThisProm.listPromos', xThisProm.listPromos);
+            // console.log('xThisProm.listPromos', xThisProm.listPromos);
             selectOptionPromoIni();
         });
     }
@@ -141,15 +410,430 @@
     function selectOptionPromo() {
         const _index = xThisProm.$.select_promo.value;
         xThisProm.promoSeleted = xThisProm.listPromos[_index]; 
+        // console.log('xThisProm.promoSeleted', xThisProm.promoSeleted);
+
+        div_num_primeros_pedidos.hidden = false;
+        div_importe_consumo_min.hidden = false;
+        xThisProm.isShowNxN = false;
+
+        if ( xThisProm.promoSeleted.nxn === '1' ) {
+            div_num_primeros_pedidos.hidden = true;
+            div_importe_consumo_min.hidden = true;            
+            xThisProm.isShowNxN = true;
+        }
+    }
+
+    function selectedTipo(e) {
+        tipoElementId = e.value;
+        tipoElementNom = e[e.selectedIndex].text;
+        xThisProm.isShowProductoItem = e.value !== "2";
+        newLista();
+    }
+
+    function precioFinalProductoItem() {
+        const _desct = isNaN(parseFloat(imp_desct.value)) ? 0 : parseFloat(imp_desct.value);
+
+        if ( xThisProm.itemProductoSeleted &&  xThisProm.isShowProductoItem){
+            const precio = parseFloat(xThisProm.itemProductoSeleted.precio);
+            const descFinal = precio - (precio * (_desct / 100));
+            xThisProm.precioFinal = descFinal.toFixed(2);
+        } else {
+            xThisProm.precioFinal = 0;
+            xThisProm.itemProductoSeleted = null;
+        }
+    }
+
+    function addListDescuentoItem() {
+        // buscar si el item ya existe en lista
+                
+
+        const ItemSelected = xThisProm.itemProductoSeleted;
+        const seccionSeleted = xThisProm.isShowProductoItem ? null : compFindSeccion.getSeccion();
+        const splitDescripcionItem = xThisProm.itemProductoSeleted?.label.split(' | ') || 0;
+        const elementDescripcion = seccionSeleted ? seccionSeleted.descripcion : splitDescripcionItem[splitDescripcionItem.length - 1];
+        const elementPrecio = seccionSeleted ? 0 : xThisProm.itemProductoSeleted.precio;
+        const idItem = ItemSelected?.procede == '0' ? ItemSelected.iditem : null;
+        const idItemSubItem = idItem ? ItemSelected.iditem_subitem : null;
+        const idProducto_stock = ItemSelected?.procede == '1' ? ItemSelected.value : null;
+        const idSeccion = seccionSeleted ? seccionSeleted.idseccion : null;
+        const elementCantidad = sel_cant.value;
+        const elementCantidadPor = xThisProm.promoSeleted.nxn === '1' ? sel_cant_x.value : null;
+        const elementIdimpresora = ItemSelected ? ItemSelected.idimpresora : seccionSeleted.idimpresora;
+
+        if ( xThisProm.promoSeleted.nxn === '1' ) {
+            xThisProm.isShowError = parseFloat(elementCantidad) < parseFloat(elementCantidadPor);
+            if (xThisProm.isShowError) {
+                xThisProm.isShowMsjError = 'La cantidad debe ser mayor a la cantidad x';
+                return;
+            } 
+        }
+
+        tipoElementNom = idItem ? 'Item' : idSeccion ? 'Seccion' : 'Producto';
+
+        const isExistElement = _listItemsDescuento.filter(x => x.elementDescripcion === elementDescripcion)[0];
+        if ( isExistElement ) { return; }
+
+        const _row = {
+            tipoId: tipoElementId,
+            tipo: tipoElementNom,
+            elementItem: ItemSelected,
+            elementSeccion: seccionSeleted,
+            elementCantidadShow: elementCantidad == '0' ? 'Todos' : elementCantidad,
+            precio: elementPrecio,
+            precio_final: xThisProm.precioFinal,
+            descripcion: elementDescripcion,
+            cantidad_x: elementCantidadPor,
+            cantidad: elementCantidad,
+            porc_descuento: parseFloat(imp_desct.value),
+            iditem: idItem,
+            iditem_subitem: idItemSubItem,
+            idproducto_stock: idProducto_stock,
+            idseccion: idSeccion,
+            idimpresora: elementIdimpresora,
+            is_nxn: elementCantidadPor ? true : false
+        }
+
+        _listItemsDescuento.push(_row);
+        xThisProm.listItemsDescuento = JSON.parse(JSON.stringify(_listItemsDescuento));
+        // console.log('xThisProm.listItemsDescuento', xThisProm.listItemsDescuento);
+        newRowItem();
+        xValidFormPromo();
+    }
+
+    function newRowItem() {
+        imp_desct.value = 0;
+        xThisProm.precioFinal = 0;
+
+    }
+
+    function newLista() {
+        _listItemsDescuento = [];
+        xThisProm.listItemsDescuento = JSON.parse(JSON.stringify(_listItemsDescuento));
+    }
+
+    function removeItemListPromo(obj) {
+        const xRowObj=obj.parentNode.parentNode;
+        const indexPS = xRowObj.dataId;
+        const itemRemove = _listItemsDescuento[indexPS];
+        _listItemsDescuento = _listItemsDescuento.filter(x => x.elementDescripcion !== itemRemove.elementDescripcion);
+        xThisProm.listItemsDescuento = JSON.parse(JSON.stringify(_listItemsDescuento));
+    }
+
+    async function guardarPromo() {
+
+                
+        // dias de la semana
+        diasSemana = '';
+        $('.check_dia').each((i, e) => {
+            diasSemana += e.checked ? i.toString() + ',': '';            
+        });
+
+        
+
+        // console.log('diasSemana', diasSemana);
+
+        const _f_ini = f_ini.value;
+        const _f_fin = f_fin.value;
+
+
+        const _h_ini = h_ini.value;
+        const _h_fin = h_fin.value;
+
+        const _num_primeros_pedidos = num_primeros_pedidos.value;
+        const _importe_consumo_min = importe_consumo_min.value;
+
+        const _establecio_img = compImgPromo.getIsEstablecioImg() ? 1 : 0;
+
+
+        var idImprsoras = '';
+        xThisProm.listItemsDescuento.map(x => {
+            const idImpresora = (x.idimpresora ? x.idimpresora : x.idimpresora) + ',';
+            idImprsoras = idImprsoras.indexOf(idImpresora) > -1 ? '' : idImpresora;
+        })
+
+        const _parametros = {
+            "body": {
+                "f_fin": _f_fin,
+                "h_fin": _h_fin,
+                "f_inicio": _f_ini,
+                "h_inicio": _h_ini,
+                "solo_app": check_solo_app.checked ? 1 : 0,
+                "dias_semana": diasSemana,
+                "importe_consumo_min": _importe_consumo_min == 0 ? null : _importe_consumo_min,
+                "num_primeros_pedidos": _num_primeros_pedidos == 0 ? null : _num_primeros_pedidos,
+            },
+            "header": {
+                "titulo": titulo.value,
+                "descripcion": descripcion.value,
+                "establecio_img": _establecio_img,
+                "icon": xThisProm.promoIcoGifSeleted
+            }
+        };
+
+        
+
+        const _dataSend = {
+            'idpromocion': idPromoSelected,
+            'idpromocion_lista': xThisProm.promoSeleted.idpromocion_lista,
+            'idimpresoras': idImprsoras,
+            'parametros': _parametros,
+            'lista': xThisProm.listItemsDescuento,
+            'op': 501
+        }
+        
+
+        xValidFormPromo();
+        if ( !xThisProm.isFormValid ) {return; }
+
+        
+        btnSucces.setLoader(true);
+
+        const _httpFech = new httpFecht();
+        const rpt = await _httpFech.postJson('../../bdphp/log_009.php', _dataSend) 
+        idPromoSelected = rpt.respuesta;
+        // console.log('rpt', rpt);
+
+        // subir imagen
+        const nomfileImg = 'promo'+idPromoSelected;
+        const img_promo = compImgPromo.getImgBase64();
+        uploadImgPromo(img_promo,nomfileImg,)
+
+
+        
+        setTimeout(() => {
+            btnSucces.setSave(true);
+        }, 1000);
+
+    }
+
+    function uploadImgPromo(imgBase64, nomfile) {
+        $.ajax({
+				type: 'POST',
+				url: 'upload_base64.php?op=6',
+                data: {
+                    nomfile : nomfile,
+                    img : imgBase64
+                }				
+			})
+			.done((res) => {				
+                // console.log('res', res);                
+			});
+    }
+
+    function xValidFormPromo() {
+        xThisProm.isFormValid = titulo.value !== '';
+        if ( !xThisProm.isFormValid ) { return; }
+        xThisProm.isFormValid = descripcion.value !== '';
+        if ( !xThisProm.isFormValid ) { return; }
+        xThisProm.isFormValid = diasSemana !== '';        
+        if ( !xThisProm.isFormValid ) { return; }
+
+        
+        xThisProm.isFormValid = f_ini.value !== '';
+        if ( !xThisProm.isFormValid ) { return; }
+        xThisProm.isFormValid = f_fin.value !== '';
+        if ( !xThisProm.isFormValid ) { return; }
+
+        xThisProm.isFormValid = h_ini.value !== '';
+        if ( !xThisProm.isFormValid ) { return; }
+        xThisProm.isFormValid = h_fin.value !== '';
+        if ( !xThisProm.isFormValid ) { return; }
+
+        if ( xThisProm.promoSeleted.nxn === '1' ) {
+            xThisProm.isShowError = parseFloat(sel_cant.value) < parseFloat(sel_cant_x.value);
+            xThisProm.isFormValid = xThisProm.isShowError;
+        }
+
+        xThisProm.isFormValid = xThisProm.listItemsDescuento.length > 0;
+
+
+    }
+
+
+
+    // lista
+    function xLoadDataPromociones() {
+        $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=502'})
+        .done(res => {
+            const _dataPromos = JSON.parse(res).datos;
+            _dataPromos.map(x => {
+                x.parametros = JSON.parse(x.parametros);
+                x.check_activo = x.activo === "1";
+            });
+            xThisProm.dataPromociones = _dataPromos;
+            // console.log('xThisProm.listPromos', xThisProm.dataPromociones);            
+        });
+    }
+
+    function xDisabledPromo(obj) {
+        // const xRowObj=obj.parentNode.parentNode;
+        const idPromo = xGetIdPromo(obj);
+        const _estado = obj.checked ? '1' : '0';
+
+        $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=503', data:{id: idPromo, estado:_estado}})
+    }
+
+    function xModificarPromo(obj) {
+        xPopupLoad.xopen();
+        const idPromo = xGetIdPromo(obj);
+        const dataPromocionSeleted = xThisProm.dataPromociones.find(x => x.idpromocion === idPromo);
+        const parametrosPromo = dataPromocionSeleted.parametros;
+        // console.log('dataPromocionSeleted', dataPromocionSeleted);
+
+        xThisProm.medidaImg = {
+            width: 350,
+            height: 180
+        }
+
+        // compImgPromo.setMedidas(xThisProm.medidaImg);
+
+        
+        idPromoSelected = idPromo;
+
+        titulo.value = parametrosPromo.header.titulo;
+        descripcion.value = parametrosPromo.header.descripcion;
+        xThisProm.promoIcoGifSeleted = parametrosPromo.header.icon || firstIconGif;
+        setIcoGifPromo()
+
+        f_ini.value = parametrosPromo.body.f_inicio;
+        f_fin.value = parametrosPromo.body.f_fin;
+
+        h_ini.value = parametrosPromo.body.h_inicio;
+        h_fin.value = parametrosPromo.body.h_fin;
+
+        // dias semana
+        diasSemana = '';
+        $('.check_dia').each((i, e) => {
+            e.checked = parametrosPromo.body.dias_semana.indexOf(i) > -1;
+            diasSemana += e.checked ? i.toString() + ',': '';            
+        });
+        
+
+        num_primeros_pedidos.value = parametrosPromo.body.num_primeros_pedidos || 0;
+        importe_consumo_min.value = parametrosPromo.body.importe_consumo_min || 0;
+        check_solo_app.checked = parametrosPromo.body.solo_app === 1;
+
+        // imagen
+        if ( parametrosPromo.header.establecio_img === 1 ) {
+            const _pathImg = URL_IMG_PROMO + dataPromocionSeleted.img;
+            compImgPromo.setImgPathFile(_pathImg);
+        } else {
+            compImgPromo.resetControl();
+        }
+        
+
+        // detalles
+        $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=504', data:{id: idPromo}})
+        .done(res => {
+            _listItemsDescuento = JSON.parse(res).datos;
+            _listItemsDescuento.map(x => {x.elementCantidadShow = x.cantidad === "0" ? 'Todos':x.cantidad; });
+            xThisProm.listItemsDescuento = JSON.parse(JSON.stringify(_listItemsDescuento));
+
+            xThisProm.isFormValid = true;
+            xThisProm.isShowListaPromo = false;
+            xPopupLoad.xclose();
+        });
+
+    }
+
+    function xGetIdPromo(obj) {
+        const xRowObj=obj.parentNode.parentNode;
+        return xRowObj.dataId;
+    }
+
+    function xNewPromocion() {
+        idPromoSelected = 0;
+        titulo.value = '';
+        descripcion.value = '';
+        f_ini.value = '';
+        f_fin.value = '';
+        h_ini.value = '';
+        h_fin.value = '';
+        $('.check_dia').each((i, e) => {
+            e.checked = false;
+        });
+
+        _listItemsDescuento = [];
+        xThisProm.listItemsDescuento = JSON.parse(JSON.stringify(_listItemsDescuento));
+
+        xThisProm.isFormValid = false;
+
+        num_primeros_pedidos.value = 0;
+        importe_consumo_min.value = 0;
+        check_solo_app.checked = false;
+
+        compImgPromo.resetControl();
+        xThisProm.isShowListaPromo = false;
+
+        xThisProm.medidaImg = {
+            width: 350,
+            height: 180
+        }
+        // compImgPromo.setMedidas(xThisProm.medidaImg);
+    }
+
+    function backListPromo() {
+        xThisProm.isShowListaPromo = true;
+        xLoadDataPromociones();
+    }
+
+    function xloadGifPromo() {        
+        $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=505'})
+        .done(res => {
+            xThisProm.listIconGif = JSON.parse(res).datos;
+            xThisProm.listIconGif.map(i => {
+                i.path = `../../images/${i.img}`;
+            });            
+            // console.log('xThisProm.listIconGif', xThisProm.listIconGif);
+            
+            firstIconGif = xThisProm.listIconGif[0].img;
+            xThisProm.promoIcoGifSeleted = firstIconGif;
+            setIcoGifPromo();
+        });
+    }
+    
+    function selectOptionIcoGif(obj) {
+        const _index = obj.dataId;
+        xThisProm.promoIcoGifSeleted = xThisProm.listIconGif[_index].img; 
+        setIcoGifPromo();
+        dialog_img_gif_promo.close();
+    }
+
+    function setIcoGifPromo() {
+        promo_img_ico_gif.src = `../../images/${xThisProm.promoIcoGifSeleted}`;
     }
 
     Polymer({
         is:'x-promociones',
         properties:{
             listPromos: [],
-            promoSeleted: []
+            promoSeleted: [],  
+            promoIcoGifSeleted: String,          
+            itemProductoSeleted: [],
+            seccionSeleted: [],
+            listItemsDescuento: [],
+            listIconGif: [],
+            precioFinal: Number,
+            isShowProductoItem: Boolean,
+            isFormValid: Boolean,
+            medidaImg: [],
+            medidaContent: [],
+            dataPromociones: [],
+            isShowListaPromo: Boolean,
+            isShowLoaderSave: Boolean,
+            isShowNxN: Boolean,
+            isShowError: Boolean,
+            isShowMsjError: String
+            // dataPromocionSeleted: [],
         },
         attached:function(){
+            this.isShowProductoItem = true;
+            this.isFormValid = false;
+            this.listItemsDescuento = [];
+            this.isShowListaPromo = true;
+            this.isShowLoaderSave = false;
+            this.isShowNxN = false;
+            this.isShowError = false;
             xThisProm=this;
             xIniPromociones();
         }

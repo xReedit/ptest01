@@ -92,6 +92,8 @@
                         <paper-checkbox id="xcheck_show_cant_item" onchange="addSubItemItem();">Cantidad seleccionable en las opciones? Es decir el cliente podrá seleccionar mas de uno en cada opción.</paper-checkbox>
                         <br><br>
                         <paper-checkbox id="xcheck_subitem_required" onchange="addSubItemItem();">Es obligatorio que se seleccione?</paper-checkbox>
+                        <br><br>
+                        <paper-checkbox id="xcheck_controlable" onchange="addSubItemItem();">Controlabe? -figura en el cierre de caja y promociones.-</paper-checkbox>
                         <br>
                         <div class="xDerecha" hidden$ = "{{isCompartido}}">
                             <div class="xBoton2 xVerde" onclick="compartirContenItem()">Compartir</div>
@@ -144,7 +146,7 @@
                     xThisComSubItemEdit.inputProcionHidden = true;
                     break;            
             }
-            console.log('evento ', $event);
+            // console.log('evento ', $event);
         }
 
         function xloadSubItemsContent(iditem) {
@@ -185,6 +187,7 @@
 
                 xcheck_subitem_required.checked = parseInt(xThisComSubItemEdit.contentSelect.subitem_required_select) === 1 ? true : false;
                 xcheck_show_cant_item.checked = parseInt(xThisComSubItemEdit.contentSelect.show_cant_item) === 1 ? true : false;
+                xcheck_controlable.checked = parseInt(xThisComSubItemEdit.contentSelect.controlable) === 1 ? true : false;
                 txt_sub_condicion_cant.value = xThisComSubItemEdit.contentSelect.subitem_cant_select;
         }
 
@@ -252,12 +255,13 @@
                 cantidad: txt_sub_cant.value,
                 precio: txt_sub_precio.value,
                 cant_select: txt_sub_condicion_cant.value,
-                required_select: xcheck_subitem_required.checked ? 1 : 0
+                required_select: xcheck_subitem_required.checked ? 1 : 0,
+                controlable: xcheck_controlable.checked ? 1 : 0
             } 
             
             // xPopupLoad.xopen();
 
-            console.log(JSON.stringify(dataSubItem));
+            // console.log(JSON.stringify(dataSubItem));
             $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=8', data:{item:dataSubItem}})
             .done( function (a) {                
                 xloadSubitems(iditemContentSelect);
@@ -279,6 +283,7 @@
                 cant_select: txt_sub_condicion_cant.value,
                 required_select: xcheck_subitem_required.checked ? 1 : 0,
                 show_cant_item: xcheck_show_cant_item.checked ? 1 : 0,
+                controlable: xcheck_controlable.checked ? 1 : 0,
                 is_sum_cant_subitems:  isSumCantSubItems ? 1 : 0,
                 cantidad: sumCantSubiTems
             } 	
@@ -288,7 +293,7 @@
             // xm_all_xToastOpen('Guardando ...', 2000);
             $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=800', data:{item:dataSubItem}})
             .done( function (a) {
-                console.log(a);        
+                console.log('ok');        
                 // xPopupLoad.xclose();
             });
         }
@@ -535,6 +540,7 @@
 
                 xcheck_subitem_required.checked = false;
                 xcheck_show_cant_item.checked = false;
+                xcheck_controlable.checked = false;
                 txt_sub_condicion_cant.value = '';
 
                 this.selected=0; 

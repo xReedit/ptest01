@@ -1,7 +1,7 @@
 <dom-module id="x-comp-find-item-producto">
 	<template is="dom-bind">
 		<div>
-            <input type="text" class="xMiInput xPasarEnter2 fs-12" onChange="conMayusculas(this)" id="des_item_pro_comp" onkeyup="xloadItemProductoComp(this)">						
+            <input type="text" class$="[[clasecss]]" onChange="conMayusculas(this)" id="des_item_pro_comp" onkeyup="xloadItemProductoComp(this)">						
 		</div>
 	</template>
 </dom-module>
@@ -9,6 +9,8 @@
 		var xThisCompItemProducto, dtItemProductosComp, elementSeleted;
 
         function xloadItemProductoComp(obj){
+            xThisCompItemProducto.clasecss = xThisCompItemProducto.clasecss === '' ? 'xTextRow2 xCursor' : xThisCompItemProducto.clasecss;
+
             const _val = obj.value;
             const _idFiltro = xThisCompItemProducto.idalmacenfiltro || 0;
             if ( _val.length < 3) {return; }
@@ -78,7 +80,8 @@
                 onlynomproducto: Boolean,
                 onlynomalmacen: Boolean,
                 onlynomfamilia: Boolean, //
-                valueInput: String
+                valueInput: String,
+                clasecss: String,
 			},
 			attached: function () {                
 				xThisCompItemProducto = this;								

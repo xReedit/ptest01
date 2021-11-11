@@ -8,6 +8,7 @@ var URL_IMG_CARTA = 'http://192.168.1.64/restobar/file/';
 var URL_IMG_CARTA = 'http://192.168.1.64/restobar/file/';
 
 var URL_IMG_CORREO = 'http://192.168.1.64/restobar/repositorio/img_correo/';
+var URL_IMG_PROMO = 'http://192.168.1.64/restobar/repositorio/img_promo/';
 var URL_IMG_GIF_UPDATE = 'http://192.168.1.64/restobar/repositorio/gif_update/';
 
 // produccion

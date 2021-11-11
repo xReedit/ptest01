@@ -194,20 +194,31 @@
         case 2001: // buscar item carta_lista
             $seacrh = $_POST["search"];
             $sql = "
-            SELECT cl.idcarta_lista value, concat(s.descripcion,' | ',i.descripcion) label, cl.cantidad stock, cl.iditem, cl.precio precio FROM 
-            carta_lista cl 
+            SELECT cl.idcarta_lista value, concat(s.descripcion,' | ',i.descripcion, COALESCE(subIt.des, '')) label, cl.cantidad stock, cl.iditem, format(cl.precio + COALESCE(subIt.precio,0), 2) precio, subIt.iditem_subitem 
+            , '0' procede, s.idimpresora
+            FROM carta_lista cl 
             inner join item i on cl.iditem = i.iditem 
             inner join seccion s on cl.idseccion = s.idseccion 
+            left join (select itcd.iditem,  isub.iditem_subitem, concat(' - ', isub.descripcion) des , isub.precio
+                from item_subitem_content ic		
+                    inner join item_subitem isub on isub.iditem_subitem_content = ic.iditem_subitem_content
+                    inner join item_subitem_content_detalle itcd on ic.iditem_subitem_content = itcd.iditem_subitem_content and itcd.estado=0 -- and itcd.iditem = ic.iditem
+                where itcd.controlable = 1 and ic.estado=0) subIt on subIt.iditem = cl.iditem 
             where s.idsede = ".$g_idsede." AND i.descripcion like '%$seacrh%'
             UNION all
             SELECT ps.idproducto_stock as value, concat(a.descripcion, ' | ', pf.descripcion , ' | ', p.descripcion) as label 
-                                ,ps.stock, ps.idproducto iditem, p.precio_venta precio
+                                ,ps.stock, ps.idproducto_stock iditem, p.precio_venta precio, null iditem_subitem, '1' procede, pf.idimpresora
                             FROM producto AS p
                                 inner join producto_stock ps on ps.idproducto = p.idproducto 
                                 inner join almacen a on a.idalmacen = ps.idalmacen
                                 inner join producto_familia pf on pf.idproducto_familia = p.idproducto_familia 
                             WHERE (p.idsede=".$g_idsede.") AND p.estado=0 and a.bodega = 1 AND p.descripcion like '%$seacrh%'
             ";
+            $bd->xConsulta($sql);
+            break;
+        
+        case 2002: // buscar secciones
+            $sql="select * from seccion where idsede=$g_idsede and estado=0 order by descripcion";
             $bd->xConsulta($sql);
             break;
     }

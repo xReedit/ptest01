@@ -1,5 +1,7 @@
 <link rel="import" href="../x-componentes/x-comp-item-subitems-edit/x-comp-item-subitems-edit.html">;
 <link rel="import" href="../x-componentes/x-comp-productos-enlazados-item-carta/x-comp-productos-enlazados-item-carta.html">;
+<link rel="import" href="../x-componentes/x-comp-img-upload/x-comp-img-upload.html">
+<link rel="import" href="../page/x-promociones/x-promociones.html">
 <dom-module id="x-carta">
 	<template>
 		<!-- <paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -25,6 +27,21 @@
 				<br><br>
 			</div>
 		</paper-dialog> -->
+
+		<!-- icono seccion -->
+
+		<paper-dialog id="dialog_img_ico_carta" class="dialog_redondo overflow-auto" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">				
+				<span class="xColorRow_Plomo">Este icono se mostrara en la aplicacion de pedidos</span>
+				<div class="content-icon-seccion">
+					<template is="dom-repeat" items="{{listIconSeccion}}" as="item">															
+						<img data-index="[[index]]" onclick="updateIconSeccionCarta(this)" class="img-ico-seccion-size-2" src="{{item.img}}" alt="a2">						
+					</template>
+				</div>
+				<br><br>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+			</div>
+		</paper-dialog>
 
 
 		<paper-dialog id="dialog_detalle" class="dialog_redondo" style="width: 90%; max-width: 550px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -67,11 +84,12 @@
 					<div id="dlg_foto_vista_previa-div">						
 						<a class="xDerecha xInvisible xCursor" onclick="xItemQuitarFoto()" id="dlg_btn_quitar_foto">Quitar Foto</a>
 						<br>
-						<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
+						<!-- <input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
 						<div id="dlg_foto_vista_previa" class="div_foto" onclick="xSeleccionarFoto();">
 							<div class="xCentradoHijo" id="dlg_label_foto">Clic aqui para seleccionar</div>
-						</div>
-						<br><br>
+						</div> -->
+						<x-comp-img-upload id="compImgItem" medidasimg="[[medidaImgCarta]]"></x-comp-img-upload>
+						<br><br><br><br>
 						<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFoto();">Listo, guardar</div>
 						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
 					</div>
@@ -125,7 +143,12 @@
 			<paper-tabs selected="{{selected}}" id="tab_carta">
 				<paper-tab>CARTA ACTUAL</paper-tab>
 				<!-- <paper-tab>SUBITEMS COMPARTIDOS</paper-tab> -->
-      			<paper-tab>HISTORIAL</paper-tab>
+				<paper-tab>
+					PROMOCIONES
+					<img src="../../images/p_confetti2_ico.gif" alt="">
+				</paper-tab>
+      			<!-- <paper-tab>HISTORIAL</paper-tab> -->
+				
       		</paper-tabs>
       		<div class="xLinea2"></div>
       		<br><br>
@@ -195,6 +218,11 @@
 					<br>
 
 				</div> -->
+
+				<!-- PROMOCIONES -->
+				<div id="promociones">
+					<x-promociones></x-promociones>
+				</div>
 				
 				<div id="historial carta">
 					<h3>Historial carta</h3>
@@ -271,7 +299,9 @@ var xThisCarta
 , xIdCartaAnterior
 , xIdObjImgDet='' //foto o detalle;
 , xidCategoria ///remplazar luego por el select
-, xFechaUltimaCarta, xdebounce, xe_debounce=false, xdtCAct, itemSelectSubItem, xIdObjCartaLista;
+, xFechaUltimaCarta, xdebounce, xe_debounce=false, xdtCAct, itemSelectSubItem, xIdObjCartaLista
+, compImgItem
+, xRutaIconSeccion = '../../images/img-icon-carta/', xidSeccionIcon, opIcon;
 
 //var xIdCartaUpdate='';
 
@@ -294,6 +324,13 @@ function xInicarta(){
 		});
 	});
 
+	xThisCarta.medidaImgCarta = {
+            width: 365,
+            height: 210
+        }
+
+	
+
 
 	//xThisCarta.xt_org=xIdOrg;
 	//xThis.xt_idsede=xIdSede;
@@ -310,6 +347,13 @@ function xInicarta(){
 	xPasaEnterClass();
 
 	xCompSubItemContet = document.getElementById('comp-subitems-content');
+
+	compImgItem = document.getElementById('compImgItem');
+
+	// compImgItem.setMedidas(xThisCarta.medidaImgCarta);
+
+	loadIconSeccionCarta();
+	
 
 	$(document).scroll(function() {
 		try {			
@@ -353,8 +397,20 @@ function xInicarta(){
 
 	$("#tab_carta").on('iron-select',function(){
 		switch(xThisCarta.selected){
-		//case 0:;break;
-			case 1:xloadCartaHistorial();break;						
+			case 0:
+				xThisCarta.medidaImgCarta = {
+					width: 365,
+					height: 210
+				}
+				// compImgItem.setMedidas(xThisCarta.medidaImgCarta);
+				break;
+			// case 1:
+			// 	xThisCarta.medidaImgCarta = {
+			// 		width: 350,
+            // 		height: 180
+			// 	}
+				// xloadCartaHistorial();
+				break;						
 		}
 	});
 
@@ -709,6 +765,23 @@ function xItemDetalle(obj, e){
 	e.stopImmediatePropagation();
 }
 
+function xItemRecomendado(index, obj, e) {
+	const elItem = xdtCAct[index];
+	if ( elItem.is_recomendacion === '0' ) {
+		elItem.is_recomendacion = '1';
+		$(obj).html('<i class="fa fa-star text-warning" aria-hidden="true"></i>');
+	} else {
+		elItem.is_recomendacion = '0';
+		$(obj).html('<i class="fa fa-star-o" aria-hidden="true"></i>');
+	}
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20601', data:{d: elItem.is_recomendacion, i: elItem.iditem}});
+
+	e.stopPropagation();
+	e.stopImmediatePropagation();
+
+}
+
 function xItemDetalleOpciones(index, obj, e){
 	itemSelectSubItem = xdtCAct[index];
 	check_visible_cliente.checked = itemSelectSubItem.is_visible_cliente.toString() === '1';
@@ -738,12 +811,16 @@ function xItemDetalleOpciones(index, obj, e){
 
 	$("#dlg_foto_vista_previa img").remove();
 	$("#dlg_btn_quitar_foto").addClass('xInvisible');
-	if(xval_img!==''){
-		xval_img='<img src="'+xval_img+'">';
-		$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
-		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
-	}	
-	$("#ctrl_open_file").val('');
+	// if(xval_img!==''){
+	// 	xval_img='<img src="'+xval_img+'">';
+	// 	$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
+	// 	$("#dlg_btn_quitar_foto").removeClass('xInvisible');
+	// }	
+	// $("#ctrl_open_file").val('');
+
+	// imagen
+	compImgItem.resetControl();
+	compImgItem.setImgPathFile(xval_img);
 	
 	
 	const _compItemProductoRelacionado = document.getElementById('compItemProductoRelacionado');
@@ -904,7 +981,13 @@ function xLoadListadoCartaActual(){
 			if(xidSeccionArray!=xdtCAct[i].idseccion){
 				xidSeccionArray=xdtCAct[i].idseccion;
 				const _isVisibleSeccion = xdtCAct[i].is_visible_cliente_seccion.toString() === '0'? false : true;
-				xSeccionArray[xCountArray]={'des':xdtCAct[i].des_seccion, 'id':xdtCAct[i].idseccion, 'idcarta':xdtCAct[i].idcarta , 'print':xdtCAct[i].imprimir, 'is_visible_cliente': _isVisibleSeccion};
+				xSeccionArray[xCountArray]={
+					'des':xdtCAct[i].des_seccion,
+					'id':xdtCAct[i].idseccion,
+					'idcarta':xdtCAct[i].idcarta,
+					'print':xdtCAct[i].imprimir,
+					'img':xdtCAct[i].img_seccion,
+					'is_visible_cliente': _isVisibleSeccion};
 				xCountArray++;
 			}
 		}
@@ -915,7 +998,12 @@ function xLoadListadoCartaActual(){
 			xClassCheckPrint='xImgCheck';
 			if(xSeccionArray[z].print==1){xClassCheckPrint='xImgNoCheck'}
 			if(xSeccionArray[z].ver_stock_cero==1){xClassCheckPrintCero='xImgNoCheck'}
+
+			imgIcono = xSeccionArray[z].img != '' ? xSeccionArray[z].img : z+'.png';
+
+
 			xCadenaSeccionList=String('<div class="xSeccion" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xidSeccionArray +'"><br><br>'+			
+			'<div onclick="openImgIconDialogCarta(this, 0)" class="content-icon-seccion"><img class="img-ico-seccion xCursor" style="width: 24px;" src="'+ xRutaIconSeccion + imgIcono+'" alt="img-ico"></div>'+
 			'<input type="text" value="'+xSeccionArray[z].des+'" data-dessec="'+ xSeccionArray[z].des+'" tabindex="1" data-id="'+xidSeccionArray+'" data-print="'+xSeccionArray[z].print+'" style="width:100%" class="xMiInput xfont20 xPasarEnter2 des_seccion txt_modifica_bd_sec" placeholder="SECCION" onChange="conMayusculas(this)" id="seccion_des">'+
 			'<div style="margin-bottom: -35px;"><div><paper-checkbox id="check_visible_cliente_seccion" data-idseccion="'+ xSeccionArray[z].id +'" '+  _checkIsVisible +' onchange="updateVisibleSeccion(this)"><span class="fs-12 text-secondary"><strong>No</strong> visible para el cliente.</span></paper-checkbox><br></div></div>'+
 			'<br><div class="xCursor xDerecha xfont12">'+
@@ -943,6 +1031,7 @@ function xLoadListadoCartaActual(){
 			xCadenaNoRow='';
 			for (var i = 0; i < xdtCAct.length; i++) {
 				if(xidSeccionArray!=xdtCAct[i].idseccion){continue;}
+				const classStart = xdtCAct[i].is_recomendacion === '0' ? 'fa fa-star-o' : 'fa fa-star text-warning';
 				xCadenaNoRow=String(xCadenaNoRow+'<tr class="row nomarcar" data-modificado="0" data-t="carta_lista" data-idborrar="'+ xdtCAct[i].idcarta_lista +'" data-id="'+xdtCAct[i].iditem+'" data-idcarta='+ xdtCAct[i].idcarta +' data-nombus="'+xdtCAct[i].des_seccion+'">'+
 				'<td data-id="'+xidSeccionArray+'" id="td_des" onclick="xModRow(this,3);" class="txt_modifica_bd">'+
 					// '<span class="xIconTrNoVisible xIcoDelete xIzquierda" title="Borrar" onclick="xxxBorrarItemLocalBD(this);"></span>'+
@@ -955,6 +1044,7 @@ function xLoadListadoCartaActual(){
 				'<td align="right" data-ColumName="precio" class="txt_modifica_bd" onclick="xModRow(this,1);" id="td_precio">'+xdtCAct[i].precio+'</td>'+
 				'<td align="center" data-ColumName="cantidad" class="cantidad_sum txt_modifica_bd" onclick="xModRow(this,2);" id="td_cant">'
 					+xdtCAct[i].cantidad+
+					'<span class="xDerecha xCursor text-secondary" title="Recomendado" onclick="xItemRecomendado(' + i + ',this, event);"><i class="'+ classStart +'" aria-hidden="true"></i></span>'+
 					'<span class="xIconTr xIcoSubItem xDerecha" title="Opciones Adicionales" onclick="xItemDetalleOpciones(' + i + ',this, event);"></span>'+
 					'</td>'+
 				'<td class="xInvisible" id="td_detalle">'+xdtCAct[i].detalle+'</td>'+
@@ -1122,8 +1212,10 @@ function xBorrarSeccion(obj){
 
 function xItemQuitarFoto(){
 	xPopupLoad.xopen();
-	$(".div_foto img").remove();
-	$(xObjImgDet).parents('tr').find('#td_img').text('');
+	// $(".div_foto img").remove();
+	// $(xObjImgDet).parents('tr').find('#td_img').text('');
+
+	compImgItem.resetControl();
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=207', data:{i:xIdObjImgDet,d:''}})
 	.done( function (a) {
 		// dialog_foto.close();
@@ -1131,20 +1223,40 @@ function xItemQuitarFoto(){
 	})
 }
 function xItemGuardarFoto(){	
-	$(".xobj_subir_foto").each(function(index, element) {		
-		if($(this).val()==''){return}
-		file=this.files[0]; name = file.name; size = file.size; type = file.type;
-		xhr = new XMLHttpRequest();
-		xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
+	// $(".xobj_subir_foto").each(function(index, element) {		
+	// 	if($(this).val()==''){return}
+	// 	file=this.files[0]; name = file.name; size = file.size; type = file.type;
+	// 	xhr = new XMLHttpRequest();
+	// 	xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
 
-		xhr.open('POST','upload.php?op=1',true);
+	// 	xhr.open('POST','upload.php?op=1',true);
 
-		xhr.setRequestHeader("Cache-Control", "no-cache");
-		xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-		xhr.setRequestHeader("X-File-Name", file.name);
-		xhr.send(file);
-	})
+	// 	xhr.setRequestHeader("Cache-Control", "no-cache");
+	// 	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+	// 	xhr.setRequestHeader("X-File-Name", file.name);
+	// 	xhr.send(file);
+	// });
+
+	const nomfileImg = 'item'+xIdObjImgDet;
+	const img_Item = compImgItem.getImgBase64();
+    uploadImgItem(img_Item,nomfileImg,)
 };
+
+function uploadImgItem(imgBase64, nomfile) {
+        $.ajax({
+				type: 'POST',
+				url: 'upload_base64.php?op=1',
+                data: {
+                    nomfile : nomfile,
+                    img : imgBase64
+                }				
+			})
+			.done((res) => {				
+                // console.log('res', res);      
+				nomfile = nomfile + '.png';
+				transferenciaCompleta(nomfile);          
+			});
+    }
 
 function transferenciaCompleta(xfile){
 	xfile=xIdOrg+xIdSede+xfile;
@@ -1152,7 +1264,7 @@ function transferenciaCompleta(xfile){
 	.done( function (a) {
 		// dialog_foto.close();
 		$(xObjImgDet).parents('tr').find('#td_img').text(xfile);
-		xPopupLoad.xclose();
+		// xPopupLoad.xclose();
 	})
 }
 
@@ -1292,6 +1404,41 @@ function updateVisibleSeccion(obj) {
 // 	})
 // }
 
+function loadIconSeccionCarta() {
+	var nomIcon = '', contador = 0, lisIcon = [];
+	xThisCarta.listIconSeccion = [];
+	while (contador <= 244) {		
+		nomIcon = xRutaIconSeccion+contador+'.png';
+		lisIcon.push({img: nomIcon});
+		contador++;
+	}
+
+	xThisCarta.listIconSeccion = lisIcon;
+
+}
+
+function openImgIconDialogCarta(obj, _opIcon) {
+	opIcon = _opIcon; // 0 seccion 1 producto_familia
+	xidSeccionIcon = obj.parentElement.dataset.idborrar
+	xObjChangeIcon = obj;
+	dialog_img_ico_carta.open();
+}
+
+function updateIconSeccionCarta(obj) {	
+	const _img = obj.dataIndex+'.png';
+	xPopupLoad.xopen();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=8', data:{i:xidSeccionIcon,img:_img, opIcon: opIcon}})
+	.done( function (a) {
+		// dialog_foto.close();
+		// if ( opIcon === 0 )	{ xLoadSecciones(); } else { xLoadSecciones_bodega(); }
+		
+		dialog_img_ico_carta.close();
+		xPopupLoad.xclose();
+
+		$(xObjChangeIcon).html('<img class="img-ico-seccion xCursor" style="width: 24px;" src="'+ xRutaIconSeccion + _img+'" alt="img-ico">');
+	})
+}
+
 
 Polymer({
 	is:'x-carta',
@@ -1299,7 +1446,9 @@ Polymer({
 		dt_item:Object,
 		dt_seccion:Object,
 		ListHistorial: [],
-		idItemSelected: Number
+		idItemSelected: Number,
+		medidaImgCarta: [],
+		listIconSeccion: []
 		// ListSubItems: [],
 		// cantidadSubItems: 0
 	},

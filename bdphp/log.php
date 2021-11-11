@@ -581,20 +581,20 @@
 							$id_item=$bd->xDevolverUnDato($sql);
 							if($id_item==''){
 								//guarda nuevo item
-								$sql="insert into item (idorg, idsede,descripcion,precio,detalle,img) values (".$g_ido.",".$g_idsede.",'".$item['des_item']."','".$item['precio_item']."','".$item['det_item']."','".$item['img_item']."')";
+								$sql="insert into item (idorg, idsede,descripcion,precio,detalle,img) values (".$g_ido.",".$g_idsede.",'".strtoupper($item['des_item'])."','".$item['precio_item']."','".$item['det_item']."','".$item['img_item']."')";
 								//echo $sql;
 								// echo $sql;
 								$id_item=$bd->xConsulta_UltimoId($sql);
 							}
 							else{//actualizar
 								// $sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item;
-								$sql_update_item="update item set descripcion='".$item['des_item']."', precio='".$item['precio_item']."' where iditem=".$id_item;
+								$sql_update_item="update item set descripcion='".strtoupper($item['des_item'])."', precio='".$item['precio_item']."' where iditem=".$id_item;
 								// echo $sql_update_item;
 								$bd->xConsulta_NoReturn($sql_update_item);
 							}
 						} else {//actualizar
 							 // $sql_update_item="update item set descripcion='".$item['des_item']."', detalle='".$item['det_item']."', precio='".$item['precio_item']."', img='".$item['img_item']."' where iditem=".$id_item.";";
-								$sql_update_item="update item set descripcion='".$item['des_item']."', precio='".$item['precio_item']."' where iditem=".$id_item.";";
+								$sql_update_item="update item set descripcion='".strtoupper($item['des_item'])."', precio='".$item['precio_item']."' where iditem=".$id_item.";";
 								$bd->xConsulta_NoReturn($sql_update_item);
 								// echo $sql_update_item;
 							}
@@ -1061,7 +1061,7 @@
 
 			$sql = "
 			SELECT c.idcarta, cl.idcarta_lista,s.idseccion, i.iditem,s.descripcion AS des_seccion, i.descripcion AS des_item, cl.precio, cl.cantidad,s.sec_orden,i.detalle,i.img,cl.cant_preparado,c.fecha,s.imprimir,s.ver_stock_cero
-				,cl.is_visible_cliente,s.is_visible_cliente as is_visible_cliente_seccion
+				,cl.is_visible_cliente,s.is_visible_cliente as is_visible_cliente_seccion, i.is_recomendacion, s.img img_seccion
 			FROM carta_lista AS cl
 				INNER JOIN carta AS c using(idcarta)
 				INNER JOIN seccion AS s using(idseccion)
@@ -1119,6 +1119,10 @@
 			break;
 		case 206://guardar detalleitem
 			$sql="update item set detalle='".$_POST['d']."' where iditem=".$_POST['i'];
+			$bd->xConsulta($sql);
+			break;
+		case 20601://guardar is_recomendacion
+			$sql="update item set is_recomendacion='".$_POST['d']."' where iditem=".$_POST['i'];
 			$bd->xConsulta($sql);
 			break;
 		case 207://guardar foto

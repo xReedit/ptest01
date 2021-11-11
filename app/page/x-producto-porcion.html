@@ -125,11 +125,11 @@
 					<br>
 					<input type="text" class="xMiInput" placeholder="Buscar" inline id="txt_buscar_porcion">
 					<div class="xBoton2 xAzul xDerecha" onclick="dialog_additem_porcion.open();">+ Agregar Porcion</div>
-					<div class="xBoton2 xVerde xDerecha" onclick="xGuardarCambiosTbProductos(2);">Guardar Cambios</div>
+					<div class="xBoton2 xVerde xDerecha" onclick="xGuardarCambiosPorcion();">Guardar Cambios</div>
 					<br><br><br>
 					<div class="xLinea2"></div>
 					<br>
-					<table id="tb_porcion" width="100%" class="xtable2">
+					<!-- <table id="tb_porcion" width="100%" class="xtable2">
 						<thead>
 							<th align="left" width="20%">Familia</th>
 							<th align="left">Porcion</th>
@@ -137,7 +137,28 @@
 							<th width="5px"></th>
 						</thead>
 					</table>
+					<br><br><br> -->
+
+					<table width="100%">
+						<thead>
+							<th align="left" width="20%">Familia</th>
+							<th align="left">Porcion</th>
+							<th align="left" width="90px">Stock</th>
+							<th width="5px"></th>
+						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{listPorciones}}" as="item">
+								<tr data-index="[[index]]">
+									<td>{{ item.familia }}</td>
+									<td class="xCursor" onclick="xModRowPorcion(this,3);" id="td_des"> {{ item.porcion }}</td>
+									<td class="sumar_stock xCursor" onclick="xModRowPorcion(this,2);" id="td_stock">{{ item.stock }}</td>
+									<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarProcion(this);"></span></td>
+								</tr>
+							</template>							
+						</tbody>
+					</table>
 					<br><br><br>
+
 				</div>
 			</iron-pages>
       	</div>
@@ -322,7 +343,8 @@ function xLoadPorciones(){
 		var xdtPor=$.parseJSON(dtPor);
 		var xcadena_por='';
 		var xtr_stock_por='';
-		xdtPor=xdtPor.datos;
+		xdtPor=xdtPor.datos.map(x => {x.modificado = false; return x });
+		xThisProPor.listPorciones = xdtPor;
 		for (var i = 0; i < xdtPor.length; i++) {
 			xtr_stock_por=xdtPor[i].stock;
 			xcadena_por=String(xcadena_por+'<tr class="row" data-idp="'+xdtPor[i].idporcion+'">'
@@ -333,9 +355,10 @@ function xLoadPorciones(){
 				+'</tr>')
 		}
 		$("#tb_porcion .row").remove();
-		$("#tb_porcion").append(xcadena_por).trigger('create');
+		/// 101121 lo quitamos
+		// $("#tb_porcion").append(xcadena_por).trigger('create');
+		// xSumarTotalesPorcion();
 
-		xSumarTotalesPorcion();
 	})
 }
 
@@ -433,6 +456,42 @@ function xModRow(obj,tipo){
 	$(obj).html('<input type="text" class="xMiInput xPasarEnter2 xAlinearIzquierda" onblur="xModBlur(this,'+tipo+')" value="'+xvalObj+'" select>').trigger('create');
 	$(obj).find('input').select();
 }
+function xModRowPorcion(obj,tipo){
+	var xvalObj=$(obj).text();
+	const indexPorcion =  obj.parentElement.dataIndex;
+	const itemPorcion = xThisProPor.listPorciones[indexPorcion]
+	itemPorcion.modificado = true;
+
+	if($(obj).find('input').length>0){$(obj).find('input').select();return;}
+	$(obj).html('<input type="text" class="xMiInput xPasarEnter2 xAlinearIzquierda inputCantPorcion" onblur="xModBlurPorcion(this, '+ indexPorcion + ', ' + tipo + ')" value="'+xvalObj+'" select>').trigger('create');
+	$(obj).find('input').select();
+}
+function xModBlurPorcion(obj, indexPorcion, tipo){
+	var xvalObj=$(obj).val();
+	var xtb=$(obj).parents('table');
+	var xrow_obj=$(obj).parent();
+
+	const itemPorcion = xThisProPor.listPorciones[indexPorcion]
+
+	switch (tipo){
+		case 2:
+			itemPorcion.stock = xCeroIzq(xvalObj,2);
+			break;
+		case 3:
+			itemPorcion.porcion = xvalObj;
+			break;
+	}
+	/*if(tipo==1){xvalObj=xMoneda(xvalObj)}
+	else{
+		xvalObj=xCeroIzq(xvalObj,2);
+	}*/
+	//if(xrow_obj.attr('id')=='td_stock'){xrow_obj.attr('data-mod-stock',xvalObj)}else{xrow_obj.attr('data-mod-precio',xvalObj)}
+	$(obj).parent().text(xvalObj);
+	$(obj).remove();
+
+}
+
+
 function xModBlur(obj,tipo){
 	var xvalObj=$(obj).val();
 	var xtb=$(obj).parents('table');
@@ -451,6 +510,20 @@ function xModBlur(obj,tipo){
 	$(obj).remove();
 
 }
+
+function xGuardarCambiosPorcion() {
+	xPopupLoad.xopen();
+	const listProcionModificar = xThisProPor.listPorciones.filter(x => x.modificado);
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=21', data: {data: listProcionModificar}})
+	.done(res => {
+		// console.log('res', res);
+		setTimeout(() => {			
+			xPopupLoad.xclose();
+		}, 200);
+	});
+	
+}
+
 function xGuardarCambiosTbProductos(op){
 	var xArraySaveProducto=new Array();
 	var xtb;
@@ -535,7 +608,10 @@ function xConfirmBorrarProducto(){
 	})
 }
 function xConfirmBorrarPorcion(){
-	var xidp=xObjRowSel.attr('data-idp');
+	const indexItem = xObjRowSel[0].dataIndex
+	const itemPorcion = xThisProPor.listPorciones[indexItem];
+	// var xidp=xObjRowSel.attr('data-idp');
+	var xidp = itemPorcion.idporcion;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1804', data:{idp:xidp}})
 	.done( function (dtElimPor) {
 		xObjRowSel.fadeTo(550, 0, function () {$(this).remove();})
@@ -643,6 +719,7 @@ Polymer({
 		xt_idus:Number,
 		xdt_prodcutos: Object,
 		dtProFam:Object,
+		listPorciones: []
 	},
 	attached:function(){
 		this.selected=0;

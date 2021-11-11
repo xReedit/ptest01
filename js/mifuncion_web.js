@@ -812,4 +812,8 @@ function PrintElemDiv(divId, titulo)
        window.print();
        document.body.innerHTML = originalContents;
 }
+
+function removeSpecialChar(_string) {
+	return _string.replace(/[&\/\\,~'"?]/g, '');
+}
   
