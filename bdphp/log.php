@@ -2934,7 +2934,7 @@
 		case 1902://pedidos por hora // en el intervalo de 60min
 			$sql="
 				SELECT count(*) AS cantidad  FROM pedido
-				WHERE (idorg=".$g_ido." AND idsede=".$g_idsede.") AND fecha_hora >= NOW() - INTERVAL 45 MINUTE and estado!=3
+				WHERE (idsede=".$g_idsede.") AND fecha_hora >= NOW() - INTERVAL 45 MINUTE and estado!=3
 			";
 			$bd->xConsulta($sql);
 			break;
@@ -2943,7 +2943,7 @@
 				SELECT count(*) AS cantidad, u.nombres
 				FROM pedido AS p
 					INNER JOIN usuario AS u using (idusuario)
-				WHERE (p.idorg=".$g_ido." AND p.idsede=".$g_idsede.") AND p.cierre=0 AND p.estado!=3
+				WHERE fecha_hora >= NOW() and (p.idsede=".$g_idsede.") AND p.cierre=0 AND p.estado!=3
 				GROUP BY p.idusuario
 				ORDER BY cantidad desc
 				";

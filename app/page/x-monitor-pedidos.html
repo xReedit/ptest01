@@ -290,7 +290,8 @@ function _getCategoria($event) {
 }
 
 function config_valoresInicialesComponenteCategoria() {
-	this.cnf_CategoriaSel = $("#compFindCategoria")[0].__data__.categorias; // valores iniciales
+	// this.cnf_CategoriaSel = $("#compFindCategoria")[0].__data__.categorias; // valores iniciales
+	this.cnf_CategoriaSel = compFindCategoria.__data__.categorias;
 	this.idCategoriaSel = cnf_CategoriaSel.idcategoria;
 
 	xLoadAllItem();
@@ -381,7 +382,7 @@ function xLoadAllItem(){
 					'<div class="table-like__item">'+
 						'<span class="name"><p class="xfont16 xBold pos-relative">'+xArrayEncaUlLi[z].des_seccion+' <span class="btnAddItem xfont12 xCursor" onClick="xOpenDialogNewItem('+z+')">Agregar</span></p></span>'+
 						'<span class="stock valing-b">Stock</span>'+
-						'<span class="number valing-b">Salio</span>'+
+						// '<span class="number valing-b">Salio</span>'+
 					'</div>'+
 				'</div>');
 			xcandena_a='';
@@ -390,7 +391,7 @@ function xLoadAllItem(){
 					xcandena_a=String(xcandena_a+'<li class="table-like__item row li'+dtAllItems[p].idcarta_lista+'" id="li'+dtAllItems[p].idcarta_lista+'">'+
 							    '<div class="name text_puntos">'+dtAllItems[p].plato+'</div>'+
 							    '<div class="stock xCursor contar" data-isporcion="'+dtAllItems[p].isporcion+'" data-iditem="'+dtAllItems[p].iditem+'" data-idcarta_lista="'+dtAllItems[p].idcarta_lista+'" data-procede="'+dtAllItems[p].procede+'" id="cantidad_stock" title="editar" onclick="xModRow(this, '+ p +');"><strong>'+xCeroIzq(dtAllItems[p].cantidad,2)+'</strong></div>'+
-							    '<div class="number contar cant_vendido" id="cantidad_vendido">'+xCeroIzq(dtAllItems[p].cant_vendido,2)+'</div>'+
+							    // '<div class="number contar cant_vendido" id="cantidad_vendido">'+xCeroIzq(dtAllItems[p].cant_vendido,2)+'</div>'+
 							  '</li>');
 				}
 			}
