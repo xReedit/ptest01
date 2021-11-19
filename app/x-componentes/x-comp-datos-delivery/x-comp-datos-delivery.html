@@ -43,9 +43,26 @@
 				</div>
 
 
-				<div>
-					<input hidden$="{{showapigoogle}}" type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)"
-						id="txt_delivery_direccion" espaciar required$ = "{{ !showapigoogle }}">
+				<div hidden$="{{showapigoogle}}">
+					
+					<div hidden$="{{!showInputDirNoMap}}">
+						<input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)"
+							id="txt_delivery_direccion" espaciar required$ = "{{ !showapigoogle }}">
+					</div>
+
+					<!-- <div hidden$="{{showInputDirNoMap}}"> -->
+					<div class="list-direccion-cliente" hidden$="{{showInputDirNoMap}}">
+						<div style="width: 100%;">
+							<select id="selectDirClienteNoMap" class="xTextRow2 xCursor" onchange="selectOptionDirClienteNoMap()">
+								<template is="dom-repeat" items="{{listDirNoMap}}" as="direccion">
+									<option value="[[index]]">[[direccion.direccion]] </option>
+								</template>
+							</select>
+						</div>
+	
+						<div class="xFondoRowIndigo btn-add-dir xCursor" onclick="nuevaDireccionNoMap()"><span class="fs-10">+Add</span></div>
+					</div>
+
 				</div>
 
 					<!-- direccion con google api -->
@@ -84,19 +101,28 @@
 </dom-module>
 <style>
 	.content-direccion-ciente { margin: 5px 15px 10px 5px;}
-	.list-direccion-cliente { display: flex; justify-content: space-around; align-items: center;}
+	.list-direccion-cliente { 
+		display: flex; justify-content: space-around; align-items: center;
+		padding-left: 5px;
+    	padding-right: 18px;
+		padding-top: 10px;
+    	padding-bottom: 5px;
+	}
 	.div-footer-delivery { display: flex; justify-content: flex-end; align-items: center;}
 	.m-0 { margin: 0px; }
 	.text-entrega { font-weight: 600; }
-	.btn-add-dir {     
+	.btn-add-dir {     		
 		font-size: 12px;
-    	padding: 0px 10px;
-    	border-radius: 1px; }
+		padding: 4px 10px;
+		border-radius: 1px;
+		margin-top: -9px;
+		 }
 </style>
 <script>
 	var xThisComDatosDelivery, xIdCliente_pedido, xClientePedidoFnac, arrCompDatosAdjuntoDelivery = [], _inputAutocompleteDel,
 	_inputAutocompleteDelObj, compDirSelectCliente, calcCosto, direcionSelected, compDirSearch, dataSede,
-	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp, comercioHabilitadoLlamarRepartidor, _dirEstablecimineto;
+	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp, comercioHabilitadoLlamarRepartidor, _dirEstablecimineto
+	, client_autocomplete_selected;
 	
 	function xCompDatosDelInit() {
 		calcCosto = new calcCostoEntrega();
@@ -111,7 +137,7 @@
 		loadLastComisiones();
 
 
-		console.log('sede', xm_log_get('datos_org_all_sede'));
+		// console.log('sede', xm_log_get('datos_org_all_sede'));
 
 
 		compDirSearch = document.getElementById('compDirSearch');
@@ -134,7 +160,7 @@
 
 		compDirSelectCliente = document.getElementById('selectDirCliente');		
 		compDirSelectCliente.addEventListener('getDireccionSelected', function (e) {
-			console.log(e);
+			// console.log(e);
 			txt_delivery_referencia.value = '';
 			xThisComDatosDelivery.showdir = true;
 			if (e.detail.direccion) {
@@ -152,11 +178,21 @@
 
 		_inputAutocompleteDel.addEventListener('input-autocomplete-selected', (event) => {
 			const cliente = event.detail;
+			client_autocomplete_selected = cliente;
+			
+
+			// console.log('cliente', cliente);
 			xIdCliente_pedido = cliente.idcliente;
 			xClientePedidoFnac = cliente.f_nac || '';
 			$("#txt_delivery_dni").val(cliente.ruc);
 			$("#txt_delivery_direccion").val(cliente.direccion);
+			$("#txt_delivery_referencia").val(cliente.referencia);
 			$("#txt_delivery_telefono").val(cliente.telefono);
+
+			xThisComDatosDelivery.listDirNoMap = JSON.parse(client_autocomplete_selected.direccion_delivery_no_map) || null;
+			xThisComDatosDelivery.showInputDirNoMap = xThisComDatosDelivery.listDirNoMap ? false : true;
+
+			if (xThisComDatosDelivery.listDirNoMap) { selectOptionDirClienteNoMap(0); }
 		});
 	}
 
@@ -206,7 +242,7 @@
 						data: _dataSend
 					})
 					.done(function (res) {
-						console.log(res);			
+						// console.log(res);			
 						const _data = res.data[0];
 						_dirEstablecimineto.c_minimo = _data.c_minimo;
 						_dirEstablecimineto.c_km = _data.c_km;
@@ -240,7 +276,7 @@
 					dataSede.c_servicio = calcCosto.getImporteDistance();
 					xThisComDatosDelivery.costoentrega = parseFloat(dataSede.c_servicio).toFixed(2);
 					xThisComDatosDelivery.showcostoentrega = comercioHabilitadoCalcDistancia;
-					console.log('calcCosto.getImporteDistance()', calcCosto.getImporteDistance());
+					// console.log('calcCosto.getImporteDistance()', calcCosto.getImporteDistance());
 
 					// agregamos a los subtotales
 					if ( comercioHabilitadoCalcDistancia ) {
@@ -263,7 +299,7 @@
 						xIdCliente_pedido=rpt.idcliente;
 						xThisComDatosDelivery.idclientedni = xIdCliente_pedido === '' ? 0 : xIdCliente_pedido;
 
-						console.log('xThisComDatosDelivery.idclientedni',xThisComDatosDelivery.idclientedni);
+						// console.log('xThisComDatosDelivery.idclientedni',xThisComDatosDelivery.idclientedni);
 
 						xClientePedidoFnac=rpt.f_nac || '';
 						_inputAutocompleteDelObj.inputValue = rpt.nombres;
@@ -315,13 +351,31 @@
 				referencia: removeSpecialChar(txt_delivery_referencia.value),
 				telefono: removeSpecialChar(txt_delivery_telefono.value),
 				paga_con: removeSpecialChar(txt_delivery_paga.value),
-				f_nac: xClientePedidoFnac, // hasta aca antes				
+				f_nac: xClientePedidoFnac, // hasta aca antes		
+				direccion_delivery_no_map: client_autocomplete_selected.direccion_delivery_no_map		
 			}		
 		}
 
 
-		id_cliente = xIdCliente_pedido === "" ? await ClienteService_Guardar(DatosCliente) :xIdCliente_pedido;
-		DatosCliente.idcliente = id_cliente;
+		// guardamos cambios en direcciones
+		const _dirAdd = {direccion: DatosCliente.direccion, referencia: DatosCliente.referencia};
+		var list_direccion_no_map = DatosCliente?.direccion_delivery_no_map || null;
+		if ( list_direccion_no_map ) {
+			list_direccion_no_map = JSON.parse(list_direccion_no_map);
+			const _dirSearch = list_direccion_no_map.filter(d => d.direccion.toLowerCase().trim() == DatosCliente.direccion.toLowerCase().trim())[0];
+			if ( !_dirSearch ) {
+				list_direccion_no_map.push(_dirAdd);
+			}
+		} else {
+			list_direccion_no_map = [];
+			list_direccion_no_map.push(_dirAdd);
+		}
+		DatosCliente.direccion_delivery_no_map = JSON.stringify(list_direccion_no_map);
+		DatosCliente.idcliente = await ClienteService_Guardar(DatosCliente);
+
+		// id_cliente = xIdCliente_pedido === "" ? await ClienteService_Guardar(DatosCliente) :xIdCliente_pedido;
+		// DatosCliente.idcliente = id_cliente;
+		
 
 		_dirEstablecimineto = {
 			'idsede': dataSede.idsede,
@@ -384,12 +438,14 @@
 						data: DatosCliente
 					})
 					.done(function (res) {//
-						console.log(res);
+						// console.log(res);
 						DatosCliente.idcliente_pwa_direccion = res.data[0].idcliente_pwa_direccion;
 						resData.direccionEnvioSelected = DatosCliente;
 						xEmitEnvet(resData);
 					});
 		} else {
+			
+
 			xEmitEnvet(resData);
 		}
 		
@@ -446,6 +502,20 @@
 		return rpt;
   	}
 
+	function nuevaDireccionNoMap() {
+		xThisComDatosDelivery.showInputDirNoMap = true;
+		txt_delivery_direccion.select();
+		txt_delivery_direccion.focus();
+	}
+
+	function selectOptionDirClienteNoMap(_index = null) {
+		const index = _index !== null ? _index : xThisComDatosDelivery.$.selectDirClienteNoMap.value;
+		const _dirSeletedNoMap = xThisComDatosDelivery.listDirNoMap[index];
+		// console.log('_dirSeletedNoMap', _dirSeletedNoMap);
+		txt_delivery_referencia.value = _dirSeletedNoMap.referencia;
+		txt_delivery_direccion.value = _dirSeletedNoMap.direccion;
+	}
+
 	Polymer({
         is: 'x-comp-datos-delivery',
         properties: {
@@ -453,9 +523,14 @@
 			showcostoentrega: Boolean,
 			showapigoogle: Boolean,
 			costoentrega: String,
-			idclientedni: Number
+			idclientedni: Number,
+			listDirNoMap: [],
+			showSelectDirNoMap: Boolean,
+			showInputDirNoMap:Boolean,
 		}, 
 		attached: function() {
+			this.showInputDirNoMap = true;
+			this.showSelectDirNoMap = false;
 			xThisComDatosDelivery=this;
 			xCompDatosDelInit();
 		},

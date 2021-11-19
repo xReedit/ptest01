@@ -11,8 +11,9 @@
     var xThisListDireccion;    
 	
 	function xCompListDireccionIni() {
-        console.log('xThisListDireccion',  this.idcliente);
-        console.log( 'xThisListDireccion',  xThisListDireccion.idcliente);
+        // console.log('xThisListDireccion',  this.idcliente);
+        // console.log( 'xThisListDireccion',  xThisListDireccion.idcliente);
+
 		// onLoadDireccionesCliente();
     }
     
@@ -28,7 +29,7 @@
                     }
 				})
 				.done(function (res) {
-                    console.log(res);
+                    // console.log(res);
                     xThisListDireccion.list = JSON.parse(res).datos;
 
                     // xThisListDireccion.list = res.data;

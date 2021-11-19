@@ -58,7 +58,7 @@
 
 		function searchClienteInput() {
 			const valInput = event.target.value;
-			console.log('valInput', valInput);
+			// console.log('valInput', valInput);
 
 			if (valInput.length < 3  ) { return; }
 			getAllClientes(valInput);
@@ -104,7 +104,7 @@
 			},
 			xchangeCliente: ()=> {
 				const cliente = event.target.value;
-				console.log('aaaaaaaaaaaaaaa');
+				// console.log('aaaaaaaaaaaaaaa');
 				event.target.fire('input-autocomplete-selected', cliente);
 			}
 			// getValorIncial: function (val) {
