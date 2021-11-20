@@ -1,4 +1,6 @@
+<link rel="import" href="../x-componentes/x-comp-img-upload/x-comp-img-upload.html">
 <dom-module id="x-producto-porcion">
+	<script type="text/javascript" src="../view/export.excel.js"></script>
 	<template>
 		<paper-dialog modal id="dialog_msj_confirma" class="dialog_redondo" style="min-width: 300px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
@@ -65,13 +67,16 @@
 				<!-- Foto -->
 				<div id="dlg_foto_vista_previa-div">						
 					<a class="xDerecha xInvisible xCursor" onclick="xItemQuitarFoto()" id="dlg_btn_quitar_foto">Quitar Foto</a>
-					<br>
+					<!-- <br>
 					<input type="file" class="xInvisible xobj_subir_foto" id="ctrl_open_file" accept="image/*"/>
 					<div id="dlg_foto_vista_previa" class="div_foto" onclick="xSeleccionarFoto();">
 						<div class="xCentradoHijo" id="dlg_label_foto">Clic aqui para seleccionar</div>
-					</div>
+					</div> -->
 					<br><br>
-					<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFoto();">Listo, guardar</div>
+					
+					<x-comp-img-upload id="compImgProducto" medidasimg="[[medidaImgProducto]]"></x-comp-img-upload>
+					<br><br><br><br>
+					<div class="xBoton2 xAzul" dialog-confirm  onclick="xItemGuardarFotProducto();">Listo, guardar</div>
 					<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
 				</div>
 				<!-- <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div> -->
@@ -114,12 +119,49 @@
 							<th align="left" width="20%">Familia</th>
 							<th align="left">Producto</th>
 							<th align="left" width="80px">Stock</th>
-							<th align="left" width="80px">P. Venta</th>
+							<th align="left" width="80px">P.Venta</th>
 							<th align="left" width="80px">Imagen</th>
+							<th align="left" width="80px" class="xInvisible">nom_imagen</th>							
 							<th width="5px"></th>
 						</thead>
-					</table>
+					</table>	
+					
+					<div class="xInvisible">
+						<table id="tb_productos_export" width="100%" class="xtable2">
+							<thead>
+								<th align="left">Producto</th>
+								<th align="left">familia</th>
+								<th align="left">codigo_barras</th>
+								<th align="left">cantidad</th>
+								<th align="left">stock_min</th>
+								<th align="left">precio compra total</th>
+								<th align="left">precio venta</th>
+								<th align="left">nom_imagen</th>							
+							</thead>
+							<tbody>
+								<template is="dom-repeat" items="{{listProductosExport}}" as="item">
+									<tr data-index="[[index]]">
+										<td>{{item.producto}}</td>
+										<td>{{item.familia}}</td>
+										<td>{{item.codigo_barra}}</td>
+										<td>{{item.stock}}</td>
+										<td>{{item.stock_minimo}}</td>
+										<td>{{item.precio}}</td>
+										<td>{{item.precio_venta}}</td>
+										<td>{{item.img}}</td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
 					<br><br><br>
+					
+					<div id="btn_soporte_shared">
+						<div class="d-flexx">
+							<button class="btn btn-sm btn-info mr-2" onclick="descargarListaProductos();">Exportar a Excel</button>							
+						</div>
+						<br><br><br>
+					</div>
 				</div>
 				<div id="cont_porciones">
 					<br>
@@ -170,7 +212,8 @@
 </style>
 
 <script>	
-var xThisProPor,xidAlmacenbUS,xObjRowSel,xPrecio_item, xObjImgDet, xIdObjImgDet, filtroStokMin = 'no';
+var xThisProPor,xidAlmacenbUS,xObjRowSel,xPrecio_item, xObjImgDet, xIdObjImgDet, filtroStokMin = 'no'
+,compImgProducto;
 function xIniProPor(){
 	xPopupLoad=document.getElementById('xLoad');
 	xm_LogChequea(function(){
@@ -184,7 +227,14 @@ function xIniProPor(){
 
 		var xDesFiltro1=getUrlParameter('stock_minimo','?');
 		filtroStokMin = xDesFiltro1 ? xDesFiltro1 : 'no';		
-	})
+	});
+
+	xThisProPor.medidaImgProducto = {
+            width: 220,
+            height: 200
+        }
+
+	compImgProducto = document.getElementById('compImgProducto');
 
 	$("#ctrl_open_file").change(function(e) {
 	    for (var i = 0; i < e.originalEvent.srcElement.files.length; i++) {
@@ -401,6 +451,12 @@ function xLoadProductos(xid_filtro){
 		var xCadenaPro='';
 		var xico_stock_min='';
 		var xtitulo_stock_min='', btnImgTitulo = 'Subir Imagen';
+
+		listProductosExportar = xdtPro.filter(x => xid_filtro === x.idalmacen);
+		xThisProPor.listProductosExport = JSON.parse(JSON.stringify(listProductosExportar));
+
+		// console.log('listProductosExportar', listProductosExportar);
+
 		for (var i = 0; i < xdtPro.length; i++) {
 			if(xid_filtro!=0){
 				if(xid_filtro!=xdtPro[i].idalmacen){continue;}
@@ -419,8 +475,8 @@ function xLoadProductos(xid_filtro){
 				+'<td class="sumar_stock xCursor" onclick="xModRow(this,2);" id="td_stock" data-valorginal="'+xtr_stock+'" data-mod-stock="'+xtr_stock+'" data-mod-precio="" data-colummn="stock">'+xtr_stock+'</td>'
 				+'<td class="xCursor" onclick="xModRow(this,1);" id="td_pventa" data-valorginal="'+xdtPro[i].precio_venta+'" data-mod-stock="" data-mod-precio="'+xdtPro[i].precio_venta+'" data-colummn="precio_venta">'+xdtPro[i].precio_venta+'</td>'
 				+'<td class="xCursor" onclick="openDialogImg(this);"><span class="xfont11">'+ btnImgTitulo +'</span></td>'
-				+'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarProducto(this);"></span></td>'
 				+'<td class="xInvisible" id="td_img">'+xdtPro[i].img+'</td>'+
+				+'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarProducto(this);"></span></td>'
 				+'</tr>')
 		};
 		$("#tb_productos .row").remove();
@@ -654,21 +710,41 @@ function xItemQuitarFoto(){
 	})
 }
 
-function xItemGuardarFoto(){	
-	$(".xobj_subir_foto").each(function(index, element) {		
-		if($(this).val()==''){return}
-		file=this.files[0]; name = file.name; size = file.size; type = file.type;
-		xhr = new XMLHttpRequest();
-		xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
+function xItemGuardarFotProducto(){	
+	// $(".xobj_subir_foto").each(function(index, element) {		
+	// 	if($(this).val()==''){return}
+	// 	file=this.files[0]; name = file.name; size = file.size; type = file.type;
+	// 	xhr = new XMLHttpRequest();
+	// 	xhr.upload.addEventListener ('load', transferenciaCompleta(name), false);
 
-		xhr.open('POST','upload.php?op=1',true);
+	// 	xhr.open('POST','upload.php?op=1',true);
 
-		xhr.setRequestHeader("Cache-Control", "no-cache");
-		xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-		xhr.setRequestHeader("X-File-Name", file.name);
-		xhr.send(file);
-	})
+	// 	xhr.setRequestHeader("Cache-Control", "no-cache");
+	// 	xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+	// 	xhr.setRequestHeader("X-File-Name", file.name);
+	// 	xhr.send(file);
+	// })
+
+	const nomfileImg = xIdObjImgDet;
+	const img_Item = compImgProducto.getImgBase64();
+    uploadImgProducto(img_Item,nomfileImg);
 };
+
+function uploadImgProducto(imgBase64, nomfile) {
+        $.ajax({
+				type: 'POST',
+				url: 'upload_base64.php?op=1',
+                data: {
+                    nomfile : nomfile,
+                    img : imgBase64
+                }				
+			})
+			.done((res) => {				
+                // console.log('res', res);      
+				nomfile = nomfile + '.png';
+				transferenciaCompleta(nomfile);          
+			});
+    }
 
 
 function transferenciaCompleta(xfile){
@@ -698,16 +774,46 @@ function openDialogImg(obj) {
 	$("#dlg_foto_vista_previa img").remove();
 	$("#dlg_btn_quitar_foto").addClass('xInvisible');
 	if(xval_img!==''){
-		xval_img='<img src="'+xval_img+'">';
-		$("#dlg_foto_vista_previa").append(xval_img).trigger('create');
+		const xval_img_control='<img src="'+xval_img+'">';
+		$("#dlg_foto_vista_previa").append(xval_img_control).trigger('create');
 		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
 	}	
 	$("#ctrl_open_file").val('');
+
+
+	compImgProducto.resetControl();
+	compImgProducto.setImgPathFile(xval_img);
 
 	dialog_detalle.open();
 
 	// e.stopPropagation();
 	// e.stopImmediatePropagation();
+}
+
+function descargarListaProductos() {
+	// listProductosExportar = JSON.parse(JSON.stringify(listProductosExportar));
+	// listProductosExportar = listProductosExportar.map(x => {
+	// 	x.idproducto_stock = 0
+	// 	x.idproducto = 0
+	// 	x.idalmacen = 0;
+
+	// 	return x
+	// })
+	// console.log('listProductosExportar', JSON.stringify(listProductosExportar));
+
+	// let a = document.createElement('a');
+	// a.href = "data:application/octet-stream,"+encodeURIComponent(JSON.stringify(listProductosExportar));
+	// a.download = 'listaPoductos.txt';
+	// a.click();
+
+
+	// tableToExcel('tb_productos_export', 'Comprobantes');
+	var _table = document.getElementById('tb_productos_export');
+    var html = _table.outerHTML;
+    window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
+	setTimeout(() => {
+		xPopupLoad.xclose();
+	}, 500);
 }
 
 
@@ -719,7 +825,9 @@ Polymer({
 		xt_idus:Number,
 		xdt_prodcutos: Object,
 		dtProFam:Object,
-		listPorciones: []
+		listPorciones: [],
+		medidaImgProducto: [],
+		listProductosExport: []
 	},
 	attached:function(){
 		this.selected=0;

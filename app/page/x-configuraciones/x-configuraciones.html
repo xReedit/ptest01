@@ -977,7 +977,7 @@ function xleerXls(xfile){
 	if($("#fileAlamcen").val==""){return};
 	$.ajax({ type: 'POST', url: '../../bdphp/leer_excel.php?op=2',data:{f:xNomFileXls,fecha:xDevolverFecha(),a:xIdA}})
 	.done( function (dtUpP) {
-		console.log(dtUpP);
+		// console.log(dtUpP);
 		$("#fileAlamcen").val('');
 		xPopupLoad.xclose();
 		//var xrptUp=$.parseJSON(dtUpP);
@@ -1266,7 +1266,7 @@ function xTestPrint(xOpC){
 	};
 
 	// si eta en la web
-	console.log('print params', xArrayPasarTest);
+	// console.log('print params', xArrayPasarTest);
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	const _data = {
 		Array_enca:xArrayPasarTest
@@ -1885,7 +1885,7 @@ function xloadMetodosPagos() {
 		xThisConfig.listMetodoPagos = listMetodoPagosAceptados;
 
 
-		console.log('xThisConfig.listMetodoPagos', xThisConfig.listMetodoPagos);
+		// console.log('xThisConfig.listMetodoPagos', xThisConfig.listMetodoPagos);
 	});
 	
 }

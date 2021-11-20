@@ -2754,7 +2754,7 @@
 			";*/
 			$sql="
 				SELECT ps.idproducto_stock,p.idproducto, ps.idalmacen,pf.descripcion AS familia, a.descripcion AS almacen, p.descripcion AS producto, ps.stock, IF(p.precio_venta='','0.00',format(p.precio_venta,2)) AS precio_venta, IF(p.stock_minimo='',0,p.stock_minimo) AS stock_minimo
-						,p.img
+						,p.img, p.codigo_barra, p.precio
 				FROM producto AS p
 					INNER JOIN producto_stock AS ps using(idproducto)
 					INNER JOIN almacen AS a using(idalmacen)
