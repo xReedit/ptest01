@@ -188,8 +188,8 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce, numDoc = '#') {
     _headers.Authorization = "Bearer " + xm_log_get("datos_org_sede")[0].authorization_api_comprobante;
 
     let rpt = {};
-    json_xml.numero_documento = numDoc;
     const numero_comp = json_xml.serie_documento + "-" + json_xml.numero_documento;
+    // json_xml.numero_documento = numDoc; // chequear que pasa
     json_xml = JSON.stringify(json_xml);
 
 

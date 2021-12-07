@@ -2060,7 +2060,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			if ( isClienteDeliveryFromApp ) { // o delivery
 				isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // optionDeliveryCliente.p_header.arrDatosDelivery.establecimiento.pwa_delivery_servicio_propio !== 0;
 				
-				isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
+				// 241121 le quitamos al agregar items no suma
+				// isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
 
 
 				xtitulo = 'Pedido #' + xp_sel_numpedido; // para el titulo
@@ -2084,6 +2085,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 				// totales
 				// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
+				console.log('subtotales delivry');
 				arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
 			
 				
@@ -2167,7 +2169,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 					// xSumarTotalPedidos();
 				}
 
-				if ( xdtDpedido[0].flag_solicita_repartidor_papaya === '1' ) {
+				if ( xdtDpedido[0].flag_solicita_repartidor_papaya === '1' ) {					
 					arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 				}
 
@@ -2238,6 +2240,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			// console.log('xThisCM.xdtPedDet', xThisCM.xdtPedDet);
 			xLoadMipedidoBD(xArrayDtOrdenFiltro)
 
+			console.log('sub total pedidos');
 			xSumarTotalPedidos();
 			xCheckPedidos();
 		})

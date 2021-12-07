@@ -9,7 +9,7 @@ $timeSpan = $fecha->getTimestamp();
 switch ($op) {
     case '1': // img de carta
 		$path = '../../file/';
-        $timeSpan = '';
+        // $timeSpan = '';
 		break;	
 	case '4': // logo comercio desde plantilla correo que viene en formato base64
         $path = '../../repositorio/img_correo/';

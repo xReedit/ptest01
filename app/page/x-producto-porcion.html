@@ -14,7 +14,7 @@
 		<paper-dialog modal id="dialog_additem_pro" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h3>Agregar Producto</h3>
-				<form id="frm_item_pro" method="post">
+				<form id="frm_item_pro">
 					<label for="sel_almacen_pro">Almacen donde ingresa:</label><br>
 					<select id="sel_almacen_pro" name="no_post" class="xMiInput"></select>
 					<input type="text" id="descripcion" name="descripcion" placeholder="Descripcion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
@@ -45,7 +45,7 @@
 				Por ejemplo: de 1000gr de bistec salen 10 porciones de 100gr cada una para el preparar bistec a lo pobre.<br>
 				Utilize la misma unidad de medida que esta en el producto a porcionar. Es decir si el producto a porcionar esta en gramos la misma unidad de medida debe ser para las prociones.</p>
 				<br>
-				<form id="frm_add_porcion" method="post">
+				<form id="frm_add_porcion">
 					<input type="text" id="descripcion" name="descripcion" placeholder="Descripcion de la porcion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
 					<input type="text" id="peso" name="peso" placeholder="Peso" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
 					<input type="text" id="stock" name="stock" placeholder="Cantidad" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
@@ -56,7 +56,7 @@
 					</div>
 				</form>
 				<br><br>
-				<div class="xBoton2 xAzul" onclick="xGuardarItemPorcion();">Listo, guardar</div>
+				<div class="xBoton2 xAzul" onclick="xGuardarItemPorcionPorcion();">Listo, guardar</div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 				<br><br><br>
 			</div>
@@ -127,7 +127,7 @@
 					</table>	
 					
 					<div class="xInvisible">
-						<table id="tb_productos_export" width="100%" class="xtable2">
+						<table id="tb_export_p" width="100%" class="xtable2">
 							<thead>
 								<th align="left">Producto</th>
 								<th align="left">familia</th>
@@ -148,7 +148,7 @@
 										<td>{{item.stock_minimo}}</td>
 										<td>{{item.precio}}</td>
 										<td>{{item.precio_venta}}</td>
-										<td>{{item.img}}</td>
+										<td>{{item.img}}</td>										
 									</tr>
 								</template>
 							</tbody>
@@ -304,7 +304,7 @@ function xEnterInInputDlgPP(e){
 		xGuardarItemProPP();
 	}
 }
-function xGuardarItemPorcion(){
+function xGuardarItemPorcionPorcion(){
 	xvalidateFormInput('frm_add_porcion',function(a){
 		if(a===false){return;}
 		xPopupLoad.xopen();
@@ -475,7 +475,6 @@ function xLoadProductos(xid_filtro){
 				+'<td class="sumar_stock xCursor" onclick="xModRow(this,2);" id="td_stock" data-valorginal="'+xtr_stock+'" data-mod-stock="'+xtr_stock+'" data-mod-precio="" data-colummn="stock">'+xtr_stock+'</td>'
 				+'<td class="xCursor" onclick="xModRow(this,1);" id="td_pventa" data-valorginal="'+xdtPro[i].precio_venta+'" data-mod-stock="" data-mod-precio="'+xdtPro[i].precio_venta+'" data-colummn="precio_venta">'+xdtPro[i].precio_venta+'</td>'
 				+'<td class="xCursor" onclick="openDialogImg(this);"><span class="xfont11">'+ btnImgTitulo +'</span></td>'
-				+'<td class="xInvisible" id="td_img">'+xdtPro[i].img+'</td>'+
 				+'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarProducto(this);"></span></td>'
 				+'</tr>')
 		};
@@ -583,13 +582,13 @@ function xGuardarCambiosPorcion() {
 function xGuardarCambiosTbProductos(op){
 	var xArraySaveProducto=new Array();
 	var xtb;
-	if(op==1){
+	// if(op==1){
 		xtb=$("#tb_productos");
 		xtb = document.getElementById('tb_productos');
-	}else{
-		xtb=$("#tb_porcion");
-		xtb = document.getElementById('tb_porcion');		
-	}
+	// }else{
+	// 	xtb=$("#tb_porcion");
+	// 	xtb = document.getElementById('tb_porcion');		
+	// }
 
 	listModificados = xtb.getElementsByClassName('modificado');
 	listModificados = [...listModificados];
@@ -656,7 +655,7 @@ function xOkPopupConfirm(){
 }
 function xConfirmBorrarProducto(){
 	var xida=xObjRowSel.attr('data-idalmacen');
-	var xidp=xObjRowSel.attr('data-idal');
+	var xidp=xObjRowSel.attr('data-idal');	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1802', data:{idp:xidp, ida:xida}})
 	.done( function (dtElimPro) {
 		xObjRowSel.fadeTo(550, 0, function () {$(this).remove();})
@@ -807,8 +806,8 @@ function descargarListaProductos() {
 	// a.click();
 
 
-	// tableToExcel('tb_productos_export', 'Comprobantes');
-	var _table = document.getElementById('tb_productos_export');
+	// tableToExcel('tb_export_p', 'Comprobantes');
+	var _table = document.getElementById('tb_export_p');
     var html = _table.outerHTML;
     window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
 	setTimeout(() => {

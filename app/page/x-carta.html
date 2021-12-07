@@ -818,6 +818,10 @@ function xItemDetalleOpciones(index, obj, e){
 	// }	
 	// $("#ctrl_open_file").val('');
 
+	if(xval_img!==''){
+		$("#dlg_btn_quitar_foto").removeClass('xInvisible');
+	}
+
 	// imagen
 	compImgItem.resetControl();
 	compImgItem.setImgPathFile(xval_img);
@@ -1252,14 +1256,14 @@ function uploadImgItem(imgBase64, nomfile) {
                 }				
 			})
 			.done((res) => {				
-                // console.log('res', res);      
-				nomfile = nomfile + '.png';
-				transferenciaCompleta(nomfile);          
+                console.log('res', res);      
+				// nomfile = nomfile + '.png';
+				transferenciaCompleta(res);          
 			});
     }
 
 function transferenciaCompleta(xfile){
-	xfile=xIdOrg+xIdSede+xfile;
+	// xfile=xIdOrg+xIdSede+xfile;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=207', data:{i:xIdObjImgDet,d:xfile}})
 	.done( function (a) {
 		// dialog_foto.close();

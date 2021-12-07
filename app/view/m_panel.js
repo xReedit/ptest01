@@ -115,6 +115,7 @@ function xIniDocument(){
 		// } 
 		
 		//si solo realizar pedido		
+		// xm_all_xToastOpen("Enviando comprobantes...", 20000);
 
 		//xSoloAccPedido();
  		/*debugger

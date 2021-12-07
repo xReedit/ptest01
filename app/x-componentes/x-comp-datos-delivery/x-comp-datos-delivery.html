@@ -352,7 +352,7 @@
 				telefono: removeSpecialChar(txt_delivery_telefono.value),
 				paga_con: removeSpecialChar(txt_delivery_paga.value),
 				f_nac: xClientePedidoFnac, // hasta aca antes		
-				direccion_delivery_no_map: client_autocomplete_selected.direccion_delivery_no_map		
+				direccion_delivery_no_map: client_autocomplete_selected ? client_autocomplete_selected.direccion_delivery_no_map : null
 			}		
 		}
 
@@ -370,7 +370,7 @@
 			list_direccion_no_map = [];
 			list_direccion_no_map.push(_dirAdd);
 		}
-		DatosCliente.direccion_delivery_no_map = JSON.stringify(list_direccion_no_map);
+		DatosCliente.direccion_delivery_no_map = list_direccion_no_map;
 		DatosCliente.idcliente = await ClienteService_Guardar(DatosCliente);
 
 		// id_cliente = xIdCliente_pedido === "" ? await ClienteService_Guardar(DatosCliente) :xIdCliente_pedido;
