@@ -191,7 +191,7 @@
 								<tr class="xSinBorde_tr" valign="top">
 									 <!-- style="padding-right:10px;" -->
 									<td width="40%" class="pd-r-10">
-										<div class="xtd-derecha">
+										<div class="xtd-derecha" id="xBodyPedidos">
 										<table width="100%" id="tb_pedidos" class="xRowPading4">
 											<thead><th colspan="5" align="left">PEDIDOS</th></thead>
 											<tr class="row selected1 xCursor check_item_p" data-idpedido="1">
@@ -218,6 +218,7 @@
 										<!-- <button class="btn btn-sm btn-warning"><i class="fa fa-sort-amount-desc"></i> Aplicar Descuento</button> -->
 										<x-comp-descuento id="component_descuento_pedido" importeventa$="[[ importeTotalPedido ]]"></x-comp-descuento>
 
+										<br><br>
 										</div>
 									</td>
 									<td class="xBordeIzq pd-l-10">										
@@ -249,6 +250,7 @@
 											</tr>
 										</table>
 										</div>
+										
 										</div>
 										<div class="d-flexx justify-content-end align-items-center" style="position: sticky; width: 100%;" hidden$="[[ !isAddItemRow ]]">
 											<button class="btn btn-success" style="margin-top: -80px;" onclick="xArmarSqlAddLUlI()" ><i class="fa fa-check"></i> Confirmar</button>
@@ -498,7 +500,8 @@ var xThisCM,
 	isSocket = false, isPedidoOpenDeliveryCliente = false, arrTotalesDeliveryCliente, xid_pedido_selected, optionDeliveryCliente, xdtDpedido
 	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
-var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria;
+var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
+	,isComercioServicioDeliveryPropio = false, idUsuarioOperador = 0;
 function xIniControlMesa(){
 
 	// if ( cuentaEventoLoadIniPrincipal > 0 ) { return; }
@@ -521,6 +524,7 @@ function xIniControlMesa(){
 	xPopupLoad=document.getElementById('xLoad');
 	//xm_LogChequea(function(){ inicia en m_control_pedidos.js		
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
+		idUsuarioOperador =  xIdUsuario;
 
 
 		firstLoad_mesas=true;
@@ -897,6 +901,7 @@ function xIniControlMesa(){
 	$("#dialog_detalle").on('iron-overlay-closed',function(){
 		//xVerificarSiActualizaItems();
 		xbuscar_mesa=false;
+		xdtDpedido = null;
 		//xRefreshPedidos=setInterval(function () {xActualizarItems()},4000);
 	})
 	$("#dialog_detalle").on('iron-overlay-opened',function(){
@@ -1823,7 +1828,16 @@ async function xRegistrarClientePagoCP(){
 			// }
 
 			xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
-			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);		
+			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);	
+			
+			const _payloadPedidoPagado = {
+				idusuario:  idUsuarioOperador,
+				num_pedido: xObj_miPedido.data().numpedido,
+				num_mesa: xObj_miPedido.data().nummesa,
+				importe_restante: xcheckItemsSeleccionados.importeTotalSeleccionado
+			}
+
+			_cpASocketNotifyPayPedido(_payloadPedidoPagado);
 
 		// }).fail(enProcesoGuardarPago = false);
 
@@ -1871,6 +1885,15 @@ async function xRegistrarClientePagoCP(){
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
 		
 		// }).fail(enProcesoGuardarPago = false);
+
+		const _payloadPedidoPagado = {
+				idusuario:  idUsuarioOperador,
+				num_pedido: xObj_miPedido.data().numpedido,
+				num_mesa: xObj_miPedido.data().nummesa,
+				importe_restante: 0
+			}
+
+		_cpASocketNotifyPayPedido(_payloadPedidoPagado);
 	}
 }
 
@@ -1996,6 +2019,10 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	var xtitulo='';
 
 	if(xp_sel_nummesa=='0'){xtitulo='PEDIDO '+xCeroIzq(xp_sel_correlativo_dia,5)}else{xtitulo='MESA '+xCeroIzq(xp_sel_nummesa,2)}	
+	
+	// para sumar totales cuando se agrega de delivery
+	const _isDeliveryObjPedido = xdtDpedido ? xdtDpedido[0]?.pwa_is_delivery === "1" ? true : false : false;
+	isPedidoOpenDeliveryCliente = _isDeliveryObjPedido;
 
 	if ( !clearDataLastPedidoInsert ) {
 		xRefreshListaPedidosItems(obj);		
@@ -2061,7 +2088,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // optionDeliveryCliente.p_header.arrDatosDelivery.establecimiento.pwa_delivery_servicio_propio !== 0;
 				
 				// 241121 le quitamos al agregar items no suma
-				// isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
+				isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
 
 
 				xtitulo = 'Pedido #' + xp_sel_numpedido; // para el titulo
@@ -2087,6 +2114,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
 				console.log('subtotales delivry');
 				arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
+				console.log('xLocal_xDtSubTotales', xLocal_xDtSubTotales);
 			
 				
 				
@@ -2191,7 +2219,15 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			}
 			
 			const xClassColorMin = xcolor_tiempo_despacho === '' ? 'xColorRow_Plomo' : xcolor_tiempo_despacho;
-			const td_tiempo_atencion = xdtDpedido[i].tiempo_atencion.length > 0 ? '<td class="'+ xcolor_tiempo_despacho +'">' + xdtDpedido[i].tiempo_atencion + ' <span class="xfont11 '+ xClassColorMin +'">min</span></td>' : '<td></td>';
+			const td_tiempo_atencion = xdtDpedido[i].tiempo_atencion > 0 ? '<p class="'+ xcolor_tiempo_despacho +'">' + xdtDpedido[i].tiempo_atencion + ' <span class="xfont11 '+ xClassColorMin +'">min</span></p>' : '';
+			let _nomUsMozo = xdtDpedido[i].nom_usuario;
+			let _iconUs = 'fa-user';
+			if ( !_nomUsMozo && xdtDpedido[i].flag_is_cliente === "1" ) {
+				_iconUs = 'fa-mobile text-success fa-2x';
+				_nomUsMozo = '';
+			} else {
+				_nomUsMozo = primeraConMayusculas(_nomUsMozo);
+			}			
 
 			xcadena_pedido=String(xcadena_pedido+'<tr class="row selected1 xCursor check_item_p" data-idcategoria="'+xidCategoriaPD+
 								'" data-idpedido="'+xdtDpedido[i].idpedido+
@@ -2206,9 +2242,11 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 								'" data-ref="'+xdtDpedido[0].referencia+'">'+
 								'" data-subtotales_tachados="'+xdtDpedido[0].subtotales_tachados+'">'+
 									'<td><paper-checkbox checked class="check_item"></paper-checkbox>'+xcount_p+'</td>'+
-									'<td>'+xdtDpedido[i].des_pedido+' <span class="xfont10 xColorRow_Plomo">'+xdtDpedido[i].referencia+'</span></td>'+
-									'<td>'+xdtDpedido[i].min_transcurridos+' <span class="xfont11 xColorRow_Plomo">min</span></td>'+
-									td_tiempo_atencion +
+									'<td><span>'+xdtDpedido[i].des_pedido+'<span><p class="xfont10 xColorRow_Plomo">'+xdtDpedido[i].referencia+'</p></td>'+
+									'<td><span class="fw-100 fs-12 text-secondary" title="Usuario"><i class="fa '+ _iconUs +' pr-1"></i>'+ _nomUsMozo +'</span></td>'+
+									'<td>'+xdtDpedido[i].min_transcurridos+' <span class="xfont11 xColorRow_Plomo">min</span>'+
+									td_tiempo_atencion +'</td>'+
+									// td_tiempo_atencion +
 									'<td align="right" class="td_importe" id="td_importe">'+xMoneda(xdtDpedido[i].total)+'</td>'+
 								'</tr>');
 			xcount_p++;
@@ -2218,6 +2256,13 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 		$("#xBody div").remove();
 		$("#xBody").append('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
+		if (isDelivery) {
+			$("#xBody").addClass('tall-delivery');
+			$("#xBodyPedidos").addClass('tall-delivery');
+		} else {
+			$("#xBody").removeClass('tall-delivery');
+			$("#xBodyPedidos").addClass('tall-delivery');
+		}
 
 		
 		const idPedidoAdd = lastDataPedidoInsert ? lastDataPedidoInsert.idpedido : 0;
@@ -2769,10 +2814,17 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 	// si hay algun subitem seleccionado no cambia por que esto es el total de pedidos
 	xImporteTotalSeleccionados = checkItemsSeleccionados.esSeleccionTotal ?  _importeTotalSeleccionados : xImporteTotalSeleccionados;
 	// si es pedido delivery cliente
-	xImporteTotalSeleccionados = isPedidoOpenDeliveryCliente ? getImporteTotalSubTotalesDelivery(arrTotalesDeliveryCliente) : xImporteTotalSeleccionados;
+	// xImporteTotalSeleccionados = isPedidoOpenDeliveryCliente ? getImporteTotalSubTotalesDelivery(arrTotalesDeliveryCliente) : xImporteTotalSeleccionados;
 	
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
-	arrSumSubtTotales = isPedidoOpenDeliveryCliente ? arrTotalesDeliveryCliente : xLocal_xDtSubTotales;
+	// arrSumSubtTotales = isPedidoOpenDeliveryCliente ? addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente) : xLocal_xDtSubTotales;
+	if ( isPedidoOpenDeliveryCliente ) {
+		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio);
+		xImporteTotalSeleccionados = getImporteTotalSubTotalesDelivery(arrSumSubtTotales);
+	} else {
+		arrSumSubtTotales = xLocal_xDtSubTotales; 		
+	}
+
 	arrSumSubtTotales = viene_dsct ? arrSubtTotalesDescuento : arrSumSubtTotales;
 	xLocal_xDtSubTotales = arrSumSubtTotales;
 
@@ -2824,7 +2876,9 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 
 	// if(viene_borrar==1){//si viene de borrar items y ya no queda mas items = mesa disponible
 	// y si no viene de descuento
-		if(parseFloat(xtt_pedidos)==0 && !viene_dsct){//cierra pedido
+		// if(parseFloat(xtt_pedidos)==0 && !viene_dsct){//cierra pedido
+		// 151221 comparamos el importe de diferencia para no cerrar si seleccionan un item de costo 0.00
+		if((parseFloat(xtt_pedidos)==0 && xtt_dif == 0 ) && !viene_dsct){//cierra pedido
 			// console.log('sumar pedidos neutro');
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
@@ -3696,6 +3750,55 @@ function xResetMesaDefault(_num) {
 	$('.grid').isotope('updateSortData');
 }
 
+
+function xRefreshPedidoPaySocket(pedido) {
+	// if (_num === '') {return; }
+	const element = xBuscarPedidoDom(pedido.num_mesa, pedido.num_pedido);
+	if ( !element ) {return;}
+	const _eparent = $(element);
+
+	
+	if (pedido.importe_restante === 0) {
+		if ( pedido.num_mesa === 0 ) { // si es llevar o delivery
+			_eparent.remove();
+			$('.grid').isotope('updateSortData');
+			return;
+		}
+
+		// $(".xMiCardPedido.xOcupado .numero").each(function(index,element){
+			// const _t_find = '|'+element.textContent+'|';
+			// if (_t_find.length === 6) {return;} // no es mesa
+			// if ( _num.indexOf(_t_find) === -1 ) {
+				_eparent.removeClass('xOcupado');
+				_eparent.removeClass('xDespachado');
+				_eparent.removeClass('xCursor');
+				_eparent.addClass('xNeutro');
+				_eparent.find('.show-led-precuenta').addClass('xInvisible');
+				_eparent.find('.show-led-print').addClass('xInvisible');
+				_eparent.find('.show-ico-mozo').addClass('xInvisible');
+				_eparent.find('.show-mozo-pedido').removeClass('pintar');
+				_eparent.find("#nommozo").text('.');
+				// _eparent.addClass('tpc1');
+				_eparent.find(".importe").text('-');
+				_eparent.find(".tiempo").text('disponible')
+				
+				_eparent.attr('data-abrir-detalle','0');
+				_eparent.attr('data-estado','b');
+				
+				_eparent.removeAttr('data-p');
+				_eparent.removeAttr('data-hora');
+				_eparent.removeAttr('data-numpedido');
+				_eparent.removeAttr('data-correlativo');
+			// }
+		// });
+	} else {
+		const _importeUpdate = parseFloat(_eparent.find(".importe").text().replace('S/. ', '')) - pedido.importe_restante;
+		_eparent.find(".importe").text('S/. ' + _importeUpdate.toFixed(2));
+	}
+
+	$('.grid').isotope('updateSortData');
+}
+
 function xCalcularTiempoPedido(){
 	var xhora_item;
 	var xContador_cant=new Array();
@@ -3793,6 +3896,7 @@ function xCallRepartidorPapayaExec() {
 	.done( function (res) {
 		// lanzar notificacion de comision del repartdior
 		arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
+		// xLocal_xDtSubTotales = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], xLocal_xDtSubTotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 		xSumarTotalPedidos();
 		_cpSocketComercioLLamaRepartidorPapaya();
 	});

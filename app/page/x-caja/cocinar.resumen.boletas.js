@@ -53,15 +53,18 @@ async function xCocinarResumenBoletas() {
             //dialog_enviando_sunat.close();
             //return; 
         }
+        if ( error ) continue;
     };
     
-    if ( error ) return;
+    // if ( error ) return;
 
 
-    // consulta los comprobantes que fueron registrados pero no enviados a la sunat x problemas de conexion con el servicio. o offline
+    // consulta los comprobantes -solo facturas (se envian uno por uno) - que fueron registrados pero no enviados a la sunat x problemas de conexion con el servicio. o offline
     const arrDocNoRegistradoSunat = await xSoapSunat_getArrNoRegistradoSunat();
     error = false;
     for (const i in arrDocNoRegistradoSunat) {
+        // solo facturas
+
 
         $("#dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
         // const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
@@ -77,7 +80,7 @@ async function xCocinarResumenBoletas() {
         }
     };
 
-    if (error) return;
+    // if (error) return;
 
     
     // cocinar resumen
@@ -129,4 +132,3 @@ async function xCocinarResumenBoletas() {
 
 
 }
-

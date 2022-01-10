@@ -266,6 +266,20 @@ function darFormatoSubTotalesDelivery(arrTotales = null) {
 	return xLocal_xDtSubTotales;
   }
 
+function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliveryPropio = false) {
+	var importeAdd = 0;
+	const _rowTotal = arrTotal.pop();
+	arrDelivery.filter(x => x.id < 0).map(x => {
+		if (isComercioServicioDeliveryPropio && x.descripcion.toLowerCase() === 'entrega') {return; }
+		importeAdd += parseFloat(x.importe);
+		arrTotal.push(x);
+	});
+
+	_rowTotal.importe = (parseFloat(_rowTotal.importe) + importeAdd).toFixed(2);
+	arrTotal.push(_rowTotal);
+	return arrTotal;
+}
+
 function getImporteTotalSubTotalesDelivery(arrTotales = null) {
     // console.log(arrTotales);
     var rowTotal = arrTotales[arrTotales.length - 1];

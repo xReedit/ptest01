@@ -1458,6 +1458,7 @@ ul.list_add_item2 li {
 
 #dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
 	.xtd-derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
+    .tall-delivery{height: calc(100vh - 342px); bottom: 0;  overflow-y:auto;}
     img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
     
 .div-active-service-delivery {

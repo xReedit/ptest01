@@ -104,6 +104,22 @@ function listenSocketP() {
     });
 
 
+    this.socketCP.listen('restobar-notifica-pay-pedido-res').subscribe(res => {
+        try {
+            // console.log('restobar-notifica-pay-pedido-res', res);
+            xRefreshPedidoPaySocket(res); // control de pedidos
+        } catch (error) {}
+    });
+
+
+    this.socketCP.listen('restobar-permiso-cierre-remoto-respuesta').subscribe(res => {
+        try {
+            // console.log('restobar-notifica-pay-pedido-res', res);            
+            xCajaResPermisoRemoto(res); // control de pedidos
+        } catch (error) {}
+    });    
+
+
     
 
 }
@@ -146,7 +162,9 @@ function _cpSocketEmitPrinterPrecuenta(item) {
 }
 
 function _cpSocketClose() {
-    if (!isSocket) { return; }
+    try {
+        if (!isSocket) { return; }        
+    } catch (error) {}
     try {        
         this.socketCP.disconnectSocket();
     } catch (error) {        
@@ -226,3 +244,22 @@ function _cpSocketClearStorage() {
     if (!isSocket) { return; }
     localStorage.removeItem('::app3_sys_dta_pe_sk');
 }
+
+
+function _cpASocketNotifyPayPedido(payload) {
+    // payload // idusuario // num pedido or num mesa // importe
+    this.socketCP.emit('restobar-notifica-pay-pedido', payload);
+}
+
+
+// vine de caja
+// function _cpSocketPermisoCierreRemoto(payload) {
+//     // payload // idusuario // num pedido or num mesa // importe
+//     this.socketCP.emit('restobar-permiso-cierre-remoto', payload);
+// }
+
+function _cpSocketPermisoCierreRemotoEnviarRpt(payload) {
+    // payload // idusuario // num pedido or num mesa // importe
+    this.socketCP.emit('restobar-permiso-cierre-remoto-respuesta', payload);
+}
+

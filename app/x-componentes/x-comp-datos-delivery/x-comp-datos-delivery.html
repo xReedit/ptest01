@@ -360,6 +360,8 @@
 		// guardamos cambios en direcciones
 		const _dirAdd = {direccion: DatosCliente.direccion, referencia: DatosCliente.referencia};
 		var list_direccion_no_map = DatosCliente?.direccion_delivery_no_map || null;
+		list_direccion_no_map = list_direccion_no_map === "null" ? null : list_direccion_no_map;
+		// if ( list_direccion_no_map && xThisComDatosDelivery.listDirNoMap ) {
 		if ( list_direccion_no_map ) {
 			list_direccion_no_map = JSON.parse(list_direccion_no_map);
 			const _dirSearch = list_direccion_no_map.filter(d => d.direccion.toLowerCase().trim() == DatosCliente.direccion.toLowerCase().trim())[0];

@@ -45,7 +45,8 @@ function xCeroIzqNumComprobante(Num){
  }
 
 function conMayusculas(field) {field.value = field.value.toUpperCase();};
-function primeraConMayusculas(field) {return field.charAt(0).toUpperCase() + field.slice(1);};
+// function primeraConMayusculas(field) {return field.charAt(0).toUpperCase() + field.slice(1);};
+function primeraConMayusculas(field) {return field ? field.toLowerCase().replace(/\b(\w)/g, s => s.toUpperCase()) : field;};
 function getUrlParameter(sParam,simbolo) {
 	var sPageURL = window.location.href;
 	sPageURL=sPageURL.replace('-',' ');

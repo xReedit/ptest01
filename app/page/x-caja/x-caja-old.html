@@ -5,30 +5,6 @@
 
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 	<template>
-
-		<!-- permiso remoto -->
-		<paper-dialog class="dialog_redondo" id="dialog_permiso_remoto" style="max-width: 500px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
-			<div>				
-				<img src="../../../images/_solicitud_remoto.png" alt="solicita">
-				<p class="fs-18">Solicitar permiso remoto.</p>
-				<p class="fw-100 text-secondary">Solicitar permiso al administrador para saber su diferencia y poder cerrar su caja.</p>
-				<br>
-				<p>Quien dará el permiso?</p>
-				<select class="selected-template-1" id="selAdmin" onchange="selectedUsAdmin(this)">
-					<template is="dom-repeat" items="{{listUsAdmin}}" as="item">
-						<option value="{{item.idusario}}">{{ item.nombres }}</option>
-					</template>
-				</select>
-				<br><br>
-				<p>En efectivo tengo:</p>
-				<input type="text" class="xMiInput xPasarEnter2 fs-15 fw-600 w-50" placeholder="0.00" id="txt_total_tengo">
-
-				<br><br>				
-				<button class="xBoton2 xVerde" onclick="xEnviarPermisoRemoto()">Enviar</button>
-				<button dialog-dismiss id="dlg_sunat_btn" class="xBoton2 xPlomo">Cancelar</button>
-			</div>
-		</paper-dialog>
-
 		<paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div style="text-align: center">
 				<img id="dgl_sunat_img" src="../../../images/_msj_envio_sunat.gif" alt="">
@@ -137,14 +113,10 @@
 				<div id="cierre_caja">
 					<div class="xTxtCierreCajaContenedor">
 						 <b><h3 id="xTituloCierre">CIERRE DE CAJA</h3></b>
-						 <p class="fs-15">indique el importe en efectivo que tiene en caja, que es igual a todas las ventas en efectivo más ingresos y menos salidas de caja.</p>
-						 <br><br>
-						 <p class="fs-16 fw-600">Total de efectivo en caja:</p>
-						 <input type="text" class="xMiInput xPasarEnter2 fs-28 fw-600 w-50" data-valor="0.10" placeholder="0.00" id="txt_total_caja">
-						 <br><br>
-
+						 <p>Especifique que cantidad tiene en caja segun denominacion:</p>
+						 <br>						 
 			            <form id="formCierre">
-			            <!-- <div class="xAlinearce xm_at_cont xEpaciarInputCierre">
+			            <div class="xAlinearce xm_at_cont xEpaciarInputCierre">
 			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="200" placeholder="De 200">
 			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="100" placeholder="De 100">
 			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="50" placeholder="De 50">
@@ -159,29 +131,15 @@
 			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="0.20" placeholder="De 0.20">
 			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="0.10" placeholder="De 0.10" id="txt_fin">
 			                 <input type="text" class="xMiInput" data-valor="total" placeholder="Total" id="TxtTotal" disabled encendido>
-			            </div> -->
+			            </div>
 			            <div id="xTituloRpt">
 						</div>
 						<div id="xTituloRpt2"></div>
 
 			            </form><br>
-						<!-- respuesta solicitud cierre -->
-						<div id="div_espera_rpt" class="xInvisible">
-							<p class="fw-600 fs-15">Por favor espere la respuesta a la solicitud por parte del administrador... <i class="fa fa-circle-o-notch fa-spin"></i></p>
-							<br>
-						</div>
-						<div id="div_rpt_solicitud" class="xInvisible">
-							<p class="fw-600 fs-15">Respuesta Solicitud</p>
-							<p class="fw-600">Efectivo Sistema: {{rowRptSolicitud.importe_sistema}}</p>
-							<p class$="[[rowRptSolicitud.diferecia_color]]">{{ rowRptSolicitud.diferecia_estado }}: {{  rowRptSolicitud.diferencia}}</p>
-							<br>
-						</div>
 			            <div id="btns_cierre">
-				            <!-- <paper-button tabindex="0" raised class="xverde" onclick="xVerificar();"><iron-icon icon="save"></iron-icon>Verificar</paper-button>
-				            <paper-button tabindex="0" raised class="xnegro" onclick="xPSupervisor.xopen()"><iron-icon icon="save"></iron-icon>Supervisor</paper-button> -->
-							<button class="btn btn-success" onclick="xVerificar();"><i class="fa fa-check pr-1"></i>Verificar</button>
-							<button class="btn btn-dark" onclick="xPSupervisor.xopen()"><i class="fa fa-user pr-1"></i>Supervisor</button>
-							<button class="btn btn-info" onclick="xOpenDialogPermisoRemotoUs()"><i class="fa fa-volume-control-phone pr-1"></i>Permiso Remoto</button>
+				            <paper-button tabindex="0" raised class="xverde" onclick="xVerificar();"><iron-icon icon="save"></iron-icon>Verificar</paper-button>
+				            <paper-button tabindex="0" raised class="xnegro" onclick="xPSupervisor.xopen()"><iron-icon icon="save"></iron-icon>Supervisor</paper-button>
 			            </div>
 			            <!-- <button onclick="xCocinarResumenBoletas();">Enviar Resumen</button> -->
 					</div>
@@ -271,7 +229,7 @@ var xThisCaja
 , id_supervisor = 0
 , xlo_idorg
 , xlo_idsede
-, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false, idUsAdminPermiso = 0;
+, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false;
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -368,10 +326,7 @@ function xIniCaja(){
 			case 0:xLoadResumenIS();break;
 			case 1: xloadLastCierres();break;
 		}
-	});
-
-
-	xLoadUsAdminPermiso();
+	})
 
 }
 function xGuardarIngreso(){
@@ -510,14 +465,12 @@ function xSumarTotal(){
 	}
 
 function xVerificar(){
-
-	xMontoTotalCaja = txt_total_caja.value;
 	//$.post('x../../bdphp/log.php?op=16',{xid:xDataEmp.Data[0].xu,xtb:xDevolverFecha()},function(xData){
 	$('#xTituloRpt').html('<paper-spinner active></paper-spinner>').trigger('create');
 	//$('#xTituloRpt').text('');
 	
 	const datos = {
-		totalcaja: parseFloat(xMontoTotalCaja),
+		totalcaja: parseInt(xMontoTotalCaja),
 		idusuario_supervisor: id_supervisor || 0,			
 	}
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70111', data: {item: datos} })
@@ -1032,56 +985,6 @@ function recibirAdelanto(obj) {
 
 }
 
-function xOpenDialogPermisoRemotoUs() {
-	txt_total_tengo.value = txt_total_caja.value;
-	dialog_permiso_remoto.open();
-}
-
-function xLoadUsAdminPermiso() {
-	$.ajax({ type: 'POST', 
-		url: '../../bdphp/log.php?op=70112'})
-	.done( function (res) {
-		xThisCaja.listUsAdmin = JSON.parse(res).datos;
-		selectedUsAdmin(null, 0);
-		console.log('listUsAdmin', xThisCaja.listUsAdmin);
-	});
-
-}
-
-function selectedUsAdmin(obj, index = null) {
-	if (index !== null) {
-		idUsAdminPermiso = xThisCaja.listUsAdmin[index].idusuario;
-		return;
-	}
-
-	idUsAdminPermiso = xThisCaja.listUsAdmin[obj.selectedIndex].idusuario;
-}
-
-function xEnviarPermisoRemoto() {
-	$.ajax({ type: 'POST', 
-		url: '../../bdphp/log.php?op=70113', data:{idus: idUsAdminPermiso, importe: txt_total_tengo.value}})
-	.done( function (res) {
-		console.log('res', res);
-		// _cpSocketPermisoCierreRemoto()
-		// xThisCaja.isShowEsperaRptSolicitudCierre = true;
-		$('#div_espera_rpt').removeClass('xInvisible');
-		dialog_permiso_remoto.close();
-	});
-}
-
-function xCajaResPermisoRemoto(res) {
-	console.log('permiso remoto', res);
-	if (res.idusuario_solicita !== xIdUsuario) {return;}
-
-	xThisCaja.rowRptSolicitud = res;
-
-	// xThisCaja.isShowEsperaRptSolicitudCierre = false;
-	// xThisCaja.isShowRptSolicitudCierre = true;
-	$('#div_espera_rpt').addClass('xInvisible');
-	$('#div_rpt_solicitud').removeClass('xInvisible');
-
-}
-
 
 Polymer({
 	is:'x-caja',
@@ -1092,20 +995,14 @@ Polymer({
 		xt_idus:Number,
 		winchaCierre: [],
 		listCierres: [],
-		listUsAdmin: [],
 		isShowLastCierres: Boolean,
 		listAdelantoOrden: [],
 		isShowListaAdelantoOrden: Boolean,
-		isShowEsperaRptSolicitudCierre: Boolean,
-		isShowRptSolicitudCierre: Boolean,
-		rowRptSolicitud: []
 	},
 	attached:function(){
 		this.selected=0;
 		this.isShowLastCierres = false;
 		this.isShowListaAdelantoOrden = false;
-		this.isShowEsperaRptSolicitudCierre = false;
-		this.isShowRptSolicitudCierre = false;
     	xThisCaja=this;
 		xIniCaja();
 		// _cpSocketIsConnect();

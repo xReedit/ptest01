@@ -733,7 +733,8 @@ function xEstructuraExpress(orden, isDelivery, isComercioAppDeliveryMapa) {
 	};
 
 	// si no es delivery o si no tiene habilitado para pp
-	if ( !isDelivery || !isComercioAppDeliveryMapa ) {
+	// if ( !isDelivery || !isComercioAppDeliveryMapa ) {
+	if ( !isDelivery) {
 		return arr_res;
 	}
 
