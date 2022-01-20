@@ -501,7 +501,8 @@ var xThisCM,
 	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
-	,isComercioServicioDeliveryPropio = false, idUsuarioOperador = 0;
+	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false, idUsuarioOperador = 0, isPedidoDelivery = false;
+
 function xIniControlMesa(){
 
 	// if ( cuentaEventoLoadIniPrincipal > 0 ) { return; }
@@ -1351,7 +1352,9 @@ async function xImprimirPrecuenta(){
 	// po si no sale el numero de mesa
 	xmesa_pc=xdtDpedido[0].nummesa;
 
-	const isDelivery = datosDelivery ? 1 : 0;
+	// const isDelivery = datosDelivery ? 1 : 0;
+	// const isDelivery = datosDelivery ? parseInt(datosDelivery?.p_header?.delivery) === 1 ? 1 : 0 : 0;
+	const isDelivery = isPedidoDelivery ? 1 : 0;
 
 	xArrayPrintEncaLi_pre_cuenta={'m':xmesa_pc, 'r':'', 'num_pedido':xmunp_pc,'reservar':0, 'solo_llevar':0,'correlativo_dia':xmunp_pc,'precuenta':true, 'delivery': isDelivery, 'arrDatosDelivery': datosDelivery};
 
@@ -1736,7 +1739,9 @@ async function xRegistrarClientePagoCP(){
 
 	// para que registr cliente
 	// var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
-	var xid_cliente_pago = xRpt_pago[0].is_update_cliente ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	// var xid_cliente_pago = xRpt_pago[0].is_update_cliente ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	// 1801222 - guarda cliente en cliente sede
+	var xid_cliente_pago = await ClienteService_Guardar(DatosCliente);
 	
 	var xidpedido_seleccionados='';
 	
@@ -2071,7 +2076,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		// datosDelivery = datosDelivery != '' && datosDelivery != '{}' && datosDelivery != '[]' ? JSON.parse(datosDelivery) : null;
 		xdtDpedido[0].json_datos_delivery = datosDelivery;
 
-		isDelivery = datosDelivery ? true : false;
+		isDelivery = datosDelivery ? parseInt(datosDelivery.p_header.delivery) === 1 ? true : false : false;
+		isPedidoDelivery = isDelivery; // marcador global
 		// console.log('datosDelivery', datosDelivery);		
 
 		$('#btnLlamarRepartidorP').addClass('xInvisible');
@@ -2085,7 +2091,9 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			isClienteDeliveryFromApp = optionDeliveryCliente ? optionDeliveryCliente.p_header ? optionDeliveryCliente.p_header.delivery === 1 : false : false;		
 		
 			if ( isClienteDeliveryFromApp ) { // o delivery
-				isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // optionDeliveryCliente.p_header.arrDatosDelivery.establecimiento.pwa_delivery_servicio_propio !== 0;
+				isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1'
+				isDeliveryCalculaCostoEntrega = xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1';
+				isDeliveryCalculaCostoEntregaSoloApp = xDtSede_cm[0].pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';
 				
 				// 241121 le quitamos al agregar items no suma
 				isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
@@ -2243,7 +2251,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 								'" data-subtotales_tachados="'+xdtDpedido[0].subtotales_tachados+'">'+
 									'<td><paper-checkbox checked class="check_item"></paper-checkbox>'+xcount_p+'</td>'+
 									'<td><span>'+xdtDpedido[i].des_pedido+'<span><p class="xfont10 xColorRow_Plomo">'+xdtDpedido[i].referencia+'</p></td>'+
-									'<td><span class="fw-100 fs-12 text-secondary" title="Usuario"><i class="fa '+ _iconUs +' pr-1"></i>'+ _nomUsMozo +'</span></td>'+
+									'<td><span class="fw-100 fs-12 text-secondary text_puntos" title="Usuario"><i class="fa '+ _iconUs +' pr-1"></i>'+ _nomUsMozo +'</span></td>'+
 									'<td>'+xdtDpedido[i].min_transcurridos+' <span class="xfont11 xColorRow_Plomo">min</span>'+
 									td_tiempo_atencion +'</td>'+
 									// td_tiempo_atencion +
@@ -2261,7 +2269,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			$("#xBodyPedidos").addClass('tall-delivery');
 		} else {
 			$("#xBody").removeClass('tall-delivery');
-			$("#xBodyPedidos").addClass('tall-delivery');
+			$("#xBodyPedidos").removeClass('tall-delivery');
 		}
 
 		
@@ -2819,7 +2827,7 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
 	// arrSumSubtTotales = isPedidoOpenDeliveryCliente ? addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente) : xLocal_xDtSubTotales;
 	if ( isPedidoOpenDeliveryCliente ) {
-		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio);
+		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio, isDeliveryCalculaCostoEntrega, isDeliveryCalculaCostoEntregaSoloApp);
 		xImporteTotalSeleccionados = getImporteTotalSubTotalesDelivery(arrSumSubtTotales);
 	} else {
 		arrSumSubtTotales = xLocal_xDtSubTotales; 		
@@ -3920,7 +3928,7 @@ function xRefreshListaPedidosItems(obj) {
 			correlativo_dia: lastDataPedidoInsert.correlativo_dia,
 			referencia: '',
 			subtotales_tachados: '',
-			des_pedido: 'P'+xCeroIzq(lastDataPedidoInsert.correlativo_dia, 5),
+			des_pedido: 'P'+xCeroIzq(lastDataPedidoInsert.correlativo_dia, 3),
 			min_transcurridos: 0,
 			tiempo_atencion: 0
 		}

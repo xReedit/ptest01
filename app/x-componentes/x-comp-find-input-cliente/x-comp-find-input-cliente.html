@@ -8,7 +8,7 @@
 			label="{{label}}" value="{{inputValue}}"
 			search-property="nombres"
 			onkeyup="searchClienteInput(this)"	
-			on-autocomplete-selected="xchangeCliente"
+			on-autocomplete-selected="xchangeCliente"			
 			autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete>
 	</template>
 </dom-module>
@@ -54,6 +54,10 @@
 				// _autocompleteComp.source = JSON.parse(JSON.stringify(xDtProv.datos));
 				// _autocompleteComp.remoteSource = true;
 			});
+		}
+
+		function resetSource() {
+			input_clie_nombres_auto.source = xThisComInputCliente.list_cliente
 		}
 
 		function searchClienteInput() {

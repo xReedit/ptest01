@@ -143,6 +143,11 @@ function handlerFnMiPedido(e) {
 
 		
 		const mySubItemView = checkMySubitemView(xidTipoConsumo, xidItem);		
+
+		// is controlable obtiene idsubitem 11/01/2022
+		const isSubItemControlable = itemPedidos_objItemSelected?.subitems ? parseInt(itemPedidos_objItemSelected.subitems[0].iscontrolable) === 1 : false;
+		const idSubItemControlable = isSubItemControlable ? itemPedidos_objItemSelected.subitems_selected[0].iditem_subitem : 0;
+
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
 		xArrayPedidoObj[xidTipoConsumo][xidItem]={
 			'idcategoria':xidCategoria, 
@@ -167,6 +172,7 @@ function handlerFnMiPedido(e) {
 			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
 			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView
 			,'isporcion': itemPedidos_objItemSelected.isporcion
+			,'iditem_subitem': idSubItemControlable
 		};
 
 		// itemPedidos_objItemSelected = xArrayPedidoObj[xidTipoConsumo][xidItem];

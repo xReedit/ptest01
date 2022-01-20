@@ -1315,7 +1315,9 @@ async function xGuardarPedidoVR(responde){
 			: [];
 
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
-	var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	// var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
+	// 1801222 - guarda cliente en cliente sede
+	var xid_cliente_pago = await ClienteService_Guardar(DatosCliente);
 	var xidpedido_seleccionados = '';	
 	
 	DatosCliente.idcliente = xid_cliente_pago;

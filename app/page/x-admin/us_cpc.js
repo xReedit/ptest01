@@ -158,6 +158,14 @@ function addCompaniesContador() {
 	if (event.keyCode != 13) return;
 	if ( !_id_num_us_new_cpc ) { alert('Guarda primero el contador.'); return;}
 
+	var mes_inicio  = '';
+	if (_companySelect.mes_inicio) {
+		mes_inicio = _companySelect.mes_inicio;
+	} else {
+		mes_inicio = xDevolverFechaParte('mm') + '/' + xDevolverFechaParte('yy');
+	}
+	
+
 	const dataCompanies = {
 		user_id: _companySelect.user_id,
 		idus_cpc : _id_num_us_new_cpc,
@@ -166,7 +174,7 @@ function addCompaniesContador() {
 		nomsede: txt_companies_sede.value,
 		serie: txt_companies_serie.value,
 		ciudad: txt_companies_ciudad.value,
-		mes_inicio: _companySelect.mes_inicio,		
+		mes_inicio: mes_inicio,		
 	}
 
 	$.ajax({

@@ -1,7 +1,11 @@
 <dom-module id="x-comp-find-item-producto">
 	<template is="dom-bind">
 		<div>
-            <input type="text" class$="[[clasecss]]" onChange="conMayusculas(this)" id="des_item_pro_comp" onkeyup="xloadItemProductoComp(this)">						
+            <input type="text" 
+                class$="[[clasecss]]"
+                placeholder$="[[elplaceholder]]"                
+                onblur="removeChartSpecialCtrl(this)"
+                onChange="conMayusculas(this)" id="des_item_pro_comp" onkeyup="xloadItemProductoComp(this)">						
 		</div>
 	</template>
 </dom-module>
@@ -71,6 +75,13 @@
         }
         
 
+        function removeChartSpecialCtrl(obj) {
+            console.log('xThisCompItemProducto.removespecialchart', xThisCompItemProducto.removespecialchart);
+            if ( xThisCompItemProducto.removespecialchart === false ) { return; }
+            obj.value = removeSpecialChar(obj.value);
+        }
+        
+
 
 		Polymer({
 			is: 'x-comp-find-item-producto',
@@ -82,8 +93,11 @@
                 onlynomfamilia: Boolean, //
                 valueInput: String,
                 clasecss: String,
+                elplaceholder: String,
+                removespecialchart: Boolean,
 			},
 			attached: function () {                
+                // this.removespecialchart = false;
 				xThisCompItemProducto = this;								
 			},
             getelementSeletedAlmacen: () => {                
@@ -95,6 +109,9 @@
             },
             focusText: () => {
                 des_item_pro_comp.focus();
+            },
+            getTextInput: () => {
+                return des_item_pro_comp.value;
             }
 		})
 	</script>

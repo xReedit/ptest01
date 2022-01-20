@@ -171,13 +171,15 @@
 				// if ( !isset($lisSubItemsSelect[0]) ) {
 				if ( $isExistSubitemsSelect == false ) {
 					$desItemInsert = addslashes($subitem['des'].$indicaciones_p);
+					$idItemSubItemControlable = isset($subitem['iditem_subitem']) ? $subitem['iditem_subitem'] : 0;
 
 					// print $subItemSelect;					
-					$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$subitem['cantidad']."','".$subitem['cantidad']."','".$subitem['precio']."','".$precio_total."','".$precio_total."','".$desItemInsert."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."'),";
+					$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$subitem['cantidad']."','".$subitem['cantidad']."','".$subitem['precio']."','".$precio_total."','".$precio_total."','".$desItemInsert."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."',".$idItemSubItemControlable."),";
 
 				} else {					
 					$pUnitarioItem = $subitem['precio'];
 					$DesItemUp = $subitem['des'];
+					// $idItemSubItemControlable = isset($subitem['iditem_subitem']) ? $subitem['iditem_subitem'] : 0;
 
 					// cuando la cantidad del item es mas que los subitems seleccionados					
 					$lenghSubItem = count($lisSubItemsSelect);
@@ -193,7 +195,8 @@
 					foreach ($lisSubItemsSelect as $sub) {						
 
 						$pUnitario = $sub['precio'];
-						$desItem = addslashes($DesItemUp.' ('.$sub['des'].')');						
+						$desItem = addslashes($DesItemUp.' ('.$sub['des'].')');	
+						$idItemSubItemControlable = $sub['id'];					
 
 						$cantSeleccionadaSubItem = $sub['cantidad_seleccionada'];
 
@@ -215,7 +218,7 @@
 						
 
 						// print $subItemSelect;												
-						$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$subitem['cantidad']."','".$subitem['cantidad']."','".$subitem['precio']."','".$precio_total."','".$precio_total."','".$subitem['des']."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."'),";
+						$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$subitem['cantidad']."','".$subitem['cantidad']."','".$subitem['precio']."','".$precio_total."','".$precio_total."','".$subitem['des']."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."',".$idItemSubItemControlable."),";
 
 
 						$PrecioTotalItemSeleccionda = $PrecioTotalItemSeleccionda - $precio_total;
@@ -226,7 +229,7 @@
 					if ($cantItemSeleccionda > 0) {
 						$PrecioTotalItemSeleccionda = number_format($PrecioTotalItemSeleccionda, 2);						
 						$desItemInsert = addslashes($DesItemUp.$indicaciones_p);
-						$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$cantItemSeleccionda."','".$cantItemSeleccionda."','".$subitem['precio']."','".$PrecioTotalItemSeleccionda."','".$PrecioTotalItemSeleccionda."','".$desItemInsert."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."'),";
+						$sql_pedido_detalle=$sql_pedido_detalle."(?,".$tipo_consumo.",".$categoria.",".$subitem['iditem'].",".$idItem2.",'".$subitem['idseccion']."','".$cantItemSeleccionda."','".$cantItemSeleccionda."','".$subitem['precio']."','".$PrecioTotalItemSeleccionda."','".$PrecioTotalItemSeleccionda."','".$desItemInsert."',".$viene_de_bodega.",".$tabla_procede.",".$pwa.",'".$subItemSelect."',".$idItemSubItemControlable."),";
 					}
 				}
 
@@ -368,7 +371,7 @@
 		$sql_pedido_detalle=substr ($sql_pedido_detalle, 0, -1);
 
 		//pedido_detalle
-		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla, pwa, subitems) values '.$sql_pedido_detalle;
+		$sql_pedido_detalle='insert into pedido_detalle (idpedido,idtipo_consumo,idcategoria,idcarta_lista,iditem,idseccion,cantidad,cantidad_r,punitario,ptotal,ptotal_r,descripcion,procede,procede_tabla, pwa, subitems, iditem_subitem) values '.$sql_pedido_detalle;
 		// $sql_pedido_detalle = addslashes($sql_pedido_detalle);
 		// echo $sql_pedido_detalle;
 		
@@ -390,7 +393,7 @@
 		// $x_respuesta->correlativo_dia = $correlativo_dia; 
 		
 		// $correlativo_dia, 'correlativo_comprobante' => '' para que no me mande generar factura
-		$x_respuesta = json_encode(array('idpedido' => $id_pedido, 'numpedido' => $numpedido, 'correlativo_dia' => $correlativo_dia, 'correlativo_comprobante' => ''));
+		$x_respuesta = json_encode(array('idpedido' => $id_pedido, 'numpedido' => $numpedido, 'correlativo_dia' => $correlativo_dia, 'correlativo_comprobante' => '', 'sql_pedido_detalle' => $sql_pedido_detalle));
 
 
 		// SI ES PAGO TOTAL
@@ -1628,14 +1631,16 @@
 		$direccion_delivery_no_map=$datos_cliente['direccion_delivery_no_map'];
 		$f_nac=$datos_cliente['f_nac'];
 		$telefono=array_key_exists('telefono', $datos_cliente) ? $datos_cliente['telefono'] : '';
-		$update_telefono = $telefono != '' ? ", telefono = '".$telefono."'" : '';
+		$update_telefono = $telefono != '' ? ", telefono = '".$telefono."'" : "";
+
+		$direccion_delivery_no_map_save = isset($direccion_delivery_no_map) ? json_encode($direccion_delivery_no_map) : '';
 		// $idpedidos=$x_arr_cliente['i'] == '' ? $x_idpedido : $x_arr_cliente['i'];
 
 		if($idclie==''){
 			if($nomclie==''){//publico general
 				$idclie=0;
 			}else{
-				$sql="insert into cliente (idorg,nombres,direccion,ruc,f_nac, f_registro,telefono, direccion_delivery_no_map)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$num_doc."','".$f_nac."',DATE_FORMAT(now(),'%d/%m/%Y'),'".$telefono."', '".json_encode($direccion_delivery_no_map)."')";
+				$sql="insert into cliente (idorg,nombres,direccion,ruc,f_nac, f_registro,telefono, direccion_delivery_no_map)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$num_doc."','".$f_nac."',DATE_FORMAT(now(),'%d/%m/%Y'),'".$telefono."', '".$direccion_delivery_no_map_save."')";
 				$idclie=$bd->xConsulta_UltimoId($sql);
 
 				// insertar en cliente_sede
@@ -1644,8 +1649,12 @@
 				
 			}
 		} else {
+			// insertar en cliente_sede
+			$sql = "call procedure_registrar_cliente_sede(".$_SESSION['idsede'].",".$idclie.")";
+			$bd->xConsulta_NoReturn($sql);
+
 			// update cliente
-			$sql="update cliente set nombres='".$nomclie."',ruc='".$num_doc."',referencia='".$referencia."',direccion='".$direccion."'".$update_telefono.", direccion_delivery_no_map = '". json_encode($direccion_delivery_no_map) ."' where idcliente = ".$idclie;
+			$sql="update cliente set nombres='".$nomclie."',ruc='".$num_doc."',referencia='".$referencia."',direccion='".$direccion."'".$update_telefono.", direccion_delivery_no_map = '". $direccion_delivery_no_map_save ."' where idcliente = ".$idclie;
 			$bd->xConsulta_NoReturn($sql);
 		}
 

@@ -266,11 +266,11 @@ function darFormatoSubTotalesDelivery(arrTotales = null) {
 	return xLocal_xDtSubTotales;
   }
 
-function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliveryPropio = false) {
+function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp=false) {
 	var importeAdd = 0;
 	const _rowTotal = arrTotal.pop();
 	arrDelivery.filter(x => x.id < 0).map(x => {
-		if (isComercioServicioDeliveryPropio && x.descripcion.toLowerCase() === 'entrega') {return; }
+		if ((isComercioServicioDeliveryPropio && !isDeliveryCalculaCostoEntrega && !isDeliveryCalculaCostoEntregaSoloApp) && x.descripcion.toLowerCase() === 'entrega') {return; }
 		importeAdd += parseFloat(x.importe);
 		arrTotal.push(x);
 	});

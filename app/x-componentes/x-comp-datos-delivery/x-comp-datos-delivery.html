@@ -9,8 +9,16 @@
 	<template is="dom-bind">
 		<paper-dialog id="dialog_datos_delivery" class="dialog_redondo" entry-animation="scale-up-animation"
 			exit-animation="fade-out-animation" modal with-backdrop>
-			<h2>Datos adicionales</h2>
-			<span>Para la entrega del delivery</span>
+			<div class="d-flexx justify-content-between align-items-center">
+				<div>
+					<h2>Datos adicionales</h2>
+					<span>Para la entrega del delivery</span>
+				</div>
+				<div>
+					<span class="fs-13"><i class="fa fa-cutlery"></i> Colocar Cubiertos</span>
+					<paper-toggle-button onchange="xColocarCubiertosDelivery(this)" id="toogle_cubiertos">Toggle</paper-toggle-button>
+				</div>
+			</div>
 			<hr>
 			<form id="frm_cliente">
 				<div style="display: flex;">
@@ -122,7 +130,7 @@
 	var xThisComDatosDelivery, xIdCliente_pedido, xClientePedidoFnac, arrCompDatosAdjuntoDelivery = [], _inputAutocompleteDel,
 	_inputAutocompleteDelObj, compDirSelectCliente, calcCosto, direcionSelected, compDirSearch, dataSede,
 	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp, comercioHabilitadoLlamarRepartidor, _dirEstablecimineto
-	, client_autocomplete_selected;
+	, client_autocomplete_selected, isSolicitaCubiertos = '0';
 	
 	function xCompDatosDelInit() {
 		calcCosto = new calcCostoEntrega();
@@ -340,7 +348,8 @@
 				codigo: direcionSelected.codigo,
 				latitude: direcionSelected.latitude,
 				longitude: direcionSelected.longitude,
-				titulo: 'Casa'
+				titulo: 'Casa',
+				solicitaCubiertos: isSolicitaCubiertos
 			}		
 		} else {
 			DatosCliente = {
@@ -352,7 +361,8 @@
 				telefono: removeSpecialChar(txt_delivery_telefono.value),
 				paga_con: removeSpecialChar(txt_delivery_paga.value),
 				f_nac: xClientePedidoFnac, // hasta aca antes		
-				direccion_delivery_no_map: client_autocomplete_selected ? client_autocomplete_selected.direccion_delivery_no_map : null
+				direccion_delivery_no_map: client_autocomplete_selected ? client_autocomplete_selected.direccion_delivery_no_map : null,
+				solicitaCubiertos: isSolicitaCubiertos
 			}		
 		}
 
@@ -424,7 +434,8 @@
 			isFromComercio: 1, // el pedido esta yendo desde el comercio,
 			costoTotalDelivery: dataSede.c_servicio,
 			tiempoEntregaProgamado: {},
-			delivery: 1
+			delivery: 1,
+			solicitaCubiertos: isSolicitaCubiertos
 		};
 
 		var xSaveNewDireccionPwa = direcionSelected ? !direcionSelected.idcliente_pwa_direccion ? true : false : false;
@@ -518,6 +529,15 @@
 		txt_delivery_direccion.value = _dirSeletedNoMap.direccion;
 	}
 
+	function xColocarCubiertosDelivery(obj) {
+		isSolicitaCubiertos = obj.checked ? '1' : '0';
+	}
+
+	function xResetCubiertos() {
+		isSolicitaCubiertos = '0';
+		toogle_cubiertos.checked = false;
+	}
+
 	Polymer({
         is: 'x-comp-datos-delivery',
         properties: {
@@ -528,7 +548,7 @@
 			idclientedni: Number,
 			listDirNoMap: [],
 			showSelectDirNoMap: Boolean,
-			showInputDirNoMap:Boolean,
+			showInputDirNoMap:Boolean,			
 		}, 
 		attached: function() {
 			this.showInputDirNoMap = true;
@@ -544,6 +564,7 @@
 			xThisComDatosDelivery.idclientedni = 0;
 			xThisComDatosDelivery.showdir = true;
 			xThisComDatosDelivery.showcostoentrega = false;
+			xResetCubiertos();
 		}
     })
 </script>

@@ -326,7 +326,7 @@
 
 		xThisCliente.$.paginator.addEventListener('page-limit-change', (e) => {
             data_pagination = e.detail.value; // datos del componente
-            p_desde = data_pagination.pageDesde; // para el # de fila            
+            p_desde = data_pagination.pageDesde || 0; // para el # de fila            
             getAllListClientes();
 		}); 
 
