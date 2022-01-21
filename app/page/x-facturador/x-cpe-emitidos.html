@@ -91,7 +91,7 @@
                             <br>
                             <hr>
                             <div class="x_div_linea">
-                                <input type="date" class="xMiInput xfont17 xitem1" style="width:200px;" id="txt_fecha" enlinea>
+                                <input type="month" class="xMiInput xfont17 xitem1" style="width:200px;" id="txt_fecha" enlinea>
                                 <input type="text" class="xMiInput xfont18 xitem2" style="width:80%; bottom: -2px;" placeholder="Buscar" autofocus onkeyup="xfiltrarDatos()"
                                     id="txt_buscar" enlinea>                                                                
                             </div>
@@ -156,6 +156,32 @@
                             <div>                                
                                 <pagination-input id="paginator" class="xDerecha" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>                                
                             </div>
+                            <br><br><br>
+                            <div class="xLinea2"></div>
+                            <br>                       
+                            <div class="div-resumen-cpe">
+                                <p class="fs-17 fw-600">Resumen de comprobantes</p>
+                                <br>
+                                <table class="w-100">
+                                    <thead>
+                                        <th>Tipo</th>
+                                        <th align="center">Cantidad</th>
+                                        <th align="right">Total</th>
+                                    </thead>
+                                    <tbody>
+                                        <template is="dom-repeat" items="{{listResumenCpeEmitidos}}" as="item">
+                                            <tr>
+                                                <td>{{ item.nom_comprobante }}</td>
+                                                <td align="center">{{ item.cantidad }}</td>
+                                                <td align="right">{{ item.total }}</td>
+                                            </tr>
+                                        </template>
+                                        <tr>                                            
+                                            <td colspan="3" align="right"><p class="fw-600 fs-16">{{ listResumenCpeEmitidosTotal }}</p></td>                                            
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>                                     
                             <br><br>
                         </div>
 
@@ -252,6 +278,16 @@
 
         </div>
     </template>
+
+    <style>
+        .div-resumen-cpe {
+            width: 290px;
+            background: #d2faf9;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
 </dom-module>
 <script type="text/javascript" src="./list.resumen.boletas.js"></script>
 <script rel="preload" type="text/javascript" src="../../view/xm_all.js"></script>
@@ -289,16 +325,19 @@
             data_pagination = e.detail.value; // datos del componente
             p_desde = data_pagination.pageDesde; // para el # de fila            
             lastPos = $(window).scrollTop();
-            xLoadCpeEmitidos('6');            
+            // xLoadCpeEmitidos('6');            
+            txt_fecha.valueAsDate = new Date();
+            xApplyFilterDate();
         }); 
            
         
         $("#txt_fecha").on('change', function () {
-            var d = $(this).val().split('-');            
-            p_fecha = d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
-            xThisCpe.$.paginator.currentPage = 1;            
-            xLoadCpeEmitidos('6');
+            // var d = $(this).val().split('-');            
+            // p_fecha = d[1]===undefined ? '' : '01/' + d[1] + '/' + d[0];                        
+            // xThisCpe.$.paginator.currentPage = 1;            
+            // xLoadCpeEmitidos('6');
             // xIniPagination();
+            xApplyFilterDate();
         });
 
         $("#tab_cpe").on('iron-select', function () {
@@ -309,6 +348,25 @@
 
         xListRe_ini(); // iniciar resumen boletas
 
+    }
+
+    function xApplyFilterDate() {
+        var d = $(txt_fecha).val().split('-');            
+            p_fecha = d[1]===undefined ? '' : '01/' + d[1] + '/' + d[0];                        
+            xThisCpe.$.paginator.currentPage = 1;            
+            xLoadCpeEmitidos('6');
+            xResumenMesTotaleCpe();
+    }
+
+    function xResumenMesTotaleCpe() {
+        $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '602', fecha_mes: p_fecha} })
+        .done(function (res) {            
+            res = JSON.parse(res);
+            console.log('xResumenMesTotaleCpe', res);
+            xThisCpe.listResumenCpeEmitidos = res.datos;
+            const _totalImporteCpe = xThisCpe.listResumenCpeEmitidos.map(x => parseFloat(x.total.replace(/,/g, ''))).reduce((a, b) => a+b, 0);
+            xThisCpe.listResumenCpeEmitidosTotal = numeroConComas(_totalImporteCpe.toFixed(2));
+        });
     }
 
     function xIniPagination() {        
@@ -650,6 +708,8 @@
             ListCpeResumen: [],
             ListReporte: [],
             listSedeUsContador:[],
+            listResumenCpeEmitidos: [],
+            listResumenCpeEmitidosTotal: Number,
             nom_sede: '',
             isContador: false,
             isReenviandoLoading: false
@@ -657,6 +717,7 @@
         attached: function () {
             this.selected = 0,
             this.isReenviandoLoading = false;
+            this.listResumenCpeEmitidosTotal = 0;
             xThisCpe = this;
             xIniCpe();
         },
