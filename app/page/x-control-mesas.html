@@ -2088,7 +2088,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 			// datos del delivery app cliente
 			optionDeliveryCliente = datosDelivery;
-			isClienteDeliveryFromApp = optionDeliveryCliente ? optionDeliveryCliente.p_header ? optionDeliveryCliente.p_header.delivery === 1 : false : false;		
+			// isClienteDeliveryFromApp = optionDeliveryCliente ? optionDeliveryCliente.p_header ? optionDeliveryCliente.p_header.delivery === 1 : false : false;		
+			isClienteDeliveryFromApp = optionDeliveryCliente ? optionDeliveryCliente.p_header ? optionDeliveryCliente.p_header.isCliente === 1 : false : false;		
 		
 			if ( isClienteDeliveryFromApp ) { // o delivery
 				isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1'

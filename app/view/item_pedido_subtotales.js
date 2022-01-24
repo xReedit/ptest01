@@ -269,7 +269,16 @@ function darFormatoSubTotalesDelivery(arrTotales = null) {
 function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp=false) {
 	var importeAdd = 0;
 	const _rowTotal = arrTotal.pop();
-	arrDelivery.filter(x => x.id < 0).map(x => {
+
+	// id locales
+	arrTotal.map(x => { //a = costos adicionales
+		// si viene del app y solo cobra comision por el app entonces quita los costos de entrega locales y deja el del app
+		if ( isDeliveryCalculaCostoEntregaSoloApp && (x.descripcion.toLowerCase().indexOf('entrega') > -1  || x.descripcion.toLowerCase().indexOf('delivery') > -1 )) {
+			arrTotal = arrTotal.filter(s => s.id !== x.id);
+		}
+	});
+
+	arrDelivery.filter(x => x.id < 0).map(x => {		
 		if ((isComercioServicioDeliveryPropio && !isDeliveryCalculaCostoEntrega && !isDeliveryCalculaCostoEntregaSoloApp) && x.descripcion.toLowerCase() === 'entrega') {return; }
 		importeAdd += parseFloat(x.importe);
 		arrTotal.push(x);
