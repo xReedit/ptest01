@@ -147,7 +147,7 @@ async function xSoapSunat_ConsultarTicketResumen(ticket) {
           data.xml = res.links.xml != "" ? 1 : 0;
           data.fecha_resumen = xSoapSunat_cambiarFormatoFechaString2(ticket.fecha_resumen); // para actualizar las boletas estado_sunat=0 -> aceptadas
 
-          if (res.response.length != 0) {
+          if (res.response.description.indexOf('aceptado') > -1) {
             data.estado_sunat = 1; // aceptado
             data.msj = res.response.description;
           }

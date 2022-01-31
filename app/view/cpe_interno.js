@@ -131,7 +131,7 @@ function CpeInterno_UpdateAnulacionFactura(dataAnulacion) {
 function CpeInterno_UpdateResumenDiario(dataUpdateResumen) {
     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '203', data: dataUpdateResumen } })
     .done(function (res) {
-        // console.log(res);
+        console.log(res);
     });
 
 }

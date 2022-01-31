@@ -6,8 +6,8 @@ async function xCocinarResumenBoletas() {
     $("#dgl_sunat_progress").removeClass("xInvisible");
     $("#dlg_sunat_btn").addClass("xInvisible");
     $("#dgl_sunat_msj").removeClass("xInvisible");
-    $("#dgl_sunat_msj2").addClass("xInvisible");
-    $("#dgl_sunat_msj3").text("...");
+    $(".dgl_sunat_msj2").addClass("xInvisible");
+    $(".dgl_sunat_msj3").text("...");    
 
     //
 
@@ -25,13 +25,13 @@ async function xCocinarResumenBoletas() {
 
     // cocinar registro faltantes - enviar documnentos que no fueron enviados al servicio api por algun error de conexion
     // estado_api = 1; //no se subieron al api
-    $("#dgl_sunat_msj3").text("Verificando comprobantes...");
+    $(".dgl_sunat_msj3").text("Verificando comprobantes...");
     const arrDocNoRegistrado = await xSoapSunat_getArrNoRegistrado();
     let error = false;
     let jsonxml = ''
     for (const i in arrDocNoRegistrado) {                
 
-        $("#dgl_sunat_msj3").text("Verificando comprobantes B..." + xCeroIzq(i) );
+        $(".dgl_sunat_msj3").text("Verificando comprobantes B..." + xCeroIzq(i) );
         try {            
             jsonxml = JSON.parse(arrDocNoRegistrado[i].json_xml);
         } catch (error) {
@@ -60,34 +60,35 @@ async function xCocinarResumenBoletas() {
 
 
     // consulta los comprobantes -solo facturas (se envian uno por uno) - que fueron registrados pero no enviados a la sunat x problemas de conexion con el servicio. o offline
-    const arrDocNoRegistradoSunat = await xSoapSunat_getArrNoRegistradoSunat();
-    error = false;
-    for (const i in arrDocNoRegistradoSunat) {
-        // solo facturas
+    await xEnviarRegistradosASunat('F'); 
+    // const arrDocNoRegistradoSunat = await xSoapSunat_getArrNoRegistradoSunat();
+    // error = false;
+    // for (const i in arrDocNoRegistradoSunat) {
+    //     // solo facturas
+    //     if (arrDocNoRegistradoSunat[i].numero.indexOf('B') > -1) { continue; }
 
-
-        $("#dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
-        // const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
-        // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
-        const rpt = await xSoapSunat_SendSunat(arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);
-        if (!rpt.ok) {
-            // continuar con el siguiente
-            this.hayError = true;
-            $("#xTituloRpt").append('<p style="color: red">' + rpt.msj_error + "</p>");
-            //error = true; 
-            //dialog_enviando_sunat.close();
-            //return; 
-        }
-    };
+    //     $(".dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
+    //     // const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
+    //     // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
+    //     const rpt = await xSoapSunat_SendSunat(arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);
+    //     if (!rpt.ok) {
+    //         // continuar con el siguiente
+    //         this.hayError = true;
+    //         $("#xTituloRpt").append('<p style="color: red">' + rpt.msj_error + "</p>");
+    //         //error = true; 
+    //         //dialog_enviando_sunat.close();
+    //         //return; 
+    //     }
+    // };
 
     // if (error) return;
 
     
     // cocinar resumen
-    $("#dgl_sunat_msj3").text('Preparando resumen de boletas...');
+    $(".dgl_sunat_msj3").text('Preparando resumen de boletas...');
     const arrFechas = await xSoapSunat_getArrFechaBoletasNoAceptadas();
     for (const f in arrFechas) {
-        $("#dgl_sunat_msj3").text("Preparando resumen de boletas..." + xCeroIzq(f));
+        $(".dgl_sunat_msj3").text("Preparando resumen de boletas..." + xCeroIzq(f));
         const rpt = await xSoapSunat_ResumenDiario(arrFechas[f].fecha);
         if (!rpt.ok) { 
             this.hayError = true;
@@ -99,15 +100,20 @@ async function xCocinarResumenBoletas() {
     
     // consultamos los ticket de resumen de boletas generados el dia anterior            
     // y actualizar el estado_sunat = 0 de las boletas => acpetadas
-    $("#dgl_sunat_msj3").text("Consultando resumen de boletas...");
+    $(".dgl_sunat_msj3").text("Consultando resumen de boletas...");
+    await xDelay(60000); // espera 1min para consultar resumen
+
     const arrTickets = await xSoapSunat_getListTicketResumenBoletas();
     for (const t in arrTickets) {
-        $("#dgl_sunat_msj3").text("Consultando resumen de boletas..." + xCeroIzq(t));
+        $(".dgl_sunat_msj3").text("Consultando resumen de boletas..." + xCeroIzq(t));
         const rpt = await xSoapSunat_ConsultarTicketResumen(arrTickets[t]);
         if (!rpt.ok) {
             this.hayError = true;
             rptSoap = rpt.msj_error;
             $("#xTituloRpt").append('<p style="color: red">' + rptSoap + '</p>');
+            
+            // 31012022 si acaso el resumen no paso enviamos uno x uno
+            await xEnviarRegistradosASunat('B'); 
         }
         // console.log(rpt);
     }
@@ -116,12 +122,12 @@ async function xCocinarResumenBoletas() {
     
     if ( !this.hayError ) {
         // proceso concluido con exito
-        $("#dgl_sunat_msj3").text("...");
+        $(".dgl_sunat_msj3").text("...");
         $('#dgl_sunat_img').addClass('xInvisible');
         $("#dgl_sunat_progress").addClass("xInvisible");
         $("#dlg_sunat_btn").removeClass("xInvisible");
         $("#dgl_sunat_msj").addClass("xInvisible");        
-        $("#dgl_sunat_msj2").removeClass("xInvisible");        
+        $(".dgl_sunat_msj2").removeClass("xInvisible");        
         $("#xTituloRpt").append('<p style="color: blue">Proceso concluido con exito!.</p>');
         rptSoap = '';
     } else {
@@ -130,5 +136,27 @@ async function xCocinarResumenBoletas() {
 
     return rptSoap;
 
+    // envia uno x uno // onlyTipo = 'B' o F''
+    async function xEnviarRegistradosASunat(onlyTipo) {
+        const arrDocNoRegistradoSunat = await xSoapSunat_getArrNoRegistradoSunat();
+        error = false;
+        for (const i in arrDocNoRegistradoSunat) {
+            // solo facturas
+            if (arrDocNoRegistradoSunat[i].numero.indexOf(onlyTipo) === -1 ) { continue; }
+
+            $(".dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
+            // const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
+            // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
+            const rpt = await xSoapSunat_SendSunat(arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);
+            if (!rpt.ok) {
+                // continuar con el siguiente
+                this.hayError = true;
+                $("#xTituloRpt").append('<p style="color: red">' + rpt.msj_error + "</p>");
+                //error = true; 
+                //dialog_enviando_sunat.close();
+                //return; 
+            }
+        };
+    }
 
 }
