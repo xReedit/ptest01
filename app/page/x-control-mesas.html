@@ -2104,7 +2104,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				if ( optionDeliveryCliente.p_header.arrDatosDelivery.pasoRecoger ) {
 					pintarInfoDeliveryCliente = 'El cliente pasa a recoger. ';
 				} else {
-					pintarInfoDeliveryCliente = !xdtDpedido[0].nom_repartidor ? 'Repartidor ... ' :  'REPARTIDOR: ' + xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor;
+					pintarInfoDeliveryCliente = !xdtDpedido[0].nom_repartidor ? '' :  'REPARTIDOR: ' + xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor;
 				}
 
 				// facturacion
@@ -2117,7 +2117,9 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 				labelInfoComprobante = '<p>' + dtFacDelivery.descripcion + ' ' + fac_razon_social + '  </p><strong>' + desRepartidorPaga + '</strong></p>';
 
-				$('#div-info-delivery-from-app').removeClass('xInvisible');
+				if ( pintarInfoDeliveryCliente !== '' ) {
+					$('#div-info-delivery-from-app').removeClass('xInvisible');
+				}
 
 				// totales
 				// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
@@ -2174,6 +2176,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 								
 
 				if ( datosDelivery.pasoRecoger ) {		
+					pintarInfoDeliveryCliente = 'El cliente pasa a recoger. ';
 					$('#divRepartidorPropio').addClass('xInvisible');
 					$('#btnLlamarRepartidorP').addClass('xInvisible');
 					labelInfoPedido = '<p><i class="fa fa-user"></i> '+ xdtDpedido[0].referencia +'</p>'								
@@ -2189,14 +2192,19 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 								+ _refDireccion
 								+'<p><i class="fa fa-phone"></i> '+ datosDelivery.telefono +'</p>';
 
+					
+					pintarInfoDeliveryCliente = !xdtDpedido[0].nom_repartidor ? '' :  'REPARTIDOR: ' + xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor;
 				}
+
 				
 				const _stylepago = datosDelivery.metodoPago ? datosDelivery.metodoPago.idtipo_pago === 2 ? 'fs-14 badge-info' : 'badge-secondary' : 'badge-secondary';
 				labelInfoComprobante += '<p><strong>Metodo de pago: </strong><span class="badge '+ _stylepago +'">' + datosDelivery.paga_con + '</span></p>';
 
 
-				$('#txt-info-delivery-from-app').text(pintarInfoDeliveryCliente);
-				$('#div-info-delivery-from-app').removeClass('xInvisible');
+				if (pintarInfoDeliveryCliente !== '') {
+					$('#txt-info-delivery-from-app').text(pintarInfoDeliveryCliente);
+					$('#div-info-delivery-from-app').removeClass('xInvisible');
+				}
 
 				$('#info-comprobante').html(labelInfoComprobante);
 				$('#info-pedido').html(labelInfoPedido);
@@ -2210,7 +2218,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 					arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 				}
 
-			} else {
+			} 
+			else {
 				$('#content-info-delivery').addClass('xInvisible');
 			}
 		}

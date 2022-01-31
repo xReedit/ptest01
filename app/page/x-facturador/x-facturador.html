@@ -717,10 +717,11 @@
             .done(function (dtValues) {
                 var _arrPrint = []
                 dtValues = $.parseJSON(dtValues);
-                _arrPrint.push({idimpresora:-1, descripcion: 'MOSTRAR EN PDF'})
+                
                 dtValues.datos.map(x =>
                     _arrPrint.push(x)
                 );
+                _arrPrint.push({idimpresora:-1, descripcion: 'MOSTRAR EN PDF'})
 
                 xThisFacturador.listImpresoras = JSON.parse(JSON.stringify(_arrPrint));
 

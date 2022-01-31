@@ -142,6 +142,11 @@
 									<p>Tipo de Contribuyente, PN = PERSONA NATURAL  O PJ= PERSONA JURIDICA</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="PN O PJ" id="tipo_contribuyente" name="tipo_contribuyente" espaciar>
 
+									<br><br>
+									<p>Link de carta virtual (Delivery). Ej: Rest. San Carlos = sancarlos</p>
+									<input type="text" class="xMiInput xPasarEnter2" onblur="verificarDisponibilidadLink(this)" placeholder="Link Carta" id="link_carta" name="link_carta" espaciar>									
+									<p hidden$=[[!isLinkDisponible]] class="text-danger fw-600">Link NO disponible.</p>
+
 									
 									<br><br>
 									<p><strong>Mozo Virtual por Voz</strong></p>							
@@ -280,6 +285,9 @@
 											<tbody>
 												<template is="dom-repeat" items="{{ListSedesHorario}}" as="item">
 													<tr data-id="{{item.idsede_horario_trabajo}}" data-t="sede_horario_trabajo">														
+														<td>
+															<p style="font-size: 12px; inline-size: 130px; overflow-wrap: break-word;">{{item.desdia}}</p>
+														</td>
 														<td>{{item.de}}</td>
 														<td>{{item.a}}</td>	
 														<td><span onclick="xBorrarItem(this);" class="xDeleteRow" title="Borrar"></span></td>
@@ -608,6 +616,7 @@ function transferenciaCompletaMini(xfile){
 		$("#frm_sede #idsede_plan_contratado").val(dataSede.idsede_plan_contratado);		
 		$("#frm_sede #umf_pago").val(dataSede.umf_pago);		
 		$("#frm_sede #tipo_contribuyente").val(dataSede.tipo_contribuyente);
+		$("#frm_sede #link_carta").val(dataSede.link_carta);
 		
 		xCompPlanSelect.setPlan(dataSede.idsede_plan_contratado);
 
@@ -888,10 +897,20 @@ function transferenciaCompletaMini(xfile){
 		// 	a: txt_horario_a.value,
 		// }
 
+
+		let numDiasHorario = '';
+		let nomDiasHorario = '';
+		$('.dia_atencion').each((i, e) => {
+			numDiasHorario += e.checked ? e.value + ',' : '';
+			nomDiasHorario += e.checked ? e.labels[0].textContent + ',' : '';
+			});
+
 		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=700', data: {
 			idsede: xThisAdminNew.xIdSede,
 			de: txt_horario_de.value,
 			a: txt_horario_a.value,
+			dias: numDiasHorario,
+			desdias: nomDiasHorario
 		}})
 				.done((res) => {
 					console.log(res);
@@ -913,6 +932,16 @@ function transferenciaCompletaMini(xfile){
 		idsede_plan_contratado.value = val.idsede_plan_contratado;
 	}
 
+	function verificarDisponibilidadLink(obj) {
+		const _linkCarta = obj.value;
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=16', data: {link_carta: _linkCarta}})
+				.done((res) => {
+					res = JSON.parse(res).datos;
+					xThisAdminNew.isLinkDisponible = res.length > 0;
+					
+				});
+	}
+
 	
 
 	
@@ -928,11 +957,13 @@ function transferenciaCompletaMini(xfile){
 			ListCategoria: [],
 			ListSubCategoria: [],
 			ListSubCategoriaSuscritas: [],
-			ListSedesHorario: []
+			ListSedesHorario: [],
+			isLinkDisponible: Boolean
 			//ListSedes: [],
 			// hayDatosRestaurar: boolean = true,
 		},
 		attached: function () {
+			this.isLinkDisponible = false;
 			xThisAdminNew = this;
 			xThisAdminNew.selected_conf=0;
 			xIniAdminNew();

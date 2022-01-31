@@ -439,8 +439,8 @@
 							</form>
 							<br><br>
 							
-							<h3 class="xBold">SERVICIOS ADICIONALES</h3>
-							<p>Ingrese los servicios adicionales que tienen un costo segun tipo de consumo. <br>
+							<h3 class="xBold">COSTOS ADICIONALES</h3>
+							<p>Ingrese los costos adicionales según tipo de consumo. <br>
 								Ejemplo: Para llevar ó Delivery, Descripcion: Taper, Tipo de consumo: Para llevar, Seccion:Platos de fondo, Importe:1.00 <strong>(por cada item)</strong> es decir por cada taper. <br>
 								Tambien puede ingresar servicios fijos que se cobran <strong>por pedido.</strong> Ejemplo: En el servicio de Delivery se suele cobrar un monto fijo por el transporte. Quedando de esta manera: Descripcion: Servicio delivery,  Tipo consumo: Delivery, Por: Pedido, Impore: 3.00.
 							</p>
@@ -1242,6 +1242,20 @@ function xModBlurImpuesto(obj){
 	})
 }
 
+function xModRowCostoAdicional(obj,tipo){
+	var xvalObj=$(obj).text();
+	if($(obj).find('input').length>0){$(obj).find('input').select();return;}
+	$(obj).html('<input type="text" class="xMiInput xPasarEnter2 xAlinearIzquierda" onblur="xModBlurCostoAdicional(this)" value="'+xvalObj+'" select>').trigger('create');
+	$(obj).find('input').select();
+}
+function xModBlurCostoAdicional(obj,tipo){
+	var xvalObj=$(obj).val(),xtb=$(obj).parents('table'),xrow_obj=$(obj).parent(),xid_row=$(xrow_obj).parents('.row').attr('data-id'),xcampo_row=$(xrow_obj).parent().attr('data-campo');
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2110',data:{importe:xvalObj,id:xid_row}})
+	.done( function (dtPrint) {
+		// if(dtPrint.indexOf('Error')!=-1){alert(dtPrint)}
+	})
+}
+
 function xBorrarItemPrintLocal(obj){
 	xRowObj=obj.parentNode.parentNode;
 	xTableRow=$(xRowObj).attr('data-t');
@@ -1621,7 +1635,14 @@ function xLoadAdicionales(){
 
 			if(dtAd[i].estado==0){xCheck_ac='checked';}
 			
-			xCadenaAd=String(xCadenaAd+'<tr class="row" data-t="conf_print_adicionales" data-id="'+dtAd[i].idconf_print_adicionales+'"><td><paper-checkbox class="check_adicional" '+xCheck_ac+'></paper-checkbox></td><td>'+dtAd[i].descripcion+'</td><td>'+dtAd[i].des_tipo_consumo+'</td><td>'+nivel+'</td><td>'+dtAd[i].des_seccion+'</td><td>'+dtAd[i].importe+'</td><td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
+			xCadenaAd=String(xCadenaAd+'<tr class="row" data-t="conf_print_adicionales" data-id="'+dtAd[i].idconf_print_adicionales+'">'+
+					'<td><paper-checkbox class="check_adicional" '+xCheck_ac+'></paper-checkbox></td>'+
+					'<td>'+dtAd[i].descripcion+'</td>'+
+					'<td>'+dtAd[i].des_tipo_consumo+'</td>'+
+					'<td>'+nivel+'</td><td>'+dtAd[i].des_seccion+'</td>'+
+					// '<td>'+dtAd[i].importe+'</td>'+
+					'<td><span onclick="xModRowCostoAdicional(this,0);">'+dtAd[i].importe+' <i class="fa fa-pencil text-secondary fw-100 pl-1" title="Modificar"></i></span></td>'+
+					'<td><div class="xDeleteRow" onClick="xBorrarItem(this)" title="Borrar"></div></td></tr>');
 		};
 		$("#tb_Adicionales").append(xCadenaAd).trigger('create');
 	});
