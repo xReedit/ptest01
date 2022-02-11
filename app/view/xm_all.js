@@ -585,7 +585,17 @@ async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 				// show boton buscar en sunat
 				buscarSunat = label_num === 'ruc';
 
-				rpt = {success: true, idcliente:dt.idcliente, nombres: dt.nombres, direccion: dt.direccion, num_doc: dt.ruc, telefono: dt.telefono, msg: 'ok', buscarSunat: buscarSunat};							
+				rpt = {
+					success: true,
+					idcliente:dt.idcliente,
+					nombres: dt.nombres,
+					direccion: dt.direccion,
+					num_doc: dt.ruc,
+					telefono: dt.telefono,
+					msg: 'ok',
+					buscarSunat: buscarSunat,
+					f_nac: dt.f_nac
+				};							
 
 				// dt.count_search las veces que se busco la bd pasado 5 veces busca cambios en la sunat
 				// if ( buscarSunat && dt.countSearch > 5 ) {

@@ -32,6 +32,11 @@
             const index = xThisComComprobante.$.compFindListComprobante.value;
             xThisComComprobante.comprobantes = xThisComComprobante.list[index];
         }
+
+        function resetListComprobante() {
+            xThisComComprobante.$.compFindListComprobante.selectedIndex = 0;
+            xThisComComprobante.comprobantes = xThisComComprobante.list[0];
+        }
         
 
         Polymer({
@@ -67,6 +72,9 @@
         reloadAllComprobantes: ()=> {
             // recargar data, ej al cambiar correlativo api
             getAllComprobantes();
+        },
+        reset: () => {
+            resetListComprobante()
         }
     })
     </script>

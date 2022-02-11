@@ -32,7 +32,7 @@ function listenSocketP() {
 
     // restore si hay
     this.socketCP.listen('nuevoPedido').subscribe(res => {
-        console.log('nuevoPedido msocket', res);
+        // console.log('nuevoPedido msocket', res);
         try {                
             _cpSocketPintarPedido(res);
         } catch (error) {}            
@@ -177,6 +177,15 @@ function _cpSocketNoiticaRepartidorFromComercio(pedido) {
     // if (!isSocket) { return; }
     this.socketCP.emit('set-repartidor-pedido-asigna-comercio', pedido);
 }
+
+// notifica al cliente repartidor asignado
+function _cpSocketNoiticaClienteRepartidorAsignado(repartidor) {
+    // if (!isSocket) { return; }
+    console.log('repartidor-notifica-cliente-acepto-pedido');
+    this.socketCP.emit('repartidor-notifica-cliente-acepto-pedido', repartidor);
+}
+
+ 
 
 // notifica para llamar al repartidor de papaya
 function _cpSocketComercioLLamaRepartidorPapaya() {

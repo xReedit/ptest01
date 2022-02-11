@@ -66,6 +66,12 @@
 
 			if (valInput.length < 3  ) { return; }
 			getAllClientes(valInput);
+
+			compRemoveSpecialCharObjClient(event);
+		}
+
+		function compRemoveSpecialCharObjClient(e) {			
+			e.target.value = e.target.value.replace(/[&\/\\,~'"?]/g, '');
 		}
 
 		Polymer({

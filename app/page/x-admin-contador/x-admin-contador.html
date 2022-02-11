@@ -128,7 +128,7 @@
 					<th align="right">I.G.V</th>
 					<th align="right">Total</th>
 					<th>Estado Sistema</th>
-					<th>Estado Sunat</th>
+					<!-- <th>Estado Sunat</th> -->
 				</thead>
 				<tbody>
 					<template is="dom-repeat" items="{{ListReporte}}" as="row">
@@ -143,7 +143,7 @@
 							<td style$="{{row.style_td}}">{{row.igv}}</td>
 							<td style$="{{row.style_td}}">{{row.total}}</td>
 							<td style$="{{row.style_reporte}}">{{row.estado}}</td>
-							<td style$="{{row.style_estado_sunat}}">{{row.estadoCp}}</td>							
+							<!-- <td style$="{{row.style_estado_sunat}}">{{row.estadoCp}}</td>							 -->
 						</tr>
 					</template>
 				</tbody>
@@ -366,22 +366,27 @@ async function downloadReporteCPE(obj) {
 						}
 		
 						// console.log('payload', payload);
-						const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
-						let estado_cpe;
-						if (rptApiConsulta?.success === true) { 
-							x.success_sunat = 1;
-							estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
-							x.estadoCp = estado_cpe.titulo;
-							x.style_estado_sunat = 'color: ' + estado_cpe.color;
-							countCpeSuccess++;
-							listCpeSuccess.push(x);
-						} else {
-							countCpeError++;
-							x.success_sunat = 0;
-							x.estadoCp = 'Sin Respuesta';
-							x.style_estado_sunat = 'color: black';
-							xThisAdmContador.showRowsNoResponse = true;
-						}
+						// const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
+						// let estado_cpe;
+						// if (rptApiConsulta?.success === true) { 
+						// 	x.success_sunat = 1;
+						// 	estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
+						// 	x.estadoCp = estado_cpe.titulo;
+						// 	x.style_estado_sunat = 'color: ' + estado_cpe.color;
+						// 	countCpeSuccess++;
+						// 	listCpeSuccess.push(x);
+						// } else {
+						// 	countCpeError++;
+						// 	x.success_sunat = 0;
+						// 	x.estadoCp = 'Sin Respuesta';
+						// 	x.style_estado_sunat = 'color: black';
+						// 	xThisAdmContador.showRowsNoResponse = true;
+						// }
+
+						// no consulta
+						countCpeSuccess++;
+						listCpeSuccess.push(x);
+
 						// console.log('rptApiConsulta', rptApiConsulta);
 					} else {
 						// dataListReporte.push(cpeVerificado);

@@ -127,10 +127,19 @@
 				<iron-pages selected="0" id="content_page" class="xNoScroll">
 					<div id="div_detalle_pedido" class="xNoScroll">
 						<div class="lh-7">
-							<div class="xDerecha">
+							<div class="xDerecha d-flexx">
 								<!-- <div>									
 									<button>Llamar repartidor</button>
 								</div> -->
+								<div style="width: 50px;" class="mr-2 text-center" id="showRepartoAsignado">
+									<i class="fa fa-check text-success fa-2x"></i>
+									<span class="fs-9 fw-600">Repartidor Asignado</span>									
+								</div>
+								<div style="width: 50px;" class="mr-2 text-center" id="showLoadingReparto">
+									<i class="fa fa-motorcycle fa-2x"></i>
+									<span class="fs-9 fw-600">Buscando Repartidor</span>
+									<paper-progress indeterminate class="w-100"></paper-progress>
+								</div>
 								<paper-fab mini icon="perm-phone-msg" onclick="xCallRepartidorPapaya()" title="Llamar a Repartidor de Papaya Express" tabindex="0" class="btnAddPapaya" id="btnLlamarRepartidorP"></paper-fab>
 								<paper-fab icon="add" onclick="xOpenLULI()" title="[F8] Agregar item" tabindex="0" class="btnAdd2"></paper-fab>
 							</div>
@@ -2082,6 +2091,10 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 		$('#btnLlamarRepartidorP').addClass('xInvisible');
 		$('#content-info-delivery').addClass('xInvisible');
+		$('#showLoadingReparto').addClass('xInvisible');
+		$('#showRepartoAsignado').addClass('xInvisible');
+		$('#div-info-delivery-from-app').addClass('xInvisible');
+		
 		
 
 		if (isDelivery) {			
@@ -2091,10 +2104,11 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			// isClienteDeliveryFromApp = optionDeliveryCliente ? optionDeliveryCliente.p_header ? optionDeliveryCliente.p_header.delivery === 1 : false : false;		
 			isClienteDeliveryFromApp = optionDeliveryCliente ? optionDeliveryCliente.p_header ? optionDeliveryCliente.p_header.isCliente === 1 : false : false;		
 		
+			isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1'
+			isDeliveryCalculaCostoEntrega = xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1';
+			isDeliveryCalculaCostoEntregaSoloApp = xDtSede_cm[0].pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';
+
 			if ( isClienteDeliveryFromApp ) { // o delivery
-				isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1'
-				isDeliveryCalculaCostoEntrega = xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1';
-				isDeliveryCalculaCostoEntregaSoloApp = xDtSede_cm[0].pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';
 				
 				// 241121 le quitamos al agregar items no suma
 				isPedidoOpenDeliveryCliente = isClienteDeliveryFromApp; // para el calculo de subtotales
@@ -2117,15 +2131,15 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 				labelInfoComprobante = '<p>' + dtFacDelivery.descripcion + ' ' + fac_razon_social + '  </p><strong>' + desRepartidorPaga + '</strong></p>';
 
-				if ( pintarInfoDeliveryCliente !== '' ) {
-					$('#div-info-delivery-from-app').removeClass('xInvisible');
-				}
+				// if ( pintarInfoDeliveryCliente !== '' ) {
+				// 	$('#div-info-delivery-from-app').removeClass('xInvisible');
+				// }
 
 				// totales
 				// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
-				console.log('subtotales delivry');
+				// console.log('subtotales delivry');
 				arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
-				console.log('xLocal_xDtSubTotales', xLocal_xDtSubTotales);
+				// console.log('xLocal_xDtSubTotales', xLocal_xDtSubTotales);
 			
 				
 				
@@ -2141,12 +2155,20 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				if ( isLlamoRepartidorRed && !isPuedeLLamarRepartdiroPapaya ) {
 					$('#btnLlamarRepartidorP').addClass('xInvisible');
 				}
+
+				if ( isLlamoRepartidorRed ) {
+					$('#showLoadingReparto').removeClass('xInvisible');
+				}
 	
 				if ( xdtDpedido[0].idrepartidor ) {
-					$('#divRepartidorNom #a_nom_repartidor').text(xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor);
+					$('#divRepartidorNom #a_nom_repartidor').text(xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor);
 					$('#divRepartidorNom').removeClass('xInvisible');
 					$('#divRepartidorSelect').addClass('xInvisible');
 					$('#btnLlamarRepartidorP').addClass('xInvisible');
+
+					$('#showRepartoAsignado').removeClass('xInvisible');
+					$('#showLoadingReparto').addClass('xInvisible');
+					
 				} else {
 					if ( isComercioServicioDeliveryPropio && !isLlamoRepartidorRed ) {
 						$('select#selectRepartidor').val(-1);
@@ -2184,7 +2206,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 					labelInfoComprobante = '<p class="badge badge-warning fs-14"><strong> <i class="fa fa-user"></i> El cliente pasa a recoger. <strong></p>';
 				} else {
 					$('#divRepartidorPropio').removeClass('xInvisible');
-					$('#btnLlamarRepartidorP').removeClass('xInvisible');
+					// $('#btnLlamarRepartidorP').removeClass('xInvisible');
 					const _nomClienteDelivery = xdtDpedido[0].referencia === '' ? datosDelivery.nombre : xdtDpedido[0].referencia;
 					const _refDireccion = datosDelivery.referencia ? '<p><i class="fa fa-map-marker"></i> '+ datosDelivery.referencia +'</p>' : '';
 					labelInfoPedido = '<p><i class="fa fa-user"></i> '+ _nomClienteDelivery +'</p>'
@@ -2201,10 +2223,10 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				labelInfoComprobante += '<p><strong>Metodo de pago: </strong><span class="badge '+ _stylepago +'">' + datosDelivery.paga_con + '</span></p>';
 
 
-				if (pintarInfoDeliveryCliente !== '') {
-					$('#txt-info-delivery-from-app').text(pintarInfoDeliveryCliente);
-					$('#div-info-delivery-from-app').removeClass('xInvisible');
-				}
+				// if (pintarInfoDeliveryCliente !== '') {
+				// 	$('#txt-info-delivery-from-app').text(pintarInfoDeliveryCliente);
+				// 	$('#div-info-delivery-from-app').removeClass('xInvisible');
+				// }
 
 				$('#info-comprobante').html(labelInfoComprobante);
 				$('#info-pedido').html(labelInfoPedido);
@@ -2216,6 +2238,30 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 				if ( xdtDpedido[0].flag_solicita_repartidor_papaya === '1' ) {					
 					arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
+				}
+
+
+				if ( xdtDpedido[0].idrepartidor ) {
+					$('#divRepartidorNom #a_nom_repartidor').text(xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor);
+					$('#divRepartidorNom').removeClass('xInvisible');
+					$('#divRepartidorSelect').addClass('xInvisible');
+					$('#btnLlamarRepartidorP').addClass('xInvisible');
+
+					$('#showRepartoAsignado').removeClass('xInvisible');
+					$('#showLoadingReparto').addClass('xInvisible');
+					
+				} else {
+					if ( isComercioServicioDeliveryPropio && !isLlamoRepartidorRed ) {
+						$('select#selectRepartidor').val(-1);
+						$('#divRepartidorSelect').removeClass('xInvisible');
+						$('#divRepartidorNom').addClass('xInvisible');
+					} else {					
+						$('#divRepartidorNom').removeClass('xInvisible');
+						$('#divRepartidorSelect').addClass('xInvisible');
+						$('#btnLlamarRepartidorP').addClass('xInvisible');
+						$('#divRepartidorNom #a_nom_repartidor').text('Repartidor no asignado..');
+					}
+	
 				}
 
 			} 
@@ -2303,7 +2349,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			// console.log('xThisCM.xdtPedDet', xThisCM.xdtPedDet);
 			xLoadMipedidoBD(xArrayDtOrdenFiltro)
 
-			console.log('sub total pedidos');
+			// console.log('sub total pedidos');
 			xSumarTotalPedidos();
 			xCheckPedidos();
 		})
@@ -3485,7 +3531,7 @@ function _cpSocketPintarPedido(pedido) {
 	pNotificaNuevoPedido(pedido); // notifica el pedido nuevo desde la app
 
 
-	console.log('nuevo pedido socket' , pedido);
+	// console.log('nuevo pedido socket' , pedido);
 	var _objPedido = 0;
 	var dt_pedido = pedido;
 
@@ -3897,6 +3943,24 @@ function selectRepartidor() {
 
 				xdtDpedido[0].idrepartidor = _repartidor.idrepartidor;
 				_cpSocketNoiticaRepartidorFromComercio(xdtDpedido[0]);
+
+				try {
+					
+					const payloadRepartidor =  [{
+						nombre: xdtDpedido[0].json_datos_delivery.p_header.arrDatosDelivery.nombres,
+						telefono: xdtDpedido[0].json_datos_delivery.p_header.arrDatosDelivery.telefono,
+						establecimiento: xdtDpedido[0].json_datos_delivery.p_header.arrDatosDelivery.establecimiento.nombre,
+						idpedido: xdtDpedido[0].idpedido,
+						repartidor_nom: _repartidor.nombre,
+						repartidor_telefono: _repartidor.telefono
+					}];
+	
+					_cpSocketNoiticaClienteRepartidorAsignado(payloadRepartidor);
+
+				} catch (error) {
+					console.log(error);
+				}
+
 			});
 }
 

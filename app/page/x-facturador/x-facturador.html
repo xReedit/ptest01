@@ -65,7 +65,9 @@
                             </x-comp-find-input-cliente>
                         </div>
 
-                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" required id="txt_direccion" espaciar>
+                        <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" onblur="removeSpecialCharObj(this)" required id="txt_direccion" espaciar>
+                        <input type="number" class="xMiInput xPasarEnter2" style="width:200px;" placeholder="Telefono" onkeyup="showMsjTelefono(this)" required id="txt_telefono" espaciar>
+                        <p class="fs-11 pl-2 fw-600 text-info" hidden$="[[!isShowMsjTelefono]]">Se enviará el comprobante al WhatsApp.</p>
                         
                         
                         <input type="text" class="xMiInput xInvisible" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
@@ -239,8 +241,10 @@
 			$("#txt_ruc").val(cliente.ruc);
 			$("#txt_direccion").val(cliente.direccion);
             $("#txt_nombres").val(cliente.nombres);
+            $("#txt_telefono").val(cliente.telefono);
+            xThisFacturador.isShowMsjTelefono = cliente.telefono !== '';
 			// EmitirValidacionFormCliente();
-            validarDocumentoCliente(null, null, true);
+            validarDocumentoCliente(null, null, true, false, false);
 		});
 
 
@@ -367,13 +371,15 @@
     
     }
 
-    function validarDocumentoCliente(valor, e, btnBuscar=false, buscarSoloSunat = false){
+    function validarDocumentoCliente(valor, e, btnBuscar=false, buscarSoloSunat = false, newCliente = true){
         if ( !btnBuscar ) {
             if (e.keyCode !== 13) return;
         }
         valor = valor ? valor : txt_ruc.value;
 
-        xNuevoCliente();
+        if ( newCliente ) {
+            xNuevoCliente();
+        }
         $("#txt_msj").addClass('xInvisible');        
 
         const tipoDoc = cnf_ComprobanteSel;
@@ -411,6 +417,8 @@
                 xIdCliente_pago = new_rpt.idcliente;
                 $("#txt_nombres").val(new_rpt.nombres);
                 $("#txt_direccion").val(new_rpt.direccion);
+                $("#txt_telefono").val(new_rpt.telefono);
+                xThisFacturador.isShowMsjTelefono = new_rpt.telefono !== '';
                 _inputAutocompleteFacObj.inputValue = new_rpt.nombres;
             } else {
                 rpt.valid = false;
@@ -445,6 +453,8 @@
         _inputAutocompleteFacObj.inputValue = '';
         $('#txt_nombres').val('');
         $('#txt_direccion').val('');
+        $('#txt_telefono').val('');
+        xThisFacturador.isShowMsjTelefono = false;
 
         $("#txt_ruc").select();
         $("#txt_ruc").focus();
@@ -576,9 +586,11 @@
             // _arrCliente.direccion = '';
             nombres_cliente = nombres_cliente === '' ? _inputAutocompleteFacObj.inputValue :  nombres_cliente;
             _arrCliente.nombres = nombres_cliente === '' ? 'PUBLICO EN GENERAL' : nombres_cliente;
-            _arrCliente.direccion = direccion_cliente;            
+            _arrCliente.direccion = direccion_cliente;     
+            _arrCliente.telefono = $("#txt_telefono").val();       
         }else {
             _arrCliente.direccion = $("#txt_direccion").val();
+            _arrCliente.telefono = $("#txt_telefono").val();
             // _arrCliente.idcliente = _arrCliente.idcliente === "" ? await ClienteService_Guardar(_arrCliente) : _arrCliente.idcliente;
             _arrCliente.idcliente = await ClienteService_Guardar(_arrCliente);
         }
@@ -661,7 +673,10 @@
         _arrItems = [];
         _arrTotal = [];
 
-        xThisFacturador.$.selectFormaPago.selectedIndex = 0
+        const _compFindComprobante = document.getElementById('compFindComprobante');
+        _compFindComprobante.reset();
+
+        xThisFacturador.$.selectFormaPago.selectedIndex = 0;
         xThisFacturador.isShowFechaPagoCredito = false;
 
         comprobanteFormaPago = {
@@ -730,6 +745,10 @@
             });
     }
 
+    function showMsjTelefono(obj) {
+        xThisFacturador.isShowMsjTelefono = obj.value !== '';
+    }
+
     Polymer({
         is: 'x-facturador',
         properties: {    
@@ -743,11 +762,13 @@
             isShowSearchSunat: Boolean,
             isShowFechaPagoCredito: Boolean,
             isShowCpeFactura: Boolean,
+            isShowMsjTelefono: Boolean,
         },
         attached: function () {
             this.isShowSearchSunat = false;
             this.isShowFechaPagoCredito = false;
             this.isShowCpeFactura = false
+            this.isShowMsjTelefono = false;
             xThisFacturador = this;
             xIniFacturador();
             _cpSocketOpen();

@@ -183,7 +183,7 @@
 	function xIniPlanillaDetalle() {
 		const ulr_val = router.activeRoute.baseURI.split('?');
 		dataUrl = JSON.parse(atob(ulr_val[1]));		
-		console.log(dataUrl);
+		// console.log(dataUrl);
 
 		xLoadPlanillaColaborador();
 		$('body').addClass('loaded');
@@ -197,12 +197,13 @@
 		})
 		.done((res) => {
 			const _res = JSON.parse(res);		
-			console.log('_res', _res);	
+			// console.log('_res', _res);	
 			xThisPColFile.dataEnca = _res.datos.map(x => {
 				x.tiempo_laborando = xTiempoTrascurridoYYMMDD(x.laborando);
 				x.fecha_baja = x.fecha_baja === null ? '' : x.fecha_baja;
 				x.debaja = x.fecha_baja !='' ? true : false;
-				x.mes_corresponte = xDesMes(parseInt(x.mes_activo.split('/')[0]) + 1) +' '+x.mes_activo.split('/')[1];
+				// x.mes_corresponte = xDesMes(parseInt(x.mes_activo.split('/')[0]) + 1) +' '+x.mes_activo.split('/')[1];
+				x.mes_corresponte = xDesMes(parseInt(dataUrl.mes.split('/')[0]) - 1) +' '+dataUrl.mes.split('/')[1];
 				return x;
 			})[0];
 
@@ -222,7 +223,7 @@
 				var sumListI = parseFloat(xThisPColFile.dataEnca.sueldo.replace(',','')),
 					sumListD = 0;
 
-				console.log(_resD.datos);
+				// console.log(_resD.datos);
 				xThisPColFile.ListIngresos = _resD.datos.filter(x => x.tipo === "0").map(x => {
 					sumListI += parseFloat(x.importe); 
 					return x;

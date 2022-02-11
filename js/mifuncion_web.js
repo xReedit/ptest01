@@ -817,4 +817,8 @@ function PrintElemDiv(divId, titulo)
 function removeSpecialChar(_string) {
 	return _string.replace(/[&\/\\,~'"?]/g, '');
 }
+
+function removeSpecialCharObj(obj) {
+	obj.value = obj.value.replace(/[&\/\\,~'"?]/g, '');
+}
   

@@ -3,7 +3,7 @@
 var xIdOrg,xIdSede,xNomU,xNomUsario,xIdUsuario,xCargoU,xPopupLoad,xIdROw,xTableRow,xRowObj,xselectIdSedeGeneral=0,xdialogus;
 var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
 var xparam_time_ruter = false;
-var componentsLoadPanel = false, dialogListNotification;
+var componentsLoadPanel = false, dialogListNotification, ipPrintServerLocal = '';
 
 // alert('aaa')
 
@@ -121,8 +121,8 @@ function xIniDocument(){
  		/*debugger
  		xIdAccDirecto=getUrlParameter('dir','?');
 		 if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */
-
-		 localStorage.setItem('::app3_sys_last_s', btoa(xm_log_get('datos_org_sede')[0].idsede));
+		ipPrintServerLocal = xm_log_get('datos_org_sede')[0].ip_server_local;
+		localStorage.setItem('::app3_sys_last_s', btoa(xm_log_get('datos_org_sede')[0].idsede));
 
 		 xComptitulo_bar.init();
  	});
@@ -301,9 +301,12 @@ async function xOpenPage(xop, parametro){
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
-			const versionPrintServer = 'print-server' // parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? 'print-server' : 'print-server-1.2';
-			const _urlPrintServver = 'http://appx.papaya.com.pe/'+versionPrintServer+'/print-server.html?o='+_xr
+			// const versionPrintServer = 'print-server' // parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? 'print-server' : 'print-server-1.2';
+			// const _urlPrintServver = 'http://'+ipPrintServerLocal+versionPrintServer+'/print-server.html?o='+_xr
 			
+			// local 10022022
+			const versionPrintServer = 'restobar/print/client/index.html'; 
+			const _urlPrintServver = 'http://'+ipPrintServerLocal+'/'+versionPrintServer+'?o='+_xr;			
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
 			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
 			return; 		
