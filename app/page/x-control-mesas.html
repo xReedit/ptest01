@@ -2035,7 +2035,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	if(xp_sel_nummesa=='0'){xtitulo='PEDIDO '+xCeroIzq(xp_sel_correlativo_dia,5)}else{xtitulo='MESA '+xCeroIzq(xp_sel_nummesa,2)}	
 	
 	// para sumar totales cuando se agrega de delivery
-	const _isDeliveryObjPedido = xdtDpedido ? xdtDpedido[0]?.pwa_is_delivery === "1" ? true : false : false;
+	var _isDeliveryObjPedido = xdtDpedido ? xdtDpedido[0]?.pwa_is_delivery === "1" ? true : false : false;
 	isPedidoOpenDeliveryCliente = _isDeliveryObjPedido;
 
 	if ( !clearDataLastPedidoInsert ) {
@@ -2049,7 +2049,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	.done( function (dtDpedido) {
 
 		var isDelivery = false;
-		var isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = '', isLlamoRepartidorRed = false,infoFacturacion = ''; // si el pedido es delivery y viene de la app
+		var isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = '', isLlamoRepartidorRed = false, infoFacturacion = ''; // si el pedido es delivery y viene de la app
 		var labelInfoPedido = '', labelInfoComprobante = '';
 
 		// si es solo para confirmar aunque no sea delivery
@@ -2065,6 +2065,12 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		
 		var atendidoPor = xdtDpedido[0].nom_usuario ? xdtDpedido[0].nom_usuario : 'Cliente';
 		atendidoPor = 'ATENDIDO POR: '+ atendidoPor  +' | ';
+
+		_isDeliveryObjPedido = xdtDpedido ? xdtDpedido[0]?.pwa_is_delivery === "1" ? true : false : false;
+		isPedidoOpenDeliveryCliente = _isDeliveryObjPedido;
+
+		// combo repartdior
+		isLlamoRepartidorRed = xdtDpedido ? xdtDpedido[0]?.flag_solicita_repartidor_papaya === '1' || false : false;
 		
 
 		//encabezado
@@ -2107,6 +2113,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			isComercioServicioDeliveryPropio =  xDtSede_cm[0].pwa_delivery_servicio_propio === '1'; // xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1'
 			isDeliveryCalculaCostoEntrega = xDtSede_cm[0].pwa_delivery_hablitar_calc_costo_servicio === '1';
 			isDeliveryCalculaCostoEntregaSoloApp = xDtSede_cm[0].pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';
+			isPuedeLLamarRepartdiroPapaya = xDtSede_cm[0].pwa_delivery_habilitar_llamar_repartidor_papaya === '1';
 
 			if ( isClienteDeliveryFromApp ) { // o delivery
 				
@@ -2149,8 +2156,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				
 				// combo repartdior
 				isLlamoRepartidorRed = xdtDpedido[0].flag_solicita_repartidor_papaya === '1';
-				isPuedeLLamarRepartdiroPapaya = xDtSede_cm[0].pwa_delivery_habilitar_llamar_repartidor_papaya === '1';
-	
+				
+				
 				
 				if ( isLlamoRepartidorRed && !isPuedeLLamarRepartdiroPapaya ) {
 					$('#btnLlamarRepartidorP').addClass('xInvisible');
@@ -2179,7 +2186,14 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 						$('#divRepartidorSelect').addClass('xInvisible');
 						$('#btnLlamarRepartidorP').addClass('xInvisible');
 						$('#divRepartidorNom #a_nom_repartidor').text('Repartidor no asignado..');
+
+						if ( isLlamoRepartidorRed ) {
+							$('#showLoadingReparto').removeClass('xInvisible');
+						}
 					}
+
+					
+	
 	
 				}
 				///
@@ -2240,6 +2254,10 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 					arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 				}
 
+				if ( isPuedeLLamarRepartdiroPapaya ) {
+					$('#btnLlamarRepartidorP').removeClass('xInvisible');
+				}
+
 
 				if ( xdtDpedido[0].idrepartidor ) {
 					$('#divRepartidorNom #a_nom_repartidor').text(xdtDpedido[0].nom_repartidor + ' ' + xdtDpedido[0].ap_repartidor + '. Telefono: ' + xdtDpedido[0].tel_repartidor);
@@ -2260,7 +2278,11 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 						$('#divRepartidorSelect').addClass('xInvisible');
 						$('#btnLlamarRepartidorP').addClass('xInvisible');
 						$('#divRepartidorNom #a_nom_repartidor').text('Repartidor no asignado..');
-					}
+
+						if ( isLlamoRepartidorRed ) {
+							$('#showLoadingReparto').removeClass('xInvisible');
+						}
+					}					
 	
 				}
 
@@ -3981,6 +4003,8 @@ function xCallRepartidorPapayaExec() {
 		// xLocal_xDtSubTotales = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], xLocal_xDtSubTotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 		xSumarTotalPedidos();
 		_cpSocketComercioLLamaRepartidorPapaya();
+		$('#showLoadingReparto').removeClass('xInvisible');
+		$('#btnLlamarRepartidorP').addClass('xInvisible');
 	});
 }
 
