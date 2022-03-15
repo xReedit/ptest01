@@ -1,5 +1,5 @@
 // var socketCP;
-var socketCP = new socketService();
+var socketCP = socketCP ? socketCP : new socketService();
 function _cpSocketOpen() { 
     // if (isSocket) {
         // isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
@@ -120,6 +120,10 @@ function listenSocketP() {
     });    
 
 
+    this.socketCP.listen('restobar-venta-registrada-res').subscribe(res => {
+        console.log('restobar-venta-registrada-res', res);    
+        this.socketCP.isRegistroVentaSource.next(true);        
+    });
     
 
 }
@@ -270,5 +274,12 @@ function _cpASocketNotifyPayPedido(payload) {
 function _cpSocketPermisoCierreRemotoEnviarRpt(payload) {
     // payload // idusuario // num pedido or num mesa // importe
     this.socketCP.emit('restobar-permiso-cierre-remoto-respuesta', payload);
+}
+
+
+function _cpSocketVentaRegistrado() {
+    // payload // idusuario // num pedido or num mesa // importe
+    this.socketCP.emit('restobar-venta-registrada');
+    this.socketCP.isRegistroVentaSource.next(true);
 }
 

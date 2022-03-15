@@ -279,7 +279,7 @@ function xgetComprobanteImpresora(xidDoc) {
 				xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[i].var_margen_iz;
 				xImpresoraPrint[0].var_size_font=xArrayImpresoras[i].var_size_font;
 				xImpresoraPrint[0].local = 0;
-				xImpresoraPrint[0].num_copias = num_copias_all;
+				xImpresoraPrint[0].num_copias = xArrayImpresoras[i].num_copias;
 				xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
 				xImpresoraPrint[0].papel_size = xArrayImpresoras[i].papel_size;
@@ -332,7 +332,7 @@ function xgetImpresora(xidDoc) {
 				xImpresoraPrint[0].var_margen_iz = xArrayImpresoras[i].var_margen_iz;
 				xImpresoraPrint[0].var_size_font = xArrayImpresoras[i].var_size_font;
 				xImpresoraPrint[0].local = 0;
-				xImpresoraPrint[0].num_copias = num_copias_all;
+				xImpresoraPrint[0].num_copias = xArrayImpresoras[i].num_copias;;
 				xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 				xImpresoraPrint[0].img64 = xArrayImpresoras[i].img64; // ya no manda la img en base64 si no esta activo img64
 				xImpresoraPrint[0].papel_size = xArrayImpresoras[i].papel_size;
@@ -370,6 +370,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	var xCuentaImpresorasEvaluadas = 0;
 	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
 	const var_size_font_tall_comanda = xImpresoraPrint[0].var_size_font_tall_comanda;
+	const isPrintPedidoDeliveryCompleto = xImpresoraPrint[0].isprint_all_delivery.toString() === '1';
 
 	// colocar en encabezado si va a imprimir subtotales
 	xArrayEnca.is_print_subtotales = xImpresoraPrint[0].isprint_subtotales_comanda;
@@ -402,7 +403,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	}
 
 	//evalua impresoras y secciones, despachos o areas, la seccion en que impresora se imprime
-	console.log('xArrayCuerpo', xArrayCuerpo);
+	// console.log('xArrayCuerpo =========================>', xArrayCuerpo);
 	for (var z = 0; z < xArrayImpresoras.length; z++) {
 		xIdPrint=xArrayImpresoras[z].idimpresora;
 		xArrayBodyPrint=[];
@@ -411,13 +412,20 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 			//xCuentaItemsEvaluados++;
 			if(xArrayCuerpo[i]==null){continue;}
 			$.map(xArrayCuerpo[i], function(xn_p, z) {
+				const isPedidoDelivery = xArrayCuerpo[i].des.toLowerCase() === 'delivery'; // 110322 // para imprimir el pedido completo
 				if (typeof xn_p=="object"){
 					if (xn_p.imprimir_comanda==='0') return;// si no se muestra en comanda
 					if(xIdPrint==xn_p.idimpresora){
 						if(xArrayBodyPrint[i]===undefined){
 							xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
 						}
-						xArrayBodyPrint[i][xn_p.iditem]=xn_p;
+						
+						if (isPedidoDelivery && isPrintPedidoDeliveryCompleto) {
+							// si es delivery
+							Object.values(xArrayCuerpo[i]).filter(x => typeof x === 'object').map(x => xArrayBodyPrint[i][x.iditem]=x);
+						} else {
+							xArrayBodyPrint[i][xn_p.iditem]=xn_p;							
+						}
 					}
 
 					// una seccion puede imprimir en varias impresoras
@@ -425,7 +433,13 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 						if(xArrayBodyPrint[i]===undefined){
 							xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
 						}
-						xArrayBodyPrint[i][xn_p.iditem]=xn_p;
+						// xArrayBodyPrint[i][xn_p.iditem]=xn_p;
+						if (isPedidoDelivery && isPrintPedidoDeliveryCompleto) {
+							// si es delivery
+							Object.values(xArrayCuerpo[i]).filter(x => typeof x === 'object').map(x => xArrayBodyPrint[i][x.iditem]=x);
+						} else {
+							xArrayBodyPrint[i][xn_p.iditem]=xn_p;							
+						}
 					}
 				}
 			})
@@ -438,7 +452,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[z].var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;
 		xImpresoraPrint[0].local = 0;		
-		xImpresoraPrint[0].num_copias = num_copias_all;
+		xImpresoraPrint[0].num_copias = xArrayImpresoras[z].num_copias;
 		xImpresoraPrint[0].var_size_font_tall_comanda = var_size_font_tall_comanda;
 		xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
 		xImpresoraPrint[0].img64 = xArrayImpresoras[z].img64;

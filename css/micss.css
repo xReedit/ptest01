@@ -1469,6 +1469,7 @@ ul.list_add_item2 li {
     width: 100%;
     text-align: center;
     box-sizing: border-box;
+    align-items: center;
 }    
 /* 
 .div-lateral-notifica-pago {

@@ -280,7 +280,7 @@ function xIniCaja(){
 	if(xIdSede=='' || xIdSede==undefined){	xIdSede=window.localStorage.getItem('::app3_woS');}*/
 	xm_LogChequea(function(){
 		xm_log_get('ini_us');
-		console.log('xUsAc_Ini', xUsAc_Ini);
+		// console.log('xUsAc_Ini', xUsAc_Ini);
 		$('body').addClass('loaded');
 
 
@@ -449,7 +449,7 @@ function xGetDataCierre(idBitacora) {
 		xEscribirDatosHtml();
 		// xLoadDataCierrePrintHtml();
 
-		console.log('arrPrint', arrRpt);
+		// console.log('arrPrint', arrRpt);
 
 		xPopupLoad.xclose();
 		$("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
@@ -492,7 +492,7 @@ function xLoadAdelantoOrdenPedido() {
 	.done( function (resAdelanto) {
 		const _resAdelanto = JSON.parse(resAdelanto).datos;
 		xThisCaja.listAdelantoOrden = _resAdelanto;
-		console.log('xThisCaja.listAdelantoOrden', xThisCaja.listAdelantoOrden);
+		// console.log('xThisCaja.listAdelantoOrden', xThisCaja.listAdelantoOrden);
 		xThisCaja.isShowListaAdelantoOrden = xThisCaja.listAdelantoOrden.length > 0;
 	});
 }
@@ -1043,7 +1043,7 @@ function xLoadUsAdminPermiso() {
 	.done( function (res) {
 		xThisCaja.listUsAdmin = JSON.parse(res).datos;
 		selectedUsAdmin(null, 0);
-		console.log('listUsAdmin', xThisCaja.listUsAdmin);
+		// console.log('listUsAdmin', xThisCaja.listUsAdmin);
 	});
 
 }
@@ -1061,7 +1061,7 @@ function xEnviarPermisoRemoto() {
 	$.ajax({ type: 'POST', 
 		url: '../../bdphp/log.php?op=70113', data:{idus: idUsAdminPermiso, importe: txt_total_tengo.value}})
 	.done( function (res) {
-		console.log('res', res);
+		// console.log('res', res);
 		// _cpSocketPermisoCierreRemoto()
 		// xThisCaja.isShowEsperaRptSolicitudCierre = true;
 		$('#div_espera_rpt').removeClass('xInvisible');
@@ -1070,7 +1070,7 @@ function xEnviarPermisoRemoto() {
 }
 
 function xCajaResPermisoRemoto(res) {
-	console.log('permiso remoto', res);
+	// console.log('permiso remoto', res);
 	if (res.idusuario_solicita !== xIdUsuario) {return;}
 
 	xThisCaja.rowRptSolicitud = res;

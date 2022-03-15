@@ -68,6 +68,7 @@
                         <input type="text" class="xMiInput xPasarEnter2" style="width:98%;" placeholder="Direccion" onChange="conMayusculas(this)" onblur="removeSpecialCharObj(this)" required id="txt_direccion" espaciar>
                         <input type="number" class="xMiInput xPasarEnter2" style="width:200px;" placeholder="Telefono" onkeyup="showMsjTelefono(this)" required id="txt_telefono" espaciar>
                         <p class="fs-11 pl-2 fw-600 text-info" hidden$="[[!isShowMsjTelefono]]">Se enviará el comprobante al WhatsApp.</p>
+                        <p class="fs-11 pl-2 fw-600 text-secondary" hidden$="[[isShowMsjTelefono]]">Para enviar el comprobante al WhatsApp.</p>
                         
                         
                         <input type="text" class="xMiInput xInvisible" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
@@ -92,12 +93,12 @@
                         <!-- <th class="xSinBorde" width="10px"></th> -->
                     </thead>
                     <tr class="xSinBorde" data-id="">                        
-						<td><input type="number" pattern="[^0-9]+" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Cant" required id="cant_item" onkeyup="verificarInputInteger(this)" autofocus></td>
+						<td><input type="number" pattern="[^0-9]+" class="xMiInput xPasarEnter2" style="width:100%;" onkeyup="verificarInputInteger(this)" placeholder="Cant" required id="cant_item" autofocus></td>
 						<td>
                             <x-comp-find-item-producto clasecss="xMiInput xPasarEnter2 w-100" elplaceholder="Descripcion"  id="compItemProductoFac"></x-comp-find-item-producto>
                             <!-- <input type="text" class="xMiInput xPasarEnter2" style="width:100%;" placeholder="Descripcion" onblur="removeChartSpecial(this)"  onChange="conMayusculas(this)" required id="des_item"> -->
                         </td>
-                        <td><input type="number" pattern="[^0-9]+" class="xMiInput xAlinearDerecha punitario" onblur="xRetornaMoneda(this)"  onkeyup="verificarInputInteger(this)" placeholder="P. Unitario" id="punitario" name="precio" required></td>
+                        <td><input type="number" pattern="[^0-9]+"  class="xMiInput xAlinearDerecha punitario" onblur="xRetornaMoneda(this)" placeholder="P. Unitario" id="punitario" name="precio" required></td>
                         <td><input type="number" class="xMiInput xAlinearDerecha xprecio"  onblur="xRetornaMoneda(this)"   placeholder="P. Total" id="ptotal" name="total" required readonly></td>
 						<!-- <td><paper-fab icon="add" onclick="xAddItem()" title="Agregar item"></paper-fab></td> -->
                     </tr>        
@@ -161,7 +162,12 @@
                     onclick="xNuevoFac();"
                     hidden="[[!cpe_show]]"
                     >Nuevo</button>
+                <br>
+                <p hidden$="[[ !isShowMsjBoletaRequireDNI ]]" class="animate__animated animate__flash text-danger fw-600">Si el importe total supera los S/.700.00 es necesario un DNI o RUC</p>
                 <br><br>
+
+
+
             </div>
         </div>
         <br><br>
@@ -342,6 +348,10 @@
         });
 
 
+        setTimeout(() => {            
+            xNuevoFac();
+        }, 500);
+
     }
 
     function verificarInputInteger(obj) {
@@ -447,6 +457,7 @@
         _formValid = false;
         xValidarBtnProcesar();
 
+        xThisFacturador.isShowMsjBoletaRequireDNI = false;
         xThisFacturador.modificarCliente = true;
         xIdCliente_pago = '';
         _arrCliente = [];
@@ -531,8 +542,13 @@
             if ( !cnf_ComprobanteSel ) {return; }
             if ( cnf_ComprobanteSel.codsunat === "03" && _listValid && parseFloat(_arrTotal[2].importe) <= 700) {
                 xThisFacturador.formValid = true;
-                xThisFacturador.modificarCliente = true; // si se pude modificar cliente           
+                xThisFacturador.modificarCliente = true; // si se pude modificar cliente   
+                xThisFacturador.isShowMsjBoletaRequireDNI = false;        
                 return;            
+            }
+
+            if ( cnf_ComprobanteSel.codsunat === "03" && parseFloat(_arrTotal[2].importe) >= 700) {
+                xThisFacturador.isShowMsjBoletaRequireDNI = true;        
             }
         }
 
@@ -689,7 +705,9 @@
 
         xNuevoCliente();
         $('#contentClie').addClass('xInvisible');
-        $('#form_pago_cliente_fac').reset();
+
+        txt_ruc.value = '';
+        // $('#form_pago_cliente_fac').reset();
     }
 
     function xLLamarPrintFac() {        
@@ -763,12 +781,14 @@
             isShowFechaPagoCredito: Boolean,
             isShowCpeFactura: Boolean,
             isShowMsjTelefono: Boolean,
+            isShowMsjBoletaRequireDNI: Boolean
         },
         attached: function () {
             this.isShowSearchSunat = false;
             this.isShowFechaPagoCredito = false;
             this.isShowCpeFactura = false
             this.isShowMsjTelefono = false;
+            this.isShowMsjBoletaRequireDNI = false;
             xThisFacturador = this;
             xIniFacturador();
             _cpSocketOpen();

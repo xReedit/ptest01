@@ -345,7 +345,7 @@
 								</tr>
 								<tr>
 									<td>
-										<h3>La copia en formato corto (Ahorro de papel)</h3>
+										<h3>La copia en formato corto (Ahorro de papel)?</h3>
 										<span>Si se imprime una copia de la comanda que este muestro en formato corto, es decir <br>solo datos necesarios - ayuda a ahorrar papel</span>
 									</td>
 									<td>
@@ -354,11 +354,20 @@
 								</tr>
 								<tr>
 									<td>
-										<h3>Imprimir todo en formato corto (Ahorro de papel)</h3>
+										<h3>Imprimir todo en formato corto (Ahorro de papel)?</h3>
 										<span>Se imprime todas las comanda en formato corto, es decir solo <br>datos necesarios - ayuda a ahorrar papel</span>
 									</td>
 									<td>
 										<paper-checkbox id="check_isprint_all_short"></paper-checkbox> Si<br>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<h3>Imprimir los pedidos delivery completo?</h3>
+										<span>Si tienes varias areas de producción los pedidos delivery<br>se imprimira completo en todas las areas.</span>
+									</td>
+									<td>
+										<paper-checkbox id="check_isprint_all_delivery"></paper-checkbox> Si<br>
 									</td>
 								</tr>
 
@@ -380,6 +389,7 @@
 									<input type="text" id="isprint_subtotales_comanda" name="isprint_subtotales_comanda">
 									<input type="text" id="isprint_copy_short" name="isprint_copy_short">
 									<input type="text" id="isprint_all_short" name="isprint_all_short">
+									<input type="text" id="isprint_all_delivery" name="isprint_all_delivery">
 									
 									<!-- <input type="text" id="papel_size" name="papel_size"> -->
 									<!-- <input type="text" id="img64" name="img64"> -->
@@ -484,6 +494,7 @@
 								<th><p>Zona de despacho<p><p class="xfont10">Donde se imprime o muestra<p></th>
 								<th><p>Minutos '<p><p class="xfont10">tiempo promedio para depachar<p></th>
 								<th><p>Impresora<p>IP / recurso compartido</th>
+								<th>Copias</th>
 								<th><p>.<p>Tamaño de letra</th>
 								<th><p>.<p>Margen Izquierda</th>
 								<th><p>.<p>img64</th>
@@ -494,6 +505,7 @@
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Zona de despacho" name="descripcion" id="descripcion" onChange="conMayusculas(this)" required></td>
 								<td><input class="xMiInput xPasarEnter2"  placeholder="" type="number" min="0" max="60" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="minutos_pedido" name="minutos_pedido"></td>
 								<td><input type="text" class="xMiInput xPasarEnter2" placeholder="Impresora"  name="ip" id="ip" required></td>
+								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="5" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="num_copias" name="num_copias"></td>
 								<td><input class="xMiInput xPasarEnter2"  placeholder="0" type="number" min="0" max="3" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_size_font" name="var_size_font"></td>
 								<td><input class="xMiInput"  placeholder="0" type="number" min="0" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="var_margen_iz" name="var_margen_iz"></td>
 								<td><input class="xMiInput" placeholder="0" type="number" min="0" max="1" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="img64" name="img64"></td>
@@ -1060,6 +1072,7 @@ function xAddImpresora(){
 		//$("#form_impresoras").reset();
 		$("#form_impresoras #descripcion").val('');
 		$("#form_impresoras #ip").val('');
+		$("#form_impresoras #num_copias").val('');
 		$("#form_impresoras #var_margen_iz").val('');
 		$("#form_impresoras #var_size_font").val('');
 		$("#form_impresoras #img64").val('');
@@ -1134,7 +1147,12 @@ function xLoadImpresorasConf(){
 			//papel 
 			$("#select_papel_zona  option[value="+xdtImp[i].papel_size+"]").attr('selected','selected');			
 
-			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'"><td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td><td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td><td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td><td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td>'+ 
+			xcadena_impr=String(xcadena_impr+'<tr class="row" data-t="impresora" data-id="'+xdtImp[i].idimpresora+'">'+
+				'<td data-campo="descripcion"><span onclick="xModRow(this,0);">'+xdtImp[i].descripcion+'</span></td>'+
+				'<td data-campo="minutos_pedido"><span onclick="xModRow(this,1);">'+xminutos_pedido+'</span></td>'+
+				'<td data-campo="ip"><span onclick="xModRow(this,2);">'+xdtImp[i].ip+'</span></td>'+
+				'<td data-campo="num_copias"><span onclick="xModRow(this,5);">'+xdtImp[i].num_copias+'</span></td>'+
+				'<td data-campo="var_size_font"><span onclick="xModRow(this,0);">'+xdtImp[i].var_size_font+'</span></td>'+ 
 				'<td  data-campo="var_margen_iz"><span onclick="xModRow(this,4);">'+xdtImp[i].var_margen_iz+'</span></td>'+
 				'<td  data-campo="img64"><span onclick="xModRow(this,4);">' + xdtImp[i].img64 + '</span></td>' +
 				'<td  data-papel="papel" data-id="'+xdtImp[i].idimpresora+'">'+
@@ -1482,6 +1500,7 @@ function xLoadConf(){
 		check_isprint_subtotales_comanda.checked = xdtPrint[0].isprint_subtotales_comanda.toString() === "0" ? false : true;
 		check_isprint_copy_short.checked = xdtPrint[0].isprint_copy_short.toString() === "0" ? false : true;
 		check_isprint_all_short.checked = xdtPrint[0].isprint_all_short.toString() === "0" ? false : true;
+		check_isprint_all_delivery.checked = xdtPrint[0].isprint_all_delivery.toString() === "0" ? false : true;
 		
 
 		xLoadPorcentaje();
@@ -1494,6 +1513,7 @@ function xGuardarCambioPrint(){
 	const _check_isprint_subtotales_comanda = check_isprint_subtotales_comanda.checked ? 1 : 0;
 	const _check_isprint_copy_short = check_isprint_copy_short.checked ? 1 : 0;	
 	const _check_isprint_all_short = check_isprint_all_short.checked ? 1 : 0;
+	const _check_isprint_all_delivery = check_isprint_all_delivery.checked ? 1 : 0;
 
 	$("#frm_conf_print #idconf_print").val(xIdConf);
 	$("#frm_conf_print #ip_print").val($("#td_ip").val());
@@ -1508,6 +1528,7 @@ function xGuardarCambioPrint(){
 	$("#frm_conf_print #isprint_subtotales_comanda").val(_check_isprint_subtotales_comanda);
 	$("#frm_conf_print #isprint_copy_short").val(_check_isprint_copy_short);
 	$("#frm_conf_print #isprint_all_short").val(_check_isprint_all_short);
+	$("#frm_conf_print #isprint_all_delivery").val(_check_isprint_all_delivery);
 	
 	
 	// $("#frm_conf_print #papel_size").val($("#select_papel_caja").val());

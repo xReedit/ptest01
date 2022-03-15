@@ -114,7 +114,7 @@
 			<div class="xContent">
 				<p id="msj_dialo_call"></p>
 				<br>
-				<div class="xBoton2 xVerde" dialog-dismiss onclick="xCallRepartidorPapayaExec();"> Si, Confirmo. </div>
+				<div class="xBoton2 xVerde" dialog-dismiss onclick="xCallRepartidorPapayaExec();" id="btnConfirmaCallReparto"> Si, Confirmo. </div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 				<br><br>
 			</div>
@@ -510,7 +510,7 @@ var xThisCM,
 	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
-	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false, idUsuarioOperador = 0, isPedidoDelivery = false;
+	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false, idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false;
 
 function xIniControlMesa(){
 
@@ -554,7 +554,10 @@ function xIniControlMesa(){
 		$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);
 		document.title ="Control de Pedidos";
 
-		$("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:80px; margin-right:5px;" placeholder="mesa" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
+		// $("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:80px; margin-right:5px;" placeholder="mesa" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
+		$("#div_filtro_header").html(`<div class="bg-white xBoton2"><input type="number" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:50px; margin-right:5px;" placeholder="# mesa" autocomplete="off"></div>
+									<div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div>
+									<div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>`)
 		xThisCM.xt_org=xIdOrg;
 		xThisCM.xt_idsede=xIdSede;
 		xThisCM.xt_idus=xIdUsuario;
@@ -2014,6 +2017,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	lastDataPedidoInsert = clearDataLastPedidoInsert ? null : lastDataPedidoInsert;
 	
 	isPedidoOpenDeliveryCliente = false;
+	isDeliverySolicitoReparto = false;
 	xAgrupar_item_activo=false;
 	xPopupLoad.titulo="Cargando...";
 	xPopupLoad.xopen();
@@ -2022,6 +2026,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 	// reset sub totales tachados
 	xLocal_SubTotal_Quitados = "";
+
+	arrTotalesDeliveryCliente = null;
 
 	//clearInterval(xRefreshPedidos);
 
@@ -2049,8 +2055,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	.done( function (dtDpedido) {
 
 		var isDelivery = false;
-		var isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = '', isLlamoRepartidorRed = false, infoFacturacion = ''; // si el pedido es delivery y viene de la app
 		var labelInfoPedido = '', labelInfoComprobante = '';
+		isClienteDeliveryFromApp = false, pintarInfoDeliveryCliente = '', isLlamoRepartidorRed = false, infoFacturacion = ''; // si el pedido es delivery y viene de la app
 
 		// si es solo para confirmar aunque no sea delivery
 		// isPedidoPagadoFromApp se utliza en comp-find-tipo-pago-option
@@ -2071,7 +2077,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 		// combo repartdior
 		isLlamoRepartidorRed = xdtDpedido ? xdtDpedido[0]?.flag_solicita_repartidor_papaya === '1' || false : false;
-		
+		isDeliverySolicitoReparto = isLlamoRepartidorRed;
 
 		//encabezado
 		$("#p_correlativo").text('CO-'+xCeroIzq(xdtDpedido[0].correlativo_dia,5)+' | ');
@@ -2250,7 +2256,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 					// xSumarTotalPedidos();
 				}
 
-				if ( xdtDpedido[0].flag_solicita_repartidor_papaya === '1' ) {					
+				if ( xdtDpedido[0].flag_solicita_repartidor_papaya === '1' ) {		
+					isDeliverySolicitoReparto = true;			
 					arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 				}
 
@@ -2904,8 +2911,8 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 	
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
 	// arrSumSubtTotales = isPedidoOpenDeliveryCliente ? addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente) : xLocal_xDtSubTotales;
-	if ( isPedidoOpenDeliveryCliente ) {
-		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio, isDeliveryCalculaCostoEntrega, isDeliveryCalculaCostoEntregaSoloApp);
+	if ( isPedidoOpenDeliveryCliente && arrTotalesDeliveryCliente ) {
+		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio, isDeliveryCalculaCostoEntrega, isDeliveryCalculaCostoEntregaSoloApp, isDeliverySolicitoReparto, isClienteDeliveryFromApp);
 		xImporteTotalSeleccionados = getImporteTotalSubTotalesDelivery(arrSumSubtTotales);
 	} else {
 		arrSumSubtTotales = xLocal_xDtSubTotales; 		
@@ -3989,8 +3996,18 @@ function selectRepartidor() {
 
 function xCallRepartidorPapaya() {
 	var costoEntrega = optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery;
-	$('#dialog_info_call_repartidor #msj_dialo_call').text(`Deseo Solicitar un repartidor de Papaya Express para este pedido. Al confirmar no podra asignar este pedido a ningún otro repartidor.
+	var _impDelivery = parseFloat(costoEntrega).toFixed(2);
+	if (isNaN(_impDelivery)){
+		$('#dialog_info_call_repartidor #msj_dialo_call').text(`No es posible llamar repartidor ya que la direccion que indico no esta georeferenciada, solicite a soporte tecnico habilitar esta opción.`);
+		$('#btnConfirmaCallReparto').addClass('xInvisible');
+	} else {
+		
+		$('#dialog_info_call_repartidor #msj_dialo_call').text(`Deseo Solicitar un repartidor de Papaya Express para este pedido. Al confirmar no podra asignar este pedido a ningún otro repartidor.
 					Ademas el comercio asume el costo del servicio de entrega (S/. ${ parseFloat(costoEntrega).toFixed(2) }). Desea confirmar su solicitud?`);
+
+		$('#btnConfirmaCallReparto').removeClass('xInvisible');
+	}
+	
 					
 	dialog_info_call_repartidor.open();	
 }
@@ -3999,6 +4016,7 @@ function xCallRepartidorPapayaExec() {
 	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1302', data:{idpedido: xid_pedido_selected }})
 	.done( function (res) {
 		// lanzar notificacion de comision del repartdior
+		isDeliverySolicitoReparto = true;
 		arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 		// xLocal_xDtSubTotales = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], xLocal_xDtSubTotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
 		xSumarTotalPedidos();

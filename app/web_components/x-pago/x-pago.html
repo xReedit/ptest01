@@ -890,6 +890,9 @@
 		/// loading - para no disparar varias veces mientras se esta ejecutando
 		setTimeout(() => {
 			registrando = false;
+			try {				
+				_cpSocketVentaRegistrado();
+			} catch (error) {}
 		}, 2000);
 	}
 

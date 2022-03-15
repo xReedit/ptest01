@@ -71,6 +71,7 @@
 
 	<link rel="stylesheet" href="../../css/micss.css">
 	<link rel="stylesheet" href="../../css/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="import" href="../x-componentes/x-comp-meta-venta/x-comp-meta-venta.html">
 	<!--link rel="stylesheet" href="../../css/perfect-scrollbar.css"-->
 
 	<!-- animate -->
@@ -185,6 +186,10 @@
 			<div class="xCentrado div-active-service-delivery">
 				<span class="pr-5" title="Activa para recibir pedidos desde Papaya Express">En linea</span>
 				<paper-toggle-button id="toogleOnline" class="x-toogle" onclick="xActivarDeliveryApp(this)"></paper-toggle-button>				
+			</div>
+			<div class="d-flexx p-3 bg-dark justify-content-around">
+				<span class="pr-5 text_puntos"><i class="fa fa-flag pr-1"></i>Meta Diaria de Venta</span>
+				<x-comp-meta-venta fontsize="fs-17" class="text-right"></x-comp-meta-venta>				
 			</div>
 	    	<div class="xLineaSombra"></div>
 	    	<div class="ul_menu2">

@@ -8,6 +8,9 @@ class socketService {
     isSocketConnectSource = new rxjs.BehaviorSubject(false);
     isSocketConnect$ = this.isSocketConnectSource.asObservable();
 
+    isRegistroVentaSource = new rxjs.BehaviorSubject(false);
+    isRegistroVenta$ = this.isRegistroVentaSource.asObservable();
+
     constructor() {
         // this.connectSocket();
     }
