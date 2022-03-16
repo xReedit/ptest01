@@ -2107,9 +2107,12 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		$('#showRepartoAsignado').addClass('xInvisible');
 		$('#div-info-delivery-from-app').addClass('xInvisible');
 		
+		$("#btn_cambiar_mesa").removeClass('xInvisible');
+		
 		
 
 		if (isDelivery) {			
+			$("#btn_cambiar_mesa").addClass('xInvisible');
 
 			// datos del delivery app cliente
 			optionDeliveryCliente = datosDelivery;
@@ -2349,9 +2352,10 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 		$("#xBody div").remove();
 		$("#xBody").append('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
+
 		if (isDelivery) {
 			$("#xBody").addClass('tall-delivery');
-			$("#xBodyPedidos").addClass('tall-delivery');
+			$("#xBodyPedidos").addClass('tall-delivery');			
 		} else {
 			$("#xBody").removeClass('tall-delivery');
 			$("#xBodyPedidos").removeClass('tall-delivery');

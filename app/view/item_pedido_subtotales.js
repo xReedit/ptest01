@@ -109,6 +109,7 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 						.map(x => {
 							
 							const id = c.tipo+c.id; // para quitar												
+							const desCompare = c.descripcion; // para comparar y unir
 							const nivel = parseInt(c.nivel);										
 							let sumItem = 0;
 							let importe_tachado = 0;
@@ -144,8 +145,9 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 
 							const tachado = checkSubTotalQuitado(cantidadItemPedido, id, sumItem);
 							
-							var IdExite;
-							arrSuma.map((z, index) => {if (z.id === id) {IdExite = index; return;}} );
+							var IdExite = null;
+							// arrSuma.map((z, index) => {if (z.id === id) {IdExite = index; return;}} );
+							arrSuma.map((z, index) => {if (z.descripcion.toLowerCase() === desCompare.toLowerCase()) {IdExite = index; return;}} );
 														
 
 							if (IdExite) {

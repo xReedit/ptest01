@@ -73,7 +73,8 @@ function handlerFnMiPedido(e) {
 		, xSotockSocketRun = xcant_max
 		, xcantRunSocket = xcant_max
 		, xcant = xCantActual
-		, xsigno = xOperacion;
+		, xsigno = xOperacion
+		, sec_orden = itemPedidos_objItemSelected.sec_orden;
 
 		
 
@@ -154,6 +155,7 @@ function handlerFnMiPedido(e) {
 			'idseccion':xIdSeccionItem, 
 			'idseccion_index':xIdSeccionItem_index, 
 			'des_seccion':xDesSeccion, 
+			'sec_orden': sec_orden,
 			'iditem':xidItem, 
 			'idtipo_consumo':xidTipoConsumo, 
 			'stock_actual': xStockActual, 
@@ -372,7 +374,8 @@ async function handlerFnMiPedidoControl(e) {
 		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
 		, xSotockSocket = xcant_max
 		, xSotockSocketRun = xcant_max
-		, xcantRunSocket = xcant_max;
+		, xcantRunSocket = xcant_max
+		, sec_orden = itemPedidos_objItemSelected.sec_orden;
 
 		//concatena con indicaciones >>en servidor
 		//if(xIndicaciones!=""){xIndicaciones='('+xIndicaciones+')';}
@@ -411,7 +414,7 @@ async function handlerFnMiPedidoControl(e) {
 		
 		var mySubItemView = checkMySubitemView(xli_tipoconsumo, xli_tipoconsumo);
 
-		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
+		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index,'sec_orden': sec_orden, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,
 			'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 
 			'iditem2': xidItem2, 
