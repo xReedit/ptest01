@@ -2,6 +2,10 @@
 <link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 
 <dom-module id="x-cpe-emitidos">
+
+    <script type="text/javascript" src="../../view/socket.master.service.js"></script>
+	<script type="text/javascript" src="../../view/socket.service.p.js"></script>
+
     <template is="dom">
         <paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation"
             exit-animation="fade-out-animation">
@@ -29,6 +33,29 @@
                 <div class="xBoton2 xRojo" dialog-dismiss onclick="xAnularComprobante_confirma();">Listo</div>
                 <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
                 <br><br>
+            </div>
+        </paper-dialog>
+
+
+        <!-- enviar documentos pdf y xml x whatsapp -->
+        <paper-dialog class="dialog_redondo" id="dialog_send_whatsapp" style="width: 300px;" modal entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation">
+            <div style="text-align: center">
+                <img src="../../../images/whatsapp.png" alt="">
+                <p id="dgl_sunat_msj">Enviar comprobante por WhatsApp.<br> [[numComprobanteSelected]] </p><br>
+
+                <input type="number" class="xMiInput xfont18 text-center" placeholder="Numero de Telefono" autofocus id="txt_wtp" onkeyup="xChangeNumWhatsApp(this)" enlinea>   
+
+                <br><br>
+                <div id="dgl_loading_whatsapp" class="xInvisible">
+                    <p>Enviando...</p>
+                    <paper-progress   indeterminate style="width: 100%;"></paper-progress>
+                </div>
+                <br>
+                <div id="div-btns-wsp">
+                    <button dialog-dismiss class="xBoton2 xPlomo">Cancelar</button>
+                    <button id="btn-send-whatsapp" onclick="sendCPEWhatsApp()" class="xBoton2 xVerde" disabled$="[[ !showBtnSendWhatsapp ]]">Enviar</button>
+                </div>
             </div>
         </paper-dialog>
 
@@ -143,6 +170,7 @@
                                                     <img class="xzoom-1 xCursor" hidden$="{{!item.ico_pdf}}" onclick="verDocuemnto('pdf', this)" src="../../../images/001-pdf.png" width="16px" alt="">
                                                     <img class="xzoom-1 xCursor" hidden$="{{!item.ico_xml}}" onclick="verDocuemnto('xml', this)" src="../../../images/002-xml.png" width="16px" alt="">
                                                     <img class="xzoom-1 xCursor" hidden$="{{!item.ico_cdr}}" onclick="verDocuemnto('cdr', this)" src="../../../images/003-cdr.png" width="16px" alt="">
+                                                    <img class="xzoom-1 xCursor" title="Enviar x WhatsApp" onclick="openSendWhatsApp(this)" src="../../../images/whatsapp.png" width="16px" alt="wts">
                             
                                                     <!-- reenviar -->
                                                     <!-- <img class="xzoom-1 xCursor" hidden$="{{!item.btn_enviar}}" title="Reenviar" src="../../../images/x_up.png" width="16px" alt="">                                                     -->
@@ -299,7 +327,7 @@
 
 <script>
     var xThisCpe, lastPos=0, xPopupLoad, p_upadate=true, p_rows_re=0, p_rows=0, p_fecha='', p_filter='', p_desde=0, data_pagination={}, data_pagination_re={}, xdebounce, xe_debounce=false, index_anular;
-    var cpe_mes_anterior = '', cpe_yy_actual='', _us_cpe='';
+    var cpe_mes_anterior = '', cpe_yy_actual='', _us_cpe='', external_id_cpe;
 
 
     function xExportarExcel() {
@@ -318,6 +346,7 @@
 
         setTimeout(() => {
             $('body').addClass('loaded');
+            txt_fecha.valueAsDate = new Date();
         }, 500);
                 
         xThisCpe.$.paginator.addEventListener('page-limit-change', (e) => {
@@ -326,7 +355,7 @@
             p_desde = data_pagination.pageDesde; // para el # de fila            
             lastPos = $(window).scrollTop();
             // xLoadCpeEmitidos('6');            
-            txt_fecha.valueAsDate = new Date();
+            // txt_fecha.valueAsDate = new Date();
             xApplyFilterDate();
         }); 
            
@@ -337,6 +366,7 @@
             // xThisCpe.$.paginator.currentPage = 1;            
             // xLoadCpeEmitidos('6');
             // xIniPagination();
+            xThisCpe.$.paginator.currentPage = 1;
             xApplyFilterDate();
         });
 
@@ -353,7 +383,7 @@
     function xApplyFilterDate() {
         var d = $(txt_fecha).val().split('-');            
             p_fecha = d[1]===undefined ? '' : '01/' + d[1] + '/' + d[0];                        
-            xThisCpe.$.paginator.currentPage = 1;            
+            // xThisCpe.$.paginator.currentPage = 1;            
             xLoadCpeEmitidos('6');
             xResumenMesTotaleCpe();
     }
@@ -362,7 +392,7 @@
         $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '602', fecha_mes: p_fecha} })
         .done(function (res) {            
             res = JSON.parse(res);
-            console.log('xResumenMesTotaleCpe', res);
+            // console.log('xResumenMesTotaleCpe', res);
             xThisCpe.listResumenCpeEmitidos = res.datos;
             const _totalImporteCpe = xThisCpe.listResumenCpeEmitidos.map(x => parseFloat(x.total.replace(/,/g, ''))).reduce((a, b) => a+b, 0);
             xThisCpe.listResumenCpeEmitidosTotal = numeroConComas(_totalImporteCpe.toFixed(2));
@@ -670,7 +700,7 @@
         _rowCpe.isReenviandoLoading = false;
         rowLoading.addClass('xInvisible');
         rowEstado.removeClass('xInvisible');
-        console.log('rpt', rpt);
+        // console.log('rpt', rpt);
     }
 
     async function reenviarComprobante(obj) {
@@ -683,7 +713,7 @@
         _rowCpe.isReenviandoLoading = true;
         rowEstado.addClass('xInvisible');
         rowLoading.removeClass('xInvisible');
-        console.log('_rowCpe', _rowCpe);
+        // console.log('_rowCpe', _rowCpe);
 
         const rpt = await xSoapSunat_SendSunat(_rowCpe.external_id, _rowCpe.idce)
         if (rpt.ok) {
@@ -696,7 +726,41 @@
         _rowCpe.isReenviandoLoading = false;
         rowLoading.addClass('xInvisible');
         rowEstado.removeClass('xInvisible');
-        console.log('rpt', rpt);
+        // console.log('rpt', rpt);
+    }
+
+    function openSendWhatsApp(obj) {
+        const index = obj.parentElement.dataId;
+        external_id_cpe = xThisCpe.ListCpe[index].external_id;
+        xThisCpe.numComprobanteSelected = xThisCpe.ListCpe[index].numero
+
+        // console.log(xm_log_get('datos_org_sede')[0].sedenombre);
+        $('#div-btns-wsp').removeClass('xInvisible');
+        txt_wtp.value = '';
+
+        dialog_send_whatsapp.open();
+    }
+
+    function xChangeNumWhatsApp(obj) {
+        xThisCpe.showBtnSendWhatsapp = obj.value.length > 8;
+    }
+
+    function sendCPEWhatsApp() {
+        const _payloadPdf = {
+            telefono: txt_wtp.value,
+            external_id: external_id_cpe,
+            numero_comprobante: xThisCpe.numComprobanteSelected,
+            comercio: xm_log_get('datos_org_sede')[0].sedenombre
+        };
+
+        $(dgl_loading_whatsapp).removeClass('xInvisible');
+        $('#div-btns-wsp').addClass('xInvisible');
+
+        setTimeout(() => {
+            $(dgl_loading_whatsapp).addClass('xInvisible');            
+            dialog_send_whatsapp.close();
+            _cpSocketComprobanteWhatApp(_payloadPdf);
+        }, 3000);
     }
     
 
@@ -712,14 +776,26 @@
             listResumenCpeEmitidosTotal: Number,
             nom_sede: '',
             isContador: false,
-            isReenviandoLoading: false
+            isReenviandoLoading: false,
+            showBtnSendWhatsapp: false,
+            numComprobanteSelected: String,
         },
         attached: function () {
             this.selected = 0,
             this.isReenviandoLoading = false;
+            this.showBtnSendWhatsapp = false;
             this.listResumenCpeEmitidosTotal = 0;
             xThisCpe = this;
             xIniCpe();
+
+            setTimeout(() => {				
+			// xIniControlMesa();
+			
+                _cpSocketOpen();
+            }, 1000);
+        },
+        detached:function(){			
+            _cpSocketClose();
         },
         displayIndex: function (index) {
             return xCeroIzq(parseInt( p_desde ) + (index + 1), 1);

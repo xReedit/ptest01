@@ -32,7 +32,8 @@ function numeroConComas(x) {
 }
 
 function xCeroIzq(Num, CantidadCeros){
-   if ( !Num ) {return Num; }
+	const isNum = parseInt(Num);
+   if ( isNaN(isNum) ) {return Num; }
    Num = Num.toString();
    while(Num.length < CantidadCeros) Num = "0" + Num;
    return Num;

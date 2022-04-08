@@ -5,7 +5,7 @@ function xListRe_ini() {
     xThisCpe.$.paginator_re.listRows = [10, 20, 30, 40];
 
     xThisCpe.$.paginator_re.addEventListener('page-limit-change', (e) => {
-        console.log('page-limit-change', e.detail.value);
+        // console.log('page-limit-change', e.detail.value);
         data_pagination_re = e.detail.value; // datos del componente
         p_desde = data_pagination_re.pageDesde; // para el # de fila
         xListRe_LoadData();
@@ -40,7 +40,7 @@ function xListRe_LoadData() {
         res = $.parseJSON(res[0]);
         xThisCpe.ListCpeResumen = res.datos;
 
-        console.log(xThisCpe.ListCpeResumen);
+        // console.log(xThisCpe.ListCpeResumen);
 
         xThisCpe.ListCpeResumen.map(x => {
 
