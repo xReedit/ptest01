@@ -39,13 +39,14 @@
                 xThisComCategoria.categorias = xThisComCategoria.list[0];
                 xThisComCategoria.categorias.index=0
                 xThisComCategoria.getValorIncial(xThisComCategoria.categorias);
+                // xThisComCategoria.fire('getValorIncial', {categorias: xThisComCategoria.categorias});
             });
         }
 
         function selectOptionCategoria() {
             const index = xThisComCategoria.$.compFindListCategoria.value;            
             xThisComCategoria.categorias = xThisComCategoria.list[index];
-            xThisComCategoria.categorias.index=index
+            xThisComCategoria.categorias.index=index;
         }
         
 
@@ -70,7 +71,7 @@
             return categoria;
         }, 
         getCategoria() {            
-            return this.categoria;
+            return this.categorias;
         },
         attached: function() {
             xThisComCategoria=this;	

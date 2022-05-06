@@ -3,15 +3,22 @@ var socketCP = socketCP ? socketCP : new socketService();
 function _cpSocketOpen() { 
     // if (isSocket) {
         // isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
-
+;
         if ( !this.socketCP._socket) {            
+            console.log('socket connect new');
             this.socketCP.connectSocket();
             this.listenSocketP();         
             
         } else {
+            console.log('socket exist');
             if ( !this.socketCP._socket.connected ) {
-                this.socketCP.connectSocket();
-                this.listenSocketP();
+                console.log('socket desconetacdo');
+                this.socketCP.disconnectSocket();
+                setTimeout(() => {                 
+                    console.log('socket conectado');   
+                    this.socketCP.connectSocket();
+                    this.listenSocketP();
+                }, 2000);
             }
         }
 

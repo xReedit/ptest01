@@ -326,6 +326,7 @@
 									class="xMiInput xtxt_enca xfont16 w-100"
 									maxlength="50"
 									onchange="conMayusculas(this)"
+									onkeyup="removeSpecialCharObj(this)"
 									data-val="referencia"
 									id="txt_ref_vr"									
 									/>
@@ -558,7 +559,7 @@ var xThisVentaRapida
 ,xarr_header = []
 ,xarr_body = []
 ,xarr_footer = []
-,xarr_tipo_pago = []
+// ,xarr_tipo_pago = []
 ,xRpt_pago=[]
 ,guardando_vr = false
 ,xdelivery = 0
@@ -1303,7 +1304,7 @@ async function xGuardarPedidoVR(responde){
 
 	// xPopupLoad.titulo="Enviando...";
 	// xPopupLoad.xopen();	
-	var xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
+	xarr_tipo_pago = xRpt_pago[0] ? xRpt_pago[0]['xtipo_pagos'] : [];
 	// var DatosCliente = xRpt_pago[0] ? xRpt_pago[0].cliente : arrDatosAdjuntoDelivery != {} ? JSON.stringify(arrDatosAdjuntoDelivery) === "{}" ? [] : JSON.parse(arrDatosAdjuntoDelivery) : [];
 	const _idCLienteCompara = xRpt_pago[0] ? xRpt_pago[0].idcliente === '' ? 0 : xRpt_pago[0].idcliente : 0;
 	var DatosCliente = 
@@ -1507,7 +1508,8 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 		'is_from_client_pwa': data.is_from_client_pwa
 	};
 
-	const xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
+	// const xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
+	xarr_tipo_pago = xRpt_pago[0].xtipo_pagos;
 
 	var ComprobanteSeleccionado = xRpt_pago[0].comprobante;
 

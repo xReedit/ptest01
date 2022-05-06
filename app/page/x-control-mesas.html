@@ -510,12 +510,16 @@ var xThisCM,
 	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
 var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
-	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false, idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false;
+	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false,
+	idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false,
+	countIntiCP = 0;
 
 function xIniControlMesa(){
 
-	// if ( cuentaEventoLoadIniPrincipal > 0 ) { return; }
-	// cuentaEventoLoadIniPrincipal++;
+	if ( cuentaEventoLoadIniPrincipal > 0 ) { return; }
+	cuentaEventoLoadIniPrincipal++;
+
+	console.log('inicio control -> ', cuentaEventoLoadIniPrincipal)
 
 	$( "#accordion" ).accordion({
 		heightStyle: "content",
@@ -984,6 +988,9 @@ function xIniControlMesa(){
 	compFindCategoria=document.getElementById('compFindCategoria');
 	compFindCategoria.addEventListener('getValorIncial', function (e) {
 		// if ( cuentaEventoLoadIni > 0 ) { return; }
+		setCatetgoriaCartaCP(e.detail.categorias);
+		return;
+
 		let valCategoriaLoalStorage;
 		valCategoriaLoalStorage = e.detail.categorias		
 
@@ -1010,6 +1017,11 @@ function xIniControlMesa(){
 		// $("#titulo_categoria").text(e.detail.categorias.descripcion);
 	});
 
+	const _getCateogriaCarta = compFindCategoria.getCategoria();
+	if ( _getCateogriaCarta ) {
+		setCatetgoriaCartaCP(_getCateogriaCarta);
+	}
+
 	xPopupLoad=document.getElementById('xLoad');
 
 
@@ -1020,6 +1032,32 @@ function xIniControlMesa(){
 
 	/// laad repartidores
 	getAllRepartidor();
+}
+
+// setear idcategoria
+function setCatetgoriaCartaCP(e) {
+	let valCategoriaLoalStorage;
+		valCategoriaLoalStorage = e;		
+
+		if ( getLocalStorage('::app3_cat_defualt') ) {
+			const _valCategoriaLoalStorage = JSON.parse(getLocalStorage('::app3_cat_defualt'));			
+			if (_valCategoriaLoalStorage.idcategoria != valCategoriaLoalStorage.idcategoria) {
+				setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));				
+			} else {
+				valCategoriaLoalStorage = _valCategoriaLoalStorage;
+			}
+
+			xidCategoriaPD = valCategoriaLoalStorage.idcategoria; // toma el que esta en el storage si hubiera
+			
+			setTimeout(() => {// coloca la categoria antes seleccionada	
+				compFindCategoria.$.compFindListCategoria.value = valCategoriaLoalStorage.index;
+			}, 500);
+		} else {
+			xidCategoriaPD = e.idcategoria; // toma el que esta en el storage si hubiera
+		}
+				
+		
+		setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));	
 }
 
 
@@ -1217,8 +1255,8 @@ function detectEvent(e) {
 		$("#txt_bus_mesa").focus();
 		if(xbuscar_mesa==true){$("#txt_bus_mesa").select();xbuscar_mesa=false;}
 	}
+	if (evt.keyCode>=119 && evt.keyCode<=121 && dialog_detalle.opened) {
 
-	if (evt.keyCode>=119 && evt.keyCode<=121) {
 		//alert('charCode is ' + evt.charCode);
 		//return document.defaultAction;
 		if(evt.keyCode==119){if(dialog_detalle.opened){xOpenLULI();}}//f8 abre add item menu lateral
@@ -1238,7 +1276,7 @@ function detectEvent(e) {
 				xIrPage(1);
 				
 
-				evt.stopPropagation();
+				// evt.stopPropagation();
 				e.stopPropagation();
 				e.stopImmediatePropagation();
 
@@ -1439,6 +1477,13 @@ function xLoadDataUlAdd(){
 
 	//$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205'})
 	//.done( function (dtItem) {
+	if (xidCategoriaPD === '') {
+		const _getCateogriaCarta = compFindCategoria.getCategoria();
+		if ( _getCateogriaCarta ) {
+			setCatetgoriaCartaCP(_getCateogriaCarta);
+		}
+	}
+
 	xGeneralLoadItems(xidCategoriaPD, function(){
 		//var xdtItem=$.parseJSON(dtItem);
 		var xArrayEncaUlLi=new Array();
@@ -1858,6 +1903,7 @@ async function xRegistrarClientePagoCP(){
 
 		// }).fail(enProcesoGuardarPago = false);
 
+		xValPago.setResetFormaPago();
 		return
 	}else{
 		//paga todo - listo
@@ -1911,6 +1957,7 @@ async function xRegistrarClientePagoCP(){
 			}
 
 		_cpASocketNotifyPayPedido(_payloadPedidoPagado);
+		xValPago.setResetFormaPago();
 	}
 }
 
@@ -3782,7 +3829,7 @@ function _cpSocketPintarNumerosPagosNotificados() {
 // }
 
 function xLogRun_CuentaNumeroPedidos(){
-	if ( isSocket) { return; }
+	if ( isSocket) { return; }	
 
 	if(typeof(EventSource) !== "undefined") {
 	    xsourceEvent = new EventSource("../../bdphp/log_run.php?op=1");
@@ -3897,6 +3944,7 @@ function xRefreshPedidoPaySocket(pedido) {
 }
 
 function xCalcularTiempoPedido(){
+	// console.log('pintar cantidad tpc');
 	var xhora_item;
 	var xContador_cant=new Array();
 	$(".xMiCardPedido.xOcupado").each(function(index,element){
@@ -4183,7 +4231,10 @@ Polymer({
 		xThisCM.select_page = 0;	
 		
 		iIniIsotope = false;
-		xIniControlMesa();
+		countIntiCP++;
+		cuentaEventoLoadIniPrincipal = cuentaEventoLoadIniPrincipal = 1 ? 0 : cuentaEventoLoadIniPrincipal;
+		
+		// xIniControlMesa();
 		
 		// iIniIsotope = false;
 		// addContadorLoad();
@@ -4195,10 +4246,11 @@ Polymer({
 		
 		// _cpSocketIsConnect();
 		setTimeout(() => {				
-			// xIniControlMesa();
+			xIniControlMesa();
 			
 			_cpSocketOpen();
-		}, 1000);
+			// console.log('entra socket');
+		}, 500);
 		// if ( xThisCM ) {return}
     	
 	},
@@ -4207,7 +4259,7 @@ Polymer({
 		console.log('entra ready');
 	},
     detached:function(){
-		console.log('sale');
+		// console.log('sale', countIntiCP);
     	//clearInterval(xRefreshPedidos);
     	clearInterval(xRefreshHora);
     	clearInterval(xRefreshPermiso);

@@ -740,14 +740,15 @@ function uploadImgProducto(imgBase64, nomfile) {
 			})
 			.done((res) => {				
                 // console.log('res', res);      
-				nomfile = nomfile + '.png';
+				// nomfile = nomfile + '.png';
+				nomfile = res;
 				transferenciaCompleta(nomfile);          
 			});
     }
 
 
 function transferenciaCompleta(xfile){
-	xfile=xIdOrg+xIdSede+xfile;
+	// xfile=xIdOrg+xIdSede+xfile;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20701', data:{i:xIdObjImgDet,d:xfile}})
 	.done( function (a) {
 		// dialog_foto.close();

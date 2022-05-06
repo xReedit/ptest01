@@ -129,13 +129,33 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 
 	comprobarNumCorrelativoComprobante(xArrayComprobante);
 
+	console.log('xarr_tipo_pago ====> ', xarr_tipo_pago);
+	var xArrayTPC;
+	if ( xarr_tipo_pago ) {
+		xArrayTPC = [];
+		xarr_tipo_pago.map(tp => {
+			let _vuleto = parseFloat(tp.importe_recibido) - parseFloat(tp.importe)
+			const _importe_recibido = _vuleto < 0 ? tp.importe : tp.importe_recibido;
+			_vuleto = _vuleto < 0 ? 0 : _vuleto;
+			const _rowTPC = {
+				'id': tp.id || '1',
+				'des_tp': tp.des_tp || 'Efectivo',
+				'importe': tp.importe,
+				'importe_recibido': _importe_recibido,
+				'importe_vuelto': _vuleto,
+			}
+			xArrayTPC.push(_rowTPC);
+		});
+	}
+
 	const _data = {
 		Array_enca: xArrayEncabezado,
 		Array_print: xImpresoraPrint,
 		ArrayItem: _arrBodyComprobante, // xArrayCuerpo 
 		ArraySubTotales: xArraySubtotal,
 		ArrayComprobante: xArrayComprobante,
-		ArrayCliente: xArrayCliente
+		ArrayCliente: xArrayCliente,
+		ArrayTipoPago: xArrayTPC // viene de xcontrol pedido // imprimir importe recibido
 	}
 
 	if (_sys_local === 1) {
@@ -377,6 +397,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	// colocar en encabezado si va a imprimir la copia en formato corto
 	xArrayEnca.isprint_copy_short = xImpresoraPrint[0].isprint_copy_short;	
 	
+	xArrayCuerpo = xArrayCuerpo.filter(x => x);
 	//si existe impresora local // saca una copia de todo el pedido
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
 		xPrintLocal=$.parseJSON(xPrintLocal);
@@ -402,6 +423,62 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		}
 	}
 
+	// 041052022
+	// si el tipo de consumo tiene un impresora especifica
+	// ej: todo delivery se imprime en una impresora x
+	let isTpcPrinter = false;
+	let listTPCPrinter = xm_log_get('estructura_pedido');
+	listTPCPrinter = listTPCPrinter.filter(p => p.idimpresora !== '0');
+	isTpcPrinter = listTPCPrinter.length > 0;
+
+	if ( isTpcPrinter ) {
+		listTPCPrinter.map(p => {
+			const _tpcPrint = p.idtipo_consumo;
+			xIdPrint=p.idimpresora;
+			xArrayBodyPrint=[];
+			for (var i = 0; i < xArrayCuerpo.length; i++) {
+				if(xArrayCuerpo[i]==null){continue;}
+				$.map(xArrayCuerpo[i], function(xn_p, z) {
+					if (typeof xn_p=="object"){
+						if(_tpcPrint==xn_p.idtipo_consumo){					
+							if(xArrayBodyPrint[i]===undefined) {
+								xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
+								xArrayBodyPrint[i][xn_p.iditem]=xn_p;
+								xArrayCuerpo[i].flag_add_tpc = true; // marca que ya se agrego en esta impresora
+							} 
+						}
+					}
+				});
+			}
+
+			if(xArrayBodyPrint.length==0){return; }
+			xcuentaSeccionesImpresas++;
+			xArmarSubtotalesArray(xArrayBodyPrint,xImpresoraPrint)
+
+			// buscamos la impresora en xArrayImpresoras;
+			const _xArrayImpresoras = xArrayImpresoras.filter(pp => parseInt(pp.idimpresora) == xIdPrint)[0];
+
+			xImpresoraPrint[0].ip_print=_xArrayImpresoras.ip;
+			xImpresoraPrint[0].var_margen_iz=_xArrayImpresoras.var_margen_iz;
+			xImpresoraPrint[0].var_size_font=_xArrayImpresoras.var_size_font;
+			xImpresoraPrint[0].local = 0;
+			xImpresoraPrint[0].num_copias = _xArrayImpresoras.num_copias;
+			xImpresoraPrint[0].var_size_font_tall_comanda = var_size_font_tall_comanda;
+			xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
+			xImpresoraPrint[0].img64 = _xArrayImpresoras.img64;
+			xImpresoraPrint[0].papel_size = _xArrayImpresoras.papel_size;
+			if (_xArrayImpresoras.img64 === "0") { xImpresoraPrint[0].logo64 = '';}
+			
+			xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print_tpc){
+				callback(rpt_print_tpc);				
+			});
+
+		});
+	}
+
+	/// ------------------->
+
+
 	//evalua impresoras y secciones, despachos o areas, la seccion en que impresora se imprime
 	// console.log('xArrayCuerpo =========================>', xArrayCuerpo);
 	for (var z = 0; z < xArrayImpresoras.length; z++) {
@@ -413,7 +490,10 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 			if(xArrayCuerpo[i]==null){continue;}
 			$.map(xArrayCuerpo[i], function(xn_p, z) {
 				const isPedidoDelivery = xArrayCuerpo[i].des.toLowerCase() === 'delivery'; // 110322 // para imprimir el pedido completo
-				if (typeof xn_p=="object"){
+
+				// si tipo consumo tiene impresora asignada
+				if (typeof xn_p=="object"){	
+					if ( xArrayCuerpo[i].flag_add_tpc ) return; // si ya imprimio en tpc asignada				
 					if (xn_p.imprimir_comanda==='0') return;// si no se muestra en comanda
 					if(xIdPrint==xn_p.idimpresora){
 						if(xArrayBodyPrint[i]===undefined){
@@ -447,7 +527,6 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		if(xArrayBodyPrint.length==0){continue}
 		xcuentaSeccionesImpresas++;
 		xArmarSubtotalesArray(xArrayBodyPrint,xImpresoraPrint)
-		//xImpresoraPrint[0].ip_print='192.168.1.80';
 		xImpresoraPrint[0].ip_print=xArrayImpresoras[z].ip;
 		xImpresoraPrint[0].var_margen_iz=xArrayImpresoras[z].var_margen_iz;
 		xImpresoraPrint[0].var_size_font=xArrayImpresoras[z].var_size_font;

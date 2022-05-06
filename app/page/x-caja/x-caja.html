@@ -270,7 +270,7 @@ var xThisCaja
 , nom_supervisor=''
 , id_supervisor = 0
 , xlo_idorg
-, xlo_idsede
+, xlo_idsede, isPrintCierreCaja = false
 , xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false, idUsAdminPermiso = 0;
 function xIniCaja(){
 
@@ -455,10 +455,10 @@ function xGetDataCierre(idBitacora) {
 		$("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
 		// xUpdateCerrarCession(function () {
 			xPermisoSupervisor = 0;
+			xIniArraysPrint();
 			
 			// xOpenPage(22)
-
-			if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return; }
+			if ( !isPrintCierreCaja ) { xVerificaSiFacturacionE();}
 			xImprimirCierre(xArrayEncabezadoCierre, xArrayCierrePrint);
 		// });
 	});
@@ -649,6 +649,7 @@ function xIniArraysPrint(){
 		xRpt = '<p class="xColorRow_Rojo">No se selecciono ninguna impresora para este documento</p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';
 		$('#xTituloRpt2').html(xRpt);
 		// alert('No se selecciono ninguna impresora para este documento');
+		isPrintCierreCaja = false;
 		return false;
 	}
 	// xArrayEncabezadoCierre.push({'ip_print':xIpPrintDoc, 'logo':xDtPrint[0].logo,'detalle_cierre':xdetall_cierre,'titulo':'CIERRE DE CAJA','var_margen_iz':xArrayImpresoras[xidPrint].var_margen_iz, 'var_size_font':xArrayImpresoras[xidPrint].var_size_font})
@@ -659,7 +660,9 @@ function xIniArraysPrint(){
 		'titulo': 'CIERRE DE CAJA',
 		'var_margen_iz': impresora[0].var_margen_iz,
 		'var_size_font': impresora[0].var_size_font,
-		'papel_size': impresora[0].papel_size })
+		'papel_size': impresora[0].papel_size });
+
+	isPrintCierreCaja = true;
 	return true;
 }
 
@@ -735,6 +738,7 @@ function xUpdateCerrarCession(responde){
 function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 
 	//si existe impresora local // imprime todos los otros documentos en esta impresora local.
+	if ( !isPrintCierreCaja ) { return; }
 	var xPrintLocal=window.localStorage.getItem("::app3_woIpPrintLo");
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
 		xPrintLocal=$.parseJSON(xPrintLocal);

@@ -18,11 +18,20 @@
     var xThisComMetaVenta, compLastColorTestMeta = '';
     setTimeout(() => {        
         try {
-            socketCP.isRegistroVenta$.subscribe(res => {
-                xIniCompMetaVenta();
-            });
+            if ( socketCP ) {
+                socketCP.isRegistroVenta$.subscribe(res => {
+                    xIniCompMetaVenta();
+                });
+            }
         } catch (error) {
-            console.log('error ', error);
+            setTimeout(() => {
+                    socketCP.isRegistroVenta$.subscribe(res => {
+                        xIniCompMetaVenta();
+                    });
+                }, 2000);
+            
+            console.log('socketCP 1s');
+
         }
     }, 4000);
 
