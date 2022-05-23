@@ -1,8 +1,9 @@
 <!--link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html" !-->
+
 <dom-module id="x-caja">
 	<!-- <script rel="preload" type="text/javascript" src="../../../js/socket.io.js"></script> -->
-
+	<link rel="import" href="../../x-componentes/x-comp-printer-local-select/x-comp-printer-local-select.html">
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 	<template>
 
@@ -66,70 +67,75 @@
       		<br><br>
       		<iron-pages selected="{{selected}}">
 	      		<div id="ingreso_caja">
-					<br>
-					<form id="form_ingreso" onsubmit="return false">
-						<select class="xTextRow2 xfont18 xCursor" id="selecie" style="width:200px">
-							<option value="1">INGRESO A CAJA</option>
-							<option value="2">SALIDA DE CAJA</option>
-						</select><br><br>
-						<p>Detalle el motivo del movimiento de efectivo.</p>
-						<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" placeholder="Motivo" id="motivo" name="motivo" required>
-						<br><br>
-						<input type="number" class="xMiInput" placeholder="Monto" style="width:200px" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="monto" name="monto" required>
-						<div class="xInvisible">
-							<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
-							<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
-							<input type="text" id="idusuario" name="idusuario" value="[[xt_idus]]">
-							<input type="text" id="fecha" name="fecha">
-							<input type="text" id="tipo" name="tipo">
-						</div>
-					</form><br><br>
-					<paper-button tabindex="0" raised class="xverde" onclick="xGuardarIngreso();"><iron-icon icon="save"></iron-icon>Listo Guardar</paper-button>
-					<br><br><br>
-					<h4>Resumen de movimientos que aun no tienen cierre</h4>
-					<div class="xLinea2"></div>
-					<table id="tb_resumen_ie" width="65%" class="xtable">
-						<thead>
-							<th width="20px">#</th>
-							<th align="left">Fecha</th>
-							<th align="left">Tipo</th>
-							<th align="left">Motivo</th>
-							<th align="right">Importe</th>
-						</thead>
-					</table>
-
-					<div hidden$="[[ !isShowListaAdelantoOrden ]]">
-						<br><br>
+					<div class="xDivImpresora">
+						<x-comp-printer-local-select></x-comp-printer-local-select>
+					</div>
+					<div>
+						<br>
+						<form id="form_ingreso" onsubmit="return false">
+							<select class="xTextRow2 xfont18 xCursor" id="selecie" style="width:200px">
+								<option value="1">INGRESO A CAJA</option>
+								<option value="2">SALIDA DE CAJA</option>
+							</select><br><br>
+							<p>Detalle el motivo del movimiento de efectivo.</p>
+							<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" placeholder="Motivo" id="motivo" name="motivo" required>
+							<br><br>
+							<input type="number" class="xMiInput" placeholder="Monto" style="width:200px" pattern="[0-9]+([\.,][0-9]+)?" step="any" id="monto" name="monto" required>
+							<div class="xInvisible">
+								<input type="text" id="idsede" name="idsede" value="[[xt_idsede]]">
+								<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
+								<input type="text" id="idusuario" name="idusuario" value="[[xt_idus]]">
+								<input type="text" id="fecha" name="fecha">
+								<input type="text" id="tipo" name="tipo">
+							</div>
+						</form><br><br>
+						<paper-button tabindex="0" raised class="xverde" onclick="xGuardarIngreso();"><iron-icon icon="save"></iron-icon>Listo Guardar</paper-button>
+						<br><br><br>
+						<h4>Resumen de movimientos que aun no tienen cierre</h4>
 						<div class="xLinea2"></div>
-						<br>
-						<h3>Adelantos de ordernes de pedido</h3>
-						<br>
-						<table>
+						<table id="tb_resumen_ie" width="65%" class="xtable">
 							<thead>
-								<th>Fecha</th>
-								<th>Usuario</th>
-								<th># Orden</th>
-								<th>Cliente</th>
-								<th>Detalle</th>
-								<th>Importe</th>
-								<th>.</th>
+								<th width="20px">#</th>
+								<th align="left">Fecha</th>
+								<th align="left">Tipo</th>
+								<th align="left">Motivo</th>
+								<th align="right">Importe</th>
 							</thead>
-							<tbody>
-								<template is="dom-repeat" items="{{listAdelantoOrden}}" as="item">
-									<tr>
-										<td>{{ item.fecha_hora }}</td>
-										<td>{{ item.usuario }}</td>
-										<td>{{ item.numero }}</td>
-										<td>{{ item.cliente_nom }}</td>
-										<td>{{ item.concepto }}</td>
-										<td>{{ item.importe }}</td>
-										<td>
-											<button class="btn btn-sm btn-success" data-id="[[index]]" onclick="recibirAdelanto(this)">Recibir</button>
-										</td>
-									</tr>
-								</template>
-							</tbody>
 						</table>
+
+						<div hidden$="[[ !isShowListaAdelantoOrden ]]">
+							<br><br>
+							<div class="xLinea2"></div>
+							<br>
+							<h3>Adelantos de ordernes de pedido</h3>
+							<br>
+							<table>
+								<thead>
+									<th>Fecha</th>
+									<th>Usuario</th>
+									<th># Orden</th>
+									<th>Cliente</th>
+									<th>Detalle</th>
+									<th>Importe</th>
+									<th>.</th>
+								</thead>
+								<tbody>
+									<template is="dom-repeat" items="{{listAdelantoOrden}}" as="item">
+										<tr>
+											<td>{{ item.fecha_hora }}</td>
+											<td>{{ item.usuario }}</td>
+											<td>{{ item.numero }}</td>
+											<td>{{ item.cliente_nom }}</td>
+											<td>{{ item.concepto }}</td>
+											<td>{{ item.importe }}</td>
+											<td>
+												<button class="btn btn-sm btn-success" data-id="[[index]]" onclick="recibirAdelanto(this)">Recibir</button>
+											</td>
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</div>
 
@@ -246,6 +252,11 @@
 	paper-button[raised].xnegro {	background: #424242;color: #fff;}
 	.xEpaciarInputCierre input{margin-bottom: 20px; font-size: 18px;}
 	.xTxtRojo{color:#F00;}
+
+	.xDivImpresora {
+		float: right;
+	}
+
 </style>
 
 <script type="text/javascript" src="./cocinar.resumen.boletas.js"></script>

@@ -68,6 +68,7 @@ function handlerFnMiPedido(e) {
 		, xidDescontar=xRowidporcion
 		, xPrecioTotal
 		, xcant_max = parseInt(xStockActual)
+		, xidcategoria = itemPedidos_objItemSelected.idcategoria
 		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
 		, xSotockSocket = xcant_max
 		, xSotockSocketRun = xcant_max
@@ -151,7 +152,7 @@ function handlerFnMiPedido(e) {
 
 		xArrayPedidoObj[xidTipoConsumo]["cantidad"]=xCantSeccion;
 		xArrayPedidoObj[xidTipoConsumo][xidItem]={
-			'idcategoria':xidCategoria, 
+			'idcategoria':xidcategoria, 
 			'idseccion':xIdSeccionItem, 
 			'idseccion_index':xIdSeccionItem_index, 
 			'des_seccion':xDesSeccion, 
@@ -166,6 +167,7 @@ function handlerFnMiPedido(e) {
 			'idimpresora':xRowidimpresora, 
 			'idimpresora_otro':xRowidimpresora_otro, 
 			'idprocede':xRowidporcion, 'procede':xRowProcede, 'procede_index':xRowProcede_index,'imprimir_comanda':ximprmir_comanda, 'iddescontar':xidDescontar, 'cant_descontar':xcant_descontar, 'idalmacen_items':xidalmacen_items, 'visible':0
+			,'pwa': isSocket ? 1 : 0, isporcion: itemPedidos_objItemSelected.isporcion
 			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
 			,'detalle': itemPedidos_objItemSelected.detalle
 			,'subitems': itemPedidos_objItemSelected.subitems
@@ -214,7 +216,9 @@ function handlerFnMiPedido(e) {
 					subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
 					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
 					sumar:  xsigno === '+' ? true : false
-				}			
+				}		
+				
+				// console.log('itemNotifySocket', itemNotifySocket)
 				
 				_cpSocketEmitItemModificado(itemNotifySocket);
 	
@@ -225,7 +229,7 @@ function handlerFnMiPedido(e) {
 			}
 		}
 
-		// xcantRunSocket = true;
+		xcantRunSocket = true;
 
 		
 		// si esta en modo vista pantalla tablet, update x-mipedido
@@ -414,7 +418,16 @@ async function handlerFnMiPedidoControl(e) {
 		
 		var mySubItemView = checkMySubitemView(xli_tipoconsumo, xli_tipoconsumo);
 
-		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':xidsecion, 'idseccion_index':xidsecion_index,'sec_orden': sec_orden, 'des_seccion':xdes_seccion, 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
+		xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={
+			'idcategoria':xidcategoria,
+			'idseccion':xidsecion,
+			'idseccion_index':xidsecion_index,
+			'sec_orden': sec_orden,
+			'des_seccion':xdes_seccion,
+			'iditem':xli_iditem,
+			'idtipo_consumo':xli_tipoconsumo,
+			'stock_actual': xStockActual,
+			'cantidad':xcant,'precio':xli_precio, 'des':xli_des,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,
 			'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 
 			'iditem2': xidItem2, 
@@ -460,6 +473,7 @@ async function handlerFnMiPedidoControl(e) {
 					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
 					sumar:  xsigno === '+' ? true : false
 				}
+				// console.log('itemNotifySocket list', itemNotifySocket)
 				
 				_cpSocketEmitItemModificado(itemNotifySocket);
 
@@ -844,7 +858,7 @@ function xEstructuraExpress(orden, isDelivery, isComercioAppDeliveryMapa) {
 			if ( isSeccionAdd ) {
 				arr_tipoc.secciones = arr_secciones;
 				arr_tpc_master.tipoconsumo.push(arr_tipoc);
-				console.log('arr_tpc_master', arr_tpc_master);
+				// console.log('arr_tpc_master', arr_tpc_master);
 			}
 
 		}
@@ -1321,7 +1335,7 @@ function xCargarCategoriaActual(responde){
 //para control_pedido cada que lo solicite
 // xidCategoria  obligatorio en venta rapida y control de pedidos 
 function xGeneralLoadItems(xidCategoria, x_rpt){
-	console.log('pasa cargando log.php205');
+	// console.log('pasa cargando log.php205');
 	// borrar localstorage subitems al volver cargar la carta
 	localStorage.removeItem('::app3_listSubItem');
 

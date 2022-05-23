@@ -286,6 +286,7 @@ function guardarNewItem() {
 function _getCategoria($event) {
 	this.cnf_CategoriaSel = $event;
 	this.idCategoriaSel = $event.idcategoria;
+	console.log('_getCategoria');
 	xLoadAllItem();
 }
 
@@ -294,7 +295,8 @@ function config_valoresInicialesComponenteCategoria() {
 	this.cnf_CategoriaSel = compFindCategoria.__data__.categorias;
 	this.idCategoriaSel = cnf_CategoriaSel.idcategoria;
 
-	xLoadAllItem();
+	// console.log('config_valoresInicialesComponenteCategoria');
+	// xLoadAllItem();
 }
 
 function xLogRun_CoutPedido(){
@@ -303,7 +305,10 @@ function xLogRun_CoutPedido(){
 	if(typeof(EventSource) !== "undefined") {
 	    source = new EventSource("../../bdphp/log_run.php?op=1");
 	    source.onmessage = function(event) {
-	        if(event.data!==xValCountPedidos){xValCountPedidos=event.data;xActualizarListaPed();}
+	        if(event.data!==xValCountPedidos){
+				console.log('xLogRun_CoutPedido');
+				xValCountPedidos=event.data;
+				xActualizarListaPed();}
 	    };
 	}
 }
@@ -425,6 +430,7 @@ function xLoadAllItem(){
 
 		$table.isotope({ sortBy: 'stock' });
 
+		console.log('xLoadAllItem');
 		xLogRun_CoutPedido();
 		xActualizarListaPed();
 
@@ -434,6 +440,7 @@ function xLoadAllItem(){
 }
 
 function _monitoreoStockUpdateCarta(res) {
+	console.log('_monitoreoStockUpdateCarta');
 	xLoadAllItem();
 }
 
@@ -525,7 +532,6 @@ function xModRow(obj, index ,tipo){
 	xActualizar=1;
 }
 function xModBlur(obj,tipo){	
-	
 	var xvalObj=$(obj).val();
 	if(xvalObj==xValCantAnterior){
 	$(obj).parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
@@ -544,6 +550,11 @@ function xModBlur(obj,tipo){
 		$(obj).parent().html('<paper-spinner id="aax" class="paper-spinner-a" active></paper-spinner>').trigger('create');
 		$("#aax").parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
 		$("#aax").remove();
+
+		// console.log('rpt', xProcede)
+		if ( xProcede == 2 ) { // porcion
+			xActualizarListaPed();
+		}
 		// $table.isotope( 'reloadItems' ).isotope();
 		return;
 	}
@@ -551,13 +562,15 @@ function xModBlur(obj,tipo){
 	$(obj).parent().html('<paper-spinner id="aax" class="paper-spinner-a" active></paper-spinner>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1901', data:{p:xProcede,idcl:xidcarta_lista,idi:xiditem,c:xvalObj}})
 	.done( function (dtRpt) {
-		
 		$("#aax").parent().html('<strong>'+xCeroIzq(xvalObj,2)+'</strong>');
 		$("#aax").remove();
 	});
 	xActualizar=0;
 }
 function xActualizarListaPed(){
+
+	console.log('xActualizarListaPed')
+
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=19', data: { 'idcategoria': this.idCategoriaSel}})
 	.done( function (DtItemP) {
 		var xDtItemP=$.parseJSON(DtItemP),

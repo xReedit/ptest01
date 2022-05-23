@@ -205,6 +205,9 @@ async function xOpenPage(xop, parametro){
 	xop = parseInt(xop);
 	if(parametro==null){parametro='';}
 	var xruta='';
+	
+	// runLastOpRouterReload();
+
 	switch(xop){
 		case 1:	xruta='/home';break;
 		case 2:	xruta='/elaborar_carta';break;
@@ -250,11 +253,12 @@ async function xOpenPage(xop, parametro){
 		case 16:
 			//var myWindow = window.open('#/venta_rapida', "Venta rapida");return;
 			if ( isSynOsWinOrMac() ) {
+				// setLastOpRouterReload(xop);
 				window.open('#/venta_rapida', "Pundo de Venta");return;
 			}else{
 				xruta='/venta_rapida';
 			}
-			console.log(window.innerWidth);
+			// console.log(window.innerWidth);
 			break;
 		case 17:xruta='/producto_porcion';break;
 		case 18:xruta='/ie_almacen';break;

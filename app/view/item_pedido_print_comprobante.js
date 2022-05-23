@@ -396,6 +396,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	xArrayEnca.is_print_subtotales = xImpresoraPrint[0].isprint_subtotales_comanda;
 	// colocar en encabezado si va a imprimir la copia en formato corto
 	xArrayEnca.isprint_copy_short = xImpresoraPrint[0].isprint_copy_short;	
+	xArrayEnca.isprint_all_short = xImpresoraPrint[0].isprint_all_short;
 	
 	xArrayCuerpo = xArrayCuerpo.filter(x => x);
 	//si existe impresora local // saca una copia de todo el pedido
@@ -438,17 +439,21 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 			xArrayBodyPrint=[];
 			for (var i = 0; i < xArrayCuerpo.length; i++) {
 				if(xArrayCuerpo[i]==null){continue;}
-				$.map(xArrayCuerpo[i], function(xn_p, z) {
-					if (typeof xn_p=="object"){
-						if(_tpcPrint==xn_p.idtipo_consumo){					
-							if(xArrayBodyPrint[i]===undefined) {
-								xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
+				if(parseInt(_tpcPrint) == parseInt(xArrayCuerpo[i].id)) {															
+					$.map(xArrayCuerpo[i], function(xn_p, z) {
+						if (typeof xn_p=="object"){
+							// if(_tpcPrint==xn_p.idtipo_consumo){					
+								if(xArrayBodyPrint[i]===undefined) {
+									xArrayBodyPrint[i]={'des':xArrayCuerpo[i].des, 'id':xArrayCuerpo[i].id, 'titlo':xArrayCuerpo[i].titulo};
+								}
+								
 								xArrayBodyPrint[i][xn_p.iditem]=xn_p;
 								xArrayCuerpo[i].flag_add_tpc = true; // marca que ya se agrego en esta impresora
-							} 
+								
+							// }
 						}
-					}
-				});
+					});
+				}
 			}
 
 			if(xArrayBodyPrint.length==0){return; }

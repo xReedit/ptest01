@@ -1,6 +1,10 @@
-<!-- <link rel="import" href="../../web_components/polymer/polymer.html"> -->
+<link rel="import" href="../x-comp-date-picker/x-comp-date-picker.html">
 <dom-module id="x-comp-option-group">
 	<template is="dom">
+
+        <!-- comp date picker -->
+        <x-comp-date-picker id="compDatePicker"></x-comp-date-picker>
+        <!-- comp date picker -->
 
         <div class="options-btn-content noselect">
             <template is="dom-repeat" items="{{listop}}" as="item">
@@ -47,15 +51,22 @@
 </style>
 <script>
 
-    var xThisComGroup, _listOp;
+    var xThisComGroup, _listOp, _compDatePicker;
 
     function xIniCompOption() {
+
+        _compDatePicker = document.getElementById('compDatePicker');
 
         _listOp = xThisComGroup.listop;
 
         xThisComGroup.optionselected = xThisComGroup.optionselected ? xThisComGroup.optionselected : 0;
 
         _listOp[xThisComGroup.optionselected].activo = true;
+
+        _compDatePicker.addEventListener('getDateSelected', (e) => {
+            xThisComGroup.fire('getDateSelectedOption', e.detail);
+        });
+
 
     }
 
@@ -69,7 +80,19 @@
 
         xThisComGroup.listop = JSON.parse(JSON.stringify(_listOp));    
 
-        xThisComGroup.getoptionGroupSelected();
+        
+        if ( _listOp[idIndex].openInputDate ) {
+            _compDatePicker.xopen(_listOp[idIndex].optionCompDate);
+        } else {
+            var _rpt;
+            _rpt = {
+                    option: idIndex == 0 ? 'now' : 'week'                                        
+                }
+
+            // xThisComGroup.getoptionGroupSelected();
+            xThisComGroup.fire('getDateSelectedOption', _rpt);
+            // console.log('xThisComGroup.optionselected', xThisComGroup.optionselected);
+        }
     }
 
     Polymer({

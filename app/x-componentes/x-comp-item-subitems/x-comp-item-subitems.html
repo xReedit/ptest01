@@ -238,6 +238,10 @@
     var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario, keyStorageListSubItem = '::app3_listSubItem';    
 
     async function xOpenDlgItemVR_comp(tpc, id) {
+
+        if ( !itemPedidos_objItemSelected ) {
+            itemPedidos_objItemSelected = xGeneralDataCarta.filter(x => x.idcarta_lista == id)[0];
+        }
         
         const _idItem = itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem;
 
@@ -245,10 +249,10 @@
 
         // itemPedidos_objItemSelected = xThisComSubItem.item_select
         if ( tpc ) {
-            itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
+            // itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
+            // 220522 cambiamos para socket
+            itemPedidos_objItemSelected = xGeneralDataCarta.filter(x => x.iditem == _idItem)[0];
         }
-
-        // console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);
 
         itemPedidos_objItemSelected.des = itemPedidos_objItemSelected.des ? itemPedidos_objItemSelected.des : itemPedidos_objItemSelected.des_item;
         xThisComSubItem.desProducto = itemPedidos_objItemSelected.des;
@@ -499,14 +503,26 @@
     //     var _subitem = xThisComSubItem.listSubItems[i];        
     //   });
 
+        _indicaciones_subitem = '';
+
         itemPedidos_objItemSelected.subitems_selected = [];
         xThisComSubItem.listContentSub.map(t => t.opciones.filter((x) => {
             if (x.selected) {
+                _indicaciones_subitem = x.des +', '+ _indicaciones_subitem;
                 listChecks.push(x);
             }
         }));
         
         itemPedidos_objItemSelected.subitems_selected =  listChecks;
+        // itemPedidos_objItemSelected.indicaciones = 'EEEEEEEE'
+        $("#txt_referencia").val(_indicaciones_subitem);
+
+        // console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);
+        xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].indicaciones = _indicaciones_subitem;
+        // xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].subitems_view = listChecks;
+        window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
+        // xVerMipedidoVR();
+
 
         // xThisComSubItem.listContentSub = [];                
         // xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
@@ -637,44 +653,20 @@
       xCadenaItem = String(
         xCadenaItem +
           '<div class="xmenu_item_2 xitem_seleccionado_pedido" ' +
-          'data-id="' +
-          xdtItem.idcarta_lista +
-          '" ' +
-          'data-item="' +
-          xdtItem.iditem +
-          '" ' +
+          'data-id="' + xdtItem.idcarta_lista +'" ' +
+          'data-item="' + xdtItem.iditem + '" ' +
           'data-idseccion="' + xdtItem.idseccion +'" ' +
           'data-desseccion="' + xdtItem.des_seccion +'" ' +
-          'data-idseccionindex="' +
-          _idseccionIndex +
-          '" ' +
-          'data-idbus="' +
-          xdtItem.idseccion +
-          '" ' +
-          'data-idimpresora="' +
-          xdtItem.idimpresora +
-          '" ' +
-          'data-idprocede="' +
-          xdtItem.idprocede +
-          '" ' +
-          'data-procede="' +
-          xdtItem.procede +
-          '" ' +
-          'data-procedeindex="' +
-          xdtItem.procede_index +
-          '" ' +
-          'data-imprimircomanda="' +
-          xdtItem.imprimir_comanda +
-          '" ' +
-          'data-iddescontar="' +
-          xdtItem.idprocede +
-          '" ' +
-          'data-cant_descontar="' +
-          xdtItem.cant_descontar +
-          '" ' +
-          'data-idalmacen_items="' +
-          xdtItem.idalmacen_items +
-          '">' +
+          'data-idseccionindex="' + _idseccionIndex + '" ' +
+          'data-idbus="' + xdtItem.idseccion +'" ' +
+          'data-idimpresora="' + xdtItem.idimpresora + '" ' +
+          'data-idprocede="' + xdtItem.idprocede + '" ' +
+          'data-procede="' + xdtItem.procede + '" ' +
+          'data-procedeindex="' + xdtItem.procede_index + '" ' +
+          'data-imprimircomanda="' + xdtItem.imprimir_comanda + '" ' +
+          'data-iddescontar="' + xdtItem.idprocede + '" ' +
+          'data-cant_descontar="' + xdtItem.cant_descontar + '" ' +
+          'data-idalmacen_items="' + xdtItem.idalmacen_items + '">' +
           xCadenaItem_encabezado +
           xCadenaItem_Detalle
       );

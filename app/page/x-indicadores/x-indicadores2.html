@@ -28,6 +28,8 @@
 			<br><br>
 		</paper-dialog>
 
+        
+
 
 
         <!-- lista de pedidos anulados -->
@@ -83,13 +85,14 @@
                         </div>
                     </div>
 
-                    <div>
+                    <!-- <div>
                         <p class="fs-11 text-secondary">Fecha</p>
                         <input type="date" class="xMiInput" name="" id="date_fecha"  onchange="changeFecha(event);">
-                    </div>
+                    </div> -->
                     <div>                        
                         <p class="fs-11 text-secondary">Estadisticas</p>
-                        <x-comp-option-group listop="{{listOpciones}}" onclick="changeOption(this)"></x-comp-option-group>                        
+                        <!-- <x-comp-option-group listop="{{listOpciones}}" onclick="changeOption(this)"></x-comp-option-group>                         -->
+                        <x-comp-option-group listop="{{listOpciones}}" id="compOptionPeriodo"></x-comp-option-group>                        
                     </div>
                 </div>
                 
@@ -603,13 +606,17 @@
 <script>
     var xThisI2, _listOp, dataFiltro, dataMetdataVentasDia, crosVenta, metaDiaria, _dtVentasHoy, _dtPedidoTotales, _listTipoConsumo = []
     , rangoFecha = 'fecha', configParamsChart = {}, ctxChar, ctxCharConsumo, myBarChartPrincipal, pageIndicadoresCaja, pageIndicadoresTopProducto, pageIndicadoresTopColaboradores, pageIndicadoresVersus
-    , data_pagination = {}, p_rows=0, p_desde=0;
+    , data_pagination = {}, p_rows=0, p_desde=0, compOptionPeriodo;
     function initIndicadores2() {
 
         xThisI2.sedeCalificacion = xm_log_get('datos_org_all_sede')[0].calificacion;
 
-        _listOp = [{descripcion: 'Hoy', activo: true, value: 0},
-        {descripcion: 'Semana', activo: false, value: 1}, {descripcion: 'Mes', activo: false, value: 2}]
+        _listOp = [
+            {descripcion: 'Hoy', activo: true, value: 0},
+            {descripcion: 'Semana', activo: false, value: 1}, 
+            {descripcion: 'Mes', activo: false, value: 2, openInputDate: true, optionCompDate: 1},
+            {descripcion: 'Rango', activo: false, value: 2, openInputDate: true, optionCompDate: 2}
+        ]
 
         xThisI2.listOpciones = _listOp;
 
@@ -637,6 +644,12 @@
 
         ctxChar = document.getElementById('myChart').getContext('2d');        
         ctxCharConsumo = document.getElementById('myChartCanalConsumo').getContext('2d');	
+
+        compOptionPeriodo = document.getElementById('compOptionPeriodo')
+        compOptionPeriodo.addEventListener('getDateSelectedOption', (e) => {
+            console.log('value date', e.detail);
+            changeOption(e.detail);
+        })
         
         
         $("#tab_cnf").on('iron-select',function(){
@@ -657,39 +670,82 @@
         });
     }
 
-    function changeOption(e) {
+    function changeOption(itemDate) {
         // console.log('e', e.optionselected);
-        date_fecha.disabled = false;
-        switch (e.optionselected) {
-            case 0:
+
+        // date_fecha.disabled = false;
+        switch (itemDate.option) {
+            case 'now':
+                itemDate.optionselected = 0;
                 rangoFecha = 'fecha';
                 xThisI2.ragoSubTitulo = 'Dia ';
                 xThisI2.ragoTitulo = 'Hoy';
                 break;        
-            case 1:
+            case 'week':
+                itemDate.optionselected = 1;
                 rangoFecha = 'semana';
                 xThisI2.ragoSubTitulo = 'Semana ';
                 xThisI2.ragoTitulo = ' Semana Actual';
-                date_fecha.val
-                date_fecha.disabled = true;
+                // date_fecha.val
+                // date_fecha.disabled = true;
                 dataFiltro.fecha = 0;
                 break;
-            case 2:
+            case 'month':
+                const nomMesTitle = xDesMes(itemDate.num_mm - 1) +' ' + itemDate.num_yy;
                 rangoFecha = 'mes';
                 xThisI2.ragoSubTitulo = 'Mes ';
-                xThisI2.ragoTitulo = ' Mes Actual';
+                xThisI2.ragoTitulo = nomMesTitle;
+                break;
+            case 'range':
+                const nomRangeTitle = ' de ' + xDevolverFechaFormatInputDate(itemDate.value1) + ' al ' + xDevolverFechaFormatInputDate(itemDate.value2);
+                rangoFecha = 'rango';
+                xThisI2.ragoSubTitulo = ' Rango ';
+                xThisI2.ragoTitulo = nomRangeTitle;
                 break;
         }
 
-        dataFiltro.intervalo = e.optionselected;
+        dataFiltro.intervalo = itemDate.optionselected;
         dataFiltro.rango = rangoFecha;
+        dataFiltro.option = itemDate;
         xThisI2.rangoSelected = dataFiltro;      
         
-        if ( xThisI2.showVersus ) {
-            pageIndicadoresVersus.ragoTitulo = e.optionselected === 2 ? 'Ultimos Meses' :  xThisI2.ragoTitulo;
-        }
+        // if ( xThisI2.showVersus ) {
+        //     pageIndicadoresVersus.ragoTitulo = e.optionselected === 2 ? 'Ultimos Meses' :  xThisI2.ragoTitulo;
+        // }
 
         updatePageTab();
+
+        // date_fecha.disabled = false;
+        // switch (e.optionselected) {
+        //     case 0:
+        //         rangoFecha = 'fecha';
+        //         xThisI2.ragoSubTitulo = 'Dia ';
+        //         xThisI2.ragoTitulo = 'Hoy';
+        //         break;        
+        //     case 1:
+        //         rangoFecha = 'semana';
+        //         xThisI2.ragoSubTitulo = 'Semana ';
+        //         xThisI2.ragoTitulo = ' Semana Actual';
+        //         date_fecha.val
+        //         date_fecha.disabled = true;
+        //         dataFiltro.fecha = 0;
+        //         break;
+        //     case 2:
+        //         rangoFecha = 'mes';
+        //         xThisI2.ragoSubTitulo = 'Mes ';
+        //         xThisI2.ragoTitulo = ' Mes Actual';
+        //         break;
+        // }
+
+        // dataFiltro.intervalo = e.optionselected;
+        // dataFiltro.rango = rangoFecha;
+        // xThisI2.rangoSelected = dataFiltro;      
+        
+        // if ( xThisI2.showVersus ) {
+        //     pageIndicadoresVersus.ragoTitulo = e.optionselected === 2 ? 'Ultimos Meses' :  xThisI2.ragoTitulo;
+        // }
+
+        // updatePageTab();
     }
 
     function updatePageTab() {
@@ -755,13 +811,14 @@
 
     function xloadDataVentas() {
         xPopupLoad.xopen();
+        console.log('dataFiltro', dataFiltro);
         $.ajax({
 				type: 'POST',
 				url: '../../bdphp/log_005.php?op=40',
 				data: dataFiltro
 			})
 			.done(function (res) {				
-                // console.log(res);
+                
                 dataMetdataVentasDia = JSON.parse(res).datos;		
                 crosVenta = crossfilter(dataMetdataVentasDia);
                 
@@ -781,6 +838,7 @@
 			})
 			.done(function (res) {				
                 // console.log(res);
+                
                 const _data = JSON.parse(res).datos;		
                 // crosVenta = crossfilter(_dta);
                 
@@ -793,6 +851,7 @@
                     data: dataFiltro
                 })
                 .done(function (res) {	
+                    
                     const _data = JSON.parse(res).datos;	
                     tablaInfoPedidosAnulados(_data);
 
@@ -809,6 +868,7 @@
 			})
 			.done(function (res) {				
                 // console.log(res);
+                // console.log(JSON.parse(res));
                 const _data = JSON.parse(res).datos;		
                 xThisI2.listComprobantes = _data;                
 			});

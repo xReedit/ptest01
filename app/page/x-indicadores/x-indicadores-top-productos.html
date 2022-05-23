@@ -122,6 +122,7 @@
 				data: xThisI2TopProductos.rango
 			})
 			.done(function (res) {
+                
                 dataIETopProductos = JSON.parse(res).datos;  
                 crosTopProductos = crossfilter(dataIETopProductos);                              
 

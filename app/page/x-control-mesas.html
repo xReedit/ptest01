@@ -512,7 +512,7 @@ var xThisCM,
 var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
 	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false,
 	idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false,
-	countIntiCP = 0;
+	countIntiCP = 0, isPassAddRowItemList = false;
 
 function xIniControlMesa(){
 
@@ -4083,7 +4083,10 @@ function xCallRepartidorPapayaExec() {
 function xRefreshListaPedidosItems(obj) {	
 
 	
-
+	
+	
+	if ( isPassAddRowItemList ) { return;} // para evitar que se agregue 2 veces // caso carlin
+	isPassAddRowItemList = true;
 
 		const totalPedido = xarr_subtotales[xarr_subtotales.length - 1].importe;
 		const _rowItemPedido = {
@@ -4105,6 +4108,10 @@ function xRefreshListaPedidosItems(obj) {
 
 		xAddRowInsertListItems(obj);
 		xPintarListPedido();		
+
+	setTimeout(() => {
+		isPassAddRowItemList = false;
+	}, 1000);
 }
 
 
@@ -4120,6 +4127,7 @@ function xAddRowInsertListItems(obj) {
 		const _numMesa = lastDataPedidoInsert ? 0 : xp_sel_nummesa;
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
 		.done( function (dtPbdet) {
+			console.log('xAddRowInsertListItems');
 			var xdtPbdet=$.parseJSON(dtPbdet);
 
 			// si se agrego un nuevo pedido solo trae ese pedido

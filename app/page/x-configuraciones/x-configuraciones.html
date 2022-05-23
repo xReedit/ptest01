@@ -976,7 +976,7 @@ function xIniConf(){
 		return false;
 	})
 	
-	$(document).on('change',".xsel_impr_tpc", function(e){		
+	$(document).on('change',".xsel_tpc_print", function(e){		
 		var xid_tpc=$(this).attr('data-id');
 		var xid_tpc_print=this.value;
 		xGuardarCambiosTPCPrint(xid_tpc,xid_tpc_print);
@@ -1414,26 +1414,33 @@ function xLoadSecciones(){
 }
 
 function xLoadCanalConsumo_impresora() {
-	const listTPC = xm_log_get('estructura_pedido');
-	xThisConfig.listCanalConsumo = listTPC;
-	var xCadena_sec='';
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=40902'})
+	.done( function (dtRes) {
+		const listTPC = JSON.parse(dtRes).datos;
+	
+		// const listTPC = xm_log_get('estructura_pedido');
+		xThisConfig.listCanalConsumo = listTPC;
+		var xCadena_sec='';
 
-	console.log('listTPC', xThisConfig.listCanalConsumo);
-	for (var i = 0; i < listTPC.length; i++) {
-			$("#sel_impr_tpc option:selected").attr('selected', false);
-			$("#sel_impr_tpc  option[value="+listTPC[i].idimpresora+"]").attr('selected','selected')
-			xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+listTPC[i].idseccion+'">'+
-				'<td>'+
-					listTPC[i].descripcion+
-				'</td>'+
-				'<td><select class="xsel_impr_tpc" data-id="'+listTPC[i].idtipo_consumo+'" option="'+listTPC[i].idimpresora+'">'+$("#sel_impr_tpc")[0].innerHTML+'</select></td>'+
-				'</tr>')
-		};
+		console.log('listTPC', xThisConfig.listCanalConsumo);
+		for (var i = 0; i < listTPC.length; i++) {
+				// $("#sel_impr_tpc option:selected").attr('selected', false);
+				$("#sel_impr_tpc  option[value="+listTPC[i].idimpresora+"]").attr('selected','selected')
+				xCadena_sec=String(xCadena_sec+'<tr class="row" data-t="seccion" data-id="'+listTPC[i].idseccion+'">'+
+					'<td>'+
+						listTPC[i].descripcion+
+					'</td>'+
+					'<td><select class="xsel_tpc_print" data-id="'+listTPC[i].idtipo_consumo+'" option="'+listTPC[i].idimpresora+'">'+sel_impr_tpc.innerHTML+'</select></td>'+
+					'</tr>');
+				
+				$("#sel_impr_tpc  option[value="+listTPC[i].idimpresora+"]").attr('selected',false);
+			};
 
-	if(listTPC.length>0){
-		$("#tb_sec_impr_tpc .row").remove();
-		$("#tb_sec_impr_tpc").append(xCadena_sec).trigger('create');
-	}
+		if(listTPC.length>0){
+			$("#tb_sec_impr_tpc .row").remove();
+			$("#tb_sec_impr_tpc").append(xCadena_sec).trigger('create');
+		}
+	});
 }
 
 function xLoadSecciones_bodega(){

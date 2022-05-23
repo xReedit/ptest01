@@ -179,6 +179,7 @@
 				data: xThisI2TopProductos.rango
 			})
 			.done(function (res) {
+                
                 var dataIETopCaja = JSON.parse(res).datos;  
                 var crossDataCaja = crossfilter(dataIETopCaja);                              
 
@@ -227,7 +228,8 @@
 				url: '../../bdphp/log_005.php?op=40061',
 				data: xThisI2TopProductos.rango
 			})
-			.done(function (res) {                
+			.done(function (res) {          
+                      
                 // console.log('res', res);
                 var dataIECierreCaja = [];
                 if ( res === '' ) { 
