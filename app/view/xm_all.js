@@ -439,7 +439,7 @@ function xCerrarSessionAll(){
 	});
 }
 
-function setClearLocalStorage() {
+function setClearLocalStorage(redirec = true) {
 	var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
 	var touchVR = window.localStorage.getItem('::app3_sys_vr_touch');	
 	var lasIdSede = window.localStorage.getItem('::app3_sys_last_s');
@@ -448,7 +448,10 @@ function setClearLocalStorage() {
 	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL); }
 	if (touchVR) {window.localStorage.setItem('::app3_sys_vr_touch', touchVR); }
 	if (lasIdSede) {window.localStorage.setItem('::app3_sys_last_s', lasIdSede); }
-	document.location.href='../../logueese.html';
+
+	if(redirec) {
+		document.location.href='../../logueese.html';
+	}
 };
 
 function getCookie(name) {

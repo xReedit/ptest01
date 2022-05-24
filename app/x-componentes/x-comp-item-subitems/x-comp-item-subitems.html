@@ -517,10 +517,12 @@
         // itemPedidos_objItemSelected.indicaciones = 'EEEEEEEE'
         $("#txt_referencia").val(_indicaciones_subitem);
 
-        // console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);
-        xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].indicaciones = _indicaciones_subitem;
-        // xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].subitems_view = listChecks;
-        window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
+        try {            
+            xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].indicaciones = _indicaciones_subitem;        
+            window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
+        } catch (error) {
+            // aun no esta en la lista
+        }
         // xVerMipedidoVR();
 
 

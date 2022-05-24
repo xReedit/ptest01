@@ -39,7 +39,9 @@ window.addEventListener('WebComponentsReady', function (e) {
 	xdialog = document.querySelector('x-dialog');
 	xul=document.querySelector('x-user-login');
 	//destruye sessuion
-	$.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'})
+	$.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'});
+	setClearLocalStorage(false);
+
 
 	$("#bta").click(function(){
 		var xdta=window.localStorage.getItem("::app3_woDUS");
@@ -57,6 +59,9 @@ window.addEventListener('WebComponentsReady', function (e) {
 	})
 	/////////
 
+	
+
+	// xdialog.xclose();
 	var t = setTimeout(function(){
 		$('body').addClass('loaded');
 		// setTimeout(() => {

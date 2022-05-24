@@ -89,6 +89,9 @@
 									<label for="id_api_comprobante">ID</label><br>
 									<input type="password" class="xMiInput xPasarEnter2" id="id_api_comprobante" name="id_api_comprobante"><br><br>
 									<paper-checkbox id="check_habilita_facturacion"><span>Habilitar Facturacion Electronica</span></paper-checkbox>
+
+									<p><strong>Reporte del contador</strong></p>
+									<paper-checkbox id="check_habilita_verificacion_cpe"><span>Habilitar verificacion uno x uno</span></paper-checkbox>
 									
 									<br><br>
 									<p><strong>Plataforma | local o web</strong></p>							
@@ -104,8 +107,10 @@
 										<input type="text" id="sys_local" name="sys_local">
 										<input type="text" id="pwa" name="pwa">
 										<input type="text" id="facturacion_e_activo" name="facturacion_e_activo">
+										<input type="text" id="habilita_verificacion_cpe" name="habilita_verificacion_cpe">
 										<input type="text" id="isprinter_socket" name="isprinter_socket">
 										<input type="text" id="speech_disabled" name="speech_disabled">
+										
 									</div>
 
 
@@ -531,12 +536,15 @@ function transferenciaCompletaMini(xfile){
 		const _CheckisPrinterSocket = check_isprinter_socket.checked ? 1 : 0;
 		const _check_habilita_facturacion = check_habilita_facturacion.checked ? 1 : 0;
 		const _check_speech_disabled = check_speech_disabled.checked ? 1 : 0;
+		const _check_habilita_verificacion_cpe = check_habilita_verificacion_cpe.checked ? 1 : 0;
+		
 
 		$("#frm_sede #sys_local").val(_printServerCheck);
 		$("#frm_sede #pwa").val(_pwaCheck);
 		$("#frm_sede #isprinter_socket").val(_CheckisPrinterSocket);
 		$("#frm_sede #speech_disabled").val(_check_speech_disabled);		
 		$("#frm_sede #facturacion_e_activo").val(_check_habilita_facturacion);		
+		$("#frm_sede #habilita_verificacion_cpe").val(_check_habilita_verificacion_cpe);		
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede", $("#frm_sede").serialize(), function (id) {
 			xPopupLoad.xclose();
@@ -624,6 +632,9 @@ function transferenciaCompletaMini(xfile){
 		check_pwa.checked = dataSede.pwa === "0" ? false : true;
 		check_isprinter_socket.checked = dataSede.isprinter_socket === "0" ? false : true;
 		check_habilita_facturacion.checked = dataSede.facturacion_e_activo === "0" ? false : true;
+		check_habilita_verificacion_cpe.checked = dataSede.habilita_verificacion_cpe === "0" ? false : true;
+
+		
 		check_habilita_delivery.checked = dataSede.pwa_habilitar_delivery_app === "0" ? false : true;
 		check_afiliado_delivery.checked = dataSede.pwa_comercio_afiliado === "0" ? false : true;
 		check_afiliado_repartidor.checked = dataSede.pwa_delivery_servicio_propio === "0" ? false : true;		
