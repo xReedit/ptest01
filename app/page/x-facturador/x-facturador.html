@@ -238,6 +238,13 @@
 		_inputAutocompleteFacObj = _inputAutocompleteFac.$.input_clie_nombres_auto;
 		_inputAutocompleteFac.addEventListener('input-autocomplete-selected', (event) => {
 			const cliente = event.detail;
+
+            if ( !cliente.nombres ) {
+                xValidarBtnProcesar();
+                return;
+            }
+
+
             console.log('cliente', cliente);
 			// xThisPago.clienteModel = cliente;
 			// xThisPago.tipoPagoRequiereCliente = false;
@@ -413,6 +420,19 @@
                     return;
                 }
 
+                // // si coloca nombre debe tener minimo 5 digitos
+                // if ( cnf_ComprobanteSel.codsunat === '03' ) {
+                //     rpt.valid = new_rpt.nombres ==='' || new_rpt.nombres.length > 4 ? true : false;
+                // } else if ( cnf_ComprobanteSel.codsunat === '01' ){
+                //     rpt.valid = new_rpt.nombres.value != '' && new_rpt.nombres.length > 4 ? true : false;
+                // }
+
+                // if ( rpt.valid ) {
+                //     NumDocNoValid(rpt);
+                //     return;
+                // }
+
+
                 xThisFacturador.isShowSearchSunat = new_rpt.buscarSunat;
 
                 rpt.valid = true;
@@ -471,6 +491,14 @@
         $("#txt_ruc").focus();
 
     }
+
+    // valida si es > 4 caracteres 
+    function validNomClienteFac() {
+        if (cnf_ComprobanteSel.codsunat === '03') {
+            xThisFacturador.formValid = clie_nombres_fac.$.input_clie_nombres_auto.$.input.value ==='' || clie_nombres_fac.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
+        }
+    }
+
 
     function xCalcTotal() {
         const xCan_item = $("#cant_item").val() === '' ? 0 : parseFloat($("#cant_item").val());    
@@ -544,12 +572,17 @@
                 xThisFacturador.formValid = true;
                 xThisFacturador.modificarCliente = true; // si se pude modificar cliente   
                 xThisFacturador.isShowMsjBoletaRequireDNI = false;        
+                validNomClienteFac();
                 return;            
             }
 
             if ( cnf_ComprobanteSel.codsunat === "03" && parseFloat(_arrTotal[2].importe) >= 700) {
                 xThisFacturador.isShowMsjBoletaRequireDNI = true;        
             }
+
+            validNomClienteFac();
+
+
         }
 
         xThisFacturador.formValid = _listValid && _formValid;

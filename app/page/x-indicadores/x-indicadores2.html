@@ -647,7 +647,7 @@
 
         compOptionPeriodo = document.getElementById('compOptionPeriodo')
         compOptionPeriodo.addEventListener('getDateSelectedOption', (e) => {
-            console.log('value date', e.detail);
+            // console.log('value date', e.detail);
             changeOption(e.detail);
         })
         
@@ -1241,8 +1241,8 @@
             }
         );
 
-        dias = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
-        numdias = [2, 3, 4, 5, 6, 7, 1];
+        dias = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+        numdias = [1, 2, 3, 4, 5, 6, 7];
 
         var semanaActual = _dataDiasSemana.all().filter(x => x.value.semana_actual === "1").map(x => x.value)
         var semanaAnterior = _dataDiasSemana.all().filter(x => x.value.semana_actual === "0").map(x => x.value)
@@ -1291,7 +1291,7 @@
         configParamsChart = {
 			type: 'line',
 			data: {
-				labels: ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"],
+				labels: ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"],
 				datasets: [{
 					label: 'Semana Anterior',
 					data: listDiaSemanaToGrafico.filter(x => !x.semana_actual).map(x => x.value),

@@ -864,11 +864,17 @@
 		var validForm = !xThisPago.ComprobanteRequiereCliente;
 		if (xThisPago.ComprobanteRequiereCliente) { // requiere factura 0 el monto es >= 700
 			if ( xThisPago.tipoComprovanteSelecionado.codsunat === '01' ){ // si es factura tiene que ser ruc
-				validForm = xThisPago.$.sel_cliente.value.length === 11 && clie_nombres.$.input_clie_nombres_auto.$.input.value != '' ? true : false;
+				validForm = xThisPago.$.sel_cliente.value.length === 11 && clie_nombres.$.input_clie_nombres_auto.$.input.value != '' && clie_nombres.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
 			} else if ( xThisPago.tipoComprovanteSelecionado.codsunat === '03' ){ // si es boleta
-				validForm = clie_nombres.$.input_clie_nombres_auto.$.input.value !='' ? true : false;
+				validForm = clie_nombres.$.input_clie_nombres_auto.$.input.value !='' && clie_nombres.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
 			}
 		} 
+
+		// si coloca nombre debe tener minimo 5 digitos
+		if ( xThisPago.tipoComprovanteSelecionado.codsunat === '03' ){
+			validForm = clie_nombres.$.input_clie_nombres_auto.$.input.value ==='' || clie_nombres.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
+		}
+
 		xThisPago.valid_form_cliente_pago = validForm;
 		xThisPago.fire('xFormClienteValid', validForm);
 	}

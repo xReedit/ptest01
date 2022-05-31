@@ -214,6 +214,7 @@ function xLoadEstablecimientosAsignados() {
 		})
 		.done((res) => {
 			const _res = JSON.parse(res);
+			console.log('_res', _res);
 			xThisAdmContador.listAsignados = _res.datos;
 		});
 }
@@ -335,6 +336,7 @@ async function downloadReporteCPE(obj) {
 			xPopupLoad.xclose();
 			dialog_match_sunat.open();
 			
+			// console.log('xThisAdmContador.selEstablecimiento', xThisAdmContador.selEstablecimiento);
 
 			const ruc_emisor = xThisAdmContador.selEstablecimiento.ruc;
 
@@ -366,26 +368,29 @@ async function downloadReporteCPE(obj) {
 						}
 		
 						// console.log('payload', payload);
-						// const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
-						// let estado_cpe;
-						// if (rptApiConsulta?.success === true) { 
-						// 	x.success_sunat = 1;
-						// 	estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
-						// 	x.estadoCp = estado_cpe.titulo;
-						// 	x.style_estado_sunat = 'color: ' + estado_cpe.color;
-						// 	countCpeSuccess++;
-						// 	listCpeSuccess.push(x);
-						// } else {
-						// 	countCpeError++;
-						// 	x.success_sunat = 0;
-						// 	x.estadoCp = 'Sin Respuesta';
-						// 	x.style_estado_sunat = 'color: black';
-						// 	xThisAdmContador.showRowsNoResponse = true;
-						// }
+						if ( xThisAdmContador.selEstablecimiento.habilita_verificacion_cpe == 1 ) {
+							const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
+							let estado_cpe;
+							if (rptApiConsulta?.success === true) { 
+								x.success_sunat = 1;
+								estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
+								x.estadoCp = estado_cpe.titulo;
+								x.style_estado_sunat = 'color: ' + estado_cpe.color;
+								countCpeSuccess++;
+								listCpeSuccess.push(x);
+							} else {
+								countCpeError++;
+								x.success_sunat = 0;
+								x.estadoCp = 'Sin Respuesta';
+								x.style_estado_sunat = 'color: black';
+								xThisAdmContador.showRowsNoResponse = true;
+							}
+						} else {
+							// no consulta
+							countCpeSuccess++;
+							listCpeSuccess.push(x);
+						}
 
-						// no consulta
-						countCpeSuccess++;
-						listCpeSuccess.push(x);
 
 						// console.log('rptApiConsulta', rptApiConsulta);
 					} else {

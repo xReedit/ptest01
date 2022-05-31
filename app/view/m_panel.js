@@ -190,8 +190,13 @@ async function xOpenPage(xop, parametro){
 
 	// setLocalSotrage('::app3_sys_route', 1);
 	// console.log('aa');
-	xPopupLoad.xopen();
-	xPopupLoad.titulo = "Abriendo ...";
+	try {
+		xPopupLoad.xopen();
+		xPopupLoad.titulo = "Abriendo ...";
+		
+	} catch (error) {
+		
+	}
 	await xDelayHere(100);
 	// console.log('b');
 	aapasa++;

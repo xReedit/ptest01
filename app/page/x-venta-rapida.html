@@ -274,7 +274,7 @@
 				  			<h4>SECCIONES</h4>
 						  </div> -->
 						<div class="xMenu_Encabezado_small" id="Encabezado_menu_m">
-							<span style="font-size: 30px; line-height: 25px;" id="r_titulo">{{xt_nombre_sede}}</span>
+							<span style="font-size: 22px; line-height: 25px;" id="r_titulo">{{xt_nombre_sede}}</span>
 							<div class="xsub_titulo" id="r_subtitulo">[[xt_eslogan]]</div>
 						</div>
 						<div class="xLineaSombra" id="line_sombra"></div>
@@ -2265,8 +2265,9 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
   }
 
   function xOpenPanelDeVR() {
-	const isOpenPanelDVR = $(".itemsDivx.a").hasClass('open');
-	if ( isOpenPanelDVR ) { xClosePanelDeVR(); } else {$(".itemsDivx.a").addClass('open');}
+	  // const isOpenPanelDVR = $(".itemsDivx.a").hasClass('open');
+	  // if ( isOpenPanelDVR ) { xClosePanelDeVR(); } else {$(".itemsDivx.a").addClass('open');}
+	  dialog_opciones_adcionales.open();
   }
 
   function xClosePanelDeVR() {

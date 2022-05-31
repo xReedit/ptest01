@@ -10,6 +10,8 @@
 			onkeyup="searchClienteInput(this)"	
 			on-autocomplete-selected="xchangeCliente"			
 			autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete>
+
+			<p hidden$="[[!isErrorLength]]" class="fs-13 text-danger">Mínimo 5 caracteres.</p>
 	</template>
 </dom-module>
 <script>
@@ -63,15 +65,17 @@
 		function searchClienteInput() {
 			const valInput = event.target.value;
 			// console.log('valInput', valInput);
+			compRemoveSpecialCharObjClient(event);
 
 			if (valInput.length < 3  ) { return; }
 			getAllClientes(valInput);
 
-			compRemoveSpecialCharObjClient(event);
 		}
 
 		function compRemoveSpecialCharObjClient(e) {			
 			e.target.value = e.target.value.replace(/[&\/\\,~'"?]/g, '');
+			xThisComInputCliente.isErrorLength = e.target.value.length > 0 && e.target.value.length < 5;
+			xThisComInputCliente.xchangeCliente();
 		}
 
 		Polymer({
@@ -95,6 +99,7 @@
 					observer: 'clienteNameChanged'
 				},
 				valIdInt: {type : Object, notify: true, reflectToAttribute: true},
+				isErrorLength: Boolean
 			},
 			listeners: {
 				'onchange': 'getCliente'
@@ -106,6 +111,7 @@
 				return e;
 			},
 			attached: function () {
+				this.isErrorLength = false;
 				xThisComInputCliente = this;
 				getAllClientesInit();				
 			},
@@ -114,8 +120,8 @@
 			},
 			xchangeCliente: ()=> {
 				const cliente = event.target.value;
-				// console.log('aaaaaaaaaaaaaaa');
 				event.target.fire('input-autocomplete-selected', cliente);
+				// console.log('aaaaaaaaaaaaaaa');
 			}
 			// getValorIncial: function (val) {
 			// 	this.fire('getValorIncial', {
