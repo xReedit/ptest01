@@ -871,8 +871,10 @@
 		} 
 
 		// si coloca nombre debe tener minimo 5 digitos
-		if ( xThisPago.tipoComprovanteSelecionado.codsunat === '03' ){
-			validForm = clie_nombres.$.input_clie_nombres_auto.$.input.value ==='' || clie_nombres.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
+		if ( xThisPago.tipoComprovanteSelecionado ) {
+			if ( xThisPago.tipoComprovanteSelecionado.codsunat === '03' ){
+				validForm = clie_nombres.$.input_clie_nombres_auto.$.input.value ==='' || clie_nombres.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
+			}
 		}
 
 		xThisPago.valid_form_cliente_pago = validForm;

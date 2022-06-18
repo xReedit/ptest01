@@ -42,9 +42,9 @@
 					<table id="tb_almacen_items" data-TablaName="almacen_items"></table>
 				</div>
 			</div>
-			<div class="xPieCard">
+			<div class="xPieCard d-flexx justify-content-lg-end">
 				<br>
-				<div class="xBoton2 xAzul" onclick="xGuardarPorciones();">Listo, guardar porciones</div>
+				<div class="xBoton2 xAzul" disabled$="[[!isShowBtnSave]]" onclick="xGuardarPorciones();">Listo, guardar porciones</div>
 				<br><br>
 			</div>
 		</div>
@@ -122,11 +122,24 @@ function xGuardarPorciones(){
 	//update producto porcionado
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=16004', data:{s:xcant_item, i:xIdAlmacen_item_pro_sel, idpro_de:xIdProducto_sel,e:xenlazado}})
 	.done( function (ax) {
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:sql_porciones}})
+		// console.log('sql_porciones', sql_porciones);
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:sql_porciones}})
+		$.ajax({ type: 'POST', url: '../../bdphp/log_100.php?op=2', data:{xsql:sql_porciones}})
 		.done( function (dtsuccess) {
-			xPopupLoad.xclose();
+			setTimeout(() => {				
+				xPopupLoad.xclose();
+			}, 2000);
+			// console.log('dtsuccess', dtsuccess);			
 			xNuevaPorcion();
 			xloadProductoItem();
+
+			//
+			$("#tb_porciones .row").remove();
+			txt_stock.value = '';
+			cant_item.value = '';
+			des_item_porcionar.value = '';
+			xThis.isShowBtnSave = false;
+			
 		})
 	})
 }
@@ -170,6 +183,8 @@ function xAddItemPorcionado(){
 				'</tr>';
 
 	$("#tb_porciones").append(xrow_porcion).trigger('create');
+	
+	xThis.isShowBtnSave = true;
 
 	$("#des_porcion").val('');
 	$("#cant_porcion").val('');
@@ -259,8 +274,10 @@ Polymer({
 	properties:{
 		dtProItem:Object,
 		dtProItem_porcion:Object,
+		isShowBtnSave: Boolean
 	},
 	attached:function(){
+		this.isShowBtnSave = false;
     	xThis=this;
     	xIniPorcionar();
     }

@@ -516,9 +516,11 @@ function xGuardarRegistroCompra(){
 		// sql_almacen=sql_almacen.replace(/-almacen/g,xsel_almacen)
 
 		// +sql_almacen
-		var xunion_sql=String(sql_compra_items+'; '+sql_compra_tp+'; '+sql_historial_precio_pro+'; '+sql_update_pro)
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xunion_sql}})
+		var xunion_sql=String(sql_compra_items+'; '+sql_compra_tp+'; '+sql_historial_precio_pro+'; '+sql_update_pro)		
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xunion_sql}})
+		$.ajax({ type: 'POST', url: '../../bdphp/log_100.php?op=1', data:{xsql:xunion_sql}})
 		.done( function (DtIdFamRpt) {
+
 			xPopupLoad.xclose();
 			dialog_registrar_pago.close();
 			xNuevaCompra();

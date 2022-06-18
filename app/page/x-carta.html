@@ -268,7 +268,7 @@
 			    --paper-checkbox-label-color: var(--paper-grey-50);
 			    --paper-checkbox-label-checked-color: var(--paper-grey-100);
 			    --paper-checkbox-checkmark-color:var(--paper-blue-900);
-			  }
+			  }			  
 		</style>
 	</template>
 </dom-module>
@@ -283,6 +283,13 @@
 	.div_foto #dlg_label_foto{opacity: .8; text-align:center; z-index:0;}
 	.div_foto img{ width: 100%;}
 
+	.btn-add-item-carta {
+		color: white;
+		background: #4CAF50;
+		border-color: green;
+		cursor: pointer;
+		font-size: 11px;
+	}
 
 </style>
 <script>
@@ -621,7 +628,7 @@ function xGuardarCambios(){
 	// const aaa= [xArraySeccionItem[5], xArraySeccionItem[6]];
 	xPopupLoad.xopen();
 	array_enviar_carta.map(x => {
-		console.log(x);
+		// console.log(x);
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204',data:{idc:xidCategoria,f:xFechaInsert,id_carta_anterior:xIdCartaAnterior,sql_array: x}})
 		.done( function (xid) {
 			xIdCartaAnterior = xid;
@@ -675,14 +682,17 @@ function xGuardarCarta(responde){
 			responde(xid)
 		})
 }
-function xGuardarLista(sql){
-	if(xIdCartaAnterior!=""){sql="delete from carta_lista where idcarta="+xIdCartaAnterior+"; "+sql;}
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:sql}})
-	.done( function (a) {
-		xPopupLoad.xclose();
-		xIdCartaAnterior=xIdCarta;
-	});
-}
+// function xGuardarLista(sql){
+// 	if(xIdCartaAnterior!=""){sql="delete from carta_lista where idcarta="+xIdCartaAnterior+"; "+sql;}
+// 	console.log('sql', sql);
+// 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:sql}})
+// 	// $.ajax({ type: 'POST', url: '../../bdphp/log_100.php?op=4', data:{xsql:sql}})
+// 	.done( function (rpt) {		
+// 		xPopupLoad.xclose();
+// 		console.log('a', rpt);
+// 		xIdCartaAnterior=xIdCarta;
+// 	});
+// }
 function xImprimirCarta(){
 	var xsec_text;
 	var xsec_item;
@@ -722,7 +732,10 @@ function xAddNewSeccion(){
 			'<tr class="xSinBorde" data-id="" data-modificado="0">'+
 				'<td><input type="text" tabindex="2" id="item_des" data-id="" class="xMiInput xPasarEnter2 des_item" placeholder="ITEM" onChange="conMayusculas(this)" required></td>'+
 				'<td><input type="text" tabindex="3" id="item_precio" class="xMiInput xPasarEnter2 xAlinearDerecha" placeholder="PRECIO" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"  placeholder="Precio" id="precio" name="precio" required></td>'+
-				'<td><input type="text" tabindex="4" id="item_cantidad" class="xMiInput xAlinearCentro xcantidad" placeholder="CANTIDAD" onChange="conMayusculas(this)" required></td>'+
+				'<td class="d-flexx">'+
+					'<input type="text" tabindex="4" id="item_cantidad" class="xMiInput xAlinearCentro xcantidad" placeholder="CANTIDAD" onChange="conMayusculas(this)" required>'+
+					'<button class="btn-add-item-carta" title="Agregar Item" onclick="xAddRowItem(this)"><i class="fa fa-plus"></i></button>'+
+					'</td>'+
 			'</tr>'+
 		'</table>'+
 	'</div>';
@@ -1025,7 +1038,10 @@ function xLoadListadoCartaActual(){
 				'<tr class="xSinBorde" data-id="">'+
 					'<td><input type="text" tabindex="2" id="item_des" data-id="" class="xMiInput xPasarEnter2 des_item" placeholder="ITEM" onChange="conMayusculas(this)" required></td>'+
 					'<td><input type="text" tabindex="3" id="item_precio" class="xMiInput xPasarEnter2 xAlinearDerecha" placeholder="PRECIO" onChange="conMayusculas(this)" onblur="xRetornaMoneda(this)"  placeholder="Precio" id="precio" name="precio" required></td>'+
-					'<td><input type="text" tabindex="4" id="item_cantidad" class="xMiInput xAlinearCentro xcantidad" placeholder="CANTIDAD" onChange="conMayusculas(this)" required></td>'+
+					'<td class="d-flexx">'+
+						'<input type="text" tabindex="4" id="item_cantidad" class="xMiInput xAlinearCentro xcantidad" placeholder="CANTIDAD" onChange="conMayusculas(this)" required>'+
+						'<button class="btn-add-item-carta" title="Agregar Item" onclick="xAddRowItem(this)"><i class="fa fa-plus"></i></button>'+
+					'</td>'+
 				'</tr>'+
 				'?row'+
 			'</table>'+

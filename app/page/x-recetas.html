@@ -1,5 +1,5 @@
 <dom-module id="x-recetas">
-	<script src="../../js/mi_orden_tabla.js"></script>
+	<!-- <script src="../../js/mi_orden_tabla.js"></script> -->
 	<template>
 		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -263,7 +263,8 @@ function xGuardarRegistroReceta(){
 	}
 	sql_ingrediente=sql_ingrediente.replace(/-item/g,xid_item);
 	sql_ingrediente=xsql_remove+' '+sql_ingrediente;
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:sql_ingrediente}})
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:sql_ingrediente}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log_100.php?op=3', data:{xsql:sql_ingrediente}})
 		.done( function (dtsuccess) {
 			xPopupLoad.xclose();
 			xNuevaIngredientes();
@@ -371,8 +372,8 @@ function xListaDeRecetas(){
 		$("#tb_platos").append(xcadena_row_receta).trigger('create');
 
 		var xxt=document.getElementById('tb_platos')
-		sorttable.init();
-		sorttable.preparar_table_manual(xxt)
+		// sorttable.init();
+		// sorttable.preparar_table_manual(xxt)
 	})
 }
 

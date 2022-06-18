@@ -182,14 +182,14 @@ function xGuardarFactura(){
 	xPopupLoad.xopen();	
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=comprobante",$("#frm_encabezado").serialize(),function(xUltimoId){
 		//armar body factura
-		debugger		
+		// debugger		
 		var xArmaBodyFac=xArmarInsertDetalle($("#tb_pro_facturar"),'idcomprobante',xUltimoId,'','');
-		debugger
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xArmaBodyFac}})
-			.done( function (a) {
-				debugger
-				xPopupLoad.xclose();
-			});		
+		// debugger
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xArmaBodyFac}})
+			// .done( function (a) {
+			// 	debugger
+			// 	xPopupLoad.xclose();
+			// });		
 	});
 	//
 

@@ -2822,56 +2822,59 @@ function xEliminarItemPedido(){
 // 	$(xobj_row_item).attr('data-total', importeTotalRow);
 // }
 
-function xModifcar_item_cant_importe(op){
-	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op='+op, data:{i:xid_pedido_detalle_item,u:xPermisoSupervisor}})
-	.done( function (a) {
-		var obj_row_mod=xBuscarAttrTbData($('#tb_pedidos'),'data-idpedido',xid_pedido);
-		var xtd_importe_row=obj_row_mod.find('#td_importe').text();
-		var xtd_importe_item=xobj_row_item.find('#td_importe').text();
-		var xtd_importe_item_2=xtd_importe_item;
-		var xcantidad_remove=parseFloat(xobj_row_item.find('#td_cant').text());
-		var xtd_cant=1;//descontar
-		var xcant_item_change;
-		var xSumarImporteCambiar=1;
+// 060622 se borra, no se utiliza
+// function xModifcar_item_cant_importe(op){
+// 	xPopupLoad.xopen();
+// 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op='+op, data:{i:xid_pedido_detalle_item,u:xPermisoSupervisor}})
+// 	.done( function (a) {
+// 		var obj_row_mod=xBuscarAttrTbData($('#tb_pedidos'),'data-idpedido',xid_pedido);
+// 		var xtd_importe_row=obj_row_mod.find('#td_importe').text();
+// 		var xtd_importe_item=xobj_row_item.find('#td_importe').text();
+// 		var xtd_importe_item_2=xtd_importe_item;
+// 		var xcantidad_remove=parseFloat(xobj_row_item.find('#td_cant').text());
+// 		var xtd_cant=1;//descontar
+// 		var xcant_item_change;
+// 		var xSumarImporteCambiar=1;
 
 
-		var xsql_=xArmarArrayDescontarStock(xobj_row_item,'+');
-		var xsql_update=xsql_[0].stock+' '+xsql_[0].importe;
+// 		var xsql_=xArmarArrayDescontarStock(xobj_row_item,'+');
+// 		var xsql_update=xsql_[0].stock+' '+xsql_[0].importe;
 
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xsql_update}})
-		.done( function () {xLoadDetallesPedido(xObj_miPedido);})
-		//xLoadDetallesPedido(xObj_miPedido);
+// 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:xsql_update}})
+// 		.done( function () {xLoadDetallesPedido(xObj_miPedido);})
+// 		//xLoadDetallesPedido(xObj_miPedido);
 
 
 
-		if(parseInt(xtd_importe_item_2)>0){
-			xtd_importe_item=xobj_row_item.attr('data-punitario');
-			xSumarImporteCambiar=0; //sumar importe al cambiar
-		}
-		xtd_importe_item_2=xMoneda(parseFloat(xtd_importe_item_2)-parseFloat(xtd_importe_item));
-		xtd_importe_row=xMoneda(parseFloat(xtd_importe_row)-parseFloat(xtd_importe_item));
+// 		if(parseInt(xtd_importe_item_2)>0){
+// 			xtd_importe_item=xobj_row_item.attr('data-punitario');
+// 			xSumarImporteCambiar=0; //sumar importe al cambiar
+// 		}
+// 		xtd_importe_item_2=xMoneda(parseFloat(xtd_importe_item_2)-parseFloat(xtd_importe_item));
+// 		xtd_importe_row=xMoneda(parseFloat(xtd_importe_row)-parseFloat(xtd_importe_item));
 
-		if(op==503){
-			xtd_cant=1;
-			xcantidad_remove--;
-			xcant_item_change=xtd_cant;
-			xid_carta_lista_a='';
-		}
+// 		if(op==503){
+// 			xtd_cant=1;
+// 			xcantidad_remove--;
+// 			xcant_item_change=xtd_cant;
+// 			xid_carta_lista_a='';
+// 		}
 
-		obj_row_mod.find('#td_importe').text(xtd_importe_row);
-		xobj_row_item.find('#td_importe').text(xtd_importe_item_2);
-		//xobj_row_item.find('#td_cant').html('<paper-checkbox  class="check_item"></paper-checkbox>'+xCeroIzq(xcantidad_remove,2))
-		xobj_row_item.find('#td_cant').text(xCeroIzq(xcantidad_remove,2))
+// 		obj_row_mod.find('#td_importe').text(xtd_importe_row);
+// 		xobj_row_item.find('#td_importe').text(xtd_importe_item_2);
+// 		//xobj_row_item.find('#td_cant').html('<paper-checkbox  class="check_item"></paper-checkbox>'+xCeroIzq(xcantidad_remove,2))
+// 		xobj_row_item.find('#td_cant').text(xCeroIzq(xcantidad_remove,2))
 
-		if(xcantidad_remove==0){$(xobj_row_item).fadeTo(550, 0, function () {$(this).remove();});}
-		xtd_cant=xcant_item_change;
+// 		if(xcantidad_remove==0){$(xobj_row_item).fadeTo(550, 0, function () {$(this).remove();});}
+// 		xtd_cant=xcant_item_change;
 
-		//xModificarTotalBD(xid_pedido,xid_pedido_detalle_item,xtd_importe_row,xtd_cant,xtd_importe_item_2);
-		xSumarTotalPedidos();
-		xPopupLoad.xclose();
-	});
-}
+// 		//xModificarTotalBD(xid_pedido,xid_pedido_detalle_item,xtd_importe_row,xtd_cant,xtd_importe_item_2);
+// 		xSumarTotalPedidos();
+// 		xPopupLoad.xclose();
+// 	});
+// }
+
+
 function xReImprimir(){
 	dialog_erro_print.close();
 	xPopupLoad.titulo="Enviando...";
@@ -2920,14 +2923,15 @@ function xLLamarPrintAddLi(){
 	});
 }
 
-function xCambiar_item(){
-	//modificar anterior en bd cantidad, precio, secambio ++ , si cantidad=0 estado=1
+// 060622 se borra no se utilizaz
+// function xCambiar_item(){
+// 	//modificar anterior en bd cantidad, precio, secambio ++ , si cantidad=0 estado=1
 
-	//actualizar en comnada grid
-	var xid_item_bus=$('#list_bus_item').attr('data-id');
-	if(xid_item_bus==null){$('#list_bus_item').val('');$('#list_bus_item').focus(); return;}
-	xModifcar_item_cant_importe(504);
-}
+// 	//actualizar en comnada grid
+// 	var xid_item_bus=$('#list_bus_item').attr('data-id');
+// 	if(xid_item_bus==null){$('#list_bus_item').val('');$('#list_bus_item').focus(); return;}
+// 	xModifcar_item_cant_importe(504);
+// }
 
 function xValidarCant_change(obj){
 	if(parseInt($(obj).val())>parseInt($(obj).attr('max'))){$(obj).val($(obj).attr('max'))}

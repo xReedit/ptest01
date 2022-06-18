@@ -1056,6 +1056,7 @@ function xLoadUsAdminPermiso() {
 	$.ajax({ type: 'POST', 
 		url: '../../bdphp/log.php?op=70112'})
 	.done( function (res) {
+		console.log('xLoadUsAdminPermiso', JSON.parse(res));
 		xThisCaja.listUsAdmin = JSON.parse(res).datos;
 		selectedUsAdmin(null, 0);
 		// console.log('listUsAdmin', xThisCaja.listUsAdmin);

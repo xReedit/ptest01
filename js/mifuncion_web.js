@@ -526,6 +526,12 @@ function xArmarInsertDetalle(xTable,NomIdPadre,IdPadre,xCondicion,xSoloUpdate){
 	var xCuenta=0;
 	var xCuentaFila=0;
 
+	var xListRpt = {
+		op: '',
+		title: '',
+		values: ''
+	}
+
 	xTable.find('tr').each(function(index,element) {
 		xValColum="";
 

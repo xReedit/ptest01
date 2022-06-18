@@ -463,7 +463,7 @@ function getCookie(name) {
 function xm_LogIni(responde){
   $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1111'})
 		.done( function (dt) {
-			console.log('-1111 dt ===> ', dt)
+			// console.log('-1111 dt ===> ', dt)
       if(dt=="0"){xVerificarSession();responde(false);}else{
         window.localStorage.setItem("::app3_woDUS", dt);
         responde(true);
@@ -477,16 +477,16 @@ function xm_LogChequea(responde){
   if (_xdt_log === null){
 	_xdt_log="undefined";
 	} else {
-		_xdt_log = {
-			us: xm_log_get('app3_us')
-		}
-		_xdt_log = btoa(JSON.stringify(_xdt_log));
+		// _xdt_log = {
+		// 	us: xm_log_get('app3_us')
+		// }
+		// _xdt_log = btoa(JSON.stringify(_xdt_log));
 	}
 	// console.log("xm_log_get('datos_org_all_sede')", xm_log_get('datos_org_all_sede'))
 	// console.log('xdt_log ', xdt_log)
   $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1112',data:{d:_xdt_log}})
 		.done( function (rpt) {
-			console.log('-1112 ==> xm_LogChequea == rpt ', rpt);
+			// console.log('-1112 ==> xm_LogChequea == rpt ', rpt);
       switch (rpt) {
         case "0":
           xm_LogIni(function(a){if(a){responde(true)}});
@@ -654,7 +654,7 @@ async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 					.done( function (dt) {
 						// responde (JSON.parse(dt));
 						dt = JSON.parse(dt);
-						console.log(dt);
+						// console.log(dt);
 						var nombres='', direccion='', telefono='';
 						var num_doc = valor;
 						var fnacimiento = '';
@@ -712,7 +712,7 @@ function xVerificarRucChangeSunat(valor, callback) {
 					.done( function (dt) {
 						// responde (JSON.parse(dt));
 						dt = JSON.parse(dt);
-						console.log(dt);
+						// console.log(dt);
 						var nombres='', direccion='', telefono='';
 						var num_doc = valor;
 						var fnacimiento = '';
