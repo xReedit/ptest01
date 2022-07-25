@@ -4,6 +4,7 @@
 
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
+	<script type="text/javascript" src="../view/export.excel.js"></script>
 
 	<template>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
@@ -120,16 +121,51 @@
 					</div>
 				</div>
 			</div>
+			<div class="w-100 border-bottom" style="padding: 20px; box-sizing: border-box; background: cornsilk;">
+				<!-- <div class="w-100"> -->
+					<!-- busqueda -->
+					<!-- </div> -->
+					<div class="d-flexx justify-content-between">
+						<input type="text" class="xMiInput" width="80%" placeholder="Buscar ..." onkeyup="buscarEnLista(this.value)">
+						<button class="xBoton2 xVerde" onclick="xGenerarReporteExcelRegistroPago()" title="Exportar a excel"><img src="../../images/excel.png" alt=""></button>
+					</div>
+			</div>
 			<div class="xContentCard border-bottom" style="padding: 20px;">            
 				<div class="div-content-grid" >
 					
-					<div class="w-100">
-						<div class="w-100">
-							<!-- busqueda -->
-							<input type="text" class="xMiInput" width="100%" placeholder="Buscar ..." onkeyup="buscarEnLista(this.value)">
-						</div>
-					</div>
 					<br>
+					
+					<!-- table export -->
+					<div class="xInvisible">
+						<table width = "100%" id="tbRegistroPago">
+							<thead>
+								<th>#</th>
+								<th>Fecha</th>
+								<th>Hora</th>
+								<th>Canal</th>
+								<th>Cliente</th>
+								<th>Comprobante</th>							
+								<th>T. Pago</th>
+								<th align="right" style="min-width: 100px;">importe</th>
+								<th></th>
+							</thead>
+							<tbody>
+								<template is="dom-repeat" items="[[listRegistro]]" as="item">
+									<tr>
+										<td>{{item.num}}</td>
+										<td>{{item.fecha_des}}</td>
+										<td>{{item.hora}}</td>
+										<td>{{item.des_consumo}}</td>
+										<td>{{item.nom_cliente}}</td>
+										<td>{{item.des_comprobante}}</td>
+										<td>{{item.des_pago}}</td>
+										<td>S/. {{ item.total }}</td>
+									</tr>
+								</template>
+							</tbody>
+						</table>
+					</div>
+					<!-- table export -->
 
 					<table width = "100%">
 						<thead>
@@ -914,6 +950,10 @@ function buscarEnLista(val) {
 	xThisHistVenta.listCantidadPagos = listTipoPago;
 	xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
 	xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 5);
+}
+
+function xGenerarReporteExcelRegistroPago() {
+	tableToExcel('tbRegistroPago', 'Registro de Pago');
 }
 
 Polymer({

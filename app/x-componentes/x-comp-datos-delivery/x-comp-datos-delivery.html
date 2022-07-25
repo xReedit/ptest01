@@ -197,7 +197,9 @@
 			$("#txt_delivery_referencia").val(cliente.referencia);
 			$("#txt_delivery_telefono").val(cliente.telefono);
 
-			xThisComDatosDelivery.listDirNoMap = JSON.parse(client_autocomplete_selected.direccion_delivery_no_map) || null;
+
+			xThisComDatosDelivery.listDirNoMap = client_autocomplete_selected.direccion_delivery_no_map ? JSON.parse(client_autocomplete_selected.direccion_delivery_no_map) || null : null;			
+			xThisComDatosDelivery.listDirNoMap = client_autocomplete_selected.direccion_delivery_no_map === '[]' ? null : xThisComDatosDelivery.listDirNoMap;
 			xThisComDatosDelivery.showInputDirNoMap = xThisComDatosDelivery.listDirNoMap ? false : true;
 
 			if (xThisComDatosDelivery.listDirNoMap) { selectOptionDirClienteNoMap(0); }

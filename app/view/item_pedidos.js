@@ -279,6 +279,7 @@ async function handlerFnMiPedidoControl(e) {
 		var isLoadingSubItems = false;
 		const isRowItemPedido = _thisObj.dataset.op === 'itempedido' ? true : false;
 		
+		
 		if ( isRowItemPedido ) { // viene del pedido item control pedido
 			_thisObj = $(_thisObj).parents('tr')[0];			
 		}
@@ -288,9 +289,20 @@ async function handlerFnMiPedidoControl(e) {
 		// const _isLi = _dataSetObj.isli ? true : false; // si viene del li ventarapida sumar al click
 		const _viene_venta_rapida = _dataSetObj.ventarapida; // _thisObj.parentElement.parentElement.dataset.ventarapida || 0;		
 		var _itemIndex = _dataSetObj.index// _thisObj.parentElement.parentElement.dataset.index;
+
+		
 		
 
+		
+		
+		const _idCategoriaItemAdd = _thisObj.dataset.idcategoria;
 		if ( isRowItemPedido ) { // viene del pedido item control pedido
+
+			// 0907222 consultamos si el item esta en la carta cargada
+			if (_idCategoriaItemAdd && _idCategoriaItemAdd != 1 && xGeneralDataCarta[0].idcategoria != _idCategoriaItemAdd ) {
+				xGeneralDataCarta = await xGeneralLoadItemsAddItem(_idCategoriaItemAdd);
+			}
+
 			// _thisObj = $(_thisObj).parents('tr')[0];
 			const idItemRowPedido = _thisObj.dataset.iditem.toString();
 			xGeneralDataCarta.map((x, i) => {
@@ -350,7 +362,7 @@ async function handlerFnMiPedidoControl(e) {
 		xsigno = isRowItemPedido ? '+' : xsigno;
 		var objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
 		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),		
-		, xcant_max = itemPedidos_objItemSelected.stock_actual // element_cant_li_sel.attr('data-cantmax'),
+		, xcant_max = itemPedidos_objItemSelected.stock_actual || 1000 // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
 		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
 		
@@ -373,7 +385,7 @@ async function handlerFnMiPedidoControl(e) {
 		// , xviene_venta_rapida = _viene_venta_rapida //$(element_li_add__print).attr('data-ventarapida'),
 		, ximprmir_comanda = itemPedidos_objItemSelected.imprimir_comanda // $(element_li_add__print).attr('data-imprimircomanda') || 0, //si solo hay items de bodega imprime o no comanda segun confg en almacen// si en  imprimir_comanda=1 imprim,
 		, xcant_descontar = itemPedidos_objItemSelected.cant_descontar // $(element_li_add__print).attr('data-cant_descontar'), //cantidad a desconatar del stock, si es porcion pueden ser 2,1  (2 chorizos, 1 huevo) o 2(2 porciones de 1/2 cocona,
-		, xidcategoria = itemPedidos_objItemSelected.idcategoria // $(element_li_add__print).attr('data-idcategoria'),
+		, xidcategoria = itemPedidos_objItemSelected.idcategoria || _idCategoriaItemAdd // $(element_li_add__print).attr('data-idcategoria'),
 		, xli_idalmacen_items = itemPedidos_objItemSelected.idalmacen_items // $(element_li_add__print).attr('data-idalmacen_items'),
 		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
 		, xSotockSocket = xcant_max
@@ -1347,6 +1359,29 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 		// console.log('xGeneralDataCarta', xGeneralDataCarta);
 		if(x_rpt){return x_rpt(xGeneralDataCarta);}
 	})
+}
+
+async function xGeneralLoadItemsAddItem(xidCategoria){
+	// console.log('pasa cargando log.php205');
+	// borrar localstorage subitems al volver cargar la carta
+	localStorage.removeItem('::app3_listSubItem');
+
+	const result = await $.ajax({ 
+		type: 'POST',
+		url: '../../bdphp/log.php?op=205',
+		data:{'idcategoria': xidCategoria}});
+
+	// .done( function (dtCarta) {
+	// 	var xdt_rpt=JSON.parse(dtCarta)
+	// 	// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
+	// 	xGeneralDataCarta=xdt_rpt.datos;
+	// 	// console.log('xGeneralDataCarta', xGeneralDataCarta);
+	// 	if(x_rpt){return x_rpt(xGeneralDataCarta);}
+	// })
+
+	var xdt_rpt=JSON.parse(result)
+	xGeneralDataCarta=xdt_rpt.datos;
+	return xGeneralDataCarta;
 }
 
 // limpia los items que tienen subitems seleccionados

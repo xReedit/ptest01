@@ -6,11 +6,26 @@
 <dom-module id="x-comp-find-comprobante">
     <template>        
         <div>
-          <select id="compFindListComprobante" class$="[[applyClass]]" onchange="selectOptionComprobante()">
-            <template is="dom-repeat" items="{{list}}" as="comprobante">
-              <option value="[[index]]">[[comprobante.descripcion]] </option>
-            </template>
-          </select>
+            <!-- <select id="compFindListComprobante" class$="[[applyClass]]" onchange="selectOptionComprobante()">
+                <template is="dom-repeat" items="{{list}}" as="comprobante">
+                    <option value="[[index]]">[[comprobante.descripcion]] </option>
+                </template>
+            </select>       -->
+
+            <div style="background: #e6e4cb; padding: 10px; border-radius: 8px; display: inline-block;">
+                <div class="content_div_op_pago" style="display: flex">
+                    <template is="dom-repeat" items="{{list}}" as="comprobante">
+                      <div class="xMiBoton_icon_option"
+                        data-index="{{index}}"
+                        selected$="{{comprobante.seleccionado}}"
+                        onclick="selectOptionComprobanteTouch(this)"
+                        >
+                        <img src="{{comprobante.img}}" width="32px">
+                        <p>{{comprobante.descripcion}}</p>
+                      </div>
+                    </template>
+                </div>
+            </div>
         </div>
 
     </template>
@@ -22,20 +37,51 @@
             $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op='+_op})
 	        .done( function (dtValues) {
                 dtValues=$.parseJSON(dtValues);	
+
+                dtValues.datos.map((x, i) => {
+                    x.seleccionado = i == 0;
+                    x.img = '../../images/'+x.img;                    
+                })
+
                 xThisComComprobante.list=dtValues.datos;
                 xThisComComprobante.comprobantes = xThisComComprobante.list[0];
                 xThisComComprobante.getValorIncial(xThisComComprobante.comprobantes);
             });
         }
 
-        function selectOptionComprobante() {
-            const index = xThisComComprobante.$.compFindListComprobante.value;
-            xThisComComprobante.comprobantes = xThisComComprobante.list[index];
+        function selectOptionComprobante(obj) {            
+            const index = xThisComComprobante.$.compFindListComprobante.value;            
+            xThisComComprobante.comprobantes = xThisComComprobante.list[index];            
         }
+
+        function selectOptionComprobanteTouch(obj) {
+            const index=obj.dataIndex;	
+			// const idSelect = obj.dataId;
+
+            // const index = xThisComComprobante.$.compFindListComprobante.value;
+            
+            xThisComComprobante.comprobantes = xThisComComprobante.list[index];
+
+            $(obj).parent().find('.xMiBoton_icon_option').each((i,e) => {								
+				e.dataIndex === index ? $(e).attr('selected', true) : $(e).removeAttr('selected');
+			});
+
+            xSelectViewOptionTC(index);
+        }
+
+        function xSelectViewOptionTC(_index) {
+			xThisComComprobante.list.map(x => {x.seleccionado=false; return x;});			
+			xThisComComprobante.comprobantes = xThisComComprobante.list[_index];
+            xThisComComprobante.comprobantes.seleccionado=true;
+
+			xThisComComprobante.fire('_onchange', xThisComComprobante.comprobantes);			
+			// xThisComComprobante.getValorIncial(xThisComComprobante.list);
+		}
 
         function resetListComprobante() {
             xThisComComprobante.$.compFindListComprobante.selectedIndex = 0;
             xThisComComprobante.comprobantes = xThisComComprobante.list[0];
+            xSelectViewOptionTC(0);
         }
         
 

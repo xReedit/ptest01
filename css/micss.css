@@ -269,6 +269,7 @@ paper-dialog.xStandar{height:auto;width:40%;}
     opacity: 0.7;
 }
 
+
 .xMiBoton_icon_option {
     font-family: 'Open Sans';
     border-radius: 5px;
@@ -281,7 +282,7 @@ paper-dialog.xStandar{height:auto;width:40%;}
     display: inline-block;
     margin-right: 11px;
     user-select: none;
-    opacity: 0.5;
+    opacity: 0.6;
     transform: all 0.3s ease;
 }
 .xMiBoton_icon_option p {    
@@ -295,13 +296,15 @@ paper-dialog.xStandar{height:auto;width:40%;}
 .xMiBoton_icon_option[selected] {    
     opacity: 1;
     border: solid 2px #1e88e5;
-    background: #b3e5fc;
+    background: #b3e5fc;    
 }
 .xMiBoton_icon_option:hover {
     border: 2px solid #64b5f6;
     background: #EEEEEE;    
     opacity: 1;
 }
+
+
 
 /* .xMiBoton_icon_option img {
     display: table-cell;

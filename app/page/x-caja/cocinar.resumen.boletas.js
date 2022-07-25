@@ -144,7 +144,7 @@ async function xCocinarResumenBoletas() {
             // solo facturas
             if (arrDocNoRegistradoSunat[i].numero.indexOf(onlyTipo) === -1 ) { continue; }
 
-            $(".dgl_sunat_msj3").text("Verificando comprobantes F..." + xCeroIzq(i));
+            $(".dgl_sunat_msj3").text("Verificando comprobantes "+ onlyTipo +"..." + xCeroIzq(i));
             // const jsonxml = JSON.parse(arrDocNoRegistradoSunat[i].json_xml.replace('"{', '{').replace('}"', '}'))
             // const rpt = await xSoapSunat_EnviarDocumentApi(jsonxml, arrDocNoRegistrado[i].idregistro_pago, arrDocNoRegistrado[i].codsunat);
             const rpt = await xSoapSunat_SendSunat(arrDocNoRegistradoSunat[i].external_id, arrDocNoRegistradoSunat[i].idce);

@@ -63,6 +63,7 @@
 		}
 
 		function searchClienteInput() {
+			if ( event.keyCode == 13 ) {return; }
 			const valInput = event.target.value;
 			// console.log('valInput', valInput);
 			compRemoveSpecialCharObjClient(event);

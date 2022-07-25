@@ -440,14 +440,20 @@ function xCerrarSessionAll(){
 }
 
 function setClearLocalStorage(redirec = true) {
+	// variables que se conservan
 	var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
 	var touchVR = window.localStorage.getItem('::app3_sys_vr_touch');	
 	var lasIdSede = window.localStorage.getItem('::app3_sys_last_s');
+	var show_opcion_item = window.localStorage.getItem('::app3_sys_vr_show_opcion');
+	var vr_touch_item = window.localStorage.getItem('::app3_sys_vr_touch');
+	
 	window.localStorage.clear();
 
 	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL); }
 	if (touchVR) {window.localStorage.setItem('::app3_sys_vr_touch', touchVR); }
 	if (lasIdSede) {window.localStorage.setItem('::app3_sys_last_s', lasIdSede); }
+	if (show_opcion_item) {window.localStorage.setItem('::app3_sys_vr_show_opcion', show_opcion_item); }
+	if (vr_touch_item) {window.localStorage.setItem('::app3_sys_vr_touch', vr_touch_item); }
 
 	if(redirec) {
 		document.location.href='../../logueese.html';

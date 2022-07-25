@@ -1399,7 +1399,7 @@ async function xGuardarPedidoVR(responde){
 		estado_p: xEstadoPedido
 	}
 
-	console.log('dataSendPedido', dataSendPedido);
+	// console.log('dataSendPedido', dataSendPedido);
 	
 
 	// fecth
@@ -2089,7 +2089,7 @@ function setValuesStorage() {
 function xOpenDlgItemVR(tpc, idItemRow, elObjRow) {
 	// console.log('rowItem', idItemRow);
 	const id = elObjRow.dataset.id; //idItemRow.toString();
-	// itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
+	itemPedidos_objItemSelected = xArrayPedidoObj[tpc][id];
 	// xCompSubitems.item_select = itemPedidos_objItemSelected;
 	xCompSubitems.openDialog(tpc, id);
 	//dialog_item_comp.open();
