@@ -6,13 +6,13 @@
 <dom-module id="x-comp-find-comprobante">
     <template>        
         <div>
-            <!-- <select id="compFindListComprobante" class$="[[applyClass]]" onchange="selectOptionComprobante()">
+            <select hidden$="[[showicons]]" id="compFindListComprobante" class$="[[applyClass]]" onchange="selectOptionComprobante()">
                 <template is="dom-repeat" items="{{list}}" as="comprobante">
                     <option value="[[index]]">[[comprobante.descripcion]] </option>
                 </template>
-            </select>       -->
+            </select>      
 
-            <div style="background: #e6e4cb; padding: 10px; border-radius: 8px; display: inline-block;">
+            <div hidden$="[[!showicons]]" style="background: #e6e4cb; padding: 10px; border-radius: 8px; display: inline-block;">
                 <div class="content_div_op_pago" style="display: flex">
                     <template is="dom-repeat" items="{{list}}" as="comprobante">
                       <div class="xMiBoton_icon_option"
@@ -100,6 +100,12 @@
                 notify: true,
                 observer: 'comprobanteNameChanged'
             },
+            showicons: {
+                type: Boolean,
+                value: true,
+                reflectToAttribute: true,
+                notify: true,
+            }
         },
         comprobanteNameChanged: function(comprobante) {
             return comprobante;

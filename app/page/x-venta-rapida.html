@@ -1060,6 +1060,7 @@ function xIrARegistrarPago(){
         alert("Indique numero de mesa. Coloque cero(0) si no corresponde");        
         return;
       } else {
+		xnum_mesa_valido = !isNaN(parseInt(txt_mesa.value)) ? true : false;
         if (xnum_mesa_valido == false) {
           alert("Numero de mesa no es valido.");          
           return;
@@ -1089,7 +1090,9 @@ function xEnviarACuenta(){
 	xReservar = check_reserva.checked ? 1 : 0;
 
 	if(xenviar_cuenta==true){
-	if(xnum_mesa_valido==false && xdelivery === 0 && xReservar === 0 && xsolo_llevar === 0){
+
+	xnum_mesa_valido = !isNaN(parseInt(txt_mesa.value)) ? true : false;
+	if(xnum_mesa_valido==false && xdelivery === 0 && xReservar === 0 && xsolo_llevar === 0){	
 		alert('Numero de mesa no es valido.'); 
 		guardando_vr = false;
 		return;
@@ -1423,7 +1426,7 @@ async function xGuardarPedidoVR(responde){
 	// .done( function (idP) {
 		
 		
-		console.log('paso b', idP);
+		// console.log('paso b', idP);
 		// const _arrRpt = xm_all_SetResponseLog_001(idP);
 		_arrRpt = idP;
 		

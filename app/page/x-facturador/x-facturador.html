@@ -25,7 +25,9 @@
                 <div class="container-cliente">             
                 <div id="form_pago_cliente_fac">
                     <div style="width:250px; padding-left: 7px;">
-                        <x-comp-find-comprobante id="compFindComprobante" onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante>
+                        <x-comp-find-comprobante 
+                        id="compFindComprobante" 
+                        onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante>
                     </div>
                     <br>
                     <div class="xInvisible" id="contentClie">
@@ -358,6 +360,16 @@
         setTimeout(() => {            
             xNuevoFac();
         }, 500);
+
+
+        // const _compFindComprobante = document.getElementById('compFindComprobante');
+        const _compFindComprobante=document.getElementById('compFindComprobante');
+        // _compFindComprobante.showicons = false;
+		_compFindComprobante.addEventListener('_onchange', (e) => {
+			_getComprobante(e.detail);
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+		} )
 
     }
 
@@ -814,7 +826,7 @@
             isShowFechaPagoCredito: Boolean,
             isShowCpeFactura: Boolean,
             isShowMsjTelefono: Boolean,
-            isShowMsjBoletaRequireDNI: Boolean
+            isShowMsjBoletaRequireDNI: Boolean            
         },
         attached: function () {
             this.isShowSearchSunat = false;

@@ -737,7 +737,7 @@
 								</thead>
 								<tr data-id="" class="xSinBorde">
 									<td><x-comp-find-sede  id="compFindSede" onchange="_getSede(sedes)"></x-comp-find-sede></td>
-									<td><x-comp-find-comprobante id="compFindComprobante" op="2" onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante></td>
+									<td><x-comp-find-comprobante id="compFindComprobante" showicons="[[showIconsListCPE]]" op="2" onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante></td>
 									<td><input type="text" autocomplete="off" class="xMiInput" placeholder="Serie" onChange="conMayusculas(this)" name="serie" id="serie" required></td>
 									<td><input class="xMiInput"  placeholder="Correlativo" type="number" min="0" pattern="[0-9]+([\.,][0-9]+)?" step="any" name="correlativo" id="correlativo" required></td>
 									<td><paper-fab icon="add" onclick="config_comprobante_add()" title="Guardar" tabindex="0"></paper-fab></td>
@@ -2052,9 +2052,11 @@ Polymer({
 			notify: true
 		},
 		listCanalConsumo: [],
+		showIconsListCPE: Boolean
 	},
 	attached:function(){
 		this.selected_conf=0;
+		this.showIconsListCPE = false;
 		xThisConfig=this;
 		xIniConf();
 		// _cpSocketIsConnect();
