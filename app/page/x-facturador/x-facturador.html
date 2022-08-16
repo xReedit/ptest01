@@ -20,7 +20,7 @@
                 <p>Emite comprobantes electronicos personalizados. Es decir el concepto y los montos no tienen que ser previamente registrados. <img ondblclick="xSeeFechaManual()" class="xDerecha" src="../../../images/candado.png" width="16px"></p>                
             </div>
             <div class="xContentCard" style="height: 100%;"> 
-                <input type="date" class="xMiInput xfont17 xDerecha" hidden$="[[!fecha_manual]]" style="width:200px;" id="txt_fecha" enlinea>                
+                <!-- <input type="date" class="xMiInput xfont17 xDerecha" hidden$="[[!fecha_manual]]" style="width:200px;" id="txt_fecha" enlinea>                 -->
                 <p class="bold xColorRow_Plomo">Comprobante</p>   
                 <div class="container-cliente">             
                 <div id="form_pago_cliente_fac">
@@ -734,8 +734,8 @@
         _arrItems = [];
         _arrTotal = [];
 
-        const _compFindComprobante = document.getElementById('compFindComprobante');
-        _compFindComprobante.reset();
+        // const _compFindComprobante = document.getElementById('compFindComprobante');        
+        // _compFindComprobante.reset();
 
         xThisFacturador.$.selectFormaPago.selectedIndex = 0;
         xThisFacturador.isShowFechaPagoCredito = false;
@@ -749,7 +749,7 @@
         xThisFacturador.arrTotales = JSON.parse(JSON.stringify(_arrTotal));
 
         xNuevoCliente();
-        $('#contentClie').addClass('xInvisible');
+        // $('#contentClie').addClass('xInvisible');
 
         txt_ruc.value = '';
         // $('#form_pago_cliente_fac').reset();

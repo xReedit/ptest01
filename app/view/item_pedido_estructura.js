@@ -4,7 +4,8 @@
 // devuelve la estructura de pedidos para impresion, {tipo consumo > seccion > items}
 // _SubItems
 // > precuenta > factura
-function xCargarDatosAEstructuraImpresion (_SubItems) {
+// sumCantidad si suma cantidades cuando adjunta en precuenta
+function xCargarDatosAEstructuraImpresion (_SubItems, sumCantidad = false) {
     var _arrEstructura = xm_log_get('estructura_pedido'); // get estructura_pedido
     var _arrRpt=[];
 
@@ -27,6 +28,15 @@ function xCargarDatosAEstructuraImpresion (_SubItems) {
                     _SubItems[i].precio_print=_SubItems[i].ptotal;//coloca precio para impresion
                     _SubItems[i].precio_total=_SubItems[i].ptotal;
                     _SubItems[i].des=_SubItems[i].descripcion;
+                    if ( sumCantidad ) {
+                        var _cantidad = _SubItems[i].cantidad;
+                        if (_cantidad.toString().indexOf(",") > -1 ) { // caso de que se junte los items
+                            __cantidad = _cantidad.split(',');
+                            _cantidad = __cantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
+                        }   
+
+                        _SubItems[i].cantidad = _cantidad;
+                    }
                     _arrRpt[_arrEstructura[b].idtipo_consumo][i]=_SubItems[i];
             }
         }

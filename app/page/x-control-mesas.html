@@ -734,7 +734,7 @@ function xIniControlMesa(){
 		e.stopImmediatePropagation()
 	})	
 
-	$(document).on('click', '.btn-add-item', function(e) {
+	$(document).on('click', '.btn-add-item', async function(e) {
 		// agregar item al pedido desde item
 
 			xobj_row_item=$(this).parents('tr')[0];
@@ -746,8 +746,10 @@ function xIniControlMesa(){
 
 			// seteamos
 			xobj_row_item.dataset.cantidad = _cantidad;
+			xobj_row_item.dataset.cantidadr = _cantidad;
 			xobj_row_item.dataset.total = _importeTotal;
 			xobj_row_item.dataset.total_r = _importeTotal;
+			xobj_row_item.dataset.ptotal = _importeTotal;
 
 			$(xobj_row_item).find('#td_cant').text(xCeroIzq(_cantidad, 2));
 			$(xobj_row_item).find('#td_importe').text(_importeTotal);
@@ -763,6 +765,9 @@ function xIniControlMesa(){
 
 
 			// xArmarSqlAddLUlI();
+
+			// checkItemsSeleccionados = await getItemsSeleccionados();
+			// console.log('checkItemsSeleccionados', checkItemsSeleccionados);
 			
 
 			e.stopPropagation();
@@ -1156,10 +1161,11 @@ async function getItemsSeleccionados() {
 			xsubtotales_tachados = $(e).attr('data-subtotales_tachados'), // para calcular los tachados o quitados - no cobrar
 			xdescripcion = $(e).find("#descripcion_item").text(),
 			xsub_i='';
+			
 			if(xid_pedido_detalle_dt_p.indexOf(',')!==-1){
-					xid_pedido_detalle_dt_p=xid_pedido_detalle_dt_p.slice(0,-1);
-					ximporte_dt_p=ximporte_dt_p.slice(0,-1);
-					xcantidad_dt_p=xcantidad_dt_p.slice(0,-1);
+					xid_pedido_detalle_dt_p = xid_pedido_detalle_dt_p.indexOf(',') > -1 ? xid_pedido_detalle_dt_p.slice(0,-1) : xid_pedido_detalle_dt_p;
+					ximporte_dt_p = ximporte_dt_p.indexOf(',') > -1 ? ximporte_dt_p.slice(0,-1) : ximporte_dt_p;
+					xcantidad_dt_p = xcantidad_dt_p.indexOf(',') > -1 ? xcantidad_dt_p.slice(0,-1) : xcantidad_dt_p;
 			}
 			/*xid_pedido_detalle_dt_p=$(e).attr('data-idpedidodetalle'),
 			ximporte_dt_p=$(e).find("#td_importe").text(),
@@ -1283,7 +1289,9 @@ function detectEvent(e) {
 				// xValPago.setFocusIinit();
 				
 			}
-		}		
+		}	
+		
+		
 
 		return document.defaultAction;
 	}
@@ -1386,11 +1394,13 @@ async function xImprimirPrecuenta(){
 	// var xDtBd=xArrayDtOrdenFiltro;
 	var xSubItmes=[];
 	//verificar items seleccionados
-	// var checkItemsSeleccionados = await getItemsSeleccionados();
+	checkItemsSeleccionados = await getItemsSeleccionados();
+	// console.log('checkItemsSeleccionados', checkItemsSeleccionados);
 	// xSubItmes = checkItemsSeleccionados.esSeleccionTotal ? xDtBd : checkItemsSeleccionados.arrayPedidosSeleccionados;
 
 	// cargar a los items en la estructura de impresion
-	xArrayItemPreCuenta = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
+	xArrayItemPreCuenta = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados, true);
+
 
 	//saca el null
 	var xmesa_pc=$("#p_mesa").text().split(' ');
@@ -2092,7 +2102,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	isPedidoOpenDeliveryCliente = _isDeliveryObjPedido;
 
 	if ( !clearDataLastPedidoInsert ) {
-		xRefreshListaPedidosItems(obj);		
+		xRefreshListaPedidosItems(obj);	
+		xPopupLoad.xclose();	
 		return;
 	}
 
@@ -4137,7 +4148,18 @@ function xAddRowInsertListItems(obj) {
 			// si se agrego un nuevo pedido solo trae ese pedido
 			if (lastDataPedidoInsert) {
 				xdtPbdet.datos.map(i => {
-					xArrayDtOrdenFiltro.push(i);
+					// xArrayDtOrdenFiltro.push(i);
+					if ( !xArrayDtOrdenFiltro.length ) { // si esta agrupado
+						// buscamos el item idtipo_consumo + _seccionIndex[0] + idseccion + idcarta_lista
+						const _seccionIndex = i.idseccion_index.split('.')
+						const _codFindItem = i.idtipo_consumo + '' + _seccionIndex[0] + '.'+ _seccionIndex[1] +''+ i.idcarta_lista;
+						const _itemMod = Object.values(xArrayDtOrdenFiltro).find(x => x.grupo === _codFindItem);
+						_itemMod.cantidad = parseFloat(_itemMod.cantidad) + parseFloat(i.cantidad);
+						_itemMod.cantidad_r = _itemMod.cantidad;
+						_itemMod.ptotal =  (parseFloat(_itemMod.ptotal) + parseFloat(i.ptotal)).toFixed(2);
+					} else {
+						xArrayDtOrdenFiltro.push(i);
+					}
 				})
 			} else {
 				xArrayDtOrdenFiltro=xdtPbdet.datos;

@@ -459,14 +459,15 @@ function xOpenAnularPedidoHistorial(){
 }
 function xAnularPedidoHistorial(){
 	//armar sql devolucion de stock
+	var _xidpedid_txt_change='';
 	var xArrayAnularItems=[];
 	$("#tb_det_pedidos .row").each(function(index,element){
-		xidpedid_txt_change=xidpedid_txt_change+','+$(element).attr('data-idpedido');;
+		_xidpedid_txt_change=_xidpedid_txt_change+','+$(element).attr('data-idpedido');;
 	})
-	xidpedid_txt_change=xidpedid_txt_change.slice(1);
+	_xidpedid_txt_change=_xidpedid_txt_change.slice(1);
 	//
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :'', xPedidos:xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor,'viene_historial':xidregistro_pago_sel}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :'', xPedidos:_xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor,'viene_historial':xidregistro_pago_sel}})
 	.done( function (dt_xx) {
 		xPopupLoad.xclose();
 		$(".xMiBoton_icon_lateral").attr('disabled', true);

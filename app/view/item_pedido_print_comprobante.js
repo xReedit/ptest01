@@ -366,6 +366,57 @@ function xgetImpresora(xidDoc) {
 }
 
 
+// devuelve una impresora segun id
+function xgetImpresoraById(xIdPrintSearch) {
+	var xArrayImpresoras = xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
+	var xDtTipoDoc = xm_log_get('app3_woIpPrintO');//JSON.parse(window.localStorage.getItem("::app3_woIpPrintO"));
+	var xPrintLocal = window.localStorage.getItem("::app3_woIpPrintLo");
+	xImpresoraPrint = xm_log_get("sede_generales");
+
+	const num_copias_all = xImpresoraPrint[0].num_copias; // numero de copias para las demas impresoras -local
+	const papel_size = xImpresoraPrint[0].papel_size; // numero de copias para las demas impresoras -local
+	const var_size_font_tall_comanda = xImpresoraPrint[0].var_size_font_tall_comanda;
+
+
+	// var xIpPrintDoc = xIdPrintSearch;
+	var xpasePrint = false;
+
+	//si existe impresora local // imprime todos los otros documentos en esta impresora local.
+	if (xPrintLocal != undefined && xPrintLocal != '') {
+		xPrintLocal = $.parseJSON(xPrintLocal);
+		xImpresoraPrint[0].ip_print = xPrintLocal.ip;
+		xImpresoraPrint[0].var_margen_iz = xPrintLocal.var_margen_iz;
+		xImpresoraPrint[0].var_size_font = xPrintLocal.var_size_font
+		xImpresoraPrint[0].local = 1;
+		xImpresoraPrint[0].num_copias = xPrintLocal.num_copias;
+		xImpresoraPrint[0].copia_local = xPrintLocal.copia_local;
+		xImpresoraPrint[0].img64 = xPrintLocal.img64;
+		xImpresoraPrint[0].papel_size = xPrintLocal.papel_size;
+		xpasePrint = true;
+	} else {
+		
+
+		const _xArrayImpresoras = xArrayImpresoras.filter(pp => parseInt(pp.idimpresora) == xIdPrintSearch)[0];
+
+		if (_xArrayImpresoras) { 
+			xpasePrint = true; 
+			xImpresoraPrint[0].ip_print=_xArrayImpresoras.ip;
+			xImpresoraPrint[0].var_margen_iz=_xArrayImpresoras.var_margen_iz;
+			xImpresoraPrint[0].var_size_font=_xArrayImpresoras.var_size_font;
+			xImpresoraPrint[0].local = 0;
+			xImpresoraPrint[0].num_copias = _xArrayImpresoras.num_copias;
+			xImpresoraPrint[0].var_size_font_tall_comanda = var_size_font_tall_comanda;
+			xImpresoraPrint[0].copia_local = 0; // no imprime // solo para impresora local 
+			xImpresoraPrint[0].img64 = '';
+			xImpresoraPrint[0].papel_size = _xArrayImpresoras.papel_size;		
+		}
+	}
+
+	const print_return = xpasePrint ? xImpresoraPrint : null;
+	return print_return;
+}
+
+
 ////////////////////////////////////////////////////
 ///////  COMANDA   ///////////////
 /// para imprimir comanda se requier xArrayPedidoObj como  xArrayCuerpo
