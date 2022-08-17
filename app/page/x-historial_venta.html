@@ -35,17 +35,16 @@
 		<paper-dialog id="dialog_registro_detalle" class="dialog_redondo" style="overflow: auto; overscroll-behavior: auto; min-width: 50%; max-width: 700px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="mb-2">
 				<div>
-					<div class="d-flexx justify-content-between" style="align-items: end;">						
+					<div class="d-flexx justify-content-between align-items-center header-registro-venta">						
 						<div style="zoom: 0.9;">
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div></paper-button>
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 100px;" onclick="xImprimirPrecuentaHistorial();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div></paper-button>
-							<paper-button disabled="[[xYaTieneComprobante]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>							
+							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>							
 							<paper-button hidden$="[[!xIsPuedeReimprimirCPE]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="reImprimirComprobante();"><img src="../../images/_print_vr.png"><p>Reimprimir Comprobante</p></div></paper-button>
 						</div>
 						<button class="btn btn-sm btn-secondary ml-2" dialog-dismiss>X</button>
-					</div>					
-					<hr>
-					
+					</div>										
+					<br>
 										
 					<label for="txt_comprobante" class="xfont10">Comprobante Emitido:</label>
 					<p><span id="txt_comprobante" class="xfont20">- </span><span id="txt_ref" class="xfont16 xColorRow_Morado xpadingLateralIz"></span></p>
@@ -343,6 +342,14 @@
 		inline-size: 230px;
     	overflow-wrap: break-word;
 	}
+
+	.header-registro-venta {
+		background: #d4d4d4;
+		padding: 20px 25px 10px;
+		margin-top: -32px;
+		margin-right: -32px;
+		margin-left: -32px;
+	}
 </style>
 
 <script  type="text/javascript" src="../view/xJsonSunat.js"></script>
@@ -445,6 +452,14 @@ var data_pagination={}, p_rows=0, p_fecha='';
 	xValPago.addEventListener('xListoRegistraPago', function (e) {		
 		// console.log('imprimir comprobante');
 		xMandarCocinarImpresionComprobante_historial();
+	});
+
+	xValPago.addEventListener('xSelectTipoComprobante', function (e) {		
+		dialog_comprobante.center();
+	});
+
+	xValPago.addEventListener('xFormClienteValid', function (e) {		
+		dialog_comprobante.center();
 	});
 }
 
@@ -821,6 +836,9 @@ function xSumarTotalesHis(){
 			$("#xBody").append(xcadena_total).trigger('create');
 		})
 	})
+
+
+	dialog_registro_detalle.center();
 }
 
 function xMandarCocinarImpresionComprobante_historial() {		

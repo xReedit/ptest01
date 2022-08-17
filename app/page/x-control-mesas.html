@@ -30,8 +30,13 @@
 		<paper-dialog style="min-width:290px; background: #212121; color: #fff;" id="dialog_borrar_item" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h3>BORRAR REGISTRO?</h3>
-				<br>
-				<div class="xBoton2 xVerde" dialog-dismiss onclick="xEliminarItemPedido();"> SI </div>
+				<div class="content-check-borrar-item">
+					<paper-checkbox class="xCursor" id="check_recuperar_stock">
+						<p class="fw-600">Recuperar Stock</p>
+					</paper-checkbox>
+				</div>
+				<br><br>
+				<div class="xBoton2 xVerde" dialog-dismiss onclick="xGetPermisoEliminarItem();"> Si Borrar. </div>				
 				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
 				<br><br>
 			</div>
@@ -65,7 +70,7 @@
 			</div>
 		</paper-dialog>
 
-		<paper-dialog id="dialog_motivo_anular" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog id="dialog_motivo_anular" style="min-width:320px; background: #212121; color: #fff;"  entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h4>ANULAR</h4>
 				<h4 class="txt_anular_cambiar_mesa"></h4>
@@ -73,9 +78,15 @@
 				<h4>Indique el motivo de anulacion</h4>
 				<div>
 					<!--textarea class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus espaciar></textarea-->
-					<input type="text" class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus>
+					<input type="text" class="xMiInput text-white" placeholder="Motivo..." id="txt_motivo_anular" autofocus>
 				</div>
-				<br><br><br>
+				<br>
+				<div class="content-check-borrar-item">
+					<paper-checkbox class="xCursor" id="check_recuperar_stock_all_pedido">
+						<p class="fw-600">Recuperar Stock</p>
+					</paper-checkbox>
+				</div>
+				<br><br>
 				<div class="xBoton2 xVerde" dialog-dismiss onclick="pass_us.open();">Listo</div>
 				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
 				<br><br>
@@ -388,6 +399,13 @@
 
 	.txt-info-delivery-from-app {
 		padding: 5px 5px !important;
+	}
+
+	.content-check-borrar-item {
+		background: #e9e9e9;
+    	padding: 5px;
+    	border-radius: 3px;
+		display: flex;		
 	}
 </style>
 </dom-module>
@@ -843,8 +861,9 @@ function xIniControlMesa(){
 		xIDdescontar_en_item_lista=xobj_row_item.attr('data-iddescontar');
 		xcant_item=parseFloat(xobj_row_item.find('#td_cant').text());
 		$("#txt_bus_cant").attr('max',xcant_item);*/
-		//xOp_permiso();
-		if(xCronometro_us==0){xPSupervisor.setVal('Pe1'); pass_us.open();}else{xOp_permiso();}
+		
+		xOp_permiso();
+		// if(xCronometro_us==0){xPSupervisor.setVal('Pe1'); pass_us.open();}else{xOp_permiso();}
 
 		// event.stopPropagation();
 		e.stopPropagation();
@@ -859,7 +878,8 @@ function xIniControlMesa(){
 			xPermisoSupervisor=e.detail.xRpts[0].us;
 			xCronometro_us=30;
 			xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
-			xOp_permiso();
+			// xOp_permiso();
+			xGoProcessBorrar();
 			e.stopPropagation();
 			e.stopImmediatePropagation()
 		}
@@ -1303,6 +1323,10 @@ function xOpenAnularPedido(){
 	if(xidpedid_txt_change==''){return;}
 	xpass_op='anular_pedido';
 	xPSupervisor.setVal('Pe1');
+
+	var _valRecuperarBorrarItem = localStorage.getItem('::app3_woRestoreStock');	
+	check_recuperar_stock_all_pedido.checked = _valRecuperarBorrarItem ? _valRecuperarBorrarItem : false;
+
 	dialog_motivo_anular.open();
 	//pass_us.open();
 }
@@ -1320,7 +1344,10 @@ function xAnularPedido(){
 	})
 	//
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor}})
+
+	const _valRecuperarBorrarItem =  check_recuperar_stock_all_pedido.checked ? '1' : '0';
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	.done( function (dt_xx) {
 		xPopupLoad.xclose();
 		xActualizarItems();
@@ -2772,18 +2799,44 @@ function xcronometro_permiso(){
 	if(xCronometro_us==0){clearInterval(xRefreshPermiso);}
 }
 function xOp_permiso(){
+	var _valRecuperarBorrarItem = localStorage.getItem('::app3_woRestoreStock');
+	check_recuperar_stock.checked = _valRecuperarBorrarItem ? _valRecuperarBorrarItem : false;
+	check_recuperar_stock_all_pedido.checked = _valRecuperarBorrarItem ? _valRecuperarBorrarItem : false;
+
 	switch(xpass_op){
-		case 'borrar':if(xCronometro_us>0 && xCronometro_us!=30){dialog_borrar_item.open();}else{xEliminarItemPedido()};break; //solo dialog ya no confirmacion de usuario
-		case 'borrar':xPermisoSupervisor=xIdUsuario; dialog_borrar_item.open();break;
+		case 'borrar': dialog_borrar_item.open(); break; //if(xCronometro_us>0 && xCronometro_us!=30){dialog_borrar_item.open();}else{xEliminarItemPedido()};break; //solo dialog ya no confirmacion de usuario
+		case 'borrar':dialog_borrar_item.open(); break; // xPermisoSupervisor=xIdUsuario; dialog_borrar_item.open();break;
 		case 'cambiar':$('#txt_bus_cant').val(1);$("#txt_espcificacion").val('');$("#list_bus_item").val(''); dialog_cambiar_item.open();break;
 		case 'anular_pedido':xAnularPedido(); break;
 	}
 }
+
+function xGetPermisoEliminarItem() {
+	console.log(check_recuperar_stock.checked);
+	const _valRecuperarBorrarItem = check_recuperar_stock.checked ? '1' : '0';
+	localStorage.setItem('::app3_woRestoreStock', _valRecuperarBorrarItem);
+
+	if(xCronometro_us>0 && xCronometro_us!=30) {
+		xPermisoSupervisor=xIdUsuario;
+		xEliminarItemPedido();
+	} else {
+		xPSupervisor.setVal('Pe1'); pass_us.open();
+	}
+}
+
+function xGoProcessBorrar() {
+	switch(xpass_op){
+		case 'borrar': xEliminarItemPedido(); break;
+		case 'anular_pedido': xAnularPedido(); break;
+	}
+}
+
 function xEliminarItemPedido(){
 	//xArrayItemEliminar
 	// enviar condicion de aumentar stock
+	const _valRecuperarBorrarItem = check_recuperar_stock.checked ? '1' : '0';
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3042', data:{xarr:xArrayItemEliminar,u:xPermisoSupervisor}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3042', data:{xarr:xArrayItemEliminar,u:xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	.done( function (e_rpt) {
 		//e_rpt=$.parseJSON(e_rpt):
 		xe_rpt=$.parseJSON(e_rpt);

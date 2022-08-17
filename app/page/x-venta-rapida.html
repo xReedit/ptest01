@@ -895,6 +895,14 @@ function xIniVentaRapida(){
 		xRegistrarClientePagoVR();
 	});
 
+	xValPago.addEventListener('xSelectTipoComprobante', function (e) {		
+		xThisVentaRapida.$.dialog_pagar_vr.center();
+	});
+
+	xValPago.addEventListener('xFormClienteValid', function (e) {		
+		xThisVentaRapida.$.dialog_pagar_vr.center();
+	});	
+
 
 	_pedido_pagar_cuenta = document.getElementById('pedido_pagar_cuenta');
 	_pedido_pagar_cuenta.addEventListener('total_pagar_cuenta', (e) => {

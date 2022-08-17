@@ -176,11 +176,11 @@
 			<br>
 			<div hidden="[[!hidden_container_pago]]">
 				<button class="xBoton2 xPlomo" onclick="xCancelarCerrar();" id="btn_regresar_cuenta">Regresar</button>
-				<button class="xBoton2 xAzul" hidden="[[!modoSoloComprobante]]"
-					disabled="[[!btnDisabledInitModoComprobante]]"
+				<button class="xBoton2 xAzul" hidden="[[!modoSoloComprobante]]"					
 					onclick="xThisPago.setVisibleContainerPago();"
 					id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
 					<div>[F10] Listo, imprimir comprobante</div>
+					<!-- disabled="[[!btnDisabledInitModoComprobante]]" -->
 					<!-- <div hidden="[[modoSoloComprobante]]">[F10] Siguente</div> -->
 				</button>
 				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]"

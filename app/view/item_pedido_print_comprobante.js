@@ -129,23 +129,27 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 
 	comprobarNumCorrelativoComprobante(xArrayComprobante);
 
-	console.log('xarr_tipo_pago ====> ', xarr_tipo_pago);
+	// console.log('xarr_tipo_pago ====> ', xarr_tipo_pago);
 	var xArrayTPC;
-	if ( xarr_tipo_pago ) {
-		xArrayTPC = [];
-		xarr_tipo_pago.map(tp => {
-			let _vuleto = parseFloat(tp.importe_recibido) - parseFloat(tp.importe)
-			const _importe_recibido = _vuleto < 0 ? tp.importe : tp.importe_recibido;
-			_vuleto = _vuleto < 0 ? 0 : _vuleto;
-			const _rowTPC = {
-				'id': tp.id || '1',
-				'des_tp': tp.des_tp || 'Efectivo',
-				'importe': tp.importe,
-				'importe_recibido': _importe_recibido,
-				'importe_vuelto': _vuleto,
-			}
-			xArrayTPC.push(_rowTPC);
-		});
+	try {		
+		if ( xarr_tipo_pago ) {
+			xArrayTPC = [];
+			xarr_tipo_pago.map(tp => {
+				let _vuleto = parseFloat(tp.importe_recibido) - parseFloat(tp.importe)
+				const _importe_recibido = _vuleto < 0 ? tp.importe : tp.importe_recibido;
+				_vuleto = _vuleto < 0 ? 0 : _vuleto;
+				const _rowTPC = {
+					'id': tp.id || '1',
+					'des_tp': tp.des_tp || 'Efectivo',
+					'importe': tp.importe,
+					'importe_recibido': _importe_recibido,
+					'importe_vuelto': _vuleto,
+				}
+				xArrayTPC.push(_rowTPC);
+			});
+		}
+	} catch (error) {
+			
 	}
 
 	const _data = {
