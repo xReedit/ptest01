@@ -2,66 +2,137 @@
     <script src="../../view/item_pedido_print_comprobante.js"></script>
     <script rel="prefetch" type="text/javascript" src="../../view/socket.service.p.js"></script>
 
-	<template is="dom-bind">        
-        <div class="content-ticket-rapido mt-2">
-            <div class="d-flexx justify-content-between align-items-center">
-                <p class="fw-600 fs-16 text-center">Ticket Rápido</p>
-                <select id="selSeccionesTicket" class="selected-template-1" style="max-width: 170px;" onchange="xChangeSeccionTicket(this)">
-                    <template is="dom-repeat" items="{{listSeccionesTicket}}" as="item">
-                        <option value="[[index]]">[[item.descripcion]] </option>
-                    </template>				
-                </select>
-            </div>
-            <br><div class="xLinea2"></div><br>
+	<template is="dom-bind">  
+        
 
+        <paper-dialog modal id="dialog_cierre_ticket_venta" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>            
+            <p class="fw-600">Al imprimir el resumen se realizara el corte a la fecha y hora actual.</p>            
             <div>
-                <template is="dom-repeat" items="{{listItemsTicketEntrada}}" as="item">
-                    <div class="item-ticket">
-                        <div data-index="[[index]]" onclick="xAddItemTicket(this, 1)" class="w-100">
-                            <p class="pl-2 noselect">{{item.descripcion}} | {{item.precio}}</p>
+                <button class="btn btn-success" onclick="xCerrarVentaTicketEntrada()"> Listo.</button>
+                <button class="btn btn-secondary" dialog-dismiss> Cancelar</button>
+            </div>
+            <br>
+		</paper-dialog>
+        
+        <div class="content-ticket-rapido mt-2">
+            <div>
+                <paper-tabs selected="{{selected_tab_ticket_venta}}" class="tab-ticket" id="tabs_ticket_venta">
+                    <paper-tab>Ticket</paper-tab>
+                    <paper-tab>Resumen</paper-tab>
+                </paper-tabs>
+            </div>
+
+            <br>
+            <div class="ticket-body">        
+                <iron-pages selected="{{selected_tab_ticket_venta}}">
+                    <div id="ticketventa">                    
+                        <div class="d-flexx justify-content-between align-items-center">
+                            <p class="fw-600 fs-16 text-center">Ticket Rápido</p>
+                            <select id="selSeccionesTicket" class="selected-template-1" style="max-width: 170px;" onchange="xChangeSeccionTicket(this)">
+                                <template is="dom-repeat" items="{{listSeccionesTicket}}" as="item">
+                                    <option value="[[index]]">[[item.descripcion]] </option>
+                                </template>				
+                            </select>
                         </div>
-                        <div class="cantidad-ticket">                            
-                            <div class="btn-ticket menos noselect" data-index="[[index]]" onclick="xAddItemTicket(this, 0)">-</div>
-                            <div class="pl-1 pr-1 noselect">{{ item.cantidad_seleccionada }}</div>
-                            <div class="btn-ticket mas noselect" data-index="[[index]]" onclick="xAddItemTicket(this, 1)">+</div>
+                        <br><div class="xLinea2"></div><br>
+
+                        <div>
+                            <template is="dom-repeat" items="{{listItemsTicketEntrada}}" as="item">
+                                <div class="item-ticket">
+                                    <div data-index="[[index]]" onclick="xAddItemTicket(this, 1)" class="w-100">
+                                        <p class="pl-2 noselect">{{item.descripcion}} | {{item.precio}}</p>
+                                    </div>
+                                    <div class="cantidad-ticket">                            
+                                        <div class="btn-ticket menos noselect" data-index="[[index]]" onclick="xAddItemTicket(this, 0)">-</div>
+                                        <div class="pl-1 pr-1 noselect">{{ item.cantidad_seleccionada }}</div>
+                                        <div class="btn-ticket mas noselect" data-index="[[index]]" onclick="xAddItemTicket(this, 1)">+</div>
+                                    </div>
+                                </div>
+                            </template>			
+
+                            <!-- total -->                
+                            <div class="total-ticket">
+                                <div class="importe-total">
+                                    <p class="text-secondary mr-2 fs-18 noselect">Total</p>
+                                    <p class="fw-600 fs-26 noselect"> {{importeTotalTicketEntrada}}</p>
+                                </div>
+                            </div>	
+                            <br><div class="xLinea2"></div><br>
+
+                            <!-- boton accion -->
+                            <div class="text-right">
+                                <button class="btn btn-success fs-18" disabled$="[[ !isShowBtnTicketEntrada ]]" onclick="xSaveTicketEntrada()">Listo Registrar</button>
+                            </div>
                         </div>
                     </div>
-                </template>			
 
-                <!-- total -->                
-                <div class="total-ticket">
-                    <div class="importe-total">
-                        <p class="text-secondary mr-2 fs-18 noselect">Total</p>
-                        <p class="fw-600 fs-26 noselect"> {{importeTotalTicketEntrada}}</p>
+                    <!-- Resumen -->
+                    <div id="ticketresumen">
+                        <p class="fw-600 fs-18">Resumen de venta:</p>
+                        <br><div class="xLinea2"></div>
+                        
+                        <table class="w-100">
+                            <thead>
+                                <th align="left">Descripcion</th>
+                                <th align="center">Cant.</th>
+                                <th align="right">Total</th>
+                            </thead>
+                            <tbody>
+                                <template is="dom-repeat" items="{{listResumenTicketEntrada}}" as="item">
+                                    <tr>
+                                        <td>{{ item.descripcion }}</td>
+                                        <td align="center">{{ item.cantidad }}</td>
+                                        <td align="right">{{ item.total }}</td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td colspan="3" align="right">
+                                        <p class="fw-600 fs-18">S/. {{ totalResumenTicketEntrada }} </p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <br><br>
+                        <!-- boton accion -->
+                        <div class="text-right">
+                            <button class="btn btn-info fs-18" disabled$="[[ !isShowBtnResumenTicketEntrada ]]" onclick="dialog_cierre_ticket_venta.open()">Imprimir Resumen</button>
+                        </div>
                     </div>
-                </div>	
-                <br><div class="xLinea2"></div><br>
-
-                <!-- boton accion -->
-                <div class="text-right">
-                    <button class="btn btn-success fs-18" disabled$="[[ !isShowBtnTicketEntrada ]]" onclick="xSaveTicketEntrada()">Listo Registrar</button>
-                </div>
+                </iron-pages>    
             </div>
         </div>
 	</template>
     <style>
         .content-ticket-rapido {
             max-width: 450px;
-            margin: 0 auto;
-            padding: 10px;
-            height: calc(100vh - 110px);
-            background: #e8e8e8;
+            margin: 0 auto;            
+            height: calc(100vh - 80px);
+            background: #e8e8e8;            
         }
+
+        .content-ticket-rapido .ticket-body {
+            padding: 10px;            
+        }
+
+        .tab-ticket {
+            background: #cbcbcb;padding: 0px;margin: 0px; border-radius: 5px 5px 0px 0px;
+            max-width: 450px;
+            border-bottom: 2px solid #989898;
+            font-size: 18px !important;
+        }
+
         .item-ticket {
-            font-size: 12px;
+            font-size: 14px;
             display: flex;
             justify-content: space-between;
             background: #f6f6f6;
             border-radius: 5px;
-            margin-bottom: 3px;
+            margin-bottom: 8px;
             font-weight: 600;
             align-items: center;
             cursor: pointer;
+            height: 48px;            
         }
 
         .item-ticket:hover {
@@ -76,16 +147,17 @@
         }
 
         .cantidad-ticket .btn-ticket{
-            padding: 10px;
+            padding: 12px;
+            border-radius: 5px;
         }
 
         .cantidad-ticket .btn-ticket.menos:hover{
             background: #ffaaaa;
         }
 
-        .cantidad-ticket .btn-ticket.mas{
+        /* .cantidad-ticket .btn-ticket.mas{
             border-radius: 0px 5px 5px 0px;
-        }
+        } */
 
         .cantidad-ticket .btn-ticket.mas:hover{
             background: #9ef3b4;
@@ -110,6 +182,13 @@
 		var xThisEntrada;
 
 		function xIniTicketEntrada() {
+
+            $("#tabs_ticket_venta").on('iron-select',function(){
+                switch(xThisEntrada.selected_tab_ticket_venta){
+                    case 1: xLoadResumenTicketEntrada() ;break;            
+                }
+            })
+
 			$.ajax({
 					type: 'POST',
 					url: '../../bdphp/log_componentes.php?op=2002'					
@@ -127,6 +206,8 @@
                             return;
                         }
                     });
+
+                    xThisEntrada.selected_tab_ticket_venta = 0;
 
                     setTimeout(() => {                    
                         if ( _seccionEntradaTicket ) {
@@ -229,6 +310,67 @@
             xNewListTicketEntrada();
         }
 
+        
+
+        function xCerrarVentaTicketEntrada() {
+            xPopupLoad.xopen();
+            $.ajax({
+					type: 'POST',
+					url: '../../bdphp/log_componentes.php?op=2203'                    
+				})
+                .done(res => {
+                    dialog_cierre_ticket_venta.close();
+                    xCocinarImpresionResumenTicketEntrada();
+                    xLoadResumenTicketEntrada();
+                    xPopupLoad.xclose(); 
+                });
+        }
+
+        
+        function xCocinarImpresionResumenTicketEntrada() {
+            var _listSendResumen = []
+            xThisEntrada.listResumenTicketEntrada.map(x => {
+                _listSendResumen.push({'descripcion': x.cantidad + ' ' + x.descripcion, 'cantidad': x.total})
+            });
+            const _arrTotales = [{descripcion: 'Total', importe: xThisEntrada.totalResumenTicketEntrada }];
+            
+            const printer = xgetImpresoraById(xThisEntrada.seccionSelectedInti.idimpresora);                        
+            const _dataUs = xm_log_get('ini_us');
+            if ( !printer ) {return; }
+            const _dataPrintD = {
+                lista : _listSendResumen,
+                impresora: printer,
+                subtotales: _arrTotales,
+                encabezado: {
+                    tipo: 'RESUMEN DE TICKETS',
+                    titulo: 'RESUMEN DE TICKETS',
+                    correlativo_lista: '',
+                    otro: '',
+                    observaciones: 'Corresponde a: ' + xNomU
+                }
+            }
+
+            // xImprimirCualquierLista(_dataPrintD, 7, 'ticket');
+            xImprimirCualquierLista(_dataPrintD);
+        }
+
+        
+
+        function xLoadResumenTicketEntrada() {
+            xPopupLoad.xopen();            
+            $.ajax({
+					type: 'POST',
+					url: '../../bdphp/log_componentes.php?op=2202'                    
+				})
+                .done(res => {
+                    res = JSON.parse(res)
+                    xThisEntrada.listResumenTicketEntrada = res.datos;  
+                    xThisEntrada.totalResumenTicketEntrada = parseFloat(res.datos.map(x => parseFloat(x.total)).reduce((a, b) => a + b, 0)).toFixed(2);
+                    xThisEntrada.isShowBtnResumenTicketEntrada = parseFloat(xThisEntrada.totalResumenTicketEntrada) > 0;
+                    xPopupLoad.xclose();                                                                    
+                });
+        }
+
 
 		Polymer({
 			is: 'x-entrada',
@@ -236,11 +378,17 @@
 				listSeccionesTicket: [],
                 seccionSelectedInti: [],
                 listItemsTicketEntrada:[],
+                listResumenTicketEntrada: [],
                 importeTotalTicketEntrada: Number,
-                isShowBtnTicketEntrada: Boolean
+                isShowBtnTicketEntrada: Boolean,
+                selected_tab_ticket_venta: Number,
+                totalResumenTicketEntrada: Number,
+                isShowBtnResumenTicketEntrada: Boolean,
 			},
 			attached: function () {
+                this.selected_tab_ticket_venta = 0;
                 this.isShowBtnTicketEntrada = false;
+                this.isShowBtnResumenTicketEntrada = false;
 				xThisEntrada = this;
 				xIniTicketEntrada();
                 _cpSocketOpen(); // conectamos para mandar a imprimir
