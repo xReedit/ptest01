@@ -356,6 +356,92 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
     return xListItemsRpt;
 }
 
+async function xCocinarJsonNotaCredito(doc) {
+    const _dataXML = JSON.parse(doc.json_xml);    
+    const _numSerieDoc = getSerieDoc(doc.numero);
+    const _fecha = xSetInputDate(xDevolverFecha());
+    const _hora = xDevolverHora();
+    const _jsonXmlNC = {
+        "serie_documento": "F"+_numSerieDoc,
+        "numero_documento": "#",
+        "fecha_de_emision": _fecha,
+        "hora_de_emision": _hora,
+        "codigo_tipo_documento":"07",
+        "codigo_tipo_nota": "01",
+        "motivo_o_sustento_de_nota": txt_motivo_anular.value,
+        "codigo_tipo_moneda": "PEN",
+        "numero_orden_de_compra": "",
+        "documento_afectado": {
+          "serie_documento": _dataXML.serie_documento,
+          "numero_documento": parseInt(_dataXML.numero_documento),
+          "codigo_tipo_documento": "01"
+        },
+        "datos_del_emisor": _dataXML.datos_del_emisor,
+        "datos_del_cliente_o_receptor":_dataXML.datos_del_cliente_o_receptor,
+        "totales": _dataXML.totales,
+        "items":_dataXML.items,
+        "extras": {}
+    }
+
+    console.log('_jsonHead', _jsonXmlNC);
+    const _res = await xSendNotaCredito(_jsonXmlNC, doc.idce);
+    return _res;
+
+}
+
+async function xSendNotaCredito (_jsonXmlNC, idce) {
+
+    const dtSede = xm_log_get("datos_org_sede")[0];
+    const url_api_fac_sede = dtSede.url_api_fac || '';
+    const URL_COMPROBANTE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[0].value : url_api_fac_sede;
+    const _url = URL_COMPROBANTE+'/documents';
+    let _headers = HEADERS_COMPROBANTE;
+    _headers.Authorization = "Bearer " + dtSede.authorization_api_comprobante;
+
+    xm_all_xToastOpen("Conectando con Sunat...");
+
+    // setTimeout(() => {        
+    //     xm_all_xToastClose();
+    // }, 2000);
+
+    const _rpt = await fetch(_url, {
+        method: 'POST',
+        headers: _headers,
+        body: JSON.stringify(_jsonXmlNC),
+    }).then(function (response) {
+        return response.json();
+    })
+    .then(function (res) {
+
+        // guardar nc
+        if ( res.success == true ) {
+            res.idce = idce;
+            res.jsonxml = _jsonXmlNC;
+            CpeInterno_RegistrarNC(res);
+
+            showToastSwal('success', 'Listo proceso correcto.');
+
+        } else {
+            // si hay algun error            
+            showAlertSwalOk('error', 'Ocurrio un error!', res.message);
+        }        
+
+
+        return res;
+    }).catch(async function (error) {
+        console.error('error', error);
+        showAlertSwalOk('error', 'Ocurrio un error!', 'No se pudo concretar el proceso. Error inesperado.');
+        return false;
+    });
+    
+    return _rpt;
+
+}
+
+function getSerieDoc(num_doc) {
+    return num_doc.split('-')[0].replace(/\D/g,'');
+}
+
 // tipo_documento = 01 > factura se envia de manera individual 
 // idtipo_comprobante_serie => guardar el correlativo
 // nomComercio para notificar mensaje whatsapp
@@ -461,7 +547,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         rpt.external_id = '';
         const correlativo_error = await CpeInterno_Error(data, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);        
         rpt.correlativo_comprobante = correlativo_error.correlativo;
-        console.log('xArrayComprobante.correlativo F error res api', rpt.correlativo_comprobante);
+        // console.log('xArrayComprobante.correlativo F error res api', rpt.correlativo_comprobante);
         console.log('error res api', error);
         rpt.facturacion_correlativo_api = correlativo_error.facturacion_correlativo_api;
         console.log(correlativo_error);
@@ -471,13 +557,13 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     //     xm_all_xToastClose();
     // }, 500);
 
-    console.log('rpt cpe', rpt);
+    // console.log('rpt cpe', rpt);
     
     return rpt;
 }
 
 function xSendWhatsAppPdfComrpobante(payload) {    
-    console.log('external_id', payload);
+    // console.log('external_id', payload);
     
     _cpSocketComprobanteWhatApp(payload)
 }

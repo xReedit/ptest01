@@ -95,7 +95,7 @@
             $sqlArray = explode(";", $sql);
             $buildSql = '';            
 
-            $sql_search = "insert into item_ingrediente (descripcion, cantidad, costo, iditem, idporcion) values ";            
+            $sql_search = "insert into item_ingrediente (descripcion, cantidad, costo, iditem, idporcion, necesario) values ";            
             $isFindPart = xSearchPartSql($sql_search, $sqlArray);
             if ( $isFindPart != 'false' ) {
                 $buildSql = xBuildSql($sql_search, $isFindPart, 'values').$buildSql;
@@ -105,7 +105,14 @@
             $isFindPart = xSearchPartSql($sql_search, $sqlArray);
             if ( $isFindPart != 'false' ) {
                 $buildSql = xBuildSql($sql_search, $isFindPart, 'where').$buildSql;
-            }
+            } else {
+                $sql_search = "delete where ";            
+                $isFindPart = xSearchPartSql($sql_search, $sqlArray);
+                if ( $isFindPart != 'false' ) {
+                    $sql_search = "delete from item_ingrediente where ";            
+                    $buildSql = xBuildSql($sql_search, $isFindPart, 'where').$buildSql;
+                }
+            }            
 
             if ( $buildSql!= '' ) {
                 $bd->xMultiConsulta($buildSql);

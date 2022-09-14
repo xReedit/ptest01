@@ -5,6 +5,16 @@
 
 
     <template is="dom-bind">
+
+        <paper-dialog id="dialog_tipo_pago_cpe_facturador" class="dialog_redondo" modal entry-animation="scale-up-animation">
+            <div class="text-center">
+                <p class="fw-600 fs-18">Elige el metodo de pago</p><br>
+                <x-comp-find-tipo-pago-option class="tpf_option_cpe_fac"></x-comp-find-tipo-pago-option><br>
+                <button class="xBoton2 xAzul">Listo, registrar</button>
+                <button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+            </div>
+        </paper-dialog>
+
         <paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation"
             exit-animation="fade-out-animation">
             <h4>Error en impresora</h4>
@@ -123,30 +133,47 @@
             </div>
 
             <div class="xPieCard">
-                <!-- forma de pago -->
-                <div style="width: 200px;" hidden$="[[ !isShowCpeFactura ]]">
-                    <br>
-                    <label for="selectFormaPago" class="xColorRow_Plomo"> Forma de Pago: </label>
-                    <select id="selectFormaPago" class="xTextRow2 xCursor">
-                        <option value="0">Contado</option>
-                        <option value="1">Credito</option>
-                    </select>
-                    
-                    <div hidden$="[[!isShowFechaPagoCredito]]">
-                        <br>
-                        <label for="fechaPagoCredito" class="xColorRow_Plomo"> Fecha de Pago: </label>
-                        <input type="date" name="fechaPagoCredito" id="fechaPagoCredito" class="xTextRow2 xCursor" onkeydown="return false">
-                    </div>
-                    <br><br><br>
-                </div>
+                <div class="d-flexx justify-content-between align-items-center">
+                    <!-- forma de pago -->
+                    <div>
+                        <div style="width: 200px;" hidden$="[[ !isShowCpeFactura ]]">
+                            <br>
+                            <label for="selectFormaPago" class="xColorRow_Plomo"> Forma de Pago: </label>
+                            <select id="selectFormaPago" class="xTextRow2 xCursor">
+                                <option value="0">Contado</option>
+                                <option value="1">Credito</option>
+                            </select>
+                            
+                            <div hidden$="[[!isShowFechaPagoCredito]]">
+                                <br>
+                                <label for="fechaPagoCredito" class="xColorRow_Plomo"> Fecha de Pago: </label>
+                                <input type="date" name="fechaPagoCredito" id="fechaPagoCredito" class="xTextRow2 xCursor" onkeydown="return false">
+                            </div>
+                            <br><br><br>
+                        </div>
 
-                <div style="width: 200px;">
-                    <label for="listPrint" class="xColorRow_Plomo"> Impresora: </label>
-                    <select id="listPrint" class="xTextRow2 xCursor" onchange="fact_selectOptionCategoria()">
-                        <template is="dom-repeat" id="listImpresora" items="[[listImpresoras]]" as="impresora">
-                            <option value="[[index]]"> {{ impresora.descripcion }} </option>
-                        </template>
-                    </select>
+                        <div style="width: 200px;">
+                            <label for="listPrint" class="xColorRow_Plomo"> Impresora: </label>
+                            <select id="listPrint" class="xTextRow2 xCursor" onchange="fact_selectOptionCategoria()">
+                                <template is="dom-repeat" id="listImpresora" items="[[listImpresoras]]" as="impresora">
+                                    <option value="[[index]]"> {{ impresora.descripcion }} </option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- boton registrar como ingreso a caja -->
+                    <div>
+                        <div class="xMiBoton_icon_option" selected$="{{ isShowIngresaCaja }}" onclick="selectOptionIngresarCaja()">
+                            <div class="d-flexx mb-2">
+                                <div>
+                                    <i hidden$="[[!isShowIngresaCaja]]" class="fa fa-check text-success pl-1"></i>
+                                    <i hidden$="[[isShowIngresaCaja]]" class="fa fa-close text-danger pl-2"></i>
+                                </div>
+                                <img src="../../../images/_caja.png" width="32px" class="mb-1">                                
+                            </div>
+                            <p>Ingresa a Caja</p>
+                        </div>
+                    </div>
                 </div>
                 <br>
                 <button class="xBoton2 xAzul" 
@@ -208,7 +235,7 @@
 </dom-module>
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
-    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, _inputAutocompleteFac, xCartaSubtotales, comprobanteFormaPago, compItemProductoFac, _labelElemetFind = '';
+    var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, _inputAutocompleteFac, xCartaSubtotales, comprobanteFormaPago, compItemProductoFac, _labelElemetFind = '', itemOptionTpSelectedCPE;
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -247,7 +274,7 @@
             }
 
 
-            console.log('cliente', cliente);
+            // console.log('cliente', cliente);
 			// xThisPago.clienteModel = cliente;
 			// xThisPago.tipoPagoRequiereCliente = false;
 			// xThisPago.valid_form_cliente_pago = true;			
@@ -266,7 +293,7 @@
         compItemProductoFac = document.getElementById('compItemProductoFac');
         compItemProductoFac.removespecialchart = true;
         compItemProductoFac.addEventListener('elementSeleted', (e) => {
-            console.log('elementSeleted', e.detail);
+            // console.log('elementSeleted', e.detail);
             var elementItemProdcutoSeleted = e.detail;
             _labelElemetFind  = elementItemProdcutoSeleted.label ? elementItemProdcutoSeleted.label.split('|')[elementItemProdcutoSeleted.label.split('|').length - 1] : e.target.valueInput;
             elementItemProdcutoSeleted.descripcion = _labelElemetFind.trim();
@@ -323,7 +350,7 @@
         })
 
         $('#selectFormaPago').on('change', (e) => {
-            console.log('e', e);
+            // console.log('e', e);
             xThisFacturador.isShowFechaPagoCredito = e.target.selectedIndex === 1;
             
            
@@ -342,7 +369,7 @@
                 xValidarBtnProcesar();
             }
 
-            console.log('comprobanteFormaPago', comprobanteFormaPago);
+            // console.log('comprobanteFormaPago', comprobanteFormaPago);
 
 
             var today = new Date().toISOString().split('T')[0];
@@ -371,6 +398,11 @@
 			e.stopImmediatePropagation();
 		} )
 
+        $(document).on('getValorIncial', '.tpf_option_cpe_fac', function (e) {
+					// console.log('getValorIncial comp-tp', e.detail);
+					itemOptionTpSelectedCPE = e.detail.values;					
+				});
+
     }
 
     function verificarInputInteger(obj) {
@@ -389,7 +421,7 @@
     function _getComprobante($event) {
         cnf_ComprobanteSel = $event;
         xNuevoCliente();
-        if (cnf_ComprobanteSel.codsunat === '0') {
+        if (cnf_ComprobanteSel.idtipo_comprobante === '0') {
             $("#contentClie").addClass('xInvisible');
         } else {            
             $("#contentClie").removeClass('xInvisible');
@@ -540,7 +572,7 @@
 
         // comprobar multiplicacion
 
-        const id = xCeroIzq(_arrItems.length + 1, 3);
+        const id = Date.now().toString().slice(-6); // number random
         const item = {  'id': id, 
                         'iditem': id, 
                         'idtipo_consumo': IdTpConsumo,
@@ -555,14 +587,17 @@
         _arrItems.push(item);
         xThisFacturador.arrItems = JSON.parse(JSON.stringify(_arrItems));
         //arrItems = JSON.parse(JSON.stringify(arrItems));
-        console.log(xThisFacturador.arrItems);
+        // console.log('xThisFacturador.arrItems', xThisFacturador.arrItems);
+        // console.log('_arrItems', _arrItems);
         xCalcularTotal();
         xNuevoItem();
     }
     
     function xBorrarItemLocalArr(obj) {
         const i = obj.parentElement.parentElement.dataValue;
-        _arrItems.splice(i,1);
+        const itemRemove = _arrItems[i];
+        // _arrItems.splice(i,1);
+        _arrItems = _arrItems.filter(x => x.id !== itemRemove.id);
         xThisFacturador.arrItems = JSON.parse(JSON.stringify(_arrItems));
         xCalcularTotal();
     }
@@ -590,6 +625,13 @@
 
             if ( cnf_ComprobanteSel.codsunat === "03" && parseFloat(_arrTotal[2].importe) >= 700) {
                 xThisFacturador.isShowMsjBoletaRequireDNI = true;        
+            }
+
+            if ( cnf_ComprobanteSel.idtipo_comprobante === "1" ) { // ticket
+                xThisFacturador.formValid = true;
+                xThisFacturador.modificarCliente = true; // si se pude modificar cliente   
+                // validNomClienteFac();
+                return;
             }
 
             validNomClienteFac();
@@ -633,9 +675,16 @@
             xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
             return;
         }
-        // registra cliente
-        xPopupLoad.xopen(); 
+
+         
+        // registra cliente        
         arr_comprobante = cnf_ComprobanteSel;
+
+        
+
+
+
+
         
         if (_arrCliente.length === 0 ){// si no hay cliente
             var nombres_cliente = $("#txt_nombres").val();
@@ -674,8 +723,33 @@
                 subtotal: _arrTotal[0].importe,
                 igv: _arrTotal[1].importe,
                 total: _arrTotal[2].importe,
+                concepto: xThisFacturador.arrItems[0].descripcion,
+                idtipo_pago: itemOptionTpSelectedCPE.idtipo_pago,
+                nombres_cliente: nombres_cliente
             }
 
+            // guarda registro en ingresos varios
+            if ( xThisFacturador.isShowIngresaCaja ) {
+                const rptIngresaCaja = await xShowIngresoVarios(arrCpeFac);
+                if ( !rptIngresaCaja ) {
+                    console.log('nada cancelo');
+                    return;
+                }
+            }
+
+            xPopupLoad.xopen();
+
+            
+
+
+
+
+            if ( cnf_ComprobanteSel.idtipo_comprobante === '1' ) {
+                // imprime ticket
+                xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, null);
+                return;
+            }
+            
             $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '102', data: arrCpeFac, arrItems: _arrItems } })
             .done(function (ultimoIdCpeFac) {                
                 _idregistro = [0, ultimoIdCpeFac]; //evalua si es array entonces sabra que esta yendo desde aca
@@ -698,8 +772,9 @@
             // agredo 041021
             arr_comprobante.forma_de_pago = comprobanteFormaPago;
 
-            // retorna el encabezado del comprobante con hash
+            // retorna el encabezado del comprobante con hash            
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);
+            itemsConEstructuraPrint = itemsConEstructuraPrint.filter(x => x);                      
             rptDoc = await xCocinarImprimirComprobante(itemsConEstructuraPrint, _arrTotal, arr_comprobante, _arrCliente, _idregistro, -2, false)
         }
 
@@ -786,7 +861,7 @@
     function fact_selectOptionCategoria() {
         const index = xThisFacturador.$.listPrint.value;
         impresoraSelect = xThisFacturador.listImpresoras[index];
-        console.log(impresoraSelect);
+        // console.log(impresoraSelect);
     }
 
 
@@ -804,12 +879,51 @@
                 xThisFacturador.listImpresoras = JSON.parse(JSON.stringify(_arrPrint));
 
                 impresoraSelect = _arrPrint[0];
-                console.log(xThisFacturador.listImpresoras);
+                // console.log(xThisFacturador.listImpresoras);
             });
     }
 
     function showMsjTelefono(obj) {
         xThisFacturador.isShowMsjTelefono = obj.value !== '';
+    }
+
+    function selectOptionIngresarCaja() {
+        xThisFacturador.isShowIngresaCaja = !xThisFacturador.isShowIngresaCaja;
+        if ( xThisFacturador.isShowIngresaCaja ) {
+            showAlertSwalOk('info', 'Ingresa a caja', 'Estas operaciones sumaran a tu caja, en la sección ingresos varios.', 'Listo')
+        } else {
+            // dialog_tipo_pago_cpe_facturador.open();   
+            
+        }
+    }
+
+    async function xShowIngresoVarios(_arrCpeFac) {
+        const _swalAlertValues = paramsSwalAlert;        
+        _swalAlertValues.title = '<p class="fw-600 fs-18">Elige el metodo de pago</p>';
+        _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <x-comp-find-tipo-pago-option class="tpf_option_cpe_fac"></x-comp-find-tipo-pago-option>
+                                </div>`;
+        _swalAlertValues.confirmButtonText = 'Listo, registrar';        
+        _swalAlertValues.showCancelButton = true;
+
+        
+        return await showAlertSwalHtmlDecision(_swalAlertValues,0)
+            .then(res => {
+                if (res.isConfirmed) { // guardar
+                    _arrCpeFac.idtipo_pago = itemOptionTpSelectedCPE.idtipo_pago
+                    // console.log('_arrCpeFac', _arrCpeFac);
+                    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: {op: '11', data: _arrCpeFac} })
+                    .done(res => {
+                        console.log('ok');
+                    })
+                }
+                return res.isConfirmed;
+            })
+
+    }
+
+    function xSaveIngresoVarios() {
+
     }
 
     Polymer({
@@ -826,7 +940,9 @@
             isShowFechaPagoCredito: Boolean,
             isShowCpeFactura: Boolean,
             isShowMsjTelefono: Boolean,
-            isShowMsjBoletaRequireDNI: Boolean            
+            isShowMsjBoletaRequireDNI: Boolean,
+            isShowIngresaCaja: Boolean,
+            subscription$: Object
         },
         attached: function () {
             this.isShowSearchSunat = false;
@@ -834,9 +950,20 @@
             this.isShowCpeFactura = false
             this.isShowMsjTelefono = false;
             this.isShowMsjBoletaRequireDNI = false;
+            this.isShowIngresaCaja = false;
             xThisFacturador = this;
             xIniFacturador();
             _cpSocketOpen();
-        }
+
+            this.subscription$ = onStatusSetUsChangeSede()                
+                .subscribe(res => {
+                if ( res == true ) {
+                    xIniFacturador();                    
+                }
+            });
+        },
+        detached:function(){			        
+            this.subscription$.unsubscribe();
+        },
     })
 </script>

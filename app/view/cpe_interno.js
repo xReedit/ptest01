@@ -1,3 +1,20 @@
+function CpeInterno_RegistrarNC(data) {
+    let dataSave = {}
+    
+    dataSave.json_xml = data.jsonxml;
+    dataSave.pdf = data.links.pdf != '' ? 1 : 0; 
+    dataSave.cdr = data.links.cdr != '' ? 1 : 0; 
+    dataSave.xml = data.links.xml != '' ? 1 : 0; 
+    dataSave.motivo = data.jsonxml.motivo_o_sustento_de_nota;
+    dataSave.msj = data.response.description;
+    dataSave.numero = data.data.number;
+    dataSave.external_id = data.data.external_id;
+    dataSave.idce = data.idce;
+
+    CpeInterno_SaveBD_NC(dataSave);
+
+}
+
 function CpeInterno_Registrar(data) {
     
     if (data.success) { //si todo salio bien graba en CE (comprobantes electronicos)
@@ -84,6 +101,15 @@ async function CpeInterno_SaveBD(dataSave) {
     .done( function (res) {
         rptSave = JSON.parse(res).datos[0];
         // console.log(res);
+    });
+    return rptSave;
+}
+
+async function CpeInterno_SaveBD_NC(dataSave) {
+    let rptSave = '';
+    await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '10', data: dataSave}})
+    .done( function (res) {
+        rptSave = JSON.parse(res).datos[0];        
     });
     return rptSave;
 }

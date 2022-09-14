@@ -952,7 +952,7 @@
 				, WEEK(STR_TO_DATE(pb.fecha_cierre, '%d/%m/%Y')) num_semana, if(WEEK(STR_TO_DATE(pb.fecha_cierre, '%d/%m/%Y')) = WEEK(now()), 1 ,0) semana_actual
 				from pedido_borrados pb 
 				inner join usuario u on u.idusuario = pb.idusuario_permiso
-				inner join item i on i.iditem = pb.iditem
+				inner join pedido_detalle i on i.idpedido_detalle = pb.idpedido_detalle 
 				where u.idsede = $idsede 
 				and $fecha GROUP by pb.idpedido_borrados";			
 			$bd->xConsulta($sql);
@@ -1495,6 +1495,11 @@
 
 				$sqlCount = "SELECT count(idsede_calificacion) as d1 from sede_calificacion where idsede = $g_idsede";
 				
+				$bd->xConsulta($sql);
+				break;
+			
+			case 23: // verifica si hay cajas abiertas - control de pedidos
+				$sql = "select count(idregistro_pago) cant from registro_pago rp where idsede = $g_idsede and STR_TO_DATE(fecha, '%d/%m/%Y') = CURDATE() and idusuario!=$g_idusuario and cierre=0 order by idregistro_pago desc limit 1";
 				$bd->xConsulta($sql);
 				break;
 	}

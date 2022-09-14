@@ -103,6 +103,35 @@
 							</thead>
 						</table>
 
+						<!-- ingresos varios -->
+						<div hidden$="[[ !isShowIngresoVarios ]]">
+							<br><br>
+							<div class="xLinea2"></div>
+							<br>
+							<h3>Ingresos Varios</h3>
+							<br>
+							<table>
+								<thead>
+									<th align="left">Fecha</th>
+									<th align="left">Metodo</th>
+									<th align="left">Cliente</th>
+									<th align="left">Concepto</th>
+									<th align="right">Importe</th>									
+								</thead>
+								<tbody>
+									<template is="dom-repeat" items="{{listIngresosVarios}}" as="item">
+										<tr>
+											<td>{{ item.fecha }}</td>
+											<td>{{ item.tipo_pago }}</td>
+											<td>{{ item.nom_cliente }}</td>
+											<td>{{ item.concepto }}</td>									
+											<td align="right">{{ item.importe }}</td>											
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
+
 						<div hidden$="[[ !isShowListaAdelantoOrden ]]">
 							<br><br>
 							<div class="xLinea2"></div>
@@ -136,6 +165,49 @@
 								</tbody>
 							</table>
 						</div>
+
+						<!-- entradas -->
+						<div hidden$="[[ !isShowListaTicketEntrada ]]">
+							<br><br>
+							<div class="xLinea2"></div>
+							<br>
+							<h3>Tickets de Entrada</h3>
+							<span>Recibe este ingreso en tu caja</span>
+							<br><br>
+							<table>
+								<thead>
+									<th>Fecha</th>
+									<th>Usuario</th>
+									<th>Detalle</th>
+									<th align="right">Total</th>
+									<th></th>									
+								</thead>
+								<tbody>
+									<template is="dom-repeat" items="{{listTicketEntrada}}" as="item">
+										<tr>
+											<td>{{ item.fecha }}</td>
+											<td>{{ item.usuario }}</td>
+											<td>
+												<table class="w-100 border-0">
+													<template is="dom-repeat" items="{{item.lista}}" as="row">
+														<tr class="border-0">
+															<td class="border-0">{{ row.cantidad }}</td>
+															<td class="border-0">{{ row.descripcion }}</td>
+															<td align="right" class="fw-600 border-0">{{ row.total }}</td>
+														</tr>
+													</template>
+												</table>
+											</td>
+											<td align="right" class="fw-600 fs-18">S/. {{ item.total }}</td>
+											<td>
+												<button class="btn btn-sm btn-success" data-id="[[index]]" onclick="recibirTicketEntrada(this)">Recibir</button>
+											</td>
+										</tr>
+									</template>
+								</tbody>
+							</table>
+						</div>
+
 					</div>
 				</div>
 
@@ -240,8 +312,8 @@
 		</div>
 
 
-		<div class="xInvisible">
-			<div id="div_datos" style="max-width:500px;">
+		<div id="pdf_cierre" class="xInvisible border-0" style="max-width: 300px; background: white;">
+			<div id="div_datos_cierre_caja"></div>
 		</div>
 	</template>
 </dom-module>
@@ -457,7 +529,7 @@ function xGetDataCierre(idBitacora) {
 		});
 
 		xArrayCierrePrint = arrRpt;
-		xEscribirDatosHtml();
+		
 		// xLoadDataCierrePrintHtml();
 
 		// console.log('arrPrint', arrRpt);
@@ -470,7 +542,10 @@ function xGetDataCierre(idBitacora) {
 			
 			// xOpenPage(22)
 			if ( !isPrintCierreCaja ) { xVerificaSiFacturacionE();}
+
+
 			xImprimirCierre(xArrayEncabezadoCierre, xArrayCierrePrint);
+			xEscribirDatosHtml();
 		// });
 	});
 }
@@ -496,6 +571,8 @@ function xLoadResumenIS(){
 	});
 
 	xLoadAdelantoOrdenPedido();
+	xLoadTicketsEntradaCaja();
+	xLoadIngresosVariosCaja();
 }
 
 function xLoadAdelantoOrdenPedido() {
@@ -962,17 +1039,17 @@ function xEscribirDatosHtml(){
 		xtabla_sum=String('<tr><td></td><td align="right"><strong>'+xArraySumT[a].t1+'</strong></td><td align="right"><strong>'+xArraySumT[a].t2+'</strong></td><td align="right"><strong>'+xArraySumT[a].t3+'</strong></td></tr>');
 
 		if(count_row===0){continue;}
-		xbody_datos=String(xbody_datos+'<table class="xtable2 xMarginTop" width="100%">'+xtabla_encabezados+xtabla_datos+xtabla_sum+'</table><br><br>');
+		xbody_datos=String(xbody_datos+'<table class="xMarginTop fs-11" width="100%">'+xtabla_encabezados+xtabla_datos+xtabla_sum+'</table><br><br>');
 
 	};
 
 	const _fechaNow = xDevolverFecha() + ' | ' + xDevolverHora();
 
 	xbody_datos = `<div style = "line-height: 1;">
-				<h3>CIERRE DE CAJA - ${_fechaNow}</h3>				
-				<h3>Local: ${sedeDatos.sedenombre}</h3>				
-				<h3>Ciudad: ${sedeDatos.sedeciudad} </h3>
-				<h4>Usuario: ${xNomUsario}</h4>
+				<h4>CIERRE DE CAJA - ${_fechaNow}</h4>				
+				<h4>Local: ${sedeDatos.sedenombre}</h4>				
+				<h4>Ciudad: ${sedeDatos.sedeciudad} </h4>
+				<p>Usuario: ${xNomUsario}</p>
 				<p>Intentos: <strong>${numImtentosUs}</strong></p>
 				<p>Supervisor: <trong>${nom_supervisor}</strong></p>
 				<br><br>
@@ -980,8 +1057,13 @@ function xEscribirDatosHtml(){
 				<br><br>
 				<p>papaya.com.pe</p>`;
 
-	$("#div_datos").append(xbody_datos).trigger('create');
+	$("#div_datos_cierre_caja").append(xbody_datos).trigger('create');
 	// xPopupLoad.xclose();
+
+	// descargar pdf
+	setTimeout(() => {		
+		xDownloadPdfCierre(_fechaNow, xNomUsario);
+	}, 1500);
 
 	// enviar a correo electronico;
 	if (!sedeDatos.email_cierre) { return; }
@@ -989,10 +1071,31 @@ function xEscribirDatosHtml(){
             to: sedeDatos.email_cierre,
             asunto: 'CIERRE DE CAJA | '+ sedeDatos.sedenombre + ' | ' + xDevolverFecha(),
             titulo: 'Cierre de caja',
-            htmlContent: div_datos.outerHTML
+            htmlContent: div_datos_cierre_caja.outerHTML
         }
 
 	xSendEmailClienteSES(_msjSend);
+}
+
+function xDownloadPdfCierre(_fecha, _nomusuariocierre) {
+	$('#pdf_cierre').removeClass('xInvisible');
+	var nodeImgCierre = document.getElementById('pdf_cierre');
+	const _heightMM = nodeImgCierre.scrollHeight / 3.77;
+	domtoimage.toPng(nodeImgCierre)
+    .then(function (dataUrl) {
+        var img = new Image();
+        img.src = dataUrl;
+        
+		var doc = new jsPDF('p', 'mm', [90, _heightMM]);
+		doc.addImage(img, 'JPEG', 5, 5);
+		doc.setProperties({title: "Cierre de caja - "+_nomusuariocierre+ " " + _fecha});
+		window.open(doc.output('bloburl'));
+
+		$('#pdf_cierre').addClass('xInvisible');
+    })
+    .catch(function (error) {
+        console.error('ocurrio un error', error);
+    });
 }
 
 function xloadLastCierres() {
@@ -1047,9 +1150,42 @@ function recibirAdelanto(obj) {
 
 }
 
+function recibirTicketEntrada(obj) {
+	const indexList = obj.dataId;
+	const item = xThisCaja.listTicketEntrada[indexList];	
+	item.fecha_guardar = xDevolverFecha()+' '+xDevolverHora();
+	// item.total = parseFloat(item.total).toFixed(2)
+
+	$.ajax({ type: 'POST', 
+		url: '../../bdphp/log_004.php?op=1701',
+		data:{data: item}})
+	.done( function (res) {
+		// console.log(res);
+		xLoadResumenIS();
+		// xLoadTicketsEntradaCaja();
+	});
+
+}
+
 function xOpenDialogPermisoRemotoUs() {
 	txt_total_tengo.value = txt_total_caja.value;
 	dialog_permiso_remoto.open();
+}
+
+function xLoadTicketsEntradaCaja() {
+	$.ajax({ type: 'POST', 
+		url: '../../bdphp/log_004.php?op=17'})		
+	.done( function (res) {
+		// console.log('JSON.parse(res)', JSON.parse(res));
+		const _resListTickes = JSON.parse(res).datos;
+		xThisCaja.isShowListaTicketEntrada = _resListTickes ? _resListTickes.length > 0 : false;
+		xThisCaja.listTicketEntrada = _resListTickes.map( x => {
+			x.lista = JSON.parse(x.lista);
+			x.total = parseFloat(x.total).toFixed(2)
+			return x;
+		});
+	});
+	
 }
 
 function xLoadUsAdminPermiso() {
@@ -1062,6 +1198,18 @@ function xLoadUsAdminPermiso() {
 		// console.log('listUsAdmin', xThisCaja.listUsAdmin);
 	});
 
+}
+
+function xLoadIngresosVariosCaja() {
+	$.ajax({ type: 'POST', 
+	url: '../../bdphp/log_004.php?op=1702'})
+	.done( (res) => {
+		xThisCaja.listIngresosVarios = JSON.parse(res).datos;
+		xThisCaja.isShowIngresoVarios = xThisCaja.listIngresosVarios.length > 0;
+		// console.log('xThisCaja.listIngresosVarios', xThisCaja.listIngresosVarios);
+		// selectedUsAdmin(null, 0);
+		// console.log('listUsAdmin', xThisCaja.listUsAdmin);
+	});
 }
 
 function selectedUsAdmin(obj, index = null) {
@@ -1111,10 +1259,14 @@ Polymer({
 		listUsAdmin: [],
 		isShowLastCierres: Boolean,
 		listAdelantoOrden: [],
+		listTicketEntrada: [],
 		isShowListaAdelantoOrden: Boolean,
 		isShowEsperaRptSolicitudCierre: Boolean,
 		isShowRptSolicitudCierre: Boolean,
-		rowRptSolicitud: []
+		isShowListaTicketEntrada: Boolean,
+		isShowIngresoVarios: Boolean,
+		rowRptSolicitud: [],
+		listIngresosVarios: []
 	},
 	attached:function(){
 		this.selected=0;
@@ -1122,6 +1274,8 @@ Polymer({
 		this.isShowListaAdelantoOrden = false;
 		this.isShowEsperaRptSolicitudCierre = false;
 		this.isShowRptSolicitudCierre = false;
+		this.isShowListaTicketEntrada = false;
+		this.isShowIngresoVarios = false;
     	xThisCaja=this;
 		xIniCaja();
 		// _cpSocketIsConnect();

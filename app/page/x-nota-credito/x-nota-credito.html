@@ -1,0 +1,35 @@
+<dom-module id="x-nota-credito">    
+    <template is="dom-bind">
+        <h1>Nota de Crédito</h1>
+    </template>
+</dom-module>
+    <script rel="prefetch" type="text/javascript" src="../../view/socket.service.p.js"></script>
+    <script type="text/javascript" src="../../shared/validar.numdoc.js"></script>
+    <script type="text/javascript" src="../../view/item_pedido_print_comprobante.js"></script>
+    <script type="text/javascript" src="../../view/deNumALetras.js"></script>
+    <script type="text/javascript" src="../../view/xJsonSunat.js"></script>
+    <script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
+    <script type="text/javascript" src="../../view/item_pedido_estructura.js"></script>
+
+<script>
+var xThisNC;
+
+function xIniNotaCredito () {
+
+}
+
+Polymer({
+        is: 'x-nota-credito',
+        properties: {                
+        },
+        attached: function () {
+            
+            xThisNC = this;
+            xIniNotaCredito();
+            _cpSocketOpen();
+        },
+        detached:function(){
+            _cpSocketClose();
+        }
+    })
+</script>

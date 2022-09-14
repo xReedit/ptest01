@@ -7,6 +7,7 @@ var componentsLoadPanel = false, dialogListNotification, ipPrintServerLocal = ''
 
 // alert('aaa')
 
+
 // var s = document.createElement('script');
 // 	s.src = "../web_components/webcomponentsjs/webcomponents-lite.min.js",
 // 	document.head.appendChild(s);
@@ -33,7 +34,14 @@ window.addEventListener('WebComponentsReady', function (e) {
 	// setTimeout(() => {
 		console.log('cargado en 4s - desde WebComponentsReady');	
 		xIniDocument();
+		
 	// }, 3000);
+
+	// status_isUsChangeSede$.subscribe(res => {
+	// 	console.log('status_isUsChangeSede', status_isUsChangeSede);
+	// })
+
+	status_CreateVariablesListen();
 });
 
 window.onload = () => {	
@@ -60,6 +68,26 @@ window.addEventListener("error", function (e) {
 	// You can send data to your server
 	// sendError(data);
 });
+
+// function test() {	
+
+// 	var node = document.getElementById('div_datos_cierre_caja');
+// 	domtoimage.toPng(node)
+//     .then(function (dataUrl) {
+//         var img = new Image();
+//         img.src = dataUrl;
+        
+// 		var doc = new jsPDF('p', 'mm', [90, 90]);
+// 		doc.addImage(img, 'JPEG', 5, 5);
+// 		doc.setProperties({title: "Cierre de caja"});
+// 		window.open(doc.output('bloburl'));
+//     })
+//     .catch(function (error) {
+//         console.error('oops, something went wrong!', error);
+//     });
+	
+// }
+
 
 // xxx();
 // document.addEventListener("WebComponentsReady", function componentsReady() {
@@ -125,6 +153,13 @@ function xIniDocument(){
 		localStorage.setItem('::app3_sys_last_s', btoa(xm_log_get('datos_org_sede')[0].idsede));
 
 		 xComptitulo_bar.init();
+
+
+		 status_CreateVariablesListen();
+
+		//  onStatusSetUsChangeSede().subscribe(res => {			
+		// 	console.log('status_isUsChangeSede', res);
+		//  })
  	});
 
  	//xRefreshNotificaciones=setInterval(function () {xNotificaciones()},10000);

@@ -1,10 +1,15 @@
 <link rel="import" href="../../x-componentes/pagination-input/pagination-input.html">
 <link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 
-<dom-module id="x-cpe-emitidos">
 
+<dom-module id="x-cpe-emitidos">
+    
     <script type="text/javascript" src="../../view/socket.master.service.js"></script>
-	<script type="text/javascript" src="../../view/socket.service.p.js"></script>
+    <script type="text/javascript" src="../../view/socket.service.p.js"></script>
+    <script src="../../view/xApiConsultaSunat.js"></script>
+    <script src="../../view/httpFech.js"></script>
+    
+
 
     <template is="dom">
         <paper-dialog class="dialog_redondo" id="dialog_enviando_sunat" style="width: 245px;" modal entry-animation="scale-up-animation"
@@ -19,18 +24,34 @@
             </div>
         </paper-dialog>
         
-        <paper-dialog id="dialog_motivo_anular_comprobante" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <paper-dialog id="dialog_motivo_anular_comprobante" class="dialog_redondo" style="min-width:320px; max-width:600px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
             <div class="xContent">
-                <h4>ANULAR COMPROBANTE</h4>
-                <hr>
-                <p class="xColorRow_Rojo">Esta seguro de querer anular el comprobante? Una vez anulado no podra recuperarlo.</p>
+                <div class="d-flexx align-items-center">
+                    <h3>ANULAR COMPROBANTE</h3> <span class="ml-2">[[ desDocCpe ]]</span>
+                </div>
+
+                <div class="xLinea2"></div><br>
+                <!-- <hr> -->
+                <!-- <p class="xColorRow_Rojo">Esta seguro de querer anular el comprobante? Una vez anulado no podra recuperarlo.</p> -->
+                <p>
+                    <strong>El plazo para comunicar de baja o anular un comprobante de pago electrónico es de [[NumDaysAnularCpe]] días</strong>, contados desde el día que emites el comprobante. Si no cumples ese plazo, tendrás que generar una Nota de Crédito.
+                </p>
+                <div hidden$="[[isShoOpNotaCredito]]" class="mt-1">
+                    <p class="fw-600 text-success">El documento esta en el plazo para dar de baja.</p>
+                </div>
+
+                <div hidden$="[[!isShoOpNotaCredito]]" class="mt-1">
+                    <p class="fw-600 text-info">El documento NO cumple con el plazo, debes generar una Nota de Crédito.</p>
+                </div>
+
                 <br>
-                <h4>Indique el motivo de anulacion</h4>
+                <h4>Indique el motivo de anulación</h4>
                 <div>                    
                     <input type="text" class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus>
                 </div>
                 <br><br><br>
-                <div class="xBoton2 xRojo" dialog-dismiss onclick="xAnularComprobante_confirma();">Listo</div>
+                <div class="xBoton2 xRojo" dialog-dismiss hidden$="[[isShoOpNotaCredito]]" onclick="xAnularComprobante_confirma();">Listo, dar de baja</div>
+                <div class="xBoton2 xAzul" dialog-dismiss hidden$="[[!isShoOpNotaCredito]]" onclick="xAnularComprobante_NotaCredito();" >Listo, generar nota de crédito</div>
                 <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
                 <br><br>
             </div>
@@ -82,6 +103,7 @@
                     <paper-tabs selected="{{selected}}" id="tab_cpe">
                         <paper-tab>Comprobantes</paper-tab>
                         <paper-tab>Resumen de boletas</paper-tab>
+                        <paper-tab>Notas de Crédito</paper-tab>
                     </paper-tabs>
                     <div class="xLinea2"></div>
                     <br><br>
@@ -99,7 +121,7 @@
                                 
                                     <div class="d-flexx">
                                         <button class="xBoton2 xAzul mr-2" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>                                        
-                                        <button class="xBoton2 xVerde" onclick="xGenerarReporteExcel()" title="Bajar a excel"><img src="../../../images/excel.png" alt=""></button>
+                                        <button class="xBoton2 xVerde" onclick="downloadReporteCPEEmitidos()" title="Bajar a excel"><img src="../../../images/excel.png" alt=""></button>
                                     </div>     
 
                                 <p id="xTituloRpt" class="xColorRow_Rojo"></p>
@@ -151,6 +173,11 @@
                                                 <div id="rowitem">
                                                     <div id="row_estado">
                                                         <span class$={{item.class_estado}}>{{item.nom_estado}}</span>
+
+                                                        <div hidden$="{{!item.show_nc}}">
+                                                            <p class="badge badge-info fs-10">NC {{ item.nota_credito }}</p>
+                                                        </div>
+
                                                         <template is="dom-if" if="{{_isEqualTo(item)}}">
                                                             <button class="xBoton_flat_2 xCursor" data-id="{{index}}" onclick="reenviarComprobante(this)"> Reenviar</button>
                                                         </template> 
@@ -256,6 +283,47 @@
                             </div>
                             <br><br>
                         </div>
+
+                        <div id="div_notas_credito">
+                            <h3>Notas de Crédito</h3><br>
+                            <table width="100%" id="tb_list_nc">
+                                <thead>
+                                    <th>#</th>
+                                    <th>Fecha</th>
+                                    <th>Usuario</th>
+                                    <th>Nota Crédito</th>                                    
+                                    <th width="35%">Comprobante Afectado</th>                                    
+                                    <th>Estado</th>
+                                    <th>.</th>
+                                </thead>
+                                <tbody>
+                                    <template is="dom-repeat" items="{{ListCpeNC}}" as="item">
+                                        <tr>
+                                            <td><span>{{displayIndex(index)}}</span></td>
+                                            <td>
+                                                <p>{{item.fecha}}</p>
+                                                <p>{{item.hora}}</p>
+                                            </td>
+                                            <td>{{item.usuario}}</td>
+                                            <td>{{item.numero}}</td>
+                                            <td>
+                                                <p>{{item.comprobante}}</p>
+                                                <p class="text-secondary">{{item.motivo}}</p>
+                                            </td>                                            
+                                            <td><span class=" badge badge-success ">Aceptado</span></td>
+                                            <td>
+                                                <div data-id="{{index}}">
+                                                    <img class="xzoom-1 xCursor" onclick="verDocuemnto('pdf', this, true)" src="../../../images/001-pdf.png" width="16px" alt="">
+                                                    <img class="xzoom-1 xCursor" onclick="verDocuemnto('xml', this, true)" src="../../../images/002-xml.png" width="16px" alt="">
+                                                    <img class="xzoom-1 xCursor" onclick="verDocuemnto('cdr', this, true)" src="../../../images/003-cdr.png" width="16px" alt="">
+                                                    <img class="xzoom-1 xCursor" title="Enviar x WhatsApp" onclick="openSendWhatsApp(this, true)" src="../../../images/whatsapp.png" width="16px" alt="wts">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                     </iron-pages>                    
                 </div>
             </div>
@@ -265,7 +333,7 @@
 
         <!-- reporte comprobantes exportar -> excel -->
         <!-- <button onclick="xGenerarReporteExcel()">Exportar</button> -->
-        <div id="reporte" class="xInvisible">
+        <!-- <div id="reporte" class="xInvisible">
 
             <table id="testTable" width="100%">
                 <caption>
@@ -304,7 +372,50 @@
                 </tbody>
             </table>
 
-        </div>
+        </div> -->
+
+        <!-- reporte comprobantes exportar -> excel -->
+		<!-- <button onclick="xGenerarReporteExcel()">Exportar</button> -->
+		<div id="reporte" class="xInvisible">
+
+			<table id="testTable" width="100%">
+				<caption>
+					<h1>{{selEstablecimientoCpe.nomsede}} | {{selEstablecimientoCpe.ciudad}}</h1>					
+					<h2>Reporte de comprobantes electronicos - {{selMesCPE}}</h2>
+				</caption>
+				<thead>
+					<th width="45px">#</th>
+					<th width="15%">f. Emision</th>					
+					<th>Tipo</th>
+					<th>Numero</th>
+					<th width="35%">Cliente</th>
+					<th width="15%">RUC/DNI</th>
+					<th align="right">Sub total</th>
+					<th align="right">I.G.V</th>
+					<th align="right">Total</th>
+					<th>Estado Sistema</th>
+					<!-- <th>Estado Sunat</th> -->
+				</thead>
+				<tbody>
+					<template is="dom-repeat" items="{{ListReporte}}" as="row">
+						<tr>
+							<td>{{displayIndex(index)}}</td>
+							<td style$="{{row.style_td}}">{{row.fecha}}</td>							
+							<td style$="{{row.style_td}}">{{row.tipo_doc}}</td>
+							<td style$="{{row.style_td}}">{{row.num_doc }}</td>
+							<td style$="{{row.style_td}}">{{row.nom_cliente}}</td>
+							<td style$="{{row.style_td}}">{{row.ruc}}</td>
+							<td style$="{{row.style_td}}">{{row.subtotal}}</td>
+							<td style$="{{row.style_td}}">{{row.igv}}</td>
+							<td style$="{{row.style_td}}">{{row.total}}</td>
+							<td style$="{{row.style_reporte}}">{{row.estado}}</td>
+							<td style$="{{row.style_estado_sunat}}">{{row.estadoCp}}</td>							
+						</tr>
+					</template>
+				</tbody>
+			</table>
+
+		</div>
     </template>
 
     <style>
@@ -321,17 +432,21 @@
 <script rel="preload" type="text/javascript" src="../../view/xm_all.js"></script>
 <script rel="preload" type="text/javascript" src="./../x-caja/cocinar.resumen.boletas.js"></script>
 <script type="text/javascript" src="../../view/config.const.js"></script>
+<script rel="preload" type="text/javascript" src="../../view/xJsonSunat.js"></script>
 <script rel="preload" type="text/javascript" src="../../view/xSOAPSunat.js"></script>
 <script rel="preload" type="text/javascript" src="../../view/cpe_interno.js"></script>
 <script type="text/javascript" src="../../view/export.excel.js"></script>
 
 <script>
     var xThisCpe, lastPos=0, xPopupLoad, p_upadate=true, p_rows_re=0, p_rows=0, p_fecha='', p_filter='', p_desde=0, data_pagination={}, data_pagination_re={}, xdebounce, xe_debounce=false, index_anular;
-    var cpe_mes_anterior = '', cpe_yy_actual='', _us_cpe='', external_id_cpe;
+    var cpe_mes_anterior = '', cpe_yy_actual='', _us_cpe='', external_id_cpe, _apiConsultaCpeCPE, listCpeSuccessCPE = [];
 
 
     function xExportarExcel() {
         tableToExcel('testTable', 'Comprobantes');
+        setTimeout(() => {
+		    xPopupLoad.xclose();		
+	    }, 500);
     }
 
     
@@ -343,6 +458,13 @@
         xCPEValidUs();
         xLoadCpeEmitidos('6');
         xIniPagination();
+
+
+        xThisCpe.NumDaysAnularCpe = xm_log_get('app3_sys_const').find(x => x.llave === 'NUM_DAYS_ANULACION_CPE').value;        
+
+        // setTimeout(() => {
+            _apiConsultaCpeCPE = new apiConsulaCpe();
+        // }, 1500);
 
         setTimeout(() => {
             $('body').addClass('loaded');
@@ -371,8 +493,9 @@
         });
 
         $("#tab_cpe").on('iron-select', function () {
+            console.log('xThisCpe.selected', xThisCpe.selected);
             switch (xThisCpe.selected) {
-                // case 0: xLoadResumenIS(); break;
+                case 2: xLoadNotasCredito(); break;
             }
         });
 
@@ -482,11 +605,11 @@
 
 
                 switch (parseInt(estado_cpe)) {
-                    case 0: msj_estado = 'Aceptado'; class_estado='xColorRow_verde'; btn_anular=true; style_reporte='color: green'; break;
-                    case 1: msj_estado = 'Sin Registrar'; class_estado = 'xColorRow_Amarillo'; btn_enviar=true; style_reporte = 'color: yellow'; break;
-                    case 2: msj_estado = 'Registrado'; class_estado = 'xColorRow_Azul'; style_reporte = 'color: blue'; break;
-                    case 3: msj_estado = 'Registrado'; class_estado = 'xColorRow_Azul'; style_reporte = 'color: blue'; break;
-                    case 4: msj_estado = 'Anulado'; class_estado = 'xFondoRowRojo'; style_reporte = 'color: red';break;
+                    case 0: msj_estado = 'Aceptado'; class_estado='badge badge-success xColorRow_verde'; btn_anular=true; style_reporte='color: green'; break;
+                    case 1: msj_estado = 'Sin Registrar'; class_estado = 'badge badge-warning xColorRow_Amarillo'; btn_enviar=true; style_reporte = 'color: yellow'; break;
+                    case 2: msj_estado = 'Registrado'; class_estado = 'badge badge-info xColorRow_Azul'; style_reporte = 'color: blue'; break;
+                    case 3: msj_estado = 'Registrado'; class_estado = 'badge badge-info xColorRow_Azul'; style_reporte = 'color: blue'; break;
+                    case 4: msj_estado = 'Anulado'; class_estado = 'badge badge-danger xFondoRowRojo'; style_reporte = 'color: red';break;
                 }
 
                 // totales json                
@@ -508,6 +631,7 @@
                 x.nom_estado = msj_estado;
                 x.btn_enviar = btn_enviar;
                 x.btn_anular = btn_anular;
+                x.show_nc = x.nota_credito ? true : false;
                 x.style_reporte = style_reporte;
                 x.isReenviandoLoading = false;
             })
@@ -555,9 +679,9 @@
     /// 
 
     /// ver documentos relacionados
-    function verDocuemnto(tipo, obj) {
+    function verDocuemnto(tipo, obj, isNotaCredito = false) {
         const index = obj.parentElement.dataId;
-        const external_id = xThisCpe.ListCpe[index].external_id; 
+        const external_id = !isNotaCredito ? xThisCpe.ListCpe[index].external_id : xThisCpe.ListCpeNC[index].external_id; 
         // console.log(external_id);
         xSoapSunat_DownloadFile(tipo, external_id)
     }
@@ -566,7 +690,18 @@
     function xAnularComprobante(obj) {
         if ( xThisCpe.isContador ) return;
         index_anular = obj.parentElement.dataId;
+        const _cpeSelected = xThisCpe.ListCpe[index_anular];
+        xThisCpe.desDocCpe = _cpeSelected.numero;
+        xVerificarPlazoAnulacion(_cpeSelected);
         dialog_motivo_anular_comprobante.open();        
+    }
+
+    function xVerificarPlazoAnulacion(cpeSelected) {
+        // const _dayCpe = new Date(cpeSelected.fecha.split('/').reverse().join('/'));
+        const _numDaysDiff = xDiasTranscurridos('', cpeSelected.fecha);
+        xThisCpe.isShoOpNotaCredito =  _numDaysDiff >= 7;
+        console.log('_numDaysDiff', _numDaysDiff);
+
     }
 
     async function xAnularComprobante_confirma() {
@@ -587,6 +722,18 @@
         xm_all_xToastClose();
 
         txt_motivo_anular.value='';
+    }
+
+    async function xAnularComprobante_NotaCredito() {
+        const _cpeSelected = xThisCpe.ListCpe[index_anular];
+        const rpt = await xCocinarJsonNotaCredito(_cpeSelected);
+
+        if (rpt) {                        
+            lastPos = $(window).scrollTop();
+            xLoadCpeEmitidos('6');            
+        }
+
+        xm_all_xToastClose();
     }
 
 
@@ -729,10 +876,10 @@
         // console.log('rpt', rpt);
     }
 
-    function openSendWhatsApp(obj) {
+    function openSendWhatsApp(obj, isNotaCredito = false) {
         const index = obj.parentElement.dataId;
-        external_id_cpe = xThisCpe.ListCpe[index].external_id;
-        xThisCpe.numComprobanteSelected = xThisCpe.ListCpe[index].numero
+        external_id_cpe = !isNotaCredito ? xThisCpe.ListCpe[index].external_id : xThisCpe.ListCpeNC[index].external_id;
+        xThisCpe.numComprobanteSelected = !isNotaCredito ? xThisCpe.ListCpe[index].numero : xThisCpe.ListCpeNC[index].numero
 
         // console.log(xm_log_get('datos_org_sede')[0].sedenombre);
         $('#div-btns-wsp').removeClass('xInvisible');
@@ -762,6 +909,211 @@
             _cpSocketComprobanteWhatApp(_payloadPdf);
         }, 3000);
     }
+
+
+    async function downloadReporteCPEEmitidos(obj) {
+
+        // objProcesar = obj ? obj : objProcesar;
+        // obj = objProcesar;
+        // var countCpeSuccess = 0, countCpeError = 0;
+        // const index = obj.parentElement.parentElement.id;
+        // // const _selMes = xThisAdmContador.listMonth[index];
+
+        const _selMes = xThisCpe.$.txt_fecha.value.split('-');
+        var selEstablecimiento = xm_log_get('datos_org_sede')[0];
+        xThisCpe.selMesCPE = xDesMes(parseInt(_selMes[1]) - 1) + ' ' + _selMes[0];
+        
+        selEstablecimiento.nomsede = selEstablecimiento.sedenombre;
+        selEstablecimiento.ciudad = selEstablecimiento.sedeciudad;
+        selEstablecimiento.userid = selEstablecimiento.id_api_comprobante;
+        xThisCpe.selEstablecimientoCpe = selEstablecimiento;
+        
+        // xThisAdmContador.selMes = _selMes;	
+        // xThisAdmContador.numRowsVerificadoSuccess = 0;
+        // xThisAdmContador.showRowsNoResponse = false;
+        // xThisAdmContador.showProccessVerificationFinalize = false;
+        // xThisAdmContador.showProccessVerificationError = false;
+
+        const _data = {
+            establecimiento: selEstablecimiento,
+            m: _selMes[1],
+            y: _selMes[0]
+        }
+
+        // obtner toke api consulta success_sunat
+        const rptApiToken = await _apiConsultaCpeCPE.getToken();
+        const _apiToken = rptApiToken.access_token;
+        var countCpeSuccess = 0;
+        
+        // console.log('rpt token', _apiToken);
+
+        xPopupLoad.titulo='Descargando...';
+        xPopupLoad.xopen();
+
+        dataListReporte = [];
+        xThisCpe.ListReporte = [];
+        $.ajax({
+                type: 'POST',
+                url: '../../bdphp/log_007.php?op=2',
+                data: {item: _data}
+            })
+            .done(async (res) => {
+                res = JSON.parse(res);
+                if ( res.error ) {console.log(res.error); return;}
+                console.log(res.data);
+
+                // xPopupLoad.xclose();
+                // dialog_match_sunat.open();
+                
+                // console.log('xThisAdmContador.selEstablecimiento', xThisAdmContador.selEstablecimiento);
+                listCpeSuccessCPE = [];
+                const ruc_emisor = selEstablecimiento.ruc;
+
+                const _numRows = res.data.length;
+                // xThisCpe.numRowsList = _numRows;
+
+                for (let index = 0; index < _numRows; index++) {
+                    var x = res.data[index];			
+
+                // res.data.map(async (x) => {
+                    x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
+                    x.style_reporte = x.estado === 'ANULADO' ? 'color: red' : 'color: green';
+                    x.style_td = x.estado === 'ANULADO' ? 'color: red' : '';
+                    
+                    // CONSULTAR CON API SUNAT -- >>
+                    try {
+                        
+                        const cpeVerificado = listCpeSuccessCPE.find(c => c.id === x.id);
+                        if ( !cpeVerificado ) {
+                            const codComp = x.series.indexOf('F') > -1 ? '01' : '03';
+                            const num_doc = parseInt(x.num_doc.split('-')[1]);
+                            const monto = x.total.replace(/,/g,''); // remplazamos las comas
+                            const payload = {
+                                header: {
+                                    ruc_receptor: x.ruc,
+                                    access_token: _apiToken
+                                },
+                                body: {"numRuc": ruc_emisor,"codComp": codComp,"numeroSerie": x.series,"numero": num_doc,"fechaEmision": x.fecha,"monto": monto}
+                            }
+            
+                            // console.log('payload', payload);
+                            if ( selEstablecimiento.habilita_verificacion_cpe == 1 ) {
+                                const rptApiConsulta = await _apiConsultaCpeCPE.getConsulta(payload);
+                                let estado_cpe;
+                                if (rptApiConsulta?.success === true) { 
+                                    x.success_sunat = 1;
+                                    estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
+                                    x.estadoCp = estado_cpe.titulo;
+                                    x.style_estado_sunat = 'color: ' + estado_cpe.color;
+                                    countCpeSuccess++;
+                                    listCpeSuccessCPE.push(x);
+                                } else {
+                                    countCpeError++;
+                                    x.success_sunat = 0;
+                                    x.estadoCp = 'Sin Respuesta';
+                                    x.style_estado_sunat = 'color: black';
+                                    xThisAdmContador.showRowsNoResponse = true;
+                                }
+                            } else {
+                                // no consulta
+                                countCpeSuccess++;
+                                listCpeSuccessCPE.push(x);
+                            }
+
+
+                            // console.log('rptApiConsulta', rptApiConsulta);
+                        } else {
+                            // dataListReporte.push(cpeVerificado);
+                            x = cpeVerificado;
+                            countCpeSuccess++;
+                        }
+                        // xThisAdmContador.numRowsVerificadoSuccess = countCpeSuccess;
+                        // xThisAdmContador.numRowsVerificadoError = countCpeError;
+                        // CONSULTAR CON API SUNAT -- >>
+                        
+                        
+                        dataListReporte.push(x);
+
+                    } catch (error) {
+                        // xThisAdmContador.showProccessVerificationFinalize = true;
+                        // xThisAdmContador.showProccessVerificationError = true;
+                        return;
+                    }
+                    //return x;
+                // });
+                }
+
+
+
+
+                // return;
+                // console.log('aaa res token', aaa);
+
+                // verificar documentos con sunat
+
+                // xThisAdmContador.showProccessVerificationFinalize = true;
+                // if ( xThisAdmContador.showRowsNoResponse || xThisAdmContador.showProccessVerificationError ) {return; }
+                setDataListReporteCpe(dataListReporte);
+
+                // xThisAdmContador.ListReporte = dataListReporte;
+
+                // setTimeout(() => {
+                // 	xExportarExcel();
+                // }, 500);
+            });
+
+        // api2
+        // $.ajax({
+        // 		type: 'POST',
+        // 		url: '../../bdphp/log_007.php?op=3',
+        // 		data: {item: _data}
+        // 	})
+        // 	.done((res) => {
+        // 		try {
+        // 			res = JSON.parse(res);
+        // 			if ( res.error ) {console.log(res.error); 
+        // 				setDataListReporte(dataListReporte);
+        // 				return;}	
+        // 		} catch (error) {
+        // 			setDataListReporte(dataListReporte);
+        // 		}
+                
+        // 		console.log(res.data);
+        // 		res.data.map(x => {
+        // 			x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
+        // 			x.style_reporte = x.estado === 'ANULADO' ? 'color: red' : 'color: green';
+        // 			x.style_td = x.estado === 'ANULADO' ? 'color: red' : '';
+        // 			dataListReporte.push(x);
+        // 			//return x;
+        // 		});
+
+        // 		setDataListReporte(dataListReporte);	
+        // 	});
+        }
+
+
+        function setDataListReporteCpe(list) {
+            // xThisAdmContador.ListReporte = list;
+            xThisCpe.ListReporte = list ? list : dataListReporte
+            setTimeout(() => {
+                xExportarExcel();
+            }, 500);
+        }
+
+
+        function xLoadNotasCredito() {
+            xThisCpe.ListCpeNC = [];
+            $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_002.php',
+                    data: { op: '1001'}
+                })
+                .done((res) => {
+                    const _list = JSON.parse(res);
+                    console.log('_list', _list);
+                    xThisCpe.ListCpeNC = _list.datos;
+                });
+        }
     
 
 
@@ -779,11 +1131,19 @@
             isReenviandoLoading: false,
             showBtnSendWhatsapp: false,
             numComprobanteSelected: String,
+            selEstablecimientoCpe: Object,
+            selMesCPE: String,
+            NumDaysAnularCpe: Number,
+            isShoOpNotaCredito: Boolean,
+            desDocCpe: String,
+            ListCpeNC: [],
+            subscription$: Object
         },
         attached: function () {
             this.selected = 0,
             this.isReenviandoLoading = false;
             this.showBtnSendWhatsapp = false;
+            this.isShoOpNotaCredito = false;
             this.listResumenCpeEmitidosTotal = 0;
             xThisCpe = this;
             xIniCpe();
@@ -793,9 +1153,16 @@
 			
                 _cpSocketOpen();
             }, 1000);
+
+            this.subscription$ = onStatusSetUsChangeSede().subscribe(res => {
+                if ( res == true ) {
+                    xIniCpe();                    
+                }
+            });
         },
         detached:function(){			
             _cpSocketClose();
+            this.subscription$.unsubscribe();
         },
         displayIndex: function (index) {
             return xCeroIzq(parseInt( p_desde ) + (index + 1), 1);

@@ -60,7 +60,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 
 	const _viene_facturador = typeof idregistro_pago === "object" ? true : false;
 
-	console.log('xArrayComprobante.correlativo A', xArrayComprobante.correlativo);
+	// console.log('xArrayComprobante.correlativo A', xArrayComprobante.correlativo);
 
 	// || xArrayComprobante.correlativo === '#' cuando viene del facturador
 	_numIntCorrelativoBD = parseInt(xArrayComprobante.correlativo);
@@ -72,7 +72,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 		_numIntCorrelativoBD = numComprobante;
 	}
 	
-	console.log('xArrayComprobante.correlativo B', xArrayComprobante.correlativo);
+	// console.log('xArrayComprobante.correlativo B', xArrayComprobante.correlativo);	
 	
 
 	// console.log('paso H');

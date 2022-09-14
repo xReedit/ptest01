@@ -123,6 +123,7 @@ function xOpenPage(xop, parametro){
 			$('#div_filtro_header').addClass('xInvisible');
 			xruta='/indicadores';
 			break;
+		case 11:xruta='/control-delivery';break;
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){

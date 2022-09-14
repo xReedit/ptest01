@@ -1,9 +1,9 @@
 <dom-module id="x-recetas">
 	<!-- <script src="../../js/mi_orden_tabla.js"></script> -->
 	<template>
-		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo" style="max-width: 700px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
-				<p class="xfont11"><strong>En ingredientes</strong> ingrese en primer lugar el ingrediente principal, del cual se contara la cantidad en la carta y en el inventario. <br>Ejemplo: Platos: Pechuga a la plancha, ingrediente principal: Pechuga 150gr.</p>
+				<p class="xfont11"><strong>En ingredientes</strong> ingrese en primer lugar el ingrediente principal, del cual se contara la cantidad en la carta y en el inventario. Ejemplo: Platos: Pechuga a la plancha, ingrediente principal: Pechuga 150gr.</p>
 				<div class="xLinea2"></div><br>
 				<div class="x_div_linea">
 					<div class="xitem1 xBordeDe">
@@ -37,18 +37,20 @@
 							</form>
 						</div>
 					</div>
-					<div class="xitem3"  style="max-width:450px;">
-						<br>
-						<p><strong>Ingredientes</strong></p>
-						<table class="xtable4" id="tb_ingredientes" data-TablaName="item_ingrediente">
+					<div class="xitem3"  style="width:100% !important;">						
+						<p class="fs-17 fw-600">Ingredientes</p>
+						<p style="font-size: 11px;line-height: 1.4;font-weight: 600;">Activa el check para indicar que el ingrediente es necesario para elaborar el plato. Si este ingrediente se queda sin stock entonces el plato también quedará sin stock.</p>
+
+						<table class="xtable4 w-100" id="tb_ingredientes" data-TablaName="item_ingrediente">
 							<thead>
+								<td class="xSinBorde" width="10px"></td>
 								<th class="xSinBorde" width="60%"></th>
 								<th class="xSinBorde" width="10px"></th>
 								<th class="xSinBorde" width="10px"></th>
 								<th class="xSinBorde" width="10px"></th>
 							</thead>
 							<tr class="xSinBorde" data-id="">
-								<td><input type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_porcion"></td>
+								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_porcion"></td>
 								<td><input type="number" class="xMiInput xPasarEnter2" placeholder="Cant" onChange="conMayusculas(this)" id="cant_item" required></td>
 								<td><input type="number" class="xMiInput" placeholder="Costo" onChange="conMayusculas(this)" id="costo_item" required></td>
 								<td><paper-fab icon="add" onclick="xAddItemIngrediente()" title="Agregar item" class="xmini"></paper-fab></td>
@@ -94,6 +96,11 @@
 			<br><br>
 		</div>
 	</template>
+
+	<style>
+		
+	</style>
+
 </dom-module>
 <script>
 var xThis;
@@ -206,16 +213,22 @@ function xAbrirDetalleReceta(obj){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1702', data:{i:xid_item}})
 	.done( function (dtDetalleI) {
 		var xdtDetalleI=$.parseJSON(dtDetalleI);
+		// console.log('xdtDetalleI', xdtDetalleI);
 		var xcadena_det_i='';
 		xdtDetalleI=xdtDetalleI.datos
 		for (var i = 0; i < xdtDetalleI.length; i++) {
-			xcadena_det_i=String(xcadena_det_i+'<tr class="row">'+
+
+			const _valCheckedNecesario = xdtDetalleI[i].necesario == '1' ? 'checked' : '';
+
+			xcadena_det_i=String(xcadena_det_i+'<tr class="row">'+			
+			'<td><paper-checkbox '+ _valCheckedNecesario +' onchange="xIngredienteNecesario(this)"></paper-checkbox></td>'+
 			'<td data-ColumName="descripcion">'+xdtDetalleI[i].descripcion+'</td>'+
 			'<td align="right" data-ColumName="cantidad">'+xdtDetalleI[i].cantidad+'</td>'+
 			'<td align="right" data-ColumName="costo" class="row_costo">'+xdtDetalleI[i].costo+'</td>'+
 			'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarItemLocalPro(this);"></span></td>'+
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
 			'<td data-ColumName="idporcion" class="xInvisible">'+xdtDetalleI[i].idporcion+'</td>'+
+			'<td class="xInvisible" data-ColumName="necesario" id="td_necesario">'+xdtDetalleI[i].necesario+'</td>'+
 			'</tr>');
 		};
 
@@ -259,7 +272,7 @@ function xGuardarRegistroReceta(){
 	var xsql_remove='';
 	var sql_ingrediente=xArmarInsertDetalle($("#tb_ingredientes"),'','');
 	if(xid_item!=""){//si no es nuevo
-		xsql_remove="delete from item_ingrediente where iditem="+xid_item+";";
+		xsql_remove="delete where iditem="+xid_item+";";
 	}
 	sql_ingrediente=sql_ingrediente.replace(/-item/g,xid_item);
 	sql_ingrediente=xsql_remove+' '+sql_ingrediente;
@@ -268,7 +281,7 @@ function xGuardarRegistroReceta(){
 		.done( function (dtsuccess) {
 			xPopupLoad.xclose();
 			xNuevaIngredientes();
-			xListaDeRecetas();
+			// xListaDeRecetas();
 		})
 }
 
@@ -284,12 +297,14 @@ function xAddItemIngrediente(){
 
 
 	var xrow_ingrediente='<tr class="row">'+
+			'<td><paper-checkbox checked onchange="xIngredienteNecesario(this)"></paper-checkbox></td>'+
 			'<td data-ColumName="descripcion">'+xdes_ingrediente+'</td>'+
 			'<td align="right" data-ColumName="cantidad">'+xcan_item+'</td>'+
 			'<td align="right" data-ColumName="costo" class="row_costo">'+xcosto_ingrediente+'</td>'+
 			'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarItemLocalPro(this);"></span></td>'+
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
 			'<td data-ColumName="idporcion" class="xInvisible">'+xidproducto_porcionado+'</td>'+
+			'<td class="xInvisible" data-ColumName="necesario" id="td_necesario">1</td>'+
 			'</tr>';
 
 	xtb_ingrediente.append(xrow_ingrediente).trigger('create');
@@ -301,10 +316,15 @@ function xAddItemIngrediente(){
 	$("#des_porcion").focus();
 }
 
+function xIngredienteNecesario(obj) {
+	const _valCheckNecesario = obj.checked ? 1 : 0;
+	$(obj).parents('tr').find('#td_necesario').text(_valCheckNecesario)
+}
+
 function xSumaringredientes(){
 	xtt_ingredientes=parseFloat(xSumaCantRow($("#tb_ingredientes"),'.row_costo')).toFixed(2);
 	$("#tb_ingredientes .row_tt").remove();
-	$("#tb_ingredientes").append('<tr class="row_tt"><td align="right" colspan="3"><strong>'+xtt_ingredientes+'</strong></td><td></td></tr>').trigger('create');
+	$("#tb_ingredientes").append('<tr class="row_tt"><td align="right" colspan="4"><strong>'+xtt_ingredientes+'</strong></td><td></td></tr>').trigger('create');
 	xRefreshImportes();
 }
 function xRefreshImportes(){

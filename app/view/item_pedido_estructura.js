@@ -42,7 +42,8 @@ function xCargarDatosAEstructuraImpresion (_SubItems, sumCantidad = false) {
         }
     };
 
-    return _arrRpt;
+    // return _arrRpt;
+    return _arrRpt.filter(x => x);
 
 }
 

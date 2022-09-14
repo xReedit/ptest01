@@ -49,6 +49,16 @@ function xCeroIzqNumComprobante(Num){
 function conMayusculas(field) {field.value = field.value.toUpperCase();};
 // function primeraConMayusculas(field) {return field.charAt(0).toUpperCase() + field.slice(1);};
 function primeraConMayusculas(field) {return field ? field.toLowerCase().replace(/\b(\w)/g, s => s.toUpperCase()) : field;};
+
+function toTitleCase(str) {
+	return str.replace(
+	  /\w\S*/g,
+	  function(txt) {
+		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+	  }
+	);
+  }
+
 function getUrlParameter(sParam,simbolo) {
 	var sPageURL = window.location.href;
 	sPageURL=sPageURL.replace('-',' ');

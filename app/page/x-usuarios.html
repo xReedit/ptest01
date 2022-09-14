@@ -194,6 +194,8 @@ function xIniUsuarios(){
 	xLoadUs();
 	// $('body').addClass('loaded');
 
+	
+
 	$('.xPasarEnter2').on('keyup',function(e){
 		var code=e.which;
 		if ( code==13||code==186 ) {
@@ -396,7 +398,8 @@ Polymer({
 		xt_idsede:Number,
 		xt_idus:Number,
 		xt_sufijo:String,
-		showFormRepartidor: boolean = false
+		showFormRepartidor: boolean = false,
+		subscription$: Object
 	},
 	// ready: function() {
 	// 	xIniUsuarios();
@@ -406,6 +409,16 @@ Polymer({
 		this.showFormRepartidor = false;
     	xThis=this;
     	xIniUsuarios();
-    }
+
+		this.subscription$ = onStatusSetUsChangeSede()		
+		.subscribe(res => {
+			if ( res == true ) {
+				xIniUsuarios();				
+			}
+		});
+    },
+	detached:function(){			        
+		this.subscription$.unsubscribe();
+    },
 })
 </script>

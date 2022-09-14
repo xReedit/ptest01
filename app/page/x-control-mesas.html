@@ -777,7 +777,7 @@ function xIniControlMesa(){
 
 			xThisCM.isAddItemRow = true;
 
-			// si no existe o no esta cartado la carta
+			// si no existe o no esta cargado la carta
 			handlerFnMiPedidoControl(e);
 			
 
@@ -2718,6 +2718,10 @@ function xLoadMipedidoBD(dt){
 
 					xNom_seccion=xDtBd[i].des_seccion;
 
+					const isShowBtnAddItem = xDtBd[i].precio_default ? 
+									'<div class="btn-add-item btn-sm-add-row" data-op="itempedido" title="Agregar Uno"><i class="fa fa-plus" data-op="itempedido"></i></div>' : 
+									'<div class="text-danger"><i class="fa fa-eye-slash" aria-hidden="true" title="Item borrado de la carta"></i></div>';
+
 					//seccion
 					if(xArraySeccion[xDtBd[i].idseccion_index]==null){xArraySeccion[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
 					xCadenaItemArray=String('<tr class="row xCursor" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+
@@ -2756,8 +2760,8 @@ function xLoadMipedidoBD(dt){
 									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+ xDtBd[i].descripcion +																			
 									'</td>'+									
 									'<td class="click_row_dt_p" align="right" id="td_importe">'+xDtBd[i].ptotal+'</td>'+
-									'<td align="center" style="width: 35px" class="rowadditem" data-op="itempedido" data-procede=0>' +
-										'<div class="btn-add-item btn-sm-add-row" data-op="itempedido" title="Agregar Uno"><i class="fa fa-plus" data-op="itempedido"></i></div>'+
+									'<td align="center" style="width: 35px" class="rowadditem" data-op="itempedido" data-procede=0>' +										
+										isShowBtnAddItem +
 									'</td>'+
 									'<td align="center" style="width: 20px" class="td_op" data-op="borrar" data-procede=0>'+
 										'<img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'">'+										
@@ -2812,7 +2816,7 @@ function xOp_permiso(){
 }
 
 function xGetPermisoEliminarItem() {
-	console.log(check_recuperar_stock.checked);
+	// console.log(check_recuperar_stock.checked);
 	const _valRecuperarBorrarItem = check_recuperar_stock.checked ? '1' : '0';
 	localStorage.setItem('::app3_woRestoreStock', _valRecuperarBorrarItem);
 
@@ -3170,18 +3174,25 @@ function xOrdenPedido(op){
 }
 
 function xFiltroPedidos(obj){
+	console.log(obj)
 	$('#div_filtro_header').removeClass('xInvisible');
 	
 	var xurl_actual = window.location.href;
 	xDesFiltro1=$(obj).find('.titulo').text();
 	xIdFiltro1=$(obj).attr('data-id');
 
+	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
+
+	// desarrollo nueva vista
+	// if ( xDesFiltro1.toLowerCase() === 'delivery' ) {
+	// 	xOpenPage(11);
+	// 	return;
+	// }
+
 	if(xurl_actual.indexOf('c_pedido')==-1){
 		xOpenPage(2,'?f1='+xIdFiltro1+'?df1='+xDesFiltro1)
 	}
-	xIdFiltro1='.tpc'+xIdFiltro1;
-	
-	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
+	xIdFiltro1='.tpc'+xIdFiltro1;	
 	
 
 	if (iIniIsotope) {
@@ -3200,7 +3211,7 @@ async function xLoadMesas(){
 		
 	xPintarMesas();
 	xLogRun_CuentaNumeroPedidos();
-	
+	xVerificarCajaAbiertaOtroUsuario();
 }
 
 function xPintarMesas() {
@@ -3914,6 +3925,8 @@ function xLogRun_CuentaNumeroPedidos(){
 	}
 }
 
+
+
 function xVerificarSiActualizaItems(){
 	if (isSocket) {return; }
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50101'})
@@ -4277,6 +4290,30 @@ function xPintarListPedido() {
 		$('#tb_pedidos').append(xcadena_pedido).trigger('create');
 
 		// xSumarTotalPedidos();
+}
+
+function xVerificarCajaAbiertaOtroUsuario() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=23'})
+		.done( res => {
+			res = JSON.parse(res);
+			if (res.success) {
+				const _dataCajAbierta = res.datos[0];				
+				if ( parseInt(_dataCajAbierta.cant) > 0 ) {
+					const _isInfoCajaOpen = isNaN(parseInt(localStorage.getItem('::app3_info_caja_open'))) ? 0 : parseInt(localStorage.getItem('::app3_info_caja_open'));
+					if ( _isInfoCajaOpen == 1 ) { return; }
+
+
+					const _swalAlertValues = paramsSwalAlert;        					
+					_swalAlertValues.html = `<div class="p-1">                    
+												<img src="../../images/swal-cash-register.png">
+												<p class="fw-100">Hay caja abierta por otro usuario. Si registra algún cobro se le asignará una caja.</p>
+											</div>`;															
+					showAlertSwalHtml(_swalAlertValues);
+
+					localStorage.setItem('::app3_info_caja_open', '1');
+				}
+			}
+		});
 }
 
 // function addContadorLoad() {

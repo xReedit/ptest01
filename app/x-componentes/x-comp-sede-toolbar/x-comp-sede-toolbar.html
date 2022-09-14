@@ -37,28 +37,41 @@
 			}		
 		}
 
-		function xCompSedeToll_CambiarSede(obj) {
+		async function xCompSedeToll_CambiarSede(obj) {
 			const index = obj.dataId;
 			const objSede = xThisComToolSede.listSede[index];
 			$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-1001', data:{i: objSede.idsede} })
 			.done((x)=> {
 
-				// guardar los cambios de sede y org en variable local
-				updateapp3_woDUS_changeSede(objSede.idorg, objSede.idsede);
+				xm_LogIni((res) => {					
 
-				// reload page
-				localStorage.setItem('::app3_woUsS', objSede.idsede);
-				localStorage.removeItem('::app3_sys_descat');// en mi pedido
+					// guardar los cambios de sede y org en variable local
+					updateapp3_woDUS_changeSede(objSede.idorg, objSede.idsede);
+	
+					// reload page
+					localStorage.setItem('::app3_woUsS', objSede.idsede);
+					localStorage.removeItem('::app3_sys_descat');// en mi pedido
 
-				$('body').removeClass('loaded');
-				setTimeout(() => {					
-					$("#txt_sede").text(objSede.nombre + ' | ' + objSede.ciudad);
-					
-					dialog_sede.close();
-					$('body').addClass('loaded');
-				}, 500);
-				//document.location.href = 'm_panel.html';
+					xThisComToolSede.objSedeSelectedToolBar = objSede;
+
+					status_SetUsChangeSede(true);
+	
+					$('body').removeClass('loaded');
+					setTimeout(() => {					
+						$("#txt_sede").text(objSede.nombre + ' | ' + objSede.ciudad);
+						
+						
+						dialog_sede.close();
+						$('body').addClass('loaded');
+					}, 500);
+				});
+
+				//document.location.href = 'm_panel.html';				
 			});
+		}
+
+		function xChangeNameSedeToolBar() {
+			$("#txt_sede").text(xThisComToolSede.objSedeSelectedToolBar.nombre + ' | ' + xThisComToolSede.objSedeSelectedToolBar.ciudad);
 		}
 
 		function xCompSedeToll_getAllSedes() {
@@ -130,6 +143,7 @@
 					value: function () { return {}; },
 					observer: 'sedeNameChanged'
 				},
+				objSedeSelectedToolBar: []
 			},
 			listeners: {
 				'onchange': 'getSede'
@@ -144,7 +158,8 @@
 				xThisComToolSede = this;
 				// setTimeout(() => {					
 					// xCompSedeToll_getAllSedes();
-				// }, 500);
+				// }, 500);									
+								
 			},
 			init:() => {
 				xCompSedeToll_getAllSedes();

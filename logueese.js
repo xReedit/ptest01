@@ -38,9 +38,11 @@ window.addEventListener('WebComponentsReady', function (e) {
 	//$('body').addClass('loaded');
 	xdialog = document.querySelector('x-dialog');
 	xul=document.querySelector('x-user-login');
+
+	
 	//destruye sessuion
-	$.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'});
-	setClearLocalStorage(false);
+	// $.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'});
+	// setClearLocalStorage(false);
 
 
 	$("#bta").click(function(){
@@ -88,11 +90,19 @@ window.addEventListener('WebComponentsReady', function (e) {
 				.done( function (dt) {
 					if(dt==1){
 						var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
+
+						
+						//destruye sessuion // anterior
+						// $.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'})
+						// .done(res => {
+							setClearLocalStorage(false);
+							window.location = 'app/page/m_panel.html';
+							if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL)};
+						// });
 						// window.localStorage.clear();
 						// document.location.href='app/page/m_panel.html';
 						// location.href='app/page/m_panel.html';
 						// confirm('eee');
-						window.location = 'app/page/m_panel.html';
 						// if ((navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPod/i))) {
 						// 	alert('ipod / ipad')
 						// 	location.replace("app/page/m_panel.html");
@@ -101,7 +111,6 @@ window.addEventListener('WebComponentsReady', function (e) {
 						//  }
 						// window.Headers
 
-						if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL)};
 					}else{
 						xdialog.xclose();
 						//alert('Usuario o clave incorrecto');

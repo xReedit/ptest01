@@ -253,9 +253,9 @@ function handlerFnMiPedido(e) {
 	// })
 
 //agregar item desde control de pedidos
-$(document.body).on('click', '#content_item_pedido div.xBtn_li', handlerFnMiPedidoControl); // control de mesas
+$(document.body).on('click', '#content_item_pedido div.xBtn_li',(e) => handlerFnMiPedidoControl(e)); // control de mesas
 // $(document.body).on('click', '.btn-sm-add-row', handlerFnMiPedidoControl); // control de mesas mismo pedido
-$(document.body).on('click', '#accordion div.xBtn_contet_li2', handlerFnMiPedidoControl); // venta rapida
+$(document.body).on('click', '#accordion div.xBtn_contet_li2',(e) => handlerFnMiPedidoControl(e)); // venta rapida
 // $(document.body).on('click', '#accordion div.content_li', handlerFnMiPedidoControl); // venta rapida
 $(document.body).on('click', '#accordion div.content_li', function(e) {
 	if (!isTouch) return; // desde venta rapida activa el touch

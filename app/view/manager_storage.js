@@ -55,7 +55,7 @@ function updateapp3_woDUS_changeSede(o,i) {
 
     _data_res = _data_res.join(':');
     _data_res = btoa(_data_res);
-    _c_xdt_log.us._sys_sessid = _data_res;
+    _c_xdt_log.us._sys_sessid = _data_res;    
     _c_xdt_log = btoa(JSON.stringify(_c_xdt_log));
 
     window.localStorage.setItem("::app3_woDUS", _c_xdt_log)
