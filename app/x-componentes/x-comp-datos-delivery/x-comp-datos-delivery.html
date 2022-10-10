@@ -488,6 +488,8 @@
 		// arrCompDatosAdjuntoDelivery = JSON.stringify(arrCompDatosAdjuntoDelivery[0]);
 		arrCompDatosAdjuntoDelivery = JSON.stringify(arrCompDatosAdjuntoDelivery);
 		arrCompDatosAdjuntoDelivery = JSON.parse(arrCompDatosAdjuntoDelivery);
+		
+		xThisComDatosDelivery.dataArrDelivery = arrCompDatosAdjuntoDelivery;
 		xThisComDatosDelivery.fire('xGetDatosDelivery', {datos: arrCompDatosAdjuntoDelivery});
 		dialog_datos_delivery.close();
 	}
@@ -551,6 +553,7 @@
 			listDirNoMap: [],
 			showSelectDirNoMap: Boolean,
 			showInputDirNoMap:Boolean,			
+			dataArrDelivery: []
 		}, 
 		attached: function() {
 			this.showInputDirNoMap = true;
@@ -567,6 +570,9 @@
 			xThisComDatosDelivery.showdir = true;
 			xThisComDatosDelivery.showcostoentrega = false;
 			xResetCubiertos();
+		},
+		getArrDelivery: () => {
+			return xThisComDatosDelivery.dataArrDelivery;
 		}
     })
 </script>

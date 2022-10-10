@@ -53,7 +53,7 @@ function xCargarDatosAEstructuraImpresion (_SubItems, sumCantidad = false) {
 /// junta o agrupa por items en 2 secciones: items y servicios adicionales (si hubiera {taper, delivery etc}) 
 /// _SubItems = xArrayCuerpo; items que se envian en el formato anterior
 /// cpe => si es comprobante electronico o no, esto para calcular el subtotal + adicionales
-function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false){
+function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false, isPrecuenta = false){
 
     let itemsObj = [];
     // items en una sola lista
@@ -64,7 +64,8 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
             Object.keys(items).map(x=>{
                 if ( typeof items[x] === 'object' ) { 
                     const item = items[x]; 
-                    item.grupo = item.iditem;
+                    // si es precuenta adjunta por descripcion
+                    item.grupo = !isPrecuenta ? item.iditem : item.des; 
                     itemsObj.push(item); 
                 }
             })
@@ -78,7 +79,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
             if (!rv[grupo]) {
                 // cuando sepran la cuenta
                 _total = x.precio_total_calc || x.total;
-                _total = _total.toString().indexOf(',') > -1 ? x.precio_total : _total; // cuando juntan la cuenta
+                _total = _total ? _total.toString().indexOf(',') > -1 ? x.precio_total : _total : x.precio_total; // cuando juntan la cuenta
                 _total = parseFloat(_total).toFixed(2);
 
                 _cantidad = x.cantidad;
@@ -90,7 +91,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
                 rv[grupo] = {
                     id: x.iditem,
                     cantidad: parseFloat(_cantidad),
-                    des: x.des,
+                    des: isPrecuenta ? x.des : x.des.split('(')[0],
                     punitario: x.precio,
                     precio_total: _total,
                     precio_print: parseInt(x.precio_print) != 0 ? _total : x.precio_print,
@@ -120,29 +121,31 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
     
     // agreagar adicionales si los hay y los suma a subtotal
     let cantAddSubtotal = 0;
-    xArraySubTotales.map(x => {
-        if (x.id === undefined) { return; } // id remplaza a tachado es decir no se aceptan subtotales
-        if (x.id === 0) { return; } // es el sub total cunado viene de papaya express
-        if (x.tachado === true) { return; }
-        if (x.esImpuesto.toString() === "1") { return; }
+    if ( !isPrecuenta ) { // en precuenta no muestra
+        xArraySubTotales.map(x => {
+            if (x.id === undefined) { return; } // id remplaza a tachado es decir no se aceptan subtotales
+            if (x.id === 0) { return; } // es el sub total cunado viene de papaya express
+            if (x.tachado === true) { return; }
+            if (x.esImpuesto.toString() === "1") { return; }
 
-        const seccion = x.id.toString().indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
-        // const cantidad = x.cantidad ? x.cantidad : 1;
-        const _pUnitario = x.punitario ? parseFloat(x.punitario) : parseFloat(x.importe); // para calcular la cantidad cuando es por item // si este cobro es por pedido entonces el punitario es igual al total
-        const cantidad = parseInt(parseFloat(x.importe) / _pUnitario);
-        const index = group.length+1; // en facturacion electronica el id debe ser numero
+            const seccion = x.id.toString().indexOf('a') >= 0 ? 'ADICIONALES' : 'SERVICIOS';
+            // const cantidad = x.cantidad ? x.cantidad : 1;
+            const _pUnitario = x.punitario ? parseFloat(x.punitario) : parseFloat(x.importe); // para calcular la cantidad cuando es por item // si este cobro es por pedido entonces el punitario es igual al total
+            const cantidad = parseInt(parseFloat(x.importe) / _pUnitario);
+            const index = group.length+1; // en facturacion electronica el id debe ser numero
 
-        cantAddSubtotal = x.importe; // para aumentar al subtotal xArraySubTotales
+            cantAddSubtotal = x.importe; // para aumentar al subtotal xArraySubTotales
 
-        group.push({
-          id: index.toString(),
-          cantidad: cantidad,
-          des: x.descripcion.toUpperCase(),
-          punitario: x.punitario,
-          precio_total: x.importe,
-          seccion: seccion
+            group.push({
+            id: index.toString(),
+            cantidad: cantidad,
+            des: x.descripcion.toUpperCase(),
+            punitario: x.punitario,
+            precio_total: x.importe,
+            seccion: seccion
+            });
         });
-    });
+    }
 
     if (cpe) { //si es comprobante electronico o no, esto para calcular el subtotal + adicionales
         cantAddSubtotal = parseFloat(xArraySubTotales[0].importe) + parseFloat(cantAddSubtotal);
@@ -154,6 +157,99 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false)
     // console.log('group: ',group);
     return group;
 }
+
+// prepara los items a formato facturacion (es decir todos las secciones lo colaca en una)
+  // si el delivery es propio o tienes otro cobros por servicio o taper para llevar
+  // entonces esos item se adicionan al pedido como 'ADICIONALES' : 'SERVICIOS
+  // sumCantidad si suma cantidades cuando adjunta en precuenta
+  function xEstructuraItemsJsonPedidoDelivery (pedido, sumCantidad = true) {
+    var _arrEstructura = xm_log_get('estructura_pedido'); // get estructura_pedido
+    var _arrRpt=[];
+
+    // enumero los id desde segun el idtipoconsumo
+    _arrEstructura.forEach(element => {
+        _arrRpt[element.idtipo_consumo]=element
+    });
+    // _arrRpt=_arrEstructura.slice();
+    _arrRpt=JSON.parse(JSON.stringify(_arrRpt).replace(/descripcion/g,'des'));
+
+    let _SubItems = [];
+    pedido.tipoconsumo.map(x => {
+      x.secciones.map(s => s.items.map(i => {
+        i.id = i.iditem;
+        i.des_seccion = i.seccion;
+        i.punitario = i.precio_unitario;
+        i.cantidad = i.cantidad_seleccionada;
+        i.idtipo_consumo = x.idtipo_consumo;
+        _SubItems.push(i)
+      }));
+    });
+
+    // _SubItems.map((element, i) => {
+    //     if ( !element.visible ) {return; }
+    //     element.id = element.iditem;
+    //     element.des_seccion = element.seccion;
+    //     element.punitario = element.precio_unitario;
+    //     element.cantidad = element.cantidad_seleccionada;
+    //     element.idtipo_consumo = 0;
+    //     // element.visible = 1;
+    //     // _arrRpt[0][i] = element
+    //     _SubItems.push(element);
+    //   });
+    
+    _SubItems.filter(i => i.visible).map((i, index) => {        
+        const _tipoConsumoItem = _arrEstructura.find(b => b.idtipo_consumo == i.idtipo_consumo);
+        if ( _tipoConsumoItem ) {                        
+            // i.precio_print=i.ptotal;//coloca precio para impresion
+            // i.precio_total=i.ptotal;
+            // i.des=i.descripcion;
+            
+
+            if ( sumCantidad ) {
+                var _cantidad = i.cantidad;
+                if (_cantidad.toString().indexOf(",") > -1 ) { // caso de que se junte los items
+                    __cantidad = _cantidad.split(',');
+                    _cantidad = __cantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
+                }   
+
+                i.cantidad = _cantidad;
+            }
+
+            _arrRpt[_tipoConsumoItem.idtipo_consumo][i.id]=i;
+        }
+    })
+
+    // for (b in _arrEstructura) {
+    //     for (var i in _SubItems) {
+    //         if(_arrEstructura[b].idtipo_consumo==_SubItems[i].idtipo_consumo){
+    //                 //fue juntado
+    //                 if(_SubItems[i].visible==1){continue;}
+    //                 if(_arrEstructura[b]==null){continue}
+    //                 // _SubItems[i].punitario = _SubItems[i].precio,
+    //                 // _SubItems[i].precio_total = parseFloat(_SubItems[i].precio_total_calc).toFixed(2),
+    //                 // _SubItems[i].precio_print = _SubItems[i].precio_print,
+    //                 _SubItems[i].precio_print=_SubItems[i].ptotal;//coloca precio para impresion
+    //                 _SubItems[i].precio_total=_SubItems[i].ptotal;
+    //                 _SubItems[i].des=_SubItems[i].descripcion;
+    //                 if ( sumCantidad ) {
+    //                     var _cantidad = _SubItems[i].cantidad;
+    //                     if (_cantidad.toString().indexOf(",") > -1 ) { // caso de que se junte los items
+    //                         __cantidad = _cantidad.split(',');
+    //                         _cantidad = __cantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
+    //                     }   
+
+    //                     _SubItems[i].cantidad = _cantidad;
+    //                 }
+    //                 _arrRpt[_arrEstructura[b].idtipo_consumo][i]=_SubItems[i];
+    //         }
+    //     }
+    // };
+
+    // return _arrRpt;
+    return _arrRpt.filter(x => x);
+    
+
+  }
 
 // pasar a estructura de impresion de comprobante donde no se tendra en cuenta el tipo consumo, solo seccion e item
 function xEstructuraItemsAgruparPrintJsonComprobante(items) {

@@ -75,7 +75,8 @@ function handlerFnMiPedido(e) {
 		, xcantRunSocket = xcant_max
 		, xcant = xCantActual
 		, xsigno = xOperacion
-		, sec_orden = itemPedidos_objItemSelected.sec_orden;
+		, sec_orden = itemPedidos_objItemSelected.sec_orden
+		, subitems_selected_index = itemPedidos_objItemSelected.subitems_selected_index;
 
 		
 
@@ -177,6 +178,7 @@ function handlerFnMiPedido(e) {
 			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView
 			,'isporcion': itemPedidos_objItemSelected.isporcion
 			,'iditem_subitem': idSubItemControlable
+			,'subitems_selected_index': subitems_selected_index			
 		};
 
 		// itemPedidos_objItemSelected = xArrayPedidoObj[xidTipoConsumo][xidItem];
@@ -562,22 +564,25 @@ function modificarUnSubItem(obj) {
 	const _idtpc = obj.dataset.idtipo_consumo;
 	const _idcl = obj.dataset.idcarta_lista;
 	const _idsubitem = obj.dataset.idsubitem;
+	const _indexSubItem = obj.dataset.index;
 	var _subItemQuit = xArrayPedidoObj[_idtpc][_idcl];
 	const _subItemDelete = _subItemQuit.subitems_view.filter(t => t.id === _idsubitem)[0].subitems;
 	_subItemQuit.subitems_selected = [];
 	_subItemQuit.subitems_selected = _subItemDelete;
+	_subItemQuit.subitems_selected_index = _indexSubItem;
 
 	// para que coincidan en la funcion principal
 	itemPedidos_objItemSelected = _subItemQuit;
 	itemPedidos_objItemSelected.des_item = _subItemQuit.des;
 	itemPedidos_objItemSelected.idcarta_lista = _subItemQuit.iditem;
+	itemPedidos_objItemSelected.subitems_selected_index = _indexSubItem;
 	// xThisVentaRapida.objSubItemQuitar = _subItemQuit.subitems_view.filter(x => x.id === _idsubitem)[0];
 	// console.log(_subItemQuit);
 }
 
 function xAddSubItemsView(tpc, id, sumar) {
 	var elItem = xArrayPedidoObj[tpc][id];
-	elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];
+	elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];	
 
 	if ( !elItem.subitems ) { return; }
 	if (elItem.subitems.length === 0 ) { return; }
@@ -598,6 +603,7 @@ function xAddSubItemsView(tpc, id, sumar) {
           newSubItemView.cantidad_seleccionada = 1;
           newSubItemView.precio += parseFloat(x.precio);
           newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  ' (' + x.indicaciones + ')';
+		  newSubItemView.indicaciones_item = elItem.indicaciones
           newSubItemView.subitems.push(x);
 		});
 		
@@ -609,8 +615,12 @@ function xAddSubItemsView(tpc, id, sumar) {
         // itemCarta.indicaciones = '';
         elItem.indicaciones = '';
         elItem.subitems_view = elItem.subitems_view ? elItem.subitems_view : [];
+		
+		var isExistSubItemView = elItem.subitems_view.filter((subView) => subView.id === newSubItemView.id && subView.indicaciones_item === newSubItemView.indicaciones_item)[0];
+		if ( elItem.subitems_selected_index ) { // si viene de la lista de resumen pedido venta rapida
+			isExistSubItemView = elItem.subitems_view[parseInt(elItem.subitems_selected_index)];
+		}
 
-        const isExistSubItemView = elItem.subitems_view.filter((subView) => subView.id === newSubItemView.id)[0];
         if ( isExistSubItemView ) {
           if ( sumar ) {
             isExistSubItemView.indicaciones += newSubItemView.indicaciones;
@@ -1126,13 +1136,17 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo,x
 //imprimir otros documentos --- -1 precuenta // - -2 factura // no se usa
 //xArrayCuerpo debe tener estructura de mod impresion, (como sub pedido ::app3_sys_dta_pe)
 // xArraySubTotales ya esta calculado los subtotales
-function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, xArraySubTotales,xidDoc){
+function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, xArraySubTotales,xidDoc, showFormatoCorto = false){
 	console.log('vienen a');
 	var xArrayImpresoras=xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
 	var xDtTipoDoc=xm_log_get('app3_woIpPrintO');//JSON.parse(window.localStorage.getItem("::app3_woIpPrintO"));
 	var xPrintLocal=window.localStorage.getItem("::app3_woIpPrintLo");
 	var xIpPrintDoc=xidDoc;
 	var xpasePrint=false;
+
+	if ( xidDoc === -1 ) { // precuenta
+		showFormatoCorto  = xm_log_get('sede_generales')[0].isprint_cpe_short == '1';
+	}
 
 	// no es comanda
 	xArrayDatosPrint[0].var_size_font_tall_comanda = 0; //default
@@ -1170,6 +1184,15 @@ function xMandarImprimirOtroDoc(xArrayEncabezado,xArrayDatosPrint,xArrayCuerpo, 
 	}
 	if(xpasePrint==false){return false;}
 	if(xArrayCuerpo.length==0){return false}
+
+	// si formato corto para precuenta
+	if (showFormatoCorto) {
+		// formato de impresion items comprobante donde no se tiene en cuenta el tipo de consumo solo seccion e items
+		xArrayCuerpo = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false, true); // cpe = true subtotal + adicional
+		xArrayCuerpo = xEstructuraItemsAgruparPrintJsonComprobante(xArrayCuerpo);
+
+		console.log('xArrayCuerpo', xArrayCuerpo)
+	}
 
 	// xArmarSubtotalesArray(xArrayCuerpo,xArrayDatosPrint) // ya viene con la funciom
 	//xArrayDatosPrint[0].ip_print=xIpPrintDoc;

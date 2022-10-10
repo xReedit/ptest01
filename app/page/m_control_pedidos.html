@@ -31,6 +31,13 @@
 	<link rel="stylesheet" href="../../css/mibootstra.css">
 	
 
+	<!-- date piker -->
+	<link rel="stylesheet" href="../../css/picket-classic.css">
+    <link rel="stylesheet" href="../../css/picket-classic.date.css">
+    <script src="../../js/picket.legacy.js"></script>
+    <script src="../../js/picket.js"></script>
+    <script src="../../js/picket.date.js"></script>
+
 	<!--script src="../../js/perfect-scrollbar.min.js"></script-->
 	
 	<!-- <script src="../web_components/webcomponentsjs/webcomponents.min.js"></script> -->
@@ -80,6 +87,9 @@
 	<!-- sweetalert -->
 	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script type="text/javascript" src="../../js/mi.sweet.alert.js"></script>
+
+	<script async src="//cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.debug.js"></script>
+	<script async src="//cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js" integrity="sha512-01CJ9/g7e8cUmY0DFTMcUw/ikS799FHiOA0eyHsUWfOetgbx/t6oV4otQ5zXKQyIrQGTHSmRVPIgrgLcZi/WMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 	<link type="image/x-icon" href="../../images/logo_app.png" rel="shortcut icon" />
 
@@ -152,7 +162,8 @@
 
 
 		.paper-drawer-panel-0 {
-			background: #F1F1F3;
+			/* background: #F1F1F3; */
+			background: #e5e5e7;
 		}
 
 		
@@ -221,6 +232,12 @@
 	    					<span class="titulo">RESERVAS</span>
 	    				</div>
 	    			</li>
+					<li  onclick="xOpenPage(12);" id="DesTPC-borrados">
+	    				<div>
+							<span>PEDIDOS ANULADOS</span>
+							<span class="xIndicadorCant3">0</span>	    				
+	    				</div>
+	    			</li>
 	    			<li  onclick="xOpenPage(10);">
 	    				<div>
 	    				<span>INDICADORES</span>
@@ -266,10 +283,10 @@
 		
 
 	  <paper-header-panel main class="content-drawer">
-	    <paper-toolbar>
+	    <paper-toolbar style="background: #136ab6 !important;">
 	      <div style="width: 100%" main class="xAlinearce w-100">
 	      	<h3 class="xAlinearce" id="Titulo_page">.</h3>
-	      	<div class="xAlinearce xDerecha" id="div_filtro_header" style="margin-top:8px;">
+	      	<div class="xAlinearce xDerecha xInvisible" id="div_filtro_header" style="margin-top:8px;">
 	      	</div>
 	      </div>
 	    </paper-toolbar>

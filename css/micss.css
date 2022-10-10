@@ -630,7 +630,8 @@ input.xMiInput[required]:valid{border-bottom:1px solid #2E7D32;}
     width: 280px;
     display: grid;
     grid-template-columns: 3fr 2fr;
-    background: #F3E5F5;
+    /* background: #F3E5F5; */
+    background: #e7e5f5;
 }
 
 
@@ -1069,6 +1070,7 @@ input:checked ~ .xMenuPopup{display: none;}
 .xIndicadorCant{ width: 18px; height: 18px; line-height: 18px; border-radius: 4px; background: #f44336; color:#fff; text-align: center; font-size: 9px; float: right;}
 .xIndicadorCant-no-remove{ width: 18px; height: 18px; line-height: 18px; border-radius: 4px; background: #f44336; color:#fff; text-align: center; font-size: 9px; float: right;}
 .xIndicadorCant2{ width: 22px; height: 22px; line-height: 22px; border-radius: 50%; text-align: center; float: right;}
+.xIndicadorCant3{ width: 18px; height: 18px; line-height: 18px; border-radius: 4px; background: #f44336; color:#fff; text-align: center; font-size: 9px; float: right;}
 .xIndicadorVr{ width: 20px; height: 20px; line-height: 20px; border-radius: 50%; background: #4C90DA; color:#fff; text-align: center; font-size: 8px; float: right; position: fixed; z-index: 100; right: 14px;}
 .xIndicadorPedido{width: auto; height: 40px; line-height: 12px; border-radius: 10%;display: inline-block; text-align: center;vertical-align: middle; font-size: 18px; top: 0; margin: 5px; padding:10px; transition: all .2s ease-in-out;}
 .xIndicadorPedido span{font-size: 10px;}

@@ -26,7 +26,7 @@
                         <div>
                             <div class="xtitulo-subitems">
                                 <div>
-                                    <p class="xBold">{{contentSub.des}}</p>
+                                    <p class="xBold">{{ labelUpperCase(contentSub.des) }}</p>
                                     <span class="fs-12 color-secundario">{{contentSub.des_cant_select}} {{contentSub.subitem_cant_select}}</span>
                                     <span class="txt-obligatorio" hidden$="[[!contentSub.isObligatorio]]">Obligatorio</span>
                                 </div>                            
@@ -66,7 +66,7 @@
                 <!-- otras indicaciones -->
                 <div class="xreferencia_item">
                     <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
-                    <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia" id="txt_referencia">
+                    <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia text-primary fw-900" id="txt_referencia" onkeyup="xChangeIndicacionesItem()">
                     <hr>
                 </div>
                 <!-- otras indicaciones -->
@@ -515,10 +515,17 @@
         
         itemPedidos_objItemSelected.subitems_selected =  listChecks;
         // itemPedidos_objItemSelected.indicaciones = 'EEEEEEEE'
-        $("#txt_referencia").val(_indicaciones_subitem);
+        
 
-        try {            
-            xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].indicaciones = _indicaciones_subitem;        
+        
+        try {                        
+            const _itemObjPedido = xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista];
+
+            if (  _itemObjPedido.cantidad  === 1) {
+                // _indicaciones_subitem = txt_referencia.value !== '' ? txt_referencia.value : _indicaciones_subitem;
+                $("#txt_referencia").val(_indicaciones_subitem);
+            }
+            _itemObjPedido.indicaciones = _indicaciones_subitem;        
             window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
         } catch (error) {
             // aun no esta en la lista
@@ -701,6 +708,13 @@
     // });
         $("#txt_referencia").val(xindicaciones);
     }
+
+
+    function xChangeIndicacionesItem() {
+        // console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);        
+        xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].indicaciones = txt_referencia.value;
+        window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
+    }
 		
 
 	Polymer({
@@ -747,6 +761,9 @@
                 resolve(getSubtItemsItem(_id));
             });            
             // return rptSubItems;
+        },
+        labelUpperCase: (val) => {
+            return val.toUpperCase();
         }
 	})
 </script>

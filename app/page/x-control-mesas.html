@@ -1,6 +1,7 @@
 <!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 <link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
+<link rel="import" href="./x-control-delivery/x-control-delivery.html">
 <dom-module id="x-control-mesas">
 
 	<script src="../view/httpFech.js"></script>
@@ -18,6 +19,7 @@
 	<script type="text/javascript" src="../view/notifica.js"></script>
 
 	<template>
+		
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
 		<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<h4>Error en impresora</h4>
@@ -353,8 +355,8 @@
 		</paper-dialog>
 		<br>
 		<div class="xContent d-flex">
-			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->
-			<div class="grid" id="_gridCM">
+			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->			
+			<div class="grid" id="_gridCM" style="overflow:hidden !important;">
 				<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
 					<p class="tipo">Mesa</p>
@@ -362,6 +364,9 @@
 					<p class="tiempo xfont11">disponible</p>
 					<p class="importe xBold">-</p>
 				</div-->
+			</div>
+			<div id="control-delivery-new-view" class="xInvisible">
+				<x-control-delivery id="comp-control-delivery"></x-control-delivery>
 			</div>
 
 			<!-- div lateral notificacion cuentas pagadas por el cliente -->
@@ -570,6 +575,8 @@ function xIniControlMesa(){
 		xLoadMesas();
 		xRefreshHora=setInterval(function () {xCalcularTiempoPedido()},2000);
 
+		xShowCantidadPedidosBorrados();
+
 		var xDesFiltro1=getUrlParameter('df1','?');
 		xDesFiltro1 = xDesFiltro1.replace(/%20/g, " ");
 		xIdFiltro1=getUrlParameter('f1','?');
@@ -577,9 +584,14 @@ function xIniControlMesa(){
 		document.title ="Control de Pedidos";
 
 		// $("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:80px; margin-right:5px;" placeholder="mesa" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
+		$("#div_filtro_header").removeClass('xInvisilbe');
 		$("#div_filtro_header").html(`<div class="bg-white xBoton2"><input type="number" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:50px; margin-right:5px;" placeholder="# mesa" autocomplete="off"></div>
 									<div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div>
-									<div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>`)
+									<div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>`).trigger('create');
+
+		
+
+
 		xThisCM.xt_org=xIdOrg;
 		xThisCM.xt_idsede=xIdSede;
 		xThisCM.xt_idus=xIdUsuario;
@@ -889,32 +901,9 @@ function xIniControlMesa(){
 		$("#dialog_cotent #us").focus()
 	})
 
-	xValPago=document.getElementById('component_pago');
-	xValPago.setObjConntet($("#dialog_detalle"));
-	xValPago.addEventListener('xSend', function (e) {
-		xRpt_pago=e.detail.xRpts;
-		// console.log('xRpt_pago', xRpt_pago);
-		var p=e.detail.xRpts[0].ok;
-		// if(p==0){
-		// 	// $("#btn_pago").attr('disabled', true);
-		// 	// xThisCM.valid_monto_pago = false;
-		// }else{
-		// 	// btn_pago.removeAttribute("disabled")
-		// 	// xThisCM.valid_monto_pago = true;
-		// 	if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoCP();}
-		// }
-		if(p!==0){
-			if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoCP();}
-		}
-	});
-
-	xValPago.addEventListener('xCancelarCerrar', function (e) {		
-		xIrPage(0);
-	});
 	
-	xValPago.addEventListener('xListoRegistraPago', function (e) {		
-		xRegistrarClientePagoCP();
-	});
+	
+	
 
 
 	xCompDescuentoPedido=document.getElementById('component_descuento_pedido');
@@ -948,6 +937,33 @@ function xIniControlMesa(){
 	})
 	$("#dialog_detalle").on('iron-overlay-opened',function(){
 		xbuscar_mesa=true;
+
+		xValPago=document.getElementById('component_pago');
+		xValPago.setObjConntet($("#dialog_detalle"));
+		xValPago.addEventListener('xSend', function (e) {
+			xRpt_pago=e.detail.xRpts;
+			// console.log('xRpt_pago', xRpt_pago);
+			var p=e.detail.xRpts[0].ok;
+			// if(p==0){
+			// 	// $("#btn_pago").attr('disabled', true);
+			// 	// xThisCM.valid_monto_pago = false;
+			// }else{
+			// 	// btn_pago.removeAttribute("disabled")
+			// 	// xThisCM.valid_monto_pago = true;
+			// 	if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoCP();}
+			// }
+			if(p!==0){
+				if(e.detail.xRpts[0].paseEnterTxt==1){xRegistrarClientePagoCP();}
+			}
+		});
+
+		xValPago.addEventListener('xCancelarCerrar', function (e) {		
+			xIrPage(0);
+		});
+
+		xValPago.addEventListener('xListoRegistraPago', function (e) {		
+			xRegistrarClientePagoCP();
+		});
 		// btn_pago.hidden=false;
 	})
 	$("#dialog_cambiar_mesa").on('iron-overlay-closed',function(){
@@ -1372,6 +1388,9 @@ function xAnularPedido(){
 		
 		dialog_detalle.close();
 	})
+
+	// indica cantidad pedidos borrados
+	xShowCantidadPedidosBorrados()
 }
 
 function xOpenCambiarMesa(){
@@ -1445,7 +1464,8 @@ async function xImprimirPrecuenta(){
 
 	xArrayPrintEncaLi_pre_cuenta={'m':xmesa_pc, 'r':'', 'num_pedido':xmunp_pc,'reservar':0, 'solo_llevar':0,'correlativo_dia':xmunp_pc,'precuenta':true, 'delivery': isDelivery, 'arrDatosDelivery': datosDelivery};
 
-	xMandarImprimirOtroDoc(xArrayPrintEncaLi_pre_cuenta,xDtPrint,xArrayItemPreCuenta,arrSumSubtTotales,-1);
+	const _isFormatShortPrecuenta = xDtPrint[0].isprint_cpe_short == '1';
+	xMandarImprimirOtroDoc(xArrayPrintEncaLi_pre_cuenta,xDtPrint,xArrayItemPreCuenta,arrSumSubtTotales,-1, _isFormatShortPrecuenta);
 
 	// update bd print
 	xUpdatePrintPrecuentaPedido(checkItemsSeleccionados.idPedidosSeleccionados);
@@ -1804,6 +1824,7 @@ function xIrPage(op){
 			// $("#btn_pago").attr('disabled',true); 
 			xValPago.setVisiblePanel1(); // regresa al primer panel comprobante cliente
 			component_pago.setVal(xMoneda(xtt_pedidos));
+			component_pago.setModoSoloComprobante(false);
 			component_pago.setIsPedidoPagadoFromAPP(isPedidoPagadoFromApp);
 			xValPago.setIsPedidoPagadoFromAPP(isPedidoPagadoFromApp);
 		break;
@@ -1932,6 +1953,7 @@ async function xRegistrarClientePagoCP(){
 			const _payloadPedidoPagado = {
 				idusuario:  idUsuarioOperador,
 				num_pedido: xObj_miPedido.data().numpedido,
+				idpedido: xObj_miPedido.data().numpedido,
 				num_mesa: xObj_miPedido.data().nummesa,
 				importe_restante: xcheckItemsSeleccionados.importeTotalSeleccionado
 			}
@@ -2004,6 +2026,7 @@ function xRegistrarPagoCM(xcant_rp){
 	// .done( function (xidC) {
 		var xnum_mesa_obj=parseInt($(xObj_miPedido).attr('data-nummesa'));
 		var xsolo_confirmar_pago=parseInt($(xObj_miPedido).attr('data-isconfirmarpago'));
+		
 		if(xcant_rp==0){
 			if(xnum_mesa_obj!=0 && xsolo_confirmar_pago.toString() === '0'){
 				$(xObj_miPedido).removeClass('xOcupado');
@@ -2022,7 +2045,7 @@ function xRegistrarPagoCM(xcant_rp){
 				$(xObj_miPedido).attr('data-abrir-detalle','0');
 				$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 			}else{
-				//remove
+				//remove				
 				$(".grid").isotope('remove',$(xObj_miPedido)).isotope('layout');
 				$(xObj_miPedido).remove();
 			}
@@ -2878,6 +2901,10 @@ function xEliminarItemPedido(){
 		}, 550);
 		// xCheckPedidos();		
 		xPopupLoad.xclose();
+
+		// indica cantidad pedidos borrados
+		console.log('aaaaaaaaaaaaaaaaaaa');
+		xShowCantidadPedidosBorrados()
 	})
 }
 
@@ -3174,7 +3201,11 @@ function xOrdenPedido(op){
 }
 
 function xFiltroPedidos(obj){
-	console.log(obj)
+	xbuscar_mesa=false;
+	$('#div_filtro_header').removeClass('xInvisible');
+	$('#control-delivery-new-view').addClass('xInvisible');
+	$('#btn_vista_delivery').addClass('xInvisible');
+	$('#_gridCM').removeClass('xInvisible');
 	$('#div_filtro_header').removeClass('xInvisible');
 	
 	var xurl_actual = window.location.href;
@@ -3184,10 +3215,21 @@ function xFiltroPedidos(obj){
 	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
 
 	// desarrollo nueva vista
-	// if ( xDesFiltro1.toLowerCase() === 'delivery' ) {
-	// 	xOpenPage(11);
-	// 	return;
-	// }
+	if ( xDesFiltro1.toLowerCase() === 'delivery' ) {
+		xbuscar_mesa=true;
+		$('#btn_vista_delivery').removeClass('xInvisible');
+		$('#_gridCM').addClass('xInvisible');
+		$('#control-delivery-new-view').removeClass('xInvisible');
+		$('#div_filtro_header').addClass('xInvisible');
+		try {		
+			const _copNewViewDelivery = document.getElementById('comp-control-delivery');
+			_copNewViewDelivery.ini();
+		} catch (error) {
+			// no esta cargada la pagina de pedidos
+		}
+		// return;
+		// xOpenPage(11);
+	}
 
 	if(xurl_actual.indexOf('c_pedido')==-1){
 		xOpenPage(2,'?f1='+xIdFiltro1+'?df1='+xDesFiltro1)
@@ -3201,6 +3243,13 @@ function xFiltroPedidos(obj){
 		iIniIsotope = true;
 	}			
 	
+}
+
+function xVistaAnteriorDelivery() {
+	$('#btn_vista_delivery').addClass('xInvisible');
+	$('#_gridCM').removeClass('xInvisible');
+	$('#control-delivery-new-view').addClass('xInvisible');	
+	$('.grid').isotope();
 }
 
 
@@ -4086,11 +4135,6 @@ function getAllRepartidor() {
 	        .done( function (dtValues) {				
                 dtValues=$.parseJSON(dtValues);	
 				xThisCM.listRepartidor=dtValues.datos;				
-
-				
-                // xThisComCategoria.categorias = xThisComCategoria.list[0];
-                // xThisComCategoria.categorias.index=0
-                // xThisComCategoria.getValorIncial(xThisComCategoria.categorias);
             });
         }
 
@@ -4314,6 +4358,20 @@ function xVerificarCajaAbiertaOtroUsuario() {
 				}
 			}
 		});
+}
+
+function xShowCantidadPedidosBorrados() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=901'})
+	.done( res => {
+		res = JSON.parse(res);
+		if (res.success) {
+			const _cant = res.datos[0].cant;
+			$('#DesTPC-borrados').find("div .xIndicadorCant3").remove();
+			if ( _cant != '0' ) {
+				$('#DesTPC-borrados').find('div').append('<span class="xIndicadorCant3">'+res.datos[0].cant+'</span>').trigger('create');
+			}
+		}
+	});
 }
 
 // function addContadorLoad() {

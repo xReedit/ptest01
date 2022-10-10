@@ -31,6 +31,14 @@ function numeroConComas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function removeComas(num) {
+	if(isNaN(num)) {		
+		return parseFloat(num.replace(/,/g, ''));
+	} else {
+		return parseFloat(num);
+	}
+}
+
 function xCeroIzq(Num, CantidadCeros){
 	const isNum = parseInt(Num);
    if ( isNaN(isNum) ) {return Num; }
@@ -840,3 +848,9 @@ function removeSpecialCharObj(obj) {
 	obj.value = obj.value.replace(/[&\/\\,~'"?]/g, '');
 }
   
+const arrGroupBy = function(xs, key) {
+	return xs.reduce(function(rv, x) {
+	  (rv[x[key]] = rv[x[key]] || []).push(x);
+	  return rv;
+	}, {});
+  };

@@ -93,11 +93,14 @@ function xOpenPage(xop, parametro){
 	// console.log('control pedidos router run ', axxx);	
 	if(parametro==null){parametro='';}
 	var xruta='';
+	$('#div_filtro_header').addClass('xInvisible');
 	switch(xop){
 		case -1:xruta='/prueba';break;
 		case 0:	xruta='/categoria';break;
 		case 1:	xruta='/menu';break;
-		case 2:	xruta='/c_pedido';break;
+		case 2:	xruta='/c_pedido';
+		$('#div_filtro_header').removeClass('xInvisible');
+			break;
 		case 3:	xruta='/caja';break;		
 		case 4:			
 			document.location.href='m_panel.html';
@@ -119,11 +122,11 @@ function xOpenPage(xop, parametro){
 		case 8:	xruta='/historial_ventas';break;
 		case 9:	xruta='/historial_registro_pago_app';break;
 		case 22:xruta='/resumen_caja';break;
-		case 10:
-			$('#div_filtro_header').addClass('xInvisible');
+		case 10:			
 			xruta='/indicadores';
 			break;
 		case 11:xruta='/control-delivery';break;
+		case 12:xruta='/pedidos-anulados';break;
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){

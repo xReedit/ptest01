@@ -247,7 +247,7 @@
 						<div id="div_espera_rpt" class="xInvisible">
 							<p class="fw-600 fs-15">Por favor espere la respuesta a la solicitud por parte del administrador... <i class="fa fa-circle-o-notch fa-spin"></i></p>
 							<br>
-						</div>
+						</div>						
 						<div id="div_rpt_solicitud" class="xInvisible">
 							<p class="fw-600 fs-15">Respuesta Solicitud</p>
 							<p class="fw-600">Efectivo Sistema: {{rowRptSolicitud.importe_sistema}}</p>
@@ -312,8 +312,10 @@
 		</div>
 
 
-		<div id="pdf_cierre" class="xInvisible border-0" style="max-width: 300px; background: white;">
-			<div id="div_datos_cierre_caja"></div>
+		<div id="content_pdf" class="xInvisible" style="margin-top: 700px;">			
+			<div id="pdf_cierre" class="xInvisible border-0" style="max-width: 300px; background: white;">
+				<div id="div_datos_cierre_caja"></div>
+			</div>
 		</div>
 	</template>
 </dom-module>
@@ -354,7 +356,7 @@ var xThisCaja
 , id_supervisor = 0
 , xlo_idorg
 , xlo_idsede, isPrintCierreCaja = false
-, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false, idUsAdminPermiso = 0;
+, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false, idUsAdminPermiso = 0, titleFilePDFCierre;
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -534,8 +536,9 @@ function xGetDataCierre(idBitacora) {
 
 		// console.log('arrPrint', arrRpt);
 
-		xPopupLoad.xclose();
-		$("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
+		xPopupLoad.xclose();		
+		// $("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
+		$("#btns_cierre").html(`<button class="btn btn-success" onclick="xCerrarSessionAll();"><i class="fa fa-close"></i> Cerrar Terminal</button> <button class="btn btn-warning" onclick="xDownloadPdfCierre(1);"><i class="fa fa-file-pdf-o"></i> Descargar cierre en PDF</button>`);
 		// xUpdateCerrarCession(function () {
 			xPermisoSupervisor = 0;
 			xIniArraysPrint();
@@ -1002,9 +1005,9 @@ function xEscribirDatosHtml(){
 		var sum_t1=0,sum_t2=0,sum_t3=0;
 		for (const key in i) {
 			if (typeof i[key] === 'object') {				
-				sum_t1+=isNaN(parseFloat(i[key].t1)) ? 0 : parseFloat(i[key].t1);
-				sum_t2+=isNaN(parseFloat(i[key].t2)) ? 0 : parseFloat(i[key].t2);
-				sum_t3+=isNaN(parseFloat(i[key].t3)) ? 0 : parseFloat(i[key].t3);
+				sum_t1+=isNaN(parseFloat(removeComas(i[key].t1))) ? 0 : parseFloat(removeComas(i[key].t1));
+				sum_t2+=isNaN(parseFloat(removeComas(i[key].t2))) ? 0 : parseFloat(removeComas(i[key].t2));
+				sum_t3+=isNaN(parseFloat(removeComas(i[key].t3))) ? 0 : parseFloat(removeComas(i[key].t3));
 			}
 		}
 		// i.map(e => {
@@ -1062,7 +1065,8 @@ function xEscribirDatosHtml(){
 
 	// descargar pdf
 	setTimeout(() => {		
-		xDownloadPdfCierre(_fechaNow, xNomUsario);
+		titleFilePDFCierre = "Cierre de caja - "+xNomUsario+ " " + _fechaNow;
+		xDownloadPdfCierre();
 	}, 1500);
 
 	// enviar a correo electronico;
@@ -1071,14 +1075,16 @@ function xEscribirDatosHtml(){
             to: sedeDatos.email_cierre,
             asunto: 'CIERRE DE CAJA | '+ sedeDatos.sedenombre + ' | ' + xDevolverFecha(),
             titulo: 'Cierre de caja',
-            htmlContent: div_datos_cierre_caja.outerHTML
+            htmlContent: pdf_cierre.outerHTML
         }
 
 	xSendEmailClienteSES(_msjSend);
 }
 
-function xDownloadPdfCierre(_fecha, _nomusuariocierre) {
-	$('#pdf_cierre').removeClass('xInvisible');
+// op = 0 // show new tab  1=only save
+function xDownloadPdfCierre(op = 0) {
+	$('#content_pdf').removeClass('xInvisible');
+	$('#pdf_cierre').removeClass('xInvisible');	
 	var nodeImgCierre = document.getElementById('pdf_cierre');
 	const _heightMM = nodeImgCierre.scrollHeight / 3.77;
 	domtoimage.toPng(nodeImgCierre)
@@ -1088,10 +1094,15 @@ function xDownloadPdfCierre(_fecha, _nomusuariocierre) {
         
 		var doc = new jsPDF('p', 'mm', [90, _heightMM]);
 		doc.addImage(img, 'JPEG', 5, 5);
-		doc.setProperties({title: "Cierre de caja - "+_nomusuariocierre+ " " + _fecha});
-		window.open(doc.output('bloburl'));
+		doc.setProperties({title: titleFilePDFCierre});
+		if ( op === 0 ) {
+			window.open(doc.output('bloburl'));
+		}else {
+			doc.save(titleFilePDFCierre);
+		}
 
 		$('#pdf_cierre').addClass('xInvisible');
+		$('#content_pdf').addClass('xInvisible');
     })
     .catch(function (error) {
         console.error('ocurrio un error', error);

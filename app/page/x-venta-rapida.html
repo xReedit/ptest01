@@ -1884,7 +1884,7 @@ function xVerMipedidoVR(){
 				/// subtitems_views
 				var cadenaSubItemView = '', precioSubitem;
 				if ( n.subitems_view ) {
-					n.subitems_view.map(subitem => {	
+					n.subitems_view.map((subitem, index) => {	
 						precioSubitem = parseFloat(subitem.precio);
 						precioSubitem = isNaN(precioSubitem) ? 0 : precioSubitem;
 						subitem.precio_mostrar = precioSubitem === 0 ? '.' : precioSubitem.toFixed(2);
@@ -1894,7 +1894,9 @@ function xVerMipedidoVR(){
 									data-idtipo_consumo="${n.idtipo_consumo}" 
 									data-idcarta_lista="${n.iditem}" 
 									data-des = "${subitem.des}"
-									data-idsubitem="${subitem.id}">										
+									data-idsubitem="${subitem.id}"
+									data-index="${index}"
+									>										
 										<td class="dis-flex" data-id="${n.idtipo_consumo}" data-ventarapida="1" data-viene-subitems-mod="1">
 												<div class="btnCount btnMenos">-</div> 
 													${subitem.cantidad_seleccionada} ${subitem.des} 

@@ -41,7 +41,11 @@ function listenSocketP() {
     this.socketCP.listen('nuevoPedido').subscribe(res => {
         // console.log('nuevoPedido msocket', res);
         try {                
-            _cpSocketPintarPedido(res);
+            _cpSocketPintarPedido(res);           
+
+            if(res.p_header.delivery.toString() == '1') {                
+                xCDAddItemRow(res);
+            }
         } catch (error) {}            
     });
 
@@ -66,8 +70,13 @@ function listenSocketP() {
     });
 
     this.socketCP.listen('printerOnly').subscribe(res => {
-        try { // puede venir de zona de despacho             
+        try { // puede venir de zona de despacho        
             _cpSocketPintarPedido(res);
+
+            if(res.delivery.toString() == '1') {
+                xCDAddItemRow(res);
+            }
+
         } catch (error) {}
     });
 
@@ -104,7 +113,7 @@ function listenSocketP() {
     // NOTIFICAR QUE SE IMPRIMIO comanda del pedido para poner el flag
     // 170521 quitamos esta accion - no es necesario
     this.socketCP.listen('notifica-impresion-comanda').subscribe(pedido => {
-        console.log('notifica-impresion-comanda', pedido);
+        // console.log('notifica-impresion-comanda', pedido);
         // try {
         //     _cpSocketPintarFlagPedidoImpreso(pedido);
         // } catch (error) {}
@@ -113,7 +122,6 @@ function listenSocketP() {
 
     this.socketCP.listen('restobar-notifica-pay-pedido-res').subscribe(res => {
         try {
-            // console.log('restobar-notifica-pay-pedido-res', res);
             xRefreshPedidoPaySocket(res); // control de pedidos
         } catch (error) {}
     });
@@ -128,8 +136,18 @@ function listenSocketP() {
 
 
     this.socketCP.listen('restobar-venta-registrada-res').subscribe(res => {
-        console.log('restobar-venta-registrada-res', res);    
         this.socketCP.isRegistroVentaSource.next(true);        
+    });
+
+    // notifica a control de delivery que el repartidor acepto pedido
+    this.socketCP.listen('repartidor-notifica-cliente-acepto-pedido-res').subscribe(res => {  
+        xCDUpdateViewItem('repartidor', res);
+    });
+
+
+    this.socketCP.listen('repartidor-notifica-fin-pedido').subscribe(res => {
+        const _res = {idpedido: res};
+        xCDUpdateViewItem('repartidor-entregado', _res);
     });
     
 
@@ -192,7 +210,6 @@ function _cpSocketNoiticaRepartidorFromComercio(pedido) {
 // notifica al cliente repartidor asignado
 function _cpSocketNoiticaClienteRepartidorAsignado(repartidor) {
     // if (!isSocket) { return; }
-    console.log('repartidor-notifica-cliente-acepto-pedido');
     this.socketCP.emit('repartidor-notifica-cliente-acepto-pedido', repartidor);
 }
 
@@ -221,8 +238,7 @@ function _cpSocketSavePedidoStorage(pedido) {
 function _cpSocketComprobanteWhatApp(payload) {
     // if (!isSocket) { return; }
     // localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
-    console.log('restobar-send-comprobante-url-ws', payload);
-    this.socketCP.emit('restobar-send-comprobante-url-ws', payload);
+    this.socketCP.emit('restobar-send-comprobante-url-ws', payload);    
 }
 
 
@@ -269,6 +285,8 @@ function _cpSocketClearStorage() {
 function _cpASocketNotifyPayPedido(payload) {
     // payload // idusuario // num pedido or num mesa // importe
     this.socketCP.emit('restobar-notifica-pay-pedido', payload);
+    payload.idpedido = payload.num_pedido;
+    xCDRemoveItemRow(payload); // quita de la lista de pendientes
 }
 
 

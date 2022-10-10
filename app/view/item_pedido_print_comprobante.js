@@ -124,6 +124,8 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 	let _arrBodyComprobante = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubtotal, true); // cpe = true subtotal + adicional
 	_arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
 
+	console.log('_arrBodyComprobante', _arrBodyComprobante);
+
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
 	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
 

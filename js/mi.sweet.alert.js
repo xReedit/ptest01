@@ -4,6 +4,7 @@ const paramsSwalAlert = {
     html: '',
     text: '',        
     showCancelButton: false,
+    showConfirmButton: true,
     confirmButtonText: 'Listo',
     cancelButtonText: 'Cancelar'
 }

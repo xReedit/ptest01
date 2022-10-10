@@ -284,6 +284,76 @@
                             </div><br>
 
 
+                            <!-- OTROS INGRESOS -->
+                            <div class="xContentCard border-bottom" style="padding: 20px;" hidden$="[[!isShowDivOtrosIngresos]]">
+                                <p class="fs-18 text-secondary fw-600">Otros Ingresos</p><br>
+                                <div class="div-content-grid">
+                                    <div class="p-3">
+                
+                                        <template is="dom-repeat" items="{{tablaTipoPagoIngresosVarios}}" as="tpc">
+                                            <div class="tableDivIndicador">
+                                                <p class="pb-2"> Ingresos con <span class="fw-600"> {{tpc.key}} </span> </p>
+                
+                                                <div class="d-flexx justify-content-between align-items-center">
+                                                    
+                                                    <div class="d-flexx align-items-center">
+                                                        <img src$="[[ tpc.img ]]" alt="">
+                                                        <p class="fs-21 color-text-principal fw-600 pl-2"> S/. {{ tpc.importe }}</p>                                                                                                                
+                                                    </div>                                                                        
+                                                </div>
+                                                                        
+                                            </div>
+                                        </template>                                        
+                                        
+                                    </div>
+
+                                    <div class="content-table-iv">
+                                        <table width="100%" class="fs-14 fw-600 text-secondary">  
+                                            <thead>
+                                                <th align="left">Fecha</th>
+                                                <th align="left">Concepto</th>
+                                                <th align="center">Tipo Pago</th>
+                                                <th align="right">Importe</th>                                                
+                                            </thead>
+                                            <tbody>
+                                                <template is="dom-repeat" items="{{listTipoPagoIngresosVarios}}" as="item">
+                                                    <tr>
+                                                        <td>{{item.fecha_show}}</td>
+                                                        <td class="fw-100">{{item.concepto}}</td>
+                                                        <td>
+                                                            <img src$="../../images/[[ item.img ]]" alt="tpc" width="24px">                                                            
+                                                        </td>
+                                                        <td align="right" class="fw-600 color-text-principal">{{ item.importe }}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                            
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- total de movimientos -->
+                            <div class="xContentCard border-bottom" style="padding: 20px; background: #cff1f5;">
+                                <p class="fs-18 text-secondary fw-600">Movimientos totales</p><br>
+                                <div class="div-columm-3">
+                                    <div>
+                                        <p class="pb-2 fw-600 fs-18"> Total Ventas</p>
+                                        <p class="fs-28 color-text-principal fw-600 pl-2"> S/. {{ dtVentasHoy.sumImporteTotalHoyShow }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="pb-2 fw-600 fs-18"> Total Otros Ingresos</p>
+                                        <p class="fs-28 color-text-principal fw-600 pl-2"> S/. {{ sumTotalIngresosVarios }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="pb-2 fw-600 fs-18"> Total</p>
+                                        <p class="fs-30 color-text-principal fw-900 pl-2"> S/. {{ sumTotalMovimientos }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
                             <!-- canal de consumo -->
                             <div class="xContentCard border-bottom" style="padding: 20px;">
                                 <p class="fs-18 text-secondary fw-600">Canales de Consumo</p><br>
@@ -543,9 +613,18 @@
         padding-bottom: 1rem;
         margin-bottom: 0.5rem;
         border-bottom: 1px solid #dee2e6;
-    }    
+    }   
+    
+    .content-table-iv {
+        height: 290px;
+        overflow-y: auto;
+    }
 
-
+    .div-columm-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-gap: 20px;
+    }
     /* .ico-dato-l[entero] {
         background: #C0F7D0;         
     } */
@@ -614,7 +693,7 @@
 <script>
     var xThisI2, _listOp, dataFiltro, dataMetdataVentasDia, crosVenta, metaDiaria, _dtVentasHoy, _dtPedidoTotales, _listTipoConsumo = []
     , rangoFecha = 'fecha', configParamsChart = {}, ctxChar, ctxCharConsumo, myBarChartPrincipal, pageIndicadoresCaja, pageIndicadoresTopProducto, pageIndicadoresTopColaboradores, pageIndicadoresVersus
-    , data_pagination = {}, p_rows=0, p_desde=0, compOptionPeriodo;
+    , data_pagination = {}, p_rows=0, p_desde=0, compOptionPeriodo, dataIngresoVarios;
     function initIndicadores2() {
 
         xThisI2.sedeCalificacion = xm_log_get('datos_org_all_sede')[0].calificacion;
@@ -819,7 +898,7 @@
 
     function xloadDataVentas() {
         xPopupLoad.xopen();
-        console.log('dataFiltro', dataFiltro);
+        // console.log('dataFiltro', dataFiltro);
         $.ajax({
 				type: 'POST',
 				url: '../../bdphp/log_005.php?op=40',
@@ -833,7 +912,24 @@
                 xDataVentas_tipo_pago();
                 xloadDataPedidos();
 
+                xloadDataOtrosIngresos();
+
                 xloadDComprobantesEmitidos();
+			});
+    }
+
+    function xloadDataOtrosIngresos() {
+        xPopupLoad.xopen();
+        // console.log('dataFiltro', dataFiltro);
+        $.ajax({
+				type: 'POST',
+				url: '../../bdphp/log_005.php?op=4000',
+				data: dataFiltro
+			})
+			.done(function (res) {				
+                // console.log('res', res);
+                const dataIngresoVarios = JSON.parse(res).datos;		  
+                tablaIngresoVariosTipoPago(dataIngresoVarios);
 			});
     }
 
@@ -985,6 +1081,45 @@
         xThisI2.listTipoPago = JSON.parse( JSON.stringify(_dtTipoPago) );
 
         cocinarCanalConsumoHoy(crosVentaHoy);
+    }
+
+    function tablaIngresoVariosTipoPago(dataTipoPagoIV) {
+        // console.log('dataTipoPagoIV', dataTipoPagoIV)
+        xThisI2.isShowDivOtrosIngresos = dataTipoPagoIV.length > 0;
+        
+        var crosVentaHoy = crossfilter(dataTipoPagoIV);
+        var ddTp = crosVentaHoy.dimension(item => item.des_tp + ':' + item.img);
+        let byTipoPago = ddTp.group().reduceSum(item => parseFloat(item.importe));
+        var _listTipoPago = byTipoPago.all().map(x => {x.value = numeroConComas(x.value.toFixed(2)); return x});		
+
+        var _dtTipoPagoIV = [];
+        var sumTotalIV = 0;
+        _listTipoPago.map(tp => {
+            // importe ayer
+            var importeHoy = parseFloat(tp.value.split(',').join(''));            
+            var des_icon = tp.key.split(':');
+
+            sumTotalIV += importeHoy;
+
+
+            // importeAyer = importeAyer.toFixed(2);
+            var _item = {
+                key: des_icon[0].toLowerCase(),
+                importe: numeroConComas(importeHoy.toFixed(2)),
+                img: '../../images/' + des_icon[1]
+            }
+
+            _dtTipoPagoIV.push(_item);
+
+        });
+
+        xThisI2.tablaTipoPagoIngresosVarios = JSON.parse( JSON.stringify(_dtTipoPagoIV) );
+        xThisI2.listTipoPagoIngresosVarios = JSON.parse( JSON.stringify(dataTipoPagoIV) );
+        xThisI2.sumTotalIngresosVarios = numeroConComas(sumTotalIV.toFixed(2));
+
+        // total movimientos
+        xThisI2.sumTotalMovimientos = numeroConComas((removeComas(sumTotalIV) + removeComas(_dtVentasHoy.sumImporteTotalHoyShow)).toFixed(2));
+
     }
 
     function tablaInfoPedidosAnulados(data) {
@@ -1543,6 +1678,8 @@
             listpedidosBorrados: [],
             listComprobantes: [],
             listCalificacionCliente: [],
+            listTipoPagoIngresosVarios: [],
+            tablaTipoPagoIngresosVarios: [],
             sedeCalificacion: String,
             dtVentasHoy: Object,    
             ragoSubTitulo: String,
@@ -1550,6 +1687,9 @@
             rangoSelected: String,
             selected_conf: Number,
             showVersus: Boolean,
+            sumTotalIV: Number,
+            sumTotalMovimientos: Number,
+            isShowDivOtrosIngresos: Boolean
 		},
 		attached: function () {
 			// this.selected = 0,
@@ -1557,6 +1697,7 @@
             this.ragoTitulo = 'Hoy';
             this.selected_conf=0;
             this.showVersus = false;
+            this.isShowDivOtrosIngresos = false;
 			xThisI2 = this;
 			initIndicadores2();
 
