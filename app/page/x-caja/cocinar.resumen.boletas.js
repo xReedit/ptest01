@@ -101,7 +101,7 @@ async function xCocinarResumenBoletas() {
     // consultamos los ticket de resumen de boletas generados el dia anterior            
     // y actualizar el estado_sunat = 0 de las boletas => acpetadas
     $(".dgl_sunat_msj3").text("Consultando resumen de boletas...");
-    await xDelay(60000); // espera 1min para consultar resumen
+    // await xDelay(60000); // espera 1min para consultar resumen
 
     const arrTickets = await xSoapSunat_getListTicketResumenBoletas();
     for (const t in arrTickets) {

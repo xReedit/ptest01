@@ -200,7 +200,10 @@
 
 			xThisComDatosDelivery.listDirNoMap = client_autocomplete_selected.direccion_delivery_no_map ? JSON.parse(client_autocomplete_selected.direccion_delivery_no_map) || null : null;			
 			xThisComDatosDelivery.listDirNoMap = client_autocomplete_selected.direccion_delivery_no_map === '[]' ? null : xThisComDatosDelivery.listDirNoMap;
-			xThisComDatosDelivery.showInputDirNoMap = xThisComDatosDelivery.listDirNoMap ? false : true;
+			xThisComDatosDelivery.showInputDirNoMap = !!xThisComDatosDelivery.listDirNoMap ? false : true;
+
+			xThisComDatosDelivery.showdir = xThisComDatosDelivery.showInputDirNoMap;
+			xThisComDatosDelivery.idclientedni = xIdCliente_pedido;
 
 			if (xThisComDatosDelivery.listDirNoMap) { selectOptionDirClienteNoMap(0); }
 		});
@@ -433,7 +436,7 @@
 			subTotales: {},
 			pasoRecoger: false,
 			buscarRepartidor: true,
-			isFromComercio: 1, // el pedido esta yendo desde el comercio,
+			isFromComercio: 1, // el pedido esta yendo desde el comercio // venta rapida
 			costoTotalDelivery: dataSede.c_servicio,
 			tiempoEntregaProgamado: {},
 			delivery: 1,

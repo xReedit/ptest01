@@ -315,31 +315,34 @@ async function xSoapSunat_SendSunat(external_id, idce) {
             // 11092021
             // si el error es de comprobante registrado con otros datos - erro se produce por sunat no sincroniza bien los datos
             // entonces le decimos que fue acepta 
-            if ( rpt.msj_error.toLowerCase() === 'el comprobante fue registrado previamente con otros datos' ) {
+            
+            // lo quitamos 310123
+            
+            // if ( rpt.msj_error.toLowerCase() === 'el comprobante fue registrado previamente con otros datos' ) {
 
-                // ok
-                rpt.ok = true;
+            //     // ok
+            //     rpt.ok = true;
 
-                let data = {};
-                data.idce = idce;
-                data.estado_api = 0; // se registro correctamente
-                data.estado_sunat = 0; // se envio correctamente
-                data.msj = "Aceptada";
-                // data.numero = numero_comp;
-                data.external_id = external_id;
+            //     let data = {};
+            //     data.idce = idce;
+            //     data.estado_api = 0; // se registro correctamente
+            //     data.estado_sunat = 0; // se envio correctamente
+            //     data.msj = "Aceptada";
+            //     // data.numero = numero_comp;
+            //     data.external_id = external_id;
 
-                if (res.response.length != 0) {
-                    // data.estado_sunat = res.response.code;
-                    data.msj = res.response.description;
-                }
+            //     if (res.response.length != 0) {
+            //         // data.estado_sunat = res.response.code;
+            //         data.msj = res.response.description;
+            //     }
 
-                data.pdf = res.links.pdf != "" ? 1 : 0;
-                data.cdr = res.links.cdr != "" ? 1 : 0;
-                data.xml = res.links.xml != "" ? 1 : 0;
+            //     data.pdf = res.links.pdf != "" ? 1 : 0;
+            //     data.cdr = res.links.cdr != "" ? 1 : 0;
+            //     data.xml = res.links.xml != "" ? 1 : 0;
 
-                CpeInterno_UpdateRegistro(data);
+            //     CpeInterno_UpdateRegistro(data);
 
-            }
+            // }
 
             
             
@@ -476,9 +479,10 @@ function xSoapSunat_cambiarFormatoFechaString2(sfecha) {
 /////////// consultas
 
 function xSoapSunat_DownloadFile(tipo, id) {
-    // const dtSede = xm_log_get("datos_org_sede")[0];
+    const _dtSede = xm_log_get("datos_org_sede")[0];
+    const _userId = _dtSede.id_api_comprobante; // whastapp
     // const url_api_fac_sede = dtSede.url_api_fac || '';
     // const URL_COMPROBANTE_DOWNLOAD_FILE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[1].value : url_api_fac_sede.replace('.pe/api', '.pe/downloads/document');
-    const _url = `${URL_COMPROBANTE_DOWNLOAD_FILE}/${tipo}/${id}`;
+    const _url = `${URL_COMPROBANTE_DOWNLOAD_FILE}/${tipo}/${id}/${_userId}`;
     window.open(_url, "_blank");
 }

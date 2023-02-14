@@ -4,12 +4,12 @@ var HEADERS_COMPROBANTE_ONLY_AUTH = { 'Authorization': '' }
 // desarrollo
 var URL_SERVER = 'http://localhost:5819/v3/'; // desarrollo
 var URL_SOCKET = 'http://localhost:5819';
-var URL_IMG_CARTA = 'http://192.168.1.64/restobar/file/';
-var URL_IMG_CARTA = 'http://192.168.1.64/restobar/file/';
+var URL_IMG_CARTA = 'http://192.168.1.65/restobar/file/';
+var URL_IMG_CARTA = 'http://192.168.1.65/restobar/file/';
 
-var URL_IMG_CORREO = 'http://192.168.1.64/restobar/repositorio/img_correo/';
-var URL_IMG_PROMO = 'http://192.168.1.64/restobar/repositorio/img_promo/';
-var URL_IMG_GIF_UPDATE = 'http://192.168.1.64/restobar/repositorio/gif_update/';
+var URL_IMG_CORREO = 'http://192.168.1.65/restobar/repositorio/img_correo/';
+var URL_IMG_PROMO = 'http://192.168.1.65/restobar/repositorio/img_promo/';
+var URL_IMG_GIF_UPDATE = 'http://192.168.1.65/restobar/repositorio/gif_update/';
 
 // produccion
 // var URL_SOCKET = 'https://app.restobar.papaya.com.pe';

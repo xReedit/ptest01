@@ -1,0 +1,133 @@
+<dom-module id="x-comp-multi-date">
+    <template is="dom">
+        <div class="content-date">
+            <div class="date-op">
+                <p class="fs-10 fw-600 text-secondary m-0">Desde</p>
+                <p class="m-0" id="comp_multi_date_1">[[dateFrom]]</p>
+            </div>
+            <div class="date-op">
+                <p class="fs-10 fw-600 text-secondary m-0">Hasta</p>
+                <p class="m-0" id="comp_multi_date_2">[[dateTo]]</p>
+            </div>
+
+        </div>
+    </template>
+</dom-module>
+<style>
+    .content-date {
+        display: flex;
+        padding: 5px;
+        border-radius: 5px;
+        background: #eeeeee;
+        width: auto;
+        flex-wrap: wrap;
+        max-width: 180px;
+    }
+    .date-op {
+        background: white;
+        border-radius: 5px;
+        padding: 5px;
+        margin: 5px;
+        cursor: pointer;
+    }
+
+    .date-op:hover {
+        background: #fffeee;
+    }
+</style>
+<script>
+    
+    function xIniCompDateMultiple() {
+        $('#comp_multi_date_1').pickadate({
+            format: 'dd mmm yyyy',
+            today: 'Hoy',
+            clear: 'Todos',
+            close: 'Cerrar',
+            onSet: function (context) {
+                const xfecha_delivery_selected = context.select ? new Date(context.select).toLocaleDateString() : '';
+                // console.log('xfecha_delivery', xfecha_delivery);
+                xCDSearchAllPedidos(xfecha_delivery_selected)
+                // p_fecha = xfecha_historial;
+                // xloadHistorial();
+            }
+        });
+    }
+
+    function compChangeDateFrom(_date) {
+            this.dateFrom = _date;
+            this.dateSelected.dateFrom = dateFrom;
+    } 
+    
+    function compChangeDateTo(_date) {
+            dateFrom = _date;
+            this.dateSelected.dateFrom = dateFrom;
+        } 
+
+
+    Polymer({
+        is: 'x-comp-multi-date',
+        properties: {                        
+            dateFrom: {
+                type: String,
+                value: 'Seleccionar',                
+            },
+            dateTo: {
+                type: String,
+                value: 'Seleccionar'                       
+            },
+            dateSelected: {
+                type: Object,                
+                reflectToAttribute: true,
+                notify: true,
+                observer: 'change'
+            }
+        },        
+        change: () => {            
+        },
+        // attached: function () {        
+        //     xIniCompDateMultiple();    
+        // },
+        changeDate: function (context) {
+            const xfecha_delivery_selected = context.select ? new Date(context.select).toLocaleDateString() : '';
+            this.dateFrom = _date;
+            this.dateSelected.dateFrom = dateFrom;
+        },
+        attached:() => {
+            this.dateSelected = {
+                dateFrom: '',
+                dateTo: ''
+            }
+            console.log('object');
+            $('#comp_multi_date_1').pickadate({
+                format: 'dd mmm yyyy',
+                today: 'Hoy',
+                clear: 'Todos',
+                close: 'Cerrar',
+                onSet:(context) => {
+                    const xfecha_delivery_selected = context.select ? new Date(context.select).toLocaleDateString() : '';
+                    compChangeDateFrom(xfecha_delivery_selected)                    
+                    // console.log('xfecha_delivery', xfecha_delivery);
+                    // xCDSearchAllPedidos(xfecha_delivery_selected)
+                    // p_fecha = xfecha_historial;
+                    // xloadHistorial();
+                }
+            });
+
+            $('#comp_multi_date_2').pickadate({
+                format: 'dd mmm yyyy',
+                today: 'Hoy',
+                clear: 'Todos',
+                close: 'Cerrar',
+                onSet: function (context) {
+                    const xfecha_delivery_selected = context.select ? new Date(context.select).toLocaleDateString() : '';
+                    this.dateTo = xfecha_delivery_selected;
+                    this.dateSelected.dateTo = dateTo;
+                    // console.log('xfecha_delivery', xfecha_delivery);
+                    // xCDSearchAllPedidos(xfecha_delivery_selected)
+                    // p_fecha = xfecha_historial;
+                    // xloadHistorial();
+                }
+            });
+        }
+    })
+</script>

@@ -460,6 +460,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     const idclienteComprobante = json_xml.extras.idcliente;
     const totalComprobante = json_xml.totales.total_venta;
     const totalesJson = json_xml.totales;
+    
     // json_xml = json_xml;   
 
     const _idregistro_p = typeof idregistro_pago === "object" ? idregistro_pago[1] : idregistro_pago;
@@ -510,11 +511,13 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
             // enviar socket url pdf whatsapp
             if ( telefonoCliente !== '' ) {
+                const _userId = dtSede.id_api_comprobante; // whastapp
                 const _payloadPdf = {
                     telefono: telefonoCliente,
                     external_id: rpt.external_id,
                     numero_comprobante: res.data.number,
-                    comercio: nomComercio
+                    comercio: nomComercio,
+                    user_id: _userId
                 };
                 xSendWhatsAppPdfComrpobante(_payloadPdf);
             }

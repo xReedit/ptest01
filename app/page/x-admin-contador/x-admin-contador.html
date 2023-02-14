@@ -128,7 +128,9 @@
 					<th align="right">I.G.V</th>
 					<th align="right">Total</th>
 					<th>Estado Sistema</th>
-					<!-- <th>Estado Sunat</th> -->
+					<th>
+						Estado Sunat						
+					</th>
 				</thead>
 				<tbody>
 					<template is="dom-repeat" items="{{ListReporte}}" as="row">
@@ -136,9 +138,11 @@
 							<td>{{displayIndex(index)}}</td>
 							<td style$="{{row.style_td}}">{{row.fecha}}</td>							
 							<td style$="{{row.style_td}}">{{row.tipo_doc}}</td>
-							<td style$="{{row.style_td}}">{{row.num_doc }}</td>
+							<td style$="{{row.style_td}}">{{row.num_doc}}</td>
 							<td style$="{{row.style_td}}">{{row.nom_cliente}}</td>
-							<td style$="{{row.style_td}}">{{row.ruc}}</td>
+							<!-- <td style$="{{row.style_td}}" data-t="s" class="text">'{{row.ruc}}</td> -->
+							<!-- <td style='mso-number-format:"00000000"'>{{row.ruc}}</td> -->
+							<td style='mso-number-format:"@"'>{{row.ruc}}</td>
 							<td style$="{{row.style_td}}">{{row.subtotal}}</td>
 							<td style$="{{row.style_td}}">{{row.igv}}</td>
 							<td style$="{{row.style_td}}">{{row.total}}</td>
@@ -214,7 +218,7 @@ function xLoadEstablecimientosAsignados() {
 		})
 		.done((res) => {
 			const _res = JSON.parse(res);
-			console.log('_res', _res);
+			// console.log('_res', _res);
 			xThisAdmContador.listAsignados = _res.datos;
 		});
 }
@@ -222,7 +226,8 @@ function xLoadEstablecimientosAsignados() {
 function selectEsablecimiento(obj) {
 	const index = obj.id;	
 	xThisAdmContador.selEstablecimiento = xThisAdmContador.listAsignados[index];
-	console.log('xThisAdmContador.selEstablecimiento', xThisAdmContador.selEstablecimiento);
+	// console.log('xThisAdmContador.selEstablecimiento', xThisAdmContador.selEstablecimiento);
+	xThisAdmContador.showVerificacionSunat = xThisAdmContador.selEstablecimiento.habilita_verificacion_cpe == '1'
 	listCpeSuccess = [];
 	xDataYears();
 	selectedRowTR(obj);
@@ -307,6 +312,7 @@ async function downloadReporteCPE(obj) {
 	xThisAdmContador.showProccessVerificationFinalize = false;
 	xThisAdmContador.showProccessVerificationError = false;
 
+	xThisAdmContador.selEstablecimiento.ruc = xThisAdmContador.selEstablecimiento.ruc.trim();
 	const _data = {
 		establecimiento: xThisAdmContador.selEstablecimiento,
 		m: _selMes.m,
@@ -314,7 +320,10 @@ async function downloadReporteCPE(obj) {
 	}
 
 	// obtner toke api consulta success_sunat
-	const rptApiToken = await _apiConsultaCpe.getToken();
+	let rptApiToken = await _apiConsultaCpe.getToken();
+	let countNewToken = 0;
+	// console.log('rptApiToken', rptApiToken);
+	// return;
 	const _apiToken = rptApiToken.access_token;
 	// console.log('rpt token', _apiToken);
 
@@ -331,7 +340,7 @@ async function downloadReporteCPE(obj) {
 		.done(async (res) => {
 			res = JSON.parse(res);
 			if ( res.error ) {console.log(res.error); return;}
-			console.log(res.data);
+			// console.log(res.data);
 
 			xPopupLoad.xclose();
 			dialog_match_sunat.open();
@@ -366,24 +375,63 @@ async function downloadReporteCPE(obj) {
 							},
 							body: {"numRuc": ruc_emisor,"codComp": codComp,"numeroSerie": x.series,"numero": num_doc,"fechaEmision": x.fecha,"monto": monto}
 						}
+
+						// x.ruc = x.ruc.toString(); // para exportar cadena con 0 izquierda
+						if ( x.estado.toLowerCase() == 'anulado' ) {
+							x.total = '0'
+							x.subtotal = '0'
+						}
+
+						// x.ruc = ' ' + x.ruc; // string
 		
 						// console.log('payload', payload);
 						if ( xThisAdmContador.selEstablecimiento.habilita_verificacion_cpe == 1 ) {
-							const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
-							let estado_cpe;
-							if (rptApiConsulta?.success === true) { 
+							// verificacion api sunat
+							if (x.rpt_sunat == '1') { // ya se consulto ya paso
 								x.success_sunat = 1;
-								estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
+								estado_cpe = xEstadoCpeApi('1');
 								x.estadoCp = estado_cpe.titulo;
 								x.style_estado_sunat = 'color: ' + estado_cpe.color;
 								countCpeSuccess++;
 								listCpeSuccess.push(x);
-							} else {
-								countCpeError++;
-								x.success_sunat = 0;
-								x.estadoCp = 'Sin Respuesta';
-								x.style_estado_sunat = 'color: black';
-								xThisAdmContador.showRowsNoResponse = true;
+
+							} else { 
+								
+								// aun no se consulta // consultamos api sunat
+								const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
+								let estado_cpe;
+								if (rptApiConsulta?.success === true && rptApiConsulta?.data?.estadoCp) { 
+									x.success_sunat = 1;
+									estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
+									x.estadoCp = estado_cpe.titulo;
+									x.style_estado_sunat = 'color: ' + estado_cpe.color;
+
+									// si no existe tambien marca en el estado sistema
+									if ( rptApiConsulta.data.estadoCp === '0' ) {
+										x.estado = estado_cpe.titulo;
+										x.style_reporte = 'color: ' + estado_cpe.color;
+										// no suma 
+										x.total = '0'
+										x.subtotal = '0'
+									}
+
+									countCpeSuccess++;
+									listCpeSuccess.push(x);
+								} else {
+									countCpeError++;
+									x.success_sunat = 0;
+									x.estadoCp = 'Sin Respuesta';
+									x.style_estado_sunat = 'color: black';
+									xThisAdmContador.showRowsNoResponse = true;
+								}
+
+								// renovamos el token cada 500 registros consultados
+								if ( countNewToken > 500 ) {
+									rptApiToken = await _apiConsultaCpe.getToken();
+									countNewToken = 0;
+								}
+								countNewToken++;
+
 							}
 						} else {
 							// no consulta
@@ -468,7 +516,8 @@ function xEstadoCpeApi(estado) {
 		color: ''
 	};
 
-	switch (estado) {
+	const _valEstado = estado.toString()
+	switch (_valEstado) {
 		case '0': _estado.titulo = "NO EXISTE"; _estado.color= "purple"; break;
 		case '1': _estado.titulo = "ACEPTADO";  _estado.color= "green"; break;		
 		case '2': _estado.titulo = "ANULADO";  _estado.color= "red"; break;		
@@ -514,12 +563,14 @@ Polymer({
 		showRowsNoResponse: Boolean,
 		showProccessVerificationFinalize: Boolean,
 		showProccessVerificationError: Boolean,
+		showVerificacionSunat: Boolean,
 	},
 	attached: function () {
 		this.selected = 0,
 		this.showRowsNoResponse = false;
 		this.showProccessVerificationFinalize = false;
 		this.showProccessVerificationError = false;
+		this.showVerificacionSunat = false;
 		xThisAdmContador = this;
 		xIniAdmContador();
 	},

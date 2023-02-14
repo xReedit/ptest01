@@ -103,15 +103,15 @@ function handlerFnMiPedido(e) {
 					if ( !isSocket ) {
 						if(xcant<xcant_max){xcant++;}			
 					} else {
-						xSotockSocket = xcant_max > 0 ? xSotockSocket - 1 : 0;
-						xSotockSocketRun = xcant_max > -1 ? xSotockSocketRun - 1 : 0;
+						xSotockSocket = xcant_max > 0 ? parseFloat(xSotockSocket) - 1 : 0;
+						xSotockSocketRun = xcant_max > -1 ? parseFloat(xSotockSocketRun) - 1 : 0;
 						if(xcant_max > 0 ){xcant++;}
 					}
 					xcantRunSocket = xcant;				 
 				}else{
 		
-					xSotockSocket = xcant === 0 ? xcant_max : xSotockSocket + 1;
-					xSotockSocketRun = xcant === 0 ? xcant_max : xSotockSocketRun + 1;
+					xSotockSocket = xcant === 0 ? xcant_max : parseFloat(xSotockSocket) + 1;
+					xSotockSocketRun = xcant === 0 ? xcant_max : parseFloat(xSotockSocketRun) + 1;
 					xcant--;	
 					xcantRunSocket = xcant;					
 					xcant = xcant <= 0 ? 0 : xcant;
@@ -364,7 +364,7 @@ async function handlerFnMiPedidoControl(e) {
 		xsigno = isRowItemPedido ? '+' : xsigno;
 		var objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
 		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),		
-		, xcant_max = itemPedidos_objItemSelected.stock_actual || 1000 // element_cant_li_sel.attr('data-cantmax'),
+		, xcant_max = itemPedidos_objItemSelected.stock_actual || 10000 // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
 		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
 		
@@ -410,15 +410,15 @@ async function handlerFnMiPedidoControl(e) {
 			if ( !isSocket || isRowItemPedido ) {
 				if(xcant<xcant_max){xcant++;}			
 			} else {
-				xSotockSocket = xcant_max > 0 ? xSotockSocket - 1 : 0;
-				xSotockSocketRun = xcant_max > -1 ? xSotockSocketRun - 1 : 0;
+				xSotockSocket = xcant_max > 0 ? parseFloat(xSotockSocket) - 1 : 0;
+				xSotockSocketRun = xcant_max > -1 ? parseFloat(xSotockSocketRun) - 1 : 0;
 				if(xcant_max > 0 ){xcant++;}
 			}
 			xcantRunSocket = xcant;				 
 		}else{
 
-			xSotockSocket = xcant === 0 ? xcant_max : xSotockSocket + 1;
-			xSotockSocketRun = xcant === 0 ? xcant_max : xSotockSocketRun + 1;
+			xSotockSocket = xcant === 0 ? xcant_max : parseFloat(xSotockSocket) + 1;
+			xSotockSocketRun = xcant === 0 ? xcant_max : parseFloat(xSotockSocketRun) + 1;
 			xcant--;	
 			xcantRunSocket = xcant;					
 			xcant = xcant <= 0 ? 0 : xcant;
@@ -1044,13 +1044,18 @@ function xSumaCantArray(ArrySum){
 				// _total = _total.toString().indexOf(',') > -1 ? x.precio_total : _total; // cuando juntan la cuenta
 				// _total = parseFloat(_total).toFixed(2);
 				
-				let _xcantidad = n.cantidad;				
+				// let _xcantidad = parseFloat(n.cantidad);	
+				let _xcantidad = n.cantidad;	
+				let importe_calculado_unitario = 0;
 				if (_xcantidad.toString().indexOf(",") > -1) { // caso de que se junte los items
 					_xcantidad = _xcantidad.split(',');
 					_xcantidad = _xcantidad.reduce((a, b) => parseFloat(a) + parseFloat(b));
-				} 
+					importe_calculado_unitario = parseFloat(n.ptotal)
+				} else {
+					_xcantidad = parseFloat(n.cantidad);	
+					importe_calculado_unitario = parseFloat(parseFloat(_xcantidad * _xprecio_unitario).toFixed(2));
+				}
 				
-				const importe_calculado_unitario = parseFloat(parseFloat(_xcantidad * _xprecio_unitario).toFixed(2));
 
 				// let xp_print;
 				// if (n.precio_print === '') { xp_print = n.precio_total_calc; } // cuando es igual a vacio viene de una regla de carta

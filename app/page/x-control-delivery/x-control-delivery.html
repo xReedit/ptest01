@@ -22,10 +22,12 @@
                 </div>			                
         </paper-dialog>
 
-        <div class="p-3" style="max-width: 1200px !important; margin: 0 auto;">
+        <div class="p-3" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">
             <div class="d-flexx justify-content-between align-items-center mb-1">
                 <h3>Control de Delivery</h3>
-                <button class="btn btn-sm btn-secondary xInvisible" id="btn_vista_delivery" onclick="xVistaAnteriorDelivery()">Vista Anterior</button>                        
+                <div>                    
+                    <button class="btn btn-sm btn-secondary xInvisible" id="btn_vista_delivery" onclick="xVistaAnteriorDelivery()">Vista Anterior</button>                        
+                </div>
             </div>
             <div class="d-flexx w-100 justify-content-between flex-wrap">
                 <div>                    
@@ -76,6 +78,10 @@
             <iron-pages selected="{{selectedTab}}">
             <div id="lista">
                 <div class="div-border div-filter">
+                    <div>
+                        <p class="fw-900">Ver Desde</p>
+                        <input type="text" class="selected-template-1 xCursor" id="txt_fecha_delivery"  placeholder="Elige fecha">
+                    </div>
                     <div>
                         <p class="fw-900">Buscar Cliente</p>                        
                         <input type="text" placeholder="Nombre o teléfono" class="selected-template-1 w-100" onkeyup="xCDFilterCliente(this)">                        
@@ -330,7 +336,8 @@
 
         .div-filter {
             display: grid;
-            grid-template-columns: 40% 60%;
+            /* grid-template-columns: 40% 60%; */
+            grid-template-columns: 1fr 3fr 3fr;
             column-gap: 30px;
             /* background: white; */
             padding: 20px;
@@ -349,7 +356,7 @@
 </dom-module>    
 
 <script>
-var xThisCDelivery, repartidorListSeleted, htmlDivPagoCP, xRpt_pagoCD, lastIdPedidoDeliverySearch = 0; //, xComoPagoDelivery;
+var xThisCDelivery, repartidorListSeleted, htmlDivPagoCP, xRpt_pagoCD, lastIdPedidoDeliverySearch = 0, xfecha_delivery_selected = ''; //, xComoPagoDelivery;
 
 function xIniControlDelivery () {    
 
@@ -380,6 +387,20 @@ function xIniControlDelivery () {
         const _arrOpSelected = [...e.target.selectedOptions].map(i => JSON.parse(i.value));
         xCDSetFilterList(_arrOpSelected);
     })
+
+    compPickDateDelivery = $('#txt_fecha_delivery').pickadate({            
+                format: 'dd mmm yyyy',
+                today: 'Hoy',
+                clear: 'Todos',
+                close: 'Cerrar',                
+                onSet: function(context) {                     
+                    const xfecha_delivery_selected = context.select ? new Date(context.select).toLocaleDateString() : '';
+                    // console.log('xfecha_delivery', xfecha_delivery);
+                    xCDSearchAllPedidos(xfecha_delivery_selected)
+                    // p_fecha = xfecha_historial;
+					// xloadHistorial();
+                }
+            });
 
     
 
@@ -419,8 +440,12 @@ function xIniControlDelivery () {
 // }
 
 // trae toda la lista de pedidos pendientes
-function xCDSearchAllPedidos() {
-    $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=7'})
+function xCDSearchAllPedidos(_fecha='') {
+    if (_fecha == '') {
+        _fecha = new Date().toLocaleDateString(); // fecha actual
+        txt_fecha_delivery.value = _fecha
+    }
+    $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=7', data: {fecha: _fecha}})
 	    .done( function (res) {            
             res = JSON.parse(res);
 
@@ -460,8 +485,10 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
     const _isRepartoSoloApp = xThisCDelivery.arrSedeInfo.pwa_delivery_reparto_solo_app === '1';
     const _isRepartoPropio = xThisCDelivery.arrSedeInfo.pwa_delivery_servicio_propio === '1';
     const _isBusquedaMapa = xThisCDelivery.arrSedeInfo.pwa_habilitar_busqueda_mapa === '1';    
+    const _isDeliveryCalculaCostoEntrega = xThisCDelivery.arrSedeInfo.pwa_delivery_hablitar_calc_costo_servicio === '1';
     const _isShowBtnCallRepartidor = xThisCDelivery.arrSedeInfo.pwa_delivery_habilitar_llamar_repartidor_papaya === '1';
     var _isAutoCallRepartidor = _isBusquedaMapa && !_isRepartoPropio;
+    // const isRedPapayaLLevaPedido = _isDeliveryCalculaCostoEntrega && !_isRepartoPropio
 
     return rowData.map(x => {
                 var _datosDelivery;
@@ -491,6 +518,15 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
                 if ( _isAutoCallRepartidor ) { // si llama automaticamente repartidor
                     x.pwa_delivery_habilitar_llamar_repartidor_papaya = '1';
                     x.flag_solicita_repartidor_papaya = '1';
+                }
+
+                // cocinar sub totales
+                if ( isDataJson ) {
+                    var _subTotales = x.json_datos_delivery.p_subtotales;
+                    _subTotales = _isRepartoPropio ? _subTotales : darFormatoSubTotalesDelivery(_subTotales);
+                    x.json_datos_delivery.p_subtotales = _subTotales;
+                    x.total = _subTotales.filter(x => x.descripcion.toUpperCase() === 'TOTAL')[0].importe;
+                    x.total = parseFloat(x.total).toFixed(2);
                 }
 
                 // repartidor

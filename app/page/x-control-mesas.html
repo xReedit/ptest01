@@ -744,6 +744,7 @@ function xIniControlMesa(){
 
 
 	$(document).on('click', '.click_row_dt_p', function(e) {
+		
 	//$(".click_row_dt_p")('click',function(e){		
 		var obj_row=$(this).parent();
 		var xcheck=obj_row.hasClass('selected1');
@@ -930,12 +931,16 @@ function xIniControlMesa(){
 	// });
 
 	$("#dialog_detalle").on('iron-overlay-closed',function(){
-		//xVerificarSiActualizaItems();
+		//xVerificarSiActualizaItems();		
 		xbuscar_mesa=false;
 		xdtDpedido = null;
+
+		if ( xThisCM.isAddItemRow ) { // para resetear item no confirmados
+			_cpSocketRestoreFromPedidoStorage();
+		}
 		//xRefreshPedidos=setInterval(function () {xActualizarItems()},4000);
 	})
-	$("#dialog_detalle").on('iron-overlay-opened',function(){
+	$("#dialog_detalle").on('iron-overlay-opened',function(){		
 		xbuscar_mesa=true;
 
 		xValPago=document.getElementById('component_pago');
@@ -1249,7 +1254,7 @@ function addListClienteUsuarioPedido(idcliente) {
 
 //
 
-function xCheckPedidos(){
+function xCheckPedidos(){	
 	var xcantidad_pedidos_sel=0;
 		var xcantidad_total_pedidos=0;
 		var xtitulo_cahnge_mesa='';
@@ -1786,6 +1791,7 @@ async function xArmarSqlAddLUlI(){
 
 		// regresa xocupado
 		$(xObj_miPedido).removeClass('xDespachado');
+		xThisCM.isAddItemRow = false;
 		// xLoadMesas();// actualiza el estado
 }
 
@@ -2232,6 +2238,10 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			isDeliveryCalculaCostoEntregaSoloApp = xDtSede_cm[0].pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';
 			isPuedeLLamarRepartdiroPapaya = xDtSede_cm[0].pwa_delivery_habilitar_llamar_repartidor_papaya === '1';
 
+			// si esta en papaya express y la red de repartidores lleva los pedidos
+			// si calcula el costo de entrega y no tiene repartidores propio entonces los lleva la red de papaya
+			const isRedPapayaLLevaPedido = isDeliveryCalculaCostoEntrega && !isComercioServicioDeliveryPropio
+
 			if ( isClienteDeliveryFromApp ) { // o delivery
 				
 				// 241121 le quitamos al agregar items no suma
@@ -2262,6 +2272,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				// totales
 				// si el servicio de delivery no es propio no muestra costo del servicio ni propinas
 				// console.log('subtotales delivry');
+				// arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : isRedPapayaLLevaPedido ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
 				arrTotalesDeliveryCliente = isComercioServicioDeliveryPropio ? optionDeliveryCliente.p_subtotales : darFormatoSubTotalesDelivery(optionDeliveryCliente.p_subtotales);
 				// console.log('xLocal_xDtSubTotales', xLocal_xDtSubTotales);
 			

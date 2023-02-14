@@ -114,8 +114,9 @@
             break;
         case 7: // control de delivery - control pedidos
             $arrItemPedido=$_POST['obj'];
+            $fecha= isset($_POST['fecha']) ? $_POST['fecha']: '';
             $arrItemPedido = isset($arrItemPedido) ? "'".json_encode($arrItemPedido)."'" : 'null';
-            $sql="call procedure_refresh_delivery($g_idsede, $arrItemPedido)";
+            $sql="call procedure_refresh_delivery($g_idsede, $arrItemPedido, '$fecha')";
             $bd->xConsulta($sql);
             break;
         case 8: // control delivery
@@ -144,6 +145,59 @@
                     inner join sede s using(idsede)
                     where s.idsede = $g_idsede and pb.fecha_cierre = ''
             ";
+            $bd->xConsulta($sql);
+            break;
+        case 10: // modificacion de stock porciones
+            $postBody = json_decode(file_get_contents('php://input'));
+            $data = $postBody;            
+            $hora = date('h:i a');
+
+            $sql = "update porcion set stock='$data->stock_actual' where idporcion=$data->idporcion";
+            $bd->xConsulta_NoReturn($sql);
+
+            $sql = "insert into porcion_historial(tipo_movimiento,fecha,hora,cantidad,idusuario, idsede,idporcion)
+                    values ('$data->movimiento', curdate(), '$hora','$data->cantidad', $g_us,$g_idsede,$data->idporcion)";
+            $bd->xConsulta($sql);
+            // echo json_encode(array('respuesta' => 'ok'));
+            break;
+        case 101; //load porciones
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="call procedure_porcion_historial($postBody->idporcion, $g_idsede)";
+            $bd->xConsulta($sql);
+            break;
+        case 11: // guardar modificacion de stock producto almacen
+            $postBody = json_decode(file_get_contents('php://input'));
+            $data = $postBody;            
+            $hora = date('h:i a');
+
+            $sql = "update producto_stock set stock='$data->stock_actual' where idproducto_stock=$data->idproducto_stock";
+            $bd->xConsulta_NoReturn($sql);
+
+            $sql = "insert into producto_historial(tipo_movimiento,fecha,hora,cantidad,idusuario, idsede,idproducto,idalmacen)
+                    values ('$data->movimiento', curdate(), '$hora','$data->cantidad', $g_us,$g_idsede,$data->idproducto,$data->idalmacen)";
+            $bd->xConsulta($sql);
+            break;
+        case 111; //load productos
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="call procedure_producto_historial($postBody->idproducto, $postBody->idproducto_stock, $g_idsede, $postBody->idalmacen)";
+            $bd->xConsulta($sql);
+            break;
+        case 112: //load producto familias
+            $sql="select pf.idproducto_familia, pf.descripcion, COALESCE(count(pf.idproducto_familia), 0) cantidad_relacionados from producto_familia pf 
+                    left join producto p on p.idproducto_familia = pf.idproducto_familia 
+                where pf.idsede = $g_idsede and pf.estado = 0	
+                GROUP by pf.idproducto_familia
+                order by pf.descripcion";
+            $bd->xConsulta($sql);
+            break;
+        case 113: //remove familia
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="update producto_familia set estado = 1 WHERE idproducto_familia = '$postBody->idproducto_familia'";
+            $bd->xConsulta($sql);
+            break;
+        case 114: //remove familia
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="update producto_familia set descripcion = '$postBody->descripcion' WHERE idproducto_familia = '$postBody->idproducto_familia'";
             $bd->xConsulta($sql);
             break;
     }

@@ -1970,7 +1970,7 @@
 					left JOIN usuario AS u on p.idusuario = u.idusuario
 					left join cliente as c on p.idcliente = c.idcliente
 					left join repartidor as r on r.idrepartidor = p.idrepartidor
-				WHERE p.idpedido > $lastIdPedido and (p.idsede=".$g_idsede." and ".$condicion.") and ".$isQyueryConfirmar;				
+				WHERE p.idpedido >= $lastIdPedido and (p.idsede=".$g_idsede." and ".$condicion.") and ".$isQyueryConfirmar;				
 
 				// AND (p.estado IN(0,1) OR (p.confirmar_pago = 1))
 
@@ -2143,7 +2143,30 @@
 				$id_pedidos_anular=$xarray_pe_anular[0]['idpedidos'];
 				$motivo_anular=$xarray_pe_anular[0]['m_a'];
 
-				$sql_pdt="update pedido_detalle set estado=1 where idpedido in (".$id_pedidos_anular."); update pedido set estado=3, motivo_anular='".$motivo_anular."' where idpedido in (".$id_pedidos_anular.");";
+				// and pagado=0 si ya pago no elimina
+				$sql_pdt="update pedido_detalle set estado=1, borrado=1 where idpedido in (".$id_pedidos_anular.") and pagado=0;";
+				$bd->xConsulta_NoReturn($sql_pdt);
+
+				// $id_pedidos_anular = rtrim($id_pedidos_anular, ",");
+				// $id_pedidos_anular = $id_pedidos_anular.',';
+				// estado = 4 anulado al final, algunos item cobrados
+				$list_id_pedidos_anular = explode(",", $id_pedidos_anular);
+				foreach ($list_id_pedidos_anular as $arrIdP) {
+					if ( $arrIdP !== '' ) {
+						$sql_pdt="update pedido as p	
+								inner join (select idpedido, sum(pagado) pagado from pedido_detalle
+											where idpedido=$arrIdP GROUP by idpedido) as pd on pd.idpedido = p.idpedido
+								set p.estado = if(pd.pagado=0,3,4)		
+								where pd.idpedido = $arrIdP";
+						
+						$bd->xConsulta_NoReturn($sql_pdt);
+					}
+				}
+
+
+				// and pagado=0 si ya pago no elimina
+				// $sql_pdt="update pedido_detalle set estado=1 where idpedido in (".$id_pedidos_anular.") and pagado=0;
+				// 	update pedido set estado=3, motivo_anular='".$motivo_anular."' where idpedido in (".$id_pedidos_anular.");";
 			}
 
 			$condicion_pdb="idpedido IN (".$id_pedidos_anular.") and pagado=0";//si no viene de registro elimina todo los item que no esten pagados // desde control de pedido
@@ -2168,7 +2191,8 @@
 			}
 
 			//print $sql_todos.$sql_change_de.$sql_pdt.$sqlpedido_borrado.$sql_historial_rp;
-			$bd->xMultiConsulta($sql_todos.$sql_change_de.$sql_pdt.$sql_historial_rp);
+			// $bd->xMultiConsulta($sql_todos.$sql_change_de.$sql_pdt.$sql_historial_rp);
+			$bd->xMultiConsulta($sql_todos.$sql_change_de.$sql_historial_rp);
 			/////////
 			break;
 		///////////////
@@ -2214,6 +2238,14 @@
 			$idus = $_SESSION['idusuario'];
 			$idBitacora = $_POST['id'];
 			$sql = "call procedure_cierre_caja($idus,$idBitacora)";
+			$bd->xConsulta($sql);
+			break;
+		case 70001: // run cierre registros
+			$idus = $_SESSION['idusuario'];
+			$idBitacora = $_POST['id'];
+			// $objData = json_encode($_POST['objdata']);
+			// $sql = "call procedure_run_cierre($idus,$idBitacora, '$objData')";
+			$sql = "call procedure_run_cierre($idus,$idBitacora, '')";
 			$bd->xConsulta($sql);
 			break;
 		case 70111: // verificar cuadre
@@ -2975,12 +3007,12 @@
 			";*/
 			$sql="
 				SELECT ps.idproducto_stock,p.idproducto, ps.idalmacen,pf.descripcion AS familia, a.descripcion AS almacen, p.descripcion AS producto, ps.stock, IF(p.precio_venta='','0.00',format(p.precio_venta,2)) AS precio_venta, IF(p.stock_minimo='',0,p.stock_minimo) AS stock_minimo
-						,p.img, p.codigo_barra, p.precio
+						,p.img, p.codigo_barra, p.precio, p.idproducto_familia, ps.idproducto_stock
 				FROM producto AS p
 					INNER JOIN producto_stock AS ps using(idproducto)
 					INNER JOIN almacen AS a using(idalmacen)
 					INNER JOIN producto_familia AS pf using(idproducto_familia)
-				WHERE (p.idorg=".$g_ido." AND p.idsede=".$g_idsede.") AND p.estado=0 AND ps.estado=0
+				WHERE (p.idsede=".$g_idsede.") AND p.estado=0 AND ps.estado=0
 				GROUP BY ps.idalmacen, ps.idproducto
 				ORDER BY a.descripcion, p.descripcion
 			";
@@ -3687,7 +3719,7 @@ function xDtUS($op_us){
 		case 3012: // load datos del org sede 
 			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, '' as logo64, se.ubigeo, se.codigo_del_domicilio_fiscal
 				,se.sys_local, se.ip_server_local, se.pwa, se.url_api_fac
-				,se.email_cierre, se.metodo_pago_aceptados, se.habilita_verificacion_cpe, tcs.serie
+				,se.email_cierre, se.metodo_pago_aceptados, se.habilita_verificacion_cpe, tcs.serie, se.id_api_comprobante
 				from org as s 
 				inner JOIN sede as se on s.idorg = se.idorg 
 				left join (select idsede, serie from tipo_comprobante_serie tcs where idsede=$g_idsede and serie != 0 and estado = 0 limit 1) as tcs on tcs.idsede = se.idsede 

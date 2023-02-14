@@ -878,8 +878,9 @@
 
     function openSendWhatsApp(obj, isNotaCredito = false) {
         const index = obj.parentElement.dataId;
-        external_id_cpe = !isNotaCredito ? xThisCpe.ListCpe[index].external_id : xThisCpe.ListCpeNC[index].external_id;
-        xThisCpe.numComprobanteSelected = !isNotaCredito ? xThisCpe.ListCpe[index].numero : xThisCpe.ListCpeNC[index].numero
+        const _listGetCPE = !isNotaCredito ? xThisCpe.ListCpe[index] : xThisCpe.ListCpeNC[index];
+        external_id_cpe = _listGetCPE.external_id; // !isNotaCredito ? xThisCpe.ListCpe[index].external_id : xThisCpe.ListCpeNC[index].external_id;
+        xThisCpe.numComprobanteSelected = _listGetCPE.numero; //!isNotaCredito ? xThisCpe.ListCpe[index].numero : xThisCpe.ListCpeNC[index].numero
 
         // console.log(xm_log_get('datos_org_sede')[0].sedenombre);
         $('#div-btns-wsp').removeClass('xInvisible');
@@ -893,9 +894,12 @@
     }
 
     function sendCPEWhatsApp() {
+        const dtSede = xm_log_get("datos_org_sede")[0];
+        const _userId = dtSede.id_api_comprobante; // whastapp
         const _payloadPdf = {
             telefono: txt_wtp.value,
             external_id: external_id_cpe,
+            user_id: _userId,
             numero_comprobante: xThisCpe.numComprobanteSelected,
             comercio: xm_log_get('datos_org_sede')[0].sedenombre
         };

@@ -7,6 +7,20 @@
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
 	<template>
 
+		<paper-dialog class="dialog_redondo" id="dialog_info_supervisor" style="max-width: 500px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div>								
+				<p class="fs-18">Cunato tengo?.</p>
+				<p class="fw-100 text-secondary">El importe que debe tener en caja es la suma de sus ventas en efectivo <span class="fw-600 text-primary">mas</span> sus ingresos de efectivo a caja y <span class="fw-600 text-danger">menos</span> sus salidas de efectivo de caja.</p>
+				<br>
+				<p class="fw-100 text-secondary">Puede ver sus ventas en efectivo en la opción de "Registro de Pagos". Si no encuentra su diferencia, llame al supervisor.</p>
+				<br>
+									
+				<button dialog-dismiss class="btn btn-dark mb-2" onclick="xPSupervisor.xopen()">Ingresar clave supervisor</button><br>
+				<button dialog-dismiss class="btn btn-primary mb-2" onclick="xOpenDialogPermisoRemotoUs()">Solicitar Permiso Remoto</button><br>
+				<button dialog-dismiss class="btn btn-secondary">Cancelar</button>
+			</div>
+		</paper-dialog>
+
 		<!-- permiso remoto -->
 		<paper-dialog class="dialog_redondo" id="dialog_permiso_remoto" style="max-width: 500px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div>				
@@ -258,8 +272,8 @@
 				            <!-- <paper-button tabindex="0" raised class="xverde" onclick="xVerificar();"><iron-icon icon="save"></iron-icon>Verificar</paper-button>
 				            <paper-button tabindex="0" raised class="xnegro" onclick="xPSupervisor.xopen()"><iron-icon icon="save"></iron-icon>Supervisor</paper-button> -->
 							<button class="btn btn-success" onclick="xVerificar();"><i class="fa fa-check pr-1"></i>Verificar</button>
-							<button class="btn btn-dark" onclick="xPSupervisor.xopen()"><i class="fa fa-user pr-1"></i>Supervisor</button>
-							<button class="btn btn-info" onclick="xOpenDialogPermisoRemotoUs()"><i class="fa fa-volume-control-phone pr-1"></i>Permiso Remoto</button>
+							<button class="btn btn-dark" onclick="dialog_info_supervisor.open()"><i class="fa fa-money pr-1"></i>Cuanto Tengo?</button>
+							<!-- <button class="btn btn-info" onclick="xOpenDialogPermisoRemotoUs()"><i class="fa fa-volume-control-phone pr-1"></i>Permiso Remoto</button> -->
 			            </div>
 			            <!-- <button onclick="xCocinarResumenBoletas();">Enviar Resumen</button> -->
 					</div>
@@ -488,13 +502,40 @@ function xGuardarIngreso(){
 }
 
 function xGetDataCierre(idBitacora) {
+	xThisCaja.isErrorCierre = false;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=7000', data:{id: idBitacora}})
-	.done(function (res) {
-		res = JSON.parse(res);
-		if( !res.success ) {console.log(res); xPopupLoad.xclose(); return;}
+	.done(function (resCierre) {
+		resCierre = JSON.parse(resCierre);
+		if( !resCierre.success ) {
+			//msj
+			const _msjErr = '<h3>Ups! hubo un problema al cerrar. Intente nuevamente</h3>'
+			$('#xTituloRpt').html(_msjErr);
+			$('#xTituloRpt').css('color','red');
+			xThisCaja.isErrorCierre = true;
+			console.log(resCierre); xPopupLoad.xclose(); 
 
-		const arrData = JSON.parse(res.datos[0]['data']);
-		const arrTitulo = JSON.parse(res.datos[0]['titulo']);
+			$("#btns_cierre").html(`<button class="btn btn-primary" onclick="xVerificar();"><i class="fa-light fa-repeat"></i> Volver a Verificar</button> <button class="btn btn-warning" onclick="xDownloadPdfCierre(1);"><i class="fa fa-file-pdf-o"></i> V</button>`);
+			
+			return;
+		}
+
+		const arrData = JSON.parse(resCierre.datos[0]['data']);
+		const arrTitulo = JSON.parse(resCierre.datos[0]['titulo']);
+		
+		// const _objRunCierre = {
+		// 	data: arrData,
+		// 	titulo: arrTitulo
+		// }
+
+		// ok run cierre registros
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70001', data:{id: idBitacora, objdata: _objRunCierre }})
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70001', data:{id: idBitacora }})
+		.done(_res => {
+			console.log('run cierre registro ',_res)
+		})
+
+		// const arrData = JSON.parse(resCierre.datos[0]['data']);
+		// const arrTitulo = JSON.parse(resCierre.datos[0]['titulo']);
 
 		var keyTitulo='', cIndex=0, arrX = [], arrRpt=[];
 		arrData.map((x, i) => {
@@ -513,19 +554,7 @@ function xGetDataCierre(idBitacora) {
 				arrX.map((z,q) => {
 					arrRpt[cIndex][q] = z;
 				});
-				// arrRpt[cIndex][0] = arrX;
-				// arrRpt[cIndex] = {
-				// 	0: arrX,
-				// 	des: arrTitulo[i].des,
-				// 	t1 : arrTitulo[i].t1,
-				// 	t2 : arrTitulo[i].t2,
-				// 	t3 : arrTitulo[i].t3
-				// }
-				// arrRpt[cIndex] = arrX;
-				// arrTitulo[i].des = arrTitulo[i].des;
-				// arrRpt[cIndex].t1 = arrTitulo[i].t1;
-				// arrRpt[cIndex].t2 = arrTitulo[i].t2;
-				// arrRpt[cIndex].t3 = arrTitulo[i].t3;				
+		
 				cIndex++;
 			}
 		});
@@ -537,8 +566,8 @@ function xGetDataCierre(idBitacora) {
 		// console.log('arrPrint', arrRpt);
 
 		xPopupLoad.xclose();		
-		// $("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');
-		$("#btns_cierre").html(`<button class="btn btn-success" onclick="xCerrarSessionAll();"><i class="fa fa-close"></i> Cerrar Terminal</button> <button class="btn btn-warning" onclick="xDownloadPdfCierre(1);"><i class="fa fa-file-pdf-o"></i> Descargar cierre en PDF</button>`);
+		// $("#btns_cierre").html('<paper-button tabindex="0" raised class="xverde" onclick="xCerrarSessionAll();"><iron-icon icon="close"></iron-icon>Cerrar terminal</paper-button>');		
+		$("#btns_cierre").html(`<button class="btn btn-success" onclick="xCerrarSessionAll();"><i class="fa fa-close"></i> Cerrar Terminal</button> <button class="btn btn-warning" onclick="xDownloadPdfCierre(1);"><i class="fa fa-file-pdf-o"></i> Descargar cierre en PDF</button>`);		
 		// xUpdateCerrarCession(function () {
 			xPermisoSupervisor = 0;
 			xIniArraysPrint();
@@ -605,8 +634,7 @@ function xVerificar(){
 	xMontoTotalCaja = txt_total_caja.value;
 	//$.post('x../../bdphp/log.php?op=16',{xid:xDataEmp.Data[0].xu,xtb:xDevolverFecha()},function(xData){
 	$('#xTituloRpt').html('<paper-spinner active></paper-spinner>').trigger('create');
-	//$('#xTituloRpt').text('');
-	
+	//$('#xTituloRpt').text('');	
 	const datos = {
 		totalcaja: parseFloat(xMontoTotalCaja),
 		idusuario_supervisor: id_supervisor || 0,			
@@ -614,7 +642,10 @@ function xVerificar(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70111', data: {item: datos} })
 	.done( res => {
 		res = JSON.parse(res);		
-		if (!res.success) {console.log(res); return;}
+		if (!res.success) { // aca pare estar el problema que no imprime
+			console.log(res); 
+			return;
+		}
 		res = res.datos[0];		
 
 		var xRpt, xColor='', labelItentos = '', xsub_falta = '', xsub_sobra = '', xRpt_monto_supervicion = '';
@@ -763,54 +794,6 @@ function xArmarArrayPrint(idBitacora){
 
 	xGetDataCierre(idBitacora);
 	// if (!xIniArraysPrint()) { xPopupLoad.xclose(); return;}
-
-	// xArrayCierrePrint=new Array();
-	// xArrayCierrePrint.push({'des':'VENTAS', 't1':'', 't2':'','t3':''});
-	// xArmarSubItems(0,7,function(){
-	// 	xArrayCierrePrint.push({'des':'CAJA INGRESOS', 't1':'', 't2':'','t3':''});
-	// 	xArmarSubItems(1,701,function(){
-	// 		xArrayCierrePrint.push({'des':'CAJA SALIDAS', 't1':'', 't2':'','t3':''});
-	// 		xArmarSubItems(2,7002,function(){
-	// 			xArrayCierrePrint.push({'des':'VENTAS AL CREDITO', 't1':'', 't2':'','t3':''});
-	// 			xArmarSubItems(3,702,function(){
-	// 				xArrayCierrePrint.push({'des':'TOTAL EFECTIVO', 't1':'', 't2':'','t3':''});
-	// 				xArmarSubItems(4,7021,function(){
-	// 					xArrayCierrePrint.push({'des':'PEDIDOS ATENDIDOS', 't1':'', 't2':'cant','t3':'importe'});
-	// 					xArmarSubItems(5,703,function(){
-	// 						xArrayCierrePrint.push({'des':'ITEMS ANULADOS', 't1':'', 't2':'cant','t3':'importe'});
-	// 						xArmarSubItems(5,7091,function(){
-	// 							xArrayCierrePrint.push({'des':'PEDIDOS ANULADOS - MOTIVO', 't1':'', 't2':'','t3':'importe'});
-	// 							xArmarSubItems(5,7092,function(){
-	// 								xArrayCierrePrint.push({'des':'CANTIDAD POR SECCION', 't1':'', 't2':'cant','t3':'importe'});
-	// 								xArmarSubItems(5,70010,function(){
-	// 									xArrayCierrePrint.push({'des':'PORCIONES', 't1':'', 't2':'ven','t3':'qda'});
-	// 									xArmarSubItems(5,707,function(){
-	// 										xArrayCierrePrint.push({'des':'PRODUCTOS VENDIDOS', 't1':'ven', 't2':'qda','t3':'importe'});
-	// 										xArmarSubItems(5,705,function(){
-	// 											xArrayCierrePrint.push({'des':'VENDIDO X BODEGA', 't1':'', 't2':'ven','t3':'qda'});
-	// 											xArmarSubItems(5,706,function(){
-	// 											//xArrayCierrePrint.push({'des':'PRODUCTOS CON STOCK MINIMO', 't1':'', 't2':'','t3':''});
-	// 												//xArmarSubItems(5,708,function(){
-	// 													console.log('xArrayCierrePrint', xArrayCierrePrint);
-	// 													return;
-	// 													xUpdateCerrarCession(function(){
-	// 														xPermisoSupervisor=0;	
-	// 														if (!xIniArraysPrint()) { xVerificaSiFacturacionE(); return;}
-	// 														xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);														
-	// 													});
-	// 												//})
-	// 											})
-	// 										})
-	// 									})
-	// 								})
-	// 							})
-	// 						})
-	// 					})
-	// 				})
-	// 			})
-	// 		})
-	// 	})
-	// })
 }
 
 
@@ -1276,11 +1259,13 @@ Polymer({
 		isShowRptSolicitudCierre: Boolean,
 		isShowListaTicketEntrada: Boolean,
 		isShowIngresoVarios: Boolean,
+		isErrorCierre:Boolean,
 		rowRptSolicitud: [],
 		listIngresosVarios: []
 	},
 	attached:function(){
 		this.selected=0;
+		this.isErrorCierre = false;
 		this.isShowLastCierres = false;
 		this.isShowListaAdelantoOrden = false;
 		this.isShowEsperaRptSolicitudCierre = false;

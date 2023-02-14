@@ -1,4 +1,5 @@
 <link rel="import" href="../x-componentes/x-comp-img-upload/x-comp-img-upload.html">
+<link rel="import" href="./x-porcion/x-porcion-main.html">
 <dom-module id="x-producto-porcion">
 	<script type="text/javascript" src="../view/export.excel.js"></script>
 	<template>
@@ -38,7 +39,7 @@
 				<br><br><br>
 			</div>
 		</paper-dialog>
-		<paper-dialog modal id="dialog_additem_porcion" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<!-- <paper-dialog modal id="dialog_additem_porcion" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h3>Agregar Porcion</h3><br>
 				<p><strong>Elaborar porciones para las recetas.</strong><br>
@@ -60,7 +61,7 @@
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 				<br><br><br>
 			</div>
-		</paper-dialog>
+		</paper-dialog> -->
 
 		<paper-dialog id="dialog_detalle" class="dialog_redondo" style="width: 90%; max-width: 550px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">				
@@ -163,23 +164,18 @@
 						<br><br><br>
 					</div>
 				</div>
+
+
 				<div id="cont_porciones">
-					<br>
+					<x-porcion-main></x-porcion-main>
+					<!-- <br>
 					<input type="text" class="xMiInput" placeholder="Buscar" inline id="txt_buscar_porcion">
 					<div class="xBoton2 xAzul xDerecha" onclick="dialog_additem_porcion.open();">+ Agregar Porcion</div>
 					<div class="xBoton2 xVerde xDerecha" onclick="xGuardarCambiosPorcion();">Guardar Cambios</div>
 					<br><br><br>
 					<div class="xLinea2"></div>
 					<br>
-					<!-- <table id="tb_porcion" width="100%" class="xtable2">
-						<thead>
-							<th align="left" width="20%">Familia</th>
-							<th align="left">Porcion</th>
-							<th align="left" width="90px">Stock</th>
-							<th width="5px"></th>
-						</thead>
-					</table>
-					<br><br><br> -->
+		
 
 					<table width="100%">
 						<thead>
@@ -199,7 +195,7 @@
 							</template>							
 						</tbody>
 					</table>
-					<br><br><br>
+					<br><br><br> -->
 
 				</div>
 			</iron-pages>

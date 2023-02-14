@@ -1354,6 +1354,11 @@ async function xGuardarPedidoVR(responde){
 
 	xarr_cliente = {'cliente':DatosCliente, 'i': xidpedido_seleccionados };
 
+	// si es delivery coloca el importe total para notificar al repartidor
+	if (arrDatosAdjuntoDelivery?.delivery === 1) {
+		arrDatosAdjuntoDelivery.importeTotal = parseFloat(xLocal_xDtSubTotales[xLocal_xDtSubTotales.length - 1].importe)
+	}
+
 	// isComercioAppDeliveryMapa = si acaso esta habilitado para busqueda con mapa entonces adjunta el detalle del pedido en el json_datos_delivery
 	xarr_header = {
 		idclie: xid_cliente_pago || '',
@@ -1736,7 +1741,7 @@ function xLoadItemsDetalleCartaALL(){
 		xCantidadMax=xGeneralDataCarta[p].cantidad;
 		
 		if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
-		if(xCantidadMax=='ND'){xCantidadMax=1000;}
+		if(xCantidadMax=='ND'){xCantidadMax=10000;}
 
 		xGeneralDataCarta[p].stock_actual = xCantidadMax;
 		xGeneralDataCarta[p].idcategoria = xidCategoriaVR;
@@ -1795,7 +1800,7 @@ function _cpStockItemModificado(item){
 
 	xtachar_li='';	
 	if(parseInt(xCantidadMax)<=0){xtachar_li='xTachar';}
-	if(xCantidadMax=='ND'){xCantidadMax=1000}
+	if(xCantidadMax=='ND'){xCantidadMax=10000}
 
 	$(idFind).attr('data-stock_actual', xCantidadMax);	
 	// $(idFind)[0].dataset.stock_actual = xCantidadMax

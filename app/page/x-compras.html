@@ -99,10 +99,12 @@
 							<input type="text" id="f_compra" name="f_compra">
 							<input type="text" id="f_registro" name="f_registro">
 							<input type="text" id="f_pago" name="f_pago">
+							<input type="text" id="fecha_hora" name="fecha_hora">							
 							<input type="text" id="total" name="total">
 							<input type="text" id="a_pagar" name="a_pagar">
 							<input type="text" id="nota_de_compra" name="nota_de_compra">
 							<input type="text" id="idtipo_pago" name="idtipo_pago">
+							<input type="text" id="idusuario" name="idusuario">
 						</form>
 				</div>
 				<div class="xEncanezadoCard xFondoRowIndigo2 xCursor xHoverOpaco xTransicion3s" id="div_proveedor" style="height:25px;">
@@ -116,7 +118,7 @@
 							<div class="xInvisible">
 								<input type="text" id="idorg" name="idorg">
 								<input type="text" id="idsede" name="idsede">
-								<input type="text" id="idproveedor" name="idproveedor">
+								<input type="text" id="idproveedor" name="idproveedor">								
 							</div>
 						</form>
 						<br><br>
@@ -460,7 +462,7 @@ function xRegistrar_compra(){
 			//nuevo // o modifica
 			xPopupLoad.xopen();
 			$("#frm_proveedor #idorg").val(xlo_idorg)
-			$("#frm_proveedor #idsede").val(xlo_idsede)
+			$("#frm_proveedor #idsede").val(xlo_idsede)			
 			$.post("../../bdphp/ManejoBD_IUD.php?tb=proveedor",$("#frm_proveedor").serialize(),function(xUltimo_id_proveedor){
 				xsel_proveedor=xUltimo_id_proveedor;
 				xGuardarRegistroCompra();
@@ -503,11 +505,13 @@ function xGuardarRegistroCompra(){
 	frm_compra.find("#f_registro").val(xDevolverFecha());
 	frm_compra.find("#f_compra").val(xDevolverFecha());
 	frm_compra.find("#f_pago").val(xDevolverFechaFormatInputDate(date_fecha_pago.value));
+	frm_compra.find("#fecha_hora").val(new Date().toLocaleString());
 	frm_compra.find("#idtipo_pago").val(sel_idTipoPago);
 	frm_compra.find("#total").val(xImporte_total_list);
 	frm_compra.find("#a_pagar").val(xImporte_total_list);
 	frm_compra.find("#idorg").val(xlo_idorg);
 	frm_compra.find("#idsede").val(xlo_idsede);
+	frm_compra.find("#idusuario").val(xIdUsuario);
 	// frm_compra.find("#nota_de_compra").val(xRpt_pago[0].nota_compra);
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=compra",$("#frm_compra").serialize(),function(xUltimo_id_compra){
 		xIdCompra=xUltimo_id_compra;

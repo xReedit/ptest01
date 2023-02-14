@@ -31,4 +31,25 @@ class apiConsulaCpe {
         // verificar boletas y hacer el resumen de boletas
     }
 
+
+    /*get CONSULTA API */
+
+    getConsultaApi = async(params) => {
+        const _url = 'https://api.sunat.gob.pe/v1/contribuyente/contribuyentes/20610029923/validarcomprobante'
+        return await fetch(_url, 
+            {                                
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '+ params.header.access_token
+                },
+                method: 'POST',
+                body:JSON.stringify(params.body)
+            }
+        )
+        .then(response => response.json())
+        .catch(error => console.log('error', error));
+    }
+    
+
 }
