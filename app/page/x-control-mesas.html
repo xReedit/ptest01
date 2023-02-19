@@ -4352,16 +4352,25 @@ function xVerificarCajaAbiertaOtroUsuario() {
 		.done( res => {
 			res = JSON.parse(res);
 			if (res.success) {
-				const _dataCajAbierta = res.datos[0];				
-				if ( parseInt(_dataCajAbierta.cant) > 0 ) {
+				const _dataCajAbierta = res.datos;				
+				if ( parseInt(_dataCajAbierta[0].importe) > 0 ) {
 					const _isInfoCajaOpen = isNaN(parseInt(localStorage.getItem('::app3_info_caja_open'))) ? 0 : parseInt(localStorage.getItem('::app3_info_caja_open'));
 					if ( _isInfoCajaOpen == 1 ) { return; }
 
 
+					let _usCajasAbiertas = '';
+					_dataCajAbierta.map(x => {
+						_usCajasAbiertas +=  '<p class="text-warning fs-14">'+x.nombres + ' con S/' + x.importe + ' </p>'
+					})
+
 					const _swalAlertValues = paramsSwalAlert;        					
 					_swalAlertValues.html = `<div class="p-1">                    
-												<img src="../../images/swal-cash-register.png">
-												<p class="fw-100">Hay caja abierta por otro usuario. Si registra algún cobro se le asignará una caja.</p>
+												<img src="../../images/swal-cash-register.png">												
+												<p class="fw-600 fs-20">Caja Abierta</p>
+												<p class="fw-100 fs-14">
+													Usuarios:
+													${_usCajasAbiertas}
+												</p>
 											</div>`;															
 					showAlertSwalHtml(_swalAlertValues);
 

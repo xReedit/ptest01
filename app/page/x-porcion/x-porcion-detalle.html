@@ -27,6 +27,20 @@
             </div>
         </paper-dialog>
 
+        <paper-dialog modal id="dialog_modificar_descripcion_porcion" class="dialog_redondo" modal entry-animation="scale-up-animation"
+            style="min-width: 350px;" exit-animation="fade-out-animation" with-backdrop>
+            <div class="xContent">
+                <h4>Modificar Descripcion</h4>
+                <br>                
+                <input type="text" id="txt_descripcion_porcion" placeholder="Descripcion" class="xMiInput"
+                    onChange="conMayusculas(this)" espaciar><br>
+                <br><br>
+                <div class="xBoton2 xAzul" onclick="xSaveModificacionDescripcionPorcion();">Listo, guardar</div>
+                <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+                <br>
+            </div>
+        </paper-dialog>
+
 
 
         <div>
@@ -35,15 +49,18 @@
                 <div class="d-flexx">
                     <div class="mr-5">
                         <p class="fs-12 text-secondary m-0">Descripcion</p>
-                        <p class="fs-18 fw-600"> {{objporcion.porcion}} </p>
+                        <p class="fs-18 fw-600"> {{objporcion.porcion}} 
+                            <i class="fa fa-pencil ml-1 text-primary xCursor" onclick="xModificarDescripcionPorcionDetalle()"></i>
+                        </p>
                     </div>
                     <div>
                         <p class="fs-12 fw-600 text-secondary m-0">Stock Actual</p>
-                        <p class="fs-18 fw-600"> {{objporcion.stock}} </p>
+                        <p class="fs-18 fw-600 xCursor" onclick="dialog_modificar_stock_porcion.open()"> {{objporcion.stock}} </p>
                     </div>
                 </div>
-                <div>
-                    <button class="btn btn-sm btn-primary" onclick="dialog_modificar_stock_porcion.open()">Modificar Stock</button>
+                <div class="text-right d-flexx">
+                    <button class="btn btn-sm btn-primary ml-1" onclick="dialog_modificar_stock_porcion.open()">Modificar Stock</button>                                        
+                    <button hidden$=[[!btnPorcionPe]] class="btn btn-sm btn-danger ml-1" onclick="xEliminarPorcionDetalle()"><i class="fa fa-trash mr-1"></i> Eliminar</button>
                 </div>
             </div>
             <!-- historial -->
@@ -81,8 +98,11 @@ var xthisPorcionDetalle;
 let _difStockPorcion = 0
 let _msjModificarStock = ''
 let _stockNowPorcion = 0; 
+let cantidadRecetasEnlazadasPorcion = 0
 
     async function xLoadDataPorcionDetalle() {
+        
+        xthisPorcionDetalle.btnPorcionPe = xm_log_get('app3_us').per.indexOf('e6')>-1;
         xPopupLoad.xopen();
         const _data = {
             idporcion: xthisPorcionDetalle.objporcion.idporcion
@@ -97,8 +117,14 @@ let _stockNowPorcion = 0;
                 return x;
             })
         }
-        console.log('rpt', xthisPorcionDetalle.listPorcionHistorial);
+        // console.log('rpt', xthisPorcionDetalle.listPorcionHistorial);
         xPopupLoad.xclose();
+
+        // recetas enlazadas
+        const rptCantidadReceta = await _httpFecht.postJson('../../bdphp/log_009.php?op=116', _data)
+        if (rptCantidadReceta.success) {
+            cantidadRecetasEnlazadasPorcion = rptCantidadReceta.datos[0].cantidad
+        }
     
     }
 
@@ -141,10 +167,61 @@ let _stockNowPorcion = 0;
         const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=10', _data)
         if ( rpt.success ) {
             dialog_modificar_stock_porcion.close();
+            xthisPorcionDetalle.objporcion.stock = _stockNowPorcion;
+            xthisPorcionDetalle.objporcion = JSON.parse(JSON.stringify(xthisPorcionDetalle.objporcion))
             xLoadDataPorcionDetalle();
-        }
-        console.log('rpt', rpt);
+        }        
         xPopupLoad.xclose();
+    }
+
+    function xModificarDescripcionPorcionDetalle() { 
+        txt_descripcion_porcion.value = xthisPorcionDetalle.objporcion.porcion;
+        dialog_modificar_descripcion_porcion.open();
+    }
+
+    async function xSaveModificacionDescripcionPorcion() {
+        if ( txt_descripcion_porcion.value.length > 2 ) {
+            const _data = {
+                descripcion: txt_descripcion_porcion.value,
+                idporcion: xthisPorcionDetalle.objporcion.idporcion
+            }
+            const _httpFecht = new httpFecht();
+            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=115', _data)
+            if (rpt.success) {
+                dialog_modificar_descripcion_porcion.close();
+                xthisPorcionDetalle.objporcion.porcion = txt_descripcion_porcion.value;
+                xthisPorcionDetalle.objporcion = JSON.parse(JSON.stringify(xthisPorcionDetalle.objporcion))
+            }  
+        }
+    }
+
+    async function xEliminarPorcionDetalle() {
+        const _swalAlertValues = paramsSwalAlert;
+        const _cantRelacionado  = cantidadRecetasEnlazadasPorcion > 0 ? `<span class="text-warning">Tenga en cuenta que afectara a ${cantidadRecetasEnlazadasPorcion} recetas enlazadas.</span>` : ''
+        _swalAlertValues.title = '<p class="fw-600 fs-20">Borrar Porción</p>';
+        _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <p class="fs-15">Esta seguro de borrar la porción: <strong>${xthisPorcionDetalle.objporcion.porcion}</strong>. ${_cantRelacionado}</p>
+                                </div>`;
+        _swalAlertValues.confirmButtonText = 'Si, borrar';
+        _swalAlertValues.showCancelButton = true;
+
+
+        await showAlertSwalHtmlDecision(_swalAlertValues, 1)
+            .then(async res => {
+                if (res.isConfirmed) { // remove familia
+                    const _data = {                     
+                        idporcion: xthisPorcionDetalle.objporcion.idporcion
+                    }
+
+                    const _httpFecht = new httpFecht();
+                    const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=117', _data)
+                    if (rpt.success) { 
+                        goMainPorcion();
+                        xLoadPorciones();
+                    }
+                }
+
+            })
     }
 
 Polymer({
@@ -158,13 +235,14 @@ Polymer({
         },
         msjStock: String,
         classMsjStock: String,
-        listPorcionHistorial: []
+        listPorcionHistorial: [],
+        btnPorcionPe: Boolean
     },
-    porcionChanged: (obj) => {
-        console.log('changed objporcion', obj);      
+    porcionChanged: (obj) => {   
         xLoadDataPorcionDetalle()  
     },
     attached:function(){
+        this.btnPorcionPe = false;
         xthisPorcionDetalle =this;
         // xIniPorcion();
     }    

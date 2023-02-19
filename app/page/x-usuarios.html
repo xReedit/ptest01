@@ -2,6 +2,19 @@
 <link rel="import" href="../x-componentes/x-comp-find-almacen/x-comp-find-almacen.html">
 <dom-module id="x-usuarios">
 	<template>
+
+		<paper-dialog class="dialog_redondo" id="dialog_borrar_usuario" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xtxtCentro">
+				<img src="../../images/_dlg_remove.gif" alt="" width="150px">
+			</div>
+			<p>Esta seguro de querer borrar este usuario?</p>
+			<br>
+			<div class="buttons">
+				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+				<button class="xBoton2 xRojo" onclick="xGoBorrarUsuario();">Si, borrar</button>
+			</div>
+		</paper-dialog>
+
 		<paper-dialog id="dialog_add_us" class="dialog_redondo" style="max-width: 600px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<paper-tabs selected="{{selected_us}}">
@@ -118,6 +131,9 @@
 							<paper-checkbox class="checkP" data-id='Pe3,'>Agregar sin imprimir</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe4,'>Cambiar de mesa el pedido</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe5,'>Asignar descuentos</paper-checkbox><br>
+							<paper-checkbox class="checkP" data-id='Pe6,'>Eliminar Porciones</paper-checkbox><br>
+							<paper-checkbox class="checkP" data-id='Pe7,'>Eliminar Productos</paper-checkbox><br>
+							<paper-checkbox class="checkP" data-id='Pe8,'>Eliminar Clientes</paper-checkbox><br>
 	      				</div>
 					  </div>
 					  <div id="div_zona">
@@ -169,7 +185,7 @@
 	</template>
 </dom-module>
 <script>
-var xThis;
+var xThis, objUsuarioSeleted;
 function xIniUsuarios(){
 	// if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
 	// if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
@@ -361,14 +377,13 @@ function xLoadUs(){
 		for (var i = 0; i < xdtUs.length; i++) {
 			xCadenaUs=String(xCadenaUs+'<tr class="row" data-id="'+xdtUs[i].idusuario+'" data-t="usuario"><td>'+xdtUs[i].nombres+'</td><td>'+xdtUs[i].cargo+'</td><td>'+xdtUs[i].usuario+'</td>'+
 				'<td title="Modificar" onClick="xModificarUs(this)"><span class="icon xCursor"><img src="../../images/edit.png"></span></td>'+
-				'<td><span onclick="xBorrarItem(this);" class="xDeleteRow" title="Borrar"></span></td>'+
+				'<td><span onClick="xBorrarUsuarioOpenDialog(this)" class="xDeleteRow" title="Borrar"></span></td>'+
 				'</tr>');
 		}
 		$("#tb_us .row").remove();
 		$("#tb_us").append(xCadenaUs).trigger('create');
 	});
-
-
+	
 	/// repartidor
 	$("#tb_us_re").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4021'})
@@ -384,6 +399,16 @@ function xLoadUs(){
 		$("#tb_us_re .row").remove();
 		$("#tb_us_re").append(xCadenaUs).trigger('create');
 	});
+}
+
+function xBorrarUsuarioOpenDialog(obj) {
+	objUsuarioSeleted = obj;
+	dialog_borrar_usuario.open()
+}
+
+function xGoBorrarUsuario() {
+	xBorrarItem(objUsuarioSeleted)
+	dialog_borrar_usuario.close()
 }
 
 

@@ -798,13 +798,16 @@ function xm_all_SetResponseLog_001(response) {
 	return _concat;
 }
 
-function xm_all_xToastOpen (msj, duracion=0, loading=true) {	
+function xm_all_xToastOpen (msj, duracion=0, loading=true, iconWifi=false) {	
 	msj = msj === null? 'Cargando...': msj;
 	if (!loading) {
 		$("#toast #loading").addClass("xInvisible");
 	} else {
 		$("#toast #loading").removeClass("xInvisible");
 	}
+	
+	iconWifi ? $("#toast #icon-wifi").removeClass("xInvisible") : $("#toast #icon-wifi").addClass("xInvisible");
+	
 	toast = document.getElementById("toast");
 	toast.duration = duracion;
   	toast.text = msj;

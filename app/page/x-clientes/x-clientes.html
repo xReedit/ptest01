@@ -88,7 +88,7 @@
 										id="f_nac_show"  autocomplete="off" espaciar required>
 								</div>
 								<input type="number" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)"
-									id="telefono" value$="[[selItemClie.telefono]]" autocomplete="off" name="telefono" espaciar required>
+									id="telefono_cliente" value$="[[selItemClie.telefono]]" autocomplete="off" espaciar required>
 								<input type="email" class="xMiInput xPasarEnter2" placeholder="EMAIL" value$="[[selItemClie.email]]"
 									autocomplete="off"  id="email" name="email" espaciar required>
 								<textarea class="xMiInput xPasarEnter2" max-rows="2" placeholder="DIRECCION" onChange="conMayusculas(this)"
@@ -250,6 +250,7 @@
 						<!-- <th>f. Nacimiento</th> -->
 						<!-- <th>f. Registro</th> -->						
 						<th>Msj</th>
+						<th hidden$="[[!btnClientePe]]"></th>
 					</thead>
 					<tbody>
 						<template is="dom-repeat" items="{{ListClientes}}" as="item">
@@ -279,6 +280,9 @@
 										<span class="xEditRow" style="margin-right: 5px;" title="Editar" onclick="xDialogBorrarObj(this);"></span>
 									</div> -->
 									<paper-checkbox data-id="{{index}}" class="checkCliente" onchange="checkClienteSeleted(this)" hidden$="[[ !item.isCheckMsj ]]"></paper-checkbox>
+								</td>
+								<td hidden$="[[!btnClientePe]]">
+									<span data-id="{{index}}" onclick="xBorrarItemCliente(this)" class="xDeleteRow" title="Borrar"></span>
 								</td>
 							</tr>
 						</template>					
@@ -311,6 +315,9 @@
 	}
 	
 	function xIniCliente() {
+
+
+		xThisCliente.btnClientePe = xm_log_get('app3_us').per.indexOf('e8') > -1;
 
 		$('body').addClass('loaded');
 
@@ -404,37 +411,48 @@
 		dialog_new_cliente.open();
 	}
 
-	function getAllListClientes() {
-		// xPopupLoad.xopen();
+	async function getAllListClientes() {
+		xPopupLoad.xopen();
 		const p_filter = xThisCliente.$.txt_buscar_cliente.value;
 		data_pagination.pageFilter = p_filter;
 
-	
-		$.ajax({
+			$.ajax({
 				type: 'POST',
-				url: '../../bdphp/log_005.php?op=4',
+				url: '../../bdphp/log_005.php?op=40001',
 				data: {
-					pagination:data_pagination,
-					filtro_cumple: isFiltroCumple
+					pagination: data_pagination,				
 				}
-			})
-			.done((res) => {
-				res = res.split('**');
-				const _res = JSON.parse(res[0]);
-				xThisCliente.ListClientes = _res.datos;				
-				// chequea si tiene telefono o email para check msj
-				xThisCliente.ListClientes.map( x => {					
-					x.isCheckMsj = x.telefono != '' || x.email != '';
-					x.isShowCumple = x.dias_cumple ? true : false;
-					x.cumple_cerca = x.dias_cumple <= 6;
-				});
-
-				p_rows = res[1];	
+			}).done(res => {
+				console.log(res);
 				
-				p_upadate = false; // para que no vuelva a llamar esta funcion
-				xThisCliente.$.paginator.pageRows = p_rows;
-								
-			});
+				$.ajax({
+					type: 'POST',
+					url: '../../bdphp/log_005.php?op=4',
+					data: {
+						pagination: data_pagination,
+						filtro_cumple: isFiltroCumple
+					}
+				})
+				.done((res) => {
+						res = res.split('**');
+						const _res = JSON.parse(res[0]);
+						xThisCliente.ListClientes = _res.datos;
+						// chequea si tiene telefono o email para check msj
+						xThisCliente.ListClientes.map(x => {
+							x.isCheckMsj = x.telefono != '' || x.email != '';
+							x.isShowCumple = x.dias_cumple ? true : false;
+							x.cumple_cerca = x.dias_cumple <= 6;
+						});
+
+						p_rows = res[1];
+
+						p_upadate = false; // para que no vuelva a llamar esta funcion
+						xThisCliente.$.paginator.pageRows = p_rows;
+
+						xPopupLoad.xclose();
+
+				});
+		});		
 	}
 
 	function xfiltrarDatos_cliente() {
@@ -460,6 +478,7 @@
 		frm_clie.find("#f_registro").val(xDevolverFecha());
 		frm_clie.find("#direccion").val(txt_direccion.value);		
 		f_nac.value = xDevolverFechaFormatInputDate(f_nac_show.value);
+		const _telCliente = frm_clie.find("#telefono_cliente").val();
 		xvalidateForm('form_new_cliente', function (a) {
 			if (a === false) {
 				return;
@@ -476,7 +495,8 @@
 					xPopupLoad.xclose();
 
 					const _dataSend = {
-						idcliente: idcliente
+						idcliente: idcliente,
+						telefono: _telCliente
 					}
 
 					$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=14', data:{data: _dataSend}})
@@ -661,6 +681,35 @@
 		getListaClientesSelected();
 	}
 
+	async function xBorrarItemCliente(obj) {
+		const index = obj.dataId;
+		xThisCliente.selItemClie = xThisCliente.ListClientes[index];
+		const _swalAlertValues = paramsSwalAlert;		
+		_swalAlertValues.title = '<p class="fw-600 fs-20">Borrar Cliente</p>';
+		_swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <p class="fs-15">Esta seguro de borrar el cliente: <strong>${xThisCliente.selItemClie.nombres}</strong>.</p>
+                                </div>`;
+		_swalAlertValues.confirmButtonText = 'Si, borrar';
+		_swalAlertValues.showCancelButton = true;
+
+		await showAlertSwalHtmlDecision(_swalAlertValues, 1)
+			.then(async res => {
+				if (res.isConfirmed) { // remove familia
+					$.ajax({
+						type: 'POST',
+						url: '../../bdphp/log_005.php?op=40002',
+						data: {
+							id: xThisCliente.selItemClie.idcliente
+						}
+					})
+						.done((res) => {
+							getAllListClientes();
+						})
+				}
+
+			})
+	}
+
 
 	Polymer({
 		is: 'x-clientes',
@@ -678,10 +727,12 @@
 			selItemClie: [],
 			selItemClieListConsumo: [],
 			selItemClieEstadistica: [],
-			ListDireccion: []
+			ListDireccion: [],
+			btnClientePe: Boolean
 		},
 		attached: function () {
 			this.selected = 0,
+			this.btnClientePe = false;
 			xThisCliente = this;
 			this.isShowDireccionGeorreferencia = false;
 			this.isShowListDirecciones = false;

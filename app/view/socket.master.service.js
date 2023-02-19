@@ -76,9 +76,11 @@ class socketService {
         // escuchamos los cambios del navegador
         window.addEventListener('online', () => {
             this.statusConexSocket(true, 'navigator_online');
+            xm_all_xToastOpen('Conexion Recuperada', 2000, false);
         });
         window.addEventListener('offline', () => {
            this.statusConexSocket(false, 'navigator_offline');
+            xm_all_xToastOpen('Sin Conexion a internet', 20000, true, true);
         });
 
         // escuchamos los cambios de conexion en el socket
@@ -86,6 +88,8 @@ class socketService {
             console.log('socket connect');
           this.statusConexSocket(true, 'connect');
           localStorage.setItem('app3_us_skt', _socketSuperMaster.id);
+
+        //  xm_all_xToastOpen('Conexion Recuperada', 2000);
         });
 
         this._socket.on('connect_failed', (res) => {
