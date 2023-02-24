@@ -197,7 +197,7 @@ let cantidadRecetasEnlazadasPorcion = 0
 
     async function xEliminarPorcionDetalle() {
         const _swalAlertValues = paramsSwalAlert;
-        const _cantRelacionado  = cantidadRecetasEnlazadasPorcion > 0 ? `<span class="text-warning">Tenga en cuenta que afectara a ${cantidadRecetasEnlazadasPorcion} recetas enlazadas.</span>` : ''
+        const _cantRelacionado  = cantidadRecetasEnlazadasPorcion > 0 ? `<span class="text-warning"> Tenga en cuenta que afectara a ${cantidadRecetasEnlazadasPorcion} recetas enlazadas.</span>` : ''
         _swalAlertValues.title = '<p class="fw-600 fs-20">Borrar Porción</p>';
         _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
                                     <p class="fs-15">Esta seguro de borrar la porción: <strong>${xthisPorcionDetalle.objporcion.porcion}</strong>. ${_cantRelacionado}</p>

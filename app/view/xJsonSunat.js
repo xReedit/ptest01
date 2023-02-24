@@ -134,21 +134,26 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         
     } else {
 
-        const total_operaciones_gravadas = descuentoEnTotal > 0 ? (importe_total_pagar_calc_igv - parseFloat(importe_total_igv)) + descuentoEnTotal : xArraySubTotales[0].importe; // el subtotal
+        // const total_operaciones_gravadas = descuentoEnTotal > 0 ? (importe_total_pagar_calc_igv - parseFloat(importe_total_igv)) + descuentoEnTotal : xArraySubTotales[0].importe; // el subtotal
         // const total_operaciones_gravadas = xArraySubTotales[0].importe; // el subtotal
-        const _total_valor = descuentoEnTotal > 0 ? _base - descuentoEnTotal : importe_total_pagar - parseFloat(importe_total_igv);
+        // const _total_valor = descuentoEnTotal > 0 ? _base - descuentoEnTotal : importe_total_pagar - parseFloat(importe_total_igv);
         const _total_venta = importe_total_pagar_calc_igv;
+
+        const procentaje_IGV = parseFloat(parseFloat(valIGV) / 100);
+        let _total_operaciones_gravadas = xCalcMontoBaseIGV(_total_venta, procentaje_IGV);
+        let _total_igv = parseFloat(_total_venta - _total_operaciones_gravadas).toFixed(2);
+        let _total_valor = _total_operaciones_gravadas
 
         totales = {
             "total_descuentos": descuentoEnTotal,
             "total_descuentos": 0.00,
             "total_exportacion": 0.00,
-            "total_operaciones_gravadas": total_operaciones_gravadas,
+            "total_operaciones_gravadas": _total_operaciones_gravadas,
             "total_operaciones_inafectas": 0.00,
             "total_operaciones_exoneradas": 0.00,
             "total_operaciones_gratuitas": 0.00,
-            "total_igv": importe_total_igv,
-            "total_impuestos": importe_total_igv,
+            "total_igv": _total_igv, // importe_total_igv,
+            "total_impuestos": _total_igv, // importe_total_igv,
             "total_valor": _total_valor,
             "total_venta": _total_venta
         }
@@ -317,13 +322,19 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         //   _precio_unitario = parseFloat(_precio_unitario) + parseFloat(total_igv); 
 
           codigo_tipo_afectacion_igv = "10";
-          total_igv = parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
-          _valor_unitario = parseFloat(_precio_unitario) - (parseFloat(_precio_unitario) * procentaje_IGV); 
-          total_base_igv = parseFloat(_precio_unitario) * x.cantidad;
-          total_valor_item = _valor_unitario *  x.cantidad;
+        //   total_igv = parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
+        //   _valor_unitario = parseFloat(_precio_unitario) - (parseFloat(_precio_unitario) * procentaje_IGV); 
+        //   total_valor_item = _valor_unitario *  x.cantidad;
+          
+        //   total_base_igv = parseFloat(_precio_unitario) * x.cantidad;
+            _valor_unitario = xCalcMontoBaseIGV(_precio_unitario, procentaje_IGV); // parseFloat(_precio_unitario) - (parseFloat(_precio_unitario) * procentaje_IGV); 
+            total_valor_item = _valor_unitario * x.cantidad;
+            total_base_igv = total_valor_item; 
+            total_igv = parseFloat(parseFloat(x.precio_total) - total_base_igv).toFixed(2);
 
         } else {
-            total_base_igv = parseFloat(x.precio_total); // cambio x error 3105 IGV // 12/07/2020
+            total_base_igv = parseFloat(x.precio_total); // cambio x error 3105 IGV // 12/07/2020            
+            
         }
 
         
@@ -355,6 +366,11 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
     
     return xListItemsRpt;
 }
+
+// xm_all.js
+// function xCalcMontoBaseIGV(importeTotal, procentaje_IGV) {
+//     return parseFloat(parseFloat(importeTotal) / (1 + procentaje_IGV)).toFixed(2)
+// }
 
 async function xCocinarJsonNotaCredito(doc) {
     const _dataXML = JSON.parse(doc.json_xml);    

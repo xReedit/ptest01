@@ -4353,6 +4353,7 @@ function xVerificarCajaAbiertaOtroUsuario() {
 			res = JSON.parse(res);
 			if (res.success) {
 				const _dataCajAbierta = res.datos;				
+				if ( _dataCajAbierta.length === 0 ) { return }
 				if ( parseInt(_dataCajAbierta[0].importe) > 0 ) {
 					const _isInfoCajaOpen = isNaN(parseInt(localStorage.getItem('::app3_info_caja_open'))) ? 0 : parseInt(localStorage.getItem('::app3_info_caja_open'));
 					if ( _isInfoCajaOpen == 1 ) { return; }

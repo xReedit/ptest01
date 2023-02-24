@@ -893,6 +893,10 @@ async function xSendEmailClienteSES(params) {
 			});
 }
 
+function xCalcMontoBaseIGV(importeTotal, procentaje_IGV) {
+	return parseFloat(parseFloat(importeTotal) / (1 + procentaje_IGV)).toFixed(2)
+}
+
 
 
 // async function getTemplate(filepath) {

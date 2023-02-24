@@ -212,8 +212,11 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 	var _importeSubTotal = parseFloat(rowSubTotal.importe);
 
 	if ( _importeIGV > 0 ) {
-		_importeIGV = parseFloat(_importeSubTotal *  _importeIGV).toFixed(2);
-		_importeSubTotal = _importeSubTotal - _importeIGV;
+		_importeSubTotal = parseFloat(xCalcMontoBaseIGV(_importeSubTotal, _importeIGV));
+		_importeIGV = parseFloat(sumTotal - _importeSubTotal).toFixed(2)
+
+		// _importeIGV = parseFloat(_importeSubTotal *  _importeIGV).toFixed(2);
+		// _importeSubTotal = _importeSubTotal - _importeIGV;
 		rowImporteIGV.importe = _importeIGV;
 		rowSubTotal.importe = _importeSubTotal.toFixed(2);
 	}
