@@ -136,6 +136,8 @@
 
 				// chekFocusPago.focus=true;
 			}, 200);
+
+			xThisComTableFP.fire('xCompTableAddRemoveRow', true);
 			// xCalcImporte();
 		}
 
@@ -211,6 +213,8 @@
 			xCalcImporte();
 			// xThisComTableFP.fire('xCompTableChange', listIni);
 
+			xThisComTableFP.fire('xCompTableAddRemoveRow', true);
+
 		}
 
 		function xResetOptions() {
@@ -246,7 +250,7 @@
 			getTipoTablePagoOption() {
 				return xThisComTableFP.listTabla;
 			},
-			attached: function () {
+			attached: function () {	
 				xThisComTableFP = this;
 				xThisComTableFP.listTabla = [];
 				xIniCompTableOption();

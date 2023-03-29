@@ -369,20 +369,28 @@ function colocarDescuentoSubtotales(importeDesct, arrTotales, descripcionDesct =
 	
 	if ( _rowIGVConfig.activo.toString() === "0" ) { // si esta activo
 		var rowIgv = arrTotales.filter(x => x.descripcion === 'I.G.V')[0];
-		var importeIgvRow = parseFloat(rowIgv.importe);
-		// if ( importeIgvRow > 0 ) {
-			const _importeIgvDsc = (rowTotal.importe * (parseFloat(_rowIGVConfig.monto) / 100)).toFixed(2);
-			rowIgv.importe = _importeIgvDsc;
-			rowSubTotal.importe = parseFloat(rowTotal.importe) - _importeIgvDsc;
+		// var importeIgvRow = parseFloat(rowIgv.importe);
+		// // if ( importeIgvRow > 0 ) {
+		// 	const _importeIgvDsc = (rowTotal.importe * (parseFloat(_rowIGVConfig.monto) / 100)).toFixed(2);
+		// 	rowIgv.importe = _importeIgvDsc;
+		// 	rowSubTotal.importe = parseFloat(rowTotal.importe) - _importeIgvDsc;
 
-			if ( importeDesct > 0 ) {
-				// rowTotal.importe += parseFloat(_importeIgvDsc);
-			}
+		// 	if ( importeDesct > 0 ) {
+		// 		// rowTotal.importe += parseFloat(_importeIgvDsc);
+		// 	}
 			
-			// sub total cambia a importe(con descuento)  - igv
-			// arrTotales[0].importe = rowTotal.importe - _importeIgvDsc;
+		// 	// sub total cambia a importe(con descuento)  - igv
+		// 	// arrTotales[0].importe = rowTotal.importe - _importeIgvDsc;
 
-		// }
+		// // }
+
+		const procentaje_IGV = parseFloat(parseFloat(_rowIGVConfig.monto) / 100);
+		let _total_operaciones_gravadas = xCalcMontoBaseIGV(rowTotal.importe, procentaje_IGV);
+		let _total_igv = parseFloat(rowTotal.importe - _total_operaciones_gravadas).toFixed(2);
+		let _total_valor = _total_operaciones_gravadas
+
+		rowIgv.importe = parseFloat(_total_igv).toFixed(2)
+		rowSubTotal.importe = (parseFloat(rowTotal.importe) - _total_igv).toFixed(2);
 	} else {
 
 		// si no esta afecto al igv

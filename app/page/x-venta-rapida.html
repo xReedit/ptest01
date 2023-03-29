@@ -10,6 +10,7 @@
 	<link rel="import" href="../x-componentes/x-comp-item-subitems/x-comp-item-subitems.html">
 	<link rel="import" href="../x-componentes/x-comp-canal-consumo/x-comp-canal-consumo.html">
 	<link rel="import" href="../x-componentes/x-pedidos-por-pagar/x-pedidos-por-pagar.html">
+	<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 
 	
 
@@ -365,6 +366,9 @@
 							<br>
 							<table width="100%" data-TablaName="pedido_subtotales" id="xtb_pedido_subtotales"></table>
 							<br>
+							<div class="p-2" hidden$="[[!showCompDescuento]]">
+								<x-comp-descuento show-detalle="false" id="component_descuento_pedido_vr" importeventa$="[[ importeTotalPedido ]]" classselect="selected-template-1 fs-11"></x-comp-descuento>
+							</div>
 							<div style="float:left">
 								<paper-checkbox style="padding:10px; display:block" class="noselect" id="check_reserva">Reservar</paper-checkbox><br>
 							</div>
@@ -550,6 +554,9 @@ var xThisVentaRapida
 ,xenviar_cuenta=false
 ,xregistrar_pago=false
 ,xtxt_select=false//selecciona todo el txt de para agilizar busqueda
+,xtxt_descuento_focus_vr = false // si esta true no va a text busqueda
+,arrSubtTotalesDescuentoVR = null // si hay descuento
+,xCompDescuentoPedidoVR
 ,xidCategoriaVR
 ,tt_pedido=0
 ,xIdPedido=''
@@ -589,6 +596,9 @@ function xIniVentaRapida(){
 		xArrayRegla=xm_log_get('reglas_de_carta');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
 		xDtPrint=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 		xNumMesasBd=parseInt(xDtPrint[0].mesas);
+
+		const xper_acc_vr = xm_log_get('app3_woPer');
+		xThisVentaRapida.showCompDescuento = xper_acc_vr.indexOf('Pe5') > -1;
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 		// console.log('isSocket', isSocket);
@@ -800,6 +810,7 @@ function xIniVentaRapida(){
 
 
 	$(document.body).keydown(function(e) {
+		if ( xtxt_descuento_focus_vr ) return;
 		if ( dialog_datos_delivery.opened ) return;
 		if ( document.activeElement.dataset.val === 'referencia' || document.activeElement.dataset.val === 'mesa') {return; }
 		if (e.keyCode != 107 && e.keyCode != 109 && e.keyCode != 40 && e.keyCode != 38 && e.keyCode!=117 && e.keyCode!=118 && e.keyCode!=17 && e.keyCode!=77 ) {
@@ -928,6 +939,26 @@ function xIniVentaRapida(){
 	// xValPago.addEventListener('xFormClienteValid', function (e) {		
 	// 	xThisVentaRapida.valid_form_cliente_pago = e.detail;
 	// });
+
+	xCompDescuentoPedidoVR = document.getElementById('component_descuento_pedido_vr');
+	xCompDescuentoPedidoVR.addEventListener('changeDescuento', function (e) {
+		const _rptDsc = e.detail;
+		arrSubtTotalesDescuentoVR = colocarDescuentoSubtotales(_rptDsc.value, xLocal_xDtSubTotales, _rptDsc.descripcion, _rptDsc.isAgregar);
+		// console.log('changeDescuento xCompDescuentoPedidoVR', _rptDsc);	
+		// console.log('arrSubtTotalesDescuento', arrSubtTotalesDescuentoVR);
+		// arrSubtTotalesDescuento = colocarDescuentoSubtotales(_rptDsc.value, arrSumSubtTotales, _rptDsc.descripcion, _rptDsc.isAgregar);
+
+		xSumarTotal(true);
+
+		e.stopPropagation();
+		e.stopImmediatePropagation()
+	});
+
+
+	$("#component_descuento_pedido_vr").on('focus-input', (e) => {
+		// console.log('focus inoput ', e.detail);
+		xtxt_descuento_focus_vr = e.detail;
+	})	
 
 
 	$("#dialog_pagar_vr").on('iron-overlay-opened',function(){
@@ -1195,6 +1226,10 @@ function xNuevoPedidoVR() {
 
 	xLocal_SubTotal_Quitados='';
 
+	if ( xCompDescuentoPedidoVR ) {
+		xCompDescuentoPedidoVR.reset();
+	}
+
 	dialog_nuevo_pedido.close();
 	//tt_pedido=0;
 	
@@ -1340,7 +1375,9 @@ async function xGuardarPedidoVR(responde){
 	}
 
 	xGeneralValidarRegalasCarta(xArrayPedidoObj,true);
-	if(xArmarSubtotalesArray()==0){return}
+	if ( !arrSubtTotalesDescuentoVR ) {
+		if(xArmarSubtotalesArray()==0){return}
+	}
 
 	xVerificarImprimirComanda=false;
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj)
@@ -1373,7 +1410,7 @@ async function xGuardarPedidoVR(responde){
 	}
 	xarr_comprobante = ComprobanteSeleccionado;
 	xarr_body = xArrayPedidoObj;
-	xarr_subtotales = xLocal_xDtSubTotales;
+	xarr_subtotales = xLocal_xDtSubTotales;	
 	// xarr_subtotales = xGeneralArraySubTotales;
 	
 	
@@ -1966,12 +2003,14 @@ function xVerMipedidoVR(){
 
 function xValidarReglaCarta(){
 	xGeneralValidarRegalasCarta($('.xtb_pedido'),false);
-	xSumarTotal();
+	xSumarTotal(null, true);
 }
 
-function xSumarTotal(){
+function xSumarTotal(viene_dsct = false){
 	// var rptSum=xGeneralSumarTotales()
 	// tt_pedido=rptSum[0].ImporteTotal;
+
+	// xArrayPedidoObj = xArrayPedidoObj.filter(x => x)
 
 	xGeneralValidarRegalasCarta(xArrayPedidoObj,true);
 	tt_pedido = xArmarSubtotalesArray();
@@ -1985,6 +2024,8 @@ function xSumarTotal(){
 		, xBtnQuitar=''
 		, classTachado=''
 		, textBnQuitar='(-)', importeRow;
+
+	xLocal_xDtSubTotales = viene_dsct ? arrSubtTotalesDescuentoVR : xLocal_xDtSubTotales;
 
 	xLocal_xDtSubTotales.forEach((element, index) => {
 		// var _fontSize,_fontSizeTitulo, titulo, _style='', _id='', _colorImporte='', xBtnQuitar='', classTachado='', textBnQuitar='(-)';
@@ -2012,9 +2053,16 @@ function xSumarTotal(){
 		
 		htmlSubtotales = htmlSubtotales + '<tr class="total '+classTachado+'">'+
 							'<td colspan="3" class="'+_style+'"><p class="'+_fontSizeTitulo+' xColorRow_Plomo">'+titulo+' '+ xBtnQuitar +'</p></td>'+
-							'<td align="right" class="'+_style+'"><p class="'+_fontSize+' '+ _colorImporte +'" id="'+_id+'">'+importeRow+'</p></td>'+
+							'<td align="right" class="'+_style+'"><p class="'+_fontSize+' '+ _colorImporte +'" id="'+_id+'">'+parseFloat(importeRow).toFixed(2)+'</p></td>'+
 						'</tr>';
 	});
+
+	// console.log('tt_pedido', tt_pedido);
+	// console.log('xLocal_xDtSubTotales', xLocal_xDtSubTotales);
+	// add 29032023 para descuento
+	tt_pedido = xLocal_xDtSubTotales[xLocal_xDtSubTotales.length - 1].importe
+	xThisVentaRapida.importeTotalPedido = tt_pedido;
+	//
 
 	$("#xtb_pedido_subtotales").html(htmlSubtotales).trigger('create');
 
@@ -2315,10 +2363,13 @@ Polymer({
 		valid_form_cliente_pago: boolean = false,
 		valid_monto_pago: boolean = false,
 		xIconScreen: String,
-		objSubItemQuitar: Object
+		objSubItemQuitar: Object,
+		importeTotalPedido: Number,
+		showCompDescuento: Boolean
 	},
 	attached:function(){
 		this.selected_us=0;
+		this.showCompDescuento = false
 		this.xIconScreen = 'icons:fullscreen';
     	xThisVentaRapida=this;
 		xIniVentaRapida();

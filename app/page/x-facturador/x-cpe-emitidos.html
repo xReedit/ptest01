@@ -974,7 +974,7 @@
                 const ruc_emisor = selEstablecimiento.ruc;
 
                 const _numRows = res.data.length;
-                // xThisCpe.numRowsList = _numRows;
+                xThisCpe.numRowsList = _numRows;
 
                 for (let index = 0; index < _numRows; index++) {
                     var x = res.data[index];			
@@ -1031,7 +1031,9 @@
                             x = cpeVerificado;
                             countCpeSuccess++;
                         }
-                        // xThisAdmContador.numRowsVerificadoSuccess = countCpeSuccess;
+
+                        xPopupLoad.titulo = 'Verificando: '+ countCpeSuccess + ' de ' + xThisCpe.numRowsList + ' Documentos.' ;
+                        xThisCpe.numRowsVerificadoSuccess = countCpeSuccess;
                         // xThisAdmContador.numRowsVerificadoError = countCpeError;
                         // CONSULTAR CON API SUNAT -- >>
                         
@@ -1041,6 +1043,7 @@
                     } catch (error) {
                         // xThisAdmContador.showProccessVerificationFinalize = true;
                         // xThisAdmContador.showProccessVerificationError = true;
+                        console.error(error);
                         return;
                     }
                     //return x;
@@ -1054,6 +1057,8 @@
                 // console.log('aaa res token', aaa);
 
                 // verificar documentos con sunat
+
+                xPopupLoad.titulo = 'Cargando...';
 
                 // xThisAdmContador.showProccessVerificationFinalize = true;
                 // if ( xThisAdmContador.showRowsNoResponse || xThisAdmContador.showProccessVerificationError ) {return; }
@@ -1118,6 +1123,24 @@
                     xThisCpe.ListCpeNC = _list.datos;
                 });
         }
+
+        function xEstadoCpeApi(estado) {
+                var _estado = {
+                    titulo: '',
+                    color: ''
+                };
+
+                const _valEstado = estado.toString()
+                switch (_valEstado) {
+                    case '0': _estado.titulo = "NO EXISTE"; _estado.color = "purple"; break;
+                    case '1': _estado.titulo = "ACEPTADO"; _estado.color = "green"; break;
+                    case '2': _estado.titulo = "ANULADO"; _estado.color = "red"; break;
+                    case '3': _estado.titulo = "AUTORIZADO"; _estado.color = "green"; break;
+                    case '4': _estado.titulo = "NO AUTORIZADO"; _estado.color = "red"; break;
+                }
+
+                return _estado;
+            }
     
 
 
@@ -1141,7 +1164,9 @@
             isShoOpNotaCredito: Boolean,
             desDocCpe: String,
             ListCpeNC: [],
-            subscription$: Object
+            subscription$: Object,
+            numRowsList: Number,
+            numRowsVerificadoSuccess: Number
         },
         attached: function () {
             this.selected = 0,

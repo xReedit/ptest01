@@ -650,15 +650,23 @@
         
 
 
-        _arrTotal.push({ 'descripcion': 'Sub Total', 'importe': xMoneda(SumaLista) });
+        let _importeSubtotal = SumaLista;
 
         xCartaSubtotales.map(x => {
             if (x.es_impuesto.toString() === '1') {
                 const impuesto = parseFloat(x.monto);
-                const importeCalc = x.activo === '0' ? parseFloat(SumaLista * (impuesto / 100)).toFixed(2) : '0.00';
+                let importeCalc = '0.00';
+                if (x.activo === '0') {
+                    if ( x.descripcion === 'I.G.V' ) {
+                        _importeSubtotal = parseFloat(xCalcMontoBaseIGV(SumaLista, (impuesto / 100)))
+                        importeCalc = (SumaLista - _importeSubtotal).toFixed(2)
+                    }
+                }                
                 _arrTotal.push({'descripcion': x.descripcion, 'importe': importeCalc});
             }
         });
+
+        _arrTotal.unshift({ 'descripcion': 'Sub Total', 'importe': xMoneda(_importeSubtotal) });
 
 
         const total = _arrTotal.map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);

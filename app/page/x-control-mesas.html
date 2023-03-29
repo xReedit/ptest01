@@ -542,7 +542,7 @@ function xIniControlMesa(){
 	if ( cuentaEventoLoadIniPrincipal > 0 ) { return; }
 	cuentaEventoLoadIniPrincipal++;
 
-	console.log('inicio control -> ', cuentaEventoLoadIniPrincipal)
+	// console.log('inicio control -> ', cuentaEventoLoadIniPrincipal)
 
 	$( "#accordion" ).accordion({
 		heightStyle: "content",
@@ -2914,7 +2914,7 @@ function xEliminarItemPedido(){
 		xPopupLoad.xclose();
 
 		// indica cantidad pedidos borrados
-		console.log('aaaaaaaaaaaaaaaaaaa');
+		// console.log('aaaaaaaaaaaaaaaaaaa');
 		xShowCantidadPedidosBorrados()
 	})
 }
@@ -4263,7 +4263,7 @@ function xAddRowInsertListItems(obj) {
 		const _numMesa = lastDataPedidoInsert ? 0 : xp_sel_nummesa;
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
 		.done( function (dtPbdet) {
-			console.log('xAddRowInsertListItems');
+			// console.log('xAddRowInsertListItems');
 			var xdtPbdet=$.parseJSON(dtPbdet);
 
 			// si se agrego un nuevo pedido solo trae ese pedido

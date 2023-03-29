@@ -478,6 +478,11 @@
 			}
 		});
 
+		// si agrega o borra fila, para centrar el dialog
+		xCompTableFP.addEventListener('xCompTableAddRemoveRow', () => {
+			xThisPago.fire('ChangeListPagoAddRemoveRow', xThisPago.tipoComprovanteSelecionado);
+		})
+
 	}
 
 	/// 0918 ///
@@ -725,6 +730,7 @@
 		// xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
 		// xThisPago.setVisiblePanel1();
 		xThisPago.fire('xListoRegistraPago', true);
+		xThisPago.fire('xListoRegistraPagoRpt', xtipoP);
 
 		/// loading - para no disparar varias veces mientras se esta ejecutando
 		setTimeout(() => {

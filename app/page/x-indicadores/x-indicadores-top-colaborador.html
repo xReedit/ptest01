@@ -318,7 +318,9 @@
         var _dataTopPedidosByMozo = dataTopPedidosByMozo.filter(x => x.usuario === filtroMozo.key);
         crosTopProductosMozos = crossfilter(_dataTopPedidosByMozo); 
         
-        xThisI2TopColaborador.nomColaborador = primeraConMayusculas(filtroMozo.value.nom_mozo.toLowerCase());
+        if ( filtroMozo ) {
+            xThisI2TopColaborador.nomColaborador = primeraConMayusculas(filtroMozo.value.nom_mozo.toLowerCase());
+        }
 
         topMozoSecciones();
         topMozoProductos();

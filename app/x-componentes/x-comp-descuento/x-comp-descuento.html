@@ -18,7 +18,7 @@
             <div class="animate__animated animate__fadeIn animate__faster" hidden$="[[ !showDetalle ]]">
                 <div class="d-flexx align-content-center justify-content-end">
                     <div class="pr-1">
-                        <select class="selected-template-1 fs-15" onchange="selectedDsc(this)">
+                        <select class$="[[classselect]]" onchange="selectedDsc(this)">
                             <template is="dom-repeat" items="{{listTipoConceptos}}" as="item">
                                 <option value="{{ item.idtipo_descuento }}">{{ item.descripcion }}</option>
                             </template>                                                        
@@ -26,7 +26,7 @@
                     </div>
 
                     <div class="content-text-improte pr-1">
-                        <input type="text" class="text_importe fs-16" id="txt_imp_dsc" autocomplete="off" onkeyup="xCalcImporteDsc()">
+                        <input type="text" class="text_importe fs-16" id="txt_imp_dsc" autocomplete="off" onblur="xFocusInputDescuento(false)" onfocus="xFocusInputDescuento(true)" onkeyup="xCalcImporteDsc()">
                     </div>
 
                     <div class="pl-1">
@@ -84,8 +84,8 @@
         xThisCompDesc.showDetalle = !xThisCompDesc.showDetalle;
 
         if ( xThisCompDesc.showDetalle ) {
-            txt_imp_dsc.value = '';
-            txt_imp_dsc.focus();
+            xThisCompDesc.$.txt_imp_dsc.value = '';
+            xThisCompDesc.$.txt_imp_dsc.focus();
         } else {
 
             xThisCompDesc.fire('changeDescuento', {
@@ -126,7 +126,7 @@
 
     function xResetCompDsc() {
         xThisCompDesc.showDetalle = false;
-        txt_imp_dsc.value = '';
+        xThisCompDesc.$.txt_imp_dsc.value = '';
         lastValCalc = 0;
         // xCalcImporteDsc();
     }
@@ -135,7 +135,7 @@
         var paseDsc = false;
         var _dtDscStorage = localStorage.getItem(keyDscStorage);
 
-        txt_imp_dsc.value === ''
+        xThisCompDesc.$.txt_imp_dsc.value === ''
 
         if ( _dtDscStorage ) {
             try {                
@@ -170,13 +170,13 @@
 
     function selectedDsc(obj) {        
         tipoDscSelected = xThisCompDesc.listTipoConceptos[obj.selectedIndex];
-        // txt_imp_dsc.value = '';
+        // xThisCompDesc.$.txt_imp_dsc.value = '';
         xCalcImporteDsc();
 
-        txt_imp_dsc.focus();
+        xThisCompDesc.$.txt_imp_dsc.focus();
 
         try {
-            txt_imp_dsc.selected();            
+            xThisCompDesc.$.txt_imp_dsc.selected();            
         } catch (error) {            
         }
     }
@@ -186,16 +186,16 @@
         var rptCalc = 0, descripcionDesct = '';
         var importeTotalPedido = xThisCompDesc.importeventa;
 
-        importeInicial = txt_imp_dsc.value === '' ? 0 : importeInicial;
+        importeInicial = xThisCompDesc.$.txt_imp_dsc.value === '' ? 0 : importeInicial;
         if ( importeInicial === 0 ) { importeInicial = importeTotalPedido + lastValCalc; }
         var limiteCantidadDsc = isDestPorcentaje ? 100 : importeInicial;
 
-        var valtxt = parseFloat(txt_imp_dsc.value) || 0;
+        var valtxt = parseFloat(xThisCompDesc.$.txt_imp_dsc.value) || 0;
         if ( valtxt ===  lastValCalc) {return; }
 
         if ( valtxt  >  limiteCantidadDsc ) {
             valtxt = limiteCantidadDsc;
-            txt_imp_dsc.value = valtxt;
+            xThisCompDesc.$.txt_imp_dsc.value = valtxt;
         }
 
         if ( isDestPorcentaje ) {
@@ -223,6 +223,10 @@
 		});
     }
 
+    function xFocusInputDescuento(value) {
+        xThisCompDesc.fire('focus-input', value)
+    }
+
     Polymer({
 		is: 'x-comp-descuento',
 		properties: {
@@ -233,7 +237,11 @@
 				notify: true,
 				reflectToAttribute: true,
 				value: 0
-            }          
+            },
+            classselect: {
+                type: String,
+                value: 'selected-template-1 fs-15'
+            }
 		},
 		attached: function () {
             this.showDetalle = false;
@@ -244,6 +252,9 @@
         },
         reset: () => {
             xResetCompDsc();
+        },
+        setVisible: (value)=> {
+            xThisCompDesc.showDetalle = value;
         }
 	})
 </script>

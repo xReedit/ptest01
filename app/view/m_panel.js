@@ -320,7 +320,9 @@ async function xOpenPage(xop, parametro){
 		case 31: xruta = '/gastos_fijos'; break;
 		case 32: xruta = '/gastos_variables'; break;
 		case 33: xruta = '/otros_ingresos'; break;
-		case 34: xruta = '/recursos_humanos'; break;
+		case 34: 
+			xruta = '/recursos_humanos'; 
+		break;
 		case 35: xruta = '/clientes'; break;
 		case 36: xruta = '/panel_contador'; break;
 		case 37: 
@@ -369,6 +371,12 @@ async function xOpenPage(xop, parametro){
 		case 50: xruta = '/solicitud_remoto'; break;
 		case 51: xruta = '/ticket_rapido'; break;
 		case 52: xruta = '/porciones'; break;
+		case 53: 
+				const _data = btoa(JSON.stringify(getDataUsRRHH()))
+			console.log('_data', _data);
+			const _urlRRHH = 'http://127.0.0.1:5173/login?us=' + _data;
+			window.open(_urlRRHH, "RRHH");// produccion
+		break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

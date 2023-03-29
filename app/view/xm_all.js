@@ -535,14 +535,17 @@ function xm_log_get(seccion){
       xUsAc_Ini=xdt_log.us.acc;
       break;
     case 'app3_Us_home':
-      xdt_rpt=xdt_log.sistema.url ;
-			break;
-		case 'app3_sys_const':		
-			xdt_rpt = xdt_log.sistema.constantes;
-			break;
+      	xdt_rpt=xdt_log.sistema.url ;
+		break;
+	case 'app3_sys_const':		
+		xdt_rpt = xdt_log.sistema.constantes;
+		break;
     case 'app3_woA':
       xdt_rpt=xdt_log.us.acc;
       break;
+	case 'app3_woPer':
+		xdt_rpt = xdt_log.us.per;
+		break;
     case 'app3_woIpPrint':
       xdt_rpt=xdt_log.dispositivos.dispositivo;
       break;
@@ -895,6 +898,37 @@ async function xSendEmailClienteSES(params) {
 
 function xCalcMontoBaseIGV(importeTotal, procentaje_IGV) {
 	return parseFloat(parseFloat(importeTotal) / (1 + procentaje_IGV)).toFixed(2)
+}
+
+function getDataUsRRHH() {
+	const dataUser = xm_log_get('app3_us')[0]
+	const dataOrg = xm_log_get('datos_org_sede')[0]
+	const dataSede = xm_log_get('datos_org_all_sede')[0]
+	return {
+		"user": {
+			"usuario": xNomUsario,
+			"pass": '',
+			"idusuario_restobar": parseInt(xIdUsuario),
+			"nombres": xNomU,
+			"cargo": xCargoU
+		},
+		"org": {
+			"idorg_restobar": parseInt(dataOrg.idorg),
+			"nombre": dataOrg.nombre,
+			"direccion": dataOrg.direccion,
+			"ruc": dataOrg.ruc,
+			"telefono": dataOrg.telefono
+		},
+		"sede": {
+			"idsede_restobar": parseInt(dataSede.idsede),
+			"ruc": dataOrg.ruc,
+			"razon_social": dataOrg.nombre,
+			"ciudad": dataSede.ciudad,
+			"direccion": dataSede.direccion,
+			"telefono": dataSede.telefono,
+			"nombre": dataSede.nombre
+		}
+	}
 }
 
 

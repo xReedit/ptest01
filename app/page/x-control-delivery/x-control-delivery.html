@@ -22,6 +22,13 @@
                 </div>			                
         </paper-dialog>
 
+        <paper-dialog id="dialog_registrar_pago_repartidor" class="dialog_redondo" style="min-width:320px;"
+            entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+            <div class="xContent" style="padding: 0px 20px 0px 5px;" id="content_xpago_repartidor">
+        
+            </div>
+        </paper-dialog>
+
         <div class="p-3" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">
             <div class="d-flexx justify-content-between align-items-center mb-1">
                 <h3>Control de Delivery</h3>
@@ -196,6 +203,9 @@
                                     <div hidden$="[[ !item.isShowPedidoCobrado ]]">                                    
                                         <p class="badge badge-success"><i class="fa fa-check"></i> Pagado</p>
                                     </div>
+                                    <div hidden$="[[ !item.isShowPedidoAnulado ]]">
+                                        <p class="badge badge-danger"><i class="fa fa-check"></i> Anulado</p>
+                                    </div>
                                 </td>
                                 <td align="right">                                
                                     <div hidden$="[[ item.isShowPedidoCobrado ]]">
@@ -203,6 +213,7 @@
                                             class="btn btn-sm fs-12 btn-flat sky" 
                                             onclick="xCDOpenDetallePedido(this)">Abrir</button>                                                                 
                                     </div>
+                                    
                                 </td>
                             </tr>
                         </template>                        
@@ -224,7 +235,11 @@
                             </th>
                             <th align="right">
                                 <p>Total</p>
-                                <p class="fs-9 text-secondary">Importe total - Costo Delivery</p>
+                                <p class="fs-9 text-secondary">Total - Delivery</p>
+                            </th>
+                            <th align="right">
+                                <p>Por Pagar</p>                                
+                                <p class="fs-9 text-secondary">Importe total a pagar</p>
                             </th>
                         </thead>
                         <body>
@@ -252,18 +267,39 @@
                                             </div>
                                         </template>
                                     </td>
-                                    <td align="right" class="fw-600 fs-18">{{ item.pedidos.importe_total }}</td>
+                                    <td align="right">
+                                        <p class="fw-600 fs-18">{{ item.pedidos.importe_total }}</p>                                        
+                                    </td>
                                     <td align="right" class="fw-600 fs-18">{{ item.pedidos.entrega }}</td>
-                                    <td align="right" class="fw-600 fs-18">{{ item.pedidos.total }}</td>
+                                    <td align="right">
+                                        <p class="fw-600 fs-18">{{ item.pedidos.total }}</p>
+                                        <div class="fw-600 fs-14 text-warning" hidden$ ="[[!item.pedidos.showImportePagado]]">
+                                            <span class="fs-10">Pagado: </span>
+                                            <span>{{ item.pedidos.importe_pagado }}</span>
+                                        </div>
+                                        
+                                    </td>
+                                    <td align="right" class="fw-600 fs-18">
+                                        <div hidden$="[[!item.pedidos.showBtnRegistroPago]]">
+                                            <p class="fw-600 fs-18">{{ item.pedidos.importe_pagar  }}</p>
+                                            <button  data-id="{{item}}" class="btn btn-sm fs-11 btn-flat sky mt-1" onclick="xRegistrarPagoRepartidor(this)">Registrar Pago</button>
+                                        </div>
+                                        <div class="text-center" hidden$="[[item.pedidos.showBtnRegistroPago]]">
+                                            <i class="fa fa-check text-success fa-2x"></i>
+                                        </div>
+                                    </td>
                                 </tr>
                             </template>
 
                             <!-- totales -->
                             <tr>
                                 <td colspan="3" class="p-3 fs-18">Total</td>
-                                <td align="right" class="fw-600 fs-18">{{convertRowFixed(listResumenDeliveryTotales.importe_total)}}</td>
+                                <td align="right">
+                                    <p class="fw-600 fs-18">{{convertRowFixed(listResumenDeliveryTotales.importe_total)}}</p>                                    
+                                </td>
                                 <td align="right" class="fw-600 fs-18">{{convertRowFixed(listResumenDeliveryTotales.entrega)}}</td>
                                 <td align="right" class="fw-600 fs-18">{{convertRowFixed(listResumenDeliveryTotales.total)}}</td>
+                                <td align="right" class="fw-600 fs-18">{{convertRowFixed(listResumenDeliveryTotales.importe_pagar)}}</td>
                             </tr>
                         </body>
                     </table>
@@ -442,7 +478,7 @@ function xIniControlDelivery () {
 // trae toda la lista de pedidos pendientes
 function xCDSearchAllPedidos(_fecha='') {
     if (_fecha == '') {
-        _fecha = new Date().toLocaleDateString(); // fecha actual
+        _fecha = xDevolverFecha(); // fecha actual
         txt_fecha_delivery.value = _fecha
     }
     $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=7', data: {fecha: _fecha}})
@@ -499,6 +535,10 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
                 x.json_datos_delivery = isDataJson ? JSON.parse(x.json_datos_delivery) : [];
                 _datosDelivery = isDataJson ? x.json_datos_delivery.p_header.arrDatosDelivery : [];                 
 
+                // if ( !!_datosDelivery.direccion ) {
+                //     return;
+                // }
+
                 // tipo de pago
                 x.paga_con = isDataJson ? _datosDelivery.metodoPago.descripcion: '--';
                 x.idtipo_pago = isDataJson ? _datosDelivery.metodoPago.idtipo_pago : 1;
@@ -552,7 +592,8 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
 
                 // estado pedido // pagado
                 x.isShowPedidoCobrado = x.estado == '2';
-                x.isShowPedidoCobrado = x.estado == '2';
+                // x.isShowPedidoCobrado = x.estado == '2';
+                x.isShowPedidoAnulado = x.estado == '3';
 
                 // comprobante
                 x.num_comprobante = isDataJson ? x.json_datos_delivery.p_header.num_comprobante : null;
@@ -743,7 +784,7 @@ function xCDOpenEmitirComprobante(obj) {
     const _rowItem = xCDGetItemListDelivery(obj);
     xThisCDelivery.rowItemSeleted = _rowItem;
 
-    $('#div_pago').empty();
+    $('#div_pago').empty(); // control pedidos
     $('#content_xpago_delivery').html('<x-pago id="component_pago_delivery"></x-pago>').trigger('create');
 
     xPopupLoad.xopen();
@@ -787,9 +828,14 @@ function xCDOpenEmitirComprobante(obj) {
 }
 function xCDRestaurarXPagoCP() {
     $('#content_xpago_delivery').empty();
+    $('#content_xpago_repartidor').empty();    
     setTimeout(() => {    
         $('#div_pago').html('<x-pago id="component_pago"></x-pago>').trigger('create');
     }, 500);
+}
+
+function xCDQuitarXPagoCP() {
+    $('#div_pago').empty(); // control pedidos
 }
 
 function xCDGoEmitirComprobante() {
@@ -876,6 +922,7 @@ function xCDGoWhastAppNumber(obj, user) {
 
     const _msm = 'Hola%20'+nombre+'%20';
     const _link = 'https://api.whatsapp.com/send?phone=51'+numTelefono+'&text='+_msm;
+    // const _link = 'https://WA.ME/51' + numTelefono
     window.open(_link).focus();
 }
 
@@ -991,20 +1038,23 @@ function xCDRepartidorResumen() {
     var _listTotalesResumen = {
         importe_total: 0,
         entrega: 0,
-        total: 0
+        total: 0,
+        importe_pagado: 0,
+        importe_pagar:0
     }
 
     _list.filter(x => x.idrepartidor).map(x => {
         if ( !_listRepartidor.find(i => i.idrepartidor === x.idrepartidor) ) {
 
-            const _filterRepartidor = _list.filter(z => z.idrepartidor === x.idrepartidor)
+            const _filterRepartidor = _list.filter(z => z.idrepartidor === x.idrepartidor && z.estado !== '3')
 
             const _costoEntrega = x.isRepartidorPapaya ?                                    
                                     _filterRepartidor
                                         .filter(z => z.idtipo_pago !== 2) // diferente de tarjeta - porque si paga tarjeta paga desde el app
                                         .map(z => {
                                         try {                                            
-                                            return parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.costoTotalDelivery)
+                                            // return parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.costoTotalDelivery)
+                                            return parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.establecimiento.c_servicio)
                                         } catch (error) {
                                             return 0;   
                                         }
@@ -1014,7 +1064,7 @@ function xCDRepartidorResumen() {
                                     _filterRepartidor.map(z => {
                                         try {                 
                                             const _subTotal = z.json_datos_delivery.p_subtotales;
-                                            return _subTotal.filter(s => s.descripcion.toLowerCase().indexOf('delivery') > -1 )
+                                            return _subTotal.filter(s => s.descripcion.toLowerCase().indexOf('delivery') > -1 || s.descripcion.toLowerCase().indexOf('entrega') > -1 )
                                                             .map(s => parseFloat(s.importe))
                                                             .reduce((a, b) => a + b, 0);                                            
                                         } catch (error) {
@@ -1022,21 +1072,26 @@ function xCDRepartidorResumen() {
                                         }
                                     }).reduce((a, b) => a + b, 0)
 
-
+            const _sumCostoEntrega = !x.isRepartidorPapaya ? 0 : _costoEntrega
             const _rowRepartidor = {
                 idrepartidor: x.idrepartidor,
                 nom_repartidor: x.nom_repartidor,
                 tel_repartidor: x.tel_repartidor,
                 isRepartidorPapaya: x.isRepartidorPapaya,                
                 cant_pedidos: _filterRepartidor.length,    
+                listIdPedidos: _filterRepartidor.map(x => x.idpedido).join(','),
                 pedidos: {
                     metodoPago: [],
-                    importe_total: _filterRepartidor.map(z => parseFloat(z.total)).reduce((a, b) => a + b, 0),
+                    importe_total: _filterRepartidor.map(z => parseFloat(z.total)).reduce((a, b) => a + b, 0) + _sumCostoEntrega,
                     // importe_efectivo: _filterRepartidor
                     //                     .filter(z => z.idtipo_pago === 1)
                     //                     .map(z => parseFloat(z.total)).reduce((a, b) => a + b, 0),
                     entrega: isNaN(_costoEntrega) ? 0 : _costoEntrega,
-                    total: 0
+                    total: 0,
+                    importe_pagado: _filterRepartidor.filter(x => x.estado == '2').map(z => parseFloat(z.total)).reduce((a, b) => a + b, 0) + _sumCostoEntrega,
+                    importe_pagar: 0,
+                    showImportePagado: false,
+                    showBtnRegistroPago: false,
                 }
             };
 
@@ -1055,14 +1110,25 @@ function xCDRepartidorResumen() {
 
             _rowRepartidor.pedidos.metodoPago = _metodoPago.filter(z => z.importe > 0);
             _rowRepartidor.pedidos.total = _rowRepartidor.pedidos.importe_total - _rowRepartidor.pedidos.entrega;
+            _rowRepartidor.pedidos.importe_pagado = _rowRepartidor.pedidos.importe_pagado > 0 ? _rowRepartidor.pedidos.importe_pagado - _rowRepartidor.pedidos.entrega : 0;
+            _rowRepartidor.pedidos.importe_pagar = (_rowRepartidor.pedidos.total - _rowRepartidor.pedidos.importe_pagado).toFixed(2);
+
+
             _rowRepartidor.pedidos.total = _rowRepartidor.pedidos.total.toFixed(2);
             _rowRepartidor.pedidos.importe_total = _rowRepartidor.pedidos.importe_total.toFixed(2);
             _rowRepartidor.pedidos.entrega = _rowRepartidor.pedidos.entrega.toFixed(2);
+            _rowRepartidor.pedidos.importe_pagado = _rowRepartidor.pedidos.importe_pagado.toFixed(2);
+
+            _rowRepartidor.pedidos.showImportePagado = _rowRepartidor.pedidos.importe_pagado > 0;
+            _rowRepartidor.pedidos.showBtnRegistroPago = _rowRepartidor.pedidos.importe_pagar > 0;
+            
             // _rowRepartidor.pedidos.importe_efectivo = _rowRepartidor.pedidos.importe_efectivo.toFixed(2);
 
             _listTotalesResumen.importe_total += parseFloat(_rowRepartidor.pedidos.importe_total);
             _listTotalesResumen.entrega += parseFloat(_rowRepartidor.pedidos.entrega);
             _listTotalesResumen.total += parseFloat(_rowRepartidor.pedidos.total);
+            _listTotalesResumen.importe_pagado += parseFloat(_rowRepartidor.pedidos.importe_pagado);
+            _listTotalesResumen.importe_pagar += parseFloat(_rowRepartidor.pedidos.importe_pagar);
 
             _listRepartidor.push(_rowRepartidor);
         } 
@@ -1071,6 +1137,134 @@ function xCDRepartidorResumen() {
 
     xThisCDelivery.listResumenDeliveryTotales = _listTotalesResumen;
     xThisCDelivery.listResumenDelivery = _listRepartidor;
+
+    // console.log('_listRepartidor', _listRepartidor);
+}
+
+async function xRegistrarPagoRepartidor(obj) {
+    const _id = obj.dataId
+    const _repartidor = obj.dataId;
+    xThisCDelivery.nomRepartidorPago = _repartidor.nom_repartidor;
+
+    let _paramsSwalAlert = paramsSwalAlert;
+    _paramsSwalAlert.html = `<div class="p-1">                    												
+												<p class="fw-600 fs-20">Registrar Pago</p>
+												<p class="fw-100 fs-14">
+													Repartidor:
+                                                    <span class="badge badge-warning">${_repartidor.nom_repartidor}</span>
+												</p><br>
+                                                <p class="fs-14">Puede registrar el pago total en diferentes metodos (efectivo, tarjeta, etc.)
+                                                <span class="fs-14 text-warning">Al finalizar el registro se darán por pagados todos los pedidos del repartidor</span>.</p>
+											</div>`;
+    _paramsSwalAlert.showCancelButton = true;
+
+
+    const _rptDialog = await showAlertSwalHtmlDecision(_paramsSwalAlert);
+
+    if (_rptDialog.isConfirmed) {
+        // console.log('object', _rptDialog);
+
+        // _paramsSwalAlert.html = `<div class="p-1">                    												
+		// 										<p class="fw-600 fs-20">Registrar Pago</p>
+		// 										<p class="fw-100 fs-14">
+		// 											Repartidor:
+        //                                             <span class="badge badge-warning">${_repartidor.nom_repartidor}</span>
+		// 										</p><br>
+        //                                         <x-comp-table-forma-pago></x-comp-table-forma-pago>
+		// 									</div>`;
+        
+        // const _rptDialogPago = await showAlertSwalHtmlDecision(_paramsSwalAlert);
+
+        xShowCompRegistrarPagoRepartidor(_repartidor.pedidos.importe_pagar, _repartidor);
+
+
+    }
+}
+
+function xShowCompRegistrarPagoRepartidor(importeCobrar, _repartidor) {      
+    xPopupLoad.titulo = "Cargando..."
+    xPopupLoad.xopen();
+    xCDQuitarXPagoCP();
+    $('#content_xpago_repartidor').html('<x-pago id="component_pago_repartidor" hidden_container_pago="false"></x-pago>').trigger('create');
+    
+    setTimeout(() => {
+        let xValPagoRepartidor = document.getElementById('component_pago_repartidor');                
+        component_pago_repartidor.setVal(importeCobrar)
+        component_pago_repartidor.setModoSoloProveedor();
+        component_pago_repartidor.setVisibleContainerPago();
+        xPopupLoad.xclose();
+        dialog_registrar_pago_repartidor.open();
+
+
+        xValPagoRepartidor.addEventListener('xCancelarCerrar', function (e) {
+            dialog_registrar_pago_repartidor.close();
+            xCDRestaurarXPagoCP()
+        });
+
+        xValPagoRepartidor.addEventListener('xListoRegistraPagoRpt', function (e) {
+            dialog_registrar_pago_repartidor.close();
+            setTimeout(() => {                
+                xCDRestaurarXPagoCP()
+            }, 100);            
+            xRegistrarPagoDeliveryRepartidor(e.detail, _repartidor);
+        });
+
+        xValPagoRepartidor.addEventListener('ChangeListPagoAddRemoveRow', function (e) {
+            setTimeout(() => {                
+                dialog_registrar_pago_repartidor.center()
+            }, 100);
+        })
+    }, 1000);
+
+}
+
+
+async function xRegistrarPagoDeliveryRepartidor(listTpSelected, _repartidor) {        
+    const _dataSend = {
+        id: _repartidor.idrepartidor,
+        list: _repartidor.listIdPedidos,
+        op: 20
+    }
+
+    var _fetchApi = new httpFecht();
+    const _rpt = await _fetchApi.postJson('../../bdphp/log_009.php', _dataSend); 
+    // console.log('_rpt', _rpt);
+
+    if ( _rpt.success ) {
+        xSetEstadoPedidoDeliveryPagado(_repartidor)
+        xSaveRegistrarPagoDeliveryRepartidor(listTpSelected)
+    }
+
+}
+
+function xSetEstadoPedidoDeliveryPagado(_repartidor) {
+    xThisCDelivery.listDeliveryPedidoFilter.filter(x => x.idrepartidor === _repartidor.idrepartidor).map(x => {
+        x.estado = 2 // pagado
+        x.isShowPedidoCobrado = true;        
+    })
+
+    xThisCDelivery.listDeliveryPedido.filter(x => x.idrepartidor === _repartidor.idrepartidor).map(x => {
+        x.estado = 2 // pagado
+        x.isShowPedidoCobrado = true;
+    })
+
+    xCDSetChangeListDelivery();    
+    xCDRepartidorResumen();
+}
+
+async function xSaveRegistrarPagoDeliveryRepartidor(listTpSelected) {
+    const _dataSend = {
+        list: listTpSelected,        
+        concepto: 'Pago de Repartidor ' + xThisCDelivery.nomRepartidorPago,
+        nom_cliente: 'Repartidor'
+    }
+
+    // console.log('_dataSend', _dataSend);
+
+    $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '11', data: _dataSend } })
+    .done(res => {
+        console.log(res);
+    })
 }
 
 
@@ -1091,7 +1285,8 @@ Polymer({
             rowItemSeleted: [],
             arrInfo: [],
             arrSedeInfo: [],
-            lastObjBtnVer: Object
+            lastObjBtnVer: Object,
+            nomRepartidorPago: String
         },
         attached: function () {
             // xIniControlDelivery();

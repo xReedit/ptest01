@@ -62,33 +62,6 @@
 					dtValues = dtValues.datos;
 					localStorage.setItem('::app3_comp_tpp_all', JSON.stringify(dtValues));
 					cocinanarDataTppALL(dtValues);
-
-					// let yaEncontroPrimero=false, index_primero=0;
-					// xThisComTipoPagoOption.listOptionPago = dtValues.datos.map((x, index) => {
-					// 	// x.clase = 'xMiBoton_icon_option';						
-					// 	x.logo='../../images/'+x.img;
-					// 	x.descripcion = xMayusculaPrimera(x.descripcion.toLowerCase());
-					// 	x.hidden = xThisComTipoPagoOption.novisibles.indexOf(x.idtipo_pago) > -1 ? true : false;
-					// 	// xThisComTipoPagoOption.hiddenIconBorrar = true;
-					// 	if (!x.hidden && !yaEncontroPrimero) {
-					// 		yaEncontroPrimero=true;
-					// 		x.seleccionado = true;
-					// 		index_primero = index;							
-							
-					// 		// xThisComTipoPagoOption.hiddenIconBorrar = index === 0 ? true : false;
-					// 	} else {x.seleccionado = false;}
-					// 	return x;
-					// });
-
-					// xThisComTipoPagoOption.list_tipo_pago = xThisComTipoPagoOption.list[index_primero];
-					// xThisComTipoPagoOption.list_tipo_pago.index = index_primero;
-					
-					// xThisComTipoPagoOption.idselect = xThisComTipoPagoOption.list_tipo_pago.idtipo_pago;
-					// xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.list_tipo_pago.requiere_cliente;
-					// xThisComTipoPagoOption.limite = xThisComTipoPagoOption.list_tipo_pago.limite;
-					
-					// xThisComTipoPagoOption.valIdInt = xThisComTipoPagoOption.list_tipo_pago;
-					// xThisComTipoPagoOption.getValorIncial(xThisComTipoPagoOption.list_tipo_pago);
 				});
 		}
 
