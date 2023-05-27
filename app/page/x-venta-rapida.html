@@ -463,7 +463,7 @@
 
 	.content-titulo .num-stock {
 		font-size: 11px;
-	}
+	}	
 
 	@media screen and (max-width:920px){
 		.xdivEnLinea2x > .itemsDivx.a { 
@@ -513,7 +513,10 @@
 
 	.paper-toggle-button-0[checked] .toggle-bar.paper-toggle-button {
 		background: grey;
-	}	
+	}
+	
+	
+	
 
 </style>
 <!-- <script  type="text/javascript" src="../../js/socket.io.js"></script>
@@ -555,6 +558,7 @@ var xThisVentaRapida
 ,xregistrar_pago=false
 ,xtxt_select=false//selecciona todo el txt de para agilizar busqueda
 ,xtxt_descuento_focus_vr = false // si esta true no va a text busqueda
+,xtxt_mod_cantidad_focus_vr = false // si da clic en el text modificar cantidad
 ,arrSubtTotalesDescuentoVR = null // si hay descuento
 ,xCompDescuentoPedidoVR
 ,xidCategoriaVR
@@ -811,6 +815,7 @@ function xIniVentaRapida(){
 
 	$(document.body).keydown(function(e) {
 		if ( xtxt_descuento_focus_vr ) return;
+		if ( xtxt_mod_cantidad_focus_vr ) return; // modificar cantidad
 		if ( dialog_datos_delivery.opened ) return;
 		if ( document.activeElement.dataset.val === 'referencia' || document.activeElement.dataset.val === 'mesa') {return; }
 		if (e.keyCode != 107 && e.keyCode != 109 && e.keyCode != 40 && e.keyCode != 38 && e.keyCode!=117 && e.keyCode!=118 && e.keyCode!=17 && e.keyCode!=77 ) {
@@ -1436,7 +1441,7 @@ async function xGuardarPedidoVR(responde){
 
 	xarr_body = xarr_body.filter(x => x).map(x => x);
 
-	console.log('paso A');
+	// console.log('paso A');
 	// enviamos el body a homologacion con papaya express
 	const _p_body_homologacion = xEstructuraExpress(xarr_body, xdelivery, _isComercioAppDeliveryMapa);
 
@@ -1456,9 +1461,14 @@ async function xGuardarPedidoVR(responde){
 	
 
 	// fecth
+	// console.log('xarr_body', xarr_body);
+
 
 	const idP = await goSendPedidoFecht(dataSendPedido);
 	// return;
+
+	// chequea si hay productos con venta x peso para enviar el cambio de stock
+	xSendItemVentaxPesoVR(xarr_body)
 
 	// $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
 	// 	data:{
@@ -1508,7 +1518,7 @@ async function xGuardarPedidoVR(responde){
 		};
 
 
-		console.log('paso c');
+		// console.log('paso c');
 		// if ( p_from === '12' ) {
 		if (xrpt_correlativo !== ''){
 			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
@@ -1527,7 +1537,7 @@ async function xGuardarPedidoVR(responde){
 		_cpSocketprinterOnly(xArrayEnca);
 				
 		
-		console.log('FIN');
+		// console.log('FIN');
 		responde(true);
 	
 	
@@ -1623,7 +1633,7 @@ async function goSendPedidoFecht(_data) {
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
-	console.log('paso d');
+	// console.log('paso d');
 	if ( xRpt_pago.length > 0 ) {
 		var arr_cliente = xRpt_pago[0].cliente;
 		var arr_comprobante = xRpt_pago[0].comprobante;
@@ -1650,7 +1660,7 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 		// quitar
 		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
 		
-		console.log('paso E');
+		// console.log('paso E');
 		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
 
 		// si es pedido de cuenta pendiente
@@ -1763,6 +1773,21 @@ function xFiltrarItemsCartaDet(xobj){
 	  
 	xClosePanelDeVR();
 }
+
+// desactiva la busqueda
+function xSeDisabledSearchText(value) {
+	xtxt_descuento_focus_vr = value;
+}
+
+function xSetFocusTextChangeCant(value) {
+	xtxt_mod_cantidad_focus_vr = value;
+	xtxt_descuento_focus_vr = value;
+}
+
+function xSetChangeTextModCantidad(obj) {	
+	obj.select()	
+}
+
 function xLoadItemsDetalleCartaALL(){
 	$("#accordion ul").remove();
 	//$("#accordion").html('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
@@ -1772,6 +1797,8 @@ function xLoadItemsDetalleCartaALL(){
 	var xCadenaItems='';
 	var xtachar_li='';
 	var xCantidadMax=0;
+	var xCompCant_li2 = ''; // control de label o texto si es producto = para modificar cantidad
+	
 
 	for (var p = 0; p < xGeneralDataCarta.length; p++) {
 		xtachar_li='';
@@ -1787,6 +1814,20 @@ function xLoadItemsDetalleCartaALL(){
 		xClassEstadoStock = xClassEstadoItem(xCantItem);
         xClassEstado = xClassEstadoStock.split("|")[0];
         xClassEstadoStock = xClassEstadoStock.split("|")[1];
+
+		// si es producto puede modificar la cantidad
+		// ej: carne x kg  -> 1.5kg
+		xCompCant_li2 = '<span class="xcant_li2" data-cantmax="' + xCantidadMax + '">0</span>'
+		if ( xGeneralDataCarta[p].venta_x_peso == "1" ) {
+			xCompCant_li2 = `<input type="text" 
+								pattern="[0-9]+(\.[0-9]+)?"
+								class="xcant_li2 text-center input-modifica input-venta-rapida-mod" 
+								max-value="${xCantidadMax}" 
+								onBlur="xSetFocusTextChangeCant(false)"
+								onFocus="xSetFocusTextChangeCant(true)"
+								onClick="xSetChangeTextModCantidad(this)" data-cantmax="${xCantidadMax}">`
+		}
+
 		
 		xCadenaItems=String(xCadenaItems+'<li id="li2'+xGeneralDataCarta[p].idcarta_lista+'" class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
 												'" data-cat="'+xGeneralDataCarta[p].des_seccion+
@@ -1815,7 +1856,8 @@ function xLoadItemsDetalleCartaALL(){
 															'</div>'+
 															'<div class="xBtn_contet_li2">'+
 																'<div class="xBtn_li2 resta">-</div>'+
-																'<span class="xcant_li2" data-cantmax="'+xCantidadMax+'">0</span>'+
+																// '<span class="xcant_li2" data-cantmax="'+xCantidadMax+'">0</span>'+
+																xCompCant_li2+
 																'<div class="xBtn_li2 suma">+</div>'+
 															'</div>'+
 														'</div>'+

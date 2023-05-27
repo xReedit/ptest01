@@ -12,35 +12,58 @@
                 <form id="frm_item_pro_alm">
                     <label for="sel_almacen_pro">Almacen donde ingresa:</label><br>
                     <select id="sel_almacen_pro" name="no_post" class="xMiInput"></select>
+                    <br><br>
+                    <div class="xLinea2"></div>
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Descripcion</p>
-                    <input type="text" id="descripcion" name="descripcion" placeholder="Descripcion"
-                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
+                    <div class="d-flexx">
+                        <div class="mr-2">
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Familia</p>
-                    <input type="text" id="sel_familia_pro_alm" name="no_post" class="xMiInput xPasarEnter2" placeholder="Familia"
-                        onChange="conMayusculas(this)" required espaciar><br>
+        
+                            <p class="m-0 fs-10 text-secondary mt-2">Descripcion</p>
+                            <input type="text" id="descripcion" name="descripcion" placeholder="Descripcion"
+                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
+        
+                            <p class="m-0 fs-10 text-secondary mt-2">Familia</p>
+                            <input type="text" id="sel_familia_pro_alm" name="no_post" class="xMiInput xPasarEnter2" placeholder="Familia"
+                                onChange="conMayusculas(this)" required espaciar><br>
+        
+                            <p class="m-0 fs-10 text-secondary mt-2">Familia</p>
+                            <input type="text" id="codigo_barra" name="codigo_barra" placeholder="Codigo de barras"
+                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
+        
+                            <p class="m-0 fs-10 text-secondary mt-2">Stock</p>
+                            <input type="text" id="stock" name="no_post" placeholder="Stock" class="xMiInput xPasarEnter2"
+                                onChange="conMayusculas(this)" espaciar required><br>
+                        </div>
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Familia</p>
-                    <input type="text" id="codigo_barra" name="codigo_barra" placeholder="Codigo de barras"
-                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
+                        <div>
+                            <p class="m-0 fs-10 text-secondary mt-2">Stock Minimo</p>
+                            <input type="text" id="stock_minimo" name="stock_minimo" placeholder="Stock minimo"
+                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
+        
+                            <p class="m-0 fs-10 text-secondary mt-2">Precio de Compra</p>
+                            <input type="text" id="precio" name="precio" placeholder="Precio de compra" onblur="xRetornaMoneda(this)"
+                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" required espaciar><br>
+        
+                            <p class="m-0 fs-10 text-secondary mt-2">Precio de Venta</p>                    
+                            <input type="text" id="precio_venta" name="precio_venta" placeholder="Precio de venta x unidad"
+                                onblur="xRetornaMoneda(this)" class="xMiInput xPasarEnter2 xPrecioAddPro" onChange="conMayusculas(this)"
+                                required espaciar><br>
+        
+                            
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Stock</p>
-                    <input type="text" id="stock" name="no_post" placeholder="Stock" class="xMiInput xPasarEnter2"
-                        onChange="conMayusculas(this)" espaciar required><br>
+                        </div>
+                    </div>
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Stock Minimo</p>
-                    <input type="text" id="stock_minimo" name="stock_minimo" placeholder="Stock minimo"
-                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
+                    <div>
+                        <br>
+                        <paper-checkbox id="check_venta_x_peso"></paper-checkbox>Se vendará por peso<br>
+                        <span class="text-secondary fs-11">Podrá modificar la cantidad en Punto de Venta.</span>
+                    </div>
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Precio de Compra</p>
-                    <input type="text" id="precio" name="precio" placeholder="Precio de compra" onblur="xRetornaMoneda(this)"
-                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" required espaciar><br>
+                    <br><br>
+                    <div class="xLinea2"></div>
 
-                    <p class="m-0 fs-10 text-secondary mt-2">Precio de Venta</p>                    
-                    <input type="text" id="precio_venta" name="precio_venta" placeholder="Precio de venta x unidad"
-                        onblur="xRetornaMoneda(this)" class="xMiInput xPasarEnter2 xPrecioAddPro" onChange="conMayusculas(this)"
-                        required espaciar><br>
                         
                     <div class="xInvisible">
                         <input type="text" id="idproducto" name="idproducto">
@@ -48,6 +71,7 @@
                         <input type="text" id="idsede" name="idsede">
                         <input type="text" id="idproducto_familia" name="idproducto_familia">
                         <input type="text" id="precio_unitario" name="precio_unitario">
+                        <input type="text" id="venta_x_peso" name="venta_x_peso">
                     </div>
                 </form>
                 <br><br>
@@ -320,6 +344,10 @@ var xThisAlmPro;
             xPopupLoad.xopen();
             xnom_familia = $("#sel_familia_pro_alm").val();
             xPrecio_item = xMoneda($("#frm_item_pro_alm #precio").val());
+
+            const _venta_x_peso = check_venta_x_peso.value ? '1' : '0'
+            $("#frm_item_pro_alm #venta_x_peso").val(_venta_x_peso)
+
             if (xNewFamilia == true) {
                 $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1602', data: { f: xnom_familia } })
                     .done(function (DtIdFamRpt) {

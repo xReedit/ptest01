@@ -1684,6 +1684,7 @@
 		case 404:// organizacion
 			$sql="
 				SELECT o.*, s.telefono sedetelefono, s.idsede, s.nombre AS nom_sede, s.direccion as dir_sede, s.ciudad,s.eslogan,s.mesas, s.ubigeo, s.codigo_del_domicilio_fiscal, s.email_cierre
+					,s.ruc_cpe, s.razonsocial_cpe
 				FROM org AS o
 					INNER JOIN sede AS s using(idorg)
 				WHERE (o.idorg=".$g_ido.") and s.estado=0
@@ -2943,7 +2944,7 @@
 			}
 			break;
 		case 1603://load sel proveedores
-			$sql="select idproveedor as value, descripcion as label, direccion, dni from proveedor where (idorg=".$g_ido." AND idsede=".$g_idsede.") AND estado=0";
+			$sql="select idproveedor as value, descripcion as label, direccion, dni, telefono from proveedor where (idorg=".$g_ido." AND idsede=".$g_idsede.") AND estado=0";
 			$bd->xConsulta($sql);
 			break;
 		case 1604://load almacenes
@@ -3007,7 +3008,7 @@
 			";*/
 			$sql="
 				SELECT ps.idproducto_stock,p.idproducto, ps.idalmacen,pf.descripcion AS familia, a.descripcion AS almacen, p.descripcion AS producto, ps.stock, IF(p.precio_venta='','0.00',format(p.precio_venta,2)) AS precio_venta, IF(p.stock_minimo='',0,p.stock_minimo) AS stock_minimo
-						,p.img, p.codigo_barra, p.precio, p.idproducto_familia, ps.idproducto_stock
+						,p.img, p.codigo_barra, p.precio, p.idproducto_familia, ps.idproducto_stock, p.venta_x_peso
 				FROM producto AS p
 					INNER JOIN producto_stock AS ps using(idproducto)
 					INNER JOIN almacen AS a using(idalmacen)
@@ -3717,9 +3718,10 @@ function xDtUS($op_us){
 			";
 			break;
 		case 3012: // load datos del org sede 
-			$sql_us = "SELECT s.idorg, se.idsede, s.nombre, s.direccion,s.ruc, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, '' as logo64, se.ubigeo, se.codigo_del_domicilio_fiscal
+			// , s.nombre, s.ruc // 250523 remplazamos por ruc_cpe, razonsocial_cpe | para comprobantes
+			$sql_us = "SELECT s.idorg, se.idsede, se.razonsocial_cpe as nombre, se.ruc_cpe as ruc , s.direccion, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, '' as logo64, se.ubigeo, se.codigo_del_domicilio_fiscal
 				,se.sys_local, se.ip_server_local, se.pwa, se.url_api_fac
-				,se.email_cierre, se.metodo_pago_aceptados, se.habilita_verificacion_cpe, tcs.serie, se.id_api_comprobante
+				,se.email_cierre, se.metodo_pago_aceptados, se.habilita_verificacion_cpe, tcs.serie, se.id_api_comprobante				
 				from org as s 
 				inner JOIN sede as se on s.idorg = se.idorg 
 				left join (select idsede, serie from tipo_comprobante_serie tcs where idsede=$g_idsede and serie != 0 and estado = 0 limit 1) as tcs on tcs.idsede = se.idsede 

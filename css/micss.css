@@ -1832,3 +1832,18 @@ ul.list_add_item2 li {
 .btn-xsm {
     zoom: .8;
 }
+
+.input-venta-rapida-mod {
+    border: 2px solid #29b6f6;
+    border-radius: 5px;
+    background: white;
+    max-width: 35px;
+    text-align: center;
+    color: black;
+}
+
+.label-input {    
+    font-size: 10px;
+    color: grey;
+}
+

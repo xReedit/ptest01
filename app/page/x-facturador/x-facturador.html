@@ -236,6 +236,7 @@
 <script>
     var xThisFacturador, xPopupLoad, _arrCliente = [], _arrTotal=[], _arrItems = [], cnf_ComprobanteSel, xIdCliente_pago, _listValid = false, _formValid = false, _modificarCliente=false;
     var impresoraSelect = {}, IdTpConsumo=0, rptDoc, itemsConEstructuraPrint, arr_comprobante = [], _idregistro, txt_fecha_cpe_manual='', isSocket=true, _inputAutocompleteFac, xCartaSubtotales, comprobanteFormaPago, compItemProductoFac, _labelElemetFind = '', itemOptionTpSelectedCPE;
+    var processRumComprobanteF = false;
 
     function xIniFacturador() {
         xPopupLoad = document.getElementById('xLoad');
@@ -679,8 +680,13 @@
     }
 
     async function xProcesarComprobante() {    
+        if (xThisFacturador.proccessCPEF === true) { return}
+        
+
+        xThisFacturador.proccessCPEF = true
         if (xThisFacturador.cpe_show) { //si no  hay ningun cpe generado // para volver a imprimir o reimprimir sin generar uno nuevo                        
-            xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
+            await xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
+            xProcessCpeFinish()
             return;
         }
 
@@ -741,6 +747,7 @@
                 const rptIngresaCaja = await xShowIngresoVarios(arrCpeFac);
                 if ( !rptIngresaCaja ) {
                     console.log('nada cancelo');
+                    xProcessCpeFinish()
                     return;
                 }
             }
@@ -754,19 +761,27 @@
 
             if ( cnf_ComprobanteSel.idtipo_comprobante === '1' ) {
                 // imprime ticket
-                xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, null);
+                await xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, null);
+                xProcessCpeFinish()
                 return;
             }
             
             $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '102', data: arrCpeFac, arrItems: _arrItems } })
-            .done(function (ultimoIdCpeFac) {                
+            .done(async function (ultimoIdCpeFac) {                
                 _idregistro = [0, ultimoIdCpeFac]; //evalua si es array entonces sabra que esta yendo desde aca
                 // xMandarCocinarImpresionComprobante(_arrRpt.correlativo_comprobante, _idregistro);
-                xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
+                await xMandarCocinarImpresionComprobante(arr_comprobante.correlativo, _idregistro);
+                xProcessCpeFinish()
             });
 
         // });
     }    
+
+    function xProcessCpeFinish(){
+        setTimeout(() => {                     
+            xThisFacturador.proccessCPEF = false;
+        }, 1000);
+    }
 
     async function xMandarCocinarImpresionComprobante(correlativo, _idregistro) {   
         
@@ -941,6 +956,7 @@
             arrTotales: [],
             listImpresoras: [],
             formValid: boolean = false,
+            proccessCPEF: boolean = false,
             modificarCliente: boolean = false,
             cpe_show: boolean = false,
             fecha_manual: boolean = false,
@@ -959,6 +975,7 @@
             this.isShowMsjTelefono = false;
             this.isShowMsjBoletaRequireDNI = false;
             this.isShowIngresaCaja = false;
+            this.proccessCPEF = false;
             xThisFacturador = this;
             xIniFacturador();
             _cpSocketOpen();

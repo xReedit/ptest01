@@ -154,7 +154,6 @@ var xThisProPor;
 function xGoDetallePorcion(obj) {
     const _index = obj.dataId;    
     const _Porcion = xThisProPor.listPorciones.filter(x => x.idporcion === _index)[0];            
-    console.log('_index', _Porcion);
     xThisProPor.objPorcion = _Porcion
     xThisProPor.isShowDetallePorcion = true;
 }

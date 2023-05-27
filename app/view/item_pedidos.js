@@ -273,8 +273,33 @@ $(document.body).on('click', '.list_add_item ul li', function(e) {
 	handlerFnMiPedidoControl(e);
 }); // lista control de pedidos
 
-async function handlerFnMiPedidoControl(e) {
+
+// viene de venta rapida, cantidad modificable
+// venta x peso, no suma al dar clic en el text
+$(document.body).on('click', '#accordion div.xBtn_contet_li2 .input-venta-rapida-mod', (e) => {
+	e.target.select()
+	e.stopPropagation();
+	e.stopImmediatePropagation()
+}); // venta rapida
+
+$(document.body).on('keyup', '#accordion div.xBtn_contet_li2 .input-venta-rapida-mod', (e) => {	
+	let _cantValue = e.target.value;	
+	if (!e.target.validity.patternMismatch || e.key === ".")  {
+		const _objxBtn_contet_li2 = e.target.parentNode
+	
+		_cantValue = _cantValue == '' ? 0 : _cantValue		
+		handlerFnMiPedidoControl(_objxBtn_contet_li2, _cantValue)
+	} else {		
+		e.target.value = e.target.value.slice(0, -1)
+	}
+
+	e.stopPropagation();
+	e.stopImmediatePropagation()
+})
+
+async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {		
+	
 
 		var _nomClassXcant_li = 'xcant_li';
 		var _thisObj = e.target || e;
@@ -327,9 +352,12 @@ async function handlerFnMiPedidoControl(e) {
 
 			//si tiene subtiems lanza el popup opciones // en control de pedidos no lanza subopciones
 			if (isShowOpcionesPrimero && itemPedidos_objItemSelected.subitems) { 
-				xCompSubitems.openDialog(null, _itemIndex);  
-				return; 
+				if (itemPedidos_objItemSelected.subitems !== '0' ) {
+					xCompSubitems.openDialog(null, _itemIndex);  
+					return; 
+				}
 			} 
+			
 			// else {
 
 			// 	if (isShowOpcionesPrimero) { 
@@ -363,7 +391,7 @@ async function handlerFnMiPedidoControl(e) {
 		var xsigno= _thisObj.textContent != '+' && _thisObj.textContent != '-' ? _dataSetObj.signo : _thisObj.textContent; // signo si viene de ventarapida solo click en item suma //$(this).text(),
 		xsigno = isRowItemPedido ? '+' : xsigno;
 		var objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
-		, xcant = parseInt(objCant_cant) //parseInt(element_cant_li_sel.text()),		
+		, xcant = cant_venta_x_peso !== null ? cant_venta_x_peso : parseInt(objCant_cant) //cant_venta_x_peso si se calcula x peso //parseInt(element_cant_li_sel.text()),		
 		, xcant_max = itemPedidos_objItemSelected.stock_actual || 10000 // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
 		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
@@ -405,27 +433,33 @@ async function handlerFnMiPedidoControl(e) {
 		// 	xcant = parseInt(xArrayPedidoObj[xli_tipoconsumo][xli_iditem].cantidad) || 0;
 		// }
 
-		if(xsigno=='+'){
-			//omitir para seguir vendiendo sin stock, da change a despues			
-			if ( !isSocket || isRowItemPedido ) {
-				if(xcant<xcant_max){xcant++;}			
-			} else {
-				xSotockSocket = xcant_max > 0 ? parseFloat(xSotockSocket) - 1 : 0;
-				xSotockSocketRun = xcant_max > -1 ? parseFloat(xSotockSocketRun) - 1 : 0;
-				if(xcant_max > 0 ){xcant++;}
+
+		if (cant_venta_x_peso !== null) { // si es venta al peso descuenta al final
+			xcant = cant_venta_x_peso
+		} else {
+			if(xsigno=='+'){
+				//omitir para seguir vendiendo sin stock, da change a despues			
+				if ( !isSocket || isRowItemPedido ) {
+					if(xcant<xcant_max){xcant++;}			
+				} else {
+					xSotockSocket = xcant_max > 0 ? parseFloat(xSotockSocket) - 1 : 0;
+					xSotockSocketRun = xcant_max > -1 ? parseFloat(xSotockSocketRun) - 1 : 0;
+					if(xcant_max > 0 ){xcant++;}
+				}
+				xcantRunSocket = xcant;				 
 			}
-			xcantRunSocket = xcant;				 
-		}else{
-
-			xSotockSocket = xcant === 0 ? xcant_max : parseFloat(xSotockSocket) + 1;
-			xSotockSocketRun = xcant === 0 ? xcant_max : parseFloat(xSotockSocketRun) + 1;
-			xcant--;	
-			xcantRunSocket = xcant;					
-			xcant = xcant <= 0 ? 0 : xcant;
-			// xSotockSocket = xcant < 0 ? xSotockSocket : xSotockSocket + 1;
-			// xSotockSocket = xSotockSocket > xcant_max ? xcant_max : xSotockSocket;
+			else {
+	
+				xSotockSocket = xcant === 0 ? xcant_max : parseFloat(xSotockSocket) + 1;
+				xSotockSocketRun = xcant === 0 ? xcant_max : parseFloat(xSotockSocketRun) + 1;
+				xcant--;	
+				xcantRunSocket = xcant;					
+				xcant = xcant <= 0 ? 0 : xcant;
+				// xSotockSocket = xcant < 0 ? xSotockSocket : xSotockSocket + 1;
+				// xSotockSocket = xSotockSocket > xcant_max ? xcant_max : xSotockSocket;
+			}
 		}
-
+		
 		xPrecioTotal=parseFloat(parseFloat(xli_precio)*parseFloat(xcant)).toFixed(2);
 		// xArrayPedidoObj[xli_tipoconsumo][xli_iditem]={'idcategoria':xidcategoria, 'idseccion':$(element_li_add__print).attr('data-idseccion'), 'idseccion_index':$(element_li_add__print).attr('data-idseccionindex'), 'des_seccion':$(element_li_add__print).attr('data-cat'), 'iditem':xli_iditem, 'idtipo_consumo':xli_tipoconsumo, 'stock_actual': xStockActual, 'cantidad':xcant, 'precio':xli_precio, 'des':xli_des,
 		// 	'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,'precio_print':xPrecioTotal,'indicaciones':xli_des_ref,'iditem2':$(element_li_add__print).attr('data-iditem'), 'idimpresora':xli_idimpresora, 'idprocede':xli_idprocede, 'procede':xli_Procede, 'procede_index':xli_Procede_index, 'imprimir_comanda':ximprmir_comanda, 'cant_descontar':xcant_descontar, 'idalmacen_items':xli_idalmacen_items,  'visible':0};
@@ -457,6 +491,8 @@ async function handlerFnMiPedidoControl(e) {
 			,'subitem_cant_select': itemPedidos_objItemSelected.subitem_cant_select
 			,'subitems_view':itemPedidos_objItemSelected.subitems_view ? itemPedidos_objItemSelected.subitems_view : mySubItemView
 			,'isporcion': itemPedidos_objItemSelected.isporcion
+			,'venta_x_peso': itemPedidos_objItemSelected.venta_x_peso
+			,'idcarta_lista': itemPedidos_objItemSelected.idcarta_lista
 			};
 
 
@@ -466,6 +502,29 @@ async function handlerFnMiPedidoControl(e) {
 
 
 		element_cant_li_sel.text(xcant);
+
+		if ($(element_cant_li_sel).hasClass('input-modifica') ) {
+			if (xcant !== 0 ) {
+				$(element_cant_li_sel).val(xcant)
+			}
+			
+			// $(element_cant_li_sel).focus()
+			// $(element_cant_li_sel).select()
+		}
+
+		// si viene de venta rapida y es cantidad x peso 
+		// entonces no cambia stock, lo hace al finalizar la venta
+		if (_viene_venta_rapida == 1 && itemPedidos_objItemSelected.venta_x_peso == '1') {
+			xVerMipedidoVR();
+			try {				
+				e.stopPropagation();
+				e.stopImmediatePropagation()
+			} catch (error) {
+				
+			}
+			return;
+		}
+
 		if(xcant<=0){
 			xcant=0;element_cant_li_sel.removeClass('cant_fixed_li');
 			delete xArrayPedidoObj[xli_tipoconsumo][xli_iditem];}
@@ -1899,4 +1958,43 @@ function xUpdateItemNoStock(op, items) {
 		.done(x => {
 			console.log(x);
 		})
+}
+
+
+// 04042023
+// desde venta rapida
+// para los productos de venta x peso
+// envia los cambios al finalizar el registro de venta
+function xSendItemVentaxPesoVR(xarr_body) {
+	const _listItemVentaPeso = xarr_body.map(x => Object.values(x)).filter(x => x.length > 3)[0].filter(x => typeof x === 'object').filter(x => x.venta_x_peso === '1')
+	
+	if (_listItemVentaPeso.length === 0 ) return;
+
+	_listItemVentaPeso.map(item => {
+
+		if (item.cantidad !== 'ND') {
+			if (isSocket) {
+	
+				item.stock_actual = item.stock_actual - item.cantidad;
+				const itemNotifySocket = {
+					cantidad: item.cantidad,
+					idcarta_lista: item.idcarta_lista,
+					iditem: item.iditem,
+					isalmacen: item.procede.toString() === '0' ? 1 : 0,
+					isporcion: item.isporcion,
+					subitems: typeof item.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems) : itemPedidos_objItemSelected.subitems,
+					subitems_selected: item.subitems_selected,
+					sumar: true,
+					venta_x_peso: 1
+				}				
+	
+				_cpSocketEmitItemModificado(itemNotifySocket);
+	
+				// _cpSocketSavePedidoStorage(xArrayPedidoObj);
+	
+			}
+		}
+	
+		xcantRunSocket = true;
+	})
 }

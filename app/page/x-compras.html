@@ -107,14 +107,23 @@
 							<input type="text" id="idusuario" name="idusuario">
 						</form>
 				</div>
-				<div class="xEncanezadoCard xFondoRowIndigo2 xCursor xHoverOpaco xTransicion3s" id="div_proveedor" style="height:25px;">
+				<div class="xEncanezadoCard xFondoRowAmarillo4">
+					<p>Estos productos ingresa a:</p>
+					<select id="sel_alamcen" class="xTextRow2" inline></select>
+				</div>
+				<div class="xEncanezadoCard xHoverOpaco xTransicion3s" id="div_proveedor">
 					<p><strong>Datos del proveedor</strong></p>
 					<br>
-					<div class="xInvisible" id="div_ínput">
+					<div id="div_ínput">
 						<form id="frm_proveedor" method="post" action="#">
-							<input type="text" id="descripcion" name="descripcion" placeholder="Nombre / Razon social" onChange="conMayusculas(this)" class="xMiInput xPasarEnter2" style="width:40%" inline>
-							<input type="text" id="dni" name="dni" placeholder="DNI / RUC" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" inline>
-							<input type="text" id="direccion" name="direccion" placeholder="Direccion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)">						
+							<div>									
+								<div>
+									<input type="text" id="descripcion" name="descripcion" placeholder="🔍 Nombre / Razon social" onChange="conMayusculas(this)" class="xMiInput xPasarEnter2" style="width: 50%; min-width: 250px;" inline>
+								</div>
+								<input type="text" id="dni" name="dni" placeholder="DNI / RUC" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" style="width: 50%; min-width: 200px;" inline>
+								<input type="text" id="telefono" name="telefono" placeholder="Telefono" onChange="conMayusculas(this)" class="xMiInput xPasarEnter2" style="width: 44%; min-width: 200px;" inline>
+							</div>
+							<input type="text" id="direccion" name="direccion" placeholder="Direccion" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)">
 							<div class="xInvisible">
 								<input type="text" id="idorg" name="idorg">
 								<input type="text" id="idsede" name="idsede">
@@ -123,12 +132,9 @@
 						</form>
 						<br><br>
 					</div>				
-				</div>
-				<div class="xEncanezadoCard xFondoRowAmarillo4">
-					<p>Estos productos ingresa a:</p>
-					<select id="sel_alamcen" class="xTextRow2" inline></select>
-				</div>
+				</div>				
 				<div class="xContentCard">
+					
 					<table class="xtable4" width="100%" id="tb_input" data-TablaName="producto_historial_precio">
 						<thead>
 							<th class="xSinBorde" width="10px">Cant</th>
@@ -317,7 +323,7 @@ function xIniCompras(){
 	});
 
 	xValPago.addEventListener('xCancelarCerrar', function (e) {		
-		xThis.$.dialog_pago.close()
+		xThis.$.dialog_pago.close()	
 	});
 
 	// xValPago.addEventListener('xListoRegistraPago', function (e) {	
@@ -325,11 +331,11 @@ function xIniCompras(){
 	// 	xThis.$.dialog_pago.close()
 	// });
 
-	$("#div_proveedor").on('click',function(e){
-		$(this).css('height','80px')
-		$(this).find('#div_ínput').removeClass('xInvisible');
-		$("#sel_proveedor").focus();
-	})
+	// $("#div_proveedor").on('click',function(e){
+	// 	$(this).css('height','80px')
+	// 	$(this).find('#div_ínput').removeClass('xInvisible');
+	// 	$("#sel_proveedor").focus();
+	// })
 
 	$("#dialog_pago").on('iron-overlay-opened',function(){component_pago_pro.setFocusTxt();})
 
@@ -549,8 +555,8 @@ function xNuevaCompra(){
 	dialog_pago.close();
 	xThis.habilitarPago = false;
 
-	$("#div_proveedor").css('height','30px');
-	$("#div_proveedor #div_ínput").addClass('xInvisible');
+	// // $("#div_proveedor").css('height','30px');
+	// $("#div_proveedor #div_ínput").addClass('xInvisible');
 
 }
 function xSumarTotalLista(){
@@ -709,6 +715,7 @@ function xCargarProveedores(){
 		        $("#frm_proveedor #idproveedor").val(xsel_proveedor);
 		        $("#frm_proveedor #direccion").val(ui.item.direccion);
 		        $("#frm_proveedor #dni").val(ui.item.dni);
+				$("#frm_proveedor #telefono").val(ui.item.telefono);
 		        return false;
 		    },
 		    focus:function(event, ui){return false;},

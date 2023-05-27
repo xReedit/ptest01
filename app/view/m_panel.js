@@ -377,6 +377,8 @@ async function xOpenPage(xop, parametro){
 			const _urlRRHH = 'http://127.0.0.1:5173/login?us=' + _data;
 			window.open(_urlRRHH, "RRHH");// produccion
 		break;
+		case 54:			
+			xruta = '/proveedores'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

@@ -25,31 +25,61 @@
 				<div class="xBoton2 xVerde" onclick="xSubirFileAlmacen();">Listo, subir archivo e ingresar</div>				
 			</div>
 		</paper-dialog>
-		<paper-dialog id="dialog_add_sede" style="max-width: 550px; overflow: auto;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog id="dialog_add_sede" class="dialog_redondo" style="max-width: 550px; overflow: auto;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h4>DATOS DE SEDE</h4>
 				<form id="frm_sede">
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION" onChange="conMayusculas(this)" id="nombre" name="nombre" espaciar required>
-					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required> -->
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="ciudad" name="ciudad" espaciar required>
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required>
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="ESLOGAN" id="eslogan" name="eslogan" maxlength="100" espaciar>
-					<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas" espaciar>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion"
+						name="direccion" espaciar required>
+					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" id="direccion" name="direccion" espaciar required> -->															
+
+					<div class="d-flexx">
+						<div>
+							<label for="ciudad" class="label-input">Ciudad</label>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="ciudad" name="ciudad" required>
+							<label for="eslogan" class="label-input">Eslogan</label>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="ESLOGAN" id="eslogan" name="eslogan" maxlength="100"
+								>
+						</div>
+						<div>			
+							<label for="mesas" class="label-input">Número de Mesas</label>
+							<input type="number" class="xMiInput xPasarEnter2" placeholder="NUMERO DE MESAS" id="mesas" min="1" name="mesas"
+								>
+							<label for="telefono" class="label-input">Telefono</label>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" id="telefono" name="telefono">
+						</div>
+					</div>		
+					
+					<br>
+					<div>
+						<p class="fw-600">Razón Social para comprobantes electronicos.</p>						
+						<div>
+							<label for="ruc_cpe" class="label-input">Ruc</label>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="RUC" onChange="conMayusculas(this)" id="ruc_cpe"
+								name="ruc_cpe" espaciar required>
+
+							<label for="razonsocial_cpe" class="label-input">Razón Social</label>
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="RAZON SOCIAL" onChange="conMayusculas(this)" id="razonsocial_cpe"
+								name="razonsocial_cpe" espaciar required>
+						</div>						
+					</div>
+					
 										
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar>					
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO DEL DOMICILIO FISCAL" id="codigo_del_domicilio_fiscal" name="codigo_del_domicilio_fiscal" espaciar>
-					<br><br>
-					<label for="ubigeo" class="xColorRow_Plomo">Telefono</label>
-					<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" id="telefono" name="telefono" espaciar>
+					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar> -->
+					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO DEL DOMICILIO FISCAL" id="codigo_del_domicilio_fiscal" name="codigo_del_domicilio_fiscal" espaciar> -->
+					<!-- <br><br> -->
+					<!-- <label for="ubigeo" class="xColorRow_Plomo">Telefono</label> -->
+					<!-- <input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" id="telefono" name="telefono" espaciar> -->
 					<div class="xInvisible">
 						<input type="text" id="idsede" name="idsede">
 						<input type="text" id="idorg" name="idorg" value$="[[xt_org]]">
 					</div>
 
 
-					<br><br><br>
+					<br><br>
 					<p class="fw-600">Email donde se enviaran los cierres de caja.</p>
-					<p class="text-secondary">Puede separar por comas ej. gerente@gmail.com, admin_local@hotmail.com </p>
+					<p class="text-secondary fs-12">Puede separar por comas ej. gerente@gmail.com, admin_local@hotmail.com </p>
 					<input type="text" class="xMiInput xPasarEnter2" placeholder="EMAIL" id="email_cierre" name="email_cierre" espaciar >					
 					
 				</form>
@@ -834,6 +864,16 @@
 			</div>
 		</div>
 	</template>
+
+
+	<style>
+		.label-input {
+			margin-left: 5px;
+			font-size: 10px;
+			color: grey;
+		}
+	</style>
+
 </dom-module>
 
 <script type="text/javascript" src="config_comporbantes.js"></script>
@@ -1954,8 +1994,13 @@ function xModificarSede(obj){
 	$("#frm_sede #eslogan").val(xThisConfig.dt_sede[xids].eslogan);
 	$("#frm_sede #mesas").val(xThisConfig.dt_sede[xids].mesas);
 	$("#frm_sede #telefono").val(xThisConfig.dt_sede[xids].sedetelefono);
-	$("#frm_sede #ubigeo").val(xThisConfig.dt_sede[xids].ubigeo);
-	$("#frm_sede #codigo_del_domicilio_fiscal").val(xThisConfig.dt_sede[xids].codigo_del_domicilio_fiscal);
+
+	$("#frm_sede #ruc_cpe").val(xThisConfig.dt_sede[xids].ruc_cpe);
+	$("#frm_sede #razonsocial_cpe").val(xThisConfig.dt_sede[xids].razonsocial_cpe);
+
+	// $("#frm_sede #ubigeo").val(xThisConfig.dt_sede[xids].ubigeo);
+	// $("#frm_sede #codigo_del_domicilio_fiscal").val(xThisConfig.dt_sede[xids].codigo_del_domicilio_fiscal);
+
 	$("#frm_sede #email_cierre").val(xThisConfig.dt_sede[xids].email_cierre);
 	dialog_add_sede.open();
 

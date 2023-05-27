@@ -228,5 +228,52 @@
             $sql="call procedure_registra_pago_repartidor($g_idsede,$g_us,$postBody->id,'$list')";
             $bd->xConsulta($sql);
             break;
+        case 21: // load lista proveedores
+            $sql="select p.*, count(c.idcompra) num_compras from proveedor p
+                    left join compra c on c.idsede = p.idsede and p.idproveedor = c.idproveedor
+                where p.idsede = $g_idsede and p.estado = 0
+                GROUP by p.idproveedor 
+                order by num_compras desc limit 50";            
+            $bd->xConsulta($sql);
+            break;
+        case 2101: // lista de compras por proveedor
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="select c.idcompra, c.f_compra, c.total, c.f_pago, c.nota_de_compra 
+                    ,a.descripcion nom_almacen, tp.descripcion as des_tipo_pago
+                    ,u.nombres nom_usuario
+                from compra c 
+                    inner join almacen a on a.idalmacen = c.idalmacen 
+                    inner join tipo_pago tp on tp.idtipo_pago = c.idtipo_pago 
+                    inner join usuario u on c.idusuario = u.idusuario 
+                where c.idproveedor = $postBody->idproveedor and c.idsede = $g_idsede
+                order by c.idcompra desc";
+
+            $bd->xConsulta($sql);
+            break;
+        case 2102: // listado de las 30 ultimas compras
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="select ci.idcompra_items, ci.idcompra, ci.idproducto, p.descripcion nom_producto
+                ,format(ci.punitario, 2) punitario, sum(ci.cantidad) cantidad, format(sum(ci.ptotal), 2) total
+            from compra_items ci 
+                inner join compra c on c.idcompra = ci.idcompra 
+                inner join producto p on p.idproducto = ci.idproducto 
+            where c.idsede = $g_idsede and c.idproveedor = $postBody->idproveedor
+            GROUP by  ci.idproducto
+            order by cantidad desc, c.idcompra desc limit 50";
+
+            $bd->xConsulta($sql);
+            break;
+        case 2103: //lista de productos por idcompra
+            $postBody = json_decode(file_get_contents('php://input'));
+            $sql="select ci.idcompra_items, ci.idcompra, ci.idproducto, p.descripcion nom_producto
+                ,format(ci.punitario, 2) punitario, ci.cantidad, format(ci.ptotal, 2) total
+            from compra_items ci 
+                inner join compra c on c.idcompra = ci.idcompra 
+                inner join producto p on p.idproducto = ci.idproducto 
+            where c.idcompra = $postBody->idcompra and c.idsede = $g_idsede
+            order by total desc";
+
+            $bd->xConsulta($sql);
+            break;
     }
 ?>    
