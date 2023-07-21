@@ -616,6 +616,8 @@ function xIniVentaRapida(){
 
 		
 
+		// Agregar el evento de desplazamiento y llamar a la función para deshabilitar la actualización
+		disableScrollRefresh()
 		
 
 		$(document.body).on('change', '#select_ulTPC', function(e) {
@@ -2428,6 +2430,7 @@ Polymer({
 		document['onkeydown'] = empty;
 		clearInterval(xGeneralRelojUpdateItemsSolo);
 		_cpSocketClose();
+		enableScrollRefresh()
 
 		$("#x-main").addClass('xContent');
 		$("#x-main").addClass('content');

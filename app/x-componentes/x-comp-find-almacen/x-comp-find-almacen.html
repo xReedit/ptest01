@@ -6,7 +6,7 @@
 <dom-module id="x-comp-find-almacen">
 	<template is="dom-bind">
 		<div>
-			<select id="compFindListAlmacen" class="xTextRow2 xCursor" onchange="selectOptionAlmacen()">				
+			<select id="compFindListAlmacen" class$="[[clasecss]]" onchange="selectOptionAlmacen()">				
 				<!-- <option value="0">NINGUNO</option> -->
 				<template is="dom-repeat" items="{{list}}" as="categoria">
 					<option value="[[index]]">[[categoria.descripcion]] </option>
@@ -19,6 +19,8 @@
 		var xThisComAlmacen;
 
 		function getAllTipoAlmacen() {
+			xThisComAlmacen.clasecss = xThisComAlmacen.clasecss === '' ? 'xTextRow2 xCursor' : xThisComAlmacen.clasecss;
+
 			$.ajax({
 					type: 'POST',
 					url: '../../bdphp/log_componentes.php?op=11'					
@@ -55,6 +57,7 @@
 					reflectToAttribute: true,
 					value: false
 				},
+				clasecss: String,
 				list: [],
 				list_almacen: {
 					type: Object,

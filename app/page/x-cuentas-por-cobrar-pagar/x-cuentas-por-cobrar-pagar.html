@@ -1,6 +1,7 @@
 <link rel="import" href="../../x-componentes/pagination-input/pagination-input.html">
 
 <dom-module id="x-cuentas-por-cobrar-pagar">
+	<link rel="import" href="./x-cuentas-por-cobrar.html">
 	<template is="dom">
 
 		<paper-dialog class="dialog_redondo" id="dialog_borrar" entry-animation="scale-up-animation"
@@ -87,23 +88,43 @@
 		</paper-dialog>
 
 		<br><br>
-		<div class="xMiCard xradius" style="width:90%">
+		<div class="xMiCard xradius" style="width:90%; max-width: 1200px;">
 			<!-- <div class="xEncanezadoCard xFondoRowAmarillo2">
 				<h3>Otros Ingresos.</h3>
 				<p>Registra todos los ingresos que no provienen de venta directa, es decir servicios prestados dentro o fuera del
 					local, como por ejemplo: Catering, alquiler del local, etc.</p>
 			</div> -->
-			<div class="xContentCard" style="height: 100%;">
-				<br>
-				<paper-tabs selected="{{selected}}" id="tab_cpc">
+			<br>
+			<div class="xContentCard" style="height: 100%;">				
+				<div class="div_container_cuentas mt-3 mb-3" hidden$="[[!showBtnPrincipales]]">
+					<div class="div_cuentas" onclick="showPanelOptionListCuentasCobrarPagar(0)">
+						<img src="../../../images/001-por-pagar.png" alt="img-por-pagar">
+						<p class="fw-600 fs-18">Cuentas por <strong class="text-warning">Pagar</strong></p>
+						<p>Compras realizadas <br>a los proveedores al credito.</p>
+					</div>
+
+					<div class="div_cuentas" onclick="showPanelOptionListCuentasCobrarPagar(1)">
+						<img src="../../../images/002-por-cobrar.png" alt="img-por-pagar">
+						<p class="fw-600 fs-18">Cuentas por <strong class="text-primary">Cobrar</strong></p>
+						<p>Consumo de clientes <br>registradas al credito.</p>
+					</div>
+				</div>
+
+				<!-- <paper-tabs selected="{{selected}}" id="tab_cpc">
 					<paper-tab>Cuentas por Pagar</paper-tab>
 					<paper-tab>Cuentas por Cobrar</paper-tab>
-				</paper-tabs>
-				<div class="xLinea2"></div>
-				<br><br>
-				<iron-pages selected="{{selected}}">
+				</paper-tabs> -->
+				<!-- <div class="xLinea2"></div> -->
+				<!-- <br><br> -->
+				<iron-pages selected="{{selected}}" hidden$="[[showBtnPrincipales]]">
 					<div id="div_cuentas_pagar">
-						<h4>Cuentas por pagar</h4>
+						<div class="d-flexx justify-content-between">
+							<h4>Cuentas por pagar</h4>
+							<button class="btn btn-sm btn-secondary" onclick="xGoBackListaCuentasCobrarPrincipal()">
+								<i class="fa fa-arrow-left mr-1"></i>
+								Atras
+							</button>
+						</div>
 						<span>Compras realizadas al credito. <strong><a class="xColorRow_verde xCursor" onclick="xVerHistorialCuentasPagadas()">Ver historial
 									de cuentas
 									pagadas</a></strong></span>
@@ -153,7 +174,13 @@
 					</div>
 
 					<div id="div_cuentas_cobrar">
-						<div class="xDerecha">
+						
+
+						<x-cuentas-por-cobrar></x-cuentas-por-cobrar>
+
+						<!-- <br><br><br><br><br><br><br><br><br><br><br><br> -->
+
+						<!-- <div class="xDerecha">
 							<button class="xBoton2 xAzul" disabled$="[[!habilitarBtnPagado]]" onclick="xRegistrarComoPagado();">Registrar como
 								pagado</button>
 						</div>
@@ -205,7 +232,7 @@
 						<div>
 							<pagination-input id="paginator_cobrar" date-log="cobrar" current-page="1" page-count="10"
 								current-page-changed="onChangePagination($event)"></pagination-input>
-						</div>
+						</div> -->
 						<br>
 					</div>
 
@@ -254,23 +281,42 @@
 			</div>
 		</div>
 	</template>
+
+	<style>
+		.div_container_cuentas {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+
+		.div_cuentas {
+			text-align: center;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			padding: 15px;
+			margin: 10px;
+			cursor: pointer;
+		}
+
+		.div_cuentas:hover{background:#E3F2FD}
+	</style>
 </dom-module>
 
 <script>
 	var xThisCpc, sel_idTipoIngreso, xObjBorrar, data_pagination={}, p_rows=0, xdebounce, xe_debounce=false;
 
 
-	function xIniPagination() {
-		xThisCpc.$.paginator.currentPage = 1;
-		xThisCpc.$.paginator.pageRows = p_rows;
-		xThisCpc.$.paginator.listRows = [30,60,90,120];
+	// function xIniPagination() {
+	// 	xThisCpc.$.paginator.currentPage = 1;
+	// 	xThisCpc.$.paginator.pageRows = p_rows;
+	// 	xThisCpc.$.paginator.listRows = [30,60,90,120];
 
-		xThisCpc.$.paginator_cobrar.currentPage = 1;
-		xThisCpc.$.paginator_cobrar.pageRows = p_rows;
-		xThisCpc.$.paginator_cobrar.listRows = [30,60,90,120];
+	// 	xThisCpc.$.paginator_cobrar.currentPage = 1;
+	// 	xThisCpc.$.paginator_cobrar.pageRows = p_rows;
+	// 	xThisCpc.$.paginator_cobrar.listRows = [30,60,90,120];
 
 		
-	}
+	// }
 
 	function xIniCpc() {
 
@@ -284,7 +330,7 @@
 		
 		xThisCpc.habiltarBtnPago = false;
 		
-		xIniPagination();
+		// xIniPagination();
 		
 		getAllListCuentasPagar();
 
@@ -319,11 +365,11 @@
 			xloadHistorialCuentasPagar();
 		});
 
-		xThisCpc.$.paginator_cobrar.addEventListener('page-limit-change', (e) => {
-			data_pagination = e.detail.value; // datos del componente		
-			// p_desde = data_pagination.pageDesde; // para el # de fila		
-			xloadCuentasCobrar();
-		});
+		// xThisCpc.$.paginator_cobrar.addEventListener('page-limit-change', (e) => {
+		// 	data_pagination = e.detail.value; // datos del componente		
+		// 	// p_desde = data_pagination.pageDesde; // para el # de fila		
+		// 	xloadCuentasCobrar();
+		// });
 
 		$(document.body).on('click', '#table_cobrar tr', function(e) {
             getIndexRow(this,e);
@@ -334,11 +380,11 @@
         });
 
 		$("#tab_cpc").on('iron-select',function(){
-		console.log('iron ', xThisCpc.selected);
+		// console.log('iron ', xThisCpc.selected);
 		switch(xThisCpc.selected){
 			case 1: // cuentas por cobrar
 				data_pagination={}, p_rows=0;
-				xIniPagination();
+				// xIniPagination();
 				xloadCuentasCobrar();
 				break;
 			// case 2:
@@ -377,24 +423,24 @@
 	function getAllListCuentasPagar() {
 		// xPopupLoad.xopen();
 
-		$.ajax({
-			type: 'GET',
-			url: '../../bdphp/log_005.php?op=3',				
-		})
-		.done((res) => {
-			const _res = JSON.parse(res);
-			console.log(_res.datos);
-			var sumTotal = 0, sumTotalHistorialCP = 0;
-			xThisCpc.ListCuentasPagar = _res.datos.map(x => {
-				sumTotal += parseFloat(x.importe);
-				// sumTotalHistorialCP += parseFloat(x.total_total);
-				x.resaltar = x.faltan < 0 ? true : false;
-				return x;
-			});
-			xThisCpc.sumListCuentasPagar = numeroConComas(sumTotal.toFixed(2));
-			// xThisCpc.sumListHistorialCuentasPagar = numeroConComas(sumTotalHistorialCP.toFixed(2));
-			// xPopupLoad.xclose();
-		});
+		// $.ajax({
+		// 	type: 'GET',
+		// 	url: '../../bdphp/log_005.php?op=3',				
+		// })
+		// .done((res) => {
+		// 	const _res = JSON.parse(res);
+		// 	console.log(_res.datos);
+		// 	var sumTotal = 0, sumTotalHistorialCP = 0;
+		// 	xThisCpc.ListCuentasPagar = _res.datos.map(x => {
+		// 		sumTotal += parseFloat(x.importe);
+		// 		// sumTotalHistorialCP += parseFloat(x.total_total);
+		// 		x.resaltar = x.faltan < 0 ? true : false;
+		// 		return x;
+		// 	});
+		// 	xThisCpc.sumListCuentasPagar = numeroConComas(sumTotal.toFixed(2));
+		// 	// xThisCpc.sumListHistorialCuentasPagar = numeroConComas(sumTotalHistorialCP.toFixed(2));
+		// 	// xPopupLoad.xclose();
+		// });
 	}
 
 	
@@ -470,8 +516,7 @@
 			dt.datos.map(x => { 
 				sumTotalDetalle += parseFloat(x.importe.replace(',',''));
 			});
-			xThisCpc.sumTotalDetalleCP = numeroConComas(sumTotalDetalle.toFixed(2));
-			console.log(dt.datos);		
+			xThisCpc.sumTotalDetalleCP = numeroConComas(sumTotalDetalle.toFixed(2));			
 		})
 	}
 
@@ -501,32 +546,32 @@
 
 	function xloadHistorialCuentasPagar() {
 		
-		const p_filter = xThisCpc.$.txt_buscar_re.value;
-		data_pagination.pageFilter = p_filter;
+		// const p_filter = xThisCpc.$.txt_buscar_re.value;
+		// data_pagination.pageFilter = p_filter;
 
-		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=303', data:{pagination:data_pagination}})
-		.done( function (res) {
-			// console.log(res);
-			res = res.split('**');
-			p_rows = res[1];
-			res = $.parseJSON(res[0]);			
-			xdt_h=res;			
+		// $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=303', data:{pagination:data_pagination}})
+		// .done( function (res) {
+		// 	// console.log(res);
+		// 	res = res.split('**');
+		// 	p_rows = res[1];
+		// 	res = $.parseJSON(res[0]);			
+		// 	xdt_h=res;			
 
-			if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}			
+		// 	if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}			
 
-			xThisCpc.ListHistorialCuentasPagar = xdt_h.datos.map(x => {			
-				x.resaltar = x.faltan > 0 ? true : false; 
-				return x; 
-			});
+		// 	xThisCpc.ListHistorialCuentasPagar = xdt_h.datos.map(x => {			
+		// 		x.resaltar = x.faltan > 0 ? true : false; 
+		// 		return x; 
+		// 	});
 
 
-			// xThisCpc.ListHistorialCuentasPagar = xdt_h.datos;
+		// 	// xThisCpc.ListHistorialCuentasPagar = xdt_h.datos;
 
-			p_upadate = false;  // para que no vuelva a llamar esta funcion
-			xThisCpc.$.paginator.pageRows = p_rows;
+		// 	p_upadate = false;  // para que no vuelva a llamar esta funcion
+		// 	xThisCpc.$.paginator.pageRows = p_rows;
 
-			// xPopupLoad.xclose();
-		});
+		// 	// xPopupLoad.xclose();
+		// });
 	}
 
 	function xfiltrarDatos_re(val) {
@@ -550,34 +595,34 @@
 
 	function xloadCuentasCobrar() {
 		
-		const p_filter = xThisCpc.$.txt_buscar_re_cobrar.value;
-		data_pagination.pageFilter = p_filter;
+		// const p_filter = xThisCpc.$.txt_buscar_re_cobrar.value;
+		// data_pagination.pageFilter = p_filter;
 
-		$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=304', data:{pagination:data_pagination}})
-		.done( function (res) {
-			// console.log(res);
-			res = res.split('**');
-			p_rows = res[1];
-			res = $.parseJSON(res[0]);			
-			xdt_h=res;			
+		// $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=304', data:{pagination:data_pagination}})
+		// .done( function (res) {
+		// 	// console.log(res);
+		// 	res = res.split('**');
+		// 	p_rows = res[1];
+		// 	res = $.parseJSON(res[0]);			
+		// 	xdt_h=res;			
 
-			if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}			
+		// 	if(!xdt_h.success){xPopupLoad.xclose();alert(xdt_h.error);return;}			
 
-			var sumTotalImporte=0;
-			xdt_h.datos.map(x => {
-				sumTotalImporte += parseFloat(x.importe);
-			});
-			xThisCpc.sumListCuentasCobrar = numeroConComas(sumTotalImporte.toFixed(2));
-			xThisCpc.ListCuentasCobrar = xdt_h.datos;
+		// 	var sumTotalImporte=0;
+		// 	xdt_h.datos.map(x => {
+		// 		sumTotalImporte += parseFloat(x.importe);
+		// 	});
+		// 	xThisCpc.sumListCuentasCobrar = numeroConComas(sumTotalImporte.toFixed(2));
+		// 	xThisCpc.ListCuentasCobrar = xdt_h.datos;
 
 
-			// xThisCpc.ListHistorialCuentasPagar = xdt_h.datos;
+		// 	// xThisCpc.ListHistorialCuentasPagar = xdt_h.datos;
 
-			p_upadate = false;  // para que no vuelva a llamar esta funcion
-			xThisCpc.$.paginator_cobrar.pageRows = p_rows;
+		// 	p_upadate = false;  // para que no vuelva a llamar esta funcion
+		// 	xThisCpc.$.paginator_cobrar.pageRows = p_rows;
 
-			// xPopupLoad.xclose();
-		});
+		// 	// xPopupLoad.xclose();
+		// });
 	}
 	
 	function xRegistrarComoPagado() {
@@ -591,6 +636,16 @@
 		.done( function (res) {
 			xloadCuentasCobrar();
 		})
+	}
+
+	function showPanelOptionListCuentasCobrarPagar(op) {
+		xThisCpc.showBtnPrincipales = false;
+		xThisCpc.selected = op;
+		// xloadCuentasCobrar();
+	}
+
+	function xGoBackListaCuentasCobrarPrincipal() {
+		xThisCpc.showBtnPrincipales = true;
 	}
 
 
@@ -610,8 +665,10 @@
 			sumListCuentasCobrar: String,
 			habilitarBtnPagado: false,
 			habiltarBtnPago: false,
+			showBtnPrincipales: Boolean
 		},
 		attached: function () {
+			this.showBtnPrincipales = true;
 			this.selected = 0,
 			this.habilitarBtnPagado = false;
 			xThisCpc = this;

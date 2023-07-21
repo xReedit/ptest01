@@ -3493,14 +3493,19 @@
 			$bd->xConsulta($sql);
 			break;
 		case 2103://ver pedidos despachados
-			$sql="
-				SELECT p.idpedido,p.correlativo_dia,p.numpedido,p.nummesa,p.total,IF(p.referencia='','-',p.referencia) AS referencia,pd.despachado_tiempo FROM pedido AS p
-					INNER JOIN pedido_detalle AS pd using(idpedido)
-					INNER JOIN seccion AS s using(idseccion)
-				WHERE (p.idorg=".$g_ido." AND p.idsede=".$g_idsede.") AND p.cierre=0 AND pd.despachado=1 AND s.idimpresora IN (".$_POST['idzona'].")
-				GROUP BY p.idpedido
-				ORDER BY p.fecha desc, TIME_FORMAT(pd.despachado_hora, '%H:%i:%s') desc
-			";
+			// $sql="
+			// 	SELECT p.idpedido,p.correlativo_dia,p.numpedido,p.nummesa,p.total,IF(p.referencia='','-',p.referencia) AS referencia,pd.despachado_tiempo FROM pedido AS p
+			// 		INNER JOIN pedido_detalle AS pd using(idpedido)
+			// 		INNER JOIN seccion AS s using(idseccion)
+			// 	WHERE (p.idorg=".$g_ido." AND p.idsede=".$g_idsede.") 
+			// 		AND p.cierre=0 AND pd.despachado=1 
+			// 		AND s.idimpresora IN (".$_POST['idzona'].")
+			// 	GROUP BY p.idpedido
+			// 	ORDER BY p.fecha desc, TIME_FORMAT(pd.despachado_hora, '%H:%i:%s') desc
+			// ";
+			// $bd->xConsulta($sql);
+
+			$sql="CALL procedure_zona_despacho_pedidos_despachados(".$g_idsede.",'".$_POST['idzona']."')";
 			$bd->xConsulta($sql);
 			break;
 		case 2104://ver detalle del pedido despachado

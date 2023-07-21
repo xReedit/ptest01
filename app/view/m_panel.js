@@ -241,7 +241,7 @@ async function xOpenPage(xop, parametro){
 		xPopupLoad.titulo = "Guardando ...";
 	}, 500);
 
-	console.log('paso el router ', aapasa);
+	// console.log('paso el router ', aapasa);
 	xop = parseInt(xop);
 	if(parametro==null){parametro='';}
 	var xruta='';
@@ -372,13 +372,29 @@ async function xOpenPage(xop, parametro){
 		case 51: xruta = '/ticket_rapido'; break;
 		case 52: xruta = '/porciones'; break;
 		case 53: 
-				const _data = btoa(JSON.stringify(getDataUsRRHH()))
-			console.log('_data', _data);
-			const _urlRRHH = 'http://127.0.0.1:5173/login?us=' + _data;
+			// console.log('getDataUsRRHH()', getDataUsRRHH());
+			const _data = btoa(JSON.stringify(getDataUsRRHH()))
+			// dev
+			// const _urlRRHH = 'http://127.0.0.1:5173/login?us=' + _data;
+			// produccion
+			const _urlRRHH = 'https://recursos-humanos.papaya.com.pe/login?us=' + _data;
+			
 			window.open(_urlRRHH, "RRHH");// produccion
 		break;
 		case 54:			
 			xruta = '/proveedores'; break;
+		case 55: 
+			// chat bot
+			// console.log('getDataUsRRHH()', getDataUsRRHH());
+			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
+			// dev
+			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			// produccion
+			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			
+			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
+		break;
+		case 56: xruta = '/distribuicion_recibe'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

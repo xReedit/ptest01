@@ -1,5 +1,6 @@
 <link rel="import" href="../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
 <link rel="import" href="../x-componentes/pagination-input/pagination-input.html">
+<link rel="import" href="./x-compras-list.html">
 <dom-module id="x-compras">
 	<template>
 		<paper-dialog id="dialog_additem_pro" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -169,12 +170,25 @@
 					</div>
 					<br><br>
 				</div>
+
+
+				
 			</div>
 
 
 
 			<!-- list compras -->
 			<div id="divList" style="padding: 30px;">
+
+				<div class="d-flexx justify-content-between align-content-center">
+					<p class="fw-600 fs-20">Listado de compras</p>
+					<button class="btn btn-sm btn-primary" onclick="goCompra()">+ Nuevo</button>
+				</div>
+				<br>
+				
+				<x-compras-list id="compListCompras"></x-compras-list>
+				
+				<!-- <br><br><br><br><br><br>
 				<p class="fw-600 fs-20">Listado de compras</p>
 				<br>
 				<div class="d-flexx justify-content-between align-content-center">				
@@ -218,7 +232,7 @@
 					</div>                             
 					<pagination-input id="paginator" class="xDerecha" current-page="1" page-count="5" current-page-changed="onChangePagination($event)"></pagination-input>                                
 				</div>
-
+ -->
 
 				
 			</div>
@@ -258,7 +272,7 @@ function xIniCompras(){
 	//xLoadFamilias();
 	//xLoadProveedores();
 	//xVerificarSession();
-	xIniPagination();
+	// xIniPagination();
 
 	xPopupLoad=document.getElementById('xLoad');
 	xm_LogChequea(function(){
@@ -339,21 +353,21 @@ function xIniCompras(){
 
 	$("#dialog_pago").on('iron-overlay-opened',function(){component_pago_pro.setFocusTxt();})
 
-	$("#txt_fecha").on('change', function () {
-            var d = $(this).val().split('-');            
-            p_fecha = d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
-            xThis.$.paginator.currentPage = 1;            
-            xLoadCpeEmitidos('6');
-            // xIniPagination();
-        });
+	// $("#txt_fecha").on('change', function () {
+    //         var d = $(this).val().split('-');            
+    //         p_fecha = d[1]===undefined ? '' : d[2] + '/' + d[1] + '/' + d[0];                        
+    //         // xThis.$.paginator.currentPage = 1;            
+    //         // xLoadCpeEmitidos('6');
+    //         // xIniPagination();
+    //     });
 
-	xThis.$.paginator.addEventListener('page-limit-change', (e) => {
-            // console.log('page-limit-change', e.detail.value);
-            data_pagination = e.detail.value; // datos del componente
-            p_desde = data_pagination.pageDesde; // para el # de fila            
-            lastPos = $(window).scrollTop();
-            xLoadCpeEmitidos('6');            
-        }); 
+	// xThis.$.paginator.addEventListener('page-limit-change', (e) => {
+    //         // console.log('page-limit-change', e.detail.value);
+    //         data_pagination = e.detail.value; // datos del componente
+    //         p_desde = data_pagination.pageDesde; // para el # de fila            
+    //         lastPos = $(window).scrollTop();
+    //         xLoadCpeEmitidos('6');            
+    //     }); 
            
 }
 
@@ -535,6 +549,9 @@ function xGuardarRegistroCompra(){
 			dialog_registrar_pago.close();
 			xNuevaCompra();
 			xLoadCpeEmitidos();
+
+			const _compListCompras = document.getElementById('compListCompras');
+			_compListCompras.refresh()
 		})
 	})
 }
@@ -755,47 +772,47 @@ function xCargarFamiliaInput(){
 		});
 }
 
-function xIniPagination() {        
-	xThis.$.paginator.currentPage = 1;
-	xThis.$.paginator.pageRows = p_rows;
-	xThis.$.paginator.listRows = [10,20,30,40];
-    }
+// function xIniPagination() {        
+// 	xThis.$.paginator.currentPage = 1;
+// 	xThis.$.paginator.pageRows = p_rows;
+// 	xThis.$.paginator.listRows = [10,20,30,40];
+//     }
 
 function xLoadCpeEmitidos(op) {                
-        p_filter = xThis.$.txt_buscar.value;      
-        // p_fecha  = xThis.$.txt_fecha.value;
-        //p_fecha = p_fecha == "" ? xDevolverFecha() : p_fecha;
+        // p_filter = xThis.$.txt_buscar.value;      
+        // // p_fecha  = xThis.$.txt_fecha.value;
+        // //p_fecha = p_fecha == "" ? xDevolverFecha() : p_fecha;
                 
-        data_pagination.pageFilter = p_filter;    
-        data_pagination.pageFecha = p_fecha;
+        // data_pagination.pageFilter = p_filter;    
+        // data_pagination.pageFecha = p_fecha;
 
-        let xDataRes = [];
-        // console.log(data_pagination);
+        // let xDataRes = [];
+        // // console.log(data_pagination);
 
-        $.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=13', data: { op: '13', pagination: data_pagination} })
-        .done(function (res) {
-            res = res.split('**');
-            p_rows = res[1];
-            res = $.parseJSON(res[0]);
-            xDataRes = res.datos;			
+        // $.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=13', data: { op: '13', pagination: data_pagination} })
+        // .done(function (res) {
+        //     res = res.split('**');
+        //     p_rows = res[1];
+        //     res = $.parseJSON(res[0]);
+        //     xDataRes = res.datos;			
             
-			xThis.sumListCompra = xDataRes.map(x => parseFloat(x.total)).reduce((a,b) => a + b, 0);			
-			xThis.sumListCompra = xThis.sumListCompra.toFixed(2);
+		// 	xThis.sumListCompra = xDataRes.map(x => parseFloat(x.total)).reduce((a,b) => a + b, 0);			
+		// 	xThis.sumListCompra = xThis.sumListCompra.toFixed(2);
                                
-            p_upadate = false;  // para que no vuelva a llamar esta funcion
-            xThis.$.paginator.pageRows = p_rows;    
-            // xThis.$.paginator.listRows = [10, 20, 30, 40];                 
-            // console.log('datos', xDataRes);
+        //     p_upadate = false;  // para que no vuelva a llamar esta funcion
+        //     xThis.$.paginator.pageRows = p_rows;    
+        //     // xThis.$.paginator.listRows = [10, 20, 30, 40];                 
+        //     // console.log('datos', xDataRes);
 
-			xThis.ListCpe = [];                
-			xThis.ListCpe = xDataRes; 
-			setTimeout(() => {
-				$(window).scrollTop(lastPos);
-			}, 5);
+		// 	xThis.ListCpe = [];                
+		// 	xThis.ListCpe = xDataRes; 
+		// 	setTimeout(() => {
+		// 		$(window).scrollTop(lastPos);
+		// 	}, 5);
             
 
             
-        });
+        // });
 
     }
 	

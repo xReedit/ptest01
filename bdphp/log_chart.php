@@ -13,15 +13,20 @@
   {
     case 1://grafico tiempo de despacho
       $arr_filtro=$_POST['arr_filtro'];
-      $sql="
-      SELECT pd.despachado_hora, CONVERT(pd.despachado_tiempo, SIGNED INTEGER) AS minutos,p.estado
-        FROM pedido_detalle AS pd
-        INNER JOIN pedido AS p using(idpedido)
-        INNER JOIN seccion AS s ON pd.idseccion=s.idseccion
-        INNER JOIN tipo_consumo AS tp ON tp.idtipo_consumo=pd.idtipo_consumo
-        WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") AND p.cierre=0 AND (pd.despachado=1 OR p.estado=4) and (s.idimpresora IN (".$arr_filtro['idseccion'].") AND tp.idtipo_consumo in(".$arr_filtro['tipo_consumo']."))
-				GROUP BY pd.idpedido, pd.despachado_hora
-      ";
+      // $sql="
+      // SELECT pd.despachado_hora, CONVERT(pd.despachado_tiempo, SIGNED INTEGER) AS minutos,p.estado
+      //   FROM pedido_detalle AS pd
+      //   INNER JOIN pedido AS p using(idpedido)
+      //   INNER JOIN seccion AS s ON pd.idseccion=s.idseccion
+      //   INNER JOIN tipo_consumo AS tp ON tp.idtipo_consumo=pd.idtipo_consumo
+      //   WHERE (p.idorg=".$_SESSION['ido']." AND p.idsede=".$_SESSION['idsede'].") 
+      //   AND p.cierre=0 AND (pd.despachado=1 OR p.estado=4)
+      //   and (s.idimpresora IN (".$arr_filtro['idseccion'].") AND tp.idtipo_consumo in(".$arr_filtro['tipo_consumo']."))
+			// 	GROUP BY pd.idpedido, pd.despachado_hora
+      // ";
+      // $bd->xConsulta($sql);
+
+      $sql = "call procedure_get_estadistica_zona_depacho(".$_SESSION['idsede'].",'".$arr_filtro['idseccion']."','".$arr_filtro['tipo_consumo']."')";
       $bd->xConsulta($sql);
       break;
   }

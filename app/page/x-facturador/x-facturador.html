@@ -933,8 +933,7 @@
         return await showAlertSwalHtmlDecision(_swalAlertValues,0)
             .then(res => {
                 if (res.isConfirmed) { // guardar
-                    _arrCpeFac.idtipo_pago = itemOptionTpSelectedCPE.idtipo_pago
-                    // console.log('_arrCpeFac', _arrCpeFac);
+                    _arrCpeFac.idtipo_pago = itemOptionTpSelectedCPE.idtipo_pago                    
                     $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: {op: '11', data: _arrCpeFac} })
                     .done(res => {
                         console.log('ok');

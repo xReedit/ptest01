@@ -447,6 +447,10 @@ function setClearLocalStorage(redirec = true) {
 	var show_opcion_item = window.localStorage.getItem('::app3_sys_vr_show_opcion');
 	var vr_touch_item = window.localStorage.getItem('::app3_sys_vr_touch');
 	
+	// zona de despacho
+	var app3_woZD = window.localStorage.getItem('::app3_woZD');
+	var app3_woZD_TP = window.localStorage.getItem('::app3_woZD_TP');
+	
 	window.localStorage.clear();
 
 	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL); }
@@ -454,6 +458,10 @@ function setClearLocalStorage(redirec = true) {
 	if (lasIdSede) {window.localStorage.setItem('::app3_sys_last_s', lasIdSede); }
 	if (show_opcion_item) {window.localStorage.setItem('::app3_sys_vr_show_opcion', show_opcion_item); }
 	if (vr_touch_item) {window.localStorage.setItem('::app3_sys_vr_touch', vr_touch_item); }
+
+	// zona de despacho
+	if (app3_woZD) { window.localStorage.setItem('::app3_woZD', app3_woZD); }
+	if (app3_woZD_TP) { window.localStorage.setItem('::app3_woZD_TP', app3_woZD_TP); }
 
 	if(redirec) {
 		document.location.href='../../logueese.html';
@@ -906,10 +914,10 @@ function getDataUsRRHH() {
 	const dataSede = xm_log_get('datos_org_all_sede')[0]
 	return {
 		"user": {
-			"usuario": xNomUsario,
+			"usuario": xNomU,
 			"pass": '',
 			"idusuario_restobar": parseInt(xIdUsuario),
-			"nombres": xNomU,
+			"nombres": xNomUsario,
 			"cargo": xCargoU
 		},
 		"org": {

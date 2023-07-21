@@ -854,3 +854,21 @@ const arrGroupBy = function(xs, key) {
 	  return rv;
 	}, {});
   };
+
+
+// Función para deshabilitar la actualización al deslizar hacia abajo
+function disableScrollRefresh(event) {
+	// Comprobar si se ha desplazado hacia abajo
+	$('body').css('overscroll-behavior', 'contain');
+}
+
+// Función para habilitar la actualización al deslizar hacia abajo
+function enableScrollRefresh() {	
+	// Eliminar el evento de desplazamiento que deshabilita la actualización	
+	$('body').css('overscroll-behavior', 'auto');
+}
+
+function getColorTipoPago(idtipo_pago) {
+	const _classTp = ['badge badge-secondary', 'badge badge-primary', 'badge bg-papaya', 'badge', 'badge badge-warning', 'badge badge-info', 'badge badge-dark']
+	return _classTp[idtipo_pago - 1];
+}

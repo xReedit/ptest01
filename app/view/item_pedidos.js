@@ -1965,8 +1965,11 @@ function xUpdateItemNoStock(op, items) {
 // desde venta rapida
 // para los productos de venta x peso
 // envia los cambios al finalizar el registro de venta
-function xSendItemVentaxPesoVR(xarr_body) {
-	const _listItemVentaPeso = xarr_body.map(x => Object.values(x)).filter(x => x.length > 3)[0].filter(x => typeof x === 'object').filter(x => x.venta_x_peso === '1')
+function xSendItemVentaxPesoVR(xarr_body) {	
+	const _listItemVentaPeso = xarr_body
+								.map(x => Object.values(x)).filter(x => x.length > 3)[0].filter(x => typeof x === 'object')
+								.filter(x => x.venta_x_peso === '1');
+	
 	
 	if (_listItemVentaPeso.length === 0 ) return;
 
