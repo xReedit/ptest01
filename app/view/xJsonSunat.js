@@ -30,7 +30,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
 
 
-    console.log('xArrayComprobante.correlativo C', xArrayComprobante.correlativo);
+    // console.log('xArrayComprobante.correlativo C', xArrayComprobante.correlativo);
     // cambio para sumar los costos negativos, si es que es delivery y el comercio paga
 	xArraySubTotales = darFormatoSubTotalesParaFacturacion(xArraySubTotales, false);
 
@@ -68,7 +68,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     // const isExoneradoIGV = true;
     // let total_valor_de_venta_operaciones_gravadas = 0,total_valor_de_venta_operaciones_exoneradas = 0, leyenda = [];
     let totales = {};
-    let descuento = [];
+    let arrDescuento = [];    
+    let arrLegends = [];
     let descuentoEnTotal = 0;
 
     
@@ -77,26 +78,27 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
 
-        // _base = importe_total_pagar - parseFloat(importe_total_igv) + descuentoEnTotal;
-        // const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
+        _base = importe_total_pagar - parseFloat(importe_total_igv) + descuentoEnTotal;
+        const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
 
         // 040921// si hay descuentos no se registra en factura, la sunat no tiene claro que le importe el descuento, no hay ejemplos y xml da error
         // solo el igv
-        // descuento = [
-        //     {
-        //     "codigo": "00",
-        //     "descripcion": "Descuento Global afecta a la base imponible",
-        //     "porcentaje": porcentaje_dsc,
-        //     "monto": descuentoEnTotal,
-        //     "base": _base
-        //     }
-        // ];
+        arrDescuento.push(
+            {
+                "codigo": "02",
+                "descripcion": "Descuento Global afecta a la base imponible",
+                "porcentaje": porcentaje_dsc,
+                "monto": descuentoEnTotal.toFixed(2),
+               "base": _base.toFixed(2)
+            }
+        );
 
+        // console.log('arrDescuento', arrDescuento);
 
 
         importe_total_pagar += descuentoEnTotal;
 
-        descuentoEnTotal = 0;
+        // descuentoEnTotal = 0;
 
     }
 
@@ -117,19 +119,26 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         //     "total_venta": importe_total_pagar
         // }
 
+        const _totalVenta = (importe_total_pagar - descuentoEnTotal).toFixed(2);
         totales = {
-            "total_descuentos": descuentoEnTotal,
+            "total_descuentos": descuentoEnTotal.toFixed(2),
             "total_exportacion": 0.00,
             "total_operaciones_gravadas": 0.00,
             "total_operaciones_inafectas": 0.00,
-            "total_operaciones_exoneradas": importe_total_pagar + descuentoEnTotal,
+            // "total_operaciones_exoneradas": importe_total_pagar + descuentoEnTotal,
+            "total_operaciones_exoneradas": importe_total_pagar,
             "total_operaciones_gratuitas": 0.00,
             "total_igv": 0.00,
             "total_impuestos": 0.00,
-            "total_valor": importe_total_pagar,
-            "total_venta": importe_total_pagar
+            "total_valor": _totalVenta,
+            "total_venta": _totalVenta
         }
 
+
+        arrLegends.push({
+            "codigo": "2001",
+            "valor": "BIENES TRANSFERIDOS EN LA AMAZONÍA REGIÓN SELVA PARA SER CONSUMIDOS EN LA MISMA."
+        })
 
         
     } else {
@@ -145,8 +154,9 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         let _total_valor = _total_operaciones_gravadas
 
         totales = {
-            "total_descuentos": descuentoEnTotal,
-            "total_descuentos": 0.00,
+            // "total_descuentos": descuentoEnTotal,
+            // "total_descuentos": 0.00,            
+            "total_descuentos": 0.00, //descuentoEnTotal, aunque haya descuento se coloca 0 si es descuento global
             "total_exportacion": 0.00,
             "total_operaciones_gravadas": _total_operaciones_gravadas,
             "total_operaciones_inafectas": 0.00,
@@ -159,7 +169,9 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         }
     }
 
-    totales.total_descuentos = descuentoEnTotal;
+    // console.log('totales', totales);
+
+    // totales.total_descuentos = descuentoEnTotal;
 
 
     // fecha actual del servidor
@@ -197,7 +209,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         //     xArrayComprobante.correlativo = numComprobante; 
         // }
 
-        console.log('xArrayComprobante.correlativo D', xArrayComprobante.correlativo);
+        // console.log('xArrayComprobante.correlativo D', xArrayComprobante.correlativo);
 
         comprobarNumCorrelativoComprobante(xArrayComprobante);
 
@@ -233,9 +245,10 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "correo_electronico": "",
                 "telefono": `${telefonoCliente}`
             },
-            "descuentos": descuento,
+            "descuentos": arrDescuento,
             "totales": totales,
             "items": xitems,
+            "leyendas": arrLegends,
             "extras":{
                 "forma_de_pago": xArrayComprobante.forma_de_pago,
                 "observaciones": "",
@@ -296,7 +309,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
         let total_igv = 0;
         let total_valor_item = parseFloat(x.precio_total).toFixed(2);
         let _precio_unitario = x.punitario || x.precio_total;
-
+        
 
 
         // verificamos que el precio del item no sea igual 0
@@ -331,6 +344,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
             total_valor_item = _valor_unitario * x.cantidad;
             total_base_igv = total_valor_item; 
             total_igv = parseFloat(parseFloat(x.precio_total) - total_base_igv).toFixed(2);
+
 
         } else {
             total_base_igv = parseFloat(x.precio_total); // cambio x error 3105 IGV // 12/07/2020            
@@ -399,7 +413,7 @@ async function xCocinarJsonNotaCredito(doc) {
         "extras": {}
     }
 
-    console.log('_jsonHead', _jsonXmlNC);
+    // console.log('_jsonHead', _jsonXmlNC);
     const _res = await xSendNotaCredito(_jsonXmlNC, doc.idce);
     return _res;
 
@@ -416,6 +430,8 @@ async function xSendNotaCredito (_jsonXmlNC, idce) {
 
     xm_all_xToastOpen("Conectando con Sunat...");
 
+
+    // console.log('_url', _url);
     // setTimeout(() => {        
     //     xm_all_xToastClose();
     // }, 2000);
@@ -490,7 +506,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
     }, 2000);
     
 
-    console.log('xArrayComprobante.correlativo E numero_comp', numero_comp);
+    // console.log('xArrayComprobante.correlativo E numero_comp', numero_comp);
 
     await fetch(_url, {
         method: 'POST',
@@ -502,7 +518,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         // console.log(res);
         const errSoap = res.response ? res.response.error_soap : false;
         // if (res.success || !errSoap) { // respuesta ok
-            console.log('xArrayComprobante.correlativo F res api', res.data.number);
+            // console.log('xArrayComprobante.correlativo F res api', res.data.number);
 
             rpt.ok = true; 
             rpt.qr = res.data.qr;

@@ -421,26 +421,26 @@
 	}
 
 	function getAllListCuentasPagar() {
-		// xPopupLoad.xopen();
+		xPopupLoad.xopen();
 
-		// $.ajax({
-		// 	type: 'GET',
-		// 	url: '../../bdphp/log_005.php?op=3',				
-		// })
-		// .done((res) => {
-		// 	const _res = JSON.parse(res);
-		// 	console.log(_res.datos);
-		// 	var sumTotal = 0, sumTotalHistorialCP = 0;
-		// 	xThisCpc.ListCuentasPagar = _res.datos.map(x => {
-		// 		sumTotal += parseFloat(x.importe);
-		// 		// sumTotalHistorialCP += parseFloat(x.total_total);
-		// 		x.resaltar = x.faltan < 0 ? true : false;
-		// 		return x;
-		// 	});
-		// 	xThisCpc.sumListCuentasPagar = numeroConComas(sumTotal.toFixed(2));
-		// 	// xThisCpc.sumListHistorialCuentasPagar = numeroConComas(sumTotalHistorialCP.toFixed(2));
-		// 	// xPopupLoad.xclose();
-		// });
+		$.ajax({
+			type: 'GET',
+			url: '../../bdphp/log_005.php?op=3',				
+		})
+		.done((res) => {
+			const _res = JSON.parse(res);
+			// console.log(_res.datos);
+			var sumTotal = 0, sumTotalHistorialCP = 0;
+			xThisCpc.ListCuentasPagar = _res.datos.map(x => {
+				sumTotal += parseFloat(x.importe);
+				// sumTotalHistorialCP += parseFloat(x.total_total);
+				x.resaltar = x.faltan < 0 ? true : false;
+				return x;
+			});
+			xThisCpc.sumListCuentasPagar = numeroConComas(sumTotal.toFixed(2));
+			xThisCpc.sumListHistorialCuentasPagar = numeroConComas(sumTotalHistorialCP.toFixed(2));
+			xPopupLoad.xclose();
+		});
 	}
 
 	

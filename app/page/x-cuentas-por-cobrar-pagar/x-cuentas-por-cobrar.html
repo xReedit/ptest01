@@ -7,10 +7,18 @@
                     <i class="fa fa-arrow-left mr-1"></i>
                     Atras
                 </button>
-                <button class="btn btn-sm btn-secondary" hidden$="[[showDetalleCuentaCobrar]]" onclick="xGoBackListaCuentasCobrarPrincipal()">
-                    <i class="fa fa-arrow-left mr-1"></i>
-                    Atras
-                </button>
+
+                <div hidden$="[[showDetalleCuentaCobrar]]">
+                    <button class="btn btn-sm btn-primary" onclick="xGoListCuentaCobrarHistorial()">
+                        <i class="fa fa-history"></i>
+                        Historial
+                    </button>
+
+                    <button class="btn btn-sm btn-secondary" onclick="xGoBackListaCuentasCobrarPrincipal()">
+                        <i class="fa fa-arrow-left mr-1"></i>
+                        Atras
+                    </button>
+                </div>
             </div>
             <div hidden$="[[!showDetalleCuentaCobrar]]" class="mt-2">
                 <div class="xLinea2"></div>                
@@ -33,13 +41,16 @@
                             <th align="right">Imp. Consumo</th>
                             <th align="right">Pagó</th>
                             <th align="right">Debe Aún</th>
-                            <th></th>
+                            <th align="center"></th>
                         </thead>
                         <tbody>
                             <template is="dom-repeat" items="{{listCuentasPagar}}">
                                 <tr>
                                     <td>{{displayIndex(index)}}</td>
-                                    <td>{{item.nom_cliente}}</td>
+                                    <td>
+                                        {{item.nom_cliente}}
+                                        <i hidden$="[[!item.isHistory]]" class="fa fa-history text-primary"></i>
+                                    </td>
                                     <td align="right">
                                         <p class="fw-600">{{item.total}}</p>
                                     </td>
@@ -48,11 +59,14 @@
                                     </td>
                                     <td align="right">
                                         <p class="fw-600 text-primary">{{item.debe}}</p>
-                                    </td>                                <td>
+                                    </td align="center">                                <td>
                                         <button data-id="[[item.idcliente]]" 
+                                            style="width: 60px;"
                                             class="btn btn-sm btn-xsm xBoton_flat_2"
                                             onclick="xCobrarCuentaCliente(this);"
-                                            >Cobrar
+                                            >
+                                            <span hidden$="[[item.isHistory]]">Cobrar</span>
+                                            <span hidden$="[[!item.isHistory]]">Ver</span>
                                         </button>
                                     </td>
                                 </tr>
@@ -113,7 +127,8 @@
                                                 <td>{{displayIndex(index)}}</td>
                                                 <td>
                                                     <p>{{item.fecha}}</p>
-                                                    <p class="fs-10 text-secondary">Pasaron: {{item.pasaron}} dia(s)</p>
+                                                    <p hidden$="[[item.isCuentaPagada]]" class="fs-10 text-secondary">{{item.pasaron}}</p>
+                                                    <span hidden$="[[!item.isCuentaPagada]]" class="badge badge-primary">{{item.pasaron}}</span>
                                                 </td>
                                                 <td>{{item.total}}</td>
                                                 <td>{{item.pagado}}</td>
@@ -266,14 +281,17 @@
         var xThisCuentasPorCobrar, itemOptionTpCuentaCobrarSelected;
 
 
-        async function xInitCuentasPorCobrar() {
+        async function xInitCuentasPorCobrar(op=23) {
             xPopupLoad.xopen();
             const _httpFecht = new httpFecht();
-            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=23')            
+            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op='+ op)
             
             if (rpt.success) {
                 xThisCuentasPorCobrar.listCuentasPagar = rpt.datos;
-                xThisCuentasPorCobrar.listCuentasPagarMaster = rpt.datos; // para busquedas
+                xThisCuentasPorCobrar.listCuentasPagarMaster = rpt.datos.map(x => {
+                    x.isHistory = parseFloat(x.debe) == 0
+                    return x;                    
+                }); // para busquedas
                 xShowTotalCuentasPagar();
             } 
 
@@ -282,6 +300,11 @@
             $(document).on('getValorIncial', '.tpf_option_cuenta_cobrar', function (e) {                
                 itemOptionTpCuentaCobrarSelected = e.detail.values;
             });
+        }
+
+        function xGoListCuentaCobrarHistorial() {
+            xThisCuentasPorCobrar.showHistoryPagos = true;
+            xInitCuentasPorCobrar(23001)
         }
 
         function xShowTotalCuentasPagar() {            
@@ -328,15 +351,20 @@
         async function xLoadConsumoCreditoByCliente() {
             // cargar los consumos del cliente
             xPopupLoad.xopen();
+            xThisCuentasPorCobrar.enabledBtnCobrarCuenta = false;
             const _dataSend = {
                 idcliente: xThisCuentasPorCobrar.objCuentaCobrar.idcliente
             }
 
+            const opList = xThisCuentasPorCobrar.showHistoryPagos ? 230101 : 2301; 
             const _httpFecht = new httpFecht();
-            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=2301', _dataSend)
+            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op='+ opList, _dataSend)
 
             if (rpt.success) {
-                xThisCuentasPorCobrar.listConsumosCreditoCliente = rpt.datos;
+                xThisCuentasPorCobrar.listConsumosCreditoCliente = rpt.datos.map(x => {
+                    x.isCuentaPagada = x.flag_pagado == '1';
+                    return x;
+                });
                 // suma los totales
                 let _totalesListCreditoCliente = {
                     total: 0,
@@ -362,13 +390,13 @@
                 xThisCuentasPorCobrar.arrTotalesListCreditoCliente = _totalesListCreditoCliente;
             }
 
-            listCuentaPagarHistoriaPagosCliente(); // historial de pagos
+            xListCuentaPagarHistoriaPagosCliente(); // historial de pagos
 
             xPopupLoad.xclose();
             
         }
 
-        async function listCuentaPagarHistoriaPagosCliente() {
+        async function xListCuentaPagarHistoriaPagosCliente() {
             const _dataSend = {
                 idcliente: xThisCuentasPorCobrar.objCuentaCobrar.idcliente
             }
@@ -397,7 +425,9 @@
                 _pagado = 0
                 // return;
             } else {
-                xThisCuentasPorCobrar.enabledBtnCobrarCuenta = true;
+                if ( _pagado > 0 ) {
+                    xThisCuentasPorCobrar.enabledBtnCobrarCuenta = true;
+                }
             }
 
             let _importeDebe = parseFloat(xThisCuentasPorCobrar.arrTotalesListCreditoCliente.debe);
@@ -406,6 +436,10 @@
                 obj.value = _pagado;
                 // xThisCuentasPorCobrar.enabledBtnCobrarCuenta = false;
                 // return;
+            }
+
+            if ( _pagado === 0 ) {
+                xThisCuentasPorCobrar.enabledBtnCobrarCuenta = false;
             }
 
             const _debeAun = _importeDebe - _pagado;
@@ -515,12 +549,14 @@
                     showDetalleCuentaCobrar: Boolean,
                     objCuentaCobrar: Object,
                     enabledBtnCobrarCuenta: Boolean,
-                    importePagadoCuentaCobrar: Number
+                    importePagadoCuentaCobrar: Number,
+                    showHistoryPagos: Boolean,
                 },
                 attached: function () {
                     this.importePagadoCuentaCobrar = 0
                     this.showDetalleCuentaCobrar = false;
                     this.enabledBtnCobrarCuenta = false;
+                    this.showHistoryPagos = false;
                     xThisCuentasPorCobrar = this;
                     xInitCuentasPorCobrar();
                 },

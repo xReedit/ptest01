@@ -3,9 +3,11 @@
 <dom-module id="x-comp-find-tipo-pago-option">
 	<template is="dom-bind">
 		<div style="display: flex">
-			<div class="content_div_op_pago" id="_content_div_op_pago" style="display: flex" disabled$="{{deshabilitado}}">
+			<div class="content_div_op_pago" id="_content_div_op_pago" 
+			style="display: grid; max-width: 450px; grid-template-columns: repeat(6, auto); grid-auto-flow: row; grid-gap: 10px;" 
+			disabled$="{{deshabilitado}}">
 				<template is="dom-repeat" items="{{listOptionPago}}" as="categoria">
-					<div class="xMiBoton_icon_option"
+					<div class="xMiBoton_icon_option" style="margin-right: 0px;"
 						data-id="{{categoria.idtipo_pago}}" 
 						data-index="{{index}}" 	
 						data-reqcliente="{{categoria.requiere_cliente}}"
@@ -70,6 +72,7 @@
 
 			let metodosPagosAceptados = xm_log_get('datos_org_sede')[0]?.metodo_pago_aceptados || null;
 			metodosPagosAceptados = metodosPagosAceptados ? metodosPagosAceptados === '' ? null : metodosPagosAceptados: metodosPagosAceptados;
+			// console.log('metodosPagosAceptados', metodosPagosAceptados);
 			
 			// metodosPagosAceptados += '4'; // agrega el pago app por defecto
 			// metodosPagosAceptados = metodosPagosAceptados.split(',');
@@ -91,11 +94,17 @@
 			});
 			
 			
-			_listOption = dtValues.map((x, index) => {
-					
+			_listOption = dtValues.map((x, index) => {	
 					// no aceptado
 					if ( metodosPagosAceptados ) {
-						if ( metodosPagosAceptados.indexOf(x.idtipo_pago) < 0 ) { x.visible = false; return x; } 
+						if ( metodosPagosAceptados.indexOf(x.idtipo_pago) < 0 ) { 
+							x.visible = false; return x; } 							
+					} else {
+						// si no es visible marcamos como no visible
+						if (x.visible == '1') {
+							x.visible = false;
+							return x;
+						}
 					}
 						
 						// x.clase = 'xMiBoton_icon_option';						

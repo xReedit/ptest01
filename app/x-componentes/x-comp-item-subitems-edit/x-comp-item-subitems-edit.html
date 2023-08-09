@@ -17,14 +17,24 @@
                                     <div id="div-list-compartido">
                                         <input type="text" class="xMiInput xPasarEnter2 w-100" id="txt_content_titulo" placeholder="Titulo">
                                     </div>
-                                </th>
-                                <th><paper-fab mini icon="add" onclick="xSaveNewContentSubItem()" class="xDerecha"></paper-fab></th>
+                                </th>                                
+                                <th colspan="2"><paper-fab mini icon="add" onclick="xSaveNewContentSubItem()" class="xDerecha"></paper-fab></th>
                             </thead>
                             <tbody>
                                 <template is="dom-repeat" items="[[listContent]]" as="item">
-                                    <tr data-index="[[index]]" data-t="item_subitem_content_detalle" data-id="{{item.iditem_subitem_content_detalle}}" class="xCursor">                                        
-                                        <td onclick="selectOptionContentItem(this)">{{item.titulo}}</td>
-                                        <td><span class="xDeleteRow" title="Anular" onclick="xBorrarItem(this);"></span></td>
+                                    <tr data-index="[[index]]" data-t="item_subitem_content_detalle" data-id="{{item.iditem_subitem_content_detalle}}" data-id-content="{{item.iditem_subitem_content}}" class="xCursor">                                        
+                                        <td onclick="selectOptionContentItem(this)">
+                                            <span id="titulo-seleccionable">
+                                                {{item.titulo}}
+                                            </span>
+                                            <input type="text" class="xMiInput xPasarEnter2 xInvisible" id="text-edit-seleccionable" onblur="xEditItemTituloSeleccionableOnBlur(this)">
+                                        </td>
+                                        <td>
+                                            <span class="xEditRow" title="Editar" onclick="xEditItemTituloSeleccionable(this);"></span>                                            
+                                        </td>
+                                        <td>                                            
+                                            <span class="xDeleteRow" title="Borrar" onclick="xBorrarItem(this);"></span>
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -204,6 +214,14 @@
         }
 
         function  selectOptionContentItem(obj) {
+            // verificar si input esta visible
+            const _span = $(obj).find('span')[0];
+            const _spanIsVisible = $(_span).hasClass('xInvisible') ? false : true;
+            if ( !_spanIsVisible ) return;
+
+
+
+
             const index = obj.parentElement.dataIndex;
             xThisComSubItemEdit.contentSelect = xThisComSubItemEdit.listContent[index];
             iditemContentSelect = xThisComSubItemEdit.contentSelect.iditem_subitem_content;
@@ -292,10 +310,10 @@
             
             // xm_all_xToastOpen('Guardando ...', 2000);
             $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=800', data:{item:dataSubItem}})
-            .done( function (a) {
-                console.log('ok');        
-                // xPopupLoad.xclose();
-            });
+            // .done( function (a) {
+            //     console.log('ok');        
+            //     // xPopupLoad.xclose();
+            // });
         }
 
         function xModRow_subitem(obj,tipo){
@@ -483,6 +501,56 @@
             xIdROw = $(xRowObj).attr('data-id') || xRowObj.dataId;
             iditem = $(xRowObj).attr('data-iditem') || xRowObj.iditem;
 
+
+        }
+
+        function xEditItemTituloSeleccionable(obj) {
+            // parent al tr
+            const _tr = obj.parentElement.parentElement;
+
+            // buscar el input
+            const _input = $(_tr).find('#text-edit-seleccionable')[0];
+            const _span = $(_tr).find('#titulo-seleccionable')[0];
+
+            // mostrar el input
+            $(_input).removeClass('xInvisible');
+            $(_span).addClass('xInvisible');
+
+            // poner el valor del span en el input
+            $(_input).val($(_span).text().trim());
+
+            // poner el foco en el input
+            $(_input).focus();
+
+            // seleccionar el texto del input
+            $(_input).select();
+            
+        }
+
+        function xEditItemTituloSeleccionableOnBlur(obj) {
+            const _tr = obj.parentElement.parentElement;
+            const _input = $(_tr).find('#text-edit-seleccionable')[0];
+            const _span = $(_tr).find('#titulo-seleccionable')[0];
+
+            $(_span).removeClass('xInvisible');
+            $(_input).addClass('xInvisible');
+
+            const _valueInput = $(_input).val().trim()
+            if ( _valueInput !== '' ) {
+                $(_span).text($(_input).val().trim());
+            }
+
+            // guardar el titulo modificado
+            const _index = _tr.dataIndex;
+            const _iditem_subitem_content = _tr.dataIdContent;                       
+
+            const _data = {
+                iditem_subitem_content: _iditem_subitem_content,
+                titulo: _valueInput
+            }
+
+            $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=808', data:{item:_data}})
+            
 
         }
 

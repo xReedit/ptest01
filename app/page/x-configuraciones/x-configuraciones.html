@@ -1132,7 +1132,7 @@ function xleerXls(xfile){
 	if($("#fileAlamcen").val==""){return};
 	$.ajax({ type: 'POST', url: '../../bdphp/leer_excel.php?op=2',data:{f:xNomFileXls,fecha:xDevolverFecha(),a:xIdA}})
 	.done( function (dtUpP) {
-		// console.log(dtUpP);
+		console.log(dtUpP);
 		$("#fileAlamcen").val('');
 		xPopupLoad.xclose();
 		//var xrptUp=$.parseJSON(dtUpP);

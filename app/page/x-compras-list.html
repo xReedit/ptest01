@@ -167,7 +167,7 @@
             }
 
             const _httpFecht = new httpFecht();
-            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=22', _dataSend)
+            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=22', _dataSend)            
             
             if (rpt.success) {
                 xThisComprasList.listComprasByMonth = rpt.datos.map(x => {

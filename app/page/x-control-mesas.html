@@ -1380,6 +1380,7 @@ function xAnularPedido(){
 			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
+			$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
 			$(xObj_miPedido).find("#nommozo").text('.');
 			
@@ -1422,6 +1423,7 @@ function xCambiarMesa(){
 		$(xObj_miPedido).removeClass('xDespachado');
 		$(xObj_miPedido).addClass('xNeutro');
 		$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
+		$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 		$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 		$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
 		$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
@@ -2039,6 +2041,7 @@ function xRegistrarPagoCM(xcant_rp){
 				$(xObj_miPedido).removeClass('xDespachado');
 				$(xObj_miPedido).addClass('xNeutro');
 				$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
+				$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 				$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');	
 				$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
 				$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
@@ -2101,6 +2104,7 @@ function isPedidoInMesa(xObj_miPedido, nummesa) {
 			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
 			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
+			$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
@@ -3138,6 +3142,7 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 			$(xObj_miPedido).removeClass('xDespachado');
 			$(xObj_miPedido).addClass('xNeutro');
 			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
+			$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
@@ -3294,8 +3299,11 @@ function xPintarMesas() {
 		xtxtEstado = 'xNeutro';
 		xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
 			'<div class="show-led-print xInvisible" title="Impreso"> <i class="fa fa-print"></i> </div>' +
-			'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +			
-			'<p class="show-mozo-pedido" title="Atendido por"><span class="fs-8 pr-1 show-ico-mozo xInvisible"><i class="fa fa-user-circle"></i></span> <span id="nommozo">-</span></p>' +
+			'<div>'+
+				'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +			
+				'<p class="show-mozo-pedido" title="Atendido por"><span class="fs-8 pr-1 show-ico-mozo xInvisible"><i class="fa fa-user-circle"></i></span> <span id="nommozo">-</span></p>' +
+				'<div class="show-led-reserva xInvisible" title="Reserva"><i class="fa fa-tag"></i></div>' +			
+			'</div>'+
 			'<p class="tipo text-secondary">Mesa</p>' +
 			'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
 			'<p class="tiempo xfont11">disponible</p>' +
@@ -3451,6 +3459,10 @@ function xPintarEstadoPedido(_objPedido = 0) {
 						});
 					
 					_eparent.find('#nommozo').text(itemList.nommozo);
+					
+					if ( itemList.reserva === '1' ) {
+						_eparent.find('.show-led-reserva').removeClass('xInvisible');
+					} 
 
 					itemList.actualizado=true;
 					// xactualiza = true;
@@ -4018,6 +4030,7 @@ function xResetMesaDefault(_num) {
 			_eparent.removeClass('xCursor');
 			_eparent.addClass('xNeutro');
 			_eparent.find('.show-led-precuenta').addClass('xInvisible');
+			_eparent.find('.show-led-reserva').addClass('xInvisible');
 			// _eparent.addClass('tpc1');
 			_eparent.find(".importe").text('-');
 			_eparent.find(".tiempo").text('disponible')
@@ -4059,6 +4072,7 @@ function xRefreshPedidoPaySocket(pedido) {
 				_eparent.removeClass('xCursor');
 				_eparent.addClass('xNeutro');
 				_eparent.find('.show-led-precuenta').addClass('xInvisible');
+				_eparent.find('.show-led-reserva').addClass('xInvisible');
 				_eparent.find('.show-led-print').addClass('xInvisible');
 				_eparent.find('.show-ico-mozo').addClass('xInvisible');
 				_eparent.find('.show-mozo-pedido').removeClass('pintar');

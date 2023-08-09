@@ -34,12 +34,14 @@
             })
         }
 
-        function xCargarProductoItemComp () {
+        function xCargarProductoItemComp () {      
+            xThisCompProductoAlmacen.appendtocmp = xThisCompProductoAlmacen.appendtocmp || 'body';              
             var xPrecio_pro_calc=0;
             var xObjTxtItemPro=$("#des_item_comp");
                 xObjTxtItemPro.autocomplete({
                     autoFocus:true,
                     source:dtProductosComp,
+                    appendTo: $(xThisCompProductoAlmacen.appendtocmp),
                     select: function( event, ui ) {
                         xObjTxtItemPro.val(ui.item.label);
                         xObjTxtItemPro.attr('data-id',ui.item.value);                        
@@ -76,9 +78,11 @@
                 idalmacenfiltro: Number,// idalmacen filtro 0 o null = all
                 onlynomproducto: Boolean,
                 onlynomalmacen: Boolean,
-                onlynomfamilia: Boolean //
+                onlynomfamilia: Boolean, //
+                appendtocmp: String,
 			},
-			attached: function () {                
+			attached: function () {        
+                // this.appendtocmp = 'body'                      
 				xThisCompProductoAlmacen = this;								
 			},
             getProductoSeletedAlmacen: () => {                
