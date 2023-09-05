@@ -11,7 +11,7 @@ async function ClienteService_Guardar(xarr_cliente) {
 
     // console.log('xarr_cliente', xarr_cliente);
     await $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'d', p_cliente:xarr_cliente}})
-    .done( function (idC) {
+    .done( function (idC) {        
         rpt = idC;
         return rpt;
     });

@@ -375,7 +375,7 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _data = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			// const _urlRRHH = 'http://127.0.0.1:5173/login?us=' + _data;
+			// const _urlRRHH = 'http://localhost:5174/login?us=' + _data;
 			// produccion
 			const _urlRRHH = 'https://recursos-humanos.papaya.com.pe/login?us=' + _data;
 			
@@ -388,9 +388,9 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
 			// produccion
-			// const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
 			
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;

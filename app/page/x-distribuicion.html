@@ -170,8 +170,8 @@
                                 <td>
                                     <!-- <input type="text" class="xMiInput xPasarEnter2 fs-12" id="des_item" onkeyup="xloadProductoProduccion(this)"> -->
                                     <x-comp-find-producto-almacen 
-                                        id="compProductoAlmacenDistribuicion"
-                                        onlynomfamilia="true"
+                                        id="compProductoAlmacenDistribuicion" 
+                                        onlynomfamilia="true"                                    
                                         idalmacenfiltro$="[[idAlmacenDistribuicionFiltro]]"></x-comp-find-producto-almacen>
                                 </td>
                                 <td>
@@ -288,9 +288,7 @@
         })
 
         const _compProductoAlmacenDistribuicion = document.getElementById('compProductoAlmacenDistribuicion');
-        _compProductoAlmacenDistribuicion.addEventListener('productoSeleted', (e) => {
-            console.log('e', e.detail);
-
+        _compProductoAlmacenDistribuicion.addEventListener('productoSeleted', (e) => {            
             text_stock_producto.value = e.detail.stock || 0;
         })
 
@@ -496,6 +494,9 @@
                 var xcandena_alm = '';
                 xDtAlam = xDtAlam.datos;
                 for (var i = 0; i < xDtAlam.length; i++) {
+                    if (i == 0) {
+                        xThisDisttribucion.idAlmacenDistribuicionFiltro = xDtAlam[i].idalmacen;
+                    }
                     xcandena_alm = String(xcandena_alm + '<option value="' + xDtAlam[i].idalmacen + '">' + xDtAlam[
                         i].descripcion + '</option>')
                 };

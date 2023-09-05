@@ -1942,7 +1942,7 @@ function xVerMipedidoVR(){
 	var xIndicacionItem='';
 
 	$("#xBody div").remove();
-	//xDtPedido=$.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));
+	//xDtPedido=$.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));	
 	xDtPedido=xArrayPedidoObj;
 
 	// xValidarReglaCarta();
@@ -2390,6 +2390,15 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
 	_pedido_pagar_cuenta.loadPedidosPendientesCobrar();
   }
 
+  function xRestorePedidoLocalStorageVR() {
+	let isPedidoFromStorageVR = window.localStorage.getItem("::app3_sys_dta_pe_sk")	
+	if ( isPedidoFromStorageVR ) {
+		xArrayPedidoObj = JSON.parse(isPedidoFromStorageVR);
+		xVerMipedidoVR();
+	}
+  }
+
+
   
 
 
@@ -2419,6 +2428,7 @@ Polymer({
 		xIniVentaRapida();
 		// _cpSocketIsConnect();
 		_cpSocketOpen();
+		xRestorePedidoLocalStorageVR()
 
 		$("#x-main").removeClass('xContent');
 		$("#x-main").removeClass('content');

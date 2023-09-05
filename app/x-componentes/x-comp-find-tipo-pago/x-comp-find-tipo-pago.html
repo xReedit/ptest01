@@ -8,7 +8,9 @@
 		<div>
 			<select id="compFindListTipoPago" class="xTextRow2 xCursor" onchange="selectOptionTipoPago()">
 				<template is="dom-repeat" items="{{list}}" as="categoria">
-					<option value="[[index]]">[[categoria.descripcion]] </option>
+					<option value="[[index]]">						
+						[[categoria.descripcion]]
+					</option>
 				</template>
 			</select>
 		</div>
@@ -24,7 +26,7 @@
 				})
 				.done(function (dtValues) {
 					dtValues = $.parseJSON(dtValues);
-					xThisComTipoPago.list = dtValues.datos;
+					xThisComTipoPago.list = dtValues.datos
 					xThisComTipoPago.list_tipo_pago = xThisComTipoPago.list[0];
 					xThisComTipoPago.list_tipo_pago.index = 0;
 					xThisComTipoPago.valIdInt = xThisComTipoPago.list_tipo_pago;
@@ -77,6 +79,12 @@
 				this.fire('getValorIncial', {
 					values: val
 				});
+			},
+			reset: () => {
+				xThisComTipoPago.list_tipo_pago = xThisComTipoPago.list[0];
+				xThisComTipoPago.list_tipo_pago.index = 0;
+				xThisComTipoPago.valIdInt = xThisComTipoPago.list_tipo_pago;
+				xThisComTipoPago.getValorIncial(xThisComTipoPago.list_tipo_pago);
 			}
 		})
 	</script>

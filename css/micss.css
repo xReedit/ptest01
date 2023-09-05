@@ -1450,6 +1450,19 @@ ul.list_add_item2 li {
     background: purple;    
 }
 
+.show-referencia-pedido {
+    background: #5e35b1;
+    display: inline;
+    padding: 0px 5px 0px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.referencia-pedido {
+    display: flex;
+    flex-direction: column;
+}
+
 /* control de pedidos */
 
 .grid:after {

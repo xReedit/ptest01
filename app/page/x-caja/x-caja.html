@@ -512,7 +512,7 @@ function xGetDataCierre(idBitacora) {
 			$('#xTituloRpt').html(_msjErr);
 			$('#xTituloRpt').css('color','red');
 			xThisCaja.isErrorCierre = true;
-			console.log(resCierre);
+			// console.log(resCierre);
 			xPopupLoad.xclose(); 
 
 			$("#btns_cierre").html(`<button class="btn btn-primary" onclick="xVerificar();"><i class="fa-light fa-repeat"></i> Volver a Verificar</button> <button class="btn btn-warning" onclick="xDownloadPdfCierre(1);"><i class="fa fa-file-pdf-o"></i> V</button>`);
@@ -532,7 +532,7 @@ function xGetDataCierre(idBitacora) {
 		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70001', data:{id: idBitacora, objdata: _objRunCierre }})
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70001', data:{id: idBitacora }})
 		.done(_res => {
-			console.log('run cierre registro ',_res)
+			// console.log('run cierre registro ',_res)
 		})
 
 		// const arrData = JSON.parse(resCierre.datos[0]['data']);
@@ -575,7 +575,7 @@ function xGetDataCierre(idBitacora) {
 			
 			// xOpenPage(22)
 			if ( !isPrintCierreCaja ) { xVerificaSiFacturacionE();}
-
+			
 
 			xImprimirCierre(xArrayEncabezadoCierre, xArrayCierrePrint);
 			xEscribirDatosHtml();

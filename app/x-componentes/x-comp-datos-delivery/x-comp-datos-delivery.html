@@ -2,6 +2,8 @@
 <link rel="import" href="../../x-componentes/x-comp-find-input-cliente/x-comp-find-input-cliente.html">
 <link rel="import" href="../../x-componentes/x-comp-direccion-google/x-comp-direccion-google.html">
 <link rel="import" href="../../x-componentes/x-comp-list-direcciones-cliente/x-comp-list-direcciones-cliente.html">
+<link rel="import" href="../../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
+
 <!-- <script  type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAknWQFyVH1RpR2OAL0vRTHTapaIpfKSqo&libraries=places"></script> -->
 <script src="../../view/calcCostoEntrega.js"></script>
 
@@ -50,6 +52,8 @@
 					</x-comp-find-input-cliente>
 				</div>
 
+				
+
 
 				<div hidden$="{{showapigoogle}}">
 					
@@ -91,8 +95,16 @@
 
 				<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" onkeyup="removeSpecialCharObj(this)"
 					id="txt_delivery_telefono" espaciar>
-				<input type="text" class="xMiInput xPasarEnter2" placeholder="PAGA CON" onChange="conMayusculas(this)" onkeyup="removeSpecialCharObj(this)"
-					id="txt_delivery_paga" espaciar>
+					
+				
+				<!-- Metodo de pago -->
+				<div class="d-flexx">
+					<div style="padding: 9px 0px 0px 5px;">
+						<x-comp-find-tipo-pago id="comp_tipo_pago_delivery"></x-comp-find-tipo-pago>
+					</div>
+					<input type="text" class="xMiInput xPasarEnter2" placeholder="PAGA CON" onChange="conMayusculas(this)" onkeyup="removeSpecialCharObj(this)"
+							id="txt_delivery_paga" espaciar>
+				</div>
 			</form>			
 			<br>
 			<div class="div-footer-delivery">
@@ -169,7 +181,7 @@
 		compDirSelectCliente = document.getElementById('selectDirCliente');		
 		compDirSelectCliente.addEventListener('getDireccionSelected', function (e) {
 			// console.log(e);
-			txt_delivery_referencia.value = '';
+			// txt_delivery_referencia.value = '';
 			xThisComDatosDelivery.showdir = true;
 			if (e.detail.direccion) {
 				direcionSelected = e.detail;
@@ -194,7 +206,8 @@
 			xClientePedidoFnac = cliente.f_nac || '';
 			$("#txt_delivery_dni").val(cliente.ruc);
 			$("#txt_delivery_direccion").val(cliente.direccion);
-			$("#txt_delivery_referencia").val(cliente.referencia);
+			// $("#txt_delivery_referencia").val(cliente.referencia);
+			txt_delivery_referencia.value = cliente.referencia ? cliente.referencia : '';
 			$("#txt_delivery_telefono").val(cliente.telefono);
 
 
@@ -413,6 +426,9 @@
 			'codigo_postal': dataSede.codigo_postal	
 		}
 
+		const comp_metodo_pago = document.getElementById('comp_tipo_pago_delivery');
+		const metodo_pago_selected_delivery = comp_metodo_pago.getTipoPago();		
+
 		var resData = {
 			idcliente: DatosCliente.idcliente,
 			dni: DatosCliente.num_doc,
@@ -426,8 +442,9 @@
 			tipoComprobante: {},
 			importeTotal: 0,
 			metodoPago: {
-				idtipo_pago: 1,
-				descripcion: 'Efectivo',
+				idtipo_pago: metodo_pago_selected_delivery.idtipo_pago,
+				descripcion: metodo_pago_selected_delivery.descripcion,
+				img: metodo_pago_selected_delivery.img,
 				importe: DatosCliente.paga_con,
 				checked: true,
 				visible: true
@@ -469,6 +486,7 @@
 			xEmitEnvet(resData);
 		}
 		
+		comp_metodo_pago.reset()
 
 
 		// arrCompDatosAdjuntoDelivery = [];

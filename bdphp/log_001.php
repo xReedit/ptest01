@@ -1660,7 +1660,7 @@
 				$idclie=0;
 			}else{
 				// $sqlClienteNew="insert into cliente (idorg,nombres,direccion,ruc,f_nac, f_registro, direccion_delivery_no_map)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$num_doc."','".$f_nac."',DATE_FORMAT(now(),'%d/%m/%Y'),'".$telefono."', '".$direccion_delivery_no_map_save."')";
-				$sqlClienteNew="insert into cliente (idorg,nombres,direccion,ruc,f_nac, f_registro $row_direccion_delivery_no_map)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$num_doc."','".$f_nac."',DATE_FORMAT(now(),'%d/%m/%Y') $val_direccion_delivery_no_map)";
+				$sqlClienteNew="insert into cliente (idorg,nombres,direccion,referencia,ruc,f_nac, f_registro $row_direccion_delivery_no_map)values(".$_SESSION['ido'].",'".$nomclie."','".$direccion."','".$referencia."','".$num_doc."','".$f_nac."',DATE_FORMAT(now(),'%d/%m/%Y') $val_direccion_delivery_no_map)";
 				$idclie=$bd->xConsulta_UltimoId($sqlClienteNew);
 
 				// insertar en cliente_sede
@@ -1670,12 +1670,13 @@
 			}
 		} else {
 			// insertar en cliente_sede
-			$sqlPredudereUpdate = "call procedure_registrar_cliente_sede(".$_SESSION['idsede'].",".$idclie.", '".$telefono."');";
+			$sqlPredudereUpdate = "call procedure_registrar_cliente_sede(".$_SESSION['idsede'].",".$idclie.", '".$telefono."');";			
 			// $bd->xConsulta_NoReturn($sqlPredudereUpdate);
 			// echo $sqlPredudereUpdate;
 
 			// update cliente
 			$row_direccion_delivery_no_map = $row_direccion_delivery_no_map.'='.$val_direccion_delivery_no_map;
+			$row_direccion_delivery_no_map = $row_direccion_delivery_no_map == '=' ? '' : $row_direccion_delivery_no_map;
 			// $sqlUpdateClient="update cliente set nombres='".$nomclie."',ruc='".$num_doc."',referencia='".$referencia."',direccion='".$direccion."'".$update_telefono.", direccion_delivery_no_map = '". $direccion_delivery_no_map_save ."' where idcliente = ".$idclie.";";
 			$sqlUpdateClient="update cliente set nombres='".$nomclie."',ruc='".$num_doc."',referencia='".$referencia."',direccion='".$direccion."' $row_direccion_delivery_no_map where idcliente = ".$idclie.";";
 

@@ -22,8 +22,9 @@
 			
 			// _autocompleteComp = document.getElementById('input_clie_nombres_auto');
 			// _autocompleteComp.addEventListener('autocomplete-selected', (event) => {				
-			// 	const cliente = _autocompleteComp.getValue();
-			// 	xThisComInputCliente.fire('input-autocomplete-selected', cliente)
+			// 	console.log('selected aaaaaaaaa', xThisComInputCliente.inputValue);
+			// 	// const cliente = _autocompleteComp.getValue();
+			// 	// xThisComInputCliente.fire('input-autocomplete-selected', cliente)
 			// 	// xThisComInputCliente.getCliente(_autocompleteComp.getValue());
 			// });
 
@@ -73,8 +74,14 @@
 
 		}
 
-		function compRemoveSpecialCharObjClient(e) {			
+		function compRemoveSpecialCharObjClient(e) {					
 			e.target.value = e.target.value.replace(/[&\/\\,~'"?]/g, '');
+			// try {
+			// 	e.target.value = e.target.value.split(' | ')[1]
+			// } catch (error) {				
+			// 	e.target.value = e.target.value;
+			// }
+
 			xThisComInputCliente.isErrorLength = e.target.value.length > 0 && e.target.value.length < 5;
 			xThisComInputCliente.xchangeCliente();
 		}
@@ -120,7 +127,7 @@
 				getAllClientes();
 			},
 			xchangeCliente: ()=> {
-				const cliente = event.target.value;
+				let cliente = event.target.value;				
 				event.target.fire('input-autocomplete-selected', cliente);
 				// console.log('aaaaaaaaaaaaaaa');
 			}

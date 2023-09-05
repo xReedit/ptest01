@@ -482,6 +482,7 @@ var xThisCM,
 	xIdFiltro1='',
 	xCronometro_us=0,
 	xPermisoSupervisor=0,
+	xPermisoSupervisorNombre='',
 	xRefreshPermiso,
 	xpass_op,
 	xid_pedido_detalle_item,
@@ -850,17 +851,25 @@ function xIniControlMesa(){
 		
 		//var xcantEliminar=xobj_row_item.attr('data-cant_descontar');
 		//if(isNaN(parseInt(xcantEliminar))){xcantEliminar=parseFloat(xobj_row_item.find('#td_cant').text());}
+
 		xArrayItemEliminar={'procede':xobj_row_item.attr('data-descontar'),
 							'cant_descontar':xobj_row_item.attr('data-cant_descontar'),
 							'idprocede':xobj_row_item.attr('data-iddescontar'),
 							'idalmacen_items':xobj_row_item.attr('data-idcartalista'),
 							'idcarta_lista':xobj_row_item.attr('data-idcartalista'),
 							'iditem':xobj_row_item.attr('data-iditem'),
+							'idseccion': xobj_row_item.attr('data-idseccion'),
+							'idimpresora_seccion': xobj_row_item.attr('data-idimpresora_seccion'),
+							'idtipoconsumo': xobj_row_item.attr('data-idtipoconsumo'),
 							'idpedido_detalle':xobj_row_item.attr('data-idpedidodetalle'),
 							'idpedido':xobj_row_item.attr('data-idpedido'),
 							'precio_total':parseFloat(xobj_row_item.find("#td_importe").text()),
-							'precio_unitario':xobj_row_item.attr('data-punitario')};
-
+							'precio_unitario':xobj_row_item.attr('data-punitario'),
+							'des_tp': xobj_row_item.attr('data-des_tp'),
+							'descripcion': xobj_row_item.attr('data-descripcion')
+						};
+		
+		
 		//xid_tpc_item=xobj_row_item.attr('data-idtipoconsumo');
 
 
@@ -889,6 +898,7 @@ function xIniControlMesa(){
 		var p=e.detail.xRpts[0].p;
 		if(p===1){
 			xPermisoSupervisor=e.detail.xRpts[0].us;
+			xPermisoSupervisorNombre = e.detail.xRpts[0].nomus;
 			xCronometro_us=30;
 			xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
 			// xOp_permiso();
@@ -1361,12 +1371,32 @@ function xAnularPedido(){
 		var xid_descontar_item=$(element).attr('data-iddescontar');
 		var xcant_descontar=$(element).attr('data-cant_descontar');
 		var xitabla_item=$(element).attr('data-descontar');
-		xArrayAnularItems.push({'idpedidos':xidpedid_txt_change,'m_a':$("#txt_motivo_anular").val(),'c':xcant_descontar, 'cant_item':xcantidad_remove_item,'iddescontar':xid_descontar_item,'tabladescontar':xitabla_item})
+		xArrayAnularItems.push({
+			'idpedidos':xidpedid_txt_change,
+			'm_a':$("#txt_motivo_anular").val(),
+			'c':xcant_descontar,
+			'cant_item':xcantidad_remove_item,
+			'descripcion': $(element).attr('data-descripcion'),
+			'des_tp': $(element).attr('data-des_tp'),
+			'idimpresora_seccion': $(element).attr('data-idimpresora_seccion'),
+			'idtipoconsumo': $(element).attr('data-idtipoconsumo'),
+			'idseccion': $(element).attr('data-idseccion'),
+			'iddescontar':xid_descontar_item,
+			'tabladescontar':xitabla_item})
 	})
 	//
 	xPopupLoad.xopen();
 
-	const _valRecuperarBorrarItem =  check_recuperar_stock_all_pedido.checked ? '1' : '0';
+	const _valRecuperarBorrarItem =  check_recuperar_stock_all_pedido.checked ? '1' : '0';	
+	
+	// impresion de anulacion
+	const infoDataPedido = {
+		nummesa: xObj_miPedido.data().nummesa,
+		numpedido: xObj_miPedido.data().numpedido
+	}
+
+	cocinarImpresionAnulacionList(xArrayAnularItems, xPermisoSupervisorNombre, xNomU, infoDataPedido, $("#txt_motivo_anular").val())
+	// return
 
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	.done( function (dt_xx) {
@@ -1380,6 +1410,7 @@ function xAnularPedido(){
 			$(xObj_miPedido).find('.show-led-precuenta').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
+			$(xObj_miPedido).find('.referencia-pedido').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
 			$(xObj_miPedido).find("#nommozo").text('.');
@@ -1426,6 +1457,7 @@ function xCambiarMesa(){
 		$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 		$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 		$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
+		$(xObj_miPedido).find('.referencia-pedido').addClass('xInvisible');
 		$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
 		$(xObj_miPedido).find("#nommozo").text('.');
 		
@@ -1914,7 +1946,6 @@ async function xRegistrarClientePagoCP(){
 	// xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
 	
 	
-	
 	if(!xcheckItemsSeleccionados.esSeleccionTotal || !xcheckItemsSeleccionados.esSeleccionTodoPeidoLista){ //si es pago parcial
 		//registrar pago - ok
 		const dataSendPedido = {
@@ -1963,7 +1994,8 @@ async function xRegistrarClientePagoCP(){
 				num_pedido: xObj_miPedido.data().numpedido,
 				idpedido: xObj_miPedido.data().numpedido,
 				num_mesa: xObj_miPedido.data().nummesa,
-				importe_restante: xcheckItemsSeleccionados.importeTotalSeleccionado
+				importe_restante: xcheckItemsSeleccionados.importeTotalSeleccionado,
+				p_tipo_pago: xarr_tipo_pago
 			}
 
 			_cpASocketNotifyPayPedido(_payloadPedidoPagado);
@@ -2020,9 +2052,10 @@ async function xRegistrarClientePagoCP(){
 				idusuario:  idUsuarioOperador,
 				num_pedido: xObj_miPedido.data().numpedido,
 				num_mesa: xObj_miPedido.data().nummesa,
-				importe_restante: 0
+				importe_restante: 0,
+				p_tipo_pago: xarr_tipo_pago
 			}
-
+		
 		_cpASocketNotifyPayPedido(_payloadPedidoPagado);
 		xValPago.setResetFormaPago();
 	}
@@ -2044,6 +2077,7 @@ function xRegistrarPagoCM(xcant_rp){
 				$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 				$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');	
 				$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
+				$(xObj_miPedido).find('.referencia-pedido').addClass('xInvisible');
 				$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
 				$(xObj_miPedido).find("#nommozo").text('.');
 
@@ -2107,6 +2141,7 @@ function isPedidoInMesa(xObj_miPedido, nummesa) {
 			$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
+			$(xObj_miPedido).find('.referencia-pedido').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
 			$(xObj_miPedido).find("#nommozo").text('.');
 
@@ -2140,6 +2175,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 	xPopupLoad.xopen();
 	xIrPage(0)
 	xObj_miPedido=$(obj);
+
 
 	// reset sub totales tachados
 	xLocal_SubTotal_Quitados = "";
@@ -2755,6 +2791,7 @@ function xLoadMipedidoBD(dt){
 					if(xAgrupar_item_activo==true){xdisabled_btn_cambiar="xdisabled";}else{xAgrupar_item_activo='';}
 
 					xNom_seccion=xDtBd[i].des_seccion;
+					
 
 					const isShowBtnAddItem = xDtBd[i].precio_default ? 
 									'<div class="btn-add-item btn-sm-add-row" data-op="itempedido" title="Agregar Uno"><i class="fa fa-plus" data-op="itempedido"></i></div>' : 
@@ -2793,6 +2830,7 @@ function xLoadMipedidoBD(dt){
 							'" data-total = "' + xDtBd[i].total +
 							'" data-total_r = "' + xDtBd[i].total_r +
 							'" data-totalr = "' + xDtBd[i].totalr +
+							'" data-idimpresora_seccion="' + xDtBd[i].idimpresora_seccion +
 							'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+
 									'<td width="50px" class="click_row_dt_p" id="cant_descontar"><paper-checkbox class="check_item"></paper-checkbox><span id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2)+'</span></td>'+
 									'<td class="click_row_dt_p" width="50%" id="descripcion_item">'+ xDtBd[i].descripcion +																			
@@ -2878,6 +2916,7 @@ function xEliminarItemPedido(){
 	// enviar condicion de aumentar stock
 	const _valRecuperarBorrarItem = check_recuperar_stock.checked ? '1' : '0';
 	xPopupLoad.xopen();
+	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3042', data:{xarr:xArrayItemEliminar,u:xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	.done( function (e_rpt) {
 		//e_rpt=$.parseJSON(e_rpt):
@@ -2916,6 +2955,12 @@ function xEliminarItemPedido(){
 		}, 550);
 		// xCheckPedidos();		
 		xPopupLoad.xclose();
+
+		const infoDataPedido = {
+			nummesa: xObj_miPedido.data().nummesa,
+			numpedido: xObj_miPedido.data().numpedido,
+		}		
+		cocinarImpresionAnulacionOne(xArrayItemEliminar, xPermisoSupervisorNombre, xNomU, infoDataPedido, true)
 
 		// indica cantidad pedidos borrados
 		// console.log('aaaaaaaaaaaaaaaaaaa');
@@ -3145,6 +3190,7 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 			$(xObj_miPedido).find('.show-led-reserva').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-led-print').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-ico-mozo').addClass('xInvisible');
+			$(xObj_miPedido).find('.referencia-pedido').addClass('xInvisible');
 			$(xObj_miPedido).find('.show-mozo-pedido').removeClass('pintar');
 			$(xObj_miPedido).find("#nommozo").text('.');
 			
@@ -3306,6 +3352,7 @@ function xPintarMesas() {
 			'</div>'+
 			'<p class="tipo text-secondary">Mesa</p>' +
 			'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
+			'<div class="xInvisible referencia-pedido"></div>' +
 			'<p class="tiempo xfont11">disponible</p>' +
 			'<p class="importe xBold">-</p>' +
 			'</div>'
@@ -3316,13 +3363,14 @@ function xPintarMesas() {
 	xIdFiltro1 = xIdFiltro1.indexOf('tpc')>-1 ? xIdFiltro1 : '.tpc' + xIdFiltro1;
 	$('.grid').html(xCadenaNumMesa).trigger('create');
 
+	// console.log('create isoto');
 	// if ($('.grid').length) {
 		$('.grid').isotope({
 		  itemSelector: '.xMiCardPedido',
-		  layoutMode: 'fitRows',
+		  layoutMode: 'masonry',
 		//   percentPosition: true,
 		  getSortData: {
-			  tpc: '[data-tpc]',
+			tpc: '[data-tpc]',
 			estado: '[data-estado]',
 			numero: '.numero parseInt'
 		  },
@@ -3360,6 +3408,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 		.done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
 			var xdtPe=JSON.parse(dtPe);
+			// console.log('xdtPe', xdtPe);
 
 			var xCadenaTPC=''
 			, xcont_mesa=1
@@ -3437,6 +3486,27 @@ function xPintarEstadoPedido(_objPedido = 0) {
 						_eparent.find('.show-led-print').removeClass('xInvisible');
 					}
 
+					// evalua si hay referencia si hay referencia
+					// console.log('itemList', itemList);
+					const isShowReferenciaPedido = itemList.referencia && itemList.referencia !== '';	
+					// console.log('isShowReferenciaPedido', isShowReferenciaPedido);
+					if ( isShowReferenciaPedido ) {
+						// remplazar la primera coma por un espacio vacio
+						const _cadenaReferenciaPedido = primeraConMayusculas(itemList.referencia.replace(/^,/, ''));
+						const _listReferenciaPedido = _cadenaReferenciaPedido.split(',')
+						let _itemHtmlReferenciaPedido = ''
+
+						_listReferenciaPedido.forEach((element, index) => {
+							_itemHtmlReferenciaPedido = _itemHtmlReferenciaPedido + '<p class="show-referencia-pedido">' + element + '</span>';
+						});
+						
+						// console.log('_cadenaReferenciaPedido', _cadenaReferenciaPedido);
+						_eparent.find('.referencia-pedido').removeClass('xInvisible');
+						_eparent.find('.referencia-pedido').html(_itemHtmlReferenciaPedido);
+						_eparent.find('.referencia-pedido').trigger('create');
+					} else {
+						_eparent.find('.referencia-pedido').addClass('xInvisible');
+					}
 
 					// _eparent.addClass(xidtpc_item_up);
 					// retorna el total + subtotales
@@ -3755,6 +3825,10 @@ function xPintarEstadoPedido(_objPedido = 0) {
 		});
 
 		$('.grid').isotope('updateSortData'); //.isotope('layout');
+
+		setTimeout(() => {
+			$('.grid').isotope('layout');			
+		}, 1000);		
 }
 
 function _cpSocketPintarPedido(pedido) {	
@@ -4075,6 +4149,7 @@ function xRefreshPedidoPaySocket(pedido) {
 				_eparent.find('.show-led-reserva').addClass('xInvisible');
 				_eparent.find('.show-led-print').addClass('xInvisible');
 				_eparent.find('.show-ico-mozo').addClass('xInvisible');
+				_eparent.find('.referencia-pedido').addClass('xInvisible');
 				_eparent.find('.show-mozo-pedido').removeClass('pintar');
 				_eparent.find("#nommozo").text('.');
 				// _eparent.addClass('tpc1');

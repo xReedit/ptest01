@@ -674,7 +674,7 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 }
 
 // imprimir cualquier lista
-function xImprimirCualquierLista(dataToPrinter, idestructura = 5, titulo = 'listado') {
+function xImprimirCualquierLista(dataToPrinter, idestructura = 5, nomfile = 'listado') {
 	xPopupLoad.titulo="Imprimiendo...";
 	xPopupLoad.xopen();
 
@@ -689,7 +689,7 @@ function xImprimirCualquierLista(dataToPrinter, idestructura = 5, titulo = 'list
 	}
 
 	// if (_sys_local === 1) {
-		xSendDataPrintServer(_data, idestructura, titulo);
+	xSendDataPrintServer(_data, idestructura, nomfile);
 		setTimeout(() => {			
 			// callback(false);
 			xPopupLoad.xclose();
@@ -709,9 +709,13 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 			if (_data.Array_enca[0].ip_print === '') return;
 			break;
 		default:
-			if (_data.Array_print[0].ip_print === '') return;
-			_data.Array_print[0].logo64 = '';
-			_data.Array_print[0].logo = '';
+			try {				
+				if (_data.Array_print[0].ip_print === '') return;
+				_data.Array_print[0].logo64 = '';
+				_data.Array_print[0].logo = '';
+			} catch (error) {
+				
+			}
 			break;
 	}
 	
@@ -832,4 +836,193 @@ function comprobarNumCorrelativoComprobante(xArrayComprobante) {
         xArrayComprobante.correlativo = _numIntCorrelativoBD;
 		console.log('numero en comprobancion B', xArrayComprobante.correlativo)
     }
+}
+
+// impresora por tipo de consumo
+function getImpresoraByTpc(idtipo_consumo) {
+	const listTPCPrinter = xm_log_get('estructura_pedido');
+	let xArrayImpresoras = xm_log_get('app3_woIpPrint')
+	let printSelected = null
+	const _tpcPrint = listTPCPrinter.filter(p => parseInt(p.idtipo_consumo) == idtipo_consumo)[0];
+	if (_tpcPrint) {
+		if (_tpcPrint.idimpresora !== '0') {
+			printSelected = xArrayImpresoras.filter(p => parseInt(p.idimpresora) == _tpcPrint.idimpresora)[0];
+		}
+	}
+	return printSelected ? printSelected : false;
+}
+
+// impresora por idseccion
+function getImpresoraByIdImpresoraSeccion(idimpresora_seccion) {	
+	let xArrayImpresoras = xm_log_get('app3_woIpPrint')
+	const printSelected = xArrayImpresoras.filter(p => parseInt(p.idimpresora) == parseInt(idimpresora_seccion))[0];
+	return printSelected ? printSelected : false;
+}
+
+
+function cocinarImpresionAnulacionOne(dataItem, usuarioSupervisor, usuarioCaja, infoDataPedido) {
+	console.log('dataItem', dataItem);
+
+	// chequear si el tipo de consumo tiene impresora donde imprime
+	let printer;	
+	printer = getImpresoraByTpc(dataItem.idtipoconsumo);
+
+	console.log('printer', printer);
+
+	// sino tiene, buscamos la impresora de la seccion
+	if (!printer ) {
+		printer = getImpresoraByIdImpresoraSeccion(dataItem.idimpresora_seccion);
+	}
+
+	// sino existe impresora salimos
+	if (!printer) return;
+
+	// obtenemos el item de dataItem	
+	let _listaItemAnulados = [];	
+	const des_tpc = dataItem.des_tp.toUpperCase();
+	const des_item = dataItem.descripcion.toUpperCase();
+	const des_mesa = infoDataPedido.nummesa === "0" ? `PEDIDO ${infoDataPedido.numpedido}` : `MESA ${infoDataPedido.nummesa}`;	
+	const infoUsuario = `Caja: ${usuarioCaja} - Supervisor: ${usuarioSupervisor}`
+			
+	_listaItemAnulados.push({
+		descripcion: des_item.toUpperCase(),
+		cantidad: '01',
+	});
+	
+
+	printer.ip_print = printer.ip;
+
+	const _dataPrintD = {
+		lista: _listaItemAnulados,
+		impresora: [printer],		
+		subtotales: [],
+		encabezado: {
+			titulo: 'ANULACION',
+			tipo_consumo: des_tpc,									
+			mesa: des_mesa,
+			correlativo_lista:0,
+			usuario: infoUsuario,
+			motivo: ''
+		}
+	}
+
+	console.log('lista anulacion', _dataPrintD);
+
+	xImprimirCualquierLista(_dataPrintD);
+}
+
+function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuarioCaja, infoDataPedido, motivoAnulacion) {
+	console.log('dataItem', listItemsAnular);
+	let listItemAgrupados = []
+
+	// verficamos si hay impresoras segun el tipo de consumo
+	listItemsAnular.map(x => {
+		// chequear si el tipo de consumo tiene impresora donde imprime
+		let printer;	
+		printer = getImpresoraByTpc(x.idtipoconsumo);
+		// sino existe impresora salimos
+		if (!printer) return;
+
+		printer.ip_print = printer.ip;
+
+		// de lo contrario buscamos si ya existe el tipo de consumo el la lista resumen
+		const _isTpc = listItemAgrupados.filter(p => p.idtipoconsumo === x.idtipoconsumo)[0];
+		if (_isTpc ) {
+			const rowAdd = {
+				descripcion: x.descripcion,
+				cantidad: xCeroIzq(x.cant_item, 2),
+			}
+
+			_isTpc.items.push(rowAdd);
+		} else {
+			let listAdd = []
+			const rowAdd = {
+				descripcion: x.descripcion,
+				cantidad: xCeroIzq(x.cant_item, 2),
+			}
+
+			listAdd.push(rowAdd)
+
+			listItemAgrupados.push({
+				idtipoconsumo: x.idtipoconsumo,
+				idseccion: 0,
+				des_tpc: x.des_tp,
+				printer: printer,
+				items: listAdd
+			})
+		}
+
+		x.chekPrint = true;
+		
+	})
+
+	
+
+	// si no ha impresora por tipo de consumo buscamos por seccion	
+	listItemsAnular.map(x => {
+		if ( x.chekPrint ) return false // si ya se marco arriba para imprimer con tipo de consumo
+		// chequear si el tipo de consumo tiene impresora donde imprime
+		let printer;	
+		printer = getImpresoraByIdImpresoraSeccion(x.idimpresora_seccion);
+		// sino existe impresora salimos
+		if (!printer) return;
+
+		printer.ip_print = printer.ip;
+		// de lo contrario buscamos si ya existe el tipo de consumo el la lista resumen
+		const _isTpc = listItemAgrupados.filter(p => p.idseccion === x.idseccion)[0];
+		if (_isTpc ) {
+			const rowAdd = {
+				descripcion: x.descripcion,
+				cantidad: xCeroIzq(x.cant_item, 2),
+			}
+			_isTpc.items.push(rowAdd);
+		} else {
+			let listAdd = []
+			const rowAdd = {
+				descripcion: x.descripcion,
+				cantidad: xCeroIzq(x.cant_item,2)
+			}
+			listAdd.push(rowAdd)
+			listItemAgrupados.push({
+				idtipoconsumo: 0,
+				idseccion: x.idseccion,
+				des_tpc: x.des_tp,			
+				printer: printer,
+				items: listAdd
+			})
+		}
+		
+	})
+	
+
+	console.log('listItemAgrupados', listItemAgrupados);	
+	
+	if (listItemAgrupados.length === 0) return false;	
+
+
+	const des_mesa = infoDataPedido.nummesa === "0" ? `PEDIDO ${infoDataPedido.numpedido}` : `MESA ${infoDataPedido.nummesa}`;	
+	const infoUsuario = `Caja: ${usuarioCaja} - Supervisor: ${usuarioSupervisor}`
+
+	listItemAgrupados.map(x => {
+		const _dataPrintD = {
+			lista: x.items,
+			impresora: [x.printer],
+			subtotales: [],
+			encabezado: {
+				titulo: 'ANULACION',
+				tipo_consumo: x.des_tpc,
+				mesa: des_mesa,
+				correlativo_lista: 0,
+				usuario: infoUsuario,
+				motivo: motivoAnulacion.toUpperCase()
+			}
+		}
+
+		console.log('lista anulacion', _dataPrintD);
+
+		xImprimirCualquierLista(_dataPrintD);
+	})
+
+
+
 }
