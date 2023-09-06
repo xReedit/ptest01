@@ -184,7 +184,7 @@
 
 			$sql="
                 SELECT ps.idproducto_stock as value, concat(a.descripcion, ' | ', pf.descripcion , ' | ', p.descripcion) as label 
-                    ,ps.stock, ps.idproducto
+                    ,ps.stock, ps.idproducto, p.precio, p.precio_unitario
                 FROM producto AS p
                     inner join producto_stock ps on ps.idproducto = p.idproducto 
                     inner join almacen a on a.idalmacen = ps.idalmacen

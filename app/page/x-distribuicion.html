@@ -16,21 +16,33 @@
                 <p><span class="fw-600">De: </span> {{ desdeDistribuicion }} <span class="fw-600">A:</span> {{ hastaDistribuicion }}</p>
                 <p><span class="fw-600">Fecha: </span> {{ fechaDistribuicion }}</p>
                 <p><span class="fw-600">Obersvaciones: </span> {{ observacionesDistribuicion }} </p>
-            </div>
-            <hr>            
-			<div>
-				<table width="100%">
+            </div>            
+			<div style="overflow: auto;background: aliceblue; border-radius: 5px;">
+				<table width="100% fs-12">
 					<thead>
                         <th align="left">Producto</th>						
 						<th align="center">Cantidad</th>
+                        <th align="center">Costo</th>
 					</thead>
 					<tbody>
 						<template is="dom-repeat" items="{{listItemAddDistribuicionD}}" as="item">
 							<tr>								
 								<td align="left">{{ item.descripcion }}</td>								
 								<td align="center">{{ item.cantidad }}</td>
+                                <td align="center">{{ item.costo }}</td>
 							</tr>
-						</template>						
+						</template>		
+                        <tr>
+                            <td align="right">
+                                <p class="fw-600 fs-15">Total</p>
+                            </td>
+                            <td align="center">
+                                <p class="fw-600 fs-15">{{ arrTotalesProductosDistribuicion.cantidad }}</p>
+                            </td>
+                            <td align="center">
+                                <p class="fw-600 fs-15">{{ arrTotalesProductosDistribuicion.costo }}</p>
+                            </td>                            
+                        </tr>
 					</tbody>
 				</table>
 			</div>
@@ -100,7 +112,7 @@
                 <div hidden$="[[ showDetalleDistribuicion ]]">
                     <div class="d-flexx justify-content-between align-items-center">
                         <p class="fs-15 fw-600">Listado de Distribuicion</p>                    
-                        <button class="btn btn-sm btn-info" onclick="goDetalleDistribuicion()"> + Nuevo</button>
+                        <button class="btn btn-sm btn-primary" onclick="goDetalleDistribuicion()"> + Nuevo</button>
                     </div>
                     <br>
                     <table width="100%">
@@ -122,7 +134,7 @@
                                     <td>{{ item.desde }}</td>
                                     <td>{{ item.hasta }}</td>
                                     <td>{{ item.detalle }}</td>
-                                    <td align="right"><button class="btn btn-sm btn-success" data-id="{{item.iddistribuicion}}"  onclick="xloadDetalleDistribuicion(this)">Ver</button></td>
+                                    <td align="right"><button class="btn btn-sm btn-xsm xBoton_flat_2" data-id="{{item.iddistribuicion}}"  onclick="xloadDetalleDistribuicion(this)">Ver</button></td>
                                 </tr>
                             </template>                            
                         </tbody>
@@ -160,9 +172,10 @@
                     
                     <table width="100%">
                         <thead>
-                            <td width="60%">Producto</td>
+                            <td width="50%">Producto</td>
                             <td>Stock</td>
-                            <td>Cantidad</td>
+                            <td>Cant. Distribuir</td>
+                            <td>Costo</td>
                             <td></td>
                         </thead>
                         <tbody>
@@ -173,12 +186,16 @@
                                         id="compProductoAlmacenDistribuicion" 
                                         onlynomfamilia="true"                                    
                                         idalmacenfiltro$="[[idAlmacenDistribuicionFiltro]]"></x-comp-find-producto-almacen>
-                                </td>
+                                </td>                                
                                 <td>
                                     <input type="number" readonly="true" class="xMiInput xPasarEnter2 fs-12" id="text_stock_producto" placeholder="Stock Actual">
                                 </td>
                                 <td>
-                                    <input type="number" class="xMiInput xPasarEnter2 fs-12" id="text_cantidad_producto" placeholder="Cantidad">
+                                    <input type="number" class="xMiInput xPasarEnter2 fs-12" id="text_cantidad_producto" placeholder="Cantidad" onchange="xCalcPrecioCompraDistribuicion(this)" onkeyup="xCalcPrecioCompraDistribuicion(this)">
+                                </td>
+                                <td>
+                                    <input type="text" readonly="true" class="xMiInput xPasarEnter2 fs-12" id="text_costo_producto_distribuicion"
+                                        placeholder="P. Compra" onkeypress="addProductoListDistribuicion()">
                                 </td>
                                 <td>
                                     <button class="btn btn-sm btn-success" onclick="addProductoListDistribuicion()">+</button>
@@ -189,11 +206,18 @@
                                 <tr data-id="[[item.idproducto_stock]]">
                                     <td>{{ item.descripcion }}</td>
                                     <td align="right" colspan="2" > {{ item.cantidad }} </td>
+                                    <td align="right" > {{ item.costo }} </td>
                                     <td>
                                         <span class="xDeleteRow ml-2" title="Anular" onclick="removeItemListDistribuicion(this);"></span>
                                     </td>
                                 </tr>
                             </template>
+                            <tr>
+                                <td colspan="2" align="right"><p class="fw-600 fs-15">Total</p></td>
+                                <td align="right"><p class="fw-600 fs-15">{{ arrTotalesProductosDistribuicion.cantidad }}</p></td>
+                                <td align="right"><p class="fw-600 fs-15">{{ arrTotalesProductosDistribuicion.costo }}</p></td>
+                                <td></td>
+                            </tr>
                         </tbody>
                     </table>
 
@@ -204,7 +228,7 @@
                         <hr>
                         <br>
                         <div class="d-flexx">
-                            <button class="btn btn-info" disabled$="[[isDisabledGuardar]]" onclick="guardarDistribuicionNew()">Guardar Distribuicion</button>
+                            <button class="btn btn-primary" disabled$="[[isDisabledGuardar]]" onclick="guardarDistribuicionNew()">Guardar Distribuicion</button>
                             <button class="btn btn-success ml-2" hidden$="[[!isGuardadoDistribuicion]]" onclick="cocinarImpresionDistribuicion()"> Imprimir </button>
                             <button class="btn btn-secondary ml-3" onclick="goDetalleDistribuicion()"> Atras </button>
                         </div>
@@ -545,6 +569,7 @@
                 rowItemAdd.descripcion = _productoSelected.label;
                 rowItemAdd.idproducto_stock = _productoSelected.value;
                 rowItemAdd.idproducto = _productoSelected.idproducto;
+                rowItemAdd.costo = text_costo_producto_distribuicion.value 
                 setItemListDistribuicion();
             }
 
@@ -569,9 +594,25 @@
             compProductoAlmacen.resetText();
             text_cantidad_producto.value = '';
             text_stock_producto.value = '';
+            text_costo_producto_distribuicion.value = '';
             compProductoAlmacen.focusText();
+            getArrTotalesProductosDistribuicion(xThisDisttribucion.listItemAddDistribuicion)
 
-        }
+    }
+
+    function getArrTotalesProductosDistribuicion(listProductosD) {
+        // obtenemos el total de cantidad y costos
+        const _arrTotales = listProductosD.reduce((acum, item) => {
+            acum.cantidad += parseFloat(item.cantidad);
+            acum.costo += parseFloat(item.costo);
+            return acum;
+        }, { cantidad: 0, costo: 0 });
+
+        _arrTotales.costo = _arrTotales.costo.toFixed(2);
+        _arrTotales.costo = isNaN(_arrTotales.costo) ? 0 : _arrTotales.costo;   
+        
+        xThisDisttribucion.arrTotalesProductosDistribuicion = _arrTotales;
+    }
 
     function setListListDistribuicion() {
         xThisDisttribucion.isDisabledGuardar = listItemDistribuicion.length === 0;
@@ -659,6 +700,8 @@
                 xThisDisttribucion.desdeDistribuicion = itemDistribuicion.desde;
                 xThisDisttribucion.hastaDistribuicion = itemDistribuicion.hasta;
 
+                getArrTotalesProductosDistribuicion(xThisDisttribucion.listItemAddDistribuicionD)
+
                 dialog_detalle_distribuicion.open();
             });
         }
@@ -670,6 +713,19 @@
                 xThisDisttribucion.listItemAddDistribuicion = [];
                 listItemDistribuicion = [];
                 xThisDisttribucion.isGuardadoDistribuicion = false;
+            }
+        }
+
+        function xCalcPrecioCompraDistribuicion(obj) {
+            const _cantidadProducto = obj.value;
+            const _productoSelected = compProductoAlmacen.getProductoSeletedAlmacen();              
+            
+            if ( !_productoSelected ) {        
+                return;
+            } else {
+                const _precioCompra = _productoSelected.precio_unitario;
+                const _precioCompraTotal = parseFloat(_precioCompra) * parseFloat(_cantidadProducto);
+                text_costo_producto_distribuicion.value = isNaN(_precioCompraTotal) ? 0 : _precioCompraTotal.toFixed(2);    
             }
         }
 
@@ -692,7 +748,8 @@
             observacionesDistribuicion: String,
             desdeDistribuicion: String,
             hastaDistribuicion: String,
-            isGuardadoDistribuicion: Boolean        
+            isGuardadoDistribuicion: Boolean,
+            arrTotalesProductosDistribuicion: {}       
         },
         attached: function () {
             this.isDisabledGuardar = true;

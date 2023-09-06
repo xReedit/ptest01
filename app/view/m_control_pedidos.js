@@ -198,6 +198,38 @@ function xSetActivarDeliveryOnline(isValDeliveryOnline) {
 	});
 }
 
+async function xCambiarMetaDiariaCP() {
+	// para cambiar la meta diaria evaluamos si es el usuario tiene perfil de administrador	
+	if (xm_log_get('app3_us').rol.toString() !== '1' ) return
+
+	const _swalAlertValues = paramsSwalAlert;	
+	_swalAlertValues.title = '<p class="fw-600 fs-20">Meta de Venta Diara</p><p class="fw-600 fs-13 text-warning">Especifique el importe de venta, que será la meta diaria.</p>';
+	_swalAlertValues.html = '<div class="p-3" style="display: inline-flex; border-radius:5px">'+
+                                    '<input type="number" placeholder="Meta Diaria" class="xMiInput text-center text-white fs-20 w-100" id="txt_meta_diaria_ventas_cm">'+
+                                '</div>';
+	_swalAlertValues.confirmButtonText = 'Listo, guardar';
+	_swalAlertValues.showCancelButton = true;
+
+
+	await showAlertSwalHtmlDecision(_swalAlertValues, 1)
+	.then(async res => {		
+			if (res.isConfirmed) { // remove familia
+				const _data = {
+					idsede: 0,
+					meta: txt_meta_diaria_ventas_cm.value,
+					new: 0
+				}
+
+				$.ajax({
+					type: 'POST',
+					url: '../../bdphp/log_005.php?op=1605',
+					data: _data
+				})				
+			}
+
+	})
+}
+
 
 // function xFiltroPedidos(obj){
 // 	var xurl_actual = window.location.href;
