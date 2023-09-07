@@ -829,12 +829,12 @@ async function xGetCorrelativoComprobante(_obj){
 }
 
 function comprobarNumCorrelativoComprobante(xArrayComprobante) {
-	console.log('numero en comprobancion A', xArrayComprobante.correlativo);
+	// console.log('numero en comprobancion A', xArrayComprobante.correlativo);
 	const _numIntCorrelativo = parseInt(xArrayComprobante.correlativo);
     const _isNotIntNumComprobante = isNaN(_numIntCorrelativoBD);
     if ( _isNotIntNumComprobante ) { // si viene con B001-00
         xArrayComprobante.correlativo = _numIntCorrelativoBD;
-		console.log('numero en comprobancion B', xArrayComprobante.correlativo)
+		// console.log('numero en comprobancion B', xArrayComprobante.correlativo)
     }
 }
 
@@ -861,13 +861,13 @@ function getImpresoraByIdImpresoraSeccion(idimpresora_seccion) {
 
 
 function cocinarImpresionAnulacionOne(dataItem, usuarioSupervisor, usuarioCaja, infoDataPedido) {
-	console.log('dataItem', dataItem);
+	// console.log('dataItem', dataItem);
 
 	// chequear si el tipo de consumo tiene impresora donde imprime
 	let printer;	
 	printer = getImpresoraByTpc(dataItem.idtipoconsumo);
 
-	console.log('printer', printer);
+	// console.log('printer', printer);
 
 	// sino tiene, buscamos la impresora de la seccion
 	if (!printer ) {
@@ -882,7 +882,7 @@ function cocinarImpresionAnulacionOne(dataItem, usuarioSupervisor, usuarioCaja, 
 	const des_tpc = dataItem.des_tp.toUpperCase();
 	const des_item = dataItem.descripcion.toUpperCase();
 	const des_mesa = infoDataPedido.nummesa === "0" ? `PEDIDO ${infoDataPedido.numpedido}` : `MESA ${infoDataPedido.nummesa}`;	
-	const infoUsuario = `Caja: ${usuarioCaja} - Supervisor: ${usuarioSupervisor}`
+	const infoUsuario = `Caja: ${usuarioCaja} - Supervisor: ${usuarioSupervisor}`;
 			
 	_listaItemAnulados.push({
 		descripcion: des_item.toUpperCase(),
@@ -906,13 +906,12 @@ function cocinarImpresionAnulacionOne(dataItem, usuarioSupervisor, usuarioCaja, 
 		}
 	}
 
-	console.log('lista anulacion', _dataPrintD);
+	// console.log('lista anulacion', _dataPrintD);
 
 	xImprimirCualquierLista(_dataPrintD);
 }
 
 function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuarioCaja, infoDataPedido, motivoAnulacion) {
-	console.log('dataItem', listItemsAnular);
 	let listItemAgrupados = []
 
 	// verficamos si hay impresoras segun el tipo de consumo
@@ -994,14 +993,13 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 		
 	})
 	
-
-	console.log('listItemAgrupados', listItemAgrupados);	
+	
 	
 	if (listItemAgrupados.length === 0) return false;	
 
 
 	const des_mesa = infoDataPedido.nummesa === "0" ? `PEDIDO ${infoDataPedido.numpedido}` : `MESA ${infoDataPedido.nummesa}`;	
-	const infoUsuario = `Caja: ${usuarioCaja} - Supervisor: ${usuarioSupervisor}`
+	const infoUsuario = `Caja: ${usuarioCaja} - Supervisor: ${usuarioSupervisor}`;
 
 	listItemAgrupados.map(x => {
 		const _dataPrintD = {
@@ -1018,7 +1016,7 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 			}
 		}
 
-		console.log('lista anulacion', _dataPrintD);
+		// console.log('lista anulacion', _dataPrintD);
 
 		xImprimirCualquierLista(_dataPrintD);
 	})

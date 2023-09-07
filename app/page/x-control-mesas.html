@@ -1394,11 +1394,14 @@ function xAnularPedido(){
 		nummesa: xObj_miPedido.data().nummesa,
 		numpedido: xObj_miPedido.data().numpedido
 	}
+	
+	const _motivoAnulacionPedidoCM = txt_motivo_anular.value
+	// console.log('_motivoAnulacionPedidoCM', _motivoAnulacionPedidoCM);
 
-	cocinarImpresionAnulacionList(xArrayAnularItems, xPermisoSupervisorNombre, xNomU, infoDataPedido, $("#txt_motivo_anular").val())
+	cocinarImpresionAnulacionList(xArrayAnularItems, xPermisoSupervisorNombre, xNomU, infoDataPedido, _motivoAnulacionPedidoCM)
 	// return
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM,'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	.done( function (dt_xx) {
 		xPopupLoad.xclose();
 		xActualizarItems();

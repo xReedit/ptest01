@@ -849,7 +849,10 @@
         xNuevoCliente();
         // $('#contentClie').addClass('xInvisible');
 
-        txt_ruc.value = '';
+        try {
+            txt_ruc.value = '';            
+        } catch (error) {            
+        }
         // $('#form_pago_cliente_fac').reset();
     }
 
