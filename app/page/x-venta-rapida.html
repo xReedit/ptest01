@@ -1372,6 +1372,7 @@ async function xGuardarPedidoVR(responde){
 	// var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
 	// 1801222 - guarda cliente en cliente sede
 	var xid_cliente_pago = await ClienteService_Guardar(DatosCliente);
+	// console.log('xid_cliente_pago', xid_cliente_pago);
 	var xidpedido_seleccionados = '';	
 	
 	DatosCliente.idcliente = xid_cliente_pago;
@@ -1467,6 +1468,7 @@ async function xGuardarPedidoVR(responde){
 
 
 	const idP = await goSendPedidoFecht(dataSendPedido);
+	console.log('idP', idP);
 	// return;
 
 	// chequea si hay productos con venta x peso para enviar el cambio de stock

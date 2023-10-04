@@ -71,6 +71,7 @@ function showAlertSwalOk(icon, title, text, btnOkText = 'Ok', theme = 1) {
 function showAlertSwalHtml(values, theme = 1) {
     const _themeShowSwalAlert = returnThemeSwalAlert(theme);
     _themeShowSwalAlert.fire(values)
+    return _themeShowSwalAlert
 }
 
 async function showAlertSwalHtmlDecision(values, theme = 1) {

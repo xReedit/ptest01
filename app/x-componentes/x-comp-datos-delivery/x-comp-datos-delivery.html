@@ -423,7 +423,9 @@
 			'id_api_comprobante': dataSede.id_api_comprobante,
 			'facturacion_e_activo': dataSede.facturacion_e_activo,
 			'logo64': "",		
-			'codigo_postal': dataSede.codigo_postal	
+			'codigo_postal': dataSede.codigo_postal,
+			'latitude': dataSede?.latitude || 0,
+			'longitude': dataSede?.longitude || 0
 		}
 
 		const comp_metodo_pago = document.getElementById('comp_tipo_pago_delivery');

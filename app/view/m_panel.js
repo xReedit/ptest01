@@ -388,9 +388,9 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
 			// produccion
-			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			// const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
 			
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;

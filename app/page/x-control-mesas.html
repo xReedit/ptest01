@@ -3371,14 +3371,17 @@ function xPintarMesas() {
 		$('.grid').isotope({
 		  itemSelector: '.xMiCardPedido',
 		  layoutMode: 'masonry',
-		//   percentPosition: true,
+		  percentPosition: true,
 		  getSortData: {
 			tpc: '[data-tpc]',
-			estado: '[data-estado]',
-			numero: '.numero parseInt'
+			numero: '.numero parseInt',
+			estado: '[data-estado]'
 		  },
 		  sortBy: [ 'tpc','numero','estado' ],
-		  filter: xIdFiltro1
+		  filter: xIdFiltro1,
+		  masonry: {				
+				horizontalOrder: true // manterner el order horizontal
+			}		  
 		});
 	// }
 	
@@ -3401,6 +3404,8 @@ function xPintarEstadoPedido(_objPedido = 0) {
 	var xCadenaNumMesa=''
 	, xCadenaPedidoOtros=''
 	, xidtipo_c='tpc1';				
+
+	// isShowResizePedidoByReferencia para redimensionar si hay referencias
 
 	// console.log('vuelve a pintar bd');
 	if (typeof _objPedido === 'object') {
@@ -3492,7 +3497,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					// evalua si hay referencia si hay referencia
 					// console.log('itemList', itemList);
 					const isShowReferenciaPedido = itemList.referencia && itemList.referencia !== '';	
-					// console.log('isShowReferenciaPedido', isShowReferenciaPedido);
+					
 					if ( isShowReferenciaPedido ) {
 						// remplazar la primera coma por un espacio vacio
 						const _cadenaReferenciaPedido = primeraConMayusculas(itemList.referencia.replace(/^,/, ''));
@@ -3825,13 +3830,18 @@ function xPintarEstadoPedido(_objPedido = 0) {
 			// 	const _val = x.nummesa == 0 ? '|'+xCeroIzq(x.correlativo_dia,4)+'|' : '|'+xCeroIzq(x.nummesa,2)+'|';
 			// 	return _val;
 			// }).join(','));
+			
+			$('.grid').isotope('updateSortData'); //.isotope('layout');
+						
+			setTimeout(() => {
+				$('.grid').isotope('layout');			
+				// $('.grid').isotope('updateSortData'); //.isotope('layout');
+				// $('.grid').isotope({ sortBy : ['tpc', 'numero', 'estado'] })
+				
+			}, 1000);		
+			
 		});
 
-		$('.grid').isotope('updateSortData'); //.isotope('layout');
-
-		setTimeout(() => {
-			$('.grid').isotope('layout');			
-		}, 1000);		
 }
 
 function _cpSocketPintarPedido(pedido) {	
