@@ -1,5 +1,7 @@
 // var socketCP;
-var socketCP = socketCP ? socketCP : new socketService();
+// var socketCP = socketCP ? socketCP : new socketService();
+var socketCP = socketService.getInstance(); 
+
 function _cpSocketOpen() { 
     // if (isSocket) {
         // isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;

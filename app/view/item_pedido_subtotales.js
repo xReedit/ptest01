@@ -292,7 +292,9 @@ function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliv
 	});
 
 	if ( isDeliverySolicitoReparto && !isClienteDeliveryFromApp ) { 
-		arrTotal.push(rowDelete);
+		if (rowDelete ) {
+			arrTotal.push(rowDelete);
+		}
 	}
 
 	_rowTotal.importe = (parseFloat(_rowTotal.importe) + importeAdd).toFixed(2);
@@ -303,6 +305,7 @@ function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliv
 function getImporteTotalSubTotalesDelivery(arrTotales = null) {
     // console.log(arrTotales);
     var rowTotal = arrTotales[arrTotales.length - 1];
+	arrTotales = arrTotales.filter(x => x); // quitamos todos los undefined
 	rowTotal.importe = arrTotales.filter(x => x.descripcion.toLowerCase() !== 'total').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
 	// quitamos los tachados
 	const importeTachado = arrTotales.filter(x => x.tachado).map(x => parseFloat(x.importe_tachado)).reduce((a, b) => a + b, 0);	

@@ -5,7 +5,8 @@
 //     idusuario: dtUs.idus,
 //     isFromApp: 0
 // }
-var socketZona = new socketService();
+// var socketZona = new socketService();
+var socketZona = socketService.getInstance();
 
 // isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 // if (isSocket) {

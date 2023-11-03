@@ -1,5 +1,5 @@
-var socketMonitoreo = new socketService();
-
+// var socketMonitoreo = new socketService();
+var socketMonitoreo = socketService.getInstance(); ;
 /// monitoreo de stock ///
 function _monitoreoSocketOpen() {    
     isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;

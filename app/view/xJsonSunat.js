@@ -216,6 +216,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         const _nomCliente = xArrayCliente?.nombres || 'PUBLICO EN GENERAL';
         const _fechaMetodoPago = xArrayComprobante.forma_de_pago?.fecha_de_pago || '';
         const _fechaVencimiento = _fechaMetodoPago !== '' ? _fechaMetodoPago : fecha_actual;
+        const _observacionesCPE = xArrayComprobante?.observaciones || '';
 
         var jsonData = {                    
             "serie_documento": `${abreviaCo}${xArrayComprobante.serie}`,
@@ -251,7 +252,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
             "leyendas": arrLegends,
             "extras":{
                 "forma_de_pago": xArrayComprobante.forma_de_pago,
-                "observaciones": "",
+                "observaciones": removeSpecialCharString(_observacionesCPE),
                 "vendedor": "",
                 "caja": "",
                 "idcliente": xArrayCliente.idcliente
@@ -516,7 +517,19 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
         return response.json();
     }).then(function (res) { 
         // console.log(res);
-        const errSoap = res.response ? res.response.error_soap : false;
+        try {
+            
+            const errSoap = res.response ? res.response.error_soap : false;
+            const _rptCPEResponse = res.response ? res.response : res;
+            const _rptCPESuccess = _rptCPEResponse.success
+            if ( !_rptCPESuccess || errSoap ) {
+            // if (!_rptCPESuccess) {
+                // analizamos el code error                            
+                xVerificarCodeResponseCPE(_rptCPEResponse)
+            }
+        } catch (error) {
+            
+        }
         // if (res.success || !errSoap) { // respuesta ok
             // console.log('xArrayComprobante.correlativo F res api', res.data.number);
 
@@ -602,4 +615,6 @@ function xSendWhatsAppPdfComrpobante(payload) {
     
     _cpSocketComprobanteWhatApp(payload)
 }
+
+
 

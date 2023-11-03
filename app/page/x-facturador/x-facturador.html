@@ -82,6 +82,10 @@
                         <p class="fs-11 pl-2 fw-600 text-info" hidden$="[[!isShowMsjTelefono]]">Se enviará el comprobante al WhatsApp.</p>
                         <p class="fs-11 pl-2 fw-600 text-secondary" hidden$="[[isShowMsjTelefono]]">Para enviar el comprobante al WhatsApp.</p>
                         
+                        <br>
+                        <input type="text" class="xMiInput xPasarEnter2" style="width:200px;" placeholder="Observaciones"
+                            id="txt_observaciones_cpe" espaciar>
+                        
                         
                         <input type="text" class="xMiInput xInvisible" style="width:98%;" placeholder="Cliente" onChange="conMayusculas(this)" id="txt_nombres" espaciar  required$="[[!modificarCliente]]" readonly$="[[!modificarCliente]]">
                         
@@ -530,6 +534,7 @@
         $('#txt_nombres').val('');
         $('#txt_direccion').val('');
         $('#txt_telefono').val('');
+        $('#txt_observaciones_cpe').val('');
         xThisFacturador.isShowMsjTelefono = false;
 
         $("#txt_ruc").select();
@@ -794,6 +799,9 @@
 
             // agredo 041021
             arr_comprobante.forma_de_pago = comprobanteFormaPago;
+
+            // agredo 1023
+            arr_comprobante.observaciones = $('#txt_observaciones_cpe').val();
 
             // retorna el encabezado del comprobante con hash            
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);

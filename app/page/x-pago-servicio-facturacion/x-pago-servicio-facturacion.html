@@ -181,7 +181,8 @@
     }
 
     function conectarSocket() {
-        xSocketPagoServicio = new socketService();
+        // xSocketPagoServicio = new socketService();
+        xSocketPagoServicio = socketService.getInstance();        
         xSocketPagoServicio.connectSocket();
     }
 

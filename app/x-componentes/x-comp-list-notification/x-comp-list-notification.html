@@ -46,7 +46,8 @@
         const _url = '../../bdphp/log_componentes.php?op=13'
         $.ajax({
 					type: 'POST',
-                    url: _url                    
+                    url: _url,
+                    async: false                    
 				})
 				.done(function (res) {
                     resCountNotification = JSON.parse(res).datos[0];
@@ -122,6 +123,22 @@
             listAddNotification.push(_iteAdd);
             countNoticaciones++;
         }
+
+        // alertas de facturacion electronica
+        if (resCountNotification.cpe_alert !== '') {            
+
+            _iteAdd = {
+                key: 'msj_cpe_alert',
+                fecha: '', descripcion: 'Alerta de facturación electrónica',
+                detalle: `${resCountNotification.cpe_alert}`,
+                idpage: 0,
+                parametro: '',
+                icon: 'fa fa-exclamation-circle text-danger'
+            }
+            listAddNotification.push(_iteAdd);
+            countNoticaciones++;
+        }
+
         
         xThisListNotificacion.lisNotificaciones = JSON.parse(JSON.stringify(listAddNotification));
         

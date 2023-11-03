@@ -573,7 +573,11 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
                 x.classtp = xGetClassTpDelivery(x.idtipo_pago)  //_classTp[parseInt(x.idtipo_pago)-1];
                 
                 // cliente
+                if ( isDataJson ) {
+                    _datosDelivery.direccion = _datosDelivery.direccion ? _datosDelivery.direccion : ''
+                }
                 x.nom_cliente = toTitleCase(x.nom_cliente);
+                
                 x.direccion_cliente = isDataJson ? toTitleCase(_datosDelivery.direccion) : '--';
                 x.tel_cliente = isDataJson ? _datosDelivery.telefono : '--';
 

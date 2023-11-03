@@ -267,7 +267,6 @@ function xEstructuraItemsGroupFormatoImpresion( xs , key) {
     const arr_rpt_json = xs;
     arr_rpt_json.des = '**';
     let rpt = {}
-    rpt[0] = arr_rpt_json;
-    console.log(rpt);
+    rpt[0] = arr_rpt_json;    
     return rpt;
 }

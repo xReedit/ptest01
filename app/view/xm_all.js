@@ -548,6 +548,9 @@ function xm_log_get(seccion){
 	case 'app3_sys_const':		
 		xdt_rpt = xdt_log.sistema.constantes;
 		break;
+	case 'cpe_alerts':// * sedes
+      xdt_rpt=xdt_log.sistema.cpe_alert;
+	  break;
     case 'app3_woA':
       xdt_rpt=xdt_log.us.acc;
       break;
@@ -583,7 +586,7 @@ function xm_log_get(seccion){
 	  break;
 	case 'datos_org_all_sede':// * sedes
       xdt_rpt=xdt_log.sede.datos_org_all_sede;
-	  break;
+	  break;	
 	
 		// xDtUS(3)
   }
@@ -940,49 +943,67 @@ function getDataUsRRHH() {
 }
 
 
+// verifica el codigo de error de la sunat 
+async function xVerificarCodeResponseCPE(response) {
+    const _listCodeErrosCpe = xm_log_get('cpe_alerts');
+    const codeResponseCPE = response.code;
 
-// async function getTemplate(filepath) {
-// 	return await fetch(filepath)
-// 		.then(response => {
-// 			let txt = response.text();
-// 			let html = new DOMParser().parseFromString(txt, 'text/html');
+    // busca el codigo de error en la lista
+    const _codeCpe = _listCodeErrosCpe.filter(x => x.code == codeResponseCPE)[0];
+    if ( _codeCpe ) {
+		if ( _codeCpe.nivel == '1' ) { // pausar         
+				
 
-// 			return html.querySelector('template');
-// 		});
-// }
+				const fetchData = new httpFecht();
+				const _dataSend = {
+					"tipo": "error",
+					"mensaje": response.description || response.message,
+					"codigo": response.code,
+				}
+				
+				const rpt = await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
+				console.log('rpt', rpt);
 
-// function xConstAjax() {
-// 	$.ajax = (($oldAjax) => {
-// 		// on fail, retry by creating a new Ajax deferred
-// 		function check(a, b, c) {
-// 			var shouldRetry = b != 'success' && b != 'parsererror';
-// 			if (shouldRetry && --this.retries > 0)
-// 				setTimeout(() => {
-// 					$.ajax(this)
-// 				}, this.retryInterval || 100);
-// 		}
+				const _swalAlertValues = paramsSwalAlert; 
+				_swalAlertValues.html = `<div class="p-1"> 
+											<p class="fw-600 fs-20 text-danger">Problemas con la facturación electrónica.</p>
+											<p class="fw-100 fs-14">${_dataSend.mensaje}</p>
+											<p class="fw-600 fs-14 text-warning">Comuniquese con soporte técnico.</p>
+										</div>`;
+				_swalAlertValues.showCancelButton = false;
+				_swalAlertValues.showConfirmButton = true;
+				_swalAlertValues.confirmButtonText = 'Entendido.';
 
-// 		return settings => $oldAjax(settings).always(check)
-// 	})($.ajax);
+				const rptSwlalCPE = await showAlertSwalHtmlDecision(_swalAlertValues);
+				if ( rptSwlalCPE.isConfirmed ) {
+					// recarga la pagina, para cargar nuevamente los valores
+					setTimeout(() => {
+						window.location.reload();
+					}, 1500);
+				}        
+			
+		} else {
+			return false;
+		}
+	}
+}
 
-// 	$.ajaxSetup({
-// 		timeout: 10000,
-// 		retries: 2, // <-------- Optional 
-// 		tryCount: 0, // <---------- cuenta los intentos
-// 		retryLimit: 2,
-// 		retryInterval: 4000, // <-------- Optional
-// 		error: function (jqXHR, textStatus, errorThrown) {
-// 			this.tryCount++;
-// 			if (this.tryCount >= this.retryLimit) {
-// 				alert('No se pudo establecer conexion. Intentelo mas tarde.');
-// 				try {
-// 					xPopupLoad.xclose();
-// 				} catch (error) {}
 
-// 				return;
-// 			}
-// 		},
-// 	});
-// }
+// chequea si is_bloqueado_facturacion de la sede esta habilitada
+// sino muestra un mensaje de alerta, pidiendo que se comunique con soporte
+function checkAlertCPESede() {
+	const _sede = xm_log_get('datos_org_all_sede')[0];	
+	if ( _sede.is_bloqueado_facturacion == '1' ) {
+		const _swalAlertValues = paramsSwalAlert; 
+		_swalAlertValues.html = `<div class="p-1">
+									<p class="fw-600 fs-20 text-danger">Problemas con la facturación electrónica.</p>
+									<p class="fw-100 fs-15">${_sede.msj_cpe_alert}.</p>	
+									<p class="fw-100 fs-15 text-warning">Comuniquese con soporte técnico.</p>
+								</div>`;
+		_swalAlertValues.showCancelButton = false;
+		_swalAlertValues.showConfirmButton = true;
+		_swalAlertValues.confirmButtonText = 'Entendido.';
 
-// reintentos en $.ajax
+		showAlertSwalHtmlDecision(_swalAlertValues);
+	}
+}

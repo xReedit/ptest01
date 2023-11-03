@@ -483,8 +483,21 @@
             break;
         case 3001: // guardar configuracion 
             $postBody = json_decode(file_get_contents('php://input'));
-            $sql="update sede_costo_delivery set parametros = '$postBody->parametros' where idsede = $g_idsede";
+            if ($postBody->isRegisterNew == 1) {
+                $sql="insert into sede_costo_delivery(idsede, parametros) values ($g_idsede, '$postBody->parametros')"; 
+            } else {
+                $sql="update sede_costo_delivery set parametros = '$postBody->parametros' where idsede = $g_idsede";
+            }
             $bd->xConsulta($sql);            
+            break;
+        case 31: // bloquear facturacion electronica por error cpe ej: certificado vencido
+            $postBody = json_decode(file_get_contents('php://input'));
+
+            $sql="update sede set is_bloqueado_facturacion = 1,msj_cpe_alert='$postBody->mensaje' where idsede = $g_idsede";
+            $bd->xConsulta_NoReturn($sql);
+
+            $sql="update tipo_comprobante_serie set is_deshabilitado_cpe = 1, estado = 1 where idsede = $g_idsede and estado = 0 and idtipo_comprobante in (2,3)";  
+            $bd->xConsulta($sql);
             break;
     }
 ?>    

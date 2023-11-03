@@ -1,6 +1,8 @@
 /// _socketSuperMaster se declara en xm_all.js
 
 class socketService {
+    static instance = null;
+
     dataSocket = {};
     _socket = _socketSuperMaster;
     _idConexSocket;
@@ -13,6 +15,21 @@ class socketService {
 
     constructor() {
         // this.connectSocket();
+
+        if (socketService.instance) {
+            return socketService.instance;
+        }
+
+        socketService.instance = this;
+
+    }
+
+    static getInstance() {
+        if (!socketService.instance) {
+            console.log('new socket services');
+            socketService.instance = new socketService();
+        }
+        return socketService.instance;
     }
 
     connectSocket(){

@@ -696,6 +696,7 @@
 
 		var validForm = !xThisPago.ComprobanteRequiereCliente;
 		if (xThisPago.ComprobanteRequiereCliente) { // requiere factura 0 el monto es >= 700
+			if ( !xThisPago.tipoComprovanteSelecionado ) return;
 			if ( xThisPago.tipoComprovanteSelecionado.codsunat === '01' ){ // si es factura tiene que ser ruc
 				validForm = xThisPago.$.sel_cliente.value.length === 11 && clie_nombres.$.input_clie_nombres_auto.$.input.value != '' && clie_nombres.$.input_clie_nombres_auto.$.input.value.length > 4 ? true : false;
 			} else if ( xThisPago.tipoComprovanteSelecionado.codsunat === '03' ){ // si es boleta
@@ -765,10 +766,14 @@
 		}
 		
 
-
-		if (xThisPago.tipoComprovanteSelecionado === {}) {
-			xSelectedTpComprobante();
+		try {			
+			if (!xThisPago.tipoComprovanteSelecionado?.codsunat) {
+				xSelectedTpComprobante();
+			}
+		} catch (error) {
+			
 		}
+
 
 		
 
@@ -903,6 +908,10 @@
 
 	function _reloadDatalientes() {
 		_inputAutocomplete.reloadllClientes();
+	}
+
+	function _reloadDataCompFindComprobante() {
+		objSelComprobante.reloadAllComprobantes();
 	}
 
 	function xGetIsPrinterCpe() {
@@ -1080,6 +1089,9 @@
 		reloadInputDatalientes() {
 			_reloadDatalientes()
 		},
+		realoadCompFindComprobante() {
+			_reloadDataCompFindComprobante();
+		},	
 		setResetFormaPago: ()=> {
 			xCompTableFP.resetFormaPago();
 			xResetValuesInit();

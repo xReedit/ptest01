@@ -102,6 +102,7 @@
         const _httpFecht = new httpFecht();
         const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=30')
         if (rpt.success) {            
+            xThisCostoDeliverySede.isRegisterNew = false;
             if ( rpt.datos.length == 0 ){
                 xThisCostoDeliverySede.objParametros = {
                     km_limite: 5,
@@ -109,6 +110,9 @@
                     km_base: 2,
                     km_adicional_costo: 1
                 }
+
+                xThisCostoDeliverySede.isRegisterNew = true;
+
                 return;
             }
 
@@ -128,8 +132,8 @@
         // guardar cambios
         xPopupLoad.xopen();
         const _httpFecht = new httpFecht();
-        const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=3001',{parametros: JSON.stringify(_dataParametros) })
-        xPopupLoad.xclose();
+        const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=3001',{parametros: JSON.stringify(_dataParametros), isRegisterNew: xThisCostoDeliverySede.isRegisterNew ? 1 : 0 })
+        xPopupLoad.xclose();        
 
         if (rpt.success) {
             xThisCostoDeliverySede.objParametros = _dataParametros;
@@ -170,10 +174,12 @@
                     }
                 },
                 linkCarta: String,
-                linkEnabled: Boolean
+                linkEnabled: Boolean,
+                isRegisterNew: Boolean
             },
             attached: function () {
                 this.linkEnabled = true;
+                this.isRegisterNew = false
                 xThisCostoDeliverySede = this;
                 xIniCostoDeliverySede();
             }

@@ -3,6 +3,7 @@
 <link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 <link rel="import" href="./x-control-delivery/x-control-delivery.html">
 <dom-module id="x-control-mesas">
+	<link rel="import" href="../x-componentes/x-input-search-pedido-in-page/x-input-search-pedido-in-page.html">
 
 	<script src="../view/httpFech.js"></script>
 
@@ -355,8 +356,8 @@
 		</paper-dialog>
 		<br>
 		<div class="xContent d-flex">
-			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->			
-			<div class="grid" id="_gridCM" style="overflow:hidden !important;">
+			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->						
+			<div class="grid grid-contente-pedidos" id="_gridCM" style="overflow:hidden !important;">
 				<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
 					<p class="tipo">Mesa</p>
@@ -586,10 +587,15 @@ function xIniControlMesa(){
 
 		// $("#div_filtro_header").html('<input type="text" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:80px; margin-right:5px;" placeholder="mesa" letrablanco><div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div><div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>')
 		$("#div_filtro_header").removeClass('xInvisilbe');
-		$("#div_filtro_header").html(`<div class="bg-white xBoton2"><input type="number" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:50px; margin-right:5px;" placeholder="# mesa" autocomplete="off"></div>
-									<div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div>
+		// $("#div_filtro_header").html(`<div class="bg-white xBoton2"><input type="number" class="xMiInput" id="txt_bus_mesa" name="txt_bus_mesa" style="width:50px; margin-right:5px;" placeholder="# mesa" autocomplete="off"></div>
+		// 							<div class="xBoton2 xVerde" onclick="xOrdenPedido(1);">Por Estado</div>
+		// 							<div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>`).trigger('create');
+
+		$("#div_filtro_header").html(`<x-input-search-pedido-in-page id="comp_input_search_pedido_in_page"></x-input-search-pedido-in-page>
+									<div class="xBoton2 xVerde ml-1" onclick="xOrdenPedido(1);">Por Estado</div>
 									<div class="xBoton2 xPlomo" onclick="xOrdenPedido(0);">Por Numero</div>`).trigger('create');
 
+									
 		
 
 
@@ -1307,10 +1313,13 @@ function detectEvent(e) {
 	}
 
 	// if (e.keyCode>=112 || e.keyCode<=123){
-	if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) { 
+	if ((e.keyCode >= 48 && e.keyCode <= 90) || (e.keyCode >= 96 && e.keyCode <= 105)) { 
 		if(xbuscar_mesa==true){return;}
-		$("#txt_bus_mesa").focus();
-		if(xbuscar_mesa==true){$("#txt_bus_mesa").select();xbuscar_mesa=false;}
+		const _comp_inputsearchpedidoinpage = document.getElementById('comp_input_search_pedido_in_page');		
+		_comp_inputsearchpedidoinpage.focus()
+		if (xbuscar_mesa == true) { _comp_inputsearchpedidoinpage.select(); xbuscar_mesa = false; }
+		// $("#txt_bus_mesa").focus();
+		// if(xbuscar_mesa==true){$("#txt_bus_mesa").select();xbuscar_mesa=false;}
 	}
 	if (evt.keyCode>=119 && evt.keyCode<=121 && dialog_detalle.opened) {
 
@@ -3676,6 +3685,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 
 					// si ya pago desde el app y solo falta confirmar pago para registrar
 					var _isOtroCardClass = 'otroCard ';
+					itemList.reserva = itemList.reserva ? itemList.reserva : '0';
 					var numBold = itemList.reserva.toString() === '0' && itemList.tipo_consumo_titulo.toUpperCase() === 'LOCAL' ? '' : xCeroIzq(itemList.correlativo_dia,4);
 					var NumidPedido = itemList.idpedido;
 					var fechaHoraPedido = itemList.fecha +' '+ itemList.hora;

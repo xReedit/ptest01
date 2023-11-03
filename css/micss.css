@@ -1458,6 +1458,31 @@ ul.list_add_item2 li {
     font-size: 11px;
 }
 
+
+@keyframes highlightAnimation {
+    0% {
+        /* background-color: '#ffeb3b'; */
+        /* color: #000; */
+        opacity: 1;
+    }
+
+    50% {
+        /* background-color: yellow; */
+        opacity: 0.3;
+    }
+
+    100% {
+        /* background-color: yellow; */
+        opacity: 1;
+    }
+}
+
+.show-element-located-in-page {
+    background-color: #ffeb3b;
+    color:#000;
+    animation: highlightAnimation 1.5s infinite;
+}
+
 .referencia-pedido {
     display: flex;
     flex-direction: column;

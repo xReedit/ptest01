@@ -517,7 +517,7 @@
             res = JSON.parse(res);
             // console.log('xResumenMesTotaleCpe', res);
             xThisCpe.listResumenCpeEmitidos = res.datos;
-            const _totalImporteCpe = xThisCpe.listResumenCpeEmitidos.map(x => parseFloat(x.total.replace(/,/g, ''))).reduce((a, b) => a+b, 0);
+            const _totalImporteCpe = xThisCpe.listResumenCpeEmitidos.map(x => removeComas(x.total)).reduce((a, b) => a+b, 0);
             xThisCpe.listResumenCpeEmitidosTotal = numeroConComas(_totalImporteCpe.toFixed(2));
         });
     }
@@ -977,7 +977,7 @@
                 xThisCpe.numRowsList = _numRows;
 
                 for (let index = 0; index < _numRows; index++) {
-                    var x = res.data[index];			
+                    var x = res.data[index];
 
                 // res.data.map(async (x) => {
                     x.estado = x.tipo_doc === 'FACTURA' && parseInt(x.ruc) === 0 ? 'ANULADO' : x.estado;
@@ -1130,7 +1130,9 @@
                     color: ''
                 };
 
-                const _valEstado = estado.toString()
+
+                // si es success entonces es aceptado
+                const _valEstado = estado ? estado.toString() : '1'
                 switch (_valEstado) {
                     case '0': _estado.titulo = "NO EXISTE"; _estado.color = "purple"; break;
                     case '1': _estado.titulo = "ACEPTADO"; _estado.color = "green"; break;

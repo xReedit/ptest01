@@ -230,6 +230,10 @@ async function xCambiarMetaDiariaCP() {
 	})
 }
 
+// function _searchStringInPageActive(obj) {
+// 	const _palabra_buscar = obj.value;
+// 	searchStringInPageActive(_palabra_buscar)
+// }
 
 // function xFiltroPedidos(obj){
 // 	var xurl_actual = window.location.href;
