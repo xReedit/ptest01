@@ -1,10 +1,14 @@
 <link rel="import" href="../x-componentes/pagination-input/pagination-input.html">
 <link rel="import" href="../x-componentes/x-comp-meta-venta/x-comp-meta-venta.html">
+<link rel="import" href="../x-componentes/x-comp-dialog-send-cpe/x-comp-dialog-send-cpe.html">
 <dom-module id="x-historial_venta">
 
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 	<script type="text/javascript" src="../view/export.excel.js"></script>
+
+	<link rel="stylesheet" href="../../css/searchableOptionList.css">
+	<script src="../../js/searchableOptionList.js"></script>
 	
 
 	<template>
@@ -63,10 +67,10 @@
 						<label for="txt_mozo" class="xfont10">Atendido por:</label>
 						<p id="txt_mozo" class="xfont20"></p>
 						</div>
-						<div>
+						<!-- <div>
 						<label for="txt_correlativo" class="xfont10">Correlativo:</label>
 						<p id="txt_correlativo" class="xfont20" style="white-space: pre-wrap; width: 50px;">CO-0000</p>
-						</div>
+						</div> -->
 						<div>
 						<label for="txt_tpc" class="xfont10">Tiempo de atencion:</label>
 						<p id="txt_tpc" class="xfont20"></p>
@@ -82,16 +86,175 @@
 			</div>						
 		</paper-dialog>
 
+		<x-comp-dialog-send-cpe id="compDialogSendCPE_RP"></x-comp-dialog-send-cpe>
+
+		<div class="p-5" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">			
+			<div class="d-flexx w-100 justify-content-between flex-wrap">
+				<!-- resumen -->
+				<h3>Registro de Pagos</h3>
+				<div class="div-info mb-1">
+					<div class="div-border text-center p-2 mr-1 div-indicador">
+						<p class="fs-12 fw-600 text-secondary">Meta Diaria</p>
+						<x-comp-meta-venta fontsize="fs-25"></x-comp-meta-venta>
+					</div>
+					<div class="div-border text-center p-2 mr-1 div-indicador" style="max-width: 100px;">
+						<p class="fs-12 fw-600 text-secondary">Metodos de Pago</p>
+						<div class="d-flexx justify-content-center">
+							<template is="dom-repeat" items="{{listCantidadPagos}}" as="item">
+								<div>
+									<p class="fs-11 pr-2 m-0 fw-600">{{item.id}}: <span class="fw-900 text-primary">{{item.cantidad}} </span></p>
+								</div>
+							</template>
+						</div>
+					</div>
+					<div class="div-border text-center p-2 mr-1 div-indicador" style="max-width: 80px;">
+						<p class="fs-12 fw-600 text-secondary">Comprobantes Emitidos</p>
+						<p class="fw-600 fs-15">{{ numComprobantesEmitidos }}</p>
+					</div>
+					<div class="div-border text-center p-2 div-indicador">
+						<p class="fs-12 fw-600 text-secondary">Importe Total</p>
+						<p class="fw-600 fs-25 text-primary">S/. {{ importeTotalRegistrado }}</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- filtros -->
+			<div class="div-border div-filter">
+				<div>
+					<p class="fw-900">Ver Desde</p>
+					<input type="text" style="height: 20px;" class="selected-template-1 xCursor" id="txt_fecha" placeholder="Elige fecha">
+				</div>
+				
+				<div style="width: 95%;">
+					<p class="fw-900">Filtro</p>
+					<div class="content-div-filtro">
+						<select class="js-select2-rp selected-template-1" id="seletecFilter" multiple>
+							<optgroup label="Cobrado Por">
+								<template is="dom-repeat" items="{{listCobradoPorFilter}}" as="item">
+									<option value$="[[item]]">{{item.us_caja}}</option>
+								</template>
+							</optgroup>
+							<optgroup label="Canal de Consumo">
+								<template is="dom-repeat" items="{{listCanalConsumoFilter}}" as="item">
+									<option value$="[[item]]">{{item.descripcion}}</option>
+								</template>
+							</optgroup>
+							<optgroup label="Tipo de Comprobante">
+								<template is="dom-repeat" items="{{listTipoComprobanteFilter}}" as="item">
+									<option value$="[[item]]">{{item.descripcion}}</option>
+								</template>
+							</optgroup>
+							<optgroup label="Tipo de Pago">
+								<template is="dom-repeat" items="{{listMetodoPagoFilter}}" as="item">
+									<option value$="[[item]]">{{item.descripcion}}</option>
+								</template>
+							</optgroup>					
+						</select>
+					</div>
+				</div>
+
+				<div>
+					<p class="fw-900">Buscar</p>
+					<input type="text" style="height: 20px;" placeholder="Indique criterio a buscar..." class="selected-template-1 w-100"
+						onkeyup="buscarEnListaRegistroPagos(this.value)" >
+				</div>
+				
+			</div>
+
+			<!-- table -->			
+			<table class="w-100 content-table-delivery">				
+				<thead>
+					<th align="left" colspan="8"><span class="text-primary fw-600 fs-15">[[cantRegistroPagos]]</span> Registros encontrados</th>
+					<th align="right" ><button class="btn btn-sm btn-success" onclick="xGenerarReporteExcelRegistroPago()"><i class="fa fa-file-excel-o"></i> Exportar</button></th>
+				</thead>
+				<thead style="height: 50px;">
+					<th>#</th>
+					<th align="left">Fecha</th>
+					<th align="center">Cobrado Por</th>
+					<th align="left">Canal</th>
+					<th align="left">Atendido Por</th>
+					<th align="left">Cliente</th>
+					<th width="85px"></th>
+					<th align="right" width="50px"></th>
+					<th align="center" style="min-width: 130px;" >Importe</th>
+					<!-- <th width="50px" style="width: 50px;"></th> -->
+				</thead>
+				<tbody>
+					<template is="dom-repeat" items="[[listRegistroPagoFilter]]" as="item">
+						<tr class$="[[ item.row_calss ]]">
+							<td>
+								<span class="fw-600 mr-1">
+									{{item.num}}
+								</span>
+								<i class="fa fa-lock" hidden$="[[!item.isCierre]]"></i>
+			
+							</td>
+							<td>
+								<p class="fs-11">{{ item.fecha_des }}</p>
+								<p class="fs-11">{{ item.hora }}</p>
+							</td>
+							<td align="center">
+								<p class="fs-11 fw-900" style$="[[item.us_caja_class_color]]">{{ item.us_caja }}</p>								
+							</td>
+							<td>
+								<p class$="[[item.class_tpc]]">{{ item.des_consumo }}</p>
+								<p class="badge badge-secondary fs-12" hidden$="[[ item.isDelivery ]]">{{ item.mesa }}</p>
+								<div class="d-flexx" style="max-width: 120px;">
+									<p class="badge badge-success mr-2" hidden$="[[ !item.isScanCodigo ]]">App</p>
+									<!-- <p Class="fs-10 txt-secondary" hidden$="[[ !item.isDelivery ]]">Repartdor: {{ item.repartidor }}</p>-->
+									<p class="fs-10 fw-600">{{ item.correlativo_dia }}</p>									
+								</div>
+			
+							</td>
+							<td>
+								<div style="max-width: 130px;">
+									<p class="fs-11">{{ item.nom_usuario_show }}</p>
+								</div>
+							</td>
+							<td>
+								<div style="max-width: 125px;">
+									<p class="fs-10 fw-600">{{ item.nom_cliente }}</p>
+									<p class="fs-10 fw-600">{{ item.referencia_pedido }}</p>
+								</div>
+							</td>
+							<td align="center">
+								<div hidden$ = "[[!item.isShowComprobante]]">
+									<p class="fs-10 fw-600 m-0">{{ item.des_comprobante }} {{ item.num_comprobante }}</p>
+									<!-- <p class="fs-9 m-0">{{ item.num_comprobante }}</p> -->
+									<button class="btn btn-sm fs-10 btn-flat sky mt-1 d-flexx" data-id="[[item.idregistro_pago]]" onclick="xRegistroPagoReenviarComprobante(this)">
+										<i class="fa fa-whatsapp"></i>
+										Reenviar
+									</button>
+								</div>
+							</td>
+							<td align="right">
+								<div class="d-flexx justify-content-end">
+									<template is="dom-repeat" items="[[item.listIconsPago]]" as="icon">
+										<img width="18px" class="mr-1" src$="{{ icon.icon }}" alt="">
+									</template>
+								</div>
+							</td>
+							<td align="right">
+								<div class="d-flexx justify-content-end">
+									<p class="fw-600 text-info fs-15">S/. {{ item.total }}</p>								
+									<button class="xBoton_flat_2 xCursor ml-2" onclick="xloadDetallePago(this)" data-id="{{index}}">Ver</button>
+								</div>
+							</td>							
+						</tr>
+			
+					</template>
+				</tbody>
+			</table>
+		</div>
 
 
 		<br>
-		<div class="xMiCard xradius" style="width:90%; max-width: 1450px;">
+		<!-- <div class="xMiCard xradius" style="width:90%; max-width: 1450px;">
 			<div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
                 <div class="div-content-head-op d-flexx justify-content-between flex-wrap">
 					<div class="pb-3">
 						<p class="fs-12 text-secondary">Fecha</p>
-						<div class="d-flexx">
-							<!-- <input type="date" class="xMiInput" style="width:200px;" id="txt_fecha">										 -->
+						<div class="d-flexx">							
 							<input type="text" class="selected-template-1 xCursor" id="txt_fecha"  placeholder="Elige fecha">
 						</div>
 					</div>
@@ -121,54 +284,89 @@
 						</div>
 					</div>
 				</div>
-			</div>
-			<div class="w-100 border-bottom" style="padding: 20px; box-sizing: border-box; background: cornsilk;">
+			</div>--> 
+			<!-- <div class="w-100 border-bottom" style="padding: 20px; box-sizing: border-box; background: cornsilk;"> -->
 				<!-- <div class="w-100"> -->
 					<!-- busqueda -->
 					<!-- </div> -->
-					<div class="d-flexx justify-content-between">
+					<!-- <div class="d-flexx justify-content-between">
 						<input type="text" class="xMiInput" width="80%" placeholder="Buscar ..." onkeyup="buscarEnLista(this.value)">
 						<button class="xBoton2 xVerde" onclick="xGenerarReporteExcelRegistroPago()" title="Exportar a excel"><img src="../../images/excel.png" alt=""></button>
 					</div>
+			</div>  -->
+
+			<div class="xInvisible">
+				<table width="100%" id="tbRegistroPago">
+					<thead>
+						<th>#</th>
+						<th>Fecha</th>
+						<th>Hora</th>
+						<th>Cobrado Por</th>
+						<th>Canal</th>
+						<th>Atendido Por</th>
+						<th>Cliente</th>
+						<th>Comprobante</th>
+						<th>Productos</th>						
+						<th>T. Pago</th>
+						<th align="right" style="min-width: 100px;">importe</th>
+						<th>Estado</th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="[[listRegistroPagoFilter]]" as="item">
+							<tr>
+								<td>{{item.num}}</td>
+								<td>{{item.fecha_des}}</td>
+								<td>{{item.hora}}</td>
+								<td>{{item.us_caja}}</td>
+								<td>{{item.des_consumo}}</td>
+								<td>{{item.nom_usuario_show}}</td>
+								<td>{{item.nom_cliente}}</td>
+								<td>{{item.des_comprobante}}</td>
+								<td>
+									<!-- Lista de productos e impresora donde se imprimio. -list_productos- -->
+									<table>										
+										<template is="dom-repeat" items="[[item.list_productos]]" as="prod">
+											<tr>
+												<td>{{prod.cantidad}}</td>
+												<td>{{prod.item}}</td>
+												<td>{{prod.total}}</td>
+												<td>{{prod.impresora}}</td>
+											</tr>											
+										</template>
+									</table>
+								</td>								
+								<td>
+									<div class="d-flexx">
+										<table>
+											<template is="dom-repeat" items="[[item.listDesPago]]" as="tpc">
+												<tr>
+													<td>{{tpc.descripcion}}</td>
+													<td>{{ tpc.importe }}</td>
+												</tr>
+											</template>
+										</table>
+									</div>
+								</td>
+								<td>S/. {{ item.total }}</td>
+								<td>
+									<p>{{item.des_estado}}</p>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
 			</div>
-			<div class="xContentCard border-bottom" style="padding: 20px;">            
+
+			<!-- <div class="xContentCard border-bottom" style="padding: 20px;">            
 				<div class="div-content-grid" >
 					
-					<br>
+					<br> -->
 					
 					<!-- table export -->
-					<div class="xInvisible">
-						<table width = "100%" id="tbRegistroPago">
-							<thead>
-								<th>#</th>
-								<th>Fecha</th>
-								<th>Hora</th>
-								<th>Canal</th>
-								<th>Cliente</th>
-								<th>Comprobante</th>							
-								<th>T. Pago</th>
-								<th align="right" style="min-width: 100px;">importe</th>
-								<th></th>
-							</thead>
-							<tbody>
-								<template is="dom-repeat" items="[[listRegistro]]" as="item">
-									<tr>
-										<td>{{item.num}}</td>
-										<td>{{item.fecha_des}}</td>
-										<td>{{item.hora}}</td>
-										<td>{{item.des_consumo}}</td>
-										<td>{{item.nom_cliente}}</td>
-										<td>{{item.des_comprobante}}</td>
-										<td>{{item.des_pago}}</td>
-										<td>S/. {{ item.total }}</td>
-									</tr>
-								</template>
-							</tbody>
-						</table>
-					</div>
+					
 					<!-- table export -->
 
-					<table width = "100%">
+					<!-- <table class="w-100 content-table-delivery">
 						<thead>
 							<th>#</th>
 							<th>Fecha</th>
@@ -176,13 +374,13 @@
 							<th>Canal</th>
 							<th>Correlativo</th>
 							<th>Cliente</th>
-							<th width="15px"></th>
+							<th width="85px"></th>
 							<th>T. Pago</th>
 							<th align="right" style="min-width: 100px;">importe</th>
 							<th></th>
 						</thead>
 						<tbody>
-							<template is="dom-repeat" items="[[listRegistro]]" as="item">
+							<template is="dom-repeat" items="[[listRegistroPagoFilter]]" as="item">
 								<tr class$="[[ item.row_calss ]]">
 									<td>
 										<span class="fw-600 mr-1">
@@ -217,7 +415,12 @@
 										<p class="fs-10 text-secondary">{{ item.referencia_pedido }}</p>
 									</td>
 									<td>
-										<span class="badge badge-today">{{ item.des_comprobante }}</span>
+										<p class="badge badge-today">{{ item.des_comprobante }}</p>
+										<button class="btn btn-sm fs-10 btn-flat sky mt-1 d-flexx"
+											onclick="xCDOpenEmitirComprobante(this)">
+											<i class="fa fa-whatsapp"></i>
+											Reenviar
+										</button>
 									</td>
 									<td>
 										<div class="d-flexx">
@@ -236,10 +439,10 @@
 
 							</template>
 						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
+					</table> -->
+				<!-- </div>
+			</div> -->
+		<!-- </div> -->
 
 		
 		<!-- <div class="xMiCard xradius" style="width:85%">
@@ -352,6 +555,25 @@
 		margin-right: -32px;
 		margin-left: -32px;
 	}
+
+	.bg-delivery {
+		background-color: #f8f6c2;
+	}
+
+	.bg-llevar {
+		background-color: #81fad3
+	}
+
+	.bg-mesa {
+		background-color: #46d9f2;
+	}
+
+	.div-indicador {
+		display: flex;
+    	flex-direction: column;
+    	justify-content: center;
+	}
+	
 </style>
 
 <script  type="text/javascript" src="../view/xJsonSunat.js"></script>
@@ -365,6 +587,82 @@
 
 <style>
 	.verIconFacturado img { visibility: hidden; }
+
+	.btn-row-delivery {
+            border: 0;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .bg-papaya {
+            background: #571c86;
+            color: white;
+        }
+        .btn-flat {            
+            opacity: 0.8;            
+        }
+        .btn-flat.blue {
+            background: #d0e6f0;
+            border: solid 1px #81d4fa;
+        }
+        .btn-flat.green {
+            background: #bfefc1;
+            border: solid 1px #81fa8a;
+        }
+        .btn-flat.sky {
+            background: #b1eef8;
+        border: solid 1px #46d9f2;
+        }
+        .btn-flat.red {
+            background: #f8c2c2;
+            border: solid 1px #e66060;
+        }
+
+        .btn-flat:hover {
+            opacity: 1;            
+        }
+
+        .content-table-delivery {
+            padding: 15px 0px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .content-table-delivery tr>td {
+            border-bottom: 8px solid #e5e5e7;
+        }
+
+        .container-list { border:2px solid #ccc; width:300px; height: auto; overflow-y: scroll; background: white; }
+
+        .sol-container {
+            display: flex !important;
+        }
+
+
+        .div-border {            
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .div-filter {
+            display: grid;
+            /* grid-template-columns: 40% 60%; */
+            grid-template-columns: 1fr 3fr 3fr;
+            column-gap: 30px;
+            /* background: white; */
+            padding: 20px;
+            /* border-radius: 5px; */
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .div-info {
+            display: flex;
+            justify-content: flex-end;
+        }
 </style>
 
 <script>
@@ -423,6 +721,23 @@ var data_pagination={}, p_rows=0, p_fecha='';
 					xloadHistorial();
                 }
             });
+
+	$(".js-select2-rp").select2({
+			// closeOnSelect : false,
+			placeholder: "Aplicar Filtro",
+			allowHtml: true,
+			allowClear: true,
+			tags: true,
+			width: "100%",
+		});
+
+	$(".js-select2-rp").on("change", (e) => {
+			const _arrOpSelected = [...e.target.selectedOptions].map(i => JSON.parse(i.value));
+			// console.log('_arrOpSelected', _arrOpSelected);
+			// xCDSetFilterList(_arrOpSelected);
+			xRegistroPagoListFilter(_arrOpSelected);
+		})
+	
 
 	// $("#txt_fecha").on('change',function(){
 	// 	var d = $(this).val().split('-');
@@ -536,66 +851,175 @@ function xloadHistorial(){
 		
 		
 		
+		
 		xdt_h=res.datos;
 		var xNumRegistro = xdt_h.length + 1 || 0;
 		var listTipoPago = [], importeTotalRegistrado = 0, numTotalComprobantes = 0;
 
+		// filters
+		xThisHistVenta.listCobradoPorFilter = [];
+		xThisHistVenta.listCanalConsumoFilter = [];
+		xThisHistVenta.listAtendidoPorFilter = [];
+		xThisHistVenta.listTipoComprobanteFilter = [];
+		xThisHistVenta.listMetodoPagoFilter = [];
+
 		xdt_h.map((x, index) => {
 			const _fecha = x.fecha.split(' ');
-			var _listIconsPago = [];
+			let _listIconsPago = [];
+			let _listDesPago = [];
 			x.isFacturaEmitido = x.idce !== null;
 			x.isPedidoApp = parseInt(x.app) === 1;
 			x.isScanCodigo = parseInt(x.scan_qr) !== 0;
 			x.isCierre = parseInt(x.cierre) !== 0;
 			x.icon_pago.split(',').map(i => {
-				_listIconsPago.push({icon: `../../images/${i}`})
-			});			
+				_listIconsPago.push({icon: `../../images/${i}`, id: i})
+			});
+			x.des_pago.split(',').map(i => {
+				const _itemPagoRow = i.split('-');
+				_listDesPago.push({ descripcion: _itemPagoRow[0], importe: _itemPagoRow[1] })
+			});
+
 			x.listIconsPago = _listIconsPago;
+			x.listDesPago = _listDesPago;
 			x.referencia_pedido = x.referencia_pedido === x.nom_cliente ? '' : x.referencia_pedido;
 			x.fecha_des = _fecha[0];
 			x.hora = _fecha[1];
 			x.des_comprobante = x.comprobante === '' ? '' : x.comprobante === 'B' ? 'Boleta' : 'Factura';
-			x.mesa = x.nummesa === '0' ? '' : 'Mesa ' + x.nummesa;
-			x.charbusqueda = `${x.us_caja} ${x.correlativo_dia} ${x.des_pago} ${x.des_consumo} ${x.nom_usuario} ${x.nom_cliente} ${x.referencia_pedido} ${x.total} ${x.des_comprobante} ${x.repartidor} ${x.parambusqueda} ${x.mesa}`;
+
+			// quitar los seros de la izquierda luego del '-'
+			x.isShowComprobante = x.des_comprobante !== '';
+			x.num_comprobante = ''
+			if ( x.isShowComprobante ) {
+				x.num_comprobante = x.numero.split('-');
+				x.num_comprobante = x.num_comprobante[0] + '-' + x.num_comprobante[1].replace(/^0+/, '');
+			}
+
+
+			x.mesa = x.nummesa === '0' ? '' : 'Mesa ' + x.nummesa;			
+
+			x.list_productos = x.list_productos ? JSON.parse(x.list_productos) : [];
 			
 
 			x.des_pago.split(',').map(t => {
-				const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === t.toLowerCase())[0];
+				const _descTPC = t.split('-')[0];
+				const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === _descTPC.toLowerCase())[0];
 				if ( ishayTP ) {
 					ishayTP.cantidad ++;
-				} else {
-					const _rowTPC = {id: primeraConMayusculas(t.toLowerCase()), cantidad: 1};
+				} else {					
+					const _rowTPC = {id: primeraConMayusculas(_descTPC.toLowerCase()), cantidad: 1};
 					listTipoPago.push(_rowTPC);
 				}
 			});
 			x.anulado = x.estado === "1";
+			x.des_estado = x.anulado ? 'Anulado' : 'Cobrado';
 			x.row_calss = x.anulado ? 'row-anulado' : '';
 			x.charbusqueda += x.anulado ? 'anulado, borrado, eliminado' : '';
 			x.isDelivery = x.des_consumo === 'DELIVERY';
+			x.des_consumo = x.des_consumo === 'CONSUMIR EN EL LOCAL' ? 'EN LOCAL' : x.des_consumo;
+			x.class_tpc = x.des_consumo === 'DELIVERY' ? 'bg-delivery' : x.des_consumo === 'PARA LLEVAR' ? 'bg-llevar' : 'bg-mesa';
+			x.class_tpc = `badge fs-12 ${x.class_tpc}`;
 
 			const _importeTotalRegistro = x.anulado ? 0 : parseFloat(x.total);			
 			importeTotalRegistrado = importeTotalRegistrado + _importeTotalRegistro;
 			numTotalComprobantes += x.comprobante !== '' ? 1 : 0;
 
-			// tipo de pago
+			// USUARIO CAJA SOLO el primer nombre
+			x.us_caja = x.us_caja.split(' ')[0];
+
+			// correlativo cambiar ',' por ' - '
+			x.correlativo_dia = x.correlativo_dia.split(',');
+			x.correlativo_dia = x.correlativo_dia.join(' - ');
+			
+			// nom_usuario mostrar solo el primer nombre
+			var listNomUsuarios = x.nom_usuario.split(',')
+			listNomUsuarios = listNomUsuarios.map(n => n.split(' ')[0]);
+			x.nom_usuario = listNomUsuarios.join(',');
+
+
+			// nom_usuario cambiar ',' por ' - '
+			x.nom_usuario_show = x.nom_usuario.split(',');
+			x.nom_usuario_show = x.nom_usuario_show.join(' - ');
+
+			// colocar un color a cada usuario de caja us_caja segun su nombre
+			// generar un color aleatorio segun el nombre
+			const xColorUsCaja = xColorAleatorioRegistroPagos(x.us_caja);
+			x.us_caja_class_color = `color: ${xColorUsCaja};`;
+
+			// filtros //
+
+			// filtro de cobrado por -us_caja-
+			const _itemCobradoPor = xThisHistVenta.listCobradoPorFilter.find(i => i.id_us_caja === x.id_us_caja)
+			if ( !_itemCobradoPor ) {
+				const _row = { id_us_caja: x.id_us_caja, us_caja: x.us_caja, key: 'id_us_caja', value: x.id_us_caja }
+				xThisHistVenta.listCobradoPorFilter.push(_row);
+			}
+
+			// filtro canal de consumo -idtipo_consumo-
+			const _itemCanalConsumo = xThisHistVenta.listCanalConsumoFilter.find(i => i.idtipo_consumo === x.idtipo_consumo)	
+			if ( !_itemCanalConsumo ) {
+				const _row = { idtipo_consumo: x.idtipo_consumo, descripcion: x.des_consumo, key: 'idtipo_consumo', value: x.idtipo_consumo }
+				xThisHistVenta.listCanalConsumoFilter.push(_row);
+			}
+
+			// filtro por tipo de comprobante -des_comprobante-
+			if ( x.isShowComprobante ) {
+				const _itemTipoComprobante = xThisHistVenta.listTipoComprobanteFilter.find(i => i.descripcion.toUpperCase() === x.des_comprobante.toUpperCase())
+				if ( !_itemTipoComprobante ) {
+					const _row = { descripcion: x.des_comprobante.toUpperCase(), key: 'des_comprobante', value: x.des_comprobante }
+					xThisHistVenta.listTipoComprobanteFilter.push(_row);
+				}
+			}
+
+			// filtro por metodo de pago -listDesPago-
+			x.listDesPago.map(p => {
+				const _itemMetodoPago = xThisHistVenta.listMetodoPagoFilter.find(i => i.descripcion.toUpperCase() === p.descripcion.toUpperCase())
+				if ( !_itemMetodoPago ) {
+					const _row = { descripcion: p.descripcion.toUpperCase(), key: 'des_pago', value: p.descripcion }
+					xThisHistVenta.listMetodoPagoFilter.push(_row);
+				}
+			});
+
+			// filtro atendido por -nom_usuario-
+			const _itemAtendidoPor = xThisHistVenta.listAtendidoPorFilter.find(i => i.nom_usuario === x.nom_usuario)	
+
+			
 
 			
 			xNumRegistro --;
 			x.num = xCeroIzq(xNumRegistro);
+
+
+			x.charbusqueda = `${x.nom_usuario} ${x.correlativo_dia} ${x.des_pago} ${x.des_consumo} ${x.nom_cliente} ${x.referencia_pedido} ${x.total} ${x.des_comprobante} ${x.num_comprobante} ${x.repartidor} ${x.mesa}`;
 
 			x.charbusqueda = x.charbusqueda.toLowerCase();
 		});
 
 		// console.log('xdt_h', xdt_h);
 		// console.log('listTipoPago', listTipoPago);
+		xThisHistVenta.listRegistroPagoMaster = JSON.parse(JSON.stringify(xdt_h));
+		xThisHistVenta.listRegistroPagoFilter = xThisHistVenta.listRegistroPagoMaster;
+		xThisHistVenta.listRegistroPagoFilterTmp = xThisHistVenta.listRegistroPagoFilter;
+
+		xThisHistVenta.listCobradoPorFilter = JSON.parse(JSON.stringify(xThisHistVenta.listCobradoPorFilter));	
+		xThisHistVenta.listCanalConsumoFilter = JSON.parse(JSON.stringify(xThisHistVenta.listCanalConsumoFilter));
+		xThisHistVenta.listTipoComprobanteFilter = JSON.parse(JSON.stringify(xThisHistVenta.listTipoComprobanteFilter));
+		xThisHistVenta.listMetodoPagoFilter = JSON.parse(JSON.stringify(xThisHistVenta.listMetodoPagoFilter));
+		
+
+		// console.log('listCobradoPorFilter', xThisHistVenta.listCobradoPorFilter);
+		// console.log('listCanalConsumoFilter', xThisHistVenta.listCanalConsumoFilter);
+		// console.log('listTipoComprobanteFilter', xThisHistVenta.listTipoComprobanteFilter);
+		
 
 		listRegistroMaster = xdt_h;
-		xThisHistVenta.listRegistro = listRegistroMaster;
+		// xThisHistVenta.listRegistroPagoFilter = listRegistroMaster;
 		
 		xThisHistVenta.listCantidadPagos = listTipoPago;
 		xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
-		xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 5);
+		xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 2);
+		xThisHistVenta.cantRegistroPagos = xThisHistVenta.listRegistroPagoFilter.length;
 
+		// console.log('¿res', xThisHistVenta.listRegistroPagoFilter);
 		xPopupLoad.xclose();
 		// return;
 
@@ -672,6 +1096,73 @@ function xloadHistorial(){
 	})*/
 }
 
+function xRegistroPagoListFilter(_listFilter) {
+	var _list = xThisHistVenta.listRegistroPagoMaster;
+	_listFilter.map(i => {
+		_list = xRegistroPagoFilterByCodes(_list, i.key, i.value)
+	})
+
+	// console.log('¿_list filter', _list);
+	xThisHistVenta.listRegistroPagoFilter = JSON.parse(JSON.stringify(_list));
+	xThisHistVenta.listRegistroPagoFilterTmp = xThisHistVenta.listRegistroPagoFilter;
+	xResumenRegistroPagoTotales();
+	// xCDInfoResumen();
+}
+
+function xRegistroPagoFilterByCodes(array, key, value) {	
+	return array.filter((o) => o[key].includes(value) );
+}
+
+function xResumenRegistroPagoTotales() {
+	var _numRegisterBusqueda = xThisHistVenta.listRegistroPagoFilter.length + 1 || 0;
+	var importeTotalRegistrado = 0, numTotalComprobantes = 0, listTipoPago = [];
+	xThisHistVenta.listRegistroPagoFilter.map(x => {
+		_numRegisterBusqueda--;
+		x.num = xCeroIzq(_numRegisterBusqueda);
+		x.des_pago.split(',').map(t => {
+			const _descTPC = t.split('-')[0];
+			const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === _descTPC.toLowerCase())[0];
+			if (ishayTP) {
+				ishayTP.cantidad++;
+			} else {
+				const _rowTPC = { id: primeraConMayusculas(_descTPC.toLowerCase()), cantidad: 1 };
+				listTipoPago.push(_rowTPC);
+			}
+		});
+
+
+		// importeTotalRegistrado = importeTotalRegistrado + parseFloat(x.total);
+		const _importeTotalRegistro = x.anulado ? 0 : parseFloat(x.total);
+		importeTotalRegistrado = importeTotalRegistrado + _importeTotalRegistro;
+		numTotalComprobantes += x.comprobante !== '' ? 1 : 0;
+	})
+
+	xThisHistVenta.listCantidadPagos = listTipoPago;
+	xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
+	xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 2);
+	xThisHistVenta.cantRegistroPagos = xThisHistVenta.listRegistroPagoFilter.length;
+}
+
+function xColorAleatorioRegistroPagos( nombre ) {
+	var xColor = '';
+	// colores pasteles claros
+	var xArrayColor = [
+		'#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5',
+		'#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50',
+		'#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800',
+		'#ff5722', '#795548', '#9e9e9e', '#607d8b'	
+	];	
+
+	var xArrayNombre = nombre.split(' ');
+	var xPrimeraLetra = xArrayNombre[0].charAt(0).toUpperCase();
+	var xSegundaLetra = xArrayNombre[1] ? xArrayNombre[1].charAt(0).toUpperCase() : '';
+	var xLetra = xPrimeraLetra + xSegundaLetra;
+	var xIndex = xLetra.charCodeAt(0) - 65;
+	xColor = xArrayColor[xIndex];
+
+	return xColor;
+}
+
 function xloadDetallePago(obj){
 
 	xPopupLoad.xopen();
@@ -685,7 +1176,8 @@ function xloadDetallePago(obj){
 	// xTotalItemSel=$(obj).find('.td_total').text();
 
 	const _indexRow = obj.dataId;
-	const rowItem = xThisHistVenta.listRegistro[_indexRow];
+	const rowItem = xThisHistVenta.listRegistroPagoFilter[_indexRow];
+	// const rowItem = xThisHistVenta.listAtendidoPorFilter[_indexRow];
 
 	index_historial = _indexRow;
 	xidregistro_pago_sel = rowItem.idregistro_pago;
@@ -858,7 +1350,7 @@ function xMandarCocinarImpresionComprobante_historial() {
 	var arr_cliente = xRpt_pago[0].cliente;	
 	var arr_comprobante = xRpt_pago[0].comprobante;
 	const arrayItems = xCargarDatosAEstructuraImpresion(xThisHistVenta.xdtPedDet);
-	console.log('arrayItems', arrayItems);
+	// console.log('arrayItems', arrayItems);
 	xPopupLoad.xopen();
 	// se envia f = genera el correlativo, e= registra el comprobante en registrodepago
 	//idregistro_pago se envia para update registro
@@ -934,7 +1426,7 @@ function reImprimirComprobante() {
 		var _detalle_json = JSON.parse(res).datos;
 		_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
 
-		const rowItem = xThisHistVenta.listRegistro[index_historial];
+		const rowItem = xThisHistVenta.listRegistroPagoFilter[index_historial];
 		const _dataPrint = {
 			detalle_json: _detalle_json.detalle_json,
 			idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
@@ -951,10 +1443,26 @@ function reImprimirComprobante() {
 	});
 }
 
+	function buscarEnListaRegistroPagos(val) {
+		// console.log('val', val);
+		val = val.toLowerCase();
+		// const _listBusqueda = listRegistroMaster.filter(x => x.charbusqueda.indexOf(val) > -1 )
+		xThisHistVenta.listRegistroPagoFilter = xThisHistVenta.listRegistroPagoFilterTmp;
+		const _listBusqueda = xThisHistVenta.listRegistroPagoFilter.filter(x => x.charbusqueda.includes(val))
+
+
+		// console.log('_listBusqueda', _listBusqueda);
+		xThisHistVenta.listRegistroPagoFilter = JSON.parse(JSON.stringify(_listBusqueda));
+
+		xResumenRegistroPagoTotales();		
+	}
+
 function buscarEnLista(val) {
 	// console.log('val', val);
 	val = val.toLowerCase();
 	const _listBusqueda = listRegistroMaster.filter(x => x.charbusqueda.indexOf(val) > -1 )
+	// xThisHistVenta.listRegistroPagoFilter = xThisHistVenta.listRegistroPagoFilterTmp;
+	// const _listBusqueda = xThisHistVenta.listRegistroPagoFilter.filter(x => x.charbusqueda.includes(val))
 	var _numRegisterBusqueda = _listBusqueda.length + 1 || 0;
 	var importeTotalRegistrado = 0, numTotalComprobantes = 0, listTipoPago = [];
 	
@@ -963,11 +1471,12 @@ function buscarEnLista(val) {
 		_numRegisterBusqueda --;
 		x.num = xCeroIzq(_numRegisterBusqueda);
 		x.des_pago.split(',').map(t => {
-				const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === t.toLowerCase())[0];
+				const _descTPC = t.split('-')[0];
+				const ishayTP = listTipoPago.length === 0 ? null : listTipoPago.filter(x => x.id.toLowerCase() === _descTPC.toLowerCase())[0];
 				if ( ishayTP ) {
 					ishayTP.cantidad ++;
 				} else {
-					const _rowTPC = {id: primeraConMayusculas(t.toLowerCase()), cantidad: 1};
+					const _rowTPC = {id: primeraConMayusculas(_descTPC.toLowerCase()), cantidad: 1};
 					listTipoPago.push(_rowTPC);
 				}
 			});
@@ -978,15 +1487,30 @@ function buscarEnLista(val) {
 		importeTotalRegistrado = importeTotalRegistrado + _importeTotalRegistro;
 		numTotalComprobantes += x.comprobante !== '' ? 1 : 0;
 	})
-	xThisHistVenta.listRegistro = _listBusqueda;
+
+	// console.log('_listBusqueda', _listBusqueda);
+
+	// xThisHistVenta.listRegistroPagoFilter = JSON.parse(JSON.stringify(_listBusqueda));
 
 	xThisHistVenta.listCantidadPagos = listTipoPago;
 	xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
-	xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 5);
+	xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 2);
 }
 
 function xGenerarReporteExcelRegistroPago() {
 	tableToExcel('tbRegistroPago', 'Registro de Pago');
+}
+
+function xRegistroPagoReenviarComprobante(obj) {
+	const _idRegistroPago = obj.dataId;	
+	const _rowItem = xThisHistVenta.listRegistroPagoFilter.find(x => x.idregistro_pago === _idRegistroPago);	
+	// console.log('_rowItem', _rowItem);
+	const _objCPE = {
+		numero: _rowItem.num_comprobante,
+		external_id: _rowItem.cpe_external_id,
+	}
+	const _compDialogSendCPE_RP = document.getElementById('compDialogSendCPE_RP');	
+	_compDialogSendCPE_RP.open(_objCPE)
 }
 
 Polymer({
@@ -1000,8 +1524,16 @@ Polymer({
 		listRegistro: [],
 		importeTotalRegistrado: Number,
 		numComprobantesEmitidos: Number,
-		listCantidadPagos: []
-
+		cantRegistroPagos: Number,
+		listCantidadPagos: [],
+		listCobradoPorFilter: [],
+		listCanalConsumoFilter: [],
+		listAtendidoPorFilter: [],
+		listMetodoPagoFilter: [],
+		listTipoComprobanteFilter: [],
+		listRegistroPagoMaster: [],
+		listRegistroPagoFilter: [],
+		listRegistroPagoFilterTmp: [], //en busqueda texto
 	},
 	attached:function(){
 		this.xIsPuedeReimprimirCPE = false;

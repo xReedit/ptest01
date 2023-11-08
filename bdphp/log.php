@@ -21,6 +21,7 @@
 
 	$g_ido = isset($_SESSION['ido']) ? $_SESSION['ido'] : 0; 
 	$g_idsede = isset($_SESSION['idsede']) ? $_SESSION['idsede'] : 0;
+	$g_us = isset($_SESSION['idusuario']) ? $_SESSION['idusuario'] : 0;
 	$fecha_now = date("d/m/Y");
 	$hora_now = date("H:i:s");
 
@@ -3280,7 +3281,7 @@
 			// 	order by rp.idregistro_pago desc";
 
 			//100521
-			$sql = "call procedure_registro_pagos_20001($g_idsede, '$fecha')";
+			$sql = "call procedure_registro_pagos_20001($g_idsede, '$fecha', $g_us)";
 				
 				// .$pagination['pageLimit']." OFFSET ".$pagination['pageDesde'];			
 			
