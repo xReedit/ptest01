@@ -260,6 +260,8 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         }
 
+        // console.log('jsonData', jsonData);
+
 
         const _viene_facturador = typeof idregistro_pago === "object" ? 1 : 0; 
 

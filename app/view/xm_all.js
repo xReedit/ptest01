@@ -992,18 +992,23 @@ async function xVerificarCodeResponseCPE(response) {
 // chequea si is_bloqueado_facturacion de la sede esta habilitada
 // sino muestra un mensaje de alerta, pidiendo que se comunique con soporte
 function checkAlertCPESede() {
-	const _sede = xm_log_get('datos_org_all_sede')[0];	
-	if ( _sede.is_bloqueado_facturacion == '1' ) {
-		const _swalAlertValues = paramsSwalAlert; 
-		_swalAlertValues.html = `<div class="p-1">
-									<p class="fw-600 fs-20 text-danger">Problemas con la facturación electrónica.</p>
-									<p class="fw-100 fs-15">${_sede.msj_cpe_alert}.</p>	
-									<p class="fw-100 fs-15 text-warning">Comuniquese con soporte técnico.</p>
-								</div>`;
-		_swalAlertValues.showCancelButton = false;
-		_swalAlertValues.showConfirmButton = true;
-		_swalAlertValues.confirmButtonText = 'Entendido.';
-
-		showAlertSwalHtmlDecision(_swalAlertValues);
+	try {
+		
+		const _sede = xm_log_get('datos_org_all_sede')[0];	
+		if ( _sede.is_bloqueado_facturacion == '1' ) {
+			const _swalAlertValues = paramsSwalAlert; 
+			_swalAlertValues.html = `<div class="p-1">
+										<p class="fw-600 fs-20 text-danger">Problemas con la facturación electrónica.</p>
+										<p class="fw-100 fs-15">${_sede.msj_cpe_alert}.</p>	
+										<p class="fw-100 fs-15 text-warning">Comuniquese con soporte técnico.</p>
+									</div>`;
+			_swalAlertValues.showCancelButton = false;
+			_swalAlertValues.showConfirmButton = true;
+			_swalAlertValues.confirmButtonText = 'Entendido.';
+	
+			showAlertSwalHtmlDecision(_swalAlertValues);
+		}
+	} catch (error) {
+		console.error('_data', error);
 	}
 }
