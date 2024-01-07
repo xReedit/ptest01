@@ -13,6 +13,7 @@
 	<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 
 	
+	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
 
 
 	<template>
@@ -127,11 +128,14 @@
 			</span>
 			<!-- <paper-icon-button paper-drawer-toggle onclick="xOpenPedidosCuentaPendientes();"></paper-icon-button> -->
 			<span class="title xtitulo_bar xfont18">Punto de Venta</span>			
-			<div class="xDerecha" style="display: flex; padding-top: 8px; margin-right: 10px;">
+			<div class="xDerecha" style="display: flex; align-items: center; padding-top: 7px; margin-right: 10px;">
 
-					<div style="padding-right: 20px;">
-							<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)" estilo="color: wheat;"></x-comp-find-categoria>
-						</div>
+					<div class="mr-2">
+						<x-comp-find-card id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-card>
+					</div>
+					<!-- <div style="padding-right: 20px;">
+						<x-comp-find-categoria id="compFindCategoria" onchange="_getCategoria(categorias)" estilo="color: wheat;"></x-comp-find-categoria>
+					</div> -->
 						
 		
 					<div style="display: grid; text-align: center; cursor: pointer;" onclick="dialog_opciones_adcionales.open()">							
@@ -693,18 +697,27 @@ function xIniVentaRapida(){
 
 
 	compFindCategoria=document.getElementById('compFindCategoria');
+	compFindCategoria.addEventListener('onChange', function (e) {
+		_getCategoria(e.detail.categorias);
+	});
+
 	compFindCategoria.addEventListener('getValorIncial', function (e) {
 
 		let valCategoriaLoalStorage;
+		console.log('¿e.detail', e.detail);
 		valCategoriaLoalStorage = e.detail.categorias		
 		
 		if ( getLocalStorage('::app3_cat_defualt') ) {
 			valCategoriaLoalStorage = JSON.parse(getLocalStorage('::app3_cat_defualt'));
 			xidCategoriaVR = valCategoriaLoalStorage.idcategoria; // toma el que esta en el storage si hubiera
 			
-			setTimeout(() => {// coloca la categoria antes seleccionada	
-				compFindCategoria.$.compFindListCategoria.value = valCategoriaLoalStorage.index;
-			}, 500);
+			try {				
+				setTimeout(() => {// coloca la categoria antes seleccionada	
+					compFindCategoria.$.compFindListCategoria.value = valCategoriaLoalStorage.index;
+				}, 500);
+			} catch (error) {
+				
+			}
 		} else {
 			xidCategoriaVR = e.detail.categorias.idcategoria; // toma el que esta en el storage si hubiera
 		}
@@ -1304,8 +1317,12 @@ function xRegistrarClientePagoVR(){
 function xRegistrarPagoVR(xidclie,xidp){
 	var idtpc=select_ulTPC.value;	
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=509', data:{idclie:xidclie,tt:xMoneda(tt_pedido),idp:xidp,xArrayItems:'',ArrayPago:xRpt_pago[0].xtipo_pagos,idtipo_consumo:idtpc}})
-	.done( function (xidC) {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=509', data:{idclie:xidclie,tt:xMoneda(tt_pedido),idp:xidp,xArrayItems:'',ArrayPago:xRpt_pago[0].xtipo_pagos,idtipo_consumo:idtpc}})
+	// .done( function (xidC) {
+
+	const _fetchApi = new httpFecht();
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=509', data: { idclie: xidclie, tt: xMoneda(tt_pedido), idp: xidp, xArrayItems: '', ArrayPago: xRpt_pago[0].xtipo_pagos, idtipo_consumo: idtpc } })
+	.then((xidC) => {
 		xidC=$.parseJSON(xidC);
 		if(!xidC.success){alert(xidC.error); return;}
 		//if(xidC.indexOf('error')!=-1){xPopupLoad.xclose(); alert(xidC); return;}
@@ -1466,9 +1483,10 @@ async function xGuardarPedidoVR(responde){
 	// fecth
 	// console.log('xarr_body', xarr_body);
 
-
+	
 	const idP = await goSendPedidoFecht(dataSendPedido);
-	console.log('idP', idP);
+	if ( !idP ) return;
+	// console.log('idP', idP);
 	// return;
 
 	// chequea si hay productos con venta x peso para enviar el cambio de stock
@@ -1597,6 +1615,7 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 	xPopupLoad.xopen(); // quitar comentario
 
 	const idP = await goSendPedidoFecht(dataSendPedido);
+	if (!idP) return;
 	const _arrRpt = idP;
 
 	const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
@@ -1631,9 +1650,28 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 }
 
 async function goSendPedidoFecht(_data) {
-	const _fetchApi = new httpFecht();
-	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
-	return rpt;	
+	const _fetchApiPedido = new httpFecht();
+	try {		
+		console.log('¿_data', _data);
+		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data }, true, false)
+		if (rpt) {
+			// evaluar si se descuenta el stock despues de enviar el pedido
+			const checkIsUpdateStockAfter = getVariableSede('update_stock_after') 
+			if (checkIsUpdateStockAfter) {
+				// item_pedidos.js
+				console.log('checkIsUpdateStockAfter', checkIsUpdateStockAfter);
+				updateStockOnOrderCompletion(_data.p_body)
+			}
+		};
+		return rpt;
+	} catch (error) {		
+		guardando_vr = false;
+		return false;
+	}
+
+
+	// return rpt;	
+	
 }
 
 function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
@@ -1874,6 +1912,7 @@ function xLoadItemsDetalleCartaALL(){
 
 // listen sokect change items
 function _cpStockItemModificado(item){
+	console.log('item', item);
 	if (!isSocket) {return; } // si no hay socket	
 
 	const idFind = '#li2' + item.idcarta_lista;	

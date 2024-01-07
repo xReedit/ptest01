@@ -4,6 +4,8 @@
 <link rel="import" href="./x-control-delivery/x-control-delivery.html">
 <dom-module id="x-control-mesas">
 	<link rel="import" href="../x-componentes/x-input-search-pedido-in-page/x-input-search-pedido-in-page.html">
+	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
+	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
 
 	<script src="../view/httpFech.js"></script>
 
@@ -20,6 +22,9 @@
 	<script type="text/javascript" src="../view/notifica.js"></script>
 
 	<template>
+		<div id="backdrop-dialog-detalle" class="backdrop-dialog-detalle"></div>
+
+		<x-comp-dialog-permiso></x-comp-dialog-permiso>
 		
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
 		<paper-dialog id="dialog_erro_print" modal style="min-width: 330px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -27,10 +32,10 @@
 			<p id="print_error"></p>
 			<br>
 			<div class="xBoton2 xVerde divLeft23" onclick="xReImprimir();">Intentar Nuevamente</div>
-			<div class="xBoton2 xPlomo divLeft23" dialog-dismiss onclick="dialog_detalle.close();">No imprimir</div>
+			<div class="xBoton2 xPlomo divLeft23" dialog-dismiss onclick="xCPcloseDialogDetalle();">No imprimir</div>
 			<br><br><br>
 		</paper-dialog>
-		<paper-dialog style="min-width:290px; background: #212121; color: #fff;" id="dialog_borrar_item" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog class="dialog_redondo" style="max-width:350px; background: #212121; color: #fff;" id="dialog_borrar_item" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h3>BORRAR REGISTRO?</h3>
 				<div class="content-check-borrar-item">
@@ -38,10 +43,13 @@
 						<p class="fw-600">Recuperar Stock</p>
 					</paper-checkbox>
 				</div>
-				<br><br>
-				<div class="xBoton2 xVerde" dialog-dismiss onclick="xGetPermisoEliminarItem();"> Si Borrar. </div>				
-				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
-				<br><br>
+				<br>
+				<button class="btn btn-success mr-1" dialog-dismiss onclick="xGetPermisoEliminarItem();"> Si Borrar. </button>				
+				<button class="btn btn-danger" dialog-dismiss>Cancelar</button>
+				<br>
+				<div class="mt-2">
+					<x-comp-btn-permiso></x-comp-btn-permiso>
+				</div>				
 			</div>
 		</paper-dialog>
 		<paper-dialog style="min-width:290px; width:80%" id="dialog_add_item" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
@@ -73,9 +81,9 @@
 			</div>
 		</paper-dialog>
 
-		<paper-dialog id="dialog_motivo_anular" style="min-width:320px; background: #212121; color: #fff;"  entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog id="dialog_motivo_anular" class="dialog_redondo" style="min-width:320px; background: #212121; color: #fff;"  entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
-				<h4>ANULAR</h4>
+				<h3>ANULAR</h3>
 				<h4 class="txt_anular_cambiar_mesa"></h4>
 				<br>
 				<h4>Indique el motivo de anulacion</h4>
@@ -89,10 +97,18 @@
 						<p class="fw-600">Recuperar Stock</p>
 					</paper-checkbox>
 				</div>
-				<br><br>
-				<div class="xBoton2 xVerde" dialog-dismiss onclick="pass_us.open();">Listo</div>
-				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
-				<br><br>
+				<br>
+				<div>
+					<button class="btn btn-success mr-1" dialog-dismiss onclick="pass_us.open();">Listo</button>
+					<button class="btn btn-danger" dialog-dismiss>Cancelar</button>
+
+					<!-- <div class="xBoton2 xVerde" dialog-dismiss onclick="pass_us.open();">Listo</div> -->
+					<!-- <div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div> -->
+					<br>
+					<div class="mt-2">
+						<x-comp-btn-permiso></x-comp-btn-permiso>
+					</div>
+				</div>				
 			</div>
 		</paper-dialog>
 
@@ -135,7 +151,7 @@
 		</paper-dialog>
 
 
-		<paper-dialog modal id="dialog_detalle" class="tall-polys tall xNoScroll" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog modal id="dialog_detalle" class="theme1 xNoScroll" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div>
 
 				<iron-pages selected="0" id="content_page" class="xNoScroll">
@@ -155,7 +171,7 @@
 									<paper-progress indeterminate class="w-100"></paper-progress>
 								</div>
 								<paper-fab mini icon="perm-phone-msg" onclick="xCallRepartidorPapaya()" title="Llamar a Repartidor de Papaya Express" tabindex="0" class="btnAddPapaya" id="btnLlamarRepartidorP"></paper-fab>
-								<paper-fab icon="add" onclick="xOpenLULI()" title="[F8] Agregar item" tabindex="0" class="btnAdd2"></paper-fab>
+								<paper-fab icon="add" onclick="xOpenLULI()" title="[F8] Agregar item" tabindex="0" class="btnAdd2"></paper-fab>								
 							</div>
 							<h3 id="p_mesa">MESA 02</h3>
 							<div class="xfont11 pb-3"><span id="p_correlativo"> CO: 00112</span><span id="p_referencia"> DR VALDES</span><span id="p_antendido"> | ATENDIDO POR: ORLANDO</span></div>													
@@ -209,7 +225,7 @@
 						</div>
 						<div class="xLinea"></div>
 						<br>
-						<div class="content-pedido" style="overflow: auto;">
+						<div class="content-pedido">
 							<table width="100%" class="xtable4">
 								<tr class="xSinBorde_tr" valign="top">
 									 <!-- style="padding-right:10px;" -->
@@ -244,9 +260,11 @@
 										<br><br>
 										</div>
 									</td>
-									<td class="xBordeIzq pd-l-10">										
-										<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor pos-union" title="Unir items">
-										<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor pd-l-10-a" title="Separar items">
+									<td class="xBordeIzq pd-l-10">		
+										<div>
+											<img src="../../images/_union.png" onclick="xJuntarFilasIguales();" class="xDerecha xAlinearce xCursor pos-union" title="Unir items">
+											<img src="../../images/_juntar_row.png" onclick="xDesJuntarItem();" class="xDerecha xAlinearce xCursor pd-l-10-a" title="Separar items">
+										</div>								
 										<div class="xtd-derecha" id="xBody">
 										<div>
 										<table width="100%" id="tb_det_pedidos" class="xRowPading4">
@@ -310,24 +328,29 @@
 								<div class="footer_dialog-more-item xFondoRowPlomo3">
 									<div class="xLinea"></div>
 									<br>
-									<div class="xBoton2 xVerde" onclick="xArmarSqlAddLUlI();">F9 | Confirmar</div>
-									<div class="xBoton2 xPlomo" onclick="xCloseLULI();">Cerrar</div>
+									<button class="btn btn-success" onclick="xArmarSqlAddLUlI();">F9 | Confirmar</button>
+									<button class="btn btn-secondary" onclick="xCloseLULI();">Cerrar</button>
 									<br>
 								</div>
 
 								<div class="xInvisible"><table data-TablaName="pedido_detalle" id="xli_tb_pedido_ad"></table></div>
 						</div>
 						<div class="footer_dialog xAlinearce xFondoRowBlanco2">
-							<div class="xLinea"></div>
+							<!-- <div class="xLinea"></div> -->
 							<br>
 							<!-- style="margin-top: 12px;display: inline-flex;" -->
 							<div class="xDerecha pos-fotter-btn">
-								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p class="fs-10">Pre-cuenta</p></div>
-								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p class="fs-10">Cambiar mesa</p></div>
-								<div class="xMiBoton_icon_lateral mg-t-15" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p class="fs-10">Anular</p></div>
+								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p class="fs-10 m-0">Pre-cuenta</p></div>
+								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p class="fs-10">Cambiar mesa</p></div>
+								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png">
+									<p class="fs-10">
+										Anular
+										<i id="btn_punto_verde_pedido" class="fa fa-unlock text-success punto-flotante-verde fs-12"></i>
+									</p>
+								</div>
 							</div>
-							<button class="xBoton2 xAzul" id="btn_registrar_pago" onclick="xIrPage(1);">F10 | Listo, pagar</button>
-							<button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
+							<button class="btn btn-primary" id="btn_registrar_pago" onclick="xIrPage(1);">F10 | Listo, pagar</button>
+							<button class="btn btn-dark" dialog-dismiss onclick="xCPcloseDialogDetalle()">Cerrar</button>
 
 							<!-- <button class="xBoton2 xVerde" onclick="xImprimirComprobante()">Factura</button> -->
 							<br>
@@ -413,6 +436,13 @@
     	border-radius: 3px;
 		display: flex;		
 	}
+
+	/* content-pedido debe tener la altura de dialog_detalle - 120px*/	
+	/* .content-pedido {
+		height: calc(100% - 193px);
+		overflow: auto;
+	} */
+	
 </style>
 </dom-module>
 <style type="text/css">
@@ -538,6 +568,8 @@ var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDa
 	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false,
 	idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false,
 	countIntiCP = 0, isPassAddRowItemList = false;
+
+const _fetchApi = new httpFecht();
 
 function xIniControlMesa(){
 
@@ -872,12 +904,36 @@ function xIniControlMesa(){
 							'precio_total':parseFloat(xobj_row_item.find("#td_importe").text()),
 							'precio_unitario':xobj_row_item.attr('data-punitario'),
 							'des_tp': xobj_row_item.attr('data-des_tp'),
-							'descripcion': xobj_row_item.attr('data-descripcion')
+							'descripcion': xobj_row_item.attr('data-descripcion'),
+							'is_cantidad_nd': xobj_row_item.attr('data-is_cantidad_nd'),
 						};
 		
+		// console.log('xArrayItemEliminar', xArrayItemEliminar );
+
+		const isBtnDeleteRowSuccess = $(this).find('.btn-delete-row').hasClass('text-success');
 		
+		xCompArraySolitaPermiso = {
+			tipo_permiso: 1,
+			obj: xArrayItemEliminar,
+			mesa: xObj_miPedido.data().nummesa,
+			numpedido: xObj_miPedido.data().numpedido,
+			isBtnDeleteRowSuccess: isBtnDeleteRowSuccess			
+		}
+		
+		// console.log('0xCompArraySolitaPermiso', xCompArraySolitaPermiso);
+
+		// verificamos si el elemento con la clase 'btn-delete-row' tiene la clase text-success
+		// si es asi, entonces no se puede eliminar el item
+
+		
+
+		
+		
+		
+
 		//xid_tpc_item=xobj_row_item.attr('data-idtipoconsumo');
 
+		
 
 		/*xid_pedido_detalle_item=xobj_row_item.attr('data-idpedidodetalle');
 		xid_pedido=xobj_row_item.attr('data-idpedido');
@@ -946,18 +1002,43 @@ function xIniControlMesa(){
 	// 	xThisCM.valid_monto_pago = e.detail;
 	// });
 
+	
+
 	$("#dialog_detalle").on('iron-overlay-closed',function(){
 		//xVerificarSiActualizaItems();		
+
+		
+
 		xbuscar_mesa=false;
 		xdtDpedido = null;
 
 		if ( xThisCM.isAddItemRow ) { // para resetear item no confirmados
 			_cpSocketRestoreFromPedidoStorage();
 		}
+
+		xCPcloseDialogDetalle();
 		//xRefreshPedidos=setInterval(function () {xActualizarItems()},4000);
 	})
+
+
 	$("#dialog_detalle").on('iron-overlay-opened',function(){		
 		xbuscar_mesa=true;
+
+		// dialog_detalle.center();
+
+		const dialog_detalleHeight = $('#dialog_detalle').height();
+		const footer_dialogHeight = $('#dialog_detalle .footer_dialog').height();	
+		const contentHeight = (dialog_detalleHeight - footer_dialogHeight) - 135;
+		$('.xtd-derecha').height(contentHeight);
+		// // $('.xtd-derecha').height(contentHeight);
+
+
+		// const backdropDiaglog = document.querySelector('iron-overlay-backdrop');
+		// const backdrop = document.querySelector('#backdrop-dialog-detalle');
+		// backdrop.style.display = 'block';
+		// backdrop.classList.remove('fade-out');
+
+		// dialog_detalle.classList.add('custom-backdrop');
 
 		xValPago=document.getElementById('component_pago');
 		xValPago.setObjConntet($("#dialog_detalle"));
@@ -1096,6 +1177,33 @@ function xIniControlMesa(){
 	getAllRepartidor();
 }
 
+function xCPcloseDialogDetalle() {
+	dialog_detalle.close();
+	const backdrop = document.querySelector('#backdrop-dialog-detalle');
+	// backdrop.style.display = 'none';
+	backdrop.classList.add('fade-out');	
+}
+
+function xCPopenDialogDetalle() {
+	
+	// const backdrop = document.querySelector('#backdrop-dialog-detalle');
+	// backdrop.style.display = 'none';
+	// backdrop.classList.add('fade-out');
+
+	// $('.xtd-derecha').height(contentHeight);
+	const backdropDiaglog = document.querySelector('iron-overlay-backdrop');
+	const backdrop = document.querySelector('#backdrop-dialog-detalle');
+	backdrop.style.display = 'block';
+	backdrop.classList.remove('fade-out');
+
+	dialog_detalle.open();
+
+	// const dialog_detalleHeight = $('#dialog_detalle').height();
+	// const footer_dialogHeight = $('#dialog_detalle .footer_dialog').height();
+	// const contentHeight = (dialog_detalleHeight - footer_dialogHeight) - 135;
+	// $('.xtd-derecha').height(contentHeight);
+}
+
 // setear idcategoria
 function setCatetgoriaCartaCP(e) {
 	let valCategoriaLoalStorage;
@@ -1126,8 +1234,10 @@ function setCatetgoriaCartaCP(e) {
 //100521
 // motivo: acelerar la consulta de pedido detalle
 function xLoadLastIdPedidoCobrado() {
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50701'})
-	.done( function (res) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=50701' })
+	.then((res) => {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50701'})
+	// .done( function (res) {
 		// console.log('id last pedido', res);
 		localStorage.setItem('::app3_woLastIdP', res);
 		lastIdPedidoCobrado = res;
@@ -1309,7 +1419,10 @@ function detectEvent(e) {
 		if(dialog_cambiar_mesa.opened){dialog_cambiar_mesa.close(); return;}
 		if(xopen_add_item){xCloseLULI(); return;}
 		if(content_page.selected==1){xIrPage(0);return;}
-		if(dialog_detalle.opened){dialog_detalle.close(); return;}
+		if(dialog_detalle.opened){
+			xCPcloseDialogDetalle();			
+			return;
+		}
 	}
 
 	// if (e.keyCode>=112 || e.keyCode<=123){
@@ -1367,36 +1480,105 @@ function xOpenAnularPedido(){
 	var _valRecuperarBorrarItem = localStorage.getItem('::app3_woRestoreStock');	
 	check_recuperar_stock_all_pedido.checked = _valRecuperarBorrarItem ? _valRecuperarBorrarItem : false;
 
-	dialog_motivo_anular.open();
+
+	var xArrayAnularItems = xCPGetItemPedidosAnular();	
+
+	// chequeamos si los items seleccionados hay uno con is_cantidad_nd = 1
+	const _isCheckIsCantidadNd = xArrayAnularItems.filter(x => x.is_cantidad_nd === '1').length > 0 ? true : false;
+	const isBtnDeleteRowSuccess = !$('.xDerecha pos-fotter-btn').find('#btn_punto_verde_pedido').hasClass('xInvisble');
+
+
+
+		
+	
+
+
+	xCompArraySolitaPermiso = {
+		tipo_permiso: 2,
+		obj: xArrayAnularItems,
+		mesa: xObj_miPedido.data().nummesa,
+		numpedido: xObj_miPedido.data().numpedido,
+		importe_total: parseFloat($("#tb_pedidos #tt_importe_pagar_t").text()),
+		is_cantidad_nd: _isCheckIsCantidadNd ? '1' : '0',
+		isBtnDeleteRowSuccess: isBtnDeleteRowSuccess
+	}
+
+	console.log('xCompArraySolitaPermiso', xCompArraySolitaPermiso);
+
+	if ( !isBtnDeleteRowSuccess ) {
+		dialog_motivo_anular.open();
+	} else {
+		xCMCheckPermisoBorrar();
+	}
+
+	// xCMCheckPermisoBorrar();
+	
 	//pass_us.open();
 }
-function xAnularPedido(){
-	//armar sql devolucion de stock
+
+function xCPGetItemPedidosAnular() {
 	xCheckPedidos();
-	var xArrayAnularItems=[];
-	$("#tb_det_pedidos .row").each(function(index,element){
-		var xcantidad_remove_item=parseFloat($(element).find('#td_cant').text());
-		var xidpeddido_item=$(element).attr('data-idpedido');
-		var xid_descontar_item=$(element).attr('data-iddescontar');
-		var xcant_descontar=$(element).attr('data-cant_descontar');
-		var xitabla_item=$(element).attr('data-descontar');
+	var xArrayAnularItems = [];
+	$("#tb_det_pedidos .row").each(function (index, element) {
+		var xcantidad_remove_item = parseFloat($(element).find('#td_cant').text());
+		var xidpeddido_item = $(element).attr('data-idpedido');
+		var xid_descontar_item = $(element).attr('data-iddescontar');
+		var xcant_descontar = $(element).attr('data-cant_descontar');
+		var xitabla_item = $(element).attr('data-descontar');
 		xArrayAnularItems.push({
-			'idpedidos':xidpedid_txt_change,
-			'm_a':$("#txt_motivo_anular").val(),
-			'c':xcant_descontar,
-			'cant_item':xcantidad_remove_item,
+			'idpedidos': xidpedid_txt_change,
+			'm_a': $("#txt_motivo_anular").val(),
+			'c': xcant_descontar,
+			'cant_item': xcantidad_remove_item,
 			'descripcion': $(element).attr('data-descripcion'),
 			'des_tp': $(element).attr('data-des_tp'),
 			'idimpresora_seccion': $(element).attr('data-idimpresora_seccion'),
 			'idtipoconsumo': $(element).attr('data-idtipoconsumo'),
 			'idseccion': $(element).attr('data-idseccion'),
-			'iddescontar':xid_descontar_item,
-			'tabladescontar':xitabla_item})
+			'iddescontar': xid_descontar_item,
+			'tabladescontar': xitabla_item,
+			'is_cantidad_nd': $(element).attr('data-is_cantidad_nd')
+		})
 	})
 	//
-	xPopupLoad.xopen();
+	// xPopupLoad.xopen();
 
-	const _valRecuperarBorrarItem =  check_recuperar_stock_all_pedido.checked ? '1' : '0';	
+	console.log('xArrayAnularItems', xArrayAnularItems);
+	return xArrayAnularItems;
+
+}
+
+function xAnularPedido(isRecuperarStock = false, motivoAnularEstablecido = ''){
+	//armar sql devolucion de stock
+	xCheckPedidos();
+	var xArrayAnularItems=[];
+	// $("#tb_det_pedidos .row").each(function(index,element){
+	// 	var xcantidad_remove_item=parseFloat($(element).find('#td_cant').text());
+	// 	var xidpeddido_item=$(element).attr('data-idpedido');
+	// 	var xid_descontar_item=$(element).attr('data-iddescontar');
+	// 	var xcant_descontar=$(element).attr('data-cant_descontar');
+	// 	var xitabla_item=$(element).attr('data-descontar');
+	// 	xArrayAnularItems.push({
+	// 		'idpedidos':xidpedid_txt_change,
+	// 		'm_a':$("#txt_motivo_anular").val(),
+	// 		'c':xcant_descontar,
+	// 		'cant_item':xcantidad_remove_item,
+	// 		'descripcion': $(element).attr('data-descripcion'),
+	// 		'des_tp': $(element).attr('data-des_tp'),
+	// 		'idimpresora_seccion': $(element).attr('data-idimpresora_seccion'),
+	// 		'idtipoconsumo': $(element).attr('data-idtipoconsumo'),
+	// 		'idseccion': $(element).attr('data-idseccion'),
+	// 		'iddescontar':xid_descontar_item,
+	// 		'tabladescontar':xitabla_item})
+	// })
+	// //
+	// xPopupLoad.xopen();
+
+	xArrayAnularItems = xCPGetItemPedidosAnular()
+	console.log('xArrayAnularItems', xArrayAnularItems);
+
+	const _isCheckRecuperarStock = isRecuperarStock ? isRecuperarStock : check_recuperar_stock.checked;
+	const _valRecuperarBorrarItem =  _isCheckRecuperarStock ? '1' : '0';	
 	
 	// impresion de anulacion
 	const infoDataPedido = {
@@ -1404,14 +1586,16 @@ function xAnularPedido(){
 		numpedido: xObj_miPedido.data().numpedido
 	}
 	
-	const _motivoAnulacionPedidoCM = txt_motivo_anular.value
+	const _motivoAnulacionPedidoCM = motivoAnularEstablecido ==='' ? txt_motivo_anular.value : motivoAnularEstablecido;
 	// console.log('_motivoAnulacionPedidoCM', _motivoAnulacionPedidoCM);
 
 	cocinarImpresionAnulacionList(xArrayAnularItems, xPermisoSupervisorNombre, xNomU, infoDataPedido, _motivoAnulacionPedidoCM)
 	// return
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM,'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
-	.done( function (dt_xx) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=5011', data: { ArrayPeAnular: xArrayAnularItems, xPedidos: xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM, 'u': xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem } })
+	.then((dt_xx) => {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM,'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
+	// .done( function (dt_xx) {
 		xPopupLoad.xclose();
 		xActualizarItems();
 		//xLoadMesas()
@@ -1435,7 +1619,7 @@ function xAnularPedido(){
 			$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 		}
 		
-		dialog_detalle.close();
+		xCPcloseDialogDetalle();		
 	})
 
 	// indica cantidad pedidos borrados
@@ -1453,13 +1637,15 @@ function xCambiarMesa(){
 	if(xnum_txt_mesa==""){return;}
 
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5010', data:{n:xnum_txt_mesa,i:xidpedid_txt_change}})
-	.done( function (dt_xx) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=5010', data: { n: xnum_txt_mesa, i: xidpedid_txt_change } })
+	.then((dt_xx) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5010', data:{n:xnum_txt_mesa,i:xidpedid_txt_change}})
+		// .done( function (dt_xx) {
 		dialog_cambiar_mesa.close();
 		txt_num_mesa_change.value='';
 		xPopupLoad.xclose()
 		
-		dialog_detalle.close();
+		xCPcloseDialogDetalle();		
 
 		if($("#dialog_cambiar_mesa #titulo_cambiar_mesa").text().indexOf('todos')<0){xPintarEstadoPedido(); return;}
 		$(xObj_miPedido).removeClass('xOcupado');
@@ -2106,7 +2292,8 @@ function xRegistrarPagoCM(xcant_rp){
 			}
 		}
 		xPopupLoad.xclose();
-		dialog_detalle.close();
+
+		xCPcloseDialogDetalle();		
 	// });
 }
 
@@ -2139,8 +2326,10 @@ async function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago)
 // consultar si mesa tiene pedidos despues de haber registrado pago por app
 function isPedidoInMesa(xObj_miPedido, nummesa) {
 	// const _lastIdPedidoCobrado = localStorage.getItem('::app3_woLastIdP');
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:nummesa, p:'', confirmar_pago: 0, lastIdPedido: lastIdPedidoCobrado}})
-	.done( function (dtDpedido) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=507', data: { m: nummesa, p: '', confirmar_pago: 0, lastIdPedido: lastIdPedidoCobrado } })
+	.then((dtDpedido) => {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:nummesa, p:'', confirmar_pago: 0, lastIdPedido: lastIdPedidoCobrado}})
+	// .done( function (dtDpedido) {
 		var xdtDpedido=$.parseJSON(dtDpedido);
 		xdtDpedido=xdtDpedido.datos;
 
@@ -2214,11 +2403,22 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		xPopupLoad.xclose();	
 		return;
 	}
+	
+
+	
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=507', data: { m: xp_sel_nummesa, p: xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado } })
+	.then((dtDpedido) => {
+		// console.log('dtDpedidoAxios === ', dtDpedido);
+	// })
 
 	//armar cantidad de pedidos
 	// const _lastIdPedidoCobrado = localStorage.getItem('::app3_woLastIdP');
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado}})
-	.done( function (dtDpedido) {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=507', data:{m:xp_sel_nummesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado}})
+	// .done( function (dtDpedido) {
+
+		
+
+		// console.log('dtDpedido', dtDpedido);
 
 		var isDelivery = false;
 		var labelInfoPedido = '', labelInfoComprobante = '';
@@ -2231,8 +2431,11 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		localStorage.setItem('::app3_papp', xp_sel_is_confirmar_pago.toString());
 		xdtDpedido=$.parseJSON(dtDpedido);
 
+		// console.log('dtDpedido === ', xdtDpedido);
+
 		xdtDpedido=xdtDpedido.datos;
 		xid_pedido_selected = xdtDpedido[0].idpedido;
+
 		
 		
 		var atendidoPor = xdtDpedido[0].nom_usuario ? xdtDpedido[0].nom_usuario : 'Cliente';
@@ -2476,8 +2679,15 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		//PEDIDOS
 		var xcadena_pedido='';
 		var xcount_p=1;
+		let xcountPermissionAnular = 0;
 		for (var i = 0; i < xdtDpedido.length; i++) {
 			let xcolor_tiempo_despacho='';
+
+			xcountPermissionAnular += parseFloat(xdtDpedido[i].permission_delete);
+
+			// revisar si solicito permiso para anular pedido
+			
+			
 
 			switch (xdtDpedido[i].val_color_despachado) {
 				case '1':xcolor_tiempo_despacho='xColorRow_verde'; break;
@@ -2518,6 +2728,16 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 								'</tr>');
 			xcount_p++;
 		};
+
+
+		const _classBtnRemoAddClassPermission = xcountPermissionAnular > 0;
+		const _elementeBtnAnularPedido = $('.pos-fotter-btn').find('#btn_punto_verde_pedido');
+		if ( !_classBtnRemoAddClassPermission ) {
+			_elementeBtnAnularPedido.addClass('xInvisible');		
+		} else {
+			_elementeBtnAnularPedido.removeClass('xInvisible');
+		}
+
 		$('#tb_pedidos .row').remove();
 		$('#tb_pedidos').append(xcadena_pedido).trigger('create');
 
@@ -2535,8 +2755,13 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		
 		const idPedidoAdd = lastDataPedidoInsert ? lastDataPedidoInsert.idpedido : 0;
 		const _numMesa = lastDataPedidoInsert ? 0 : xp_sel_nummesa;
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
-		.done( function (dtPbdet) {
+
+		_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})	
+		.then((dtPbdet) => {
+
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
+		// .done( function (dtPbdet) {
+
 			var xdtPbdet=$.parseJSON(dtPbdet);
 
 			// si se agrego un nuevo pedido solo trae ese pedido
@@ -2558,7 +2783,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			xCheckPedidos();
 		})
 		xPopupLoad.xclose();
-		dialog_detalle.open();
+		xCPopenDialogDetalle();
 
 		xThisCM.isAddItemRow = false;
 		xNuevoPedidoCM();
@@ -2745,7 +2970,7 @@ function xLoadMipedidoBD(dt){
 	var xIndicacionItem='';
 	var xNom_seccion;
 	var xDtBd=dt;
-
+	
 	var xdisabled_btn_cambiar='';
 	var xdisabled_procede='';
 
@@ -2803,6 +3028,10 @@ function xLoadMipedidoBD(dt){
 					if(xAgrupar_item_activo==true){xdisabled_btn_cambiar="xdisabled";}else{xAgrupar_item_activo='';}
 
 					xNom_seccion=xDtBd[i].des_seccion;
+
+					const isShowItemRemove = xDtBd[i].item_permiso_borrar == '1';
+					const classShowItemRemove = isShowItemRemove ? 'text-success' : '';
+					const isVisiblePuntoFlotanteVerde = isShowItemRemove ? '' : 'xInvisible';
 					
 
 					const isShowBtnAddItem = xDtBd[i].precio_default ? 
@@ -2842,6 +3071,7 @@ function xLoadMipedidoBD(dt){
 							'" data-total = "' + xDtBd[i].total +
 							'" data-total_r = "' + xDtBd[i].total_r +
 							'" data-totalr = "' + xDtBd[i].totalr +
+							'" data-is_cantidad_nd = "' + xDtBd[i].is_cantidad_nd +
 							'" data-idimpresora_seccion="' + xDtBd[i].idimpresora_seccion +
 							'" data-idseccion="'+ xDtBd[i].idseccion +'" >'+
 									'<td width="50px" class="click_row_dt_p" id="cant_descontar"><paper-checkbox class="check_item"></paper-checkbox><span id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2)+'</span></td>'+
@@ -2852,7 +3082,8 @@ function xLoadMipedidoBD(dt){
 										isShowBtnAddItem +
 									'</td>'+
 									'<td align="center" style="width: 20px" class="td_op" data-op="borrar" data-procede=0>'+
-										'<img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'">'+										
+										'<i style="font-size: 18px !important" title="Borrar" class="btn-delete-row fa fa-trash-o '+ xdisabled_btn_cambiar +' '+ classShowItemRemove +'">  <i class="fa fa-unlock text-success punto-flotante-verde '+ isVisiblePuntoFlotanteVerde +'"></i> </i>'+										
+										// '<img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'">'+										
 									'</td>'+									
 								'</tr>');
 
@@ -2879,6 +3110,37 @@ function xLoadMipedidoBD(dt){
 }
 
 
+// buscar dentro de la tabla el item con el idpedido_detalle y el elemento btn-delete-row agregar la clase text-success	
+function xCPAddClassItemPermissionDelete(idpedido_detalle) {
+	console.log('idpedido_detalle', idpedido_detalle);
+	$('#tb_det_pedidos .row').each(function(i,e){
+		if($(e).attr('data-idpedidodetalle') == idpedido_detalle){
+			const _elementeBtnDelete = $(e).find('.btn-delete-row');				
+			_elementeBtnDelete.addClass('text-success');
+			_elementeBtnDelete.attr('data-item_permiso_borrar', idpedido_detalle);
+
+			// buscar en _elementeBtnDelete el punto-flotante-verde
+			const _elementePuntoFlotante = $(_elementeBtnDelete).find('.punto-flotante-verde');	
+			_elementePuntoFlotante.removeClass('xInvisible');			
+			
+		}
+	});
+}
+
+// buscar dentro de la talba tb_pedidos el tr con la propiedad data-idpedido y agregar la clase text-success al elemento btn_anular_pedido que esta en el div pos-fotter-btn
+function xCPAddClassItemPermissionAnularPedido(idpedido) {
+	$('#tb_pedidos .row').each(function(i,e){
+		const _idpedidoRow = $(e).attr('data-idpedido');
+		const _arridpedidos = idpedido.split(',');
+		if( _arridpedidos.indexOf(_idpedidoRow) > -1 ){
+			const _elementeBtnAnularPedido = $('.pos-fotter-btn').find('#btn_punto_verde_pedido');				
+			_elementeBtnAnularPedido.removeClass('xInvisible');
+			// _elementeBtnAnularPedido.attr('data-item_permiso_borrar', idpedido);
+		}
+	});
+}
+
+
 function xLoadDtPrintCM(){
 	
 	xDtPrint=xm_log_get('sede_generales'); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
@@ -2895,11 +3157,118 @@ function xOp_permiso(){
 	check_recuperar_stock.checked = _valRecuperarBorrarItem ? _valRecuperarBorrarItem : false;
 	check_recuperar_stock_all_pedido.checked = _valRecuperarBorrarItem ? _valRecuperarBorrarItem : false;
 
+
+
 	switch(xpass_op){
-		case 'borrar': dialog_borrar_item.open(); break; //if(xCronometro_us>0 && xCronometro_us!=30){dialog_borrar_item.open();}else{xEliminarItemPedido()};break; //solo dialog ya no confirmacion de usuario
+		case 'borrar': 
+
+			// // buscamos si existe idpedido_detalle en el storage de solicitud de permiso
+			// const _dataSolicitudPermiso = findStorageSolicudPermisoRemota(xCompArraySolitaPermiso.obj.idpedido_detalle, xCompArraySolitaPermiso.tipo_permiso);
+			// if (_dataSolicitudPermiso) {
+			// 	// si existe solicitud entonces enviamos directamente a borrar
+			// 	xGetPermisoEliminarItem();
+
+			// }
+
+
+			// let isStockProductoRemoveND = false;
+			// try {				
+			// 	isStockProductoRemoveND = xCompArraySolitaPermiso?.obj?.is_cantidad_nd ? xCompArraySolitaPermiso.obj.is_cantidad_nd === '1' : false;			
+			// } catch (error) {			
+			// 	isStockProductoRemoveND = false;	
+			// }
+
+			// if ( !isStockProductoRemoveND ){
+			// 	dialog_borrar_item.open(); 
+			// } else {
+			// 	xGetPermisoEliminarItem();
+			// }
+			xCMCheckPermisoBorrar();
+			break; //if(xCronometro_us>0 && xCronometro_us!=30){dialog_borrar_item.open();}else{xEliminarItemPedido()};break; //solo dialog ya no confirmacion de usuario
 		case 'borrar':dialog_borrar_item.open(); break; // xPermisoSupervisor=xIdUsuario; dialog_borrar_item.open();break;
 		case 'cambiar':$('#txt_bus_cant').val(1);$("#txt_espcificacion").val('');$("#list_bus_item").val(''); dialog_cambiar_item.open();break;
 		case 'anular_pedido':xAnularPedido(); break;
+	}
+}
+
+async function xCMCheckPermisoBorrar() {
+	// evaluamos si el stock es diferente a ND para adicionar un check si recupera stock
+	let isStockProductoND = false;
+	let idFindSolicitud = 0;
+	try {
+		if ( xCompArraySolitaPermiso.tipo_permiso === 1 ) {
+			idFindSolicitud = xCompArraySolitaPermiso.obj.idpedido_detalle;
+			isStockProductoND =  xCompArraySolitaPermiso?.obj?.is_cantidad_nd ? xCompArraySolitaPermiso.obj.is_cantidad_nd === '1' : false;
+		}
+
+		if (xCompArraySolitaPermiso.tipo_permiso === 2) {
+			idFindSolicitud = xCompArraySolitaPermiso.obj.map(x => x.idpedidos).join(',');
+			isStockProductoND = xCompArraySolitaPermiso?.is_cantidad_nd ? xCompArraySolitaPermiso.is_cantidad_nd === '1' : false;
+		}
+	} catch (error) {
+		isStockProductoND = false;
+	}
+
+	// sino tiene el permiso borrar
+	if ( !xCompArraySolitaPermiso.isBtnDeleteRowSuccess ) {
+		if (!isStockProductoND) {			
+			dialog_borrar_item.open();
+		} else {
+			xGetPermisoEliminarItem();
+		}
+
+		return;
+	}
+
+
+	const _dataSolicitudPermiso = await findStorageSolicudPermisoRemota(idFindSolicitud, xCompArraySolitaPermiso.tipo_permiso);
+	if ( _dataSolicitudPermiso !== false ) {
+		const _swalAlertValues = paramsSwalAlert;				
+
+		const _checkRecuperarStock = isStockProductoND ? '' : `<div class="bg-white" style="display: inline; padding: 2px 10px 5px 10px; border-radius: 5px; font-size: 15px;">
+																		<paper-checkbox id="check_recuperar_stock_dialog_borrar" checked>Recuperar stock</paper-checkbox>
+																	</div>`;
+
+		_swalAlertValues.html = `<div class="p-1" style="overflow: hidden;"><i class="fa fa-trash-o fa-2x text-danger" aria-hidden="true"></i>
+                                <p class="mt-1 fs-18">Esta seguro de borrar este registro?</p>
+                                ${_checkRecuperarStock}</div>`;
+
+
+		_swalAlertValues.confirmButtonText = "Si, borrar";
+		_swalAlertValues.cancelButtonText = "Cancelar";
+		_swalAlertValues.showCancelButton = true;
+
+		const rptDialogBorrar = await showAlertSwalHtmlDecision(_swalAlertValues);
+
+		if (rptDialogBorrar.isConfirmed) {
+			// eliminar item del pedido
+
+			xPermisoSupervisor = _dataSolicitudPermiso.idusuario_admin
+
+			// evaluamos si selecciono el check check_recuperar_stock_dialog_borrar
+			const _valRecuperarBorrarItem = _checkRecuperarStock !== '' ? check_recuperar_stock_dialog_borrar.checked : false;	
+
+			if ( xCompArraySolitaPermiso.tipo_permiso === 1 )  {
+				xEliminarItemPedido(_valRecuperarBorrarItem, _dataSolicitudPermiso.motivo);
+			}
+
+			// anula pedidos
+			if ( xCompArraySolitaPermiso.tipo_permiso === 2 )  {
+				xAnularPedido(_valRecuperarBorrarItem, _dataSolicitudPermiso.motivo);
+			}
+		}
+	} else {
+		if (xCompArraySolitaPermiso.tipo_permiso === 1)  {
+			if ( !isStockProductoND ){
+				dialog_borrar_item.open(); 
+			} else {
+				xGetPermisoEliminarItem();
+			}
+		}
+
+		if (xCompArraySolitaPermiso.tipo_permiso === 2) {
+			dialog_motivo_anular.open();
+		}
 	}
 }
 
@@ -2912,6 +3281,7 @@ function xGetPermisoEliminarItem() {
 		xPermisoSupervisor=xIdUsuario;
 		xEliminarItemPedido();
 	} else {
+		xPSupervisor.solicitarPermisoRemoto(true);
 		xPSupervisor.setVal('Pe1'); pass_us.open();
 	}
 }
@@ -2923,14 +3293,17 @@ function xGoProcessBorrar() {
 	}
 }
 
-function xEliminarItemPedido(){
+function xEliminarItemPedido(isRecuperarStock = null, motivoAnularEstablecido = ''){
 	//xArrayItemEliminar
 	// enviar condicion de aumentar stock
-	const _valRecuperarBorrarItem = check_recuperar_stock.checked ? '1' : '0';
+	const _isCheckRecuperarStock = isRecuperarStock !== null ? isRecuperarStock : check_recuperar_stock.checked;
+	const _valRecuperarBorrarItem = _isCheckRecuperarStock ? '1' : '0';
 	xPopupLoad.xopen();
 	
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3042', data:{xarr:xArrayItemEliminar,u:xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
-	.done( function (e_rpt) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=3042', data: { xarr: xArrayItemEliminar, u: xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem, xMotivo: motivoAnularEstablecido } })
+	.then((e_rpt) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3042', data:{xarr:xArrayItemEliminar,u:xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
+		// .done( function (e_rpt) {
 		//e_rpt=$.parseJSON(e_rpt):
 		xe_rpt=$.parseJSON(e_rpt);
 		if(!xe_rpt.success){alert(e_rpt.error); return;}
@@ -3056,15 +3429,20 @@ function xLLamarPrint(){
 	var xCorrelativo_dia=$("#p_correlativo").text();
 
 	xArrayEnca={'m':xmesa,'correlativo_dia':xCorrelativo_dia, 'item':xitem_print};
-	$.ajax({type: 'POST', url: '../../print/print3_1.php', data:{Array_enca:xArrayEnca, Array_print:xDtPrint}})
-	.done( function (dtPrint) {
+
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../print/print3_1.php', data: { Array_enca: xArrayEnca, Array_print: xDtPrint } })
+	.then((dtPrint) => {
+
+		// $.ajax({type: 'POST', url: '../../print/print3_1.php', data:{Array_enca:xArrayEnca, Array_print:xDtPrint}})
+		// .done( function (dtPrint) {
+
 		xPopupLoad.xclose();
 		if(dtPrint.indexOf('Error')!=-1){
 			$("#print_error").text(dtPrint);
 			dialog_erro_print.open();
 		}else{
 			xPopupLoad.titulo='Exito!';
-			setTimeout( function(){ dialog_detalle.close(); }, 1000);
+			setTimeout( function(){ xCPcloseDialogDetalle();  }, 1000);
 			}
 	});
 }
@@ -3074,8 +3452,11 @@ function xLLamarPrintAddLi(){
 	xArrayPrintEncaLi.solo_llevar=0;
 	xArrayPrintEncaLi.reservar=0;
 	xPopupLoad.titulo="Enviando...";
-	$.ajax({type: 'POST', url: '../../print/print3.php', data:{Array_enca:xArrayPrintEncaLi, Array_print:xDtPrint, ArrayItem:xArrayPedidoObj, ArraySubTotales:xDtSubTotales}})
-	.done( function (dtPbd) {
+
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../print/print3.php', data: { Array_enca: xArrayPrintEncaLi, Array_print: xDtPrint, ArrayItem: xArrayPedidoObj, ArraySubTotales: xDtSubTotales } })
+	.then((dtPbd) => {
+	// $.ajax({type: 'POST', url: '../../print/print3.php', data:{Array_enca:xArrayPrintEncaLi, Array_print:xDtPrint, ArrayItem:xArrayPedidoObj, ArraySubTotales:xDtSubTotales}})
+	// .done( function (dtPbd) {
 		xPopupLoad.xclose();
 		if(dtPbd.indexOf('Error')!=-1){
 			$("#print_error").text(dtPbd);
@@ -3214,7 +3595,8 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 			$('.grid').isotope('updateSortData',$(xObj_miPedido)).isotope('layout');
 
 			// cerramos
-			dialog_detalle.close();
+			xCPcloseDialogDetalle();
+			
 		}else{
 			$(xObj_miPedido).find(".importe").text(xMoneda(xtt_pedidos));
 		}
@@ -3421,10 +3803,14 @@ function xPintarEstadoPedido(_objPedido = 0) {
 		_objPedido.lastIdPedido = lastIdPedidoCobrado
 	} 
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
-		.done( function (dtPe) {			
+	console.log('run axiosExecute');
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
+	.then((dtPe) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
+		// .done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
 			var xdtPe=JSON.parse(dtPe);
+			console.log('xdtPe');
 			// console.log('xdtPe', xdtPe);
 
 			var xCadenaTPC=''
@@ -4098,8 +4484,11 @@ function xLogRun_CuentaNumeroPedidos(){
 
 function xVerificarSiActualizaItems(){
 	if (isSocket) {return; }
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50101'})
-	.done( function (dtRptI) {
+
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=50101' })
+	.then((dtRptI) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=50101'})
+		// .done( function (dtRptI) {
 		dtRptI=parseInt(dtRptI);
 		if(dtRptI!=xCountTotalPedidos){
 			xCountTotalPedidos=dtRptI;
@@ -4225,8 +4614,10 @@ function xCalcularTiempoPedido(){
 }
 
 function xLoadItems_add(){
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=901'})
-	.done( function (dtConsumo) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=901' })
+	.then((dtConsumo) => {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=901'})
+	// .done( function (dtConsumo) {
 		var xcadenaConsumo='';
 		var xdtConsumo=$.parseJSON(dtConsumo);
 		var xdtPro=eval((JSON.stringify(xdtConsumo.datos).replace(/descripcion/g,'label')).replace(/idt/g,'value'));
@@ -4254,8 +4645,10 @@ function xLoadItems_add(){
 }
 
 function getAllRepartidor() {
-            $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=13'})
-	        .done( function (dtValues) {				
+		_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_005.php?op=13' })
+		.then((dtValues) => {
+            // $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=13'})
+	        // .done( function (dtValues) {				
                 dtValues=$.parseJSON(dtValues);	
 				xThisCM.listRepartidor=dtValues.datos;				
             });
@@ -4266,9 +4659,10 @@ function selectRepartidor() {
 	const index = xThisCM.$.selectRepartidor.value;            
     const _repartidor = xThisCM.listRepartidor[index];
 
-	
-	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1301', data:{idrepartidor: _repartidor.idrepartidor, idpedido: xid_pedido_selected }})
-	        .done( function (res) {	
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_005.php?op=1301', data: { idrepartidor: _repartidor.idrepartidor, idpedido: xid_pedido_selected } })
+	.then((res) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1301', data:{idrepartidor: _repartidor.idrepartidor, idpedido: xid_pedido_selected }})
+	    //     .done( function (res) {	
 
 				xdtDpedido[0].idrepartidor = _repartidor.idrepartidor;
 				_cpSocketNoiticaRepartidorFromComercio(xdtDpedido[0]);
@@ -4313,8 +4707,10 @@ function xCallRepartidorPapaya() {
 }
 
 function xCallRepartidorPapayaExec() {
-	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1302', data:{idpedido: xid_pedido_selected }})
-	.done( function (res) {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_005.php?op=1302', data: { idpedido: xid_pedido_selected } })
+	.then((res) => {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=1302', data:{idpedido: xid_pedido_selected }})
+	// .done( function (res) {
 		// lanzar notificacion de comision del repartdior
 		isDeliverySolicitoReparto = true;
 		arrTotalesDeliveryCliente = darFormatoSubTotalesComisionRepartidor(xDtSede_cm[0], optionDeliveryCliente.p_subtotales, optionDeliveryCliente.p_header.arrDatosDelivery.costoTotalDelivery, true);
@@ -4373,8 +4769,11 @@ function xAddRowInsertListItems(obj) {
 
 	const idPedidoAdd = lastDataPedidoInsert ? lastDataPedidoInsert.idpedido : 0;
 		const _numMesa = lastDataPedidoInsert ? 0 : xp_sel_nummesa;
-		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
-		.done( function (dtPbdet) {
+
+		_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=3051', data: { m: _numMesa, p: xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd } })
+		.then((dtPbdet) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
+		// .done( function (dtPbdet) {
 			// console.log('xAddRowInsertListItems');
 			var xdtPbdet=$.parseJSON(dtPbdet);
 
@@ -4407,7 +4806,7 @@ function xAddRowInsertListItems(obj) {
 			xCheckPedidos();
 		})
 		xPopupLoad.xclose();
-		dialog_detalle.open();
+		xCPopenDialogDetalle();
 
 		xThisCM.isAddItemRow = false;
 		xNuevoPedidoCM();
@@ -4432,6 +4831,7 @@ function xPintarListPedido() {
 			
 			const xClassColorMin = xcolor_tiempo_despacho === '' ? 'xColorRow_Plomo' : xcolor_tiempo_despacho;
 			const td_tiempo_atencion = xdtDpedido[i].tiempo_atencion.length > 0 ? '<td class="'+ xcolor_tiempo_despacho +'">' + xdtDpedido[i].tiempo_atencion + ' <span class="xfont11 '+ xClassColorMin +'">min</span></td>' : '<td></td>';
+			
 
 			xcadena_pedido=String(xcadena_pedido+'<tr class="row selected1 xCursor check_item_p" data-idcategoria="'+xidCategoriaPD+
 								'" data-idpedido="'+xdtDpedido[i].idpedido+
@@ -4443,6 +4843,7 @@ function xPintarListPedido() {
 								'" data-idtipoconsumo="'+xdtDpedido[0].idtipo_consumo+
 								'" data-nump="'+xdtDpedido[0].numpedido+
 								'" data-correlativo="'+xdtDpedido[0].correlativo_dia+
+								'" data-pedido_permiso_borrar="'+xdtDpedido[0].pedido_permiso_borrar+
 								'" data-ref="'+xdtDpedido[0].referencia+'">'+
 								'" data-subtotales_tachados="'+xdtDpedido[0].subtotales_tachados+'">'+
 									'<td><paper-checkbox checked class="check_item"></paper-checkbox>'+xcount_p+'</td>'+
@@ -4460,8 +4861,10 @@ function xPintarListPedido() {
 }
 
 function xVerificarCajaAbiertaOtroUsuario() {
-	$.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=23'})
-		.done( res => {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_005.php?op=23' })
+	.then((res) => {
+		// $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=23'})
+		// .done( res => {
 			res = JSON.parse(res);
 			if (res.success) {
 				const _dataCajAbierta = res.datos;				
@@ -4494,8 +4897,10 @@ function xVerificarCajaAbiertaOtroUsuario() {
 }
 
 function xShowCantidadPedidosBorrados() {
-	$.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=901'})
-	.done( res => {
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php?op=901' })
+	.then((res) => {
+	// $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=901'})
+	// .done( res => {
 		res = JSON.parse(res);
 		if (res.success) {
 			const _cant = res.datos[0].cant;
@@ -4505,6 +4910,7 @@ function xShowCantidadPedidosBorrados() {
 			}
 		}
 	});
+	
 }
 
 // function addContadorLoad() {

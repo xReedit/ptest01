@@ -1,16 +1,27 @@
 <dom-module id="x-pass">
-	<template>		
+	<link rel="import" href="../../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
+	<!-- <link rel="import" href="../../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html"> -->
+	<template>	
+		<!-- <x-comp-dialog-permiso></x-comp-dialog-permiso> -->
+
 		<paper-dialog id="dialog_cotent" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 		 <div>
 			<h3 id="titulo">{{titulo}}</h3>			
 			<div style="text-align: left;">
 			<p class="xRojo" id="msj_passUs"></p>
 			<br>
+			<div hidden$="[[!permisoremoto]]">				
+				<x-comp-btn-permiso></x-comp-btn-permiso>
+			</div>			
 			<paper-input id="us" label="Usuario" autofocus autocomplete="off"></paper-input>
 			<paper-input id="pass" type="password" label="Clave"></paper-input>
 			<br>
-			<paper-button tabindex="0" raised class="xverde" onclick="xVerificarPassUs();">Listo</paper-button>
-			<paper-button tabindex="0" raised class="xnegro" onclick="xCerrar();">Cancelar</paper-button>
+			<!-- <paper-button tabindex="0" raised class="xverde" onclick="xVerificarPassUs();">Listo</paper-button>
+			<paper-button tabindex="0" raised class="xnegro" onclick="xCerrar();">Cancelar</paper-button> -->
+
+			<button tabindex="0" class="btn btn-success" onclick="xVerificarPassUs();">Listo</button>
+			<button tabindex="0" class="btn btn-dark" onclick="xCerrar();">Cancelar</button>
+
 			</div>
 		</div>
 		</paper-dialog>
@@ -19,7 +30,7 @@
 </dom-module>
 <style>
 	.xRojo{color:red;}
-	paper-button[raised].xverde {background: #43a047;color: #fff; text-align: center;}
+	paper-button[raised].xverde {background: #cee0cf;color: #fff; text-align: center;}
 	paper-button[raised].xnegro {background: #424242;color: #fff;}		    		
 	#dialog_cotent{ border-radius: 5px; text-align: center; padding: 8px; border: 1px solid #bdbdbd;}
 </style>
@@ -39,7 +50,7 @@ function xIiniPass(){
 
 	$("#dialog_cotent").on('iron-overlay-opened',function(){		
 		$("#us").focus();
-	})
+	})	
 }
 
 function xVerificarPassUs(){
@@ -90,6 +101,7 @@ Polymer({
 	properties:{
 		titulo:{type:String, value:''},
 		valor:{type:String, value:''},
+		permisoremoto: Boolean
 	},
 	attached:function(){		
 		xThisPass=this;		
@@ -110,6 +122,14 @@ Polymer({
 		}
     },
     xopen:function(){xpass_d.open();},
-    xclose:function(){xpass_d.close();}
+    xclose:function(){xpass_d.close();},
+	// propiedad para mostrar el boton de solicitar permiso remoto
+	// si es true se muestra el boton
+	// si es false se oculta el boton
+	// si no se define se oculta el boton
+	solicitarPermisoRemoto:(value) => {
+		xThisPass.permisoremoto = value;
+	}
+
 })
 </script>

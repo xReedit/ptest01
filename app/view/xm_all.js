@@ -450,6 +450,7 @@ function setClearLocalStorage(redirec = true) {
 	// zona de despacho
 	var app3_woZD = window.localStorage.getItem('::app3_woZD');
 	var app3_woZD_TP = window.localStorage.getItem('::app3_woZD_TP');
+	var app3_woZD_orderItemVerticalZD = window.localStorage.getItem('::app3_woZD_orderItemVerticalZD');
 	
 	window.localStorage.clear();
 
@@ -462,6 +463,7 @@ function setClearLocalStorage(redirec = true) {
 	// zona de despacho
 	if (app3_woZD) { window.localStorage.setItem('::app3_woZD', app3_woZD); }
 	if (app3_woZD_TP) { window.localStorage.setItem('::app3_woZD_TP', app3_woZD_TP); }
+	if (app3_woZD_orderItemVerticalZD) { window.localStorage.setItem('::app3_woZD_orderItemVerticalZD', app3_woZD_orderItemVerticalZD); }
 
 	if(redirec) {
 		document.location.href='../../logueese.html';
@@ -586,11 +588,48 @@ function xm_log_get(seccion){
 	  break;
 	case 'datos_org_all_sede':// * sedes
       xdt_rpt=xdt_log.sede.datos_org_all_sede;
+	  break;
+	case 'datos_sede_variables':// * sedes
+      xdt_rpt=xdt_log.sede.datos_sede_variables;
 	  break;	
 	
 		// xDtUS(3)
   }
   return xdt_rpt;
+}
+
+function getVariableSede(variable) {
+	let variablesSede = xm_log_get('datos_sede_variables');
+	try {
+		
+		if(variablesSede) {
+			variablesSede = variablesSede[0];
+			variablesSede.switch1 = variablesSede.switch1 === '1';	
+			variablesSede.switch2 = variablesSede.switch2 === '1';
+			variablesSede.update_stock_after = variablesSede.update_stock_after === '1';	
+		} else {
+			// valores predeterminados para variablesSede
+			variablesSede = {
+				switch1: false,
+				switch2: false,
+				num_intentos_cierre: 3,
+				update_stock_after: false,
+				hora_cierre:  '0:00'
+			}
+		}
+
+	} catch (error) {
+		// valores predeterminados para variablesSede
+		variablesSede = {
+			switch1: false,
+			switch2: false,
+			num_intentos_cierre: 3,
+			update_stock_after: false,
+			hora_cierre:  '0:00'
+		}
+	}
+	
+	return variablesSede[variable];
 }
 
 //3
@@ -962,7 +1001,7 @@ async function xVerificarCodeResponseCPE(response) {
 				}
 				
 				const rpt = await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
-				console.log('rpt', rpt);
+				// console.log('rpt', rpt);
 
 				const _swalAlertValues = paramsSwalAlert; 
 				_swalAlertValues.html = `<div class="p-1"> 

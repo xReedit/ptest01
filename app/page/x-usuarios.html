@@ -1,4 +1,3 @@
-
 <link rel="import" href="../x-componentes/x-comp-find-almacen/x-comp-find-almacen.html">
 <dom-module id="x-usuarios">
 	<template>
@@ -45,6 +44,15 @@
 									</div>
 									
 									<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>									
+									<br>
+
+									<!-- si tiene rol de administrador muestra input telefono -->																		
+									<div>
+										<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="telefono" name="telefono" espaciar>
+										<div style="max-width: 230px; line-height: 1;">
+											<span class="text-info fs-11">A este numero de telefono se notificara las solicitudes remotas</span>
+										</div>
+									</div>
 									
 		      				<div class="xInvisible">
 		      					<input type="text" id="idusuario" name="idusuario">
@@ -271,6 +279,7 @@ function xModificarUs(obj){
 		frm_us.find("#acc").val(xacc_bd);
 		frm_us.find("#per").val(xper_bd);
 		frm_us.find("#idalmacen").val(listAlmacen.getAlmacen().idalmacen);
+		frm_us.find("#telefono").val(xdtLoadUs[0].telefono);
 		select_rol.value = xdtLoadUs[0].rol;
 
 		var xBus='';

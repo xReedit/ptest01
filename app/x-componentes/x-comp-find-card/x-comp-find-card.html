@@ -1,0 +1,104 @@
+<dom-module id="x-comp-find-card">
+
+    <!-- // importamos script httpFecht -->
+    <script src="../../view/httpFech.js"></script>
+
+    <template>
+        <style>
+            .card {
+                display: inline-block;
+                margin: 1px;
+                padding: 5px;
+                border: 1px solid #919191;
+                color: #9f9f9f;
+                border-radius: 10px;
+                text-align: center;
+                cursor: pointer;
+                user-select: none;
+                font-size: 10px;
+                background: #333333;
+            }
+
+            .card.selected {
+                border-color: #ffffff;
+                background-color: #ffc107;
+                color: black;
+                font-weight: 600;  /* Nuevo color de fondo */
+            }
+        </style>
+        <template is="dom-repeat" items="{{cards}}">
+            <div class$="{{getClass(index)}}" on-click="selectCard">                
+                {{item.descripcion}}
+            </div>
+        </template>
+    </template>
+
+    <script>
+        Polymer({
+                is: 'x-comp-find-card',
+                properties: {
+                    cards: {
+                        type: Array,
+                        value: function () {
+                            return [];
+                        }
+                    },
+                    selectedIndex: {
+                        type: Number,
+                        value: 0
+                    }
+                },
+                ready: function () {
+                    this.loadCards();
+                },
+                listeners: {
+                    'onChange': 'handleOnChange'
+                },          
+                handleOnChange: function (e) {
+                    // Maneja el evento 'onChange' aquí
+                    // console.log('onChange event fired', e.detail);
+                    return e.detail;
+                },      
+                loadCards: async function () {
+                    var self = this;
+
+                    const _fetchApi = new httpFecht();
+                    _fetchApi.axiosExecute({
+                        type: 'POST',
+                        url: '../../bdphp/log_componentes.php?op=3'}, false, false)
+                    .then(function (data) {
+                        // console.log('data', data);
+                        self.cards = data.datos;
+
+                        if (data.datos.length > 0) {
+                            self.fire('getValorIncial', { categorias: data.datos[0] });
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Failed to load cards');
+                    });
+                },
+                getClass: function (index) {
+                    return 'card' + (index === this.selectedIndex ? ' selected' : '');
+                },
+                selectCard: function (e) {
+                     // Elimina la clase 'selected' de todas las tarjetas
+                    var cards = Polymer.dom(this.root).querySelectorAll('.card');
+                    for (var i = 0; i < cards.length; i++) {
+                        Polymer.dom(cards[i]).classList.remove('selected');
+                    }
+
+                    // Agrega la clase 'selected' a la tarjeta seleccionada y la enfoca
+                    this.selectedIndex = this.cards.indexOf(e.model.item);
+                    Polymer.dom(e.target).classList.add('selected');
+                    e.target.focus();
+                    
+                    this.fire('getCategoria', { categorias: e.model.item });
+                    this.fire('onChange', { categorias: e.model.item });
+                },
+                getValorIncial: function (categoria) {
+                    this.fire('getValorIncial', { categorias: categoria });
+                }
+            });
+    </script>
+</dom-module>

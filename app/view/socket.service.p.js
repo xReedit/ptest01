@@ -5,7 +5,8 @@ var socketCP = socketService.getInstance();
 function _cpSocketOpen() { 
     // if (isSocket) {
         // isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
-;
+        
+        
         if ( !this.socketCP._socket) {            
             console.log('socket connect new');
             this.socketCP.connectSocket();
@@ -29,14 +30,12 @@ function _cpSocketOpen() {
 
 
 function listenSocketP() {
+    console.log('listenSocketP ==== ');
 
     // console.log('this.socketCP', this.socketCP);
     /// guardar conexion sede
     setTimeout(() => {    
-        $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=14', data: { socketId:  this.socketCP._socket.id}})
-        .done( function (res) {
-            // console.log(res);
-        });
+        $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=14', data: { socketId:  this.socketCP._socket.id}})        
     }, 1200);
 
     // restore si hay
@@ -151,6 +150,46 @@ function listenSocketP() {
         const _res = {idpedido: res};
         xCDUpdateViewItem('repartidor-entregado', _res);
     });
+
+    // escuchar los permisos de las solicitudes otorgados por el administrador
+    // producto en mesa
+    this.socketCP._listen('restobar-permiso-remove-producto-mesa', res => {        
+        xCPAddClassItemPermissionDelete(res.idpedido_detalle); // control de pedidos
+        pNotificaSolicitudAceptada(res);
+
+        // guardamos en el storage para poder consular luego
+        saveStorageSolicitudPermisoRemota(res);
+    });
+
+    // pedidos 
+    this.socketCP._listen('restobar-permiso-remove-pedido-mesa', res => {        
+        xCPAddClassItemPermissionAnularPedido(res.idpedido); // control de pedidos
+        pNotificaSolicitudAceptada(res);
+
+        saveStorageSolicitudPermisoRemota(res);
+    });
+
+
+    // notifica cambio de metodo de pago a registro de pagos
+    this.socketCP._listen('restobar-permiso-change-metodo-pago', res => {        
+        xRPRemoverPuntoFlotanteVerde(res.data.data.idregistro_pago_detalle); // control de pedidos
+        pNotificaSolicitudAceptada(res);
+
+        saveStorageSolicitudPermisoRemota(res);
+    });
+
+    // notifica cerrar caja
+    this.socketCP._listen('restobar-permiso-cerrar-caja', res => {
+        console.log('restobar-permiso-cerrar-caja', res);              
+        pNotificaSolicitudAceptada(res);
+
+        res.idusuario_solicita = res.data.idusuario_solicita;
+        res.importe_sistema = res.data.data.importe_2;
+        res.diferencia = (parseFloat(res.data.data.importe_1) - parseFloat(res.data.data.importe_2)).toFixed(2);
+        res.diferecia_color = res.diferencia < 0 ? 'red' : 'green';
+        xCajaResPermisoRemoto(res);
+    });
+
     
 
 }
@@ -179,7 +218,26 @@ function _cpSocketprinterOnly(pedido) {
 
 function _cpSocketEmitItemModificado(item) {
     // if (!isSocket) { return; }
-    this.socketCP.emit('itemModificado', item);
+    const checkIsUpdateStockAfter = getVariableSede('update_stock_after');
+				
+    console.log('item', item);
+    // descuenta al agregar producto
+	if ( !checkIsUpdateStockAfter ) {
+        this.socketCP.emit('itemModificado', item);
+	} else {
+        // modificamos la cantidad del stock solo local en la vista
+        // item.cantidad = item.sumar ? item.cantidad - item.cantidad_seleccionada : item.cantidad + item.cantidad_seleccionada ; 
+        // item.cantidad_seleccionada = 0;
+        if ( item.isporcion != 'ND' ) {
+            _cpStockItemModificado(item);
+        }
+    }
+}
+
+// 23122023  actualiza stock de los productos despues de la venta
+function _cpSocketEmitItemAllModificado(listItems) {
+    // if (!isSocket) { return; }
+    this.socketCP.emit('itemAllModificado', listItems);
 }
 
 function _cpSocketEmitPrinterOnly(item) {
@@ -243,13 +301,22 @@ function _cpSocketComprobanteWhatApp(payload) {
     this.socketCP.emit('restobar-send-comprobante-url-ws', payload);    
 }
 
+function _cpSocketSendWhatAppPermisoAdmin(payload) {
+    // if (!isSocket) { return; }
+    // localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
+    this.socketCP.emit('restobar-send-msj-ws-solicitud-permiso', payload);    
+}
+
 
 
 
 
 // solo para el caso de nuevo pedido en venta rapida o al cerrar panel lateral
 function _cpSocketRestoreFromPedidoStorage() {
+    const checkIsUpdateStockAfter = getVariableSede('update_stock_after');
+    if ( checkIsUpdateStockAfter ) { return; } // si se guarda luego entonces en backend no hubo ningun cambio 
     if (!isSocket) { return; }
+
     var pedido = localStorage.getItem('::app3_sys_dta_pe_sk') ? JSON.parse(localStorage.getItem('::app3_sys_dta_pe_sk')) : null;
     var pedidoSend = [], _subItemView = [];
     if ( pedido ) {

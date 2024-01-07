@@ -21,9 +21,10 @@
 
 					<div id="container-cliente">
 						<div>
-							<label for="xsel_tp_doc" class="xfont12 xColorRow_Plomo">Comprobante a imprimir: </label>
+							<label class="xfont12 xColorRow_Plomo">Comprobante a imprimir: </label>
 							<x-comp-find-comprobante apply-class="xTextRow2 xfont16 xCursor"
-								id="comp_sel_comprobante" 
+								id="comp_sel_comprobante" 	
+								hide-content-card-tpc="{{hideContentCardTpc}}"							
 								onchange="xSelectedTpComprobante(comprobantes)"></x-comp-find-comprobante>
 						</div>
 						
@@ -44,7 +45,7 @@
 
 							<paper-input label="[[placeholder_clie]]" onkeyup="xValidarDNIRUC(this.value, event)"
 								autofocus char-counter maxlength="11" pattern="[0-9]*"
-								error-message={{mensajeErrorDocumento}} class="xPasarEnter2" id="sel_cliente">
+								error-message={{mensajeErrorDocumento}} class="xPasarEnter2" id="sel_cliente">								
 							</paper-input>
 
 							<paper-icon-button icon="icons:search" title="Buscar DNI"
@@ -73,7 +74,8 @@
 								</paper-progress>
 							</div>
 
-							<div id="datos_cliente" hidden=[[hidden_container_cliente]]>
+							<!-- hidden=[[hidden_container_cliente]] -->
+							<div id="datos_cliente" >
 								<!-- <paper-input label="Nombres | Razon Social" onkeyup="EmitirValidacionFormCliente()"
 									id="clie_nombres" onChange="conMayusculas(this)" class="xPasarEnter2"
 									required="[[ComprobanteRequiereCliente]]" auto-validate></paper-input>
@@ -175,15 +177,15 @@
 			<div class="xLinea"></div>
 			<br>
 			<div hidden="[[!hidden_container_pago]]">
-				<button class="xBoton2 xPlomo" onclick="xCancelarCerrar();" id="btn_regresar_cuenta">Regresar</button>
-				<button class="xBoton2 xAzul" hidden="[[!modoSoloComprobante]]"					
+				<button class="btn btn-sm btn-dark" onclick="xCancelarCerrar();" id="btn_regresar_cuenta">Regresar</button>
+				<button class="btn btn-sm btn-primary" hidden="[[!modoSoloComprobante]]"					
 					onclick="xThisPago.setVisibleContainerPago();"
 					id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">
 					<div>[F10] Listo, imprimir comprobante</div>
 					<!-- disabled="[[!btnDisabledInitModoComprobante]]" -->
 					<!-- <div hidden="[[modoSoloComprobante]]">[F10] Siguente</div> -->
 				</button>
-				<button class="xBoton2 xAzul" hidden="[[modoSoloComprobante]]"
+				<button class="btn btn-sm btn-primary" hidden="[[modoSoloComprobante]]"
 					onclick="xThisPago.setVisibleContainerPago();" id="btn_pago_next"
 					disabled$="[[!valid_form_cliente_pago]]">
 					<!-- valid_form_cliente_pago || <div hidden="[[!modoSoloComprobante]]">[F10] Listo, imprimir comprobante</div> -->
@@ -198,9 +200,9 @@
 					<p class="xColorRow_Rojo">Este medio de pago requiere un cliente.<br> Por
 						favor regrese y registre o seleccione un cliente.</p><br>
 				</div>				
-				<div class="xBoton2 xPlomo" onclick="xThisPago.setVisibleContainerPago();"
+				<div class="btn btn-sm btn-dark mr-1" onclick="xThisPago.setVisibleContainerPago();"
 					id="btn_regresar_comprobante">Regresar</div>
-				<button class="xBoton2 xAzul" 
+				<button class="btn btn-sm btn-primary" 
 					hidden$ = "[[tipoPagoRequiereCliente]]"
 					disabled$="[[!change_monto_pago_valid]]"					
 					onclick="xListoRegistraPago();"
@@ -327,9 +329,32 @@
 		_inputAutocomplete = document.getElementById('clie_nombres');
 		_inputAutocompleteObj = _inputAutocomplete.$.input_clie_nombres_auto;
 		_inputAutocomplete.addEventListener('input-autocomplete-selected', (event) => {
-			const cliente = event.detail;
+			const cliente = event.detail;			
 			xThisPago.clienteModel = cliente;
 			xThisPago.tipoPagoRequiereCliente = false;
+			xThisPago.mensajeErrorDocumento = '';
+			// validar si el nombre tiene mas de 5 caracteres
+			if (cliente.length < 5) {
+				xThisPago.$.clie_nombres.invalid = true;
+				// xThisPago.mensajeErrorDocumento = 'Mínimo 5 caracteres.';
+
+				// deshabilitar el boton siguiente
+				xThisPago.valid_form_cliente_pago = false;
+
+				return;
+			}
+
+			// si el comprobante elegido es factura, evaluar el numero de ruc o dni debe contener 11 caracteres
+			if (xThisPago.tipoComprovanteSelecionado.codsunat === '01') {
+				if (cliente.length < 11) {
+					// xThisPago.$.sel_cliente.invalid = true;
+					xThisPago.$.sel_cliente.invalid = true;
+					xThisPago.mensajeErrorDocumento = 'Nro de RUC no valido';
+					return;
+				}
+			}
+
+
 			// xThisPago.valid_form_cliente_pago = true;			
 			
 			xIdCliente_pago = cliente.idcliente;
@@ -627,7 +652,7 @@
 	function xSelectedTpComprobante(event) {
 		// var idTipoComprobante = parseInt(valor);	
 		const _selObj = event ? event : objSelComprobante.getValorSelecionado();
-		// console.log('comprobante sel ', _selObj);
+		console.log('comprobante sel ', _selObj);
 
 		xThisPago.ComprobanteRequiereCliente = parseInt(_selObj.requiere_cliente) === 0 ? false : true; //requiere
 		
@@ -637,6 +662,21 @@
 				xThisPago.ComprobanteRequiereCliente = true;
 			}
 		}
+
+		if (_selObj.codsunat === '01') {
+			// comprueba si el numero de ruc o dni esta vacio
+			if (xThisPago.clienteModel.num_doc === '') {
+				xThisPago.$.sel_cliente.invalid = true;
+				xThisPago.mensajeErrorDocumento = 'Nro de RUC no valido';
+				// return;
+			}
+		} else {
+			if (xThisPago.clienteModel.num_doc === '') { 
+				xThisPago.$.sel_cliente.invalid = false;
+				xThisPago.mensajeErrorDocumento = '';			
+			}
+		}
+		
 		
 		_inputAutocompleteObj.inputValue = '';
 		
@@ -838,7 +878,9 @@
 				xAddTipoPago();
 
 				// inicia
-				xThisPago.hidden_container_pago = true;
+				xThisPago.hidden_container_pago = true;				
+				objSelComprobante.resetModoComprobanteSelected();
+
 				xThisPago.fire('xContainerPagoVisible', xThisPago.hidden_container_pago);
 			})
 	}
@@ -970,7 +1012,11 @@
 			dataClientes: Object,
 			isShowSearchSunat: Boolean,
 			isBtnPrinterCpe: Boolean,
-			changeDatosClienteSave: Object
+			changeDatosClienteSave: Object,
+			hideContentCardTpc: {
+				type: Boolean,
+				value: false,
+			},
 		},
 		attached: function () {
 			//this.total='83.00';
@@ -1048,6 +1094,7 @@
 			// xThisPago.valid_form_cliente_pago = false;
 			// xThisPago.fire('xFormClienteValid', false);
 			xThisPago.hidden_container_pago = true;
+			objSelComprobante.resetModoComprobanteSelected();
 
 		},
 		setObjConntet: function (objC) {

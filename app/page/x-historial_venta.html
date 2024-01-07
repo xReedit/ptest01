@@ -3,15 +3,32 @@
 <link rel="import" href="../x-componentes/x-comp-dialog-send-cpe/x-comp-dialog-send-cpe.html">
 <dom-module id="x-historial_venta">
 
+	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
+	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
+
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 	<script type="text/javascript" src="../view/export.excel.js"></script>
 
 	<link rel="stylesheet" href="../../css/searchableOptionList.css">
 	<script src="../../js/searchableOptionList.js"></script>
+	<script async src="../view/httpFech.js"></script>
+	<script type="text/javascript" src="../view/notifica.js"></script>
+	<script type="text/javascript" src="../../js/PNotify.js"></script>
+	<script type="text/javascript" src="../../js/PNotifyConfirm.js"></script>
+	<script type="text/javascript" src="../../js/PNotifyHistory.js"></script>
+	<link rel="stylesheet" href="../../css/PNotifyBrightTheme.css">
 	
 
 	<template>
+
+		<div class="xInvisible">
+			<audio id="notificaLlamadoCliente" autobuffer preload="auto">
+				<source src="../../sound/notifica-llamado.mp3" type="audio/mpeg" />
+			</audio>
+		</div>
+
+		<x-comp-dialog-permiso></x-comp-dialog-permiso>
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
 		<paper-dialog id="dialog_motivo_anular_historial" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -24,7 +41,7 @@
 					<input type="text" class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus>
 				</div>
 				<br><br><br>
-				<div class="xBoton2 xVerde" dialog-dismiss onclick="pass_us.open();">Listo</div>
+				<div class="xBoton2 xVerde" dialog-dismiss onclick="xOpenDialogAnularPedido();">Listo</div>
 				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
 				<br><br>
 			</div>
@@ -97,9 +114,9 @@
 						<p class="fs-12 fw-600 text-secondary">Meta Diaria</p>
 						<x-comp-meta-venta fontsize="fs-25"></x-comp-meta-venta>
 					</div>
-					<div class="div-border text-center p-2 mr-1 div-indicador" style="max-width: 100px;">
+					<div class="div-border text-center p-2 mr-1 div-indicador" style="max-width: 150px;">
 						<p class="fs-12 fw-600 text-secondary">Metodos de Pago</p>
-						<div class="d-flexx justify-content-center">
+						<div class="d-flexx justify-content-center flex-wrap">
 							<template is="dom-repeat" items="{{listCantidadPagos}}" as="item">
 								<div>
 									<p class="fs-11 pr-2 m-0 fw-600">{{item.id}}: <span class="fw-900 text-primary">{{item.cantidad}} </span></p>
@@ -781,7 +798,8 @@ var data_pagination={}, p_rows=0, p_fecha='';
                 clear: 'Borrar',
                 close: 'Cerrar',                
                 onSet: function(context) {                     
-                    xfecha_historial = context.select ? new Date(context.select).toLocaleDateString() : '';
+                    xfecha_historial = context.select ? xDevolverFechaDada2(context.select) : '';
+					console.log('xfecha_historial', xfecha_historial);
                     p_fecha = xfecha_historial;
 					xloadHistorial();
                 }
@@ -815,7 +833,10 @@ var data_pagination={}, p_rows=0, p_fecha='';
 	 	$("#txt_motivo_anular").focus();
 	})
 	$("#dialog_motivo_anular_historial #txt_motivo_anular").keyup(function(e){
-		if(e.keyCode==13){dialog_motivo_anular_historial.close();pass_us.open();}
+		if(e.keyCode==13){
+			dialog_motivo_anular_historial.close();
+			xOpenDialogAnularPedido();
+		}
 	})
 
 
@@ -825,9 +846,14 @@ var data_pagination={}, p_rows=0, p_fecha='';
 		var p=e.detail.xRpts[0].p;
 		if(p===1){
 			xPermisoSupervisor=e.detail.xRpts[0].us;
-			xCronometro_us=30;
-			xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
-			xAnularPedidoHistorial();
+			if ( xThisHistVenta.opPermisoPass == 0 ) {
+				// xAnularPedidoHistorial();
+				// xCronometro_us=30;
+				// xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
+				xAnularPedidoHistorial();
+			} else {
+				xShowChangeMetodoPagoRegistro();
+			}
 		}
 	});
 
@@ -855,6 +881,16 @@ var data_pagination={}, p_rows=0, p_fecha='';
 	xValPago.addEventListener('xFormClienteValid', function (e) {		
 		dialog_comprobante.center();
 	});
+
+	$(document).on('getValorIncial', '.tpf_option_change_rgister', function (e) {
+		console.log('getValorIncial comp-tp', e.detail);
+		xThisHistVenta.idTpSelected = e.detail.values;
+	});
+}
+
+function xOpenDialogAnularPedido() {
+	xThisHistVenta.opPermisoPass = 0;
+	pass_us.open();
 }
 
 function xAbrirDialogComprobante() {
@@ -1393,14 +1429,16 @@ function xSumarTotalesHis(){
 		//formas de pago // tipos de pago {efectivo, tarjeta, etc}
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2004', data:{i:xidregistro_pago_sel}})
 		.done( function (dt_tpp) {
-			var xdt_tpp=$.parseJSON(dt_tpp);
+			var xdt_tpp=$.parseJSON(dt_tpp);			
+			console.log('xdt_tpp', xdt_tpp);
 			if(!xdt_tpp.success){xPopupLoad.xclose();alert(xdt_tpp.error);return;}
 			xdt_tpp=xdt_tpp.datos;
 			for (var i = 0; i < xdt_tpp.length; i++) {
-				xcadena_total=String(xcadena_total+'<tr><td>'+xdt_tpp[i].tipo_pago+'</td><td align="right">'+xdt_tpp[i].importe+'</td></tr>');
+				const isVisiblePuntoFlotanteVerde = xdt_tpp[i].permission_change == '1' ? '' : 'xInvisible';	
+				xcadena_total=String(xcadena_total+'<tr><td><div id="row_tp_pago_detalle" data-id="'+ xdt_tpp[i].idregistro_pago_detalle +'"><span data-id="' + xdt_tpp[i].idregistro_pago_detalle +'" data-idregistro_pago="' + xdt_tpp[i].idregistro_pago +'" data-idtp="' + xdt_tpp[i].idtipo_pago +'" data-importe="'+ xdt_tpp[i].importe +'" data-destp="'+ xdt_tpp[i].tipo_pago +'" onclick="xPermisoChangeTP(this)"><i class="fa fa-unlock text-success mr-1 punto-flotante-verde ' + isVisiblePuntoFlotanteVerde +'"></i><i class="fa fa-refresh text-primary mr-1 xCursor" title="Cambiar metodo de pago"></i></span>'+xdt_tpp[i].tipo_pago+'</div></td><td align="right">'+xdt_tpp[i].importe+'</td></tr>');
 			};
 			
-			xcadena_total='<div class="d-flexx justify-content-end mb-2"><table width="30%" id="tb_totales" class="xRowPading4">'+xcadena_total+'</table></div><br>'+xhtml_anulado;
+			xcadena_total='<div class="d-flexx justify-content-end mb-2"><table width="50%" id="tb_totales" class="xRowPading4">'+xcadena_total+'</table></div><br>'+xhtml_anulado;
 			$("#xBody").append(xcadena_total).trigger('create');
 		})
 	})
@@ -1650,7 +1688,7 @@ function xGenerarReporteExcelRegistroPagoDetallado() {
 				if (x.isShowComprobante) {
 					const _numComprobante = x.num_comprobante.split('-');
 					x.comprobante_serie = _numComprobante[0];
-					x.comprobante_num = x.num_comprobante[1];
+					x.comprobante_num = _numComprobante[1];
 				}
 
 
@@ -1705,6 +1743,95 @@ function xRegistroPagoReenviarComprobante(obj) {
 	_compDialogSendCPE_RP.open(_objCPE)
 }
 
+async function xPermisoChangeTP(obj) {
+	xThisHistVenta.objChangeTp.idregistro_pago_detalle = obj.dataset.id;
+	xThisHistVenta.objChangeTp.idregistro_pago = obj.dataset.idregistro_pago;
+	xThisHistVenta.objChangeTp.idtipo_pago_before = obj.dataset.idtp;
+	xThisHistVenta.objChangeTp.importe = obj.dataset.importe;
+	xThisHistVenta.objChangeTp.descripcion_before = obj.dataset.destp;
+	xThisHistVenta.opPermisoPass = 1; // cambiar tp
+
+	// chequear si ya tiene el permiso utilizando findStorageSolicudPermisoRemota
+	const _objPermiso = await findStorageSolicudPermisoRemota(xThisHistVenta.objChangeTp.idregistro_pago_detalle, 3);
+	console.log('_objPermiso', _objPermiso);
+	if (_objPermiso) {
+		xPermisoSupervisor = _objPermiso.idusuario_admin;
+		xThisHistVenta.objChangeTp.idusuario_admin = _objPermiso.idusuario_admin;		
+		xThisHistVenta.objChangeTp.idpermiso_remoto = _objPermiso.idpermiso_remoto;
+		// xCompArraySolitaPermiso = _objPermiso;
+		xShowChangeMetodoPagoRegistro();
+		return;
+	}
+
+
+
+	xCompArraySolitaPermiso = {
+		tipo_permiso: 3,
+		obj: xThisHistVenta.objChangeTp,		
+	}
+
+	pass_us.open();
+}
+
+async function xShowChangeMetodoPagoRegistro() {
+        const _swalAlertValues = paramsSwalAlert;        
+        _swalAlertValues.title = '<p class="fw-600 fs-18">Elige el metodo de pago</p>';
+        _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <x-comp-find-tipo-pago-option class="tpf_option_change_rgister"></x-comp-find-tipo-pago-option>
+                                </div>`;
+        _swalAlertValues.confirmButtonText = 'Listo, registrar';        
+        _swalAlertValues.showCancelButton = true;
+
+        
+        return await showAlertSwalHtmlDecision(_swalAlertValues,0)
+            .then(res => {
+                if (res.isConfirmed) { // guardar
+
+					xThisHistVenta.objChangeTp.idusuario_admin = xPermisoSupervisor;	
+					xThisHistVenta.objChangeTp.idtipo_pago_after = xThisHistVenta.idTpSelected.idtipo_pago;
+
+					console.log('xThisHistVenta.objChangeTp', xThisHistVenta.objChangeTp);
+
+					const _fetchApi = new httpFecht();
+					_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_010.php?op=change-tipo-pago-registro-pago', data: xThisHistVenta.objChangeTp }, true, false)
+						.then(res => {
+							console.log('res', res);
+							if (res.success) {
+								// obtenemos el registro de la lista para modificar el tipo de pago
+								const _rowItem = xThisHistVenta.listRegistroPagoFilter.find(x => x.idregistro_pago === xidregistro_pago_sel);
+								// tambien el del master
+								// const _rowItemMaster = xThisHistVenta.listRegistroPagoMaster.find(x => x.idregistro_pago === xidregistro_pago_sel);	
+
+								console.log('_rowItem', _rowItem);
+								_rowItem.listDesPago.descripcion = xThisHistVenta.idTpSelected.descripcion;
+								_rowItem.listIconsPago[0].icon = xThisHistVenta.idTpSelected.logo;
+								_rowItem.listIconsPago[0].id = xThisHistVenta.idTpSelected.img;
+
+								// acutualizamos vista
+								xThisHistVenta.listRegistroPagoFilter = JSON.parse(JSON.stringify(xThisHistVenta.listRegistroPagoFilter));	
+								// xThisHistVenta.listRegistroPagoMaster = JSON.parse(JSON.stringify(xThisHistVenta.listRegistroPagoMaster));
+
+								// quita de la lista storage para que no este disponible
+								removeStorageSolicitudPermisoRemota(xThisHistVenta.objChangeTp.idpermiso_remoto)
+								
+							}
+						})
+                   
+                }                
+            })
+
+    }
+
+	// function que recibe el idregistro_pago_detalle y busca en la tabla tb_totales el elemento row_tp_pago_detalle>punto-flotante-verde y remueve la clase xInvisible
+	function xRPRemoverPuntoFlotanteVerde(idregistro_pago_detalle) {
+		const _rowTpPagoDetalle = document.querySelector('#row_tp_pago_detalle[data-id="'+ idregistro_pago_detalle +'"] .punto-flotante-verde');
+		if ( _rowTpPagoDetalle ){
+			_rowTpPagoDetalle.classList.remove('xInvisible');
+		}
+	}
+
+	
+
 Polymer({
 	is:'x-historial_venta',
 	properties:{
@@ -1728,8 +1855,24 @@ Polymer({
 		listRegistroPagoFilterTmp: [], //en busqueda texto
 		listRegistroPagoExportDetallado: [],
 		listRegistroPagoExportDetalladoRowsDynamic: String,
+		opPermisoPass: Number,		
+		idTpSelected: {},
+		objChangeTp: {
+			type: Object,
+			value: {
+				idregistro_pago_detalle: '',
+				idregistro_pago: '',
+				descripcion_before: '',
+				descripcion_after: '',
+				idtipo_pago_before: '',				
+				idtipo_pago_after: '',
+				importe: '',
+				idusuario_admin: ''
+			}
+		},		
 	},
 	attached:function(){
+		this.opPermisoPass=0; // anular pedido
 		this.xIsPuedeReimprimirCPE = false;
 		this.xYaTieneComprobante = true;
 		this.xYaPedidoCerrado = true;

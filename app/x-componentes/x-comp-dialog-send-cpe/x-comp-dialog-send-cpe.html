@@ -9,7 +9,7 @@
             <p id="dgl_sunat_msj">Enviar comprobante por WhatsApp.<br> <span class="fw-600">[[objcpe.numero]] </span></p><br>
     
             <input type="number" class="xMiInput xfont18 text-center" placeholder="Numero de Telefono" autofocus
-                id="txt_wtp" onkeyup="xCompChangeNumWhatsAppCpe(this)" enlinea>
+                id="txt_wtp" onkeyup="xCompChangeNumWhatsAppCpe(this)" value$="{{valueTelfono}}" enlinea>
     
             <br><br>
             <div id="comp_send_cpe_dgl_loading_whatsapp" class="xInvisible">
@@ -39,6 +39,7 @@
             // const external_id_cpe = xThisComDialogSendCPE.objcpe.external_id;
             try {
                 
+                // console.log('valueTelfono', xThisComDialogSendCPE.valueTelfono);
             
                 const _payloadPdf = {
                     telefono: txt_wtp.value,
@@ -46,8 +47,10 @@
                     user_id: _userId,
                     numero_comprobante: xThisComDialogSendCPE.objcpe.numero,
                     comercio: dtSede.sedenombre,
-                    telefono: dtSede.telefono
+                    comercio_telefono: dtSede.telefono
                 };
+
+                
                 
 
                 $(comp_send_cpe_dgl_loading_whatsapp).removeClass('xInvisible');
@@ -79,7 +82,11 @@
             showBtnSendWhatsapp: {
                 type: Boolean,
                 value: false
-            }
+            },
+            valueTelfono: {
+                type: String,
+                value: ''
+            }   
         },
         attached: function () {
             this.showBtnSendWhatsapp = false;

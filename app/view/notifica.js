@@ -118,6 +118,42 @@ function pNotificaPersonal(mesa) {
 
 }
 
+function pNotificaSolicitudAceptada(data) {
+  // var hora = pTimeNow();
+
+	if (typeof window.stackBottomRight === 'undefined') {
+    window.stackBottomRight = {
+      'dir1': 'up',
+      'dir2': 'left',
+      'firstpos1': 25,
+      'firstpos2': 25
+    };
+  }
+
+  const _contenthtml = `<strong>Solicitud Aceptada</strong><br>${data.solicitud}`;
+
+  var notice = PNotify.success({  
+    text: _contenthtml,
+    textTrusted: true,  
+    hide: false,
+    stack: window.stackBottomRight,
+    modules: {
+      History: {
+        maxInStack: 5
+      }
+    } 
+  });  
+
+  notice.on('click', function() {
+  	notice.close();
+	});
+
+
+  // PlaySound('../../sound/notifica-llamado.mp3');
+  PlaySound('notificaLlamadoCliente');
+
+}
+
 
 // notifica nuevo pedido desde el app
 function pNotificaNuevoPedido(pedido) {

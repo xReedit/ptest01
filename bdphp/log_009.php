@@ -143,7 +143,7 @@
                     select COUNT(pb.idpedido_borrados) cant from pedido_borrados pb 
                     inner join usuario u using(idusuario)
                     inner join sede s using(idsede)
-                    where s.idsede = $g_idsede and pb.fecha_cierre = ''
+                    where s.idsede = $g_idsede and STR_TO_DATE(pb.fecha, '%d/%m/%Y') >= CURDATE() - INTERVAL 2 DAY and pb.fecha_cierre = '' 
             ";
             $bd->xConsulta($sql);
             break;
@@ -499,5 +499,28 @@
             $sql="update tipo_comprobante_serie set is_deshabilitado_cpe = 1, estado = 1 where idsede = $g_idsede and estado = 0 and idtipo_comprobante in (2,3)";  
             $bd->xConsulta($sql);
             break;
+        case 40: // permiso remoto
+            $data = file_get_contents('php://input');
+            $postBody = json_decode($data);
+
+
+            // Generar un ID único
+            $uniqueId = uniqid();
+
+            // Truncar el ID a 6 caracteres
+            $shortUniqueId = substr($uniqueId, 0, 10);
+
+            $sql="insert into permiso_remoto(idsede, idusuario_solicita, idusuario_admin, fecha, hora, data, link) 
+                values ($g_idsede, $g_us, $postBody->idusuario_admin, curdate(), curtime(), '$data', '$shortUniqueId')";  
+            $bd->xConsulta_NoReturn($sql);     
+            
+            echo json_encode(array('success' => true, 'link' => $shortUniqueId));
+            break;
+        case 4001: // trae la lista de solicitudes atendidas
+            $sql="select pr.* from permiso_remoto pr                
+                where pr.idsede = $g_idsede and pr.atendido=1 and pr.ejecutado=0
+                order by pr.idpermiso_remoto desc";
+            $bd->xConsulta($sql);
+            break;        
     }
 ?>    

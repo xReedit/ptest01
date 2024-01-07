@@ -75,7 +75,7 @@
             break;
         case 70101://load clientes - input autocomplete search val input            
             $inputValue = $_POST['val'];
-            $sql = "select c.idcliente, c.idorg, c.nombres, c.f_nac, c.ruc, c.direccion, cs.telefono, c.credito, c.estado, c.pwa_id, c.email, c.calificacion, c.dni_num_verificador, c.direccion_delivery_no_map, c.referencia from cliente_sede cs inner join cliente c on cs.idcliente = c.idcliente where cs.idsede = $g_idsede and nombres like '%$inputValue%' order by nombres limit 5";
+            $sql = "select c.idcliente, c.idorg, concat(cs.telefono, ' ', c.nombres) tel_nom, c.nombres, c.f_nac, c.ruc, c.direccion, cs.telefono, c.credito, c.estado, c.pwa_id, c.email, c.calificacion, c.dni_num_verificador, c.direccion_delivery_no_map, c.referencia from cliente_sede cs inner join cliente c on cs.idcliente = c.idcliente where cs.idsede = $g_idsede and concat(cs.telefono, ' ', c.nombres) like '%$inputValue%' order by nombres limit 5";
 			$bd->xConsulta($sql);
             break;
         case 8://load cargos
@@ -255,6 +255,19 @@
             break;
         case 2203: //cerrar resumen
             $sql = "update ticket_rapido tr set tr.cierre = '1', fecha_cierre = now() where tr.idsede = $g_idsede and tr.idusuario = $g_idusuario and tr.cierre = '0'";
+            $bd->xConsulta($sql);
+            break;
+        case 2204: // cargar opciones de la sede
+            $sql = "select * from sede_opciones where idsede = $g_idsede";
+            $bd->xConsulta($sql);
+            break;
+        case 2205: // guardar opciones de la sede
+            $items = json_decode(json_encode($_POST["items"]));
+            // insertar o actualizar segun la columna idsede 
+            $sql = "insert into sede_opciones (idsede, switch2, num_intentos_cierre, update_stock_after, hora_cierre_dia)
+                    values ($g_idsede, $items->switch2, $items->num_intentos_cierre, $items->update_stock_after, '$items->hora_cierre_dia')
+                    on duplicate key update switch2 = $items->switch2, num_intentos_cierre = $items->num_intentos_cierre, update_stock_after = $items->update_stock_after, hora_cierre_dia = '$items->hora_cierre_dia'";
+            
             $bd->xConsulta($sql);
             break;
     }

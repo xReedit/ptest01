@@ -74,6 +74,9 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	
 	// console.log('xArrayComprobante.correlativo B', xArrayComprobante.correlativo);	
 	
+	// si es comprobante de consumo
+	// 211223 comprobante por consumo   
+	xArrayCuerpo = isComprobanteConsumo(xArrayComprobante, xArraySubTotales, xArrayCuerpo);
 
 	// console.log('paso H');
 	rptPrint = await xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago);
@@ -944,7 +947,7 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 
 			listItemAgrupados.push({
 				idtipoconsumo: x.idtipoconsumo,
-				idseccion: 0,
+				idseccion: x.idseccion,
 				des_tpc: x.des_tp,
 				printer: printer,
 				items: listAdd
@@ -968,7 +971,7 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 
 		printer.ip_print = printer.ip;
 		// de lo contrario buscamos si ya existe el tipo de consumo el la lista resumen
-		const _isTpc = listItemAgrupados.filter(p => p.idseccion === x.idseccion)[0];
+		const _isTpc = listItemAgrupados.filter(p => p.idtipoconsumo === x.idtipoconsumo)[0];
 		if (_isTpc ) {
 			const rowAdd = {
 				descripcion: x.descripcion,
@@ -983,7 +986,7 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 			}
 			listAdd.push(rowAdd)
 			listItemAgrupados.push({
-				idtipoconsumo: 0,
+				idtipoconsumo: x.idtipoconsumo,
 				idseccion: x.idseccion,
 				des_tpc: x.des_tp,			
 				printer: printer,
@@ -1023,4 +1026,34 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 
 
 
+}
+
+// funcion que evalua si el comprobante es por consumo
+function isComprobanteConsumo(xArrayComprobante, xArraySubTotales, xArrayCuerpo) {
+	// 211223 comprobante por consumo    
+    if ( xArrayComprobante?.modo.id == 2 ) { 
+        const _id = Date.now().toString().slice(-6); // number random
+        const arrEstructura = xm_log_get('estructura_pedido');
+        const _IdTpConsumo = arrEstructura[0].idtipo_consumo;
+
+        // el precio total lo sacamos de subtotales
+        const _importeTotalComprobante = xArraySubTotales.filter(x => x.descripcion.toLowerCase() === 'total')[0].importe;
+
+        const item = {  'id': _id, 
+                        'iditem': _id, 
+                        'idtipo_consumo': _IdTpConsumo,
+                        'des_seccion': 'ITEMS',
+                        'cantidad': 1, 
+                        'descripcion': xArrayComprobante.modo.modo_title, 
+                        'punitario': _importeTotalComprobante, 
+                        'precio': _importeTotalComprobante,
+                        'ptotal': _importeTotalComprobante,
+                        'precio_total_calc': _importeTotalComprobante
+                    };
+
+        const _listItem = [item];
+        xArrayCuerpo = xCargarDatosAEstructuraImpresion(_listItem, xArraySubTotales, false);
+    } 
+
+	return xArrayCuerpo;
 }

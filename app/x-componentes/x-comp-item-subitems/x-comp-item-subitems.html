@@ -455,6 +455,7 @@
 
     function addSubItem(obj) {
         const idItemContentObj = obj.dataIdcontent;
+        console.log('idItemContentObj', idItemContentObj);
         const index = obj.dataId;
         var subitem = obj.dataItem
         , listChecks = []
@@ -508,7 +509,8 @@
         itemPedidos_objItemSelected.subitems_selected = [];
         xThisComSubItem.listContentSub.map(t => t.opciones.filter((x) => {
             if (x.selected) {
-                _indicaciones_subitem = x.des +', '+ _indicaciones_subitem;
+                x.des = x.des.trim();
+                _indicaciones_subitem = x.des +','+ _indicaciones_subitem.trim();
                 listChecks.push(x);
             }
         }));

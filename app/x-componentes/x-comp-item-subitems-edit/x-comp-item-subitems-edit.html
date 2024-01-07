@@ -352,7 +352,7 @@
             
             var _subItemMod = xThisComSubItemEdit.listCompSubitems[index];
             _subItemMod.cantidad = tr_cant;
-            _subItemMod.precio = tr_precio;
+            _subItemMod.precio = tr_precio.trim();
             _subItemMod.descripcion = tr_des;
 
             sumCantSubitem();

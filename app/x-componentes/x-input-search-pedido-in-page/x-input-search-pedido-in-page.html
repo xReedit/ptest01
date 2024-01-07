@@ -3,7 +3,7 @@
     <div id="search-container">        
         <span hidden$="[[!isVisibleCantidadEncontrados]]" class="label-input-cant-serch">[[cantElementosEncontrados]] | </span>
         <span hidden$="[[!isVisibleCantidadEncontrados]]" class="label-input-btn-x xCursor" onclick="clearBusquedaCompInputSearchInPage()"><i class="fa fa-close"></i></span>
-        <form autocomplete="off">
+        <form autocomplete="off" action="" onsubmit="return false;">
             <input type="text" autocomplete="off" class="text-input-search-page" id="comp-input-serch-in-page" name="comp-input-serch-in-page" placeholder="🔎 Buscar..." onkeyup="_searchStringInPageActive(this)">                
         </form>
     </div>

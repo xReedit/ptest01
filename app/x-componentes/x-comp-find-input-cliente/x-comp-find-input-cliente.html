@@ -5,18 +5,24 @@
 	<template>
 		<paper-input-autocomplete 
 			id="input_clie_nombres_auto" 
-			label="{{label}}" value="{{inputValue}}"
-			search-property="nombres"
-			onkeyup="searchClienteInput(this)"	
+			label="{{label}}" value="{{inputValue}}"			
+			search-property$="{{searchProperty}}"
+			onkeyup="searchClienteInput(this)"
+			onchange="verifyChartLengthInput(this)"		
 			on-autocomplete-selected="xchangeCliente"			
 			autocomplete-search-length="2" disable-show-clear="true"></paper-input-autocomplete>
 
+			<p hidden$="[[!isShowInfoBuscar]]" class="fs-11 fw-100 text-primary" style="margin-top: -9px;">🔎 Busca por nombre o telefono</p>
 			<p hidden$="[[!isErrorLength]]" class="fs-13 text-danger">Mínimo 5 caracteres.</p>
 	</template>
 </dom-module>
 <script>
 	var xThisComInputCliente, _autocompleteComp;
 		
+	function verifyChartLengthInput(event) {
+			xThisComInputCliente.isErrorLength = event.target.value.length > 0 && event.target.value.length < 5;
+			// xThisComInputCliente.xchangeCliente();
+	}
 
 		function getAllClientesInit() {
 			
@@ -37,8 +43,13 @@
 			.done( function (DtProv) {
 				var xDtProv=JSON.parse(DtProv);
 				xThisComInputCliente.list_cliente=xDtProv.datos;
+				// xThisComInputCliente.list_cliente = xDtProv.datos.map(cliente => {
+				// 	cliente.nombresAndTelefono = cliente.telefono + ' ' + cliente.nombres;
+				// 	return cliente;
+				// });
 				
 				// _autocompleteComp.source = ['Apple', 'Orange', 'Bananas'];
+				
 				const listElementInput = input_clie_nombres_auto;
 				if ( listElementInput.length ) {
 					for (let item of listElementInput) {
@@ -47,6 +58,22 @@
 				} else {
 					listElementInput.source=xDtProv.datos;
 				}
+
+
+				// const listElementInput = input_clie_nombres_auto;
+				// if (listElementInput.length) {
+				// 	for (let item of listElementInput) {
+				// 		item.source = xDtProv.datos.map(cliente => {
+				// 			cliente.nombresAndTelefono =  cliente.telefono +' '+ cliente.nombres;
+				// 			return cliente;
+				// 		});
+				// 	}
+				// } else {
+				// 	listElementInput.source = xDtProv.datos.map(cliente => {
+				// 		cliente.nombresAndTelefono = cliente.telefono + ' ' + cliente.nombres;
+				// 		return cliente;
+				// 	});
+				// }
 				
 				// input_clie_nombres_auto.map((x,i) => {
 				// 	input_clie_nombres_auto[i].source=xDtProv.datos
@@ -91,6 +118,14 @@
 			properties: {
 				_autocompleteComp: Object,
 				label: String,
+				searchProperty: {
+					type: String,
+					value: 'nombres'
+				},
+				isShowInfoBuscar: {
+					type: Boolean,
+					value: false
+				},
 				inputValue: {
 					type: String,
 					notify: true
@@ -126,8 +161,18 @@
 			reloadllClientes: function() {
 				getAllClientes();
 			},
-			xchangeCliente: ()=> {
-				let cliente = event.target.value;				
+			xchangeCliente: ()=> {				
+				let cliente = event.target.value;	
+				
+				// Verifica si el evento se disparó debido a una selección de la lista de autocompletado
+				if (event.type === 'autocomplete-selected') {										
+					// Establece el valor del input al nombre del cliente seleccionado
+					event.target.$.input.value = cliente.nombres;
+				}
+				
+				
+				// event.target.value = cliente.nombres;	
+				xThisComInputCliente.isErrorLength = cliente.length > 0 && cliente.length < 5;
 				event.target.fire('input-autocomplete-selected', cliente);
 				// console.log('aaaaaaaaaaaaaaa');
 			}

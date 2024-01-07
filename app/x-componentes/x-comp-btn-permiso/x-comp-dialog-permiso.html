@@ -1,0 +1,226 @@
+<dom-module id="x-comp-dialog-permiso">
+    <script src="../../view/httpFech.js"></script>
+    <template>
+    <paper-dialog id="com_dialog_solicitud_remota_permiso" class="dialog_redondo" style="max-width: 295px;"
+        entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <div class="p-3">
+            <div>
+                <!-- <img src="../../../images/_solicitud_remoto.png" alt="solicita"> -->
+                <div>
+                    <p class="fs-18 fw-600">                
+                        Solicitar Permiso Remoto
+                    </p>
+                    <span class="fw-600 fs-11">Las solicitudes se envian al numero de WhatsApp</span>
+                </div>
+            </div>
+            <br>            
+
+            <p>Quien dará el permiso?</p>
+            <select class="selected-template-1" id="selAdmin" onchange="xCompDialogSPselectedUsAdmin(this)">
+                <template is="dom-repeat" items="{{listUsAdmin}}" as="item">
+                    <option value="{{item.idusario}}">{{ item.nombres }}</option>
+                </template>
+            </select>    
+            <br>     
+
+            <p hidden$="[[!isUsAdminHaveTelefono]]" class="fs-10 badge badge-info">Telefono de notificación:  [[usAdminSelected.telefono]]</p>
+            <p hidden$="[[isUsAdminHaveTelefono]]" class="fs-10 badge badge-danger">No tiene un telefono registrado</p>
+            <br><br>
+
+            
+            <p class="fw-600">Solicitud:</p>
+            <p class="fs-12" id="comp_dialog_permiso_titulo_solicitud"></p>
+            <textarea class="selected-template-1" id="text_motivo_solicitud_remoto" 
+                placeholder="Indique el motivo de su solicitud"
+                cols="30" rows="3" value="">
+            </textarea>
+
+            <br><br>
+            <button disabled$="[[!isUsAdminHaveTelefono]]" class="btn btn-sm btn-primary" onclick="xCompDialogSP_SendSolicitud()">Enviar</button>
+            <button class="btn btn-sm btn-secondary" dialog-dismiss>Cancelar</button>
+        </div>
+    </paper-dialog>
+    </template>
+
+    <style>
+        /* .dialog_zindex {
+            z-index: 100000;
+        } */
+        #comp_dialog_permiso_titulo_solicitud {
+            width: 250px;
+        }
+    </style>
+
+    <script>
+        var xThisCompDialogPermiso, idUsAdminPermisoRemoto;
+        var xCompArraySolitaPermiso = {
+            tipo_permiso: 0,
+            motivo: '',
+            idusuario_admin: 0,
+            idusuario_solicita: 0,
+            nomusuario_solicita: '',
+            nomusuario_admin: '',
+            nomsede: '',
+            data: {},
+            solicitud: '',
+            solicitudHtml: '',
+            link: '',
+        }
+
+           
+        
+
+        async function xCompDialogSP_SendSolicitud() {
+            console.log('0idUsAdminPermisoRemoto', xThisCompDialogPermiso.usAdminSelected);            
+            xCompArraySolitaPermiso.motivo = xThisCompDialogPermiso.$.text_motivo_solicitud_remoto.value;
+            xCompArraySolitaPermiso.idusuario_solicita = xIdUsuario;
+            xCompArraySolitaPermiso.idusuario_admin = xThisCompDialogPermiso.usAdminSelected.idusuario;
+            xCompArraySolitaPermiso.telefono_admin = xThisCompDialogPermiso.usAdminSelected.telefono;
+            xCompArraySolitaPermiso.nomusuario_solicita = xNomUsario;
+            xCompArraySolitaPermiso.nomusuario_admin = primeraConMayusculas(xThisCompDialogPermiso.usAdminSelected.nombres);  
+            xCompArraySolitaPermiso.nomsede = xm_log_get('datos_org_sede')[0].sedenombre;
+            xCompArraySolitaPermiso.data = xCompArraySolitaPermiso.obj; // objeto de solicitud
+
+            delete xCompArraySolitaPermiso.obj;
+            
+            
+            const _fetchApi = new httpFecht();
+            const rpt = await _fetchApi.postJson('../../bdphp/log_009.php?op=40', xCompArraySolitaPermiso);
+            console.log('rpt', rpt);
+            if (rpt.success) {
+                xThisCompDialogPermiso.$.com_dialog_solicitud_remota_permiso.close();
+                xThisCompDialogPermiso.$.text_motivo_solicitud_remoto.value = '';
+                xCompArraySolitaPermiso.link = rpt.link;
+                console.log('xCompArraySolitaPermiso', xCompArraySolitaPermiso); 
+                _cpSocketSendWhatAppPermisoAdmin(xCompArraySolitaPermiso)
+
+                // mostrar un swal que indique que se envio la solicitud      
+                const _swalAlertValues = paramsSwalAlert;
+                _swalAlertValues.html = `<div class="p-1">                    
+												<i class="fa fa-check fa-2x text-success"></i>												
+												<p class="fw-600 fs-20">Solicitud enviada</p>
+												<p class="fw-100 fs-14">
+													Se envio la solicitud a <strong>${xCompArraySolitaPermiso.nomusuario_admin}</strong> al WhatsApp <strong>${xCompArraySolitaPermiso.telefono_admin}</strong>. Se le notificara cuando la solicitud sea atendida.
+												</p>
+											</div>`;	
+
+                showAlertSwalHtml(_swalAlertValues);
+
+                xThisCompDialogPermiso.fire('xSend', xCompArraySolitaPermiso)
+
+
+                // Swal.fire({
+                //     title: 'Solicitud enviada',
+                //     html: `Se envio la solicitud a <strong>${xCompArraySolitaPermiso.nomusuario_admin}</strong> al WhatsApp <strong>${xCompArraySolitaPermiso.telefono_admin}</strong>. Se le notificara cuando se le de el permiso.`,
+                //     icon: 'success',
+                //     confirmButtonText: 'Ok'
+                // })
+
+            } else {
+                console.log('error', rpt);
+            }
+        }
+        
+        function xCompDialogSPLoadUsAdminPermiso() {
+
+                // ecuchar el evento open del dialog
+                $('#com_dialog_solicitud_remota_permiso').on('iron-overlay-opened', function () {
+                    console.log('xCompArraySolitaPermiso', xCompArraySolitaPermiso);
+
+                    let _descripcionEliminar = '';
+                    let _descripcionEliminarNoHtml = '';
+                    const _mesaPedido = xCompArraySolitaPermiso.mesa == '0' ? `del pedido ${xCompArraySolitaPermiso.numpedido}` : `de la mesa ${xCompArraySolitaPermiso.mesa}`;    
+                    if ( xCompArraySolitaPermiso.tipo_permiso == 1 ) {
+                        // _descripcionEliminar = `Eliminar producto ${_mesaPedido} ${xCompArraySolitaPermiso.obj.precio_unitario}.`;    
+                        _descripcionEliminar = `<span class="fw-600 text-danger">Eliminar</span> <strong>${_mesaPedido}</strong> el producto <strong>${xCompArraySolitaPermiso.obj.descripcion.toLowerCase()} (${xCompArraySolitaPermiso.obj.precio_unitario}).</strong>`; 
+                        _descripcionEliminarNoHtml = `Eliminar ${_mesaPedido} el producto ${xCompArraySolitaPermiso.obj.descripcion.toLowerCase()} por un importe de ${xCompArraySolitaPermiso.obj.precio_unitario}.`;  
+                    }
+
+                    // borrar todo el pedido o pedidos
+                    if (xCompArraySolitaPermiso.tipo_permiso == 2) {
+                        // el numero de pedidos viene en obj como idpedidos                        
+                        const _pedidoPlural = xCompArraySolitaPermiso.obj.length > 1;
+                        const _tituloPedidoPlural = _pedidoPlural ? 'los pedidos' : 'el pedido';
+                        const _importeTotal = xCompArraySolitaPermiso.importe_total.toFixed(2);
+
+
+                        _descripcionEliminar = `<span class="fw-600 text-danger">Eliminar</span> <strong>${_mesaPedido}</strong> ${_tituloPedidoPlural} <strong>${xCompArraySolitaPermiso.obj[0].idpedidos}</strong> por un importe de <strong>${_importeTotal}</strong>`; 
+                        _descripcionEliminarNoHtml = `Eliminar ${_mesaPedido} ${_tituloPedidoPlural} ${xCompArraySolitaPermiso.obj[0].idpedidos} por un importe de ${_importeTotal}`;  
+
+                    }
+
+                    // solicitud de cambiar metodo pago desde registro de pagos
+                    if (xCompArraySolitaPermiso.tipo_permiso == 3) {
+                        // el numero de pedidos viene en obj como idpedidos                                                
+                        const _importeTotal = xCompArraySolitaPermiso.obj.importe;
+                        const _desTpBefore = xCompArraySolitaPermiso.obj.descripcion_before;
+                        const _desTpAfter = xCompArraySolitaPermiso.obj.descripcion_afeter;
+                        _descripcionEliminar = `<span class="fw-600 text-danger">Cambiar metodo de pago</span> <strong>${_desTpBefore}</strong> de un importe de: <strong>${_importeTotal}</strong>`; 
+                        _descripcionEliminarNoHtml = `Cambiar metodo de pago ${_desTpBefore} de un importe de ${_importeTotal}`;
+                    }
+
+                    // permiso para cerrar caja
+                    if (xCompArraySolitaPermiso.tipo_permiso == 4) {
+                        // el numero de pedidos viene en obj como idpedidos                                                
+                        const _importeTotal = xCompArraySolitaPermiso.obj.importe_1.toFixed(2);
+                        const _importeEvaluar = parseFloat(xCompArraySolitaPermiso.obj.importe_2);
+                        const _ImporteDif = (_importeTotal - _importeEvaluar).toFixed(2);
+                        _descripcionEliminar = `<span class="fw-600 text-danger">Cerrar caja</span> hay una diferencia en el efectivo de caja. Tengo <strong>${_importeTotal}</strong>`; 
+                        _descripcionEliminarNoHtml = `Ver monto registrado en caja para realizar el cuadre de caja. Hay una diferencia en el efectivo de caja. Tiene ${_importeTotal} y deberia tener ${_importeEvaluar}. La diferencia es de ${_ImporteDif}`;   
+                    }
+                    
+
+                    xCompArraySolitaPermiso.solicitud = _descripcionEliminarNoHtml;
+                    // xCompArraySolitaPermiso.solicitudHtml = _descripcionEliminar;
+
+                    xThisCompDialogPermiso.$.comp_dialog_permiso_titulo_solicitud.innerHTML = _descripcionEliminar; 
+                    xThisCompDialogPermiso.$.com_dialog_solicitud_remota_permiso.center();
+                    // centrar el dialog
+                    
+                });    
+
+
+                xThisCompDialogPermiso.$.text_motivo_solicitud_remoto.value = '';
+                $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log.php?op=70112'
+                })
+                    .done(function (res) {
+                        // console.log('xLoadUsAdminPermiso', JSON.parse(res));
+                        xThisCompDialogPermiso.listUsAdmin = JSON.parse(res).datos;
+                        xCompDialogSPselectedUsAdmin(null, 0);
+                        // console.log('listUsAdmin', xThisCaja.listUsAdmin);
+                    });
+
+            }
+        
+        function xCompDialogSPselectedUsAdmin(obj, index = null) {
+                if (index !== null) {
+                    xThisCompDialogPermiso.usAdminSelected = xThisCompDialogPermiso.listUsAdmin[index];
+                    xThisCompDialogPermiso.isUsAdminHaveTelefono = xThisCompDialogPermiso.usAdminSelected.telefono !== null;   
+                    return;
+                }
+                
+                xThisCompDialogPermiso.usAdminSelected = xThisCompDialogPermiso.listUsAdmin[obj.selectedIndex];
+                idUsAdminPermisoRemoto = xThisCompDialogPermiso.usAdminSelected.idusuario
+                xThisCompDialogPermiso.isUsAdminHaveTelefono = xThisCompDialogPermiso.usAdminSelected.telefono !== null;   
+            }
+        
+
+        Polymer({
+                is: 'x-comp-dialog-permiso',
+                properties: {                    
+                    listUsAdmin: [],
+                    usAdminSelected: {},
+                    descripcionEliminar: String,
+                    isUsAdminHaveTelefono: Boolean
+                },
+                attached: function () {  
+                    console.log('aaaaaaa');
+                    this.isUsAdminHaveTelefono = false;                  
+                    xThisCompDialogPermiso = this;     
+                    xCompDialogSPLoadUsAdminPermiso();               
+                }
+            })
+        </script>
+</dom-module>

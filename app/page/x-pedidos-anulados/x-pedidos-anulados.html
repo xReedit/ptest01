@@ -14,31 +14,30 @@
             <input type="text" class="selected-template-1 xCursor" id="pick-date"  placeholder="Elige fecha">
         </div>
         <div>
-            <table class="w-100 content-table-delivery fs-12" style="min-width: 850px;">
+            <table class="w-100 content-table-delivery fs-12" style="min-width: 600px;">
                 <thead>
                     <th align="center">#</th>
-                    <th align="left" style="max-width: 50px;">Fecha</th>
-                    <th align="left">Usuario</th>
-                    <th align="left">Motivo</th>
+                    <th align="left">Fecha</th>
+                    <th align="left" style="max-width: 200px;">Usuario</th>                    
                     <th align="left">Pedido</th>
                     <th align="left">Detalle</th>
                 </thead>
                 <tbody>
                     <template is="dom-repeat" items="{{listPedidosBorrados}}" as="item">
                         <tr>
-                            <td align="center" class="fw-600 fs-18">{{item.num}}</td>
-                            <td style="max-width: 30px;">
+                            <td align="center">                                                                
+                                <p class="fw-600 fs-18">{{item.num}}</p>
+                                <i hidden$="[[!item.isCerrado]]" class="fa fa-lock"></i>
+                            </td>
+                            <td>
                                 <p class="fw-600">{{ item.fecha }}</p>
                                 <p>{{ item.hora }}</p>
                             </td>
                             <td>
                                 <p>{{ item.usuario}}</p>
                                 <p title="Autorizo"> <i class="fa fa-key text-success fw-900"></i>  {{ item.usuario_autoriza }} </p>
-                            </td>
-                            <td>
-                                
-                                <p class="text-danger fw-600">{{ item.motivo_anular }}</p>
-                            </td>
+                                <p><strong>Motivo:</strong> <span class="text-danger fw-600">{{ item.motivo_anular }}</span></p>
+                            </td>                            
                             <td>
                                 <p>{{ item.idpedido }}</p>
                                 <p class="fw-900 ">{{ item.tp }}</p>
@@ -57,7 +56,7 @@
                         </tr>
                     </template>
                     <tr>
-                        <td colspan="5" align="right" class="fw-600"></td>
+                        <td colspan="4" align="right" class="fw-600"></td>
                         <td align="right" style="padding: 10px;"><span class="fw-600 fs-18">{{ convertRowFixed(importeTotal) }}</span></td>
                     </tr>
                 </tbody>
@@ -108,12 +107,17 @@
             $.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=9', data: {f: _fecha}})
 	        .done( function (res) { 
                 res = JSON.parse(res);                
+                console.log('res', res, _fecha);
                 var _numrows = res.datos.length;                
                 xThisPB.listPedidosBorrados = res.datos.map(x => {
+                    
                     x.num = _numrows;
                     x.items = JSON.parse(x.items);
+                    const _motivoAnuladoItems = x.items[0].motivo ? x.items[0].motivo : 'No indico';  
+
+                    x.isCerrado = x.fecha_cierre !== '' ? true : false;
                     x.isShowMesa = x.nummesa != 0;
-                    x.motivo_anular = x.motivo_anular ? x.motivo_anular : 'No indico';
+                    x.motivo_anular = x.motivo_anular ? x.motivo_anular : _motivoAnuladoItems;
                     x.isShowRecuperaStock = x.recupera_stock == '1' ? true : false;
                     _importeTotal += x.items.map(z => parseFloat(z.importe)).reduce((a, b) => a + b, 0);
                     _numrows--;

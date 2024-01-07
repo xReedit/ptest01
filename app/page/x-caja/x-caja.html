@@ -5,7 +5,23 @@
 	<!-- <script rel="preload" type="text/javascript" src="../../../js/socket.io.js"></script> -->
 	<link rel="import" href="../../x-componentes/x-comp-printer-local-select/x-comp-printer-local-select.html">
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
+	<link rel="import" href="../../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
+	<script async src="../../view/httpFech.js"></script>
+	<script type="text/javascript" src="../../view/notifica.js"></script>
+	<script type="text/javascript" src="../../../js/PNotify.js"></script>
+	<script type="text/javascript" src="../../../js/PNotifyConfirm.js"></script>
+	<script type="text/javascript" src="../../../js/PNotifyHistory.js"></script>
+	<link rel="stylesheet" href="../../../css/PNotifyBrightTheme.css">
+
 	<template>
+
+		<div class="xInvisible">
+			<audio id="notificaLlamadoCliente" autobuffer preload="auto">
+				<source src="../../../sound/notifica-llamado.mp3" type="audio/mpeg" />
+			</audio>
+		</div>
+
+		<x-comp-dialog-permiso id="compUsPermisoCerrarCaja"></x-comp-dialog-permiso>
 
 		<paper-dialog class="dialog_redondo" id="dialog_info_supervisor" style="max-width: 500px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div>								
@@ -15,8 +31,8 @@
 				<p class="fw-100 text-secondary">Puede ver sus ventas en efectivo en la opción de "Registro de Pagos". Si no encuentra su diferencia, llame al supervisor.</p>
 				<br>
 									
-				<button dialog-dismiss class="btn btn-dark mb-2" onclick="xPSupervisor.xopen()">Ingresar clave supervisor</button><br>
-				<button dialog-dismiss class="btn btn-primary mb-2" onclick="xOpenDialogPermisoRemotoUs()">Solicitar Permiso Remoto</button><br>
+				<button dialog-dismiss class="btn btn-dark mb-2" onclick="xCjPermisoSupervisor()">Ingresar clave supervisor</button><br>
+				<button dialog-dismiss class="btn btn-primary mb-2" onclick="xCjPermisoSupervisor(1)">Solicitar Permiso Remoto</button><br>
 				<button dialog-dismiss class="btn btn-secondary">Cancelar</button>
 			</div>
 		</paper-dialog>
@@ -231,6 +247,14 @@
 						 <b><h3 id="xTituloCierre">CIERRE DE CAJA</h3></b>
 						 <p class="fs-15">indique el importe en efectivo que tiene en caja, que es igual a todas las ventas en efectivo más ingresos y menos salidas de caja.</p>
 						 <br><br>
+
+						 <!-- si hay cuentas por cobrar -->
+						 <div hidden$="[[!isCuentasPorCobrar]]">
+							<p class="fs-18 fw-600 text-danger">Tiene pedidos pendientes por cobrar.</p>
+							<p class="text-secondary">Debe cobrar todos los pedidos para cerrar caja.</p>
+							<br>
+						 </div>
+
 						 <p class="fs-16 fw-600">Total de efectivo en caja:</p>
 						 <input type="text" class="xMiInput xPasarEnter2 fs-28 fw-600 w-50" data-valor="0.10" placeholder="0.00" id="txt_total_caja">
 						 <br><br>
@@ -259,19 +283,19 @@
 			            </form><br>
 						<!-- respuesta solicitud cierre -->
 						<div id="div_espera_rpt" class="xInvisible">
-							<p class="fw-600 fs-15">Por favor espere la respuesta a la solicitud por parte del administrador... <i class="fa fa-circle-o-notch fa-spin"></i></p>
+							<p class="fw-600 fs-20 text-primary">Por favor espere la respuesta a la solicitud por parte del administrador... <i class="fa fa-circle-o-notch fa-spin"></i></p>
 							<br>
 						</div>						
-						<div id="div_rpt_solicitud" class="xInvisible">
-							<p class="fw-600 fs-15">Respuesta Solicitud</p>
-							<p class="fw-600">Efectivo Sistema: {{rowRptSolicitud.importe_sistema}}</p>
-							<p class$="[[rowRptSolicitud.diferecia_color]]">{{ rowRptSolicitud.diferecia_estado }}: {{  rowRptSolicitud.diferencia}}</p>
+						<div id="div_rpt_solicitud" class="xInvisible fs-18">
+							<p class="fw-600">Respuesta Solicitud</p>
+							<p class="fw-600">Efectivo en el Sistema: {{rowRptSolicitud.importe_sistema}}</p>
+							<p class$="[[rowRptSolicitud.diferecia_color]]">Tiene una diferencia de: <span class="text-danger"><strong>{{rowRptSolicitud.diferencia}}<strong></span></p>
 							<br>
 						</div>
 			            <div id="btns_cierre">
 				            <!-- <paper-button tabindex="0" raised class="xverde" onclick="xVerificar();"><iron-icon icon="save"></iron-icon>Verificar</paper-button>
 				            <paper-button tabindex="0" raised class="xnegro" onclick="xPSupervisor.xopen()"><iron-icon icon="save"></iron-icon>Supervisor</paper-button> -->
-							<button class="btn btn-success" onclick="xVerificar();"><i class="fa fa-check pr-1"></i>Verificar</button>
+							<button disabled$="[[isCuentasPorCobrar]]" class="btn btn-success" onclick="xVerificar();"><i class="fa fa-check pr-1"></i>Verificar</button>
 							<button class="btn btn-dark" onclick="dialog_info_supervisor.open()"><i class="fa fa-money pr-1"></i>Cuanto Tengo?</button>
 							<!-- <button class="btn btn-info" onclick="xOpenDialogPermisoRemotoUs()"><i class="fa fa-volume-control-phone pr-1"></i>Permiso Remoto</button> -->
 			            </div>
@@ -469,8 +493,23 @@ function xIniCaja(){
 		}
 	});
 
+	const _compUsPermisoCerrarCaja = document.getElementById('compUsPermisoCerrarCaja');
+	_compUsPermisoCerrarCaja.addEventListener('xSend', e => {
+		const _p = e.detail;
+		console.log('_p', _p);
+		idUsAdminPermiso = _p.idusuario_admin;		
+
+		xEnviarPermisoRemoto()
+	});
+
 
 	xLoadUsAdminPermiso();
+
+	// check si cierra caja con cuentas por cobrar
+	
+	xThisCaja.isCheckCuentasPorCobrar = getVariableSede('switch2') ;
+	verifyCuentasPagar();
+	
 
 }
 function xGuardarIngreso(){
@@ -630,7 +669,28 @@ function xSumarTotal(){
 		$('#TxtTotal').val(xMoneda(xMontoTotalCaja));
 	}
 
+
+function verifyCuentasPagar() {
+	if ( xThisCaja.isCheckCuentasPorCobrar ) {
+		const _fetchApi = new httpFecht()
+		_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_010.php?op=check-cuentas-cobrar' }, false, false)
+		.then(res => {
+			if ( res.success ) {
+				const _data = res.datos[0]
+				xThisCaja.isCuentasPorCobrar = _data.cantidad > 0				
+			}
+			console.log('res', res);
+		})
+
+
+	} else {
+		return false;
+	}
+}
+
 function xVerificar(){
+
+	
 
 	xMontoTotalCaja = txt_total_caja.value;
 	//$.post('x../../bdphp/log.php?op=16',{xid:xDataEmp.Data[0].xu,xtb:xDevolverFecha()},function(xData){
@@ -1164,7 +1224,8 @@ function recibirTicketEntrada(obj) {
 
 function xOpenDialogPermisoRemotoUs() {
 	txt_total_tengo.value = txt_total_caja.value;
-	dialog_permiso_remoto.open();
+	// dialog_permiso_remoto.open();
+	com_dialog_solicitud_remota_permiso.open();
 }
 
 function xLoadTicketsEntradaCaja() {
@@ -1229,7 +1290,7 @@ function xEnviarPermisoRemoto() {
 }
 
 function xCajaResPermisoRemoto(res) {
-	// console.log('permiso remoto', res);
+	console.log('permiso remoto', res);
 	if (res.idusuario_solicita !== xIdUsuario) {return;}
 
 	xThisCaja.rowRptSolicitud = res;
@@ -1239,6 +1300,37 @@ function xCajaResPermisoRemoto(res) {
 	$('#div_espera_rpt').addClass('xInvisible');
 	$('#div_rpt_solicitud').removeClass('xInvisible');
 
+}
+
+function xCjPermisoSupervisor(op=0) {
+	xCompArraySolitaPermiso = {
+		tipo_permiso: 4,
+		idusuario_solicita: xIdUsuario,
+		obj: {
+			importe_1: txt_total_caja.value || 0,
+			importe_2: 0,
+		}
+	}
+
+	xCajaPermisoRemotoSupervisorData(op)
+
+	// xPSupervisor.xopen();
+}
+
+function xCajaPermisoRemotoSupervisorData(op=0) {
+	const _fetchApi = new httpFecht();
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_010.php?op=show-permiso-cerrar-caja'}, false, false)
+	.then(res => {	
+		console.log('res', res);
+		xThisCaja.montoEvaluar = res.datos[0].efectivo || 0;
+		xCompArraySolitaPermiso.obj.importe_2 = xThisCaja.montoEvaluar;		
+
+		if ( op === 0 ) {
+			xPSupervisor.xopen();
+		} else {
+			xOpenDialogPermisoRemotoUs();
+		}
+	})
 }
 
 
@@ -1262,7 +1354,19 @@ Polymer({
 		isShowIngresoVarios: Boolean,
 		isErrorCierre:Boolean,
 		rowRptSolicitud: [],
-		listIngresosVarios: []
+		listIngresosVarios: [],
+		montoEvaluar: {
+			type: Number,
+			value: 0
+		},
+		isCuentasPorCobrar: {
+			type: Boolean,
+			value: false
+		},
+		isCheckCuentasPorCobrar: {
+			type: Boolean,
+			value: true
+		},
 	},
 	attached:function(){
 		this.selected=0;

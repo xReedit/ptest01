@@ -220,7 +220,7 @@ function handlerFnMiPedido(e) {
 					sumar:  xsigno === '+' ? true : false
 				}		
 				
-				// console.log('itemNotifySocket', itemNotifySocket)
+				console.log('itemNotifySocket 1', itemNotifySocket)
 				
 				_cpSocketEmitItemModificado(itemNotifySocket);
 	
@@ -546,8 +546,9 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
 					sumar:  xsigno === '+' ? true : false
 				}
-				// console.log('itemNotifySocket list', itemNotifySocket)
+				console.log('itemNotifySocket list', itemNotifySocket)
 				
+								
 				_cpSocketEmitItemModificado(itemNotifySocket);
 
 				_cpSocketSavePedidoStorage(xArrayPedidoObj);
@@ -658,7 +659,7 @@ function xAddSubItemsView(tpc, id, sumar) {
 
         elItem.subitems_selected.map((x) => {
           newSubItemView.id += x.iditem_subitem.toString();
-          newSubItemView.des.push(primeraConMayusculas(x.des.toLowerCase()));
+          newSubItemView.des.push(primeraConMayusculas(x.des.toLowerCase().trim()));
           newSubItemView.cantidad_seleccionada = 1;
           newSubItemView.precio += parseFloat(x.precio);
           newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  ' (' + x.indicaciones + ')';
@@ -666,9 +667,9 @@ function xAddSubItemsView(tpc, id, sumar) {
           newSubItemView.subitems.push(x);
 		});
 		
-		newSubItemView.des = newSubItemView.des.join(', ');
+		newSubItemView.des = newSubItemView.des.join(',');
 
-		newSubItemView.des += elItem.indicaciones === undefined ? '' :  ', (' + elItem.indicaciones + ')';
+		newSubItemView.des += elItem.indicaciones === undefined ? '' :  ',(' + elItem.indicaciones + ')';
 
         // itemCarta para sacar los indicadores
         // itemCarta.indicaciones = '';
@@ -2000,4 +2001,50 @@ function xSendItemVentaxPesoVR(xarr_body) {
 	
 		xcantRunSocket = true;
 	})
+}
+
+// 23122023  actualiza stock de los productos despues de la venta
+function updateStockOnOrderCompletion(xarr_body) {
+
+	// tambien filtra los item que tienen como cantidad ND, ya no es necesario enviarlo al backend
+	let _listItemVentaPeso = xarr_body
+								.map(x => Object.values(x)).filter(x => x.length > 3)[0]
+								.filter(x => typeof x === 'object')								
+								.filter(x => x.isporcion !== 'ND')
+								.filter(x => x.venta_x_peso !== '1');
+
+	
+	
+	
+	if (_listItemVentaPeso.length === 0 ) return;
+	// _listItemVentaPeso = _listItemVentaPeso
+
+	let listItemsSend = [];
+
+	_listItemVentaPeso.map(item => {
+		item.stock_actual = item.stock_actual - item.cantidad;
+		const itemUpdateStock = {
+			cantidad: item.cantidad,
+			idcarta_lista: item.idcarta_lista,
+			iditem: item.iditem,
+			iditem2: item.iditem2,
+			isalmacen: item.procede.toString() === '0' ? 1 : 0,
+			isporcion: item.isporcion,
+			subitems: typeof item.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems) : itemPedidos_objItemSelected.subitems,
+			subitems_selected: item.subitems_selected,
+			sumar: true,
+			venta_x_peso: 1
+		}
+
+		listItemsSend.push(itemUpdateStock);
+	})
+
+	console.log('listItemsSend', listItemsSend);
+
+	// lo enviamos por socket
+	if (isSocket) {
+		_cpSocketEmitItemAllModificado(listItemsSend);
+	}	
+
+
 }

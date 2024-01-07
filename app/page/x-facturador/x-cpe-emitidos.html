@@ -901,7 +901,8 @@
             external_id: external_id_cpe,
             user_id: _userId,
             numero_comprobante: xThisCpe.numComprobanteSelected,
-            comercio: xm_log_get('datos_org_sede')[0].sedenombre
+            comercio: xm_log_get('datos_org_sede')[0].sedenombre,
+            comercio_telefono: xm_log_get('datos_org_sede')[0].telefono
         };
 
         $(dgl_loading_whatsapp).removeClass('xInvisible');

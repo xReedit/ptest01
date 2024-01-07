@@ -28,15 +28,20 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     const valIGV = parseFloat(procentajeIGV.monto);
     const isExoneradoIGV = procentajeIGV.activo === "1" ? true : false; //1 = desactivado => exonerado
 
+    // cambio para sumar los costos negativos, si es que es delivery y el comercio paga
+	xArraySubTotales = darFormatoSubTotalesParaFacturacion(xArraySubTotales, false);    
 
 
     // console.log('xArrayComprobante.correlativo C', xArrayComprobante.correlativo);
-    // cambio para sumar los costos negativos, si es que es delivery y el comercio paga
-	xArraySubTotales = darFormatoSubTotalesParaFacturacion(xArraySubTotales, false);
+    
 
     // cpe = false subtotal + adicional -> lo ponemos en xImprimirComprobanteAhora() // para mostrar en la impresion
-    var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false);
+    var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false);        
     xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV, isExoneradoIGV);
+
+    
+
+    
 
 
     // array encabezado org sede
@@ -523,8 +528,9 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             
             const errSoap = res.response ? res.response.error_soap : false;
             const _rptCPEResponse = res.response ? res.response : res;
+            const _isCPEResponseCode = _rptCPEResponse?.code ? true : false; 
             const _rptCPESuccess = _rptCPEResponse.success
-            if ( !_rptCPESuccess || errSoap ) {
+            if ( _isCPEResponseCode ) { // si tiene code lo analiza
             // if (!_rptCPESuccess) {
                 // analizamos el code error                            
                 xVerificarCodeResponseCPE(_rptCPEResponse)
@@ -558,13 +564,16 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
             // enviar socket url pdf whatsapp
             if ( telefonoCliente !== '' ) {
+                const dtSede = xm_log_get("datos_org_sede")[0];
+                
                 const _userId = dtSede.id_api_comprobante; // whastapp
                 const _payloadPdf = {
                     telefono: telefonoCliente,
                     external_id: rpt.external_id,
                     numero_comprobante: res.data.number,
                     comercio: nomComercio,
-                    user_id: _userId
+                    user_id: _userId,
+                    comercio_telefono: dtSede.telefono
                 };
                 xSendWhatsAppPdfComrpobante(_payloadPdf);
             }

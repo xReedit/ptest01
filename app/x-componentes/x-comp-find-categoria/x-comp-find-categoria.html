@@ -30,8 +30,7 @@
             }
 
             $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=3'})
-	        .done( function (dtValues) {
-                // console.log('aaaaaaaaaaaaaaaaa load componente categoria');
+	        .done( function (dtValues) {                
                 dtValues=$.parseJSON(dtValues);	
                 xThisComCategoria.list=dtValues.datos;
                 localStorage.setItem('::app3_comp_cat', JSON.stringify(xThisComCategoria.list));

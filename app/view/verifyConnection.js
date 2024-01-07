@@ -24,7 +24,7 @@ window.addEventListener("focus", function (event) {
 
 	setTimeout(() => {
 		updateConnectionStatusFocus();
-	}, 500);
+	}, 300);
 });
 
 $(window).blur(function () {
@@ -35,7 +35,7 @@ $(window).blur(function () {
 
 async function updateConnectionStatusFocus() {
 	var rpt_conex = await comprobarConexion();
-	if (rpt_conex) {
+	// if (rpt_conex) {
 		const _data_res = xm_log_get('app3_us')._sys_sessid;
 		console.log('_data_res _sys_sessid', _data_res);
 		const _restore_conex = await restoreConexion(_data_res);
@@ -45,7 +45,7 @@ async function updateConnectionStatusFocus() {
 			xm_all_xToastOpen('Verificando conexion', 2000);
 			console.log('restablecio la conexion focus');
 		}
-	}
+	// }
 }
 
 
@@ -59,7 +59,7 @@ async function updateConnectionStatus() {
 
 	if (!comprobantdoConexion) {
 		const _sys_no_conect = getLocalStorage('::app3_sys_no_conex') || false; // si en algun momepnto se desconecto esta ventana		
-		var rpt_conex = await comprobarConexion();
+		const rpt_conex = await comprobarConexion();
 
 		if (!rpt_conex) { // si es falso me evalua 2 veces, puede que tarde en conectar
 			setTimeout(() => {
@@ -106,16 +106,16 @@ function activarChangeConection() {
 	}, 3000);
 }
 
-async function comprobarConexion() {
-	var rpt_conex = false;
+async function comprobarConexion() { 
+	let rpt_conex = false;
 	comprobantdoConexion = true;
 	await fetch('../../bdphp/log_run.php?op=3')
 		.then(function (response) {
-			return response
+			return response.json()
 		})
-		.then(res => {
+		.then(res => {			
 			// console.log('online: ', res);
-			rpt_conex = true;
+			rpt_conex = res.id !== 0;
 		}).catch(function (error) { // error de conexion
 			rpt_conex = false;
 			// console.log('offline');		

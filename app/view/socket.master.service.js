@@ -1,11 +1,14 @@
 /// _socketSuperMaster se declara en xm_all.js
 
+
 class socketService {
     static instance = null;
 
     dataSocket = {};
     _socket = _socketSuperMaster;
     _idConexSocket;
+
+    //  _socketEventSubject = new BehaviorSubject(null);
 
     isSocketConnectSource = new rxjs.BehaviorSubject(false);
     isSocketConnect$ = this.isSocketConnectSource.asObservable();
@@ -83,11 +86,23 @@ class socketService {
 
     listen(evento) {
         return new rxjs.Observable(observer => {
-            this._socket.on(evento, (res) => {
+            this._socket.on(evento, (res) => {                
                 observer.next(res);
             });
-        });
+        })
+        // .pipe(
+        //     rxjs.take(1),
+        //     rxjs.retry(2)            
+        // );
     }
+
+    _listen(evento, callback) {
+        this._socket.on(evento, callback);
+    }
+
+    // getSocketEventObservable() {
+    //     return this._socketEventSubject.asObservable();
+    // }
 
     listenStatus() {
         // escuchamos los cambios del navegador
@@ -138,3 +153,4 @@ class socketService {
     }
 
 }
+

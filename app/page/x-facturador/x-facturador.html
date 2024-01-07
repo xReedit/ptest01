@@ -37,6 +37,7 @@
                     <div style="width:250px; padding-left: 7px;">
                         <x-comp-find-comprobante 
                         id="compFindComprobante" 
+                        hide-content-card-tpc="true"
                         onchange="_getComprobante(comprobantes)"></x-comp-find-comprobante>
                     </div>
                     <br>
@@ -802,6 +803,8 @@
 
             // agredo 1023
             arr_comprobante.observaciones = $('#txt_observaciones_cpe').val();
+
+            console.log('arr_comprobante', arr_comprobante);
 
             // retorna el encabezado del comprobante con hash            
             itemsConEstructuraPrint = xCargarDatosAEstructuraImpresion(xThisFacturador.arrItems);

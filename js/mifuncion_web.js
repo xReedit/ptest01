@@ -132,6 +132,11 @@ function xDevolverFechaParte(xParte){
 	return xrpt;
 	}
 
+function xDevolverFechaDada2(xFecha){
+	let date = new Date(xFecha);
+	return date.toISOString().slice(0,10).split('-').reverse().join('/');
+}
+
 function xDevolverFechaParte_Dada(xFecha, xParte){
 	var d = new Date(xFecha.split('/').reverse().join('/'));
 	var xrpt;

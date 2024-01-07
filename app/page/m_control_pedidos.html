@@ -84,6 +84,9 @@
 	<!-- animate -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
+	<script async src="../../js/axios.min.js"></script>
+	<script async src="../view/httpFech.js"></script>
+	
 	<!-- sweetalert -->
 	<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script type="text/javascript" src="../../js/mi.sweet.alert.js"></script>
@@ -190,7 +193,7 @@
 		</audio>
 	</div>
 
-	<paper-drawer-panel>
+	<paper-drawer-panel style="overflow: hidden;">
 	  <paper-header-panel drawer>
 	    <div>	    	
 	    	<div class="xCentrado" style="padding: 11.8px;">
@@ -297,7 +300,7 @@
 	      	</div>
 	      </div>
 	    </paper-toolbar>
-	    <div fit layout vertical class="content" style="overflow-x: auto; overflow-y: hidden;">			
+	    <div fit layout vertical class="content" style="overflow: auto; height: calc(100vh - 60px);">			
 			<x-router></x-router>
 			<paper-toast id="toast" duration=0 text="." style="z-index: 1000;">
 				<i class="fa fa-wifi text-danger ml-1" id="icon-wifi"></i>
