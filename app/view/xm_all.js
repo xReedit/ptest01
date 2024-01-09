@@ -1000,7 +1000,7 @@ async function xVerificarCodeResponseCPE(response) {
 					"codigo": response.code,
 				}
 				
-				const rpt = await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
+				await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
 				// console.log('rpt', rpt);
 
 				const _swalAlertValues = paramsSwalAlert; 
