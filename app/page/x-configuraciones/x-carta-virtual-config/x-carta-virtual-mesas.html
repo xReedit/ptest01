@@ -258,6 +258,7 @@
 
 <script>
     var xThisCartaVMesas, compImgLogo, _keyUrlLogoQr = '';
+    let urlApiQR = 'https://api.qrserver.com/v1/create-qr-code/?size=';
 
     function xIniCartaVirtualMesas() {
         // console.log('ini mesa carta');
@@ -316,9 +317,12 @@
                     }
                     countIndexList++;
                     const _cod = x.codigo.replace('/#', '');
-                    x.codigoDownload = 'https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=' + _cod;
-                    x.codigo = 'https://chart.apis.google.com/chart?cht=qr&chs=75x75&chl=' + _cod;
-                    x.codigo_d1 = 'https://chart.apis.google.com/chart?cht=qr&chs=185x185&chl=' + _cod;
+                                        
+
+                    x.codigoDownload = `${urlApiQR}400x400&data=${_cod}`; //'https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl=' + _cod;
+                    x.codigo = `${urlApiQR}75x75&data=${_cod}`; //'https://chart.apis.google.com/chart?cht=qr&chs=75x75&chl=' + _cod;
+                    x.codigo_d1 = `${urlApiQR}180x180&data=${_cod}`; //'https://chart.apis.google.com/chart?cht=qr&chs=185x185&chl=' + _cod;
+
                     x.titulo = 'Mesa ' + x.nummesa;
                     x.codigo_qr = _cod;                    
                     arrPart.push(x)
@@ -353,16 +357,16 @@
             var listOther = [];
             xThisCartaVMesas.qrLLevar = {};
             var _cod = res.datos[0].qr_para_llevar;
-            xThisCartaVMesas.qrLLevar.codigoDownload = 'https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl='+_cod;
-            xThisCartaVMesas.qrLLevar.codigo = 'https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl='+_cod;
+            xThisCartaVMesas.qrLLevar.codigoDownload = `${urlApiQR}400x400&data=${_cod}`;  //'https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl='+_cod;
+            xThisCartaVMesas.qrLLevar.codigo = `${urlApiQR}50x50&data=${_cod}`; //'https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl='+_cod;
             xThisCartaVMesas.qrLLevar.titulo = 'Solo para llevar';
             xThisCartaVMesas.qrLLevar.codigo_qr = _cod;          
             
             // codigo qr delivery
             xThisCartaVMesas.qrDelivery = {};
             _cod = res.datos[0].qr_delivery;
-            xThisCartaVMesas.qrDelivery.codigoDownload = 'https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl='+_cod;
-            xThisCartaVMesas.qrDelivery.codigo = 'https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl='+_cod;
+            xThisCartaVMesas.qrDelivery.codigoDownload = `${urlApiQR}400x400&data=${_cod}`; //'https://chart.apis.google.com/chart?cht=qr&chs=400x400&chl='+_cod;
+            xThisCartaVMesas.qrDelivery.codigo = `${urlApiQR}50x50&data=${_cod}`; //'https://chart.apis.google.com/chart?cht=qr&chs=50x50&chl='+_cod;
             xThisCartaVMesas.qrDelivery.titulo = 'Delivery';
             xThisCartaVMesas.qrDelivery.codigo_qr = _cod;
             xThisCartaVMesas.url_delivery = _cod;

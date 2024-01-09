@@ -42,7 +42,21 @@
     function xIniCompListNotificacion(params) {
 
         // divIconNotification = document.getElementById('divIconNotification');
-        
+
+        // si abre otra pestaña que no sea la principal, no se ejecuta
+        // if ( localStorage.getItem('opHandled') === 'true' ) return;
+        // console.log('se ejecuta verificaciones');
+
+        // antes de ejecutar verificamos primero si hay notificaciones en el localstorage   
+        const _localCountNotification = window.localStorage.getItem('::app3_sys_count_notification');
+        if ( _localCountNotification !== null ) {
+            resCountNotification = JSON.parse(_localCountNotification);
+            verifyShowNotification();
+            return;
+        }
+
+
+        console.log('ejecutamos verificaciones log == ');
         const _url = '../../bdphp/log_componentes.php?op=13'
         $.ajax({
 					type: 'POST',
@@ -51,6 +65,10 @@
 				})
 				.done(function (res) {
                     resCountNotification = JSON.parse(res).datos[0];
+                    
+                    // guardar en el localstorage
+                    window.localStorage.setItem('::app3_sys_count_notification', JSON.stringify(resCountNotification));
+
                     verifyShowNotification();                                    
 
                 });
@@ -209,7 +227,11 @@
      Polymer({
 			is: 'x-comp-list-notification',
 			properties: {				
-                lisNotificaciones: [],                
+                lisNotificaciones: [],    
+                dataNotification: {
+                    type: Object,
+                    notify: true
+                }               
 			},			
 			xopen() {
 				dialog_notificaciones.open();

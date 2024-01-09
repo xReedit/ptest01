@@ -164,6 +164,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <button class="btn btn-sm btn-dark" onclick="xCambiarMetaDiariaID2()">Cambiar meta diaria</button>
                                         <br>
                                     </div>
                 
@@ -1642,12 +1643,17 @@
 
     }
     
-    function calcularPorcentajeMetaDiaria() {
+    async function calcularPorcentajeMetaDiaria() {
         var multiplicadorRango = 1;
         switch (dataFiltro.rango) {
             case 'fecha': multiplicadorRango = 1; break;
             case 'semana': multiplicadorRango = 7; break;
             case 'mes': multiplicadorRango = 30; break;
+        }
+
+        if ( !dataMeta ) {
+            // si meta no existe que muestre el dialog para colocar la meta
+            await xCambiarMetaDiariaID2();            
         }
 
         metaDiaria = dataMeta.diaria * multiplicadorRango;
@@ -1666,6 +1672,47 @@
 
         xThisI2.dtVentasHoy = JSON.parse( JSON.stringify(_dtVentasHoy) );
     }
+
+    async function xCambiarMetaDiariaID2() {
+            // para cambiar la meta diaria evaluamos si es el usuario tiene perfil de administrador	
+            if (xm_log_get('app3_us').rol.toString() !== '1') return
+
+            let _swalAlertValuesMeta = paramsSwalAlert;
+            _swalAlertValuesMeta.title = '<p class="fw-600 fs-20">Meta de Venta Diara</p><p class="fw-600 fs-13 text-warning">Especifique el importe de venta, que será la meta diaria.</p>';
+            _swalAlertValuesMeta.html = '<div class="p-3" style="display: inline-flex; border-radius:5px">' +
+                '<input type="number" placeholder="Meta Diaria" class="xMiInput text-center text-white fs-20 w-100" id="txt_meta_diaria_ventas_id">' +
+                '</div>';
+            _swalAlertValuesMeta.confirmButtonText = 'Listo, guardar';
+            _swalAlertValuesMeta.showCancelButton = true;
+
+
+            await showAlertSwalHtmlDecision(_swalAlertValuesMeta, 1)
+                .then(async res => {
+                    if (res.isConfirmed) { // remove familia
+                        const _data = {
+                            idsede: 0,
+                            meta: txt_meta_diaria_ventas_id.value,
+                            new: 0
+                        }
+
+                        // metaDiaria = txt_meta_diaria_ventas_id.value;
+                        dataMeta = { diaria : txt_meta_diaria_ventas_id.value}                        
+
+                        $.ajax({
+                            type: 'POST',
+                            url: '../../bdphp/log_005.php?op=1605',
+                            data: _data
+                        })  
+                        
+                        _swalAlertValuesMeta.title = '';
+                        _swalAlertValuesMeta = paramsSwalAlert;
+
+                        // destruir el html generado para la function showAlertSwalHtmlDecision
+
+                    }
+
+                })
+        }
 
     Polymer({
 		is: 'x-indicadores2',

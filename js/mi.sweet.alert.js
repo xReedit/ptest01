@@ -76,7 +76,8 @@ function showAlertSwalHtml(values, theme = 1) {
 
 async function showAlertSwalHtmlDecision(values, theme = 1) {
     const _themeShowSwalAlert = returnThemeSwalAlert(theme);
-    return await _themeShowSwalAlert.fire(values).then((result) => {
+    return await _themeShowSwalAlert.fire(values).then((result) => {           
+        values.title = '';
         return result;
     })
 }

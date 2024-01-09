@@ -29,6 +29,18 @@ window.addEventListener('WebComponentsReady', function (e) {
 		}
 	  });
 	
+	// let params = new RegExp('[\?&]op=([^&#]*)').exec(window.location.href);
+	// let op = params ? params[1] : null;
+	// console.log('params op' , op);
+
+	// if (op !== '' && op !== null && op !== undefined && localStorage.getItem('opHandled') !== 'true') {
+	// 	localStorage.setItem('opHandled', 'true');
+	// 	setTimeout(() => {			
+	// 		xOpenPage(op, 'redirect');
+	// 	}, 500);
+	// 	return;
+	// }
+
 	// $('body').addClass('loaded');
 	this.componentsLoadPanel = true;
 	// setTimeout(() => {
@@ -210,6 +222,8 @@ function xOneOptionPage(_codOne) {
 
 var aapasa=0;
 async function xOpenPage(xop, parametro){	
+	 console.log('==== xOpenPage ====', xop, 'parametro===', parametro);
+	//  console.trace();
 	// var _route_count = getLocalStorage('::app3_sys_route') || 0;
 	// console.log('open ' + xop);
 	// console.log('app3_sys_route ' + _route_count);
@@ -294,7 +308,15 @@ async function xOpenPage(xop, parametro){
 			//var myWindow = window.open('#/venta_rapida', "Venta rapida");return;
 			if ( isSynOsWinOrMac() ) {
 				// setLastOpRouterReload(xop);
-				window.open('#/venta_rapida', "Pundo de Venta");return;
+				// const _paramOp = parametro === '' ? '' : '?op=16';
+				// console.log('parametro', parametro);
+				// if (parametro === '') {
+				// 	window.open('#/venta_rapida?op=16', "Pundo de Venta");
+				// } else {					
+				// }
+				window.open('#/venta_rapida', "Pundo de Venta");
+				// window.open(window.location.origin + '/restobar/app/page/m_panel.html#/venta_rapida', "Pundo de Venta");
+				return;
 			}else{
 				xruta='/venta_rapida';
 			}
@@ -310,6 +332,10 @@ async function xOpenPage(xop, parametro){
 		case 24:xruta='/items_borrados';break;
 		case 25: 
 			// xruta = '/facturador'; 
+			// if (parametro === '') {
+			// 	window.open('#/facturador?op=25', "Facturador");
+			// } else {
+			// }
 			window.open('#/facturador', "Facturador");
 			return;
 			break;
@@ -388,9 +414,9 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
 			// produccion
-			// const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
 			
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;
@@ -573,7 +599,18 @@ function xPasarAMenuAcc() {
 	xLiberarRouter();
 	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{
 		setLocalSotrage('::app3_sys_route', 0);
-		xOpenPage(1);}
+		
+		// if (localStorage.getItem('opHandled') !== 'true') {
+			// 	xOpenPage(1);
+			// }
+		if (localStorage.getItem('xOpenPageCalled') !== 'true') {
+			console.log('aca empieza home');
+			xOpenPage(1);
+			localStorage.setItem('xOpenPageCalled', 'true');
+		}
+
+		// localStorage.setItem('opHandled', 'false');
+	}
 }
 
 function showNotificationPago() {

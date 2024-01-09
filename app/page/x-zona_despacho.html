@@ -343,9 +343,11 @@ function xCheckStorageChecksZD() {
 	console.log('_xIdZonaSeccion', _xIdZonaSeccion);
 
 	if(_xIdZonaSeccion ==null || _xIdZonaSeccion ==undefined){
+		xOpenLateralIzq();
 		xPopupLoad.xclose();
 		return;}
 	if(_xIdZonaSeccion.trim() == '') {
+		xOpenLateralIzq();
 		xPopupLoad.xclose();
 		return;}
 
