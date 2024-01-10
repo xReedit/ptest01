@@ -200,7 +200,7 @@ function xOpenPageCarta(xop, parametro) {
       break;
     case 4:
       window.localStorage.removeItem("::app3_sys_first_load");
-      document.location.href = "m_panel.html";
+      document.location.href = "m_panel-39b4c106.html";
       return;
     case 5:
       xruta = "/buscar_item_menu";
@@ -413,7 +413,7 @@ function xCerrarSession() {
     // window.localStorage.clear();
 
     // window.localStorage.setItem('::app3_woIpPrintLo', printL)
-    // document.location.href='../../logueese.html';
+    // document.location.href='../../logueese-9e9140c8.html';
   });
 }
 

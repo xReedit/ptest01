@@ -315,7 +315,7 @@ async function xOpenPage(xop, parametro){
 				// } else {					
 				// }
 				window.open('#/venta_rapida', "Pundo de Venta");
-				// window.open(window.location.origin + '/restobar/app/page/m_panel.html#/venta_rapida', "Pundo de Venta");
+				// window.open(window.location.origin + '/restobar/app/page/m_panel-39b4c106.html#/venta_rapida', "Pundo de Venta");
 				return;
 			}else{
 				xruta='/venta_rapida';
@@ -377,7 +377,7 @@ async function xOpenPage(xop, parametro){
 			// const _urlPrintServver = 'http://'+ipPrintServerLocal+versionPrintServer+'/print-server.html?o='+_xr
 			
 			// local 10022022
-			const versionPrintServer = 'restobar/print/client/index.html'; 
+			const versionPrintServer = 'restobar/print/client/index-2898d3fd.html'; 
 			const _urlPrintServver = 'http://'+ipPrintServerLocal+'/'+versionPrintServer+'?o='+_xr;			
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
 			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
@@ -479,7 +479,7 @@ function xCerrarSession(){
 		// window.localStorage.clear();
 
 		// window.localStorage.setItem('::app3_woIpPrintLo', printL);
-		// document.location.href='../../logueese.html';
+		// document.location.href='../../logueese-9e9140c8.html';
 	});
 }
 

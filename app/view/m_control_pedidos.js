@@ -103,7 +103,7 @@ function xOpenPage(xop, parametro){
 			break;
 		case 3:	xruta='/caja';break;		
 		case 4:			
-			document.location.href='m_panel.html#/home';
+			document.location.href='m_panel-39b4c106.html#/home';
 			return;
 		case 5:
 			h = window.screen.availHeight-100;

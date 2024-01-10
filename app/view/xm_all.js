@@ -373,8 +373,8 @@ function xVerificarSession(){
 
 			// window.localStorage.setItem('::app3_woIpPrintLo', printL);
 
-			// document.location.href='../../logueese.html';
-			//window.location.href="../../index.html";
+			// document.location.href='../../logueese-9e9140c8.html';
+			//window.location.href="../../index-2898d3fd.html";
 		}
 	});
 }
@@ -435,7 +435,7 @@ function xCerrarSessionAll(){
 		// window.localStorage.clear();
 
 		// window.localStorage.setItem('::app3_woIpPrintLo', printL);
-		// document.location.href='../../logueese.html';
+		// document.location.href='../../logueese-9e9140c8.html';
 	});
 }
 
@@ -466,7 +466,7 @@ function setClearLocalStorage(redirec = true) {
 	if (app3_woZD_orderItemVerticalZD) { window.localStorage.setItem('::app3_woZD_orderItemVerticalZD', app3_woZD_orderItemVerticalZD); }
 
 	if(redirec) {
-		document.location.href='../../logueese.html';
+		document.location.href='../../logueese-9e9140c8.html';
 	}
 };
 
