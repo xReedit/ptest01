@@ -16,7 +16,7 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 	// no polyfills needed
 	console.log('no polyfills needed');
   } else {
-	console.log('si necestia polyfills');	
+	console.log('si necestia polyfills'); 	
   }
 
 
