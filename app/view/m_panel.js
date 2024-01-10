@@ -42,16 +42,12 @@ window.addEventListener('WebComponentsReady', function (e) {
 	// }
 
 	// $('body').addClass('loaded');
-	this.componentsLoadPanel = true;
+	this.componentsLoadPanel = true; 
 	// setTimeout(() => {
 		console.log('cargado en 4s - desde WebComponentsReady');	
 		xIniDocument();
 		
 	// }, 3000);
-
-	// status_isUsChangeSede$.subscribe(res => {
-	// 	console.log('status_isUsChangeSede', status_isUsChangeSede);
-	// })
 
 	status_CreateVariablesListen();
 });
