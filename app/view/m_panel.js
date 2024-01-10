@@ -47,7 +47,7 @@ window.addEventListener('WebComponentsReady', function (e) {
 		console.log('cargado en 4s - desde WebComponentsReady');	
 		xIniDocument();
 		
-	// }, 3000);
+	
 
 	status_CreateVariablesListen();
 });
