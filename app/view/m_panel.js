@@ -5,12 +5,7 @@ var xMenuOp = '', xAcc, xIdAccDirecto, verCambioClave = false;
 var xparam_time_ruter = false;
 var componentsLoadPanel = false, dialogListNotification, ipPrintServerLocal = '';
 
-// alert('aaa')
 
-
-// var s = document.createElement('script');
-// 	s.src = "../web_components/webcomponentsjs/webcomponents-lite.min.js",
-// 	document.head.appendChild(s);
 
 if ('registerElement' in document && 'import' in document.createElement('link')) {
 	// no polyfills needed
@@ -27,19 +22,7 @@ window.addEventListener('WebComponentsReady', function (e) {
 		if (this.selected == "main") {
 		  $("#PanelDe").css("z-index", "0");
 		}
-	  });
-	
-	// let params = new RegExp('[\?&]op=([^&#]*)').exec(window.location.href);
-	// let op = params ? params[1] : null;
-	// console.log('params op' , op);
-
-	// if (op !== '' && op !== null && op !== undefined && localStorage.getItem('opHandled') !== 'true') {
-	// 	localStorage.setItem('opHandled', 'true');
-	// 	setTimeout(() => {			
-	// 		xOpenPage(op, 'redirect');
-	// 	}, 500);
-	// 	return;
-	// }
+	  });		
 
 	// $('body').addClass('loaded');
 	this.componentsLoadPanel = true; 
@@ -373,7 +356,7 @@ async function xOpenPage(xop, parametro){
 			// const _urlPrintServver = 'http://'+ipPrintServerLocal+versionPrintServer+'/print-server.html?o='+_xr
 			
 			// local 10022022
-			const versionPrintServer = 'restobar/print/client/index-2898d3fd.html'; 
+			const versionPrintServer = 'restobar/print/client/index.html'; 
 			const _urlPrintServver = 'http://'+ipPrintServerLocal+'/'+versionPrintServer+'?o='+_xr;			
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
 			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			

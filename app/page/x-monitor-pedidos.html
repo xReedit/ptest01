@@ -135,6 +135,7 @@ function xIniMonPe(){
 		xThisMonPe.xval_pedidos_x_hora=xDt_sede_other[0].maximo_pedidos_x_hora;
 
 		$("#Titulo_page").text("Monitoreo del stock");
+
 		
 		xCargarEnInputItem();
 		graf_ped_x_hora=null;
@@ -143,6 +144,8 @@ function xIniMonPe(){
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
 		console.log('isSocket', isSocket);
+
+		$('body').addClass('loaded');
 
 		
 	});			
@@ -452,6 +455,7 @@ function monitoreoStockEmitItemModificado(objItem) {
 		, iditem: objItem.parent().attr('data-iditem')		
 		, isalmacen: objItem.parent().attr('data-procede') === '0' ? 1 : 0
 		, isporcion: objItem.parent().attr('data-isporcion')
+		, from_monitor: true
 	}
 
 	_monitoreoSocketEmitItemModificado(item);
@@ -556,6 +560,11 @@ function xModBlur(obj,tipo){
 			xActualizarListaPed();
 		}
 		// $table.isotope( 'reloadItems' ).isotope();
+
+		// stop propagation event
+		event.stopPropagation();
+		event.stopImmediatePropagation();
+
 		return;
 	}
 
@@ -566,6 +575,10 @@ function xModBlur(obj,tipo){
 		$("#aax").remove();
 	});
 	xActualizar=0;
+
+	event.stopPropagation();
+	event.stopImmediatePropagation();
+
 }
 function xActualizarListaPed(){
 

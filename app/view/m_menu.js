@@ -200,7 +200,7 @@ function xOpenPageCarta(xop, parametro) {
       break;
     case 4:
       window.localStorage.removeItem("::app3_sys_first_load");
-      document.location.href = "m_panel--bff9f6c9.html";
+      document.location.href = "m_panel.html";
       return;
     case 5:
       xruta = "/buscar_item_menu";
