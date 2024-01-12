@@ -3804,7 +3804,7 @@ function xPintarEstadoPedido(_objPedido = 0) {
 	} 
 
 	console.log('run axiosExecute');
-	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=501', isShowPreload:false, data: {objPedido: _objPedido}})
 	.then((dtPe) => {
 		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
 		// .done( function (dtPe) {			

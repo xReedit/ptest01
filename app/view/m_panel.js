@@ -54,47 +54,9 @@ window.onload = () => {
 
 
 window.addEventListener("error", function (e) {
-	console.log(e.error.message, "from", e.error.stack);
-	// alert(e.error);
-	// You can send data to your server
-	// sendError(data);
+	console.log(e.error.message, "from", e.error.stack);	
 });
 
-// function test() {	
-
-// 	var node = document.getElementById('div_datos_cierre_caja');
-// 	domtoimage.toPng(node)
-//     .then(function (dataUrl) {
-//         var img = new Image();
-//         img.src = dataUrl;
-        
-// 		var doc = new jsPDF('p', 'mm', [90, 90]);
-// 		doc.addImage(img, 'JPEG', 5, 5);
-// 		doc.setProperties({title: "Cierre de caja"});
-// 		window.open(doc.output('bloburl'));
-//     })
-//     .catch(function (error) {
-//         console.error('oops, something went wrong!', error);
-//     });
-	
-// }
-
-
-// xxx();
-// document.addEventListener("WebComponentsReady", function componentsReady() {
-// 	$("#PanelDe").on("transitionend", function (a) {
-// 		if (this.selected == "main") {
-// 			$("#PanelDe").css("z-index", "0");
-// 		}
-// 	});
-// 	xIniDocument();
-// });
-
-//window.onload = function(){xIniDocument();}
-// window.addEventListener('WebComponentsReady', function(e) {
-// 	xIniDocument();
-// });
-//window.onload = function(){$("#nom_sede").text('SAN CARLOS'); setTimeout( function(){ xIniDocument(); }, 1600); };
 function xIniDocument(){
 	// router = document.querySelector("app-router");
 
@@ -587,6 +549,17 @@ function xPasarAMenuAcc() {
 			xOpenPage(1);
 			localStorage.setItem('xOpenPageCalled', 'true');
 		}
+
+		setTimeout(() => {
+			const currentUrlPanel = window.location.href;
+
+			// Verifica si la URL termina en 'page/m_panel.html'
+			if (currentUrlPanel.endsWith('page/m_panel.html')) {
+				// Si es así, ejecuta la función xOpenPage(1)
+				console.log('vamos al home');
+				xOpenPage(1);
+			}
+		}, 1500);
 
 		// localStorage.setItem('opHandled', 'false');
 	}

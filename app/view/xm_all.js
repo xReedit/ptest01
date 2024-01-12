@@ -466,7 +466,7 @@ function setClearLocalStorage(redirec = true) {
 	if (app3_woZD_orderItemVerticalZD) { window.localStorage.setItem('::app3_woZD_orderItemVerticalZD', app3_woZD_orderItemVerticalZD); }
 
 	if(redirec) {
-		document.location.href='../../logueese-9e9140c8.html';
+		document.location.href='../../logueese.html';
 	}
 };
 
