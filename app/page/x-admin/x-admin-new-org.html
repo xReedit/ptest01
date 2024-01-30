@@ -626,6 +626,16 @@ function transferenciaCompletaMini(xfile){
 
 		xThisAdminNew.xIdSede = xThisAdminNew.ListSedesPorOrg[index].idsede;
 
+		const _inputCiudadUbigeo = document.getElementById('inputCiudadUbigeo');
+		_inputCiudadUbigeo.setValue({
+			value: dataSede.ubigeo,
+			label: dataSede.ciudad,
+			ciudad: dataSede.ciudad,
+			provincia: dataSede.provincia,
+			departamento: dataSede.departamento
+		});
+
+
 		$("#frm_sede #nombre").val(dataSede.nombre);
 		$("#frm_sede #ciudad").val(dataSede.ciudad);
 		$("#frm_sede #ubigeo").val(dataSede.ubigeo);

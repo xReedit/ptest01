@@ -39,6 +39,14 @@
             getValue: function() {
                 return this.$.inputAutocomplete.value;
             },
+            setValue: function(value) {
+                this.$.inputAutocomplete.value = value;
+                // mostrar en el input 
+                this.$.inputAutocomplete.$.input.value = value.label;
+                
+
+                console.log('this.$.inputAutocomplete.value', this.$.inputAutocomplete.value);
+            },
             loadData: function() {
                 // buscara cuando el input tengo por lo menos 3 caracteres
                 const _length = this.$.inputAutocomplete.value.length;
