@@ -14,15 +14,6 @@ var tableToExcel = (function () {
         link.download = 'reporte.xls';
         link.href = uri + base64(format(template, ctx));
         link.click();
-
-
-        // no marcado html
-        // var _table = document.getElementById(table);
-        // var html = _table.outerHTML;
-        // window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
-
-        // window.location.href = uri + base64(format(template, ctx))
     }
 })()
 
-// 'data:application/vnd.ms-excel;base64,'

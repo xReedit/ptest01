@@ -2460,7 +2460,11 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		} catch (error) {
 			// si el string tiene saltos de pagina /n 
 			// itemList.json_datos_delivery = JSON.parse(datosDelivery.replace(/(\r\n|\n|\r)/g,""));
-			datosDelivery = JSON.parse(datosDelivery.replace(/(\r\n|\n|\r)/g,""));
+			try {
+				datosDelivery = JSON.parse(datosDelivery.replace(/(\r\n|\n|\r)/g,""));				
+			} catch (error) {
+				datosDelivery = null;
+			}
 		}
 
 		// datosDelivery = datosDelivery != '' && datosDelivery != '{}' && datosDelivery != '[]' ? JSON.parse(datosDelivery) : null;

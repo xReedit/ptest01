@@ -37,6 +37,16 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
     // cpe = false subtotal + adicional -> lo ponemos en xImprimirComprobanteAhora() // para mostrar en la impresion
     var xitems = xEstructuraItemsJsonComprobante(xArrayCuerpo, xArraySubTotales, false);        
+
+    // si el comprobante es solo por consumo entonces tomamos solo el primer item de items
+    try {        
+        if ( xArrayComprobante?.modo.id===2 ){
+            xitems = xitems.slice(0,1);
+        }
+    } catch (error) {
+        console.log('error xArrayComprobante?.modo', error);
+    }
+
     xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV, isExoneradoIGV);
 
     

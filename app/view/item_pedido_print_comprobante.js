@@ -1032,27 +1032,38 @@ function cocinarImpresionAnulacionList(listItemsAnular, usuarioSupervisor, usuar
 function isComprobanteConsumo(xArrayComprobante, xArraySubTotales, xArrayCuerpo) {
 	// 211223 comprobante por consumo    
     if ( xArrayComprobante?.modo.id == 2 ) { 
-        const _id = Date.now().toString().slice(-6); // number random
-        const arrEstructura = xm_log_get('estructura_pedido');
-        const _IdTpConsumo = arrEstructura[0].idtipo_consumo;
+		let _xArrayCuerpoTMP = {...xArrayCuerpo};
+		try {			
+			const _id = Date.now().toString().slice(-6); // number random
+			const arrEstructura = xm_log_get('estructura_pedido');
+			const _IdTpConsumo = arrEstructura[0].idtipo_consumo;
+	
+			// el precio total lo sacamos de subtotales
+			const _importeTotalComprobante = xArraySubTotales.filter(x => x.descripcion.toLowerCase() === 'total')[0].importe;
+			const des_item = xArrayComprobante.modo.modo_title.trim() === '' ?  'POR CONSUMO' : xArrayComprobante.modo.modo_title;
+	
+			const item = {  'id': _id, 
+							'iditem': _id, 
+							'idtipo_consumo': _IdTpConsumo,
+							'des_seccion': 'ITEMS',
+							'cantidad': 1, 
+							'descripcion': des_item, 
+							'punitario': _importeTotalComprobante, 
+							'precio': _importeTotalComprobante,
+							'ptotal': _importeTotalComprobante,
+							'precio_total_calc': _importeTotalComprobante
+						};
+	
+			const _listItem = [item];
+			_xArrayCuerpoTMP = xCargarDatosAEstructuraImpresion(_listItem, xArraySubTotales, false);
 
-        // el precio total lo sacamos de subtotales
-        const _importeTotalComprobante = xArraySubTotales.filter(x => x.descripcion.toLowerCase() === 'total')[0].importe;
+			if (_xArrayCuerpoTMP.length === 0) return xArrayCuerpo;
 
-        const item = {  'id': _id, 
-                        'iditem': _id, 
-                        'idtipo_consumo': _IdTpConsumo,
-                        'des_seccion': 'ITEMS',
-                        'cantidad': 1, 
-                        'descripcion': xArrayComprobante.modo.modo_title, 
-                        'punitario': _importeTotalComprobante, 
-                        'precio': _importeTotalComprobante,
-                        'ptotal': _importeTotalComprobante,
-                        'precio_total_calc': _importeTotalComprobante
-                    };
+			xArrayCuerpo = _xArrayCuerpoTMP;
 
-        const _listItem = [item];
-        xArrayCuerpo = xCargarDatosAEstructuraImpresion(_listItem, xArraySubTotales, false);
+		} catch (error) {
+			console.error('error en comprobante por consumo', error);			
+		}
     } 
 
 	return xArrayCuerpo;

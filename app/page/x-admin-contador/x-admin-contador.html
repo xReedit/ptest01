@@ -3,6 +3,20 @@
 <dom-module id="x-admin-contador">
 	<template is="dom">
 
+		<!-- Dialog que ofrece los formatos de descarga de los reportes -->
+		<paper-dialog id="dialog_reporte_formato" class="dialog_redondo" style="max-width: 380px" entry-animation="scale-up-animation"
+			exit-animation="fade-out-animation">
+			<div class="p-3 text-center">
+				<p class="fs-18">Selecciona el formato</p>
+				<br>
+				<div class="divBtnReporte">
+					<button class="btn btn-sm btn-primary" onclick="downloadReporteCPE_f1()">Formato 1</button>
+					<button class="btn btn-sm btn-success mt-2" onclick="downloadReporteCPE_f2()">Formato SIRE</button>
+					<button class="btn btn-sm btn-success mt-2" onclick="downloadReporteCPE_f3()">Formato SIRE TXT</button>
+				</div>
+			</div>
+		</paper-dialog>
+
 		<paper-dialog id="dialog_match_sunat" class="dialog_redondo" modal style="min-width: 330px; max-width: 400px" modal entry-animation="scale-up-animation"
             exit-animation="fade-out-animation">
 			<div class="p-2 text-center">
@@ -86,7 +100,7 @@
 								<th width="15px">#</th>
 								<th>Mes</th>
 								<th>Estado</th>
-								<th>Accion</th>
+								<th>Acción </th>
 							</thead>
 							<tbody>
 								<template is="dom-repeat" items="{{listMonth}}" as="item">
@@ -95,8 +109,11 @@
 										<td class="xfont11">{{item.mes}}</td>
 										<td class="xfont11">{{item.desestado}}</td>										
 										<td class="xfont11">
-											<div hidden$="{{!item.activo}}" onclick="downloadReporteCPE(this)">
-												<a>Descargar <img src="../../../images/x_down2.png" alt=""></a>
+											<!-- <div>
+												<a class="xCursor" onclick="downloadReporteCPE_open_dialog(this)">Descargar <i class="fa fa-download"></i></a>													
+											</div> -->
+											<div hidden$="{{!item.activo}}" onclick="downloadReporteCPE_open_dialog(this)">
+												<a class="xCursor">Descargar <img src="../../../images/x_down2.png" alt=""></a>
 											</div>
 										</td>
 									</tr>
@@ -139,9 +156,7 @@
 							<td style$="{{row.style_td}}">{{row.fecha}}</td>							
 							<td style$="{{row.style_td}}">{{row.tipo_doc}}</td>
 							<td style$="{{row.style_td}}">{{row.num_doc}}</td>
-							<td style$="{{row.style_td}}">{{row.nom_cliente}}</td>
-							<!-- <td style$="{{row.style_td}}" data-t="s" class="text">'{{row.ruc}}</td> -->
-							<!-- <td style='mso-number-format:"00000000"'>{{row.ruc}}</td> -->
+							<td style$="{{row.style_td}}">{{row.nom_cliente}}</td>							
 							<td style='mso-number-format:"@"'>{{row.ruc}}</td>
 							<td style$="{{row.style_td}}">{{row.subtotal}}</td>
 							<td style$="{{row.style_td}}">{{row.igv}}</td>
@@ -154,11 +169,148 @@
 			</table>
 
 		</div>
+
+		<div id="reporte-sire" class="xInvisible">
+		
+			<table id="testTableSire" width="100%">
+				<caption>
+					<h1>{{selEstablecimiento.nomsede}} | {{selEstablecimiento.ciudad}}</h1>
+					<h2>Registro de Ventas - {{selMes.mes}}</h2>
+				</caption>
+				<thead>					
+					<th width="45px">#</th>
+					<th>Ruc</th>
+					<th>Razon Social</th>
+					<th>Periodo</th>
+					<th>CAR SUNAT</th>
+					<th width="15%">Fecha de emisión</th>
+					<th width="15%">Fecha Vcto/Pago</th>
+					<th>Tipo CP/Doc.</th>
+					<th>Serie del CDP</th>
+					<th>Nro CP o Doc</th>
+					<th>Nro Final</th>
+					<th width="15%">Tipo Doc Identidad</th>
+					<th width="15%">Nro Doc Identidad</th>					
+					<th width="35%">Apellidos Nombres/ Razón Social</th>					
+					<th>Valor Facturado Exportación</th>
+					<th>BI Gravada</th>
+					<th>Dscto BI</th>
+					<th>IGV / IPM</th>
+					<th>Dscto IGV / IPM</th>
+					<th>Mto Exonerado</th>
+					<th>Mto Inafecto</th>
+					<th>ISC</th>
+					<th>BI Grav IVAP</th>
+					<th>IVAP</th>
+					<th>ICBPER</th>
+					<th>Otros Tributos</th>
+					<th>Total CP</th>
+					<th>Moneda</th>
+					<th>Tipo Cambio</th>
+					<th>Fecha Emisión Doc Modificado</th>
+					<th>Tipo CP Modificado</th>
+					<th>Serie CP Modificado</th>
+					<th>Nro CP Modificado</th>
+					<th>ID Proyecto Operadores</th>
+					<th>Atribución</th>
+					<th>Tipo de Nota</th>
+					<th>Est. Comp</th>
+					<th>Desc. Comp</th>										
+					<th>Valor FOB Embarcado</th>
+					<th>Valor OP Gratuitas</th>
+					<th>Tipo Operación</th>
+					<th>DAM / CP</th>
+					<th>CLU</th>					
+					<th>Estado Sistema</th>
+					<th>Estado Sunat</th>
+				</thead>
+				<tbody>
+					<template is="dom-repeat" items="{{ListReporte}}" as="row">
+						<tr>
+							<td>{{displayIndex(index)}}</td>
+							<td style$="{{row.style_td}}">{{selEstablecimiento.ruc}}</td>
+							<td style$="{{row.style_td}}">{{selEstablecimiento.razonsocial}}</td>
+							<td style$="{{row.style_td}}">{{periodoComprobantes}}</td>
+							<td style$="{{row.style_td}}">{{row.cart_sunat}}</td>
+							<td style='mso-number-format:"\@"'>{{row.fecha}}</td>
+							<td style='mso-number-format:"\@"'>{{row.fecha}}</td>
+							<td style='mso-number-format:"\@"'>{{row.tipo_doc_id}}</td>
+							<td style$="{{row.style_td}}">{{row.serie_doc}}</td>
+							<td style$="{{row.style_td}}">{{row.numero_doc}}</td>
+							<td style$="{{row.style_td}}"></td>
+							<td style='mso-number-format:"\@"'>{{row.tipo_doc_id_cliente}}</td>
+							<td style='mso-number-format:"\@"'>{{row.num_doc_cliente}}</td>
+							<td style$="{{row.style_td}}">{{row.nom_cliente}}</td>
+							<td style='mso-number-format:"0.00"'>{{row.total_exportacion}}</td>
+							<td style='mso-number-format:"0.00"'>{{row.total_gravado}}</td>
+							<td style='mso-number-format:"0.00"'>0.00</td>
+							<td style='mso-number-format:"0.00"'>{{row.igv}}</td>
+							<td style='mso-number-format:"0.00"'>0.00</td>
+							<td style='mso-number-format:"0.00"'>{{row.total_exonerado}}</td>
+							<td style='mso-number-format:"0.00"'>{{row.total_inafecto}}</td>
+							<td style='mso-number-format:"0.00"'>{{row.total_isc}}</td>
+							<td style='mso-number-format:"0.00"'>0.00</td>
+							<td style='mso-number-format:"0.00"'>0.00</td>
+							<td style='mso-number-format:"0.00"'>0.00</td>
+							<td style='mso-number-format:"0.00"'>0.00</td>
+							<td style='mso-number-format:"0.00"'>{{row.total}}</td>
+							<td style$="{{row.style_td}}">{{row.moneda_doc}}</td>
+							<td style$="{{row.style_td}}">1</td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}">{{row.estado_cpe}}</td>
+							<td style$="{{row.style_td}}">{{row.estado_descricpion_cpe}}</td>
+							<td style$="{{row.style_td}}">0.00</td>
+							<td style$="{{row.style_td}}">{{row.total_gratuito}}</td>							
+							<td style='mso-number-format:"\@"'>0101</td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_td}}"></td>
+							<td style$="{{row.style_reporte}}">{{row.estado}}</td>
+							<td style$="{{row.style_estado_sunat}}">{{row.estadoCp}}</td>
+						</tr>
+					</template>
+					<!-- sumatoria de los totales -->
+					<template is="dom-if" if="{{index === (ListReporte.length - 1)}}">
+						<tr>
+							<td colspan="13"></td>
+							<td>TOTAL</td>
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total_exportacion}}</td>
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total_gravado}}</td>
+							<td>0</td>
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total_igv}}</td>
+							<td>0</td>
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total_exonerado}}</td>								
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total_inafecto}}</td>
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total_isc}}</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td>0</td>
+							<td style='mso-number-format:"0.00"; font-weight:bold;'>{{arrSumatoria.total}}</td>
+						</tr>
+					</template>
+				</tbody>
+			</table>
+		
+		</div>
+
 		<style>
 			tr:hover,
 			tr.selected {
 				background-color: #e3f2fd
-			}			
+			}		
+			
+			.divBtnReporte {
+				display: flex;
+				flex-direction: column;
+				flex-wrap: nowrap;
+				align-items: center;
+			}
 		</style>
 	</template>	
 </dom-module>
@@ -275,6 +427,8 @@ function xDataYearsMonth(yy) {
 	const _num_f_ini = _y_now === yy_ini ? parseInt(_my_ini[0]) + yy_ini : 1 + _y_now; // sumamos > 02+2019 = 2021 : 1 + 2020
 	const isMismoYY = _y_now === yy;
 
+	
+
 	while(count_m <= 12) { 		
 		const _num_f_now = isMismoYY ? _m_now+_y_now : 12 + yy;
 		const _num_f = count_m+yy;
@@ -300,8 +454,8 @@ function xDataYearsMonth(yy) {
 
 async function downloadReporteCPE(obj) {
 
-	objProcesar = obj ? obj : objProcesar;
-	obj = objProcesar;
+	xThisAdmContador.objProcesar = obj ? obj : xThisAdmContador.objProcesar;
+	obj = xThisAdmContador.objProcesar;
 	var countCpeSuccess = 0, countCpeError = 0;
 	const index = obj.parentElement.parentElement.id;
 	const _selMes = xThisAdmContador.listMonth[index];
@@ -319,6 +473,12 @@ async function downloadReporteCPE(obj) {
 		y: _selMes.y
 	}
 
+	xPopupLoad.titulo = 'Descargando...';
+	xPopupLoad.xopen();
+
+	// el perido es el año y el mes seleccionado yyyy-mm
+	xThisAdmContador.periodoComprobantes = _selMes.y +''+ xCeroIzq(_selMes.m, 2);
+
 	// obtner toke api consulta success_sunat
 	let rptApiToken = await _apiConsultaCpe.getToken();
 	let countNewToken = 0;
@@ -327,8 +487,17 @@ async function downloadReporteCPE(obj) {
 	const _apiToken = rptApiToken.access_token;
 	// console.log('rpt token', _apiToken);
 
-	xPopupLoad.titulo='Descargando...';
-	xPopupLoad.xopen();
+	
+
+	xThisAdmContador.arrSumatoria = {
+		total_exportacion: 0,
+		total_gravado: 0,
+		total_igv: 0,
+		total_exonerado: 0,
+		total_inafecto: 0,
+		total_isc: 0,
+		total: 0
+	}
 
 	dataListReporte = [];
 	xThisAdmContador.ListReporte = [];
@@ -364,9 +533,10 @@ async function downloadReporteCPE(obj) {
 				try {
 					
 					const cpeVerificado = listCpeSuccess.find(c => c.id === x.id);
+					const codComp = x.series.indexOf('F') > -1 ? '01' : '03';
+					const num_doc = parseInt(x.num_doc.split('-')[1]);
+
 					if ( !cpeVerificado ) {
-						const codComp = x.series.indexOf('F') > -1 ? '01' : '03';
-						const num_doc = parseInt(x.num_doc.split('-')[1]);
 						const monto = x.total.replace(/,/g,''); // remplazamos las comas
 						const payload = {
 							header: {
@@ -382,14 +552,17 @@ async function downloadReporteCPE(obj) {
 							x.subtotal = '0'
 						}
 
-						// x.ruc = ' ' + x.ruc; // string
+						
 		
 						// console.log('payload', payload);
+						let estado_cpe;
 						if ( xThisAdmContador.selEstablecimiento.habilita_verificacion_cpe == 1 ) {
 							// verificacion api sunat
 							if (x.rpt_sunat == '1') { // ya se consulto ya paso
-								x.success_sunat = 1;
 								estado_cpe = xEstadoCpeApi('1');
+								x.estado_cpe = '1';
+								x.estado_descricpion_cpe = estado_cpe.titulo;
+								x.success_sunat = 1;
 								x.estadoCp = estado_cpe.titulo;
 								x.style_estado_sunat = 'color: ' + estado_cpe.color;
 								countCpeSuccess++;
@@ -399,12 +572,20 @@ async function downloadReporteCPE(obj) {
 								
 								// aun no se consulta // consultamos api sunat
 								const rptApiConsulta = await _apiConsultaCpe.getConsulta(payload);
-								let estado_cpe;
+								
+
+								
+
 								if (rptApiConsulta?.success === true && rptApiConsulta?.data?.estadoCp) { 
-									x.success_sunat = 1;
+									x.success_sunat = 1;									
+
 									estado_cpe = xEstadoCpeApi(rptApiConsulta.data.estadoCp);
 									x.estadoCp = estado_cpe.titulo;
 									x.style_estado_sunat = 'color: ' + estado_cpe.color;
+
+									x.estado_cpe = rptApiConsulta.data.estadoCp;
+									x.estado_descricpion_cpe = x.estadoCp;
+									
 
 									// si no existe tambien marca en el estado sistema
 									if ( rptApiConsulta.data.estadoCp === '0' ) {
@@ -413,6 +594,7 @@ async function downloadReporteCPE(obj) {
 										// no suma 
 										x.total = '0'
 										x.subtotal = '0'
+										x.total_exonerado = '0'
 									}
 
 									countCpeSuccess++;
@@ -450,6 +632,33 @@ async function downloadReporteCPE(obj) {
 					xThisAdmContador.numRowsVerificadoError = countCpeError;
 					// CONSULTAR CON API SUNAT -- >>
 					
+
+					// llenado de datos para el reporte
+
+					// cart_sunat es el numero de ruc + tipo de comprobante + serie + numero	
+					x.cart_sunat = xThisAdmContador.selEstablecimiento.ruc + x.tipo_doc_id + x.serie_doc + xCeroIzq(x.numero_doc, 10);					
+
+					// si x.tipo_doc_id == '07' nota de credito, entonces los valores deben negativos
+					if ( x.tipo_doc_id == '07' ) {
+						x.subtotal = '-' + x.subtotal;
+						x.igv = '-' + x.igv;
+						x.total = '-' + x.total;
+						x.total_exonerado = '-' + x.total_exonerado;
+						x.total_inafecto = '-' + x.total_inafecto;						
+					}
+					
+					// totales
+					xThisAdmContador.arrSumatoria.total_exportacion += parseFloat(removeComas(x.total_exportacion));	
+					xThisAdmContador.arrSumatoria.total_gravado += parseFloat(removeComas(x.total_gravado));
+					xThisAdmContador.arrSumatoria.total_igv += parseFloat(removeComas(x.igv));
+					xThisAdmContador.arrSumatoria.total_exonerado += parseFloat(removeComas(x.total_exonerado));
+					xThisAdmContador.arrSumatoria.total_inafecto += parseFloat(removeComas(x.total_inafecto));
+					xThisAdmContador.arrSumatoria.total_isc += parseFloat(removeComas(x.total_isc));
+					xThisAdmContador.arrSumatoria.total += parseFloat(removeComas(x.total));
+					
+					
+										
+
 					
 					dataListReporte.push(x);
 
@@ -472,6 +681,12 @@ async function downloadReporteCPE(obj) {
 
 			xThisAdmContador.showProccessVerificationFinalize = true;
 			if ( xThisAdmContador.showRowsNoResponse || xThisAdmContador.showProccessVerificationError ) {return; }
+
+			console.log('xThisAdmContador.arrSumatoria', xThisAdmContador.arrSumatoria);
+
+
+			xThisAdmContador.arrSumatoria = JSON.parse(JSON.stringify(xThisAdmContador.arrSumatoria));	
+
 			setDataListReporte(dataListReporte);
 
 			// xThisAdmContador.ListReporte = dataListReporte;
@@ -537,11 +752,69 @@ function setDataListReporte(list) {
 }
 
 function xExportarExcel() {
-	tableToExcel('testTable', 'Comprobantes');
+
+	// TXT
+	xPopupLoad.titulo='Exportando...';
+	xPopupLoad.xopen();
+
+	if ( xThisAdmContador.format_download == 3 ) {
+		xGenerarReporteTXT()		
+	} else {
+		const _tableFormat = xThisAdmContador.format_download == 1 ? 'testTable' : 'testTableSire';
+		tableToExcel(_tableFormat, 'Comprobantes');
+	}
+
 	setTimeout(() => {
-		// xPopupLoad.xclose();
+		xPopupLoad.xclose();
+		xPopupLoad.titulo = 'Cargando...';
 		dialog_match_sunat.close();
 	}, 500);
+}
+
+function downloadReporteCPE_f1() {
+	xThisAdmContador.format_download = 1;
+	runDownloadReporteCPE()
+}
+
+
+function downloadReporteCPE_f2() {
+	xThisAdmContador.format_download = 2;
+	runDownloadReporteCPE()
+}
+
+function downloadReporteCPE_f3() {
+	xThisAdmContador.format_download = 3;
+	runDownloadReporteCPE()
+}
+
+function downloadReporteCPE_open_dialog(obj) {
+	xThisAdmContador.objProcesar = obj;
+	dialog_reporte_formato.open();
+}
+
+
+
+function runDownloadReporteCPE() {	
+	downloadReporteCPE();
+	dialog_reporte_formato.close();
+}
+
+function xGenerarReporteTXT() {
+	// Primero, crea la cadena de texto con el formato deseado
+	let dataString = "Ruc|Razon Social|Periodo|CAR SUNAT|Fecha de emisión|Fecha Vcto/Pago|Tipo CP/Doc.|Serie del CDP|Nro CP o Doc. Nro Inicial (Rango)|Nro Final (Rango)|Tipo Doc Identidad|Nro Doc Identidad|Apellidos Nombres/ Razón Social|Valor Facturado Exportación|BI Gravada|Dscto BI|IGV / IPM|Dscto IGV / IPM|Mto Exonerado|Mto Inafecto|ISC|BI Grav IVAP|IVAP|ICBPER|Otros Tributos|Total CP|Moneda|Tipo Cambio|Fecha Emisión Doc Modificado|Tipo CP Modificado|Serie CP Modificado|Nro CP Modificado|ID Proyecto Operadores Atribución|Tipo de Nota|Est. Comp|Valor FOB Embarcado|Valor OP Gratuitas|Tipo Operación|DAM / CP|CLU\n";
+
+	dataListReporte.forEach(row => {
+		dataString += `${xThisAdmContador.selEstablecimiento.ruc}|${xThisAdmContador.selEstablecimiento.razonsocial}|${xThisAdmContador.periodoComprobantes}|${row.cart_sunat}|${row.fecha}|${row.fecha}|${row.tipo_doc_id}|${row.serie_doc}|${row.numero_doc}||${row.tipo_doc_id_cliente}|${row.num_doc_cliente}|${row.nom_cliente}|${parseFloat(removeComas(row.total_exportacion))}|${parseFloat(removeComas(row.total_gravado))}|0|${parseFloat(removeComas(row.igv))}|0|${parseFloat(removeComas(row.total_exonerado))}|${parseFloat(removeComas(row.total_inafecto))}|${parseFloat(removeComas(row.total_isc))}|0|0|0|0|${parseFloat(removeComas(row.total))}||||||||1|0|0|0|0101||\n`;
+	});
+
+	// Luego, crea un elemento de enlace invisible, establece el contenido del archivo y el nombre del archivo, y haz clic en él para iniciar la descarga
+	let downloadLink = document.createElement('a');
+	downloadLink.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(dataString);
+	downloadLink.download = 'comprobantes.txt';
+
+	document.body.appendChild(downloadLink);
+	downloadLink.click();
+	document.body.removeChild(downloadLink);
 }
 
 
@@ -564,6 +837,10 @@ Polymer({
 		showProccessVerificationFinalize: Boolean,
 		showProccessVerificationError: Boolean,
 		showVerificacionSunat: Boolean,
+		periodoComprobantes: String,
+		format_download: Number,
+		objProcesar: Object,
+		arrSumatoria: Object
 	},
 	attached: function () {
 		this.selected = 0,
@@ -571,11 +848,24 @@ Polymer({
 		this.showProccessVerificationFinalize = false;
 		this.showProccessVerificationError = false;
 		this.showVerificacionSunat = false;
+		this.arrSumatoria = {
+			total_exportacion: 0,
+			total_gravado: 0,
+			total_igv: 0,
+			total_exonerado: 0,
+			total_inafecto: 0,
+			total_isc: 0,
+			total: 0
+		}
+
 		xThisAdmContador = this;
 		xIniAdmContador();
 	},
 	displayIndex: function (index) {
 		return xCeroIzq(index + 1, 1);
+	},
+	sumatoriaTotal: function (campo) {
+		return xThisAdmContador.arrSumatoria[campo].toFixed(2);
 	},
 })
 </script>

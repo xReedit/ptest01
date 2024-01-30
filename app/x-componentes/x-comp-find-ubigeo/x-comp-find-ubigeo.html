@@ -1,0 +1,57 @@
+
+<link rel="import" href="../../web_components/polymer/polymer.html">
+<link rel="import" href="../../web_components/paper-input-autocomplete/paper-input-autocomplete.html">
+
+<dom-module id="x-comp-find-ubigeo">
+    <template>
+        <style>
+            paper-input-autocomplete {
+                width: 100%;
+            }
+        </style>
+        <paper-input-autocomplete id="inputAutocomplete" label="CIUDAD" source="[[ubigeoData]]" on-autocomplete-selected="_onAutocompleteSelected" on-input="loadData" search-property="label"></paper-input-autocomplete>        
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-find-ubigeo',
+            properties: {
+                ubigeoData: {
+                    type: Array,
+                    value: function() {
+                        return [];
+                    }
+                }
+            },
+            _onAutocompleteSelected: function(event) {
+                // Lógica para manejar la selección del autocompletado
+                var selectedValue = event.detail.value;                
+                
+                // Disparar evento para que el componente padre pueda manejar la selección
+                this.dispatchEvent(new CustomEvent('on-selected', {
+                    detail: {
+                        value: selectedValue
+                    }
+                }));
+
+                // this.fire('on-selected', { value: selectedValue });
+            },
+            getValue: function() {
+                return this.$.inputAutocomplete.value;
+            },
+            loadData: function() {
+                // buscara cuando el input tengo por lo menos 3 caracteres
+                const _length = this.$.inputAutocomplete.value.length;
+                const _httpFecht = new httpFecht()
+                if (_length >= 3) {
+                    _httpFecht.axiosExecute({ type: 'POST', url:'../../bdphp/log_componentes.php?op=2206', isShowPreload:false, data:{ search: this.$.inputAutocomplete.value } })
+                        .then(data => {                            
+                            data = JSON.parse(data);
+                            this.ubigeoData = data.datos || [];                            
+                        })                                    
+                }
+
+            }
+        });
+    </script>
+</dom-module>

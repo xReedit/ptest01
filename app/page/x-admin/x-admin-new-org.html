@@ -1,5 +1,6 @@
 <dom-module id="x-admin-new-org">
 	<link rel="import" href="../../x-componentes/x-comp-select-plan/x-comp-select-plan.html">
+	<link rel="import" href="../../x-componentes/x-comp-find-ubigeo/x-comp-find-ubigeo.html">
 
 	<template>
 		<br>
@@ -71,10 +72,13 @@
 							<div class="xBordeIzqHover">				
 								
 								<form id="frm_sede">
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRE" onChange="conMayusculas(this)" id="nombre" name="nombre" espaciar required>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" onChange="conMayusculas(this)" id="ciudad" name="ciudad" espaciar required>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRE" onChange="conMayusculas(this)" id="nombre" name="nombre" espaciar required>									
+									<div class="pl-1 pr-2">
+										<x-comp-find-ubigeo class="xMiInput xPasarEnter2" id="inputCiudadUbigeo"></x-comp-find-ubigeo>
+									</div>
+
 		
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="UBIGEO" id="ubigeo" name="ubigeo" espaciar readonly>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO DEL DOMICILIO FISCAL" id="codigo_del_domicilio_fiscal" name="codigo_del_domicilio_fiscal" espaciar>
 									
 									<br><br>
@@ -104,6 +108,7 @@
 									<paper-checkbox id="check_isprinter_socket"><span>Servidor de impresion adminte socket?</span></paper-checkbox>
 		
 									<div class="xInvisible">
+										<input type="text" id="ciudad" name="ciudad">
 										<input type="text" id="sys_local" name="sys_local">
 										<input type="text" id="pwa" name="pwa">
 										<input type="text" id="facturacion_e_activo" name="facturacion_e_activo">
@@ -447,6 +452,16 @@
 				}
 			}
 		});
+
+		const _inputCiudadUbigeo = document.getElementById('inputCiudadUbigeo');
+		_inputCiudadUbigeo.addEventListener('on-selected', (e) => {
+			console.log('e', e);
+			$("#frm_sede #ubigeo").val(e.detail.value.value);
+			$("#frm_sede #codigo_del_domicilio_fiscal").val('0000');
+			$('#formDatosAPP #ciudad').val(e.detail.value.ciudad);
+			$('#formDatosAPP #provincia').val(e.detail.value.provincia);
+			$('#formDatosAPP #departamento').val(e.detail.value.departamento);
+		})
 	}
 
 	function xSeleccionarFoto(){
@@ -526,6 +541,12 @@ function transferenciaCompletaMini(xfile){
 		const selTipoVal=selTipo.value;
 
 		// if ( !xThisAdminNew.xAdmNewValidarSufijo ) return;
+
+		const _inputCiudadUbigeo = document.getElementById('inputCiudadUbigeo');
+		const _datosUbigeo = _inputCiudadUbigeo.getValue()
+		console.log('_datosUbigeo', _datosUbigeo);
+
+		$("#frm_sede #ciudad").val(_datosUbigeo.ciudad);
 
 		$("#frm_sede #idorg").val(xThisAdminNew.xIdOrg);
 		$("#frm_sede #idsede").val(xThisAdminNew.xIdSede);

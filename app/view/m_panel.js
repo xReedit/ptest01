@@ -101,14 +101,14 @@ function xIniDocument(){
 		//xSoloAccPedido();
  		/*debugger
  		xIdAccDirecto=getUrlParameter('dir','?');
-		 if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */
+		 if(xIdAccDirecto=='' || xIdAccDirecto===undefined){xOpenPage(1);}else{xOpenNewWindow();} */		 
 		ipPrintServerLocal = xm_log_get('datos_org_sede')[0].ip_server_local;
 		localStorage.setItem('::app3_sys_last_s', btoa(xm_log_get('datos_org_sede')[0].idsede));
 
-		 xComptitulo_bar.init();
+		xComptitulo_bar.init();
 
 
-		 status_CreateVariablesListen();
+		status_CreateVariablesListen();
 
 		//  onStatusSetUsChangeSede().subscribe(res => {			
 		// 	console.log('status_isUsChangeSede', res);
@@ -355,9 +355,9 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
 			// produccion
-			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			// const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
 			
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;
