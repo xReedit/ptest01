@@ -21,7 +21,7 @@
             <div class="p-2">
                 <h4>Registrar Adelanto</h4>                
                 <br>
-                <div class="p-1 xFondoRowPlomo2">                    
+                <div class="p-1">                    
                     <x-comp-find-tipo-pago onchange="selectTipoPago(this);" id="compTipoPago"></x-comp-find-tipo-pago>
                 </div>
                 <input type="text" class="xMiInput xPasarEnter2 w-100" placeholder="Concepto" onChange="conMayusculas(this)" id="txt_concepto_adelanto" required espaciar>                
@@ -44,11 +44,9 @@
         <paper-dialog class="dialog_redondo" id="dialog_nota" entry-animation="scale-up-animation"
 			exit-animation="fade-out-animation" with-backdrop>			            
             <div class="p-2">
-                <h4>Registrar Nota:</h4>                
-                <br>
-                <textarea class="xMiInput xPasarEnter2 w-100" name="" id="txt_nota_nota" cols="10" rows="5" maxlength="150"></textarea>
-            </div>
-			<br>
+                <h4>Registrar Nota:</h4>                                
+                <textarea class="xPasarEnter2 selected-template-1 w-100" name="" id="txt_nota_nota" cols="4" rows="4" maxlength="150"></textarea>
+            </div>			
 			<div class="buttons">
 				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
 				<button class="xBoton2 xAzul" onclick="xRegistrarNota();">Registar Nota</button>
@@ -61,7 +59,7 @@
 			<div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
                 <div class="d-flexx justify-content-between align-items-center">
                     <h3>Orden de pedido {{ correlativoOrden }}</h3>                                       
-                    <button class="btn btn-sm btn-secondary" onclick="goBackLista()"> < Atras </button>                    
+                    <button class="btn btn-sm btn-secondary" onclick="goBackLista()"><i class="fa fa-arrow-circle-left"></i> Atras </button>                    
                 </div>                
             </div>	
             <div class="xLinea2"></div>
@@ -70,6 +68,13 @@
                     <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../../images/_apuntar_cuenta_vr.png"><p>Notas o cambios</p></div></paper-button> -->
                     <paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="cocinarImpresionOrdenPedido();" id="btn_anular_pedido"><img src="../../../images/_print_1_vr.png"><p>Imprimir</p></div></paper-button>
                     <paper-button disabled$="[[!isDisabledFacturar]]" ><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xAbrirDialogComprobante();" id="btn_anular_pedido"><img src="../../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>
+                    <paper-button>
+                        <div class="xMiBoton_icon_lateral2" style="margin-top:-15px;" onclick="generatePDFOrdenPedido();"
+                            id="btn_anular_pedido"><img src="../../../images/001-pdf-file.png">
+                            <p>PDF</p>
+                        </div>
+                    </paper-button>
+
                 </div>
             <div class="xLinea2"></div>
             <div class="xContentCard" style="padding: 20px;">            
@@ -362,6 +367,12 @@
 
     function xNuevoOrden() {
         $('#form_pago_cliente').reset();
+        $('#form_pago_cliente #frm_nombres').val('');
+        $('#form_pago_cliente #frm_direccion').val('');
+        $('#form_pago_cliente #frm_telefono').val('');
+        $('#form_pago_cliente #txt_nota').val('');
+        $('#form_pago_cliente #form_idorden_pedido').val('');
+
         xThisOrden.arrItems = [];
         xThisOrden.arrTotales = [];
         xThisOrden.listImpresoras = [];
@@ -534,7 +545,7 @@
 
     function goBackLista() {
         xNuevoOrden();
-        xThisOrden.fire('goBackOrden');
+        xThisOrden.fire('goBackOrden');        
     }
 
     function loadOrden(getOrden) {
@@ -550,7 +561,7 @@
         idOrdenPedido = getOrden.idorden_pedido;
 
         // items
-        _arrItems = JSON.parse(getOrden.detalle_json);        
+        _arrItems = getOrden.detalle_json;        
         xThisOrden.arrItems = _arrItems;
         xCalcularTotal();
 
@@ -562,33 +573,191 @@
     }
 
     function cocinarImpresionOrdenPedido() {
-        const _arrTotales = JSON.parse(JSON.stringify(xThisOrden.arrTotales));
-        _arrTotales.push({descripcion: 'Adelanto', importe: xThisOrden.totalAdelanto });
-        _arrTotales.push({descripcion: 'Pendiente', importe: xThisOrden.totalPendiente });
+        // const _arrTotales = JSON.parse(JSON.stringify(xThisOrden.arrTotales));
+        // _arrTotales.push({descripcion: 'Adelanto', importe: xThisOrden.totalAdelanto });
+        // _arrTotales.push({descripcion: 'Pendiente', importe: xThisOrden.totalPendiente });
 
-        const printer = xgetImpresora(-7);                        
-            const _dataPrintD = {
-                lista : xThisOrden.arrItems,
-                impresora: printer,
-                subtotales: _arrTotales,
-                encabezado: {
-                    tipo: 'ORDEEN DE PEDIDO',
-                    titulo: 'ORDEN DE PEDIDO',
-                    correlativo_lista: idOrdenPedido,
-                    otro: `PEDIDO`,
-                    observaciones: '',
-                    nombres : frm_nombres.value,
-                    direccion : frm_direccion.value,
-                    telefono : frm_telefono.value,
-                    fecha_entrega: f_entrega.value,
-                    nota: txt_nota.value,                    
-                }
-            }
+        // const printer = xgetImpresora(-7);                        
+        //     const _dataPrintD = {
+        //         lista : xThisOrden.arrItems,
+        //         impresora: printer,
+        //         subtotales: _arrTotales,
+        //         encabezado: {
+        //             tipo: 'ORDEN DE PEDIDO',
+        //             titulo: 'ORDEN DE PEDIDO',
+        //             correlativo_lista: idOrdenPedido,
+        //             otro: `PEDIDO`,
+        //             observaciones: '',
+        //             nombres : frm_nombres.value,
+        //             direccion : frm_direccion.value,
+        //             telefono : frm_telefono.value,
+        //             fecha_entrega: f_entrega.value,
+        //             nota: txt_nota.value,                    
+        //         }
+        //     }
 
-            console.log('_dataPrintD', _dataPrintD);
+        //     console.log('_dataPrintD', _dataPrintD);
+
+        //     xThisOrden.dataPrintOdenPedido = _dataPrintD;
+
+            setDataCocinarImprimir();
+            const _dataPrint = xThisOrden.dataPrintOdenPedido;
 
             xImprimirCualquierLista(_dataPrintD, 6, 'orden_pedido');
     }
+
+    function setDataCocinarImprimir() {
+        const _arrTotales = JSON.parse(JSON.stringify(xThisOrden.arrTotales));
+        _arrTotales.push({ descripcion: 'Adelanto', importe: xThisOrden.totalAdelanto });
+        _arrTotales.push({ descripcion: 'Pendiente', importe: xThisOrden.totalPendiente });
+
+        const printer = xgetImpresora(-7);
+        const _dataPrintD = {
+            lista: xThisOrden.arrItems,
+            impresora: printer,
+            subtotales: _arrTotales,
+            encabezado: {
+                tipo: 'ORDEN DE PEDIDO',
+                titulo: 'ORDEN DE PEDIDO',
+                correlativo_lista: idOrdenPedido,
+                otro: `PEDIDO`,
+                observaciones: '',
+                nombres: frm_nombres.value,
+                direccion: frm_direccion.value,
+                telefono: frm_telefono.value,
+                fecha_entrega: f_entrega.value,
+                nota: txt_nota.value,
+            }
+        }
+
+        console.log('_dataPrintD', _dataPrintD);
+
+        xThisOrden.dataPrintOdenPedido = _dataPrintD;
+    }
+
+    function generatePDFOrdenPedido() {
+            setDataCocinarImprimir();
+            const _dataPrintD = xThisOrden.dataPrintOdenPedido;
+            var headerHeight = 10 * 10; // 10 líneas de encabezado, cada una de 10 puntos de alto
+            var productsHeight = _dataPrintD.lista.length * 10; // Cada producto ocupa 10 puntos de alto
+            var subtotalsHeight = _dataPrintD.subtotales.length * 10; // Cada subtotal ocupa 10 puntos de alto
+            var totalHeight = headerHeight + productsHeight + subtotalsHeight;
+
+            var doc = new jsPDF({
+                orientation: 'p',
+                unit: 'pt',
+                format: [213.2, totalHeight + 120] // Ajusta el ancho a 203.2 puntos (80mm) y el alto al total calculado
+            });
+
+            
+
+            // Ajusta el tamaño de la fuente y el espaciado entre líneas para que se ajusten al ancho de 80mm
+            doc.setFontSize(9);
+
+            // nombre del local y fecha como titulo
+            var y = 20
+            const _nomSede = xm_log_get('datos_org_sede')[0].sedenombre;
+            const _telefono = xm_log_get('datos_org_sede')[0].sedetelefono;
+            const _direccion = xm_log_get('datos_org_sede')[0].sededireccion;
+            
+            var pageWidth = doc.internal.pageSize.getWidth();
+
+            var text = _nomSede;
+            var textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            var textOffset = (pageWidth - textWidth) / 2;
+            doc.text(text, textOffset, y);
+            y += 10;
+
+            text = _telefono;
+            textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            textOffset = (pageWidth - textWidth) / 2;
+            doc.text(text, textOffset, y);
+            y += 10;
+
+            text = _direccion;
+            textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            textOffset = (pageWidth - textWidth) / 2;
+            doc.text(text, textOffset, y);
+            y += 10;
+
+            text = 'Fecha: ' + new Date().toLocaleString();
+            textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+            textOffset = (pageWidth - textWidth) / 2;
+            doc.text(text, textOffset, y);
+            y += 10;
+
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(0);
+            doc.line(10, y, 203.2, y);
+
+            y+=10;                    
+
+            // Agregar encabezado
+            y += 10;
+            doc.text(_dataPrintD.encabezado.tipo, 10, y);            
+            y += 10;            
+            doc.text('Nombres: ' + _dataPrintD.encabezado.nombres, 10, y);
+            y += 10;
+            doc.text('Dirección: ' + _dataPrintD.encabezado.direccion, 10, y);
+            y += 10;
+            doc.text('Teléfono: ' + _dataPrintD.encabezado.telefono, 10, y);
+            y += 10;
+            doc.text('Fecha de Entrega: ' + _dataPrintD.encabezado.fecha_entrega, 10, y);
+            y += 10;
+            doc.text('Nota: ' + _dataPrintD.encabezado.nota, 10, y);
+            y += 10;
+            y += 10;
+            // Agregar lista de items
+            
+            // titulo
+            doc.text('Productos: ', 10, y);
+            y += 10;
+
+            // espaciar con lineas punteagudas por todo el ancho de la hoja
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(0);
+            doc.line(10, y, 203.2, y);
+            
+            // espacio en blanco
+            y += 10;
+
+            // var y = 140;
+            _dataPrintD.lista.forEach(function (item, index) {
+                // Guardar la posición y actual
+                var currentY = y;
+
+                // Alinear el importe a la derecha
+                var importeText = item.ptotal.toString();
+                var offset = doc.getStringUnitWidth(importeText) * doc.internal.getFontSize();
+                doc.text(importeText, 203.2 - offset, currentY);
+
+                // Alinear la cantidad y la descripción a la izquierda
+                var text = item.cantidad + ' ' + item.descripcion;
+                var splitText = doc.splitTextToSize(text, 150); // Ajusta el ancho a tu necesidad
+
+                for (var i = 0; i < splitText.length; i++) {
+                    doc.text(splitText[i], 10, y);
+                    y += 10;
+                }
+            });
+
+            // Agregar subtotales
+            y += 10;            
+
+            doc.setLineWidth(0.5);
+            doc.setDrawColor(0);
+            doc.line(10, y, 203.2, y);
+            y += 10;
+            _dataPrintD.subtotales.forEach(function (subtotal, index) {
+                var text = subtotal.descripcion + ': ' + subtotal.importe;
+                var offset = doc.getStringUnitWidth(text) * doc.internal.getFontSize();
+                doc.text(text, 203.2 - offset, y); // Alinea el texto a la derecha
+                y += 10;
+            });
+
+            // Guardar el PDF
+            doc.save('ticket.pdf');
+        }
 
     function xAbrirDialogComprobante() {
         // dialog_comprobante.open()
@@ -639,6 +808,7 @@
                 setfechaorden: String,
                 setidorden: Number,
                 isDisabledFacturar: Boolean,
+                dataPrintOdenPedido: Object
 			},
 			attached: function () {
                 this.isDisabledFacturar = false;
@@ -650,6 +820,9 @@
 			},
 			displayIndex: function (index) {
 				return xCeroIzq(index + 1, 1);
+            },
+            newOrden: function () {
+                xNuevoOrden();
             },
             setValuesShowOrden: (getOrden, fecha) => {
                 // console.log('getOrden ', getOrden);

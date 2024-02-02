@@ -662,8 +662,14 @@
             const _sedeComp = document.getElementById('sedeComp');
             const _idsedeA = _sedeComp.getSede();
             const adondelabel = xThisDisttribucion.isToAlmacen ? sel_alamcenA.selectedOptions[0].text : 'LOCAL ' + _idsedeA.nombre;
+            const _listPrint = xThisDisttribucion.listItemAddDistribuicion.map(x => {
+                return {
+                    descripcion: `${x.cantidad} ${x.descripcion.split('|')[1].trim()}`,                    
+                    importe: x.costo
+                }
+            });
             const _dataPrintD = {
-                lista : xThisDisttribucion.listItemAddDistribuicion,
+                lista : _listPrint,
                 impresora: printer,
                 subtotales: [],
                 encabezado: {

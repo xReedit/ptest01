@@ -205,7 +205,10 @@ let _stockNowProducto = 0;
             'Disminuye': 'fw-600 text-danger',
             'Compra': 'fw-600 text-info',
             'Ingreso x Distribucion': 'fw-600 text-warning',
-            'Salida x Distribucion': 'fw-600 text-danger'
+            'Salida x Distribucion': 'fw-600 text-danger',
+            'Salida de Almacen': 'fw-600 text-danger',
+            'Entrada a Almacen': 'fw-600 text-warning',
+            
         }
 
         const _httpFecht = new httpFecht();
@@ -397,9 +400,14 @@ Polymer({
         listProductoHistorial: [],
         btnProductoPe: Boolean
     },
-    productoChanged: (obj) => {
-        console.log('changed productoChanged', obj);              
-        xLoadDataProductoDetalle()  
+    // productoChanged: (obj) => {
+    //     console.log('changed productoChanged', obj);              
+    //     xLoadDataProductoDetalle()  
+    // },
+    load: (_objproducto) => {
+        console.log('load productoChanged', _objproducto);
+        xthisProductoDetalle.objproducto = _objproducto;
+        xLoadDataProductoDetalle()    
     },
     attached:function(){
         this.btnProductoPe = false;

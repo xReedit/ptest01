@@ -169,7 +169,7 @@
 
                     <!-- detalle -->
                     <div hidden$="[[!isShowDetalleProducto]]">
-                        <x-producto-almacen-detalle objproducto$=[[productoSeleted]]></x-producto-almacen-detalle>
+                        <x-producto-almacen-detalle id="view_producto_detalle" objproducto$=[[productoSeleted]]></x-producto-almacen-detalle>
                     </div>
 
                     <!-- familia productos -->
@@ -261,6 +261,8 @@ var xThisAlmPro;
         // console.log('_producto', _producto);
         xThisAlmPro.productoSeleted = _producto
         // xThisAlmPro.isShowDetalleProducto = true;
+        const view_producto_detalle = document.getElementById('view_producto_detalle'); 
+        view_producto_detalle.load(_producto);
         goDetalleProducto();
     }
 

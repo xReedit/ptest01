@@ -269,7 +269,8 @@ async function xOpenPage(xop, parametro){
 		case 20:xruta='/historial_ventas';break;
 		case 21:xruta='/inventario';break;
 		case 22:xruta='/resumen_caja';break;
-		case 23:xruta='/zona_despacho';break;
+		case 23:xruta='/zona_despacho-theme-2';break;
+		case 2301:xruta='/zona_despacho';break;
 		case 24:xruta='/items_borrados';break;
 		case 25: 
 			// xruta = '/facturador'; 

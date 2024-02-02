@@ -64,6 +64,12 @@
 					<p id="min_max_pedido">-<span class="xfont9">min x pedido</span></p>
 				</div>
 				<div class="xContent_Indicador_pedido_de">
+					
+					<div class="xIndicadorPedido dark xCursor noselect" onclick="changeModeViewZD2(this)">
+						<i class="fa fa-paint-brush" aria-hidden="true"></i>
+						<p class="fs-10">Oscuro</p>
+					</div>
+
 					<div class="xIndicadorPedido default xCursor noselect" onclick="changeOderItemsZD(this)">												
 							<i hidden$="[[orderItemsVerticalZD]]" class="fa fa-arrow-right"></i>
 							<i hidden$="[[!orderItemsVerticalZD]]" class="fa fa-arrow-down"></i>
@@ -242,6 +248,8 @@
 			/* display: flex !important;
 			flex-wrap: wrap !important; */
 		}
+
+
 		
 	</style>
 </dom-module>
@@ -1310,6 +1318,11 @@ function xZD_listVertical() {
 	setTimeout(() => {		
 		$('#xContent_zd_pedido').isotope('layout');
 	}, 1500);
+}
+
+function changeModeViewZD2() {
+    // enviamos a la vista de zona de despacho 1
+    xOpenPage(23)
 }
 
 Polymer({

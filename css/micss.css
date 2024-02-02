@@ -3963,6 +3963,11 @@ input:checked~.xMenuPopup {
     background: #303f9f;
 }
 
+.xIndicadorPedido.dark {
+    color: white;
+    background: #575757;
+}
+
 
 .xContent_Indicador_pedido_de {
     float: right;
@@ -3993,10 +3998,8 @@ input:checked~.xMenuPopup {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     border: 1px solid #6b676b;
-    -webkit-animation-name: ini_pedido;
-    /* Safari 4.0 - 8.0 */
-    -webkit-animation-duration: 2s;
-    /* Safari 4.0 - 8.0 */
+    -webkit-animation-name: ini_pedido;    
+    -webkit-animation-duration: 2s;    
     animation-name: ini_pedido;
     animation-duration: 2s;
 }
@@ -4028,7 +4031,8 @@ input:checked~.xMenuPopup {
     }
 }
 
-.xContent_zd_pedido .xmarco_zd_pedido.retirada {
+/* .xContent_zd_pedido .xmarco_zd_pedido.retirada { */
+.xmarco_zd_pedido.retirada {
     animation-fill-mode: forwards;
     animation-name: retirada_pedido;    
     animation-duration: 2s;
@@ -4081,6 +4085,7 @@ input:checked~.xMenuPopup {
 
 .xpie_zd_btn_pedido {
     display: none;
+    border-radius: 0px 0px 5px 5px;
 }
 
 .xmarco_zd_pedido .encabezado {
@@ -4240,6 +4245,7 @@ input:checked~.xMenuPopup {
     -moz-transition: all 0.3s ease;
     transition: all 0.3s ease;
     text-align: center;
+    border-radius: 0px 0px 5px 0px;
 }
 
 .xBtnDespacho:hover {
@@ -4260,6 +4266,7 @@ input:checked~.xMenuPopup {
     -moz-transition: all 0.3s ease;
     transition: all 0.3s ease;
     text-align: center;
+    border-radius: 0px 0px 0px 5px;
 }
 
 .xBtnCloseDrawer {
@@ -5545,4 +5552,117 @@ ul.list_add_item2 li.divLi {
     /* float: right; */
     position: relative;
     /* margin-top: -6px; */
+}
+
+
+/* theme-2-zona-depacho */
+.body-zona-theme-2 {
+    background-color: #344465 !important;
+}
+
+.xContent_zd_pedido-t1 {
+    width: max-content;
+    margin-top: 20px;
+    position: absolute;
+    padding: 10px;
+    display: table;
+}
+
+.xContent_zd_pedido-t1 .xmarco_zd_pedido {
+    width: 290px;
+    background-color: #F6F7F8;
+    position: relative;
+    float: left;
+    top: 0;
+    margin-right: 10px;
+    position: relative;
+    transition: all .2s ease-in-out;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    border: 1px solid #6b676b;
+    -webkit-animation-name: ini_pedido;
+    -webkit-animation-duration: 2s;
+    animation-name: ini_pedido;
+    animation-duration: 2s;
+    padding-bottom: 0px;
+}
+
+.xContent_zd_pedido-t1 .xmarco_zd_pedido .encabezado {
+    display: flex;    
+    justify-content: space-between;
+    padding: 7px 10px 7px 10px;    
+    /* background-color: #344465; */
+    border-radius: 7px 7px 0px 0px;
+    /* margin-bottom: 10px; */
+    color: white;
+    font-weight: 100;
+}
+
+.xContent_zd_pedido-t1 .xmarco_zd_pedido .encabezado .tpc {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.xContent_zd_pedido-t1 .xmarco_zd_pedido .encabezado img {
+    width: 32px;
+    height: 32px;
+}
+
+.xContent_zd_pedido-t1 .xmarco_zd_pedido .footer-pedido{
+    display: flex;
+    justify-content: space-between;
+    background: #E2E2E4;
+    padding: 1px 10px 1px 10px;
+    border-radius: 0px 0px 8px 8px;
+}
+
+
+.xtabla_pedido_despacho-t1 tr td {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 8px 6px 8px;
+    /* background: white; */
+}
+
+.xtabla_pedido_despacho-t1 tr.des_seccion td {    
+    background: #DDE0ED;
+    text-align: center;
+    padding: 4px;
+    font-size: 12px;
+}
+
+.xtabla_pedido_despacho-t1 .list-indicaciones {
+    color: #8d8fa3;
+    margin: 2px;
+}
+
+.xtabla_pedido_despacho-t1 .list-indicaciones ul {    
+    margin-left: -15px;
+}
+
+.xmarco_zd_pedido .referencia-t1 {
+    text-align: center;
+    background-color: #8d8fa3;
+    color: white;
+    padding: 2px;
+}
+
+/*.xtabla_pedido_despacho tr td:hover{background:#FFF9C4;}*/
+
+.xtabla_pedido_despacho-t1 tr td.xMorado {
+    background: #b388ff;
+}
+
+.xtabla_pedido_despacho-t1 tr td.xNaranja {
+    background: #ffe57f;
+}
+
+.xtabla_pedido_despacho-t1 tr td.xRojo {
+    background: #f8bbd0;
+}
+
+/* el ultimo td row row_item de la tabla xtabla_pedido_despacho-t1 no deberia tener border-bootom */
+.xtabla_pedido_despacho-t1 tr td:last-child {
+    border-bottom: none;
 }

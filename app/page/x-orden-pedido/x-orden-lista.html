@@ -1,5 +1,8 @@
 <!-- Zabuto Calendar -->
 <script src="../../../js/zabuto_calendar.min.js"></script>
+<script src="../../view/export.excel.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.debug.js"></script>
 <link rel="import" href="./x-orden-pedido.html">
 
 <dom-module id="x-orden-lista">
@@ -19,10 +22,14 @@
                         <div id="my-calendar"></div>
                         <br><br>
                     </div>
-                    <div class="col-sm-7 w-100">
+                    <div class="col-sm-7 w-100" id="table-ordenes-mes">
                         <div class="d-flexx justify-content-between align-items-center">
                             <h3>Ordenes {{ titleFilter }}</h3>
-                            <button class="btn btn-sm btn-success xCursor" onclick="showOrdenGo()">+ Agregar</button>
+                            <div id="div-btn-orden-lista">
+                                <button class="btn btn-sm btn-danger" title="Exportar PDF" onclick="exportPDFOrdenesMes()"><i class="fa fa-file-pdf-o"></i></button>
+                                <button class="btn btn-sm btn-success" title="Exportar Excel" onclick="exportExcelOrdenesMes()"><i class="fa fa-file-excel-o"></i></button>
+                                <button class="btn btn-sm btn-primary xCursor" onclick="showOrdenGo()">+ Agregar</button>
+                            </div>
                         </div>
                         <hr>
                         <div class="w-100">
@@ -32,9 +39,10 @@
                             <table width="100%">
                                 <thead>
                                     <th class="xSinBorde" width="15px">#</th>
-                                    <th class="xSinBorde" width="15px"># Orden</th>
-                                    <th class="xSinBorde" width="20%" >Hora</th>
+                                    <th class="xSinBorde" width="15px">Orden</th>
+                                    <th class="xSinBorde" width="20%" >Entrega</th>
                                     <th class="xSinBorde" width="60%">Cliente</th>
+                                    <th class="xSinBorde xInvisible" width="60%">Producto</th>
                                     <th class="xSinBorde" width="30px" align="right">Importe</th>
                                     <th class="xSinBorde" width="30px" align="right">Adelanto</th>
                                 </thead>
@@ -43,15 +51,26 @@
                                         <tr class="fs-11 xCursor" onclick="openOrden(this)" data-idorden={{item.idorden_pedido}}>
                                             <td data-id="{{index}}"><span>{{displayIndex(index)}}</span></td>
                                             <td> {{ item.num }} </td>
-                                            <td>                                                
-                                                <p> {{ item.hora }} </p>  
+                                            <td>        
+                                                <p> {{ item.desFecha }} </p>                                        
+                                                <span>Hora: {{ item.hora }} </span>  
                                             </td>
                                             <td> 
-                                                <p>{{ item.cliente_nom }} </p> 
-                                                <p>{{ item.nota }} </p> 
+                                                <p>{{ item.cliente_nom }}</p> 
+                                                <span>{{ item.nota }} </span> 
                                             </td>
-
-                                            <td align="right"> {{ item.total }} </td>
+                                            <td class="xInvisible">
+                                                <table>
+                                                    <template is="dom-repeat" items="{{ item.detalle_json }}" as="producto">
+                                                        <tr class="xSinBorde">
+                                                            <td>{{ producto.cantidad }} </td>
+                                                            <td>{{ producto.descripcion }} </td>                                                            
+                                                            <!-- <td>{{ producto.ptotal }} </td> -->
+                                                        </tr>
+                                                    </template>
+                                                </table>                                                                                                    
+                                            </td>
+                                            <td align="right"><p class="fw-600"> {{ item.total }}</p> </td>
                                             <td class$="{{ item.color_importe }}" align="right"> {{ item.total_adelanto }} </td>
                                         </tr>
                                     </template>
@@ -81,6 +100,7 @@
         compOrden.addEventListener('goBackOrden', function (e) {
             // console.log('atras');
             xThisOrdenLista.showOrden = false;
+            xloadOrdenesMMYY(dateNow.getMonth() + 1, dateNow.getFullYear());
         });
 
         xThisOrdenLista.loadingData = true;
@@ -100,8 +120,9 @@
     }
 
 
-    function xloadOrdenesMMYY(mes, yy) {        
-        xThisOrdenLista.titleFilter = 'del mes ' + xMayusculaPrimera(xDesMes(mes - 1)) + ' ' + yy;
+    function xloadOrdenesMMYY(mes, yy) {  
+        xThisOrdenLista.nommes = xMayusculaPrimera(xDesMes(mes - 1)) + '-' + yy;      
+        xThisOrdenLista.titleFilter = 'de ' + xMayusculaPrimera(xDesMes(mes - 1)) + ' ' + yy;
         xThisOrdenLista.loadingData = true;
         $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=30', data: {m: mes, y: yy} })
         .done(function (res) {
@@ -119,18 +140,19 @@
         //     {"date":"2020-10-16","badge":true,"title":"Example for 2020-10-16","body":"<p class=\"lead\">Information for this date<\/p><p>You can add <strong>html<\/strong> in this block<\/p>","footer":"Extra information"},
         //     {"date":"2020-10-24","badge":false,"title":"Example for 2020-10-24","body":"<p class=\"lead\">Information for this date<\/p><p>You can add <strong>html<\/strong> in this block<\/p>","footer":"Extra information"},
         //     {"date":"2020-10-11","badge":true,"title":"Example for 2020-10-11","body":"<p class=\"lead\">Information for this date<\/p><p>You can add <strong>html<\/strong> in this block<\/p>","footer":"Extra information"}];
-        
+        // console.log('data', data);
         data.map((x, i) => {
             x.num = xCeroIzq(x.idorden_pedido, 3);
             x.visible = true;
             x.desFecha = xDesDiaSemana(x.dia_semana) + ' ' + x.dia; 
             x.color_importe = parseFloat(x.total) > parseFloat(x.total_adelanto) ? 'text-warning fw-600' : 'text-success fw-600';            
+            x.detalle_json = JSON.parse(x.detalle_json);
         });
 
         listMasterMonth = data;
         xThisOrdenLista.listOrdenes = data;
 
-        // console.log('xThisOrdenLista.listOrdenes', xThisOrdenLista.listOrdenes);
+        console.log('xThisOrdenLista.listOrdenes', xThisOrdenLista.listOrdenes);
         // console.log('eventDataCalendarMonth', xThisOrdenLista.eventDataCalendarMonth);
 
         xThisOrdenLista.loadingData = false;
@@ -205,6 +227,10 @@
     function showOrdenGo() {
         compOrden.setValuesShowOrden(idOrdenSelect, fechaSelectLista);
         idOrdenSelect = null
+
+        const _compOrden = document.getElementById('compOrden');
+        _compOrden.newOrden();
+
         xThisOrdenLista.showOrden = true;
     }
 
@@ -212,7 +238,63 @@
         // console.log('item', item);
         idOrdenSelect = xThisOrdenLista.listOrdenes.filter(i=> i.idorden_pedido === item.dataIdorden)[0];
 
-        showOrdenGo();
+        compOrden.setValuesShowOrden(idOrdenSelect, fechaSelectLista);
+        idOrdenSelect = null
+        xThisOrdenLista.showOrden = true;
+    }
+
+    // exportar a pdf formato A4
+    function exportPDFOrdenesMes() {
+        // var doc = new jsPDF('p', 'pt', 'a4');
+        // var elem = document.getElementById('table-ordenes-mes');
+        // // var res = doc.autoTableHtmlToJson(elem);
+        // doc.fromHTML(elem.innerHTML);
+        // const _nomFile = xThisOrdenLista.nommes + '.pdf';
+        // doc.save(_nomFile);
+
+        // colocar en invisible al div div-btn-orden-lista
+        let _divBtn = document.getElementById('div-btn-orden-lista');
+        _divBtn.style.display = 'none';
+        
+        var pdf = new jsPDF('p', 'pt', 'a4');
+        var div = document.getElementById('table-ordenes-mes');
+
+        html2canvas(div, {
+            onrendered: function (canvas) {
+                var imgData = canvas.toDataURL('image/png');
+                var width = pdf.internal.pageSize.getWidth();
+                var height = pdf.internal.pageSize.getHeight();
+                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+                const _nomFile = xThisOrdenLista.nommes + '.pdf';
+                pdf.save(_nomFile);
+            }
+        });
+
+        setTimeout(() => {
+            _divBtn.style.display = 'block';
+        }, 1000);
+        
+    }
+
+    // exportar a excel
+    function exportExcelOrdenesMes() {
+        let _divBtn = document.getElementById('div-btn-orden-lista');
+        _divBtn.style.display = 'none';
+
+        // var table = document.getElementById('table-ordenes-mes');
+        // var html = table.outerHTML;
+        // var url = 'data:application/vnd.ms-excel,' + escape(html); // Set your html table into url 
+        // var a = document.createElement('a');
+        // a.href = url;
+        // a.download = _nomFile; // Your file name
+        // a.click();
+        
+        const _nomFile = xThisOrdenLista.nommes;
+        tableToExcel('table-ordenes-mes', _nomFile);
+
+        setTimeout(() => {
+            _divBtn.style.display = 'block';
+        }, 2000);
     }
 
     Polymer({
@@ -221,7 +303,8 @@
                 listOrdenes: [],
                 loadingData: Boolean,
                 titleFilter: String,
-                showOrden: Boolean
+                showOrden: Boolean,
+                nommes: String,
 			},
 			attached: function () {
                 this.showOrden = false;

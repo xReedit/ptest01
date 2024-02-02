@@ -117,6 +117,35 @@ function xSetInputDate(fecha_string) {
 	return fecha_string.split('/').reverse().join('-');
 }
 
+function convertirHoraFormat12Hrs(hora24) {
+	var hora12 = "";
+	var partesHora = hora24.split(":");
+	var horas = parseInt(partesHora[0]);
+	var minutos = partesHora[1];
+	var segundos = partesHora[2];
+
+	if (horas === 0) {
+		hora12 = "12:" + minutos + ":" + segundos + " AM";
+	} else if (horas < 12) {
+		hora12 = horas + ":" + minutos + ":" + segundos + " AM";
+	} else if (horas === 12) {
+		hora12 = "12:" + minutos + ":" + segundos + " PM";
+	} else {
+		hora12 = (horas - 12) + ":" + minutos + ":" + segundos + " PM";
+	}
+
+	return hora12;
+}
+
+function obtenerDiaFecha(fecha_string) {
+    var dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    var fecha = new Date(fecha_string);
+    var dia = dias[fecha.getDay()];
+    var diaDelMes = fecha.getDate();
+    return dia + " " + diaDelMes;
+}
+
+
 
 function xDevolverFechaParte(xParte){
 	var d = new Date();
