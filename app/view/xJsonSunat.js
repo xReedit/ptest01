@@ -407,6 +407,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
 async function xCocinarJsonNotaCredito(doc) {
     const _dataXML = JSON.parse(doc.json_xml);    
     const _numSerieDoc = getSerieDoc(doc.numero);
+    const _codDocumento = doc.codsunat;
     const _fecha = xSetInputDate(xDevolverFecha());
     const _hora = xDevolverHora();
     const _jsonXmlNC = {
@@ -422,7 +423,7 @@ async function xCocinarJsonNotaCredito(doc) {
         "documento_afectado": {
           "serie_documento": _dataXML.serie_documento,
           "numero_documento": parseInt(_dataXML.numero_documento),
-          "codigo_tipo_documento": "01"
+          "codigo_tipo_documento": _codDocumento
         },
         "datos_del_emisor": _dataXML.datos_del_emisor,
         "datos_del_cliente_o_receptor":_dataXML.datos_del_cliente_o_receptor,
@@ -431,7 +432,8 @@ async function xCocinarJsonNotaCredito(doc) {
         "extras": {}
     }
 
-    // console.log('_jsonHead', _jsonXmlNC);
+    console.log('_jsonHead', _jsonXmlNC);
+    console.log('doc.idce', doc.idce);
     const _res = await xSendNotaCredito(_jsonXmlNC, doc.idce);
     return _res;
 
@@ -447,6 +449,9 @@ async function xSendNotaCredito (_jsonXmlNC, idce) {
     _headers.Authorization = "Bearer " + dtSede.authorization_api_comprobante;
 
     xm_all_xToastOpen("Conectando con Sunat...");
+
+    console.log('_headers', _headers);
+    console.log('_url', _url);
 
 
     // console.log('_url', _url);

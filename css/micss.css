@@ -5330,6 +5330,10 @@ ul.list_add_item2 li.divLi {
     cursor: pointer;
 }
 
+.selected-template-1.no-border {
+    border: none;
+}
+
 .selected-template-1:hover {
     background: lavenderblush;
 }

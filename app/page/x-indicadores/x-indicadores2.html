@@ -906,7 +906,7 @@
 				data: dataFiltro
 			})
 			.done(function (res) {				
-                
+                console.log('JSON.parse(res)', JSON.parse(res));
                 dataMetdataVentasDia = JSON.parse(res).datos;		
                 crosVenta = crossfilter(dataMetdataVentasDia);
                 
@@ -928,7 +928,7 @@
 				data: dataFiltro
 			})
 			.done(function (res) {				
-                // console.log('res', res);
+                console.log('res ingresos varios', JSON.parse(res));
                 const dataIngresoVarios = JSON.parse(res).datos;		  
                 tablaIngresoVariosTipoPago(dataIngresoVarios);
 			});

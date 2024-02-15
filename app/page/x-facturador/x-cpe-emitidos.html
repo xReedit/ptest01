@@ -512,6 +512,7 @@
     }
 
     function xResumenMesTotaleCpe() {
+        console.log('p_fecha', p_fecha);
         $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '602', fecha_mes: p_fecha} })
         .done(function (res) {            
             res = JSON.parse(res);
@@ -726,6 +727,7 @@
 
     async function xAnularComprobante_NotaCredito() {
         const _cpeSelected = xThisCpe.ListCpe[index_anular];
+        console.log('_cpeSelected', _cpeSelected);
         const rpt = await xCocinarJsonNotaCredito(_cpeSelected);
 
         if (rpt) {                        
