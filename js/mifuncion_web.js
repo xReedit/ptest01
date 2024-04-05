@@ -27,6 +27,11 @@ function xRetornaMoneda(xObj){
 	$(this).each(function(){this.reset();});
 	}*/
 
+async function delay(ms) {	
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 function numeroConComas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -949,4 +954,37 @@ function searchStringInPageActive(palabra) {
 
 
 	return cantidadElementosEncontrados;
+}
+
+async function pingServerPrintLocal(_urlPrintServer) {
+	return true;
+	const urlPing = `${_urlPrintServer}/api/test`;	
+	const http = new httpFecht();
+	return http.axiosExecute({url: urlPing, method: 'GET'}, true, false)
+		.then(response => {
+			if (!response.ok) {
+				showInfoOpenServerPrint();			
+			return false;            
+			}
+			// El servidor está activo, puedes abrir la ventana aquí
+			return true;
+		})
+		.catch(error => {
+			// El servidor no está activo, muestra un mensaje al usuario
+			showInfoOpenServerPrint()
+			return false;
+		});
+}
+
+function showInfoOpenServerPrint() {
+	const _swalAlertValues = paramsSwalAlert;
+	_swalAlertValues.html = `<div class="p-1" style="overflow: hidden;"><i class="fa fa-info fa-2x text-warning" aria-hidden="true"></i>
+                                <p class="mt-1 fs-18 text-warning">Por favor, inicie Laragon para que el servidor de impresión esté activo.</p>
+								<p class="fs-14">Ubique el icono en su escritorio, de doble clic y luego abra nuevamente el servidor de impresion.</p>
+								<img style="max-width: 340px;" src="../../images/gif/open_laragon_clic.gif">
+                                </div>`;
+
+	_swalAlertValues.confirmButtonText = "Entendido";
+	_swalAlertValues.showCancelButton = false;
+	showAlertSwalHtmlDecision(_swalAlertValues);
 }

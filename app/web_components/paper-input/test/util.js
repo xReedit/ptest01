@@ -13,3 +13,4 @@ function ensureFocus(node, callback) {
     assertNodeHasFocus(node);
   }, callback);
 }
+

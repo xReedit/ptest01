@@ -6,6 +6,7 @@
 	<link rel="import" href="../x-componentes/x-input-search-pedido-in-page/x-input-search-pedido-in-page.html">
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
+	<link rel="import" href="../x-componentes/x-comp-area-mesa/x-comp-area-mesa.html">
 
 	<script src="../view/httpFech.js"></script>
 
@@ -309,20 +310,7 @@
 								</div>
 								<br>
 								<ul id="accordion" class="list_add_item noselect">
-									<!--li><li data-cat="gaseosas">
-												<div>
-													<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>
-													<p class="xtitulo_li">LOMITO SALTADO CON VINO TINDO DEL ORIENTE NACIONAL EN SUDADO DE PAICHE</p>
-													<input type="text" class="xMiInput" anchofull id="xinput_li">
-												</div>
-												<div class="xBtn_contet_li">
-													<div class="xBtn_li">+</div>
-													<span class="xcant_li">1</span>
-													<div class="xBtn_li">-</div>
-												</div>
-											</li>
-										</ul>
-									</li-->
+
 								</ul>
 								<br>
 								<div class="footer_dialog-more-item xFondoRowPlomo3">
@@ -358,20 +346,7 @@
 					</div>
 					<div id="div_pago">
 						<x-pago id="component_pago"></x-pago>
-						<!-- <div class="xLinea"></div>
-						<br>
-
-						<div hidden="[[!hidden_container_registro_pago]]">
-							<button class="xBoton2 xPlomo" onclick="xIrPage(0);" id="btn_regresar_cuenta">Regresar</button>
-							<button class="xBoton2 xAzul" onclick="xValPagoMostrarContainerPago();" id="btn_pago_next" disabled="[[!valid_form_cliente_pago]]">[F10] Siguente</button>
-						</div>
-
-						<div hidden="[[hidden_container_registro_pago]]">
-							<div class="xBoton2 xPlomo" onclick="xValPagoMostrarContainerPago();" id="btn_regresar_comprobante">Regresar</div>
-							<button class="xBoton2 xAzul" onclick="xRegistrarClientePagoCP();" id="btn_pago" disabled="[[!valid_monto_pago]]">[F10]Listo, registrar pago</button>
-						</div>						
-
-						<br><br> -->
+			
 					</div>
 					<br><br>
 				</iron-pages>
@@ -379,7 +354,11 @@
 		</paper-dialog>
 		<br>
 		<div class="xContent d-flex">
-			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->						
+			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->									
+
+			<div hidden$="[[!showVisibleAreaMesas]]">
+				<x-comp-area-mesa id="comp-area-mesas"></x-comp-area-mesa>
+			</div>
 			<div class="grid grid-contente-pedidos" id="_gridCM" style="overflow:hidden !important;">
 				<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
@@ -1175,6 +1154,13 @@ function xIniControlMesa(){
 
 	/// laad repartidores
 	getAllRepartidor();
+
+	const compAreasMesas = document.getElementById('comp-area-mesas');
+	compAreasMesas.addEventListener('onChangeTitle', function (e) {		
+		// filtrar por area
+		const _areaTitle = `.${e.detail.title}`;
+		$('.grid').isotope({ filter: _areaTitle });		
+	});
 }
 
 function xCPcloseDialogDetalle() {
@@ -3672,6 +3658,8 @@ function xFiltroPedidos(obj){
 	xDesFiltro1=$(obj).find('.titulo').text();
 	xIdFiltro1=$(obj).attr('data-id');
 
+	xThisCM.showVisibleAreaMesas = xDesFiltro1.toLowerCase() === 'local';
+	
 	$("#Titulo_page").text("PEDIDOS | "+xDesFiltro1);	
 
 	// desarrollo nueva vista
@@ -3696,7 +3684,7 @@ function xFiltroPedidos(obj){
 	}
 	xIdFiltro1='.tpc'+xIdFiltro1;	
 	
-
+	
 	if (iIniIsotope) {
 		$('.grid').isotope({ filter: xIdFiltro1 });
 	} else {		
@@ -3717,14 +3705,25 @@ async function xLoadMesas(){
 
 	$('.grid').html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');	
 	$('.grid').isotope('destroy');
+
+	// obtenemos las areas y mesas
+	// xGetAreaMesas();
 		
 	xPintarMesas();
 	xLogRun_CuentaNumeroPedidos();
 	xVerificarCajaAbiertaOtroUsuario();
 }
 
+function xGetAreaMesas() {
+	const compAreasMesas = document.getElementById('comp-area-mesas');	
+	return compAreasMesas.getDataListAreas();
+}
+
 function xPintarMesas() {
 	// console.log('pintar mesa');
+	let listAreasMesas = xGetAreaMesas();
+	const isShowAreas = listAreasMesas.length > 0;
+	console.log('listAreasMesas', listAreasMesas);
 	
 	var selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x =>	x.idtipo_consumo)[0];
 	if ( !selector_tpc_local_id ) {
@@ -3735,30 +3734,60 @@ function xPintarMesas() {
 	xIdFiltro1 = selector_tpc_local_id;	
 
 	// limpiar grid
-	// $('.grid .xMiCardPedido').remove();
+	let xCadenaNumMesa = '';
+	let xfilterArea = '';
 
-	const NumMesa = parseInt(xm_log_get('datos_org_all_sede')[0].mesas);
-	var xcont_mesa=1, xCadenaNumMesa = '';
-	for (var i = 0; i < NumMesa; i++) {
-		xtxtEstado = 'xNeutro';
-		xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
-			'<div class="show-led-print xInvisible" title="Impreso"> <i class="fa fa-print"></i> </div>' +
-			'<div>'+
-				'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +			
-				'<p class="show-mozo-pedido" title="Atendido por"><span class="fs-8 pr-1 show-ico-mozo xInvisible"><i class="fa fa-user-circle"></i></span> <span id="nommozo">-</span></p>' +
-				'<div class="show-led-reserva xInvisible" title="Reserva"><i class="fa fa-tag"></i></div>' +			
-			'</div>'+
-			'<p class="tipo text-secondary">Mesa</p>' +
-			'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
-			'<div class="xInvisible referencia-pedido"></div>' +
-			'<p class="tiempo xfont11">disponible</p>' +
-			'<p class="importe xBold">-</p>' +
-			'</div>'
-		);
-		xcont_mesa++;
+	// $('.grid .xMiCardPedido').remove();
+	if ( !isShowAreas ) {
+		const NumMesa = parseInt(xm_log_get('datos_org_all_sede')[0].mesas);
+		var xcont_mesa=1;
+		for (var i = 0; i < NumMesa; i++) {
+			xtxtEstado = 'xNeutro';
+			xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + '" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0>' +
+				'<div class="show-led-print xInvisible" title="Impreso"> <i class="fa fa-print"></i> </div>' +
+				'<div>'+
+					'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +			
+					'<p class="show-mozo-pedido" title="Atendido por"><span class="fs-8 pr-1 show-ico-mozo xInvisible"><i class="fa fa-user-circle"></i></span> <span id="nommozo">-</span></p>' +
+					'<div class="show-led-reserva xInvisible" title="Reserva"><i class="fa fa-tag"></i></div>' +			
+				'</div>'+
+				'<p class="tipo text-secondary">Mesa</p>' +
+				'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
+				'<div class="xInvisible referencia-pedido"></div>' +
+				'<p class="tiempo xfont11">disponible</p>' +
+				'<p class="importe xBold">-</p>' +
+				'</div>'
+			);
+			xcont_mesa++;
+		}
+	} else {
+		// con areas establecidas		
+		for (let area of listAreasMesas) {
+			console.log('area', area);
+			xfilterArea = xfilterArea === '' ? `.${area.title}` : xfilterArea;
+			for (let i = parseInt(area.desde); i <= parseInt(area.hasta); i++) {
+				xtxtEstado = 'xNeutro';
+				xcont_mesa = i;				
+				xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + ' ' + area.title +'" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0 data-area="'+ area.title +'" data-idarea="' + area.idarea_mesa +'">' +
+					'<div class="show-led-print xInvisible" title="Impreso"> <i class="fa fa-print"></i> </div>' +
+					'<div>' +
+					'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +
+					'<p class="show-mozo-pedido" title="Atendido por"><span class="fs-8 pr-1 show-ico-mozo xInvisible"><i class="fa fa-user-circle"></i></span> <span id="nommozo">-</span></p>' +
+					'<div class="show-led-reserva xInvisible" title="Reserva"><i class="fa fa-tag"></i></div>' +
+					'</div>' +
+					'<p class="tipo text-secondary">Mesa</p>' +
+					'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
+					'<div class="xInvisible referencia-pedido"></div>' +
+					'<p class="tiempo xfont11">disponible</p>' +
+					'<p class="importe xBold">-</p>' +
+					'</div>'
+				);
+			}
+		}
 	}
 
 	xIdFiltro1 = xIdFiltro1.indexOf('tpc')>-1 ? xIdFiltro1 : '.tpc' + xIdFiltro1;
+	xIdFiltro1 = xfilterArea !='' ? xIdFiltro1 + xfilterArea : xIdFiltro1;	 
+	console.log('xIdFiltro1', xIdFiltro1);
 	$('.grid').html(xCadenaNumMesa).trigger('create');
 
 	// console.log('create isoto');
@@ -3770,7 +3799,8 @@ function xPintarMesas() {
 		  getSortData: {
 			tpc: '[data-tpc]',
 			numero: '.numero parseInt',
-			estado: '[data-estado]'
+			estado: '[data-estado]',
+			area: '[data-area]'
 		  },
 		  sortBy: [ 'tpc','numero','estado' ],
 		  filter: xIdFiltro1,
@@ -3786,7 +3816,7 @@ function xPintarMesas() {
 
 	
 	// setTimeout(() => {		
-		xPintarEstadoPedido();
+		xPintarEstadoPedido();		
 	// }, 500);
 }
 
@@ -3857,19 +3887,6 @@ function xPintarEstadoPedido(_objPedido = 0) {
 					xtxtEstadoDespachado = parseInt(itemList.despachado) === 0 ? '' : 'xDespachado';
 					xtxtHora = itemList.hora;
 
-					// retorna el total + subtotales
-					// xtxt_subtota_total = xArmarSubtotalesFromTotal(itemList);
-					
-					// xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xOcupado ' + xtxtEstadoDespachado + ' ' + selector_tpc_local + ' xCursor'
-					// 	+' data-estado="a" data-tpc="' + selector_tpc_local + '" data-hora="' + itemList.hora + '"' 
-					// 	+' data-p="' + itemList.idpedido + '" data-nummesa="' + itemList.nummesa + '"'
-					// 	+' data-correlativo="' + itemList.correlativo_dia + '"  data-numpedido="' + itemList.numpedido + '"'
-					// 	+' data-idcat="' + itemList.idcategoria + '" onclick="xLoadDetallesPedido(this)" data-abrir-detalle="1">' +
-					// 	'<p class="tipo">Mesa</p>' +
-					// 	'<h3 class="numero xBold">' + xCeroIzq(xcont_mesa, 2) + '</h3>' +
-					// 	'<p class="tiempo xfont11">-</p>' +
-					// 	'<p class="importe xBold">S/. ' + xMoneda(xtxt_subtota_total) + '</p>' +
-					// 	'</div>');
 
 					_eparent.removeClass('xNeutro');
 					_eparent.removeClass('xDespachado');
@@ -4242,6 +4259,9 @@ function xPintarEstadoPedido(_objPedido = 0) {
 			
 		});
 
+		setTimeout(() => {
+			xPintaCountAreasMesas();
+		}, 500);
 }
 
 function _cpSocketPintarPedido(pedido) {	
@@ -4287,7 +4307,38 @@ function _cpSocketPintarPedido(pedido) {
 	}, 600);
 
 	pasoRedibujado = false;
-	xPintarEstadoPedido(_objPedido)
+	xPintarEstadoPedido(_objPedido)			
+}
+
+async function xPintaCountAreasMesas() {	
+
+	console.log('pinta count areas mesas');
+
+	var pedidos = document.querySelectorAll('.xMiCardPedido.xOcupado');
+
+	// Crea un objeto para almacenar los conteos de pedidos por área
+	var areaCounts = {};
+
+	// Itera sobre los pedidos
+	for (var i = 0; i < pedidos.length; i++) {
+		// Obtén el id del área de este pedido
+		var areaId = pedidos[i].getAttribute('data-idarea');
+
+		// Si este id de área no está en el objeto areaCounts, añádelo con un conteo de 0
+		if (!areaCounts[areaId]) {
+			areaCounts[areaId] = 0;
+		}
+
+		// Incrementa el conteo de pedidos para este id de área
+		areaCounts[areaId]++;
+	}
+
+	const compAreasMesas = document.getElementById('comp-area-mesas');
+
+	// Itera sobre las áreas en el objeto areaCounts
+	for (var areaId in areaCounts) {		
+		compAreasMesas.setCountArea(areaId, areaCounts[areaId]);
+	}
 }
 
 function _cpSocketPintarFlagPedidoImpreso(listPedidos) {
@@ -4947,6 +4998,7 @@ Polymer({
 		isAddItemRow: Boolean,
 		listRepartidor: [],
 		importeTotalPedido: Number,
+		showVisibleAreaMesas: Boolean,
 		// hidden_container_registro_pago: boolean = false,
 		// valid_form_cliente_pago: boolean = false,
 		// valid_monto_pago: boolean = false

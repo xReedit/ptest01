@@ -1,0 +1,116 @@
+<dom-module id="x-comp-anular-comprobante">
+    <template>
+        <paper-dialog id="dialog_motivo_anular_comprobante" class="dialog_redondo" style="min-width:320px; max-width:600px;"
+            entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+            <div class="xContent">
+                <div class="d-flexx align-items-center">
+                    <h3>ANULAR COMPROBANTE</h3> <span class="ml-2">[[ desDocCpe ]]</span>
+                </div>
+        
+                <div class="xLinea2"></div><br>
+                <!-- <hr> -->
+                <!-- <p class="xColorRow_Rojo">Esta seguro de querer anular el comprobante? Una vez anulado no podra recuperarlo.</p> -->
+                <p>
+                    <strong>El plazo para comunicar de baja o anular un comprobante de pago electrónico es de
+                        [[NumDaysAnularCpe]] días</strong>, contados desde el día que emites el comprobante. Si no cumples ese
+                    plazo, tendrás que generar una Nota de Crédito.
+                </p>
+                <div hidden$="[[isShoOpNotaCredito]]" class="mt-1">
+                    <p class="fw-600 text-success">El documento esta en el plazo para dar de baja.</p>
+                </div>
+        
+                <div hidden$="[[!isShoOpNotaCredito]]" class="mt-1">
+                    <p class="fw-600 text-info">El documento NO cumple con el plazo, debes generar una Nota de Crédito.</p>
+                </div>
+        
+                <br>
+                <h4>Indique el motivo de anulación</h4>
+                <div>
+                    <input type="text" class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus>
+                </div>
+                <br><br><br>
+                <div class="xBoton2 xRojo" dialog-dismiss hidden$="[[isShoOpNotaCredito]]"
+                    on-click="anularComprobante">Listo, dar de baja</div>
+                <div class="xBoton2 xAzul" dialog-dismiss hidden$="[[!isShoOpNotaCredito]]"
+                    on-click="generarNotaCredito">Listo, generar nota de crédito</div>
+                <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+                <br><br>
+            </div>
+        </paper-dialog>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-anular-comprobante',
+            properties: {
+                idcomprobante: {
+                    type: Number
+                },
+                desDocCpe: {
+                    type: String,
+                    value: ''
+                },
+                NumDaysAnularCpe: {
+                    type: Number,
+                    value: 0
+                },
+                isShoOpNotaCredito: {
+                    type: Boolean,
+                    value: false
+                },
+                dataCpe: {
+                    type: Object,
+                    value: {}
+                }
+            },
+            open: function (idcomprobante) {
+                this.idcomprobante = idcomprobante;
+                this.$.dialog_motivo_anular_comprobante.open();
+                this.searhComprobante();
+            },
+            searhComprobante: function () {
+                // buscar el comprobante por get comprobante
+                const _http = new httpFecht();
+                _http.axiosExecute({ type: 'GET', url: '../../bdphp/api.php?route=search-comprobante/'+ this.idcomprobante }, true, false)
+                    .then(rpt => {
+                        console.log('rpt', rpt);
+                        if (rpt.success) {
+                            const dataCpe = rpt.data[0];
+                            this.dataCpe = dataCpe;
+                            const NumDaysAnularCpe = xm_log_get('app3_sys_const').find(x => x.llave === 'NUM_DAYS_ANULACION_CPE').value;
+                            const _numDaysDiff = xDiasTranscurridos('', dataCpe.fecha);
+                            const isShoOpNotaCredito = _numDaysDiff >= 7;
+
+                            this.desDocCpe = rpt.data[0].numero;
+                            this.NumDaysAnularCpe = NumDaysAnularCpe;
+                            this.isShoOpNotaCredito = isShoOpNotaCredito;
+                        }
+                    });
+                
+            },
+            anularComprobante: async function () {
+                const _http = new httpFecht();
+                const _motivo_anulacion = this.$.txt_motivo_anular.value;
+                const jsonXml = JSON.parse(this.dataCpe.json_xml);
+                const _external_id = this.dataCpe.external_id;
+                const _codsunat = jsonXml.codigo_tipo_documento;
+                const _fecha = this.dataCpe.fecha;     
+
+                const dataAnulacion = { codsunat: _codsunat, external_id: _external_id, motivo: _motivo_anulacion, fecha: _fecha }
+
+                xm_all_xToastOpen("Conectando con Sunat...");
+                const res = await xSoapSunat_AnularComprobante(dataAnulacion);                
+                xm_all_xToastClose();
+                this.$.txt_motivo_anular.value = '';
+                
+                this.fire('onAnularComprobante', { success: true});
+            },
+            generarNotaCredito: async function () {
+                xm_all_xToastOpen("Conectando con Sunat...");
+                const rpt = await xCocinarJsonNotaCredito(this.dataCpe);
+                xm_all_xToastClose();
+                this.fire('onAnularComprobante', { success: true });
+            }
+        });
+    </script>
+</dom-module>

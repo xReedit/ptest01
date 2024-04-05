@@ -1,0 +1,162 @@
+<dom-module id="x-areas-mesas">
+    <template is="dom">
+
+        <!-- TITULO: AREAS Y MESAS -->
+        <h3>Areas y Mesas</h3>
+        <p>Configura las áreas y mesas de tu local.</p>
+        <div class="xLinea2"></div>
+        <br>
+
+
+        <table>
+            <thead>                                
+                <th class="text-left">Area</th>
+                <!-- <th class="text-left">Descripción</th> -->
+                <th class="text-center">Desde la mesa</th>
+                <th class="text-center">Hasta la mesa</th>
+                <th class="text-center"></th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input class="selected-template-1" type="text" placeholder="Titulo del Area" id="tituloarea" onChange="conMayusculas(this)"></td>
+                    <!-- <td><input class="selected-template-1" type="text" placeholder="Breve Descripción" id="descripcion"></td> -->
+                    <td class="text-center"><input class="selected-template-1 text-center" type="number" placeholder="# Mesa" id="desde"></td>
+                    <td class="text-center"><input class="selected-template-1 text-center" type="number" placeholder="# Mesa" id="hasta"></td>
+                    <td class="text-center"><button class="btn btn-sm btn-primary" on-click="agregarArea">+ Agregar</button></td>                    
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-right text-danger fw-600 animated" id="alertMessage" style="display: none;"></td>
+                </tr>
+            
+                <template is="dom-repeat" items="{{listAreas}}" as="item">
+                    <tr>                        
+                        <td>{{item.titulo}}</td>
+                        <!-- <td>{{item.descripcion}}</td> -->
+                        <td class="text-center">{{item.desde}}</td>
+                        <td class="text-center">{{item.hasta}}</td>
+                        <td class="text-center">
+                            <span class="xDeleteRow" on-click="eliminarArea"></span>
+                            <!-- <button class="btn btn-sm btn-danger" on-click="eliminarArea"><i class="fa fa-trash"></i></button> -->
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <br>
+        <button class="btn btn-success" disabled$="{{!isShowBtnGuardar}}" on-click="guardarCambios"><i class="fa fa-save"></i> Guardar Cambios</button>
+    </template>
+    <script>
+        var xThisAreasMesas;
+
+        Polymer({
+                is: 'x-areas-mesas',
+                properties: {
+                    listAreas: {
+                        type: Array,
+                        value: []
+                    },
+                    isShowBtnGuardar: {
+                        type: Boolean,
+                        value: false
+                    }
+                },
+                attached: function () {
+                    xThisAreasMesas = this;
+                    this.loadAreas();
+                },
+                agregarArea: function () {
+                    let titulo = this.$.tituloarea.value;
+                    // let descripcion = this.$.descripcion.value;
+                    let desde = parseInt(this.$.desde.value);
+                    let hasta = parseInt(this.$.hasta.value);
+
+                    if (desde < 0 || hasta < 0) {
+                        this.showAlert('Los números de mesa no pueden ser negativos.');
+                        return;
+                    }
+
+                    if (hasta < desde) {
+                        this.showAlert('El número de mesa "hasta" no puede ser menor que el número de mesa "desde".');
+                        return;
+                    }
+
+                    for (var i = 0; i < this.listAreas.length; i++) {
+                        var area = this.listAreas[i];
+                        if ((desde >= area.desde && desde <= area.hasta) || (hasta >= area.desde && hasta <= area.hasta)) {
+                            this.showAlert('El rango de mesas se superpone con un área existente.');
+                            return;
+                        }
+                    }
+
+                    this.push('listAreas', { titulo: titulo, descripcion: descripcion, desde: desde, hasta: hasta });
+                    
+                    this.isShowBtnGuardar = true;
+
+                    // limpiar campos
+                    this.$.tituloarea.value = '';
+                    // this.$.descripcion.value = '';
+                    this.$.desde.value = '';
+                    this.$.hasta.value = '';
+
+                    // colocar el foco en el primer campo
+                    this.$.tituloarea.focus();
+                },
+                eliminarArea: async function (e) {
+                    const _swalAlertValues = paramsSwalAlert;
+                    _swalAlertValues.html = `<div class="p-1" style="overflow: hidden;"><i class="fa fa-trash-o fa-2x text-danger" aria-hidden="true"></i>
+                                <p class="mt-1 fs-18">Esta seguro de borrar este registro?</p>
+                                </div>`;	
+
+                    _swalAlertValues.confirmButtonText = "Si, borrar";
+                    _swalAlertValues.cancelButtonText = "Cancelar";
+                    _swalAlertValues.showCancelButton = true;
+
+                    const rptDialogBorrarArea = await showAlertSwalHtmlDecision(_swalAlertValues);
+
+                    if (rptDialogBorrarArea.isConfirmed) {
+                        let index = e.model.index;
+                        this.splice('listAreas', index, 1);
+                        this.isShowBtnGuardar = true;
+                    }
+
+                },
+                guardarCambios: async function () {
+                    xPopupLoad.xopen();
+                    var payload = {
+                        listAreas: this.listAreas,
+                        op: 50
+                    };
+
+                    var _fetchApi = new httpFecht();
+                    const _rpt = await _fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: payload }, true, false); 
+                    if (_rpt.success) {
+                        xPopupLoad.xclose();
+                    } else {
+                        xPopupLoad.xclose();
+                        this.showAlert('Ocurrió un error al guardar los cambios.');
+                    }
+                    
+                },
+                showAlert: function (message) {
+                    let alertMessage = this.$.alertMessage;
+                    alertMessage.textContent = message;
+                    alertMessage.classList.add('animate__flash');
+                    $(alertMessage).fadeIn().delay(3000).fadeOut(function () {
+                        alertMessage.classList.remove('animate__flash');
+                    });
+                },
+                loadAreas: async function () {
+                    console.log('cargar areas');
+                    var _fetchApi = new httpFecht();
+                    const _rpt = await _fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 5001 } }, true, false);                    
+                    if (_rpt.success) {
+                        this.listAreas = _rpt.datos;
+                        console.log('this.listAreas', this.listAreas);
+                    } else {
+                        this.showAlert('Ocurrió un error al cargar las áreas.');
+                    }
+                }
+                
+            })
+    </script>
+</dom-module>

@@ -16,7 +16,21 @@ class httpFecht {
               },            
             ...options,
         })
-        .then(res => res.json());        
+        // .then(res => res.json());   
+        .then(res => {
+            if (!res.ok) {
+                console.log('error', res.statusText);
+                throw new Error('Network response was not ok', res.statusText);
+            }
+            return res.text();
+        })
+        .then(data => {
+            if (data === "") {
+                console.log('error', data);
+                throw new Error('Empty response from server');
+            }
+            return JSON.parse(data);
+        });     
       };
 
     ajaxPost(url) {
@@ -53,7 +67,7 @@ class httpFecht {
         }
 
 
-        params.method = params.type;
+        params.method = params.type || params.method;
         delete params.type;      
         
         const isShowPreload = params.isShowPreload === undefined ? true : params.isShowPreload;
@@ -71,20 +85,6 @@ class httpFecht {
             xPopupLoad.xopen();
         }
 
-        // try {
-        //     const response = await this.axiosPost(params);
-        //     xPopupLoad.xclose();
-        //     return respondeString ? JSON.stringify(response) : response;
-        // } catch (error) {
-        //     if (retry > 0) {
-        //         await new Promise(resolve => setTimeout(resolve, 2000));
-        //         return this.axiosExecute(params, isHeadersJson, respondeString, retry - 1);
-        //     } else {
-        //         this.manejoErrorPetitionHttp(error);
-        //         xPopupLoad.xclose();
-        //         throw error;
-        //     }
-        // }
 
         return new Promise((resolve, reject) => {
             const attempt = async () => {
@@ -94,7 +94,7 @@ class httpFecht {
                 } catch (error) {
                     if (retry > 0) {
                         setTimeout(() => attempt(--retry), 2000);
-                    } else {
+                    } else {                        
                         this.manejoErrorPetitionHttp(error);                        
                         reject(error);  
                         throw error;                      
@@ -106,22 +106,6 @@ class httpFecht {
             attempt();
         });
 
-        // return await this.axiosPost(params)
-        //     .then(response => {
-        //         xPopupLoad.xclose();
-        //         return respondeString ? JSON.stringify(response): response;
-        //     })
-        //     .catch(error => {                
-        //         if (retry > 0) {
-        //             setTimeout(() => {                        
-        //                 this.axiosExecute(params, isHeadersJson, respondeString, retry - 1);
-        //             }, 2000);
-        //         } else {
-        //             this.manejoErrorPetitionHttp(error)
-        //             return error;
-        //         }                
-
-        //     });
     }
 
     // function que lanza un mensaje de error si no hay conexion a internet o cuando hay un error en la peticion

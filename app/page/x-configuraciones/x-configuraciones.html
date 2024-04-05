@@ -4,6 +4,7 @@
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-config.html">
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-mesas.html">
 <link rel="import" href="../../page/x-configuraciones/x-config-sede-opciones/x-config-sede-opciones.html">
+<link rel="import" href="./x-areas-mesas/x-areas-mesas.html">
 
 <dom-module id="x-configuraciones">
 	<template>
@@ -206,6 +207,7 @@
 				<paper-tab>ALMACENES</paper-tab>
 				<paper-tab>EMISION DE COMPROBANTES</paper-tab>
 				<paper-tab>CARTA APP</paper-tab>				
+				<paper-tab>AREAS Y MESAS</paper-tab>
 			</paper-tabs>
 			<div class="xLinea2"></div>
 				<br>
@@ -879,7 +881,12 @@
 
 						<br><br>						
 						<x-carta-virtual-mesas></x-carta-virtual-mesas>
-					</div>					
+					</div>
+					
+					<!-- AREAS Y MESAS -->
+					<div id="div_areas_mesas" class="xContent">						
+						<x-areas-mesas></x-areas-mesas>
+					</div>
 				</iron-pages>
 			</div>
 		</div>

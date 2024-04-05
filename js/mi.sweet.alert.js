@@ -4,9 +4,11 @@ const paramsSwalAlert = {
     html: '',
     text: '',        
     showCancelButton: false,
+    showDenyButton: false,
     showConfirmButton: true,
     confirmButtonText: 'Listo',
-    cancelButtonText: 'Cancelar'
+    cancelButtonText: 'Cancelar',
+    denyButtonText: '',
 }
 
 const backgroundAlertSwal = {

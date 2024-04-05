@@ -9,6 +9,10 @@ var xImpresoraPrint, _numIntCorrelativoBD;
 // idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
 // showPrint = true; es false si lo mando desde facturador.
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
+
+	// xArrayCliente si el nombre del cliente no tiene mas de 4 caracteres coloca en blanco
+	xArrayCliente.nombres = xArrayCliente.nombres.length > 4 ? xArrayCliente.nombres : '';
+
 	let rptPrint = {}
 	if ( !!xArrayComprobante ) {
 		if (xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = false; return rptPrint;} // ninguno no imprime
@@ -1067,4 +1071,45 @@ function isComprobanteConsumo(xArrayComprobante, xArraySubTotales, xArrayCuerpo)
     } 
 
 	return xArrayCuerpo;
+}
+
+async function reimpresionDocumento(idregistro_pago) {
+	// obtenemos la estructura de impresion
+
+	// llamamos a restobar api
+	xPopupLoad.xopen();
+	const http = new httpFecht();
+	const url = '../../bdphp/api.php?route=get-comprobante/'+idregistro_pago;	
+	let rpt = await http.axiosExecute({
+		type: 'GET',
+		url: url			
+		}, true, false
+	)
+
+	if (rpt.success === false) {
+		alert('Error al obtener el comprobante');
+		xPopupLoad.xclose();
+		return;	
+	}
+	
+	rpt.Array_enca.nom_us = xm_log_get('app3_us').nomus
+	rpt.Array_enca = [rpt.Array_enca]
+
+	// obtener impresora
+	let printer;
+	printer = xgetComprobanteImpresora(-2);
+	delete xImpresoraPrint[0].pie_pagina
+
+	rpt.Array_print = xImpresoraPrint;		
+
+	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+
+	if (_sys_local === 1) {		
+		xSendDataPrintServer(rpt, 2, 'comprobante');
+		setTimeout(() => {
+			xPopupLoad.xclose();
+			// callback(false);
+		}, 1000);
+		return;
+	}
 }

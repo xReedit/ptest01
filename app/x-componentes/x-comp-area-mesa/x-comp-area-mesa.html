@@ -1,0 +1,128 @@
+<dom-module id="x-comp-area-mesa">
+    <template>
+        <style>
+            .content-areas {
+                padding: 7px;
+                background: #cbcbcb;
+                border-radius: 8px;
+                display: inline-block;
+            }
+
+            #area-container {
+                display: flex;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        
+            .area {
+                flex: 0 0 auto;
+                margin-right: 8px;
+                cursor: pointer;
+                border: 1px solid #bdbdbd;
+                border-radius: 5px;
+                padding: 4px 10px 4px 10px;
+                background: #fff;
+                font-weight: 600;
+                color: #7f7f7f;
+            }
+
+            .area.selected {
+                background: #701b9a;
+                color: #fff;
+            }
+
+            .area-count {
+                position: relative;
+                top: -0.2em;
+            }
+        </style>
+
+
+        <div class="d-flexx align-items-center content-areas mb-2" hidden$="{{!isShowVisible}}">            
+            <div id="area-container">
+                <template is="dom-repeat" items="{{listAreas}}">
+                    <div class$="{{getClassForArea(item.idarea_mesa)}}" data-id$="{{item.idarea_mesa}}" on-click="handleClick">
+                        {{item.titulo}}                        
+                        <!-- <span data-id$="{{item.idarea_mesa}}" class="badge badge-dark ml-2 area-count fw-100">12</span>                         -->
+                        <span data-id$="{{item.idarea_mesa}}" 
+                            class="badge badge-dark ml-2 area-count fw-100"
+                            hidden$="{{!getCountForArea(item.idarea_mesa)}}">
+                            {{getCountForArea(item.idarea_mesa)}}
+                        </span>
+                    </div>                
+                </template>
+            </div>
+        </div>        
+    </template>
+    
+    <script>
+        Polymer({
+            is: 'x-comp-area-mesa',
+            properties: {
+                listAreas: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                isShowVisible: {
+                    type: Boolean,
+                    value: false
+                },
+                selectedArea: {
+                    type: Object
+                },
+                areaCounts: {
+                    type: Object,
+                    value: function () { return {}; }
+                }
+            },
+            attached: function () {
+                this.loadAreas();
+            },
+            loadAreas: async function () {                
+                var _fetchApi = new httpFecht();
+                const _rpt = await _fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 5001 } }, true, false);                
+                if (_rpt.success) {
+                    this.listAreas = _rpt.datos;         
+                }
+                this.isShowVisible = this.listAreas.length > 0;
+                if (this.isShowVisible) {
+                    this.selectedArea = this.listAreas[0]
+                }
+
+            },
+            handleClick: function (e) {
+                var areas = Polymer.dom(this.root).querySelectorAll('.area');
+                for (var i = 0; i < areas.length; i++) {
+                    Polymer.dom(areas[i]).classList.remove('selected');
+                }
+
+                // Agrega la clase 'selected' a la área seleccionada
+                var id = Polymer.dom(e).localTarget.dataset.id;                
+                this.selectedArea = this.listAreas.find(x => x.idarea_mesa == id);
+                // Polymer.dom(e.target).classList.add('selected');                
+                let target = Polymer.dom(e).localTarget;
+                if (target.tagName === 'SPAN') {
+                    target = target.parentNode;
+                }
+                target.classList.add('selected');
+
+                // Aquí puedes hacer algo con el id del área
+                this.fire('onChangeTitle', { title: this.selectedArea.title });
+            },
+            getClassForArea: function (id) {                
+                return 'noselect area' + (this.selectedArea.idarea_mesa === id ? ' selected' : '');
+            },
+            getDataListAreas: function () {
+                return this.listAreas;
+            },
+            setCountArea: function (id, count) {
+                this.set('areaCounts.' + id, count);                
+                this.listAreas = JSON.parse(JSON.stringify(this.listAreas));                
+            },
+            getCountForArea: function (id) {
+                return this.get('areaCounts.' + id) || 0;
+            },
+        })
+    </script>
+
+</dom-module>

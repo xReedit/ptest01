@@ -273,10 +273,13 @@ function darFormatoSubTotalesDelivery(arrTotales = null) {
 
 function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp=false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false) {
 	var importeAdd = 0;
-	const _rowTotal = arrTotal.pop();
+	const _rowTotal = arrTotal.pop() || { importe: 0 };;
 	var rowDelete;
 	// id locales
 	arrTotal.map(x => { //a = costos adicionales
+		if (x.importe === undefined || isNaN(parseFloat(x.importe))) {
+            x.importe = "0.00";
+        }
 		// si viene del app y solo cobra comision por el app entonces quita los costos de entrega locales y deja el del app
 		// si solicito repartidor no quita nada
 		if ( isDeliveryCalculaCostoEntregaSoloApp && (x.descripcion.toLowerCase().indexOf('entrega') > -1  || x.descripcion.toLowerCase().indexOf('delivery') > -1 )) {			
@@ -285,10 +288,14 @@ function addCostoDeliveryArrTotal(arrTotal, arrDelivery, isComercioServicioDeliv
 		}
 	});
 
-	arrDelivery.filter(x => x.id < 0).map(x => {		
+	arrDelivery.filter(x => x.id < 0).map(x => {	
+		if (x.importe === undefined || isNaN(parseFloat(x.importe))) {
+            x.importe = "0.00";
+        }
+
 		if ((isComercioServicioDeliveryPropio && !isDeliveryCalculaCostoEntrega && !isDeliveryCalculaCostoEntregaSoloApp) && x.descripcion.toLowerCase() === 'entrega') {return; }
 		importeAdd += parseFloat(x.importe);
-		arrTotal.push(x);		
+		arrTotal.push(x);			
 	});
 
 	if ( isDeliverySolicitoReparto && !isClienteDeliveryFromApp ) { 

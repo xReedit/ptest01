@@ -5,6 +5,9 @@
 
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
+	<link rel="import" href="../x-componentes/x-comp-anular-comprobante/x-comp-anular-comprobante.html">
+
+	
 
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
@@ -28,7 +31,10 @@
 			</audio>
 		</div>
 
-		<x-comp-dialog-permiso></x-comp-dialog-permiso>
+
+		<x-comp-anular-comprobante id="compAnularComprobante"></x-comp-anular-comprobante>
+
+		<x-comp-dialog-permiso></x-comp-dialog-permiso>		
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
 		<paper-dialog id="dialog_motivo_anular_historial" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -108,7 +114,7 @@
 		<div class="p-5" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">			
 			<div class="d-flexx w-100 justify-content-between flex-wrap">
 				<!-- resumen -->
-				<h3>Registro de Pagos</h3>
+				<h3>Registro de Pagos</h3>				
 				<div class="div-info mb-1">
 					<div class="div-border text-center p-2 mr-1 div-indicador">
 						<p class="fs-12 fw-600 text-secondary">Meta Diaria</p>
@@ -886,6 +892,20 @@ var data_pagination={}, p_rows=0, p_fecha='';
 		console.log('getValorIncial comp-tp', e.detail);
 		xThisHistVenta.idTpSelected = e.detail.values;
 	});
+
+	const compAnularComprobante = document.getElementById('compAnularComprobante');
+	compAnularComprobante.addEventListener('onAnularComprobante', function (e) {
+		xThisHistVenta.$.dialog_comprobante.open();	
+		xm_all_xToastOpen("Se anulo el comprobante correctamente");
+	});
+
+	
+}
+
+function openAnularComp() {
+	console.log('xidregistro_pago_sel', xdt_pdE.idce);
+	const compAnularComprobante = document.getElementById('compAnularComprobante');
+	compAnularComprobante.open(xdt_pdE.idce);
 }
 
 function xOpenDialogAnularPedido() {
@@ -893,9 +913,38 @@ function xOpenDialogAnularPedido() {
 	pass_us.open();
 }
 
-function xAbrirDialogComprobante() {
-	// dialog_comprobante.open()
-	xThisHistVenta.$.dialog_comprobante.open();
+async function xAbrirDialogComprobante() {
+	
+	// verificamos si ya existe un comprobante emitido a esta venta
+	if ( xThisHistVenta.xYaTieneComprobante !== false ) {
+		// informar y seleccionar que desea hacer: Emitir uno nuevo y eliminar el anterior o emitir un nuevo solamente
+
+		const _swalAlertValues = paramsSwalAlert;
+		_swalAlertValues.title = '<p class="fw-600 fs-18">Atención!</p>';
+		_swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <p class="mt-1 fs-18">Ya existe un comprobante emitido por esta venta. ¿Que desea hacer?</p>
+                                </div>`;
+		
+		_swalAlertValues.confirmButtonText = 'Emitir Nuevo';
+		_swalAlertValues.denyButtonText = 'Emitir y Eliminar Anterior';
+		_swalAlertValues.showDenyButton = true;
+		_swalAlertValues.showCancelButton = true;
+
+		const rptDialogBorrar = await showAlertSwalHtmlDecision(_swalAlertValues)
+		if ( rptDialogBorrar.isConfirmed ) {
+			xThisHistVenta.$.dialog_comprobante.open();		
+		}
+
+		if (rptDialogBorrar.isDenied) {
+			// eliminar el comprobante anterior y emitir uno nuevo
+			openAnularComp();
+		}
+
+	} else {
+		xThisHistVenta.$.dialog_comprobante.open();		
+	}
+
+	// xThisHistVenta.$.dialog_comprobante.open();
 }
 
 function xOpenAnularPedidoHistorial(){
@@ -1414,7 +1463,10 @@ function xSumarTotalesHis(){
 	.done( function (dt_subt) {
 		var xdt_subt=$.parseJSON(dt_subt);
 		if(!xdt_subt.success){xPopupLoad.xclose();alert(xdt_subt.error);return;}
-		xdt_subt=xdt_subt.datos
+		xdt_subt=xdt_subt.datos		
+		console.log('xdt_subt', xdt_subt);
+
+		const rowIsCierreOn = xdt_subt[0].cierre === '1';
 		
 		// para imprimir precuenta o comprobantes
 		arrSumSubtTotales = xdt_subt;
@@ -1435,7 +1487,9 @@ function xSumarTotalesHis(){
 			xdt_tpp=xdt_tpp.datos;
 			for (var i = 0; i < xdt_tpp.length; i++) {
 				const isVisiblePuntoFlotanteVerde = xdt_tpp[i].permission_change == '1' ? '' : 'xInvisible';	
-				xcadena_total=String(xcadena_total+'<tr><td><div id="row_tp_pago_detalle" data-id="'+ xdt_tpp[i].idregistro_pago_detalle +'"><span data-id="' + xdt_tpp[i].idregistro_pago_detalle +'" data-idregistro_pago="' + xdt_tpp[i].idregistro_pago +'" data-idtp="' + xdt_tpp[i].idtipo_pago +'" data-importe="'+ xdt_tpp[i].importe +'" data-destp="'+ xdt_tpp[i].tipo_pago +'" onclick="xPermisoChangeTP(this)"><i class="fa fa-unlock text-success mr-1 punto-flotante-verde ' + isVisiblePuntoFlotanteVerde +'"></i><i class="fa fa-refresh text-primary mr-1 xCursor" title="Cambiar metodo de pago"></i></span>'+xdt_tpp[i].tipo_pago+'</div></td><td align="right">'+xdt_tpp[i].importe+'</td></tr>');
+				// si ya esta cerrado no debe permitir cambios
+				let controlPuntoFlotante = rowIsCierreOn ? '' : '<span data-id="' + xdt_tpp[i].idregistro_pago_detalle + '" data-idregistro_pago="' + xdt_tpp[i].idregistro_pago + '" data-idtp="' + xdt_tpp[i].idtipo_pago + '" data-importe="' + xdt_tpp[i].importe + '" data-destp="' + xdt_tpp[i].tipo_pago + '" onclick="xPermisoChangeTP(this)"><i class="fa fa-unlock text-success mr-1 punto-flotante-verde ' + isVisiblePuntoFlotanteVerde +'"></i><i class="fa fa-refresh text-primary mr-1 xCursor" title="Cambiar metodo de pago"></i></span>';
+				xcadena_total=String(xcadena_total+'<tr><td><div id="row_tp_pago_detalle" data-id="'+ xdt_tpp[i].idregistro_pago_detalle +'">'+ controlPuntoFlotante +xdt_tpp[i].tipo_pago+'</div></td><td align="right">'+xdt_tpp[i].importe+'</td></tr>');
 			};
 			
 			xcadena_total='<div class="d-flexx justify-content-end mb-2"><table width="50%" id="tb_totales" class="xRowPading4">'+xcadena_total+'</table></div><br>'+xhtml_anulado;
@@ -1518,30 +1572,34 @@ function reImprimirCierre() {
 }
 
 function reImprimirComprobante() {
-	xPopupLoad.xopen()	
-	const _cpe = xdt_pdE.num_comprobante;
-	$.ajax({ type: 'POST', 
-		url: '../../bdphp/log_005.php?op=1702',
-		data:{comprobante: _cpe}})
-	.done( function (res) {
-		var _detalle_json = JSON.parse(res).datos;
-		_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
 
-		const rowItem = xThisHistVenta.listRegistroPagoFilter[index_historial];
-		const _dataPrint = {
-			detalle_json: _detalle_json.detalle_json,
-			idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
-			hora: xDevolverHora(),
-			nomUs: rowItem.nom_usuario,
-			nom_documento: "comprobante"
-		}
+	reimpresionDocumento(xdt_pdE.idregistro_pago)
+	return;
 
-		_cpSocketprinterOnly(_dataPrint);
+	// xPopupLoad.xopen()	
+	// const _cpe = xdt_pdE.num_comprobante;
+	// $.ajax({ type: 'POST', 
+	// 	url: '../../bdphp/log_005.php?op=1702',
+	// 	data:{comprobante: _cpe}})
+	// .done( function (res) {
+	// 	var _detalle_json = JSON.parse(res).datos;
+	// 	_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
 
-		setTimeout(() => {
-			xPopupLoad.xclose()
-		}, 1500);
-	});
+	// 	const rowItem = xThisHistVenta.listRegistroPagoFilter[index_historial];
+	// 	const _dataPrint = {
+	// 		detalle_json: _detalle_json.detalle_json,
+	// 		idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
+	// 		hora: xDevolverHora(),
+	// 		nomUs: rowItem.nom_usuario,
+	// 		nom_documento: "comprobante"
+	// 	}
+
+	// 	_cpSocketprinterOnly(_dataPrint);
+
+	// 	setTimeout(() => {
+	// 		xPopupLoad.xclose()
+	// 	}, 1500);
+	// });
 }
 
 	function buscarEnListaRegistroPagos(val) {

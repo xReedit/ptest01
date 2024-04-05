@@ -320,9 +320,14 @@ async function xOpenPage(xop, parametro){
 			
 			// local 10022022
 			const versionPrintServer = 'restobar/print/client/index.html'; 
-			const _urlPrintServver = 'http://'+ipPrintServerLocal+'/'+versionPrintServer+'?o='+_xr;			
+			const _urlLocal = 'http://'+ipPrintServerLocal;
+			const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			
+			const rptPingServerPrint = await pingServerPrintLocal(_urlLocal);
+			console.log('rptPingServerPrint', rptPingServerPrint);
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
+			if ( rptPingServerPrint ) {
+				window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
+			}
 			return; 		
 		case 41: xruta = '/indicadores'; break;
 		case 42: xruta = '/mozo_virtual'; break;
@@ -356,9 +361,9 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
 			// produccion
-			// const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
 			
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;

@@ -260,22 +260,7 @@
 						 <br><br>
 
 			            <form id="formCierre">
-			            <!-- <div class="xAlinearce xm_at_cont xEpaciarInputCierre">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="200" placeholder="De 200">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="100" placeholder="De 100">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="50" placeholder="De 50">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="20" placeholder="De 20">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="10" placeholder="De 10">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="5" placeholder="De 5">
-			            </div>
-			            <div class="xAlinearce xm_at_cont xEpaciarInputCierre">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="2" placeholder="De 2">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="1" placeholder="De 1">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="0.50" placeholder="De 0.50">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="0.20" placeholder="De 0.20">
-			                 <input type="text" class="xMiInput xPasarEnter2" data-valor="0.10" placeholder="De 0.10" id="txt_fin">
-			                 <input type="text" class="xMiInput" data-valor="total" placeholder="Total" id="TxtTotal" disabled encendido>
-			            </div> -->
+	
 			            <div id="xTituloRpt">
 						</div>
 						<div id="xTituloRpt2"></div>
@@ -303,8 +288,23 @@
 					</div>
 
 					<br><br>
+					<!-- CONSOLIDADO -->
 					<div class="xTxtCierreCajaContenedor mt-2" hidden$="[[ !isShowLastCierres ]]">
+						<div hidden$="[[!isShowContentConsolidado]]">
+							<hr>
+							<div hidden$="[[!isShowConsolidado]]">
+								<p>Para ofrecer un consolidado, todos los usuarios deben cerrar caja. Falta cerrar: {{ listUsuarioFaltaCerrar }}</p>
+							</div>
+							<div hidden$="[[isShowConsolidado]]">
+								<p class="mr-2 fw-600 fs-15">Consolidado de Ventas y Operaciones de Todas las Cajas.</p>
+								<br>
+								<button class="btn btn-sm btn-primary" onclick="xGenerarConsolidadoCaja()">Genear consolidado</button>
+								<button class="btn btn-sm btn-dark mr-1" hidden$="[[!isShowBtnDownloadConsolidado]]" onclick="donwloadConsolidadoCaja()"><i class="fa fa-download"></i> Descargar Consolidado</button>								
+								<p id="title_consolidado" class="mr-2 fw-600 text-secondary"></p>
+							</div>
+						</div>
 						<hr>
+						<br>
 						<p class="fw-600 fs-18">Ultimos cierres de caja</p>
 						<br>
 						<table width="100%">
@@ -355,6 +355,12 @@
 				<div id="div_datos_cierre_caja"></div>
 			</div>
 		</div>
+
+		<div id="content_pdf_consolidado" class="xInvisible" style="margin-top: 700px;">
+			<div id="pdf_consolidado" class="xInvisible border-0" style="max-width: 300px; background: white;">
+				<div id="div_datos_consolidado"></div>
+			</div>
+		</div>
 	</template>
 </dom-module>
 <style>
@@ -394,7 +400,8 @@ var xThisCaja
 , id_supervisor = 0
 , xlo_idorg
 , xlo_idsede, isPrintCierreCaja = false
-, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false, idUsAdminPermiso = 0, titleFilePDFCierre;
+, xlo_us, isSocket, xArraySumT=[], numImtentosUs = 0, guadandoIngresoSalida = false, idUsAdminPermiso = 0, titleFilePDFCierre
+, dateIniConsolidado, dateFinConsolidado;
 function xIniCaja(){
 
 	xPopupLoad=document.getElementById('xLoad');
@@ -577,29 +584,31 @@ function xGetDataCierre(idBitacora) {
 		// const arrData = JSON.parse(resCierre.datos[0]['data']);
 		// const arrTitulo = JSON.parse(resCierre.datos[0]['titulo']);
 
-		var keyTitulo='', cIndex=0, arrX = [], arrRpt=[];
-		arrData.map((x, i) => {
-			keyTitulo = Object.keys(x)[0];			
-			arrX = JSON.parse(x[keyTitulo]);
-			if ( arrX ) {
-				arrRpt.push({
-					des:arrTitulo[i].des,
-					t1:arrTitulo[i].t1,
-					t2:arrTitulo[i].t2,
-					t3:arrTitulo[i].t3,
-					visible:0,
-					// items:arrX
-					});
+		// var keyTitulo='', cIndex=0, arrX = [], arrRpt=[];
+		// arrData.map((x, i) => {
+		// 	keyTitulo = Object.keys(x)[0];			
+		// 	arrX = JSON.parse(x[keyTitulo]);
+		// 	if ( arrX ) {
+		// 		arrRpt.push({
+		// 			des:arrTitulo[i].des,
+		// 			t1:arrTitulo[i].t1,
+		// 			t2:arrTitulo[i].t2,
+		// 			t3:arrTitulo[i].t3,
+		// 			visible:0,
+		// 			// items:arrX
+		// 			});
 				
-				arrX.map((z,q) => {
-					arrRpt[cIndex][q] = z;
-				});
+		// 		arrX.map((z,q) => {
+		// 			arrRpt[cIndex][q] = z;
+		// 		});
 		
-				cIndex++;
-			}
-		});
+		// 		cIndex++;
+		// 	}
+		// });
 
-		xArrayCierrePrint = arrRpt;
+		// xArrayCierrePrint = arrRpt;
+
+		xArrayCierrePrint = cocinarDataCierre(arrData, arrTitulo);
 		
 		// xLoadDataCierrePrintHtml();
 
@@ -620,6 +629,32 @@ function xGetDataCierre(idBitacora) {
 			xEscribirDatosHtml();
 		// });
 	});
+}
+
+function cocinarDataCierre(arrData, arrTitulo) {
+	var keyTitulo = '', cIndex = 0, arrX = [], arrRpt = [];
+	arrData.map((x, i) => {
+		keyTitulo = Object.keys(x)[0];
+		arrX = JSON.parse(x[keyTitulo]);
+		if (arrX) {
+			arrRpt.push({
+				des: arrTitulo[i].des,
+				t1: arrTitulo[i].t1,
+				t2: arrTitulo[i].t2,
+				t3: arrTitulo[i].t3,
+				visible: 0,
+				// items:arrX
+			});
+
+			arrX.map((z, q) => {
+				arrRpt[cIndex][q] = z;
+			});
+
+			cIndex++;
+		}
+	});
+
+	return arrRpt;
 }
 
 function xLoadResumenIS(){
@@ -746,41 +781,7 @@ function xVerificar(){
 		
 		$('#xTituloRpt').html(xRpt);
 		$('#xTituloRpt').css('color',xColor);
-	});
-	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=7001'})
-	// .done( function (dtC) {
-	// 	xSumData=parseFloat(dtC);
-	// 	xEfectivoCaja=xSumData;
-	// 	var xRpt_monto_supervicion='';
-	// 	var xsub_falta='', xsub_sobra='';
-	// 	var xRpt;
-	// 	var xColor="";
-	// 	xSumData=xMontoTotalCaja-xSumData;
-
-	// 	if(xSumData>=-1 && xSumData<=1){xRpt='<h3>OK cuadre conforme.</h3>';xColor="#060"; xArmarArrayPrint();}
-	// 	else{
-	// 		if(xPermisoSupervisor==1){//supervisor
-	// 			if(!isNaN(xSumData)){
-	// 				if(xSumData>1){xRpt_monto_supervicion='(sobra '+xMoneda(xSumData)+'). ';xsub_sobra='xSubrayar xBold2';}else{xRpt_monto_supervicion='(falta '+xMoneda(xSumData)+'). ';xsub_falta='xSubrayar xBold2';}
-	// 			}
-	// 			xRpt='<p class="xfont16"><strong>Efectivo: '+xEfectivoCaja+' </strong> '+xRpt_monto_supervicion+' Resultado de caja con supervision. Si <span class='+xsub_sobra+'>tiene sobrante</span>, haga un ingreso en caja como sobrante de efectivo. Si por el contrario <span class='+xsub_falta+'>tiene faltante</span>, haga una salida de caja como faltante en caja. Luego vuela a realizar el cuadre de caja, imprima los resultados y cierre su terminal. </p><a class="xCursor xfont16" onClick="xOpenPage(22);"><strong>Ver Resumen.</strong></a>';xColor="#8e24aa"; //<a onclick="xArmarArrayPrint();">Imprimir cierre</a>
-	// 			//xPermisoSupervisor=0;
-	// 		}else{
-	// 			if(xSumData>1){xRpt='<h3>Existe sobrante en caja</h3>';xColor="#F00";}
-	// 			if(xSumData<-1){xRpt='<h3>Existe faltante en caja</h3>';xColor="#F00";}
-	// 		}
-	// 	}
-	// 	//$('.xTxtMontoPagar').find('#xBtns').remove();
-	// 	$('#xTituloRpt').html(xRpt);
-	// 	$('#xTituloRpt').css('color',xColor);
-
-	// 	if(xColor=="#060"){
-	// 		////dialog_cierre.open();
-	// 		//$('.xTxtMontoPagar').append('<div id="xBtns"><button data-theme="a" onClick="xImprimir();")>Listo, Imprimir operaciones.</button><button data-theme="a" onClick="xCerrarSession();">Cerrar Terminal</button></div>');
-	// 		//$('.xTxtMontoPagar').trigger('create');
-	// 		}
-	// });
-		//});
+	});	
 }
 
 function xArmarSubItems(xx,numBD,reponde){
@@ -808,7 +809,7 @@ function xArmarSubItems(xx,numBD,reponde){
 	})
 }
 
-function xIniArraysPrint(){
+function xIniArraysPrint(isConsolidado = false){
 	xArrayEncabezadoCierre=[];
 
 	var xIpPrintDoc='';
@@ -840,7 +841,7 @@ function xIniArraysPrint(){
 		'ip_print': impresora[0].ip_print,
 		'logo': xDtPrint[0].logo,
 		'detalle_cierre': xdetall_cierre,
-		'titulo': 'CIERRE DE CAJA',
+		'titulo': !isConsolidado ? 'CIERRE DE CAJA' :  'CONSOLIDADO DE CAJA',
 		'var_margen_iz': impresora[0].var_margen_iz,
 		'var_size_font': impresora[0].var_size_font,
 		'papel_size': impresora[0].papel_size });
@@ -870,7 +871,7 @@ function xUpdateCerrarCession(responde){
 
 
 
-function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
+function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint, isConsolidado = false){
 
 	//si existe impresora local // imprime todos los otros documentos en esta impresora local.
 	if ( !isPrintCierreCaja ) { return; }
@@ -892,13 +893,21 @@ function xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint){
 	if (_sys_local === 1) {
 		xPopupLoad.xopen();
 		xSendDataPrintServer(_data, 4, 'cuadre-caja');
-		setTimeout(() => {
+		if (!isConsolidado) {			
+			setTimeout(() => {
+				xPopupLoad.xclose();
+				xVerificaSiFacturacionE();			
+			}, 1000);
+		} else {
 			xPopupLoad.xclose();
-			xVerificaSiFacturacionE();			
-		}, 1000);
+		}
 		return;
 	}
 
+	if (isConsolidado) {
+		xPopupLoad.xclose();
+		return
+	};
 
 	$.ajax({type: 'POST', url: '../../print/print4.php', data:{Array_enca:xArrayEncabezadoCierre, ArrayItem:xArrayCierrePrint}})
 						.done( function (dtPbd) {
@@ -1043,7 +1052,7 @@ function xReImprimirCierre(obj){
 	xImprimirCierre(xArrayEncabezadoCierre,xArrayCierrePrint);
 }
 
-function xEscribirDatosHtml(){
+function xEscribirDatosHtml(isConsolidado = false){
 
 	xArrayCierrePrint.map((i, index) => {
 		var sum_t1=0,sum_t2=0,sum_t3=0;
@@ -1092,8 +1101,9 @@ function xEscribirDatosHtml(){
 
 	const _fechaNow = xDevolverFecha() + ' | ' + xDevolverHora();
 
+	const titulo_html = isConsolidado ? 'CONSOLIDADO DE CAJA (' + dateIniConsolidado + ' -> ' + dateFinConsolidado + ')' : 'CIERRE DE CAJA ' + _fechaNow;
 	xbody_datos = `<div style = "line-height: 1;">
-				<h4>CIERRE DE CAJA - ${_fechaNow}</h4>				
+				<h4>${titulo_html}</h4>				
 				<h4>Local: ${sedeDatos.sedenombre}</h4>				
 				<h4>Ciudad: ${sedeDatos.sedeciudad} </h4>
 				<p>Usuario: ${xNomUsario}</p>
@@ -1104,32 +1114,48 @@ function xEscribirDatosHtml(){
 				<br><br>
 				<p>papaya.com.pe</p>`;
 
-	$("#div_datos_cierre_caja").append(xbody_datos).trigger('create');
-	// xPopupLoad.xclose();
 
-	// descargar pdf
-	setTimeout(() => {		
-		titleFilePDFCierre = "Cierre de caja - "+xNomUsario+ " " + _fechaNow;
-		xDownloadPdfCierre();
-	}, 1500);
+				// xPopupLoad.xclose();
+				
+				// descargar pdf
+	if ( !isConsolidado ) {
+		$("#div_datos_cierre_caja").append(xbody_datos).trigger('create');
+		setTimeout(() => {		
+			titleFilePDFCierre = "Cierre de caja - "+xNomUsario+ " " + _fechaNow;
+			xDownloadPdfCierre();
+		}, 1500);
+	} else {
+		$("#div_datos_consolidado").append(xbody_datos).trigger('create');
+		titleFilePDFCierre = "Consolidado de caja desde " + dateIniConsolidado + " hasta " + dateFinConsolidado;
+	}
 
+	const titulo_print_cierre = isConsolidado ? 'Consolidado de Caha' : 'Cierre de Caja';
+	const asunto_print_cierre = isConsolidado ? 'CONSOLIDADO DE CAJA ('+ dateIniConsolidado +' -> '+ dateFinConsolidado +')' : 'CIERRE DE CAJA | '+ sedeDatos.sedenombre + ' | ' + xDevolverFecha();	
 	// enviar a correo electronico;
 	if (!sedeDatos.email_cierre) { return; }
 	const _msjSend = {
             to: sedeDatos.email_cierre,
-            asunto: 'CIERRE DE CAJA | '+ sedeDatos.sedenombre + ' | ' + xDevolverFecha(),
-            titulo: 'Cierre de caja',
-            htmlContent: pdf_cierre.outerHTML
+            asunto: asunto_print_cierre,
+            titulo: titulo_print_cierre,
+            htmlContent: !isConsolidado ? pdf_cierre.outerHTML : pdf_consolidado.outerHTML,	
         }
 
 	xSendEmailClienteSES(_msjSend);
 }
 
 // op = 0 // show new tab  1=only save
-function xDownloadPdfCierre(op = 0) {
-	$('#content_pdf').removeClass('xInvisible');
-	$('#pdf_cierre').removeClass('xInvisible');	
-	var nodeImgCierre = document.getElementById('pdf_cierre');
+function xDownloadPdfCierre(op = 0, isConsolidado = false) {
+	var nodeImgCierre;
+	if (!isConsolidado) {
+		$('#content_pdf').removeClass('xInvisible');
+		$('#pdf_cierre').removeClass('xInvisible');	
+		nodeImgCierre = document.getElementById('pdf_cierre');
+	} else {
+		$('#content_pdf_consolidado').removeClass('xInvisible');
+		$('#pdf_consolidado').removeClass('xInvisible');
+		nodeImgCierre = document.getElementById('pdf_consolidado');
+	}
+		
 	const _heightMM = nodeImgCierre.scrollHeight / 3.77;
 	domtoimage.toPng(nodeImgCierre)
     .then(function (dataUrl) {
@@ -1145,21 +1171,48 @@ function xDownloadPdfCierre(op = 0) {
 			doc.save(titleFilePDFCierre);
 		}
 
-		$('#pdf_cierre').addClass('xInvisible');
-		$('#content_pdf').addClass('xInvisible');
+		if (!isConsolidado) {
+			$('#pdf_cierre').addClass('xInvisible');
+			$('#content_pdf').addClass('xInvisible');
+		} else {
+			$('#pdf_consolidado').addClass('xInvisible');
+			$('#content_pdf_consolidado').addClass('xInvisible');
+		}
     })
     .catch(function (error) {
         console.error('ocurrio un error', error);
     });
 }
 
-function xloadLastCierres() {
+function xloadLastCierres() {	
 	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12'})
 	.done(function (res) {		
 		res = JSON.parse(res).datos;
 		xThisCaja.listCierres = res;
-		xThisCaja.isShowLastCierres = res.length > 0;
+		xThisCaja.isShowLastCierres = res.length > 0;		
 		// console.log('xThisCaja.listCierres', xThisCaja.listCierres);
+	});
+
+	
+
+	// obtener las fechas de los consolidados
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12002'})
+	.done(function (res) {		
+		res = JSON.parse(res).datos[0];
+		dateIniConsolidado = res.f_ini;
+		dateFinConsolidado = res.f_fin;		
+
+		$('#title_consolidado').text('Consolidado de caja desde ' + dateIniConsolidado + ' hasta ' + dateFinConsolidado);
+
+		// verificar cierres pendientes para ofrecer consolidado
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12001' })
+			.done(function (res) {
+				res = JSON.parse(res).datos;
+				console.log('res', res);
+				xThisCaja.isShowConsolidado = res.length > 0;
+				xThisCaja.isShowContentConsolidado = xThisCaja.isShowConsolidado;
+				xThisCaja.listUsuarioFaltaCerrar = res.map(x => x.nombres).join(', ');
+		});
 	});
 }
 
@@ -1334,6 +1387,32 @@ function xCajaPermisoRemotoSupervisorData(op=0) {
 }
 
 
+function xGenerarConsolidadoCaja() {
+	xPopupLoad.xopen();
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70002'})
+	.done( function (resConsolidado) {
+		let xresConsolidado = JSON.parse(resConsolidado);
+		if (!xresConsolidado.success) {
+			xPopupLoad.xclose();		
+			return;
+		}
+		const arrData = JSON.parse(xresConsolidado.datos[0]['data']);
+		const arrTitulo = JSON.parse(xresConsolidado.datos[0]['titulo']);
+
+		const xArrayConsolidadoPrint = cocinarDataCierre(arrData, arrTitulo);
+		xIniArraysPrint(true); // impresora
+
+		xImprimirCierre(xArrayEncabezadoCierre, xArrayConsolidadoPrint, true);
+		xEscribirDatosHtml(true);
+		xThisCaja.isShowBtnDownloadConsolidado = true;
+		xPopupLoad.xclose();
+	});
+}
+
+function donwloadConsolidadoCaja() {
+	xDownloadPdfCierre(1, true)
+}
+
 Polymer({
 	is:'x-caja',
 	properties:{
@@ -1347,12 +1426,16 @@ Polymer({
 		isShowLastCierres: Boolean,
 		listAdelantoOrden: [],
 		listTicketEntrada: [],
+		listUsuarioFaltaCerrar: String,
 		isShowListaAdelantoOrden: Boolean,
 		isShowEsperaRptSolicitudCierre: Boolean,
 		isShowRptSolicitudCierre: Boolean,
 		isShowListaTicketEntrada: Boolean,
 		isShowIngresoVarios: Boolean,
 		isErrorCierre:Boolean,
+		isShowConsolidado: Boolean,
+		isShowContentConsolidado: Boolean,
+		isShowBtnDownloadConsolidado: Boolean,
 		rowRptSolicitud: [],
 		listIngresosVarios: [],
 		montoEvaluar: {
@@ -1377,6 +1460,10 @@ Polymer({
 		this.isShowRptSolicitudCierre = false;
 		this.isShowListaTicketEntrada = false;
 		this.isShowIngresoVarios = false;
+		this.isShowConsolidado = false;
+		this.isShowContentConsolidado = false;
+		this.isShowBtnDownloadConsolidado = false;
+		this.listUsuarioFaltaCerrar = '';
     	xThisCaja=this;
 		xIniCaja();
 		// _cpSocketIsConnect();
