@@ -106,7 +106,7 @@
 
 					<!-- configuraciones -->
 					<div>
-						<x-config-sede-opciones></x-config-sede-opciones>
+						<x-config-sede-opciones id="compOpcionesSede"></x-config-sede-opciones>
 					</div>
 				</iron-pages>
 			</div>
@@ -1026,6 +1026,13 @@ function xIniConf(){
 	}
 	})
 
+	$('#tab_sede').on('iron-select',function(){
+		if (xThisConfig.selectedTabSede === 1) {
+			const compOpcionesSede = document.getElementById('compOpcionesSede');
+			compOpcionesSede.loadData(xThisConfig.idsede_selected);
+		}
+	})
+
 	$('#fileAlamcen').change(function(){
 		xPopupLoad.xopen();
         //xSubirXls($("#file"));
@@ -1114,6 +1121,11 @@ function xIniConf(){
 		e.stopImmediatePropagation()
 		return false;
 	})
+
+	const compOpcionesSede = document.getElementById('compOpcionesSede');
+	compOpcionesSede.addEventListener('close', function (e) {
+		dialog_add_sede.close();
+	});
 }
 
 function loadIconSeccion() {
@@ -2020,6 +2032,8 @@ function xLoadCategoriaCarta(){
 
 function xModificarSede(obj){
 	var xids=$(obj).parents('tr').attr('data-id');
+	xThisConfig.selectedTabSede = 0;
+	xThisConfig.idsede_selected = xThisConfig.dt_sede[xids].idsede;
 	$("#frm_sede #idsede").val(xThisConfig.dt_sede[xids].idsede);
 	$("#frm_sede #nombre").val(xThisConfig.dt_sede[xids].nom_sede);
 	$("#frm_sede #ciudad").val(xThisConfig.dt_sede[xids].ciudad);
@@ -2222,10 +2236,15 @@ Polymer({
 			type: Number,
 			value: 0
 		},
+		idsede_selected: {
+			type: Number,
+			value: 0
+		},
 	},
 	attached:function(){
 		this.selected_conf=0;
 		this.showIconsListCPE = false;
+
 		xThisConfig=this;
 		xIniConf();
 		// _cpSocketIsConnect();

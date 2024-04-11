@@ -47,6 +47,7 @@
             <br>
             
             <button class="btn btn-primary" dialog-dismiss on-click="saveInputs" >Guardar</button>
+            <button class="btn btn-secondary" dialog-dismiss on-click="cancel">Cancelar</button>
         </div>
     </template>
     
@@ -87,14 +88,16 @@
                 // Send the inputs array to the backend
                 // ...
             },
-            loadData: function() {
+            loadData: function(idsede) {
                 // Retrieve data for the given idsede from the backend
                 // ...
                 const _httpFech = new httpFecht();
                 const _url = '../../bdphp/log_componentes.php?op=2204';
                 
                 _httpFech.axiosExecute({
-                    url: _url                    
+                    type: 'POST',
+                    url: _url,
+                    data: { idsede: idsede }                    
                 }, false, false).then((data) => {
                     console.log('data', data);
                     if (data.success) {
@@ -105,10 +108,17 @@
                             this.$.allowCierre.checked = _data.switch2 === '1';
                             this.$.descuentoStock.checked = _data.update_stock_after === '1';
                             // convertir a formato hora para mostrar en el input time
-                            _data.hora_cierre = !_data.hora_cierre || _data.hora_cierre == '0' ? '00:00' : _data.hora_cierre;
+                            _data.hora_cierre = !_data.hora_cierre_dia || _data.hora_cierre_dia == '0' ? '00:00' : _data.hora_cierre_dia;
                             const _horaCierre = _data.hora_cierre.split(':');
+                            console.log('_horaCierre', _horaCierre);
                             this.$.horaCierre.value = `${_horaCierre[0]}:${_horaCierre[1]}`;                            
 
+                        }
+                        else {
+                            this.$.numIntentos.value = '3';
+                            this.$.allowCierre.checked = false;
+                            this.$.descuentoStock.checked = false;
+                            this.$.horaCierre.value = '00:00';
                         }
                     }
                 }).catch((err) => {
@@ -116,7 +126,10 @@
                 });                                            
             },
             ready: function() {
-                this.loadData();
+                // this.loadData();
+            },
+            cancel: function() {
+                this.fire('close');
             }
         });          
     </script>    
