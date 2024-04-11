@@ -2274,8 +2274,12 @@ function xRegistrarPagoCM(xcant_rp){
 			}else{
 				//remove				
 				$(".grid").isotope('remove',$(xObj_miPedido)).isotope('layout');
-				$(xObj_miPedido).remove();
+				$(xObj_miPedido).remove();				
 			}
+
+			setTimeout(() => {
+				xPintaCountAreasMesas();
+			}, 500);
 		}
 		xPopupLoad.xclose();
 
@@ -4336,6 +4340,7 @@ async function xPintaCountAreasMesas() {
 	const compAreasMesas = document.getElementById('comp-area-mesas');
 
 	// Itera sobre las áreas en el objeto areaCounts
+	compAreasMesas.resetAreaCounts();
 	for (var areaId in areaCounts) {		
 		compAreasMesas.setCountArea(areaId, areaCounts[areaId]);
 	}

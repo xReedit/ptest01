@@ -96,6 +96,13 @@
 
 									<p><strong>Reporte del contador</strong></p>
 									<paper-checkbox id="check_habilita_verificacion_cpe"><span>Habilitar verificacion uno x uno</span></paper-checkbox>
+
+									<br><br>
+									<div>																				
+										<paper-checkbox id="check_habilita_igv"><span><strong>Habilitar I.G.V</strong></span></paper-checkbox>
+										<p>Porcentaje IGV</p>
+										<input type="number" value="18" class="xMiInput xPasarEnter2" id="porcentaje_igv"><br>
+									</div>
 									
 									<br><br>
 									<p><strong>Plataforma | local o web</strong></p>							
@@ -114,8 +121,7 @@
 										<input type="text" id="facturacion_e_activo" name="facturacion_e_activo">
 										<input type="text" id="habilita_verificacion_cpe" name="habilita_verificacion_cpe">
 										<input type="text" id="isprinter_socket" name="isprinter_socket">
-										<input type="text" id="speech_disabled" name="speech_disabled">
-										
+										<input type="text" id="speech_disabled" name="speech_disabled">										
 									</div>
 
 
@@ -557,7 +563,8 @@ function transferenciaCompletaMini(xfile){
 		const _CheckisPrinterSocket = check_isprinter_socket.checked ? 1 : 0;
 		const _check_habilita_facturacion = check_habilita_facturacion.checked ? 1 : 0;
 		const _check_speech_disabled = check_speech_disabled.checked ? 1 : 0;
-		const _check_habilita_verificacion_cpe = check_habilita_verificacion_cpe.checked ? 1 : 0;
+		const _check_habilita_verificacion_cpe = check_habilita_verificacion_cpe.checked ? 1 : 0;		
+
 		
 
 		$("#frm_sede #sys_local").val(_printServerCheck);
@@ -566,6 +573,7 @@ function transferenciaCompletaMini(xfile){
 		$("#frm_sede #speech_disabled").val(_check_speech_disabled);		
 		$("#frm_sede #facturacion_e_activo").val(_check_habilita_facturacion);		
 		$("#frm_sede #habilita_verificacion_cpe").val(_check_habilita_verificacion_cpe);		
+		
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede", $("#frm_sede").serialize(), function (id) {
 			xPopupLoad.xclose();
@@ -579,6 +587,22 @@ function transferenciaCompletaMini(xfile){
 			xLoadAdmDatosOrg();
 			$("#frm_sede").reset();				
 		});		
+
+		// guardar igv 
+		const _check_habilita_igv = check_habilita_igv.checked ? 0 : 1;
+		const _porcentaje_igv = porcentaje_igv.value;
+		const dataSend = {		
+			data:{
+				idsede: xThisAdminNew.xIdSede,	
+				activo: _check_habilita_igv,
+				igv: _porcentaje_igv
+			}
+		}
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1800', data: dataSend })
+		.done((res) => {
+			console.log('res', res);
+		});
+
 	}
 
 	function xAdmGuardarUsuario() {
@@ -615,7 +639,7 @@ function transferenciaCompletaMini(xfile){
 			$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=102', data:{idorg: dataOrg.idorg} })
 			.done((res) => {
 				txt_usuario.value = res;				
-			});
+			});			
 		}				
 
 	}
@@ -741,6 +765,21 @@ function transferenciaCompletaMini(xfile){
 
 		xLoadCategorias();
 		xLoadHorarioTrabajo();
+		xLoadImpuestos()
+	}
+
+	function xLoadImpuestos() {
+		// verificar si igv esta habilitado
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1801', data: { idsede: xThisAdminNew.xIdSede } })
+			.done((res) => {
+				console.log('res', res);
+				const _res = $.parseJSON(res);
+				if (_res.datos.length > 0) {
+					const _data = _res.datos[0];
+					check_habilita_igv.checked = _data.activo === '0' ? true : false;
+					porcentaje_igv.value = _data.porcentaje;
+				}
+			});
 	}
 
 	function xAdmNewNuevaSede() {

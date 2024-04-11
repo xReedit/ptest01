@@ -114,7 +114,10 @@
 		<div class="p-5" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">			
 			<div class="d-flexx w-100 justify-content-between flex-wrap">
 				<!-- resumen -->
-				<h3>Registro de Pagos</h3>				
+				<div>
+					<h3>Registro de Pagos</h3>	
+					<p>Hora de cierre: <span id="info-hours-close" class="fw-600 text-primary">{{ horaCierre }}</span> <i class="xCursor fa fa-pencil" title="Modificar" onclick="showMsjChangeHoraClose()"></i></p>
+				</div>
 				<div class="div-info mb-1">
 					<div class="div-border text-center p-2 mr-1 div-indicador">
 						<p class="fs-12 fw-600 text-secondary">Meta Diaria</p>
@@ -983,6 +986,19 @@ function xAnularPedidoHistorial(){
 function xloadHistorial(){
 	xPopupLoad.titulo='Cargando...';
 	xPopupLoad.xopen();
+
+	// hora cierre
+	const _fetchApi = new httpFecht();
+	_fetchApi.axiosExecuteJSON({ type: 'GET', url: '../../bdphp/api.php?route=get-hours-clouse'})
+	.then(res => {		
+		if ( res.success ) {
+			try {				
+				xThisHistVenta.horaCierre = res.data[0].hora_cierre_dia;
+			} catch (error) {
+				xThisHistVenta.horaCierre = '00:00';
+			}
+		}
+	})
 
 	// paginacion    
     data_pagination.pageFecha = p_fecha !== '' ? p_fecha : xDevolverFecha();
@@ -1888,6 +1904,17 @@ async function xShowChangeMetodoPagoRegistro() {
 		}
 	}
 
+	function showMsjChangeHoraClose() {
+		const _swalAlertValues = paramsSwalAlert;  
+		_swalAlertValues.title = '<p class="fw-600 fs-18 text-warning">Hora de cierre</p>';
+		_swalAlertValues.html = '<p class="fs-16">Para cambiar la hora de cierre vaya a las opciones principales "Datos del sistema / Sede / Variables."</p>';
+		_swalAlertValues.confirmButtonText = 'Entendido';
+		_swalAlertValues.showCancelButton = false;
+
+		showAlertSwalHtml(_swalAlertValues)
+	
+	}
+
 	
 
 Polymer({
@@ -1895,6 +1922,7 @@ Polymer({
 	properties:{
 		xdtPedDet: Object,
 		isCierreCaja: Boolean,
+		horaCierre: String,
 		xYaTieneComprobante: boolean = true,
 		xYaPedidoCerrado: boolean = true,
 		xIsPuedeReimprimirCPE: boolean = false,
@@ -1935,6 +1963,7 @@ Polymer({
 		this.xYaTieneComprobante = true;
 		this.xYaPedidoCerrado = true;
 		this.isCierreCaja = false;
+		this.horaCierre = '00:00';
     	xThisHistVenta=this;
 		xIniHistVenta();
 		

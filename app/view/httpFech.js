@@ -108,6 +108,13 @@ class httpFecht {
 
     }
 
+    // devuelve por defecto JSON
+    axiosExecuteJSON = async (params) => {
+        let isHeadersJson = true;
+        let respondeString = false;        
+        return await this.axiosExecute(params, isHeadersJson, respondeString);        
+    }
+
     // function que lanza un mensaje de error si no hay conexion a internet o cuando hay un error en la peticion
     manejoErrorPetitionHttp = (error) => {               
         xPopupLoad.xclose();

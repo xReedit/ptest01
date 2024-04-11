@@ -35,6 +35,16 @@
                 position: relative;
                 top: -0.2em;
             }
+
+            @keyframes number-change {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.6); }
+                100% { transform: scale(1); }
+            }
+
+            .number-change {
+                animation: number-change 0.5s ease-in-out;
+            }
         </style>
 
 
@@ -118,10 +128,35 @@
             setCountArea: function (id, count) {
                 this.set('areaCounts.' + id, count);                
                 this.listAreas = JSON.parse(JSON.stringify(this.listAreas));                
+                 // Encuentra el elemento que muestra el número y agrega la clase 'number-change'
+                setTimeout(() => {
+                    var areaElement = Polymer.dom(this.root).querySelector('[data-id="' + id + '"]');
+                    if (areaElement) {
+                        var countElement = areaElement.querySelector('.area-count');
+                        if (countElement) {
+                            countElement.classList.add('number-change');
+
+                            // Elimina la clase después de la animación
+                            setTimeout(function () {
+                                countElement.classList.remove('number-change');
+                            }, 500);
+                        }
+                    }
+                }, 100);
             },
             getCountForArea: function (id) {
                 return this.get('areaCounts.' + id) || 0;
             },
+            resetAreaCounts: function () {
+                // Itera sobre las claves en areaCounts
+                for (var id in this.listAreas) {
+                    // Establece el conteo para esta área en cero
+                    this.set('areaCounts.' + this.listAreas[id].idarea_mesa, 0);
+                }
+
+                // Actualiza listAreas para reflejar los cambios en areaCounts
+                this.listAreas = JSON.parse(JSON.stringify(this.listAreas));
+            }
         })
     </script>
 
