@@ -505,6 +505,7 @@
 
 		// si agrega o borra fila, para centrar el dialog
 		xCompTableFP.addEventListener('xCompTableAddRemoveRow', () => {
+			// console.log('xThisPago.tipoComprovanteSelecionado', xThisPago.tipoComprovanteSelecionado);
 			xThisPago.fire('ChangeListPagoAddRemoveRow', xThisPago.tipoComprovanteSelecionado);
 		})
 
@@ -652,7 +653,7 @@
 	function xSelectedTpComprobante(event) {
 		// var idTipoComprobante = parseInt(valor);	
 		const _selObj = event ? event : objSelComprobante.getValorSelecionado();
-		console.log('comprobante sel ', _selObj);
+		
 
 		xThisPago.ComprobanteRequiereCliente = parseInt(_selObj.requiere_cliente) === 0 ? false : true; //requiere
 		
@@ -769,7 +770,10 @@
 		registrando = true;
 		xSumarTotales_row();
 		// xThisPago.hidden_container_pago = true; //regresa a la pantalla inicial
-		// xThisPago.setVisiblePanel1();
+		// xThisPago.setVisiblePanel1();		
+
+		const listPagosSeleted = xCompTableFP.getListPagoSeleted();		
+
 		xThisPago.fire('xListoRegistraPago', true);
 		xThisPago.fire('xListoRegistraPagoRpt', xtipoP);
 
@@ -813,8 +817,8 @@
 		} catch (error) {
 			
 		}
-
-
+		
+		const listPagosSeleted = xCompTableFP.getListPagoSeleted();
 		
 
 		xRpts.push({
@@ -825,7 +829,7 @@
 			'idcliente': xIdCliente_pago,
 			'nota_compra': nom_nota,
 			'nomcliente': nom_nota,
-			'xtipo_pagos': xtipoP,
+			'xtipo_pagos': listPagosSeleted, //xtipoP,
 			'paseEnterTxt': xEnterTxtImporte,
 			'is_printer_cpe': xThisPago.isBtnPrinterCpe,
 			'is_update_cliente': is_update_cliente

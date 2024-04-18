@@ -2,7 +2,7 @@ var xArrayPedidoObj
 ,xidTipoConsumo
 ,xidItem
 ,xCambioCantidad=false
-,xLocal_xDtSubTotales
+// ,xLocal_xDtSubTotales
 ,xLocal_TotalImporte=0
 ,xErrorPrint=false
 ,xArrayDesTipoConsumo=[]

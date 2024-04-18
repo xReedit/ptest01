@@ -546,7 +546,7 @@ var xThisCM,
 var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
 	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false,
 	idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false,
-	countIntiCP = 0, isPassAddRowItemList = false;
+	countIntiCP = 0, isPassAddRowItemList = false, xLocal_xDtSubTotales_cp;
 
 const _fetchApi = new httpFecht();
 
@@ -1251,7 +1251,7 @@ async function PreparComprobante() {
 	var xArrayEstructura = xCargarDatosAEstructuraImpresion(xSubItmes);
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
 	xArmarSubtotalesArray(xArrayEstructura,xDtPrint)
-	
+	xLocal_xDtSubTotales_cp = xLocal_xDtSubTotales;
 }
 
 
@@ -1896,7 +1896,7 @@ async function xArmarSqlAddLUlI(){
 	var xli_ref;
 	var xsub_sql_descontar='';
 	var xsql_descontar='';
-	var xpasar=false;
+	var xpasar=false;	
 
 	//idpedido// idcategoria todos los checks // toma el ultimo check seleccionado
 			$("#tb_pedidos .check_item").each(function(index,element){
@@ -1920,7 +1920,9 @@ async function xArmarSqlAddLUlI(){
 	// xImporteTotalRowArray=xGeneralArraySubTotales[0].importe; // el cero siempre sera subtotal el total;
 	// xImporteTotalRowArray = xLocal_xDtSubTotales.length > 1 ? xLocal_xDtSubTotales[xLocal_xDtSubTotales.length -1].importe : xLocal_xDtSubTotales[0].importe;
 
-	if(xArmarSubtotalesArray()==0){return}
+	
+	if(xArmarSubtotalesArray() == 0){return}
+	xLocal_xDtSubTotales_cp = xLocal_xDtSubTotales;
 
 	var xsolo_llevar="0", xdelivery="0";
 	switch (tpCDes) {
@@ -1946,7 +1948,8 @@ async function xArmarSqlAddLUlI(){
 	// xarr_header = {'idclie':0, 'ImporteTotal': xImporteTotalRowArray ,'referencia':'', 'idcategoria': xidCategoriaPD, 'mesa':xCeroIzq(xli_nummesa,2),'reservar':0, 'tipo_consumo': xli_tipoconsumo}
 	xarr_header = {'idclie':0,'referencia':'', 'idcategoria': xidCategoriaPD, 'mesa':xCeroIzq(xli_nummesa,2), 'num_pedido': xli_numpedido,'reservar':0, 'tipo_consumo': xli_tipoconsumo, 'subtotales_tachados': ''}
 	xarr_body = xArrayPedidoObj;
-	xarr_subtotales = xLocal_xDtSubTotales;
+	// xarr_subtotales = xLocal_xDtSubTotales;
+	xarr_subtotales = xLocal_xDtSubTotales_cp;
 
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj);
 
@@ -2021,7 +2024,7 @@ async function goSendPedidoFecht(_data) {
 }
 
 function xLLamarPrintAddLUlI() {
-	xCocinarImprimirComanda(xArrayPrintEncaLi,xArrayPedidoObj,xLocal_xDtSubTotales, (res)=>{
+	xCocinarImprimirComanda(xArrayPrintEncaLi,xArrayPedidoObj,xLocal_xDtSubTotales_cp, (res)=>{
 		if(!res){ //si no hay error
 			xPopupLoad.xclose();
 			xLoadDetallesPedido(xObj_miPedido, false);
@@ -2756,7 +2759,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3051', data:{m:_numMesa, p:xp_sel_numpedido, confirmar_pago: xp_sel_is_confirmar_pago, lastIdPedido: lastIdPedidoCobrado, idpedido: idPedidoAdd}})
 		// .done( function (dtPbdet) {
 
-			var xdtPbdet=$.parseJSON(dtPbdet);
+			var xdtPbdet=$.parseJSON(dtPbdet);			
 
 			// si se agrego un nuevo pedido solo trae ese pedido
 			if (lastDataPedidoInsert) {
@@ -3500,6 +3503,7 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 
 	var xarrSumEstructura = xCargarDatosAEstructuraImpresion(xSumSubItmes);
 	var _importeTotalSeleccionados = xArmarSubtotalesArray(xarrSumEstructura,xSumSubItmes.importeTotalSubItemSeleccionados);
+	xLocal_xDtSubTotales_cp = xLocal_xDtSubTotales;
 
 	// si hay algun subitem seleccionado no cambia por que esto es el total de pedidos
 	xImporteTotalSeleccionados = checkItemsSeleccionados.esSeleccionTotal ?  _importeTotalSeleccionados : xImporteTotalSeleccionados;
@@ -3509,17 +3513,17 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 	// armamos los subtotales que retorma en xLocal_xDtSubTotales
 	// arrSumSubtTotales = isPedidoOpenDeliveryCliente ? addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente) : xLocal_xDtSubTotales;
 	if ( isPedidoOpenDeliveryCliente && arrTotalesDeliveryCliente ) {
-		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio, isDeliveryCalculaCostoEntrega, isDeliveryCalculaCostoEntregaSoloApp, isDeliverySolicitoReparto, isClienteDeliveryFromApp);
+		arrSumSubtTotales = addCostoDeliveryArrTotal(xLocal_xDtSubTotales_cp, arrTotalesDeliveryCliente, isComercioServicioDeliveryPropio, isDeliveryCalculaCostoEntrega, isDeliveryCalculaCostoEntregaSoloApp, isDeliverySolicitoReparto, isClienteDeliveryFromApp);
 		xImporteTotalSeleccionados = getImporteTotalSubTotalesDelivery(arrSumSubtTotales);
 	} else {
-		arrSumSubtTotales = xLocal_xDtSubTotales; 		
+		arrSumSubtTotales = xLocal_xDtSubTotales_cp; 		
 	}
 
 	arrSumSubtTotales = viene_dsct ? arrSubtTotalesDescuento : arrSumSubtTotales;
-	xLocal_xDtSubTotales = arrSumSubtTotales;
+	xLocal_xDtSubTotales_cp = arrSumSubtTotales;
 
 	var htmlSubtotales='';	
-	xLocal_xDtSubTotales.forEach((element, index) => {
+	xLocal_xDtSubTotales_cp.forEach((element, index) => {
 		var _fontSize,_fontSizeTitulo, titulo, _style='', _id='';
 		
 		var classTachado = element.tachado ? 'xTachar' : '';
@@ -3605,18 +3609,18 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 
 function quitarSubTotal(obj, index) {
 	const tachado = obj.dataset.tachado;
-	var idQuitar = xLocal_xDtSubTotales[index].id || "";
+	var idQuitar = xLocal_xDtSubTotales_cp[index].id || "";
 	
 	if ( tachado === "true") {
 		idQuitar = idQuitar + ",";
 		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(idQuitar,''); 
-		xLocal_xDtSubTotales[index].tachado = false;		
+		xLocal_xDtSubTotales_cp[index].tachado = false;		
 		obj.dataset.tachado = false;
-		xLocal_xDtSubTotales[index].importe_tachado = parseFloat();
+		xLocal_xDtSubTotales_cp[index].importe_tachado = parseFloat();
 	} else {
 		xLocal_SubTotal_Quitados += idQuitar + ',';	
-		xLocal_xDtSubTotales[index].tachado = true;
-		xLocal_xDtSubTotales[index].importe_tachado = xLocal_xDtSubTotales[index].importe;
+		xLocal_xDtSubTotales_cp[index].tachado = true;
+		xLocal_xDtSubTotales_cp[index].importe_tachado = xLocal_xDtSubTotales_cp[index].importe;
 		obj.dataset.tachado = true;
 	}
 

@@ -1,6 +1,7 @@
 
 #ignore
 bdphp/ManejoBD.php
+config.js
 file
 dist
 minify.sh

@@ -584,7 +584,18 @@ var xThisVentaRapida
 xarr_subtotales=[], arrDatosAdjuntoDelivery=[], xIdCliente_pedido = '', xClientePedidoFnac='', isSreenFull=false, isTouch=true, isShowOpcionesPrimero = false
 , xCadenaTC='', xCompSubitems, isSocket = false, xCompCanalConsumo, xDataPagoPedidoPendiente, _pedido_pagar_cuenta;
 
+
 // , xCompSubitemsEdit
+
+window.addEventListener('beforeunload', async function (e) {
+	console.log('xArrayPedidoObj', xArrayPedidoObj, xLocal_TotalImporte);
+	if (tt_pedido > 0) {
+		var message = 'Se perderán todos los datos. ¿Estás seguro de que quieres hacer esto?';
+		e.preventDefault();
+		e.returnValue = message;
+		return message;
+	}
+});
 
 
 
@@ -1186,6 +1197,7 @@ function xNuevoPedidoVR() {
 	localStorage.removeItem('::app3_woDUS::cxe');
 	window.localStorage.removeItem("::app3_sys_dta_pe");
 	xCompDatosDelivery.resetValInit();
+	tt_pedido=0;
 	//xArrayPedido=new Array();
 	//xDtSubTotales=new Array()
 	xLimpiarItemSeleccionadosSubItems();

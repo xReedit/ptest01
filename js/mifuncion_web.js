@@ -958,22 +958,22 @@ function searchStringInPageActive(palabra) {
 
 async function pingServerPrintLocal(_urlPrintServer) {
 	return true;
-	const urlPing = `${_urlPrintServer}/api/test`;	
-	const http = new httpFecht();
-	return http.axiosExecute({url: urlPing, method: 'GET'}, true, false)
-		.then(response => {
-			if (!response.ok) {
-				showInfoOpenServerPrint();			
-			return false;            
-			}
-			// El servidor está activo, puedes abrir la ventana aquí
-			return true;
-		})
-		.catch(error => {
-			// El servidor no está activo, muestra un mensaje al usuario
-			showInfoOpenServerPrint()
-			return false;
-		});
+	// const urlPing = `${_urlPrintServer}/api/test`;	
+	// const http = new httpFecht();
+	// return http.axiosExecute({url: urlPing, method: 'GET'}, true, false)
+	// 	.then(response => {
+	// 		if (!response.ok) {
+	// 			showInfoOpenServerPrint();			
+	// 		return false;            
+	// 		}
+	// 		// El servidor está activo, puedes abrir la ventana aquí
+	// 		return true;
+	// 	})
+	// 	.catch(error => {
+	// 		// El servidor no está activo, muestra un mensaje al usuario
+	// 		showInfoOpenServerPrint()
+	// 		return false;
+	// 	});
 }
 
 function showInfoOpenServerPrint() {
