@@ -79,6 +79,8 @@ class httpFecht {
             'Content-Type':  isHeadersJson ? 'application/json' : 'application/x-www-form-urlencoded'
         };            
 
+        // Agregar tiempo máximo de espera de 10 segundos
+        params.timeout = 10000;
         xPopupLoad.titulo="Cargando...";
 
         if(isShowPreload == true) {

@@ -23,6 +23,11 @@
 	<link rel="stylesheet" href="../../css/PNotifyBrightTheme.css">
 	
 
+	<!-- sweetalert -->
+	<script src="../../js/sweetalert2.js"></script>
+	<script type="text/javascript" src="../../js/mi.sweet.alert.js"></script>
+	
+	
 	<template>
 
 		<div class="xInvisible">
@@ -922,18 +927,18 @@ async function xAbrirDialogComprobante() {
 	if ( xThisHistVenta.xYaTieneComprobante !== false ) {
 		// informar y seleccionar que desea hacer: Emitir uno nuevo y eliminar el anterior o emitir un nuevo solamente
 
-		const _swalAlertValues = paramsSwalAlert;
-		_swalAlertValues.title = '<p class="fw-600 fs-18">Atención!</p>';
-		_swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+		const _swalAlertValues1 = paramsSwalAlert;
+		_swalAlertValues1.title = '<p class="fw-600 fs-18">Atención!</p>';
+		_swalAlertValues1.html = `<div class="pb-2" style="display: inline-flex;">                    
                                     <p class="mt-1 fs-18">Ya existe un comprobante emitido por esta venta. ¿Que desea hacer?</p>
                                 </div>`;
 		
-		_swalAlertValues.confirmButtonText = 'Emitir Nuevo';
-		_swalAlertValues.denyButtonText = 'Emitir y Eliminar Anterior';
-		_swalAlertValues.showDenyButton = true;
-		_swalAlertValues.showCancelButton = true;
+		_swalAlertValues1.confirmButtonText = 'Emitir Nuevo';
+		_swalAlertValues1.denyButtonText = 'Emitir y Eliminar Anterior';
+		_swalAlertValues1.showDenyButton = true;
+		_swalAlertValues1.showCancelButton = true;
 
-		const rptDialogBorrar = await showAlertSwalHtmlDecision(_swalAlertValues)
+		const rptDialogBorrar = await showAlertSwalHtmlDecision(_swalAlertValues1)
 		if ( rptDialogBorrar.isConfirmed ) {
 			xThisHistVenta.$.dialog_comprobante.open();		
 		}

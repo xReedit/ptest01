@@ -546,7 +546,7 @@ var xThisCM,
 var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
 	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false,
 	idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false,
-	countIntiCP = 0, isPassAddRowItemList = false, xLocal_xDtSubTotales_cp;
+	countIntiCP = 0, isPassAddRowItemList = false, xLocal_xDtSubTotales_cp, isProcessRemoveItemPedido = false;
 
 const _fetchApi = new httpFecht();
 
@@ -826,42 +826,16 @@ function xIniControlMesa(){
 
 	//$(".td_op").on('click',function(e){
 	$(document).on('click', '.td_op', function(e) {
+		// si est en proceso de borrado
+		if ( isProcessRemoveItemPedido ) {return;}
+		
 		if($(this).attr('data-procede')!='0'){return;}
+		isProcessRemoveItemPedido = true;
 
 		// const opItem = $(this).attr('data-op');
 		xpass_op=$(this).attr('data-op');
 		xobj_row_item=$(this).parent();
 
-		//agrega item
-		// if ( xpass_op === 'itempedido' ) {
-
-		// 	console.log('agrega item');
-		// 	const _tipoConsumo = xobj_row_item.data().idtipoconsumo;
-		// 	var _cantidad = xobj_row_item.data().cantidad + 1;
-		// 	var _punitario = parseFloat(xobj_row_item.data().punitario);
-		// 	var _importeTotal = parseFloat(_cantidad * _punitario).toFixed(2);
-
-		// 	// seteamos
-		// 	xobj_row_item.data().cantidad = _cantidad;
-		// 	xobj_row_item.data().total = _importeTotal;
-		// 	xobj_row_item.data().total_r = _importeTotal;
-
-		// 	$(xobj_row_item).find('#td_cant').text(xCeroIzq(_cantidad, 2));
-		// 	$(xobj_row_item).find('#td_importe').text(_importeTotal);
-			
-		// 	// setear a select tipo consumo 
-		// 	$("#select_ulTPC").val(_tipoConsumo);
-		// 	handlerFnMiPedidoControl(e);
-
-		// 	console.log('xArrayPedidoObj', xArrayPedidoObj);
-
-		// 	// xArmarSqlAddLUlI();
-			
-
-		// 	e.stopPropagation();
-		// 	e.stopImmediatePropagation();
-		// 	return;
-		// }
 
 		if(xAgrupar_item_activo==true){return;}
 		xArrayItemEliminar=[];
@@ -899,33 +873,12 @@ function xIniControlMesa(){
 			isBtnDeleteRowSuccess: isBtnDeleteRowSuccess			
 		}
 		
-		// console.log('0xCompArraySolitaPermiso', xCompArraySolitaPermiso);
-
-		// verificamos si el elemento con la clase 'btn-delete-row' tiene la clase text-success
-		// si es asi, entonces no se puede eliminar el item
-
-		
-
-		
-		
-		
-
-		//xid_tpc_item=xobj_row_item.attr('data-idtipoconsumo');
-
-		
-
-		/*xid_pedido_detalle_item=xobj_row_item.attr('data-idpedidodetalle');
-		xid_pedido=xobj_row_item.attr('data-idpedido');
-		xid_tpc_item=xobj_row_item.attr('data-idtipoconsumo');
-		xid_cat_item=xobj_row_item.attr('data-idcategoria');
-		xid_carta_lista_de=xobj_row_item.attr('data-idcartalista');
-		xidprocede_item_lista=xobj_row_item.attr('data-procede');
-		xdescontar_en_item_lista=xobj_row_item.attr('data-descontar');
-		xIDdescontar_en_item_lista=xobj_row_item.attr('data-iddescontar');
-		xcant_item=parseFloat(xobj_row_item.find('#td_cant').text());
-		$("#txt_bus_cant").attr('max',xcant_item);*/
 		
 		xOp_permiso();
+
+		setTimeout(() => {
+			isProcessRemoveItemPedido = false;
+		}, 2500);
 		// if(xCronometro_us==0){xPSupervisor.setVal('Pe1'); pass_us.open();}else{xOp_permiso();}
 
 		// event.stopPropagation();
@@ -3158,28 +3111,6 @@ function xOp_permiso(){
 
 	switch(xpass_op){
 		case 'borrar': 
-
-			// // buscamos si existe idpedido_detalle en el storage de solicitud de permiso
-			// const _dataSolicitudPermiso = findStorageSolicudPermisoRemota(xCompArraySolitaPermiso.obj.idpedido_detalle, xCompArraySolitaPermiso.tipo_permiso);
-			// if (_dataSolicitudPermiso) {
-			// 	// si existe solicitud entonces enviamos directamente a borrar
-			// 	xGetPermisoEliminarItem();
-
-			// }
-
-
-			// let isStockProductoRemoveND = false;
-			// try {				
-			// 	isStockProductoRemoveND = xCompArraySolitaPermiso?.obj?.is_cantidad_nd ? xCompArraySolitaPermiso.obj.is_cantidad_nd === '1' : false;			
-			// } catch (error) {			
-			// 	isStockProductoRemoveND = false;	
-			// }
-
-			// if ( !isStockProductoRemoveND ){
-			// 	dialog_borrar_item.open(); 
-			// } else {
-			// 	xGetPermisoEliminarItem();
-			// }
 			xCMCheckPermisoBorrar();
 			break; //if(xCronometro_us>0 && xCronometro_us!=30){dialog_borrar_item.open();}else{xEliminarItemPedido()};break; //solo dialog ya no confirmacion de usuario
 		case 'borrar':dialog_borrar_item.open(); break; // xPermisoSupervisor=xIdUsuario; dialog_borrar_item.open();break;
