@@ -1871,8 +1871,12 @@ function xLoadItemsDetalleCartaALL(){
 
 		// si es producto puede modificar la cantidad
 		// ej: carne x kg  -> 1.5kg
+
+		// si se actualiza stock luego de confirmar el pedido
+		const _checkIsUpdateStockAfter = getVariableSede('update_stock_after') 
+		
 		xCompCant_li2 = '<span class="xcant_li2" data-cantmax="' + xCantidadMax + '">0</span>'
-		if ( xGeneralDataCarta[p].venta_x_peso == "1" ) {
+		if ( xGeneralDataCarta[p].venta_x_peso == "1"  || _checkIsUpdateStockAfter) {
 			xCompCant_li2 = `<input type="text" 
 								pattern="[0-9]+(\.[0-9]+)?"
 								class="xcant_li2 text-center input-modifica input-venta-rapida-mod" 
@@ -1882,6 +1886,8 @@ function xLoadItemsDetalleCartaALL(){
 								onClick="xSetChangeTextModCantidad(this)" data-cantmax="${xCantidadMax}">`
 		}
 
+		
+		
 		
 		xCadenaItems=String(xCadenaItems+'<li id="li2'+xGeneralDataCarta[p].idcarta_lista+'" class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
 												'" data-cat="'+xGeneralDataCarta[p].des_seccion+

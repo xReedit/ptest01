@@ -52,10 +52,23 @@
 </dom-module>
 <script>
 
-    var xThisCompDatePicker;
+    var xThisCompDatePicker, comp_date_month;
 
     function xIniCompDatePicker() {
-        comp_date_month.valueAsDate = new Date();
+        // comp_date_month.valueAsDate = new Date();
+
+        comp_date_month = document.getElementById('comp_date_month');
+        try {
+            if (comp_date_month) {
+                comp_date_month.valueAsDate = new Date();
+            } 
+        } catch (error) {
+            var date = new Date();
+            var month = date.getMonth() + 1; // getMonth() returns a zero-based month, so add 1
+            var year = date.getFullYear();
+            comp_date_month.value = year + '-' + (month < 10 ? '0' : '') + month;
+            console.error('comp_date_month is not defined or not accessible');
+        }                    
 
         // Obtenemos los elementos de fecha por su ID
         const fechaInicioInput = document.getElementById("comp_date_desde");

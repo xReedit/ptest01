@@ -355,7 +355,7 @@
 		<br>
 		<div class="xContent d-flex">
 			<!-- <button onclick="PlaySound('notificaNuevoPedido');">aaa</button> -->									
-
+			<!-- <button onclick="sendPrintServerTest()"> enviar print server</button> -->
 			<div hidden$="[[!showVisibleAreaMesas]]">
 				<x-comp-area-mesa id="comp-area-mesas"></x-comp-area-mesa>
 			</div>
@@ -829,16 +829,17 @@ function xIniControlMesa(){
 		// si est en proceso de borrado
 		if ( isProcessRemoveItemPedido ) {return;}
 		
-		if($(this).attr('data-procede')!='0'){return;}
-		isProcessRemoveItemPedido = true;
+		if($(this).attr('data-procede')!='0'){return;}		
+		if (xAgrupar_item_activo == true) { return; }
 
 		// const opItem = $(this).attr('data-op');
 		xpass_op=$(this).attr('data-op');
 		xobj_row_item=$(this).parent();
 
+		
+		// xArrayItemEliminar=[];
 
-		if(xAgrupar_item_activo==true){return;}
-		xArrayItemEliminar=[];
+		isProcessRemoveItemPedido = true;
 		
 		//var xcantEliminar=xobj_row_item.attr('data-cant_descontar');
 		//if(isNaN(parseInt(xcantEliminar))){xcantEliminar=parseFloat(xobj_row_item.find('#td_cant').text());}
@@ -883,7 +884,8 @@ function xIniControlMesa(){
 
 		// event.stopPropagation();
 		e.stopPropagation();
-		e.stopImmediatePropagation()
+		e.stopImmediatePropagation();		
+		
 	});
 
 	xPSupervisor=document.getElementById('pass_us');
@@ -2020,8 +2022,15 @@ async function xRegistrarClientePagoCP(){
 	// $("#btn_pagoX").attr('disabled', true);
 	// btn_pagoX.disabled = true;
 	// btn_pago.hidden=true;
-	if (enProcesoGuardarPago) {return;}
+	if (enProcesoGuardarPago) {return;}	
 	enProcesoGuardarPago = true;
+
+	let timeEnProcesoGuardarPagoCP  = setTimeout(() => {
+		if ( enProcesoGuardarPago ) {
+			enProcesoGuardarPago = false;
+		}
+	}, 5000);
+	
 	
 	xPopupLoad.titulo="Guardando...";
 	xPopupLoad.xopen();
@@ -2119,6 +2128,7 @@ async function xRegistrarClientePagoCP(){
 			const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
+			clearInterval(timeEnProcesoGuardarPagoCP);
 			xLoadDetallesPedido(xObj_miPedido);
 			// if (isSocket) {
 				_cpSocketPintarPedido(null);
@@ -2176,6 +2186,7 @@ async function xRegistrarClientePagoCP(){
 			const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
 			enProcesoGuardarPago = false;
+			clearInterval(timeEnProcesoGuardarPagoCP);
 			xRegistrarPagoCM(xCantRow);	
 
 			// if (isSocket) {
@@ -3113,7 +3124,7 @@ function xOp_permiso(){
 		case 'borrar': 
 			xCMCheckPermisoBorrar();
 			break; //if(xCronometro_us>0 && xCronometro_us!=30){dialog_borrar_item.open();}else{xEliminarItemPedido()};break; //solo dialog ya no confirmacion de usuario
-		case 'borrar':dialog_borrar_item.open(); break; // xPermisoSupervisor=xIdUsuario; dialog_borrar_item.open();break;
+		// case 'borrar':dialog_borrar_item.open(); break; // xPermisoSupervisor=xIdUsuario; dialog_borrar_item.open();break;
 		case 'cambiar':$('#txt_bus_cant').val(1);$("#txt_espcificacion").val('');$("#list_bus_item").val(''); dialog_cambiar_item.open();break;
 		case 'anular_pedido':xAnularPedido(); break;
 	}
@@ -4924,6 +4935,53 @@ function xShowCantidadPedidosBorrados() {
 
 // 	return contadoLoad > 1 ? false : true;
 // }
+
+
+	// function sendPrintServerTest() {
+
+	// 	// idpedido randon
+	// 	let _idpedido = Math.floor(Math.random() * 1000) + 1;
+
+	// 	let pedido = {
+	// 		detalle_json: '{"Array_enca":{"m":"02","r":"","num_pedido":"00001","idpedido":'+ _idpedido +',"reservar":0,"solo_llevar":0,"delivery":0,"correlativo_dia":"00001","arrDatosDelivery":[],"isFromVR":true,"is_print_subtotales":"1","isprint_copy_short":"0","isprint_all_short":"0","nom_us":"SISTEMA"},"Array_print":[{"var_size_font_tall_comanda":"0","ip_print":"//DESKTOP-KHJ0E16/pcaja1-22","num_copias":"0","pie_pagina":"Buenvenidos, gracias por su preferencia. Presente este ticket al momento de pagar. Muchas gracias.","pie_pagina_comprobante":"Representación impresa del Comprobante de Venta Electrónico esta puede ser consultada en www.papaya.com.pe. Autorizado mediante resolución de intendencia 00000000/SUNAT.","pie_pagina_precuenta":"Si tiene alguna propina danosla con toda la alegria como le atendemos, si le atendimos mal, acusenos con el administrador.","logo":"","logo64":"","des_sede":"EL ASADOR","eslogan":".","mesas":"30","ciudad":"LIMA","isprint_subtotales_comanda":"1","isprint_copy_short":"0","isprint_all_short":"0","isprint_all_delivery":"1","isprint_cpe_short":"1","var_margen_iz":"0","var_size_font":"0","local":0,"copia_local":0,"img64":"0","papel_size":"0"}],"ArrayItem":[{"des":"CONSUMIR EN EL LOCAL","id":"31","titlo":"LOCAL","16131289936":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"16131289936","idtipo_consumo":"31","stock_actual":"50","cantidad":1,"precio":"20.00","des":"ASADO CON PAPAS","precio_total":"20.00","precio_total_calc":"20.00","precio_print":"","indicaciones":"","iditem2":"936","idimpresora":"38","idimpresora_otro":"0","idprocede":"16131289936","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"50","precio_unitario":"20.00","detalle":"","subitems":"936","subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"16131289936"},"161312891015":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"161312891015","idtipo_consumo":"31","stock_actual":"48","cantidad":1,"precio":"15.00","des":"BISTEC ESPECIAL A LA PLANCHA","precio_total":"15.00","precio_total_calc":"15.00","precio_print":"","indicaciones":"","iditem2":"1015","idimpresora":"38","idimpresora_otro":"0","idprocede":"161312891015","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"48","precio_unitario":"15.00","detalle":"","subitems":null,"subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"161312891015"},"161312891041":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"161312891041","idtipo_consumo":"31","stock_actual":"49","cantidad":1,"precio":"20.00","des":"FILETE DE POLLO CON ENSALADA","precio_total":"20.00","precio_total_calc":"20.00","precio_print":"","indicaciones":"","iditem2":"1041","idimpresora":"38","idimpresora_otro":"0","idprocede":"161312891041","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"49","precio_unitario":"20.00","detalle":"","subitems":null,"subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"161312891041"},"16131289961":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"16131289961","idtipo_consumo":"31","stock_actual":"48","cantidad":1,"precio":"15.00","des":"HAWAIANA CON PIÑA AAA","precio_total":"15.00","precio_total_calc":"15.00","precio_print":"","indicaciones":"","iditem2":"961","idimpresora":"38","idimpresora_otro":"0","idprocede":"16131289961","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"48","precio_unitario":"15.00","detalle":"","subitems":"961","subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"16131289961"}}],"ArraySubTotales":[{"descripcion":"Sub Total","importe":"70.00","visible":true,"quitar":false,"visible_cpe":true},{"id":"p13","descripcion":"I.G.V","importe":"0.00","esImpuesto":"1","visible":true,"quitar":false,"tachado":false,"visible_cpe":true},{"descripcion":"Total","importe":"70.00","visible":true,"visible_cpe":true}]}',
+	// 		idprint_server_estructura: 1,
+	// 		tipo: 'comanda',
+	// 		descripcion_doc: 'comanda',
+	// 		nom_documento: 'comanda',
+	// 		idprint_server_detalle: _idpedido,
+	// 		hora: '17:32:23'
+	// 	}
+
+	// 	_cpSocketprinterOnly(pedido)
+
+	// 	// ip
+	// 	_idpedido = Math.floor(Math.random() * 1000) + 1;
+	// 	pedido = {
+	// 		detalle_json: '{"Array_enca":{"m":"02","r":"","num_pedido":"00001","idpedido":'+ _idpedido +',"reservar":0,"solo_llevar":0,"delivery":0,"correlativo_dia":"00001","arrDatosDelivery":[],"isFromVR":true,"is_print_subtotales":"1","isprint_copy_short":"0","isprint_all_short":"0","nom_us":"SISTEMA"},"Array_print":[{"var_size_font_tall_comanda":"0","ip_print":"pcaja1","num_copias":"0","pie_pagina":"Buenvenidos, gracias por su preferencia. Presente este ticket al momento de pagar. Muchas gracias.","pie_pagina_comprobante":"Representación impresa del Comprobante de Venta Electrónico esta puede ser consultada en www.papaya.com.pe. Autorizado mediante resolución de intendencia 00000000/SUNAT.","pie_pagina_precuenta":"Si tiene alguna propina danosla con toda la alegria como le atendemos, si le atendimos mal, acusenos con el administrador.","logo":"","logo64":"","des_sede":"EL ASADOR","eslogan":".","mesas":"30","ciudad":"LIMA","isprint_subtotales_comanda":"1","isprint_copy_short":"0","isprint_all_short":"0","isprint_all_delivery":"1","isprint_cpe_short":"1","var_margen_iz":"0","var_size_font":"0","local":0,"copia_local":0,"img64":"0","papel_size":"0"}],"ArrayItem":[{"des":"CONSUMIR EN EL LOCAL","id":"31","titlo":"LOCAL","16131289936":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"16131289936","idtipo_consumo":"31","stock_actual":"50","cantidad":1,"precio":"20.00","des":"ASADO CON PAPAS","precio_total":"20.00","precio_total_calc":"20.00","precio_print":"","indicaciones":"","iditem2":"936","idimpresora":"38","idimpresora_otro":"0","idprocede":"16131289936","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"50","precio_unitario":"20.00","detalle":"","subitems":"936","subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"16131289936"},"161312891015":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"161312891015","idtipo_consumo":"31","stock_actual":"48","cantidad":1,"precio":"15.00","des":"BISTEC ESPECIAL A LA PLANCHA","precio_total":"15.00","precio_total_calc":"15.00","precio_print":"","indicaciones":"","iditem2":"1015","idimpresora":"38","idimpresora_otro":"0","idprocede":"161312891015","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"48","precio_unitario":"15.00","detalle":"","subitems":null,"subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"161312891015"},"161312891041":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"161312891041","idtipo_consumo":"31","stock_actual":"49","cantidad":1,"precio":"20.00","des":"FILETE DE POLLO CON ENSALADA","precio_total":"20.00","precio_total_calc":"20.00","precio_print":"","indicaciones":"","iditem2":"1041","idimpresora":"38","idimpresora_otro":"0","idprocede":"161312891041","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"49","precio_unitario":"20.00","detalle":"","subitems":null,"subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"161312891041"},"16131289961":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"16131289961","idtipo_consumo":"31","stock_actual":"48","cantidad":1,"precio":"15.00","des":"HAWAIANA CON PIÑA AAA","precio_total":"15.00","precio_total_calc":"15.00","precio_print":"","indicaciones":"","iditem2":"961","idimpresora":"38","idimpresora_otro":"0","idprocede":"16131289961","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"48","precio_unitario":"15.00","detalle":"","subitems":"961","subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"16131289961"}}],"ArraySubTotales":[{"descripcion":"Sub Total","importe":"70.00","visible":true,"quitar":false,"visible_cpe":true},{"id":"p13","descripcion":"I.G.V","importe":"0.00","esImpuesto":"1","visible":true,"quitar":false,"tachado":false,"visible_cpe":true},{"descripcion":"Total","importe":"70.00","visible":true,"visible_cpe":true}]}',
+	// 		idprint_server_estructura: 1,
+	// 		tipo: 'comanda',
+	// 		descripcion_doc: 'comanda',
+	// 		nom_documento: 'comanda',
+	// 		idprint_server_detalle: _idpedido,
+	// 		hora: '17:32:23'
+	// 	}
+
+	// 	_cpSocketprinterOnly(pedido)
+
+	// 	_idpedido = Math.floor(Math.random() * 1000) + 1;
+	// 	pedido = {
+	// 		detalle_json: '{"Array_enca":{"m":"02","r":"","num_pedido":"00001","idpedido":' + _idpedido + ',"reservar":0,"solo_llevar":0,"delivery":0,"correlativo_dia":"00001","arrDatosDelivery":[],"isFromVR":true,"is_print_subtotales":"1","isprint_copy_short":"0","isprint_all_short":"0","nom_us":"SISTEMA"},"Array_print":[{"var_size_font_tall_comanda":"0","ip_print":"192.168.1.219","num_copias":"0","pie_pagina":"Buenvenidos, gracias por su preferencia. Presente este ticket al momento de pagar. Muchas gracias.","pie_pagina_comprobante":"Representación impresa del Comprobante de Venta Electrónico esta puede ser consultada en www.papaya.com.pe. Autorizado mediante resolución de intendencia 00000000/SUNAT.","pie_pagina_precuenta":"Si tiene alguna propina danosla con toda la alegria como le atendemos, si le atendimos mal, acusenos con el administrador.","logo":"","logo64":"","des_sede":"EL ASADOR","eslogan":".","mesas":"30","ciudad":"LIMA","isprint_subtotales_comanda":"1","isprint_copy_short":"0","isprint_all_short":"0","isprint_all_delivery":"1","isprint_cpe_short":"1","var_margen_iz":"0","var_size_font":"0","local":0,"copia_local":0,"img64":"0","papel_size":"0"}],"ArrayItem":[{"des":"CONSUMIR EN EL LOCAL","id":"31","titlo":"LOCAL","16131289936":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"16131289936","idtipo_consumo":"31","stock_actual":"50","cantidad":1,"precio":"20.00","des":"ASADO CON PAPAS","precio_total":"20.00","precio_total_calc":"20.00","precio_print":"","indicaciones":"","iditem2":"936","idimpresora":"38","idimpresora_otro":"0","idprocede":"16131289936","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"50","precio_unitario":"20.00","detalle":"","subitems":"936","subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"16131289936"},"161312891015":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"161312891015","idtipo_consumo":"31","stock_actual":"48","cantidad":1,"precio":"15.00","des":"BISTEC ESPECIAL A LA PLANCHA","precio_total":"15.00","precio_total_calc":"15.00","precio_print":"","indicaciones":"","iditem2":"1015","idimpresora":"38","idimpresora_otro":"0","idprocede":"161312891015","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"48","precio_unitario":"15.00","detalle":"","subitems":null,"subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"161312891015"},"161312891041":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"161312891041","idtipo_consumo":"31","stock_actual":"49","cantidad":1,"precio":"20.00","des":"FILETE DE POLLO CON ENSALADA","precio_total":"20.00","precio_total_calc":"20.00","precio_print":"","indicaciones":"","iditem2":"1041","idimpresora":"38","idimpresora_otro":"0","idprocede":"161312891041","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"49","precio_unitario":"20.00","detalle":"","subitems":null,"subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"161312891041"},"16131289961":{"idcategoria":"14","idseccion":"89","idseccion_index":"11.89","sec_orden":"1","des_seccion":"A LA PARRILLA","iditem":"16131289961","idtipo_consumo":"31","stock_actual":"48","cantidad":1,"precio":"15.00","des":"HAWAIANA CON PIÑA AAA","precio_total":"15.00","precio_total_calc":"15.00","precio_print":"","indicaciones":"","iditem2":"961","idimpresora":"38","idimpresora_otro":"0","idprocede":"16131289961","procede":"1","procede_index":"0","imprimir_comanda":"1","cant_descontar":"1","idalmacen_items":"0","visible":0,"pwa":1,"isporcion":"48","precio_unitario":"15.00","detalle":"","subitems":"961","subitem_required_select":"0","subitem_cant_select":"0","subitems_view":null,"venta_x_peso":"0","idcarta_lista":"16131289961"}}],"ArraySubTotales":[{"descripcion":"Sub Total","importe":"70.00","visible":true,"quitar":false,"visible_cpe":true},{"id":"p13","descripcion":"I.G.V","importe":"0.00","esImpuesto":"1","visible":true,"quitar":false,"tachado":false,"visible_cpe":true},{"descripcion":"Total","importe":"70.00","visible":true,"visible_cpe":true}]}',
+	// 		idprint_server_estructura: 1,
+	// 		tipo: 'comanda',
+	// 		descripcion_doc: 'comanda',
+	// 		nom_documento: 'comanda',
+	// 		idprint_server_detalle: _idpedido,
+	// 		hora: '17:32:23'
+	// 	}
+
+	// 	_cpSocketprinterOnly(pedido)
+
+	// }
 
 
 Polymer({

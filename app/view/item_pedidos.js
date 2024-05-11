@@ -353,30 +353,13 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 			//si tiene subtiems lanza el popup opciones // en control de pedidos no lanza subopciones
 			if (isShowOpcionesPrimero && itemPedidos_objItemSelected.subitems) { 
 				if (itemPedidos_objItemSelected.subitems !== '0' ) {
-					xCompSubitems.openDialog(null, _itemIndex);  
-					return; 
+					// if (itemPedidos_objItemSelected.opciones){
+						xCompSubitems.openDialog(null, _itemIndex);  
+						return; 
+					// }
 				}
 			} 
 			
-			// else {
-
-			// 	if (isShowOpcionesPrimero) { 
-			// 		// isLoadingSubItems = true;
-			// 		// pedir al control devolver si tiene subitems para mostar dialog
-			// 		// xCompSubitems.getSubtItemsItemById(itemPedidos_objItemSelected.iditem);
-			// 		// console.log('data', _data);
-			// 		xCompSubitems.getSubtItemsItemById(itemPedidos_objItemSelected.iditem).then(resSubItems => {
-			// 			resSubItems = resSubItems?.length > 0 ? true : false;
-			// 			if ( resSubItems ) {
-			// 				xCompSubitems.openDialog(null, _itemIndex);  
-			// 				return; 
-			// 			}
-			// 			//  else {
-			// 			// 	isLoadingSubItems = false;
-			// 			// }		
-			// 		});
-			// 	} 
-			// }
 			
 		}
 
