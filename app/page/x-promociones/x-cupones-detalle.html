@@ -1,0 +1,475 @@
+<dom-module id="x-cupones-detalle">
+    <link rel="import" href="../../x-componentes/x-comp-find-item-producto/x-comp-find-item-producto.html">
+    <link rel="import" href="../../x-componentes/x-comp-find-seccion/x-comp-find-seccion.html">
+    <script src="../../view/httpFech.js"></script>
+    <template>
+        <style>
+            .conent-grid-two {
+                width: 100%;
+                display: grid;
+                grid-gap: 1rem;
+                margin: 0 auto;
+                grid-template-columns: 1fr 1fr;
+            }
+        
+            .div-child {
+                max-width: 360px;
+            }
+        
+            .div-content-img {
+                display: flex;
+                flex-wrap: wrap;
+                max-width: 560px;
+                margin-bottom: 20px;
+            }
+        
+            .div-content-img img {
+                padding-right: 10px;
+                margin: auto;
+            }
+        </style>
+        <br>
+        <div class="xMiCard xradius" style="width:94%; max-width: 1300px;">
+            <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                <div class="d-flexx justify-content-between">
+                    <div>
+                        <p class="fs-18 fw-600">Detalle del Cupon</p>                    
+                        <p>Una vez que se registre la venta, los cupones se imprimirán automáticamente. Además, si proporcionas el número de
+                            teléfono del cliente, el cupón también se enviará de forma virtual al WhatsApp del cliente. De esta manera, el
+                            cliente puede recibir su cupón tanto en formato físico como digital.</p>
+                    </div>
+                    <div class="pl-4">
+                        <button class="btn btn-sm btn-secondary" on-click="close">Atras</button>
+                    </div>
+                </div>
+            </div>
+            <div class="xLinea2"></div>
+            <br>
+            <div class="xContentCard" style="padding: 20px;">
+                <div class="conent-grid-two">                
+                    <div class="div-child">
+                        <p class="fw-600">Titulo</p>
+                        <input type="text" class="selected-template-1 w-100" placeholder="Titulo" onChange="conMayusculas(this)" id="titulo"
+                            on-input="computeFormValid" required>
+                        <br><br>
+                        <p class="fw-600">Descripcion</p>
+                        <textarea class="selected-template-1 w-100" maxlength="250" rows="4" id="descripcion" on-input="computeFormValid" required></textarea>
+                        <br><br>
+
+                        
+                        <div>
+                            <label class="d-flexx align-items-start xCursor">
+                                <input type="radio" name="grupoOption" value="opcion1" checked$="[[isGeneracionAutomatica]]" on-change="handleOptionGeneracionChange">
+                                <div>
+                                    <p class="fw-600">Generación Automatica</p>
+                                    <p class="fw-100 text-secondary">Tras cada transacción de venta completada, el sistema generará automáticamente un código de cupón único.</p>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="d-flexx align-items-start xCursor">
+                                <input type="radio" name="grupoOption" value="opcion2" on-change="handleOptionGeneracionChange" checked$="[[!isGeneracionAutomatica]]">
+                                <div>
+                                    <p class="fw-600">Generación Manual</p>
+                                    <p class="fw-100 text-secondary">El código de cupón se genera de forma manual.</p>
+                                </div>
+                            </label>
+                        </div>
+                        <br>
+                        <br>
+                        <div hidden$="[[isGeneracionAutomatica]]">
+                            <p class="fw-600">Ingresa el código del cupón</p>
+                            <p class="fw-100 text-secondary">Por ejemplo: <strong>DIAPADRE</strong> o <strong>FIESTA-BLANCA</strong>. El código
+                                debe tener un minimo de 5 caracteres.</p>
+                            <input type="text" onChange="conMayusculas(this)" on-input="computeFormValid" class="selected-template-1" id="codigo_cupon" placeholder="CÓDIGO DEL CUPÓN" maxlength="10" minlength="5"
+                                required>
+                        </div>
+                        
+
+
+                    </div>
+
+                    <div class="div-child">                                 
+                        <p class="fw-600">Fecha de Inicio</p>
+                        <input type="date" on-input="computeFormValid" class="selected-template-1" id="fecha_inicio" required>
+                        <br><br>
+                        <p class="fw-600">Fecha de Fin</p>
+                        <input type="date" on-input="computeFormValid" class="selected-template-1" id="fecha_fin" required>
+                        
+                        <br><br>
+                        <p class="fw-600">Fecha de lanzamiento</p>                    
+                        <p class="text-secondary">Fecha a partir de la cual se empezarán a generar los cupones.</p>
+                        <input type="date" on-input="computeFormValid" class="selected-template-1" id="fecha_inicio_emitir" required>
+                        
+                        <br><br>
+                        <p class="fw-600">Cantidad máxima de cupones a canjear</p>
+                        <p class="fw-100 text-secondary">Establece el límite de cuántos cupones se pueden canjear. Si se establece en 0, todos
+                            los cupones generados pueden ser canjeados.</p>
+                        <input type="number" on-input="computeFormValid" class="selected-template-1" id="cantidad_maxima" value="0" required>
+                    </div>
+                </div>
+            
+                <br><br>
+                <div class="xLinea2"></div>
+                <br><br>
+                <div class="w-100">
+                    <div>
+                        <div>
+                            <p class="fs-16">Lista</p>
+                            <p class="text-secondary">Agregue las secciones o items de la carta, o productos de bodega que forman parte
+                                de la promoción.</p>
+                        </div>
+                    </div>
+                    <br>
+                    <div>
+                        <table class="w-100">
+                            <thead>
+                                <th width="8%">Tipo</th>
+                                <th width="45%">Producto / Item / Seccion</th>
+                                <th width="8%">Tipo descuento</th>                            
+                                <th width="8%">Descuento</th>
+                                <th width="8%">Precio</th>
+                                <th width="8%">Precio Decuento</th>
+                                <th aling="right"></th>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td width="8%">
+                                        <select class="selected-template-1" id="selTipoProducto" on-change="selTipo">
+                                            <option value="0">Item / Producto</option>
+                                            <option value="2">Sección</option>
+                                        </select>
+                                    </td>
+                                    <td width="45%">
+                                        <div hidden$="[[ !isShowProductoItem ]]">
+                                            <x-comp-find-item-producto onlynomproducto="true" on-selected="selCompProductoItem" clasecss="selected-template-1 w-100" id="compItemProductoCupon"></x-comp-find-item-producto>
+                                        </div>
+                                        <div hidden$="[[ isShowProductoItem ]]">
+                                            <x-comp-find-seccion on-selected="selCompSeccion" clasecss="selected-template-1 w-100" id="compFindSeccionCupon"></x-comp-find-seccion>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <select class="selected-template-1" id="selTipoDescuento" on-change="selChangeTipoDescuento">
+                                            <option value="0">PORCENTUAL</option>
+                                            <option value="1">FIJO</option>
+                                        </select>
+                                    </td>
+                                    <td width="8%">
+                                        <input style="width: 50px;" type="number" class="selected-template-1" id="descuento" on-keyup="calcPrecioDescuento" on-change="calcPrecioDescuento" required>
+                                    </td>
+                                    <td width="8%">
+                                        <input style="width: 50px;" type="number" disabled class="selected-template-1" id="precio" required>
+                                    </td>
+                                    <td width="8%">
+                                        <input style="width: 50px;"type="number" disabled class="selected-template-1" id="precio_final" required>
+                                    </td>
+                                    <td aling="right">
+                                        <button class="btn btn-sm btn-info" on-click="addDetalle">+</button>
+                                    </td>
+                                </tr>           
+                                <template is="dom-repeat" items="{{listDetalle}}">
+                                    <tr>
+                                        <td>{{item.descripcion_tipo}}</td>
+                                        <td>{{item.descripcion_producto}}</td>
+                                        <td>{{item.descripcion_tipo_descuento}}</td>
+                                        <td>{{item.descuento}}</td>
+                                        <td>{{item.precio}}</td>
+                                        <td>{{item.precio_final}}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" on-click="removeItem">-</button>
+                                        </td>
+                                    </tr>
+                                </template>                 
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <br><br>
+                <div class="xLinea2"></div>
+                <br><br>
+                <div>
+                    <button class="btn btn-primary mr-2" on-click="saveCupon" disabled$="[[!isFormValid]]">Listo Guardar</button>
+                    <button class="btn btn-dark" on-click="close">Cancelar</button>
+                </div>
+            </div>
+            <br><br>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'x-cupones-detalle',
+            properties: {         
+                listDetalle: {
+                    type: Object,
+                    notify: true
+                },
+                showPrecio: {
+                    type: Boolean,
+                    value: false
+                },
+                isShowProductoItem : {
+                    type: Boolean,
+                    value: true
+                },
+                isFormValid: {
+                    type: Boolean,
+                    value: false
+                },
+                idCuponModicar: {
+                    type: Number,
+                    value: 0
+                },
+                isGeneracionAutomatica: {
+                    type: Boolean,
+                    value: true
+                }
+            },
+            computeFormValid: function() {
+                // verificar si titulo y descripcion están llenos
+                let _isFormValid = true;
+                if (!this.$.titulo.value && !this.$.descripcion.value) {
+                    _isFormValid = false;
+                }
+                // verificar si la lista de detalle está vacía
+                if (this.listDetalle.length == 0) {
+                    _isFormValid = false;
+                }
+
+                // verificar que los campos date este llenos
+                if (!this.$.fecha_inicio.value || !this.$.fecha_fin.value || !this.$.fecha_inicio_emitir.value) {
+                    _isFormValid = false;
+                }
+
+                if ( !this.isGeneracionAutomatica ) {
+                    if (!this.$.codigo_cupon.value) {
+                        _isFormValid = false;
+                    }
+                }
+
+                this.isFormValid = _isFormValid;
+                
+                return this.isFormValid;
+            },
+            ready: function() {
+                this.listDetalle = [];
+                this.showPrecio = false
+                this.isFormValid = false
+                this.isGeneracionAutomatica = true
+            },
+            selTipo: function(e) { // item / producto = 0, seccion = 1
+                if (e.target.value == 0) {
+                    this.showPrecio = true
+                    this.isShowProductoItem = true                                        
+                    this.$.precio.value = ''
+                    this.$.precio_final.value = ''
+                } else {
+                    this.showPrecio = false
+                    this.isShowProductoItem = false                    
+                    this.$.precio.value = ''
+                    this.$.precio_final.value = ''
+                }
+                this.calcPrecioDescuento();
+            },
+            selChangeTipoDescuento: function(e) {
+                this.calcPrecioDescuento();
+            },
+            addDetalle: function() {
+                let detalle = {};
+                const selTipoProducto = this.$.selTipoProducto.value;
+                const compItemProducto = this.$.compItemProductoCupon.getelementSeletedAlmacen();
+                const compFindSeccion = this.$.compFindSeccionCupon.getSeccion();
+                const descuento = this.$.descuento.value;
+                const precio = this.$.precio.value;
+                const precio_final = this.$.precio_final.value;
+                const tipoDescuento = this.$.selTipoDescuento.value;
+                let iditem = null;
+                let idseccion = null;
+                let idproducto_stock = null;
+                let descripcion_tipo = 'SECCION';
+                let descripcion_producto = ''
+
+                if (selTipoProducto !== '2') {
+                    iditem = compItemProducto.procede == '0' ? compItemProducto.iditem : null;
+                    idproducto_stock = compItemProducto.procede == '1' ? compItemProducto.iditem : null;
+                    descripcion_tipo = iditem ? 'ITEM' : 'PRODUCTO';
+                    const countSplit = compItemProducto.label.split('|');
+                    descripcion_producto = countSplit[countSplit.length - 1];
+                } else {                    
+                    descripcion_producto = compFindSeccion.descripcion;
+                    idseccion = compFindSeccion.idseccion;
+                }
+                     
+                detalle.descuento = descuento;
+                detalle.precio = precio;
+                detalle.precio_final = precio_final;
+                detalle.tipo_descuento = tipoDescuento;
+                detalle.descripcion_tipo_descuento = tipoDescuento == 0 ? 'PORCENTUAL' : 'FIJO';
+                detalle.iditem = iditem;
+                detalle.idproducto_stock = idproducto_stock;
+                detalle.idseccion = idseccion;
+                detalle.descripcion_tipo = descripcion_tipo;
+                detalle.descripcion_producto = descripcion_producto.trim();
+                detalle.is_automatico = this.isGeneracionAutomatica ? 1 : 0;
+                detalle.cantidad_maxima = this.$.cantidad_maxima.value;
+                detalle.cupon_manual = this.$.codigo_cupon.value || '';
+
+                
+
+                
+                
+                console.log('detalle', detalle);
+                this.listDetalle.push(detalle);
+                this.listDetalle = [...this.listDetalle];
+
+                this.computeFormValid();
+            },
+            removeItem: function(e) {
+                const index = e.model.index;
+                this.listDetalle.splice(index, 1);
+                this.listDetalle = [...this.listDetalle];
+                this.computeFormValid();
+            },
+            selCompProductoItem: function(e) {
+                console.log('e', e);     
+                this.$.precio.value = e.detail.precio;           
+            },
+            selCompSeccion: function(e) {
+                console.log('e', e);
+                this.$.precio.value = e.detail.precio;
+                this.calcPrecioDescuento();
+            },
+            calcPrecioDescuento: function() {
+                let descuento = this.$.descuento.value;
+                let precio = this.$.precio.value;
+
+                if (!descuento || isNaN(descuento)) {
+                    descuento = 0
+                }
+                if (!precio || isNaN(precio)) {
+                    precio=0
+                }
+
+                // Conversión a número
+                descuento = Number(descuento);
+                precio = Number(precio);
+
+                let precio_final = 0;
+
+                // verificar si el tipo de descuento es porcentual
+                if (this.$.selTipoDescuento.value == 0) {
+                    if (descuento > 100) {
+                        descuento = 100;
+                        this.$.descuento.value = 100;
+                    }
+                    precio_final = precio - (precio * descuento / 100);
+                    // redondear a 2 decimales
+                    precio_final = Math.round(precio_final * 100) / 100;
+                } else {
+                    precio_final = precio - descuento;                
+                }
+
+                // el precio de descuento no puede ser menor a 0
+                if (precio_final < 0) {
+                    precio_final = 0;
+                }
+                
+                this.$.precio_final.value = precio_final;
+            },
+            saveCupon: async function() {
+                const dataSend={                    
+                        titulo: this.$.titulo.value,
+                        descripcion: this.$.descripcion.value,
+                        fecha_inicio: this.$.fecha_inicio.value,
+                        fecha_fin: this.$.fecha_fin.value,
+                        fecha_inicio_emitir: this.$.fecha_inicio_emitir.value,
+                        cantidad_maxima: this.$.cantidad_maxima.value,
+                        is_automatico: this.isGeneracionAutomatica ? 1 : 0,
+                        cupon_manual: this.$.codigo_cupon.value,  
+                        idcupon: this.idCuponModicar,                      
+                        listDetalle: this.listDetalle                    
+                }
+
+                const http = new httpFecht();
+
+                const rpt =  await http.axiosExecuteJSON({
+                    url: '../../bdphp/log_009.php?op=60',
+                    method: 'POST',
+                    data: dataSend                    
+                });
+                
+                this.fire('close');
+            },
+            close: function() {
+                this.fire('close');
+            },
+            cuponModificar(idCuponModicar) {
+                this.idCuponModicar = idCuponModicar;
+
+                // load data
+                this.loadDataCupon();
+            },
+            loadDataCupon: async function() {
+                const http = new httpFecht();
+                const rpt = await http.axiosExecuteJSON({
+                    url: '../../bdphp/log_009.php?op=6002',
+                    method: 'POST',
+                    data: {idcupon: this.idCuponModicar}                    
+                });
+
+                console.log('rpt', rpt);
+                const cupon = rpt.cupon[0];
+                const listDetalle = rpt.list;
+                this.$.titulo.value = cupon.titulo;
+                this.$.descripcion.value = cupon.descripcion;
+                this.$.fecha_inicio.value = cupon.fecha_inicio;
+                this.$.fecha_fin.value = cupon.fecha_termina;
+                this.$.fecha_inicio_emitir.value = cupon.fecha_inicio_emitir;                
+                this.$.cantidad_maxima.value = cupon.cantidad_maxima;
+                this.isGeneracionAutomatica = cupon.is_automatico == '1' ? true : false;
+                this.$.codigo_cupon.value = cupon.cupon_manual;
+                console.log('listDetalle', listDetalle);
+
+                this.listDetalle = []
+                listDetalle.map((item) => {
+                    const rowItem = {
+                        idcupon_detalle: item.idcupon_detalle,
+                        descuento: item.dsct,
+                        precio: item.precio,
+                        precio_final: item.precio_final,
+                        tipo_descuento: item.tipo_dsct,
+                        descripcion_tipo_descuento: item.tipo_dsct == '0' ? 'PORCENTUAL' : 'FIJO',
+                        iditem: item.iditem,
+                        idproducto_stock: item.idproducto_stock,
+                        idseccion: item.idseccion,
+                        descripcion_tipo: item.tipo,
+                        descripcion_producto: item.descripcion,
+                        cantidad_maxima: item.cantidad_maxima,
+                        is_automatico: item.is_automatico,
+                        cupon_manual: item.cupon_manual
+                    }
+                    
+                    this.listDetalle.push(rowItem);
+                });
+
+                this.listDetalle = [...this.listDetalle];
+            },
+            nuevoCupon() {
+                this.idCuponModicar = 0;
+                this.$.titulo.value = '';
+                this.$.descripcion.value = '';
+                this.$.fecha_inicio.value = '';
+                this.$.fecha_fin.value = '';
+                this.$.fecha_inicio_emitir.value = '';
+                this.$.cantidad_maxima.value = 0;
+                this.isGeneracionAutomatica = true;
+                this.$.codigo_cupon.value = '';
+
+                this.listDetalle = [];
+                this.computeFormValid();
+            },
+            handleOptionGeneracionChange: function (e) {
+                this.isGeneracionAutomatica = e.target.value === 'opcion1';
+            }
+        });
+    </script>
+</dom-module>

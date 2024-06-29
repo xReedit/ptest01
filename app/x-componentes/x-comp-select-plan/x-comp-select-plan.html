@@ -8,7 +8,7 @@
         <div>       
           <select id="compFindlistPlan" class$="[[clasecss]]" onchange="selectOptionPlan()">
             <template is="dom-repeat" items="{{listPlan}}" as="sede">
-              <option value="[[index]]">[[sede.descripcion]] </option>
+              <option value="[[index]]">[[sede.descripcion]] | [[sede.importe]]</option>
             </template>
           </select>
         </div>
@@ -93,6 +93,10 @@
         },
         getValorIncial: function(plan) {
             this.fire('getValorIncial', {planes: plan});
+        },
+        getPlanSeleted: function() {
+            const index = xThisComPlan.$.compFindlistPlan.value;
+            return xThisComPlan.listPlan[index];
         }
     })
     </script>

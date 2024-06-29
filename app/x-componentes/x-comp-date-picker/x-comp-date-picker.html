@@ -77,23 +77,27 @@
         // Función para habilitar fechaFin y establecer el rango máximo de 2 meses
         fechaInicioInput.addEventListener("change", function () {
             // Obtenemos la fecha seleccionada en fechaInicio
-            const fechaInicio = new Date(this.value);
-            
+            try {                            
+                const fechaInicio = new Date(this.value);
+                
 
-            // Calculamos la fecha mínima permitida (2 meses hacia atrás)
-            const fechaMinima = new Date(fechaInicio);
-            fechaMinima.setMonth(fechaMinima.getMonth() - 2);
+                // Calculamos la fecha mínima permitida (2 meses hacia atrás)
+                const fechaMinima = new Date(fechaInicio);
+                fechaMinima.setMonth(fechaMinima.getMonth() - 2);
 
-            // Calculamos la fecha máxima permitida (2 meses hacia adelante)
-            const fechaMaxima = new Date(fechaInicio);
-            fechaMaxima.setMonth(fechaMaxima.getMonth() + 2);
-            
-            // Establecemos los atributos min y max en fechaFin
-            fechaFinInput.setAttribute("min", fechaMinima.toISOString().split("T")[0]);
-            fechaFinInput.setAttribute("max", fechaMaxima.toISOString().split("T")[0]);
+                // Calculamos la fecha máxima permitida (2 meses hacia adelante)
+                const fechaMaxima = new Date(fechaInicio);
+                fechaMaxima.setMonth(fechaMaxima.getMonth() + 2);
+                
+                // Establecemos los atributos min y max en fechaFin
+                fechaFinInput.setAttribute("min", fechaMinima.toISOString().split("T")[0]);
+                fechaFinInput.setAttribute("max", fechaMaxima.toISOString().split("T")[0]);
 
-            // Habilitamos fechaFin
-            fechaFinInput.disabled = false;
+                // Habilitamos fechaFin
+                fechaFinInput.disabled = false;
+            } catch (error) {
+
+            }
         });
 
     }

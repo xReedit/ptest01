@@ -129,9 +129,9 @@
 									<br><br>
 									<p><strong>Temporal (url_api_fac)</strong></p>							
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="URL api facturador" id="url_api_fac" name="url_api_fac" espaciar>	
-		
-									<br><br>
-									<p><strong>Escenario</strong></p>
+
+									<br><br><br>
+									<!-- <p><strong>Escenario</strong></p>
 									<select id="selTipo" class="xCursor">
 										<option value="PRUEBAS">PRUEBAS</option>
 										<option value="PRODUCCION">PRODUCCION</option>
@@ -140,19 +140,63 @@
 
 									<p>COMISION FIJO MENSUAL</p>
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="COSTO FIJO MENSUAL" id="costo_restobar_fijo_mensual" name="costo_restobar_fijo_mensual" espaciar>
-									<br><br><br><br>
+									<br><br><br><br> -->
 
 
 									<!-- configuracioon cobro del servicio -->
-									<p class="fw-600">COBRO DEL SERVICIO</p>
+									<p class="fw-600 text-primary">SUSCRIPCION</p>
 									<hr>
-									<p>Plan contratado:</p>
-									<x-comp-select-plan clasecss="selected-template-1" id="compPlanSelect" onchange="changePlan(planes)"></x-comp-select-plan>					
+									<div class="d-flexx">
+										<div class="pr-2">
+											<p>Plan contratado:</p>
+											<x-comp-select-plan clasecss="selected-template-1" id="compPlanSelect" onchange="changePlan(planes)"></x-comp-select-plan>
+										</div>
+										<div>
+											<p>Entorno:</p>
+											<select id="selTipo" class="selected-template-1 xCursor">
+												<option value="PRUEBAS">PRUEBAS</option>
+												<option value="PRODUCCION">PRODUCCION</option>
+											</select>
+										</div>
+									</div>
+									<br>									
+									<div class="d-flexx">
+										<div class="pr-2">
+											<p>Periodo:</p>
+											<select id="selPeriodo" class="selected-template-1 xCursor">
+												<option value="MENSUAL">MENSUAL</option>
+												<option value="SEMESTRAL">SEMESTRAL</option>
+												<option value="ANUAL">ANUAL</option>
+											</select>
+										</div>
+										<div class="pr-2">
+											<p>Fecha Inicio:</p>
+											<input type="date" class="selected-template-1 xPasarEnter2" placeholder="YYYY-MM-DD" id="fecha_inicio" name="" espaciar>
+										</div>
+										<div>
+											<p>Ultimo Mes Pago:</p>
+											<input type="month" class="selected-template-1 xPasarEnter2" id="sus_ultimo_mes_pago"
+												espaciar>
+										</div>
+									</div>
+									<br>
+									<div class="d-flexx">
+										<div class="pr-3">
+											<p>Nombre Contacto:</p>
+											<input type="text" class="selected-template-1 xPasarEnter2" placeholder="NOMBRE CONTACTO" id="sus_nombre_contacto" espaciar>
+										</div>										
+										<div>
+											<p>Telefono Contacto -separa por comas-:</p>
+											<input type="text" class="selected-template-1 xPasarEnter2" placeholder="TELEFONO CONTACTO" id="sus_telefono_contacto" espaciar>
+										</div>
+									</div>
+
 									
 									<br><br>
+									<hr>
 									
-									<p>Ultimo mes que pago, formato (año-mes-dia)</p>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="YYYY-MM-DD" id="umf_pago" name="umf_pago" espaciar>
+									<!-- <p>Ultimo mes que pago, formato (año-mes-dia)</p>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="YYYY-MM-DD" id="umf_pago" name="umf_pago" espaciar> -->
 
 									<br><br>
 									<p>Tipo de Contribuyente, PN = PERSONA NATURAL  O PJ= PERSONA JURIDICA</p>
@@ -175,6 +219,9 @@
 										<input type="text" id="idorg" name="idorg" value$="{{xIdOrg}}">
 										<input type="text" id="idsede" name="idsede" value$="{{xIdSede}}">
 										<input type="text" placeholder="TIPO" id="tipo" name="tipo" espaciar>
+										<input type="text" id="finicio" name="finicio" value="">
+										
+										<input type="date" class="xMiInput xPasarEnter2" placeholder="YYYY-MM-DD" id="umf_pago" name="umf_pago" espaciar>
 										
 									</div>
 								</form>						
@@ -565,7 +612,7 @@ function transferenciaCompletaMini(xfile){
 		const _check_speech_disabled = check_speech_disabled.checked ? 1 : 0;
 		const _check_habilita_verificacion_cpe = check_habilita_verificacion_cpe.checked ? 1 : 0;		
 
-		
+		$("#frm_sede #finicio").val(fecha_inicio.value);
 
 		$("#frm_sede #sys_local").val(_printServerCheck);
 		$("#frm_sede #pwa").val(_pwaCheck);
@@ -580,29 +627,57 @@ function transferenciaCompletaMini(xfile){
 
 			// script nuevo org
 			if ( xThisAdminNew.xIdSede === '' ) {// si es nuevo			
-				xThisAdminNew.xIdSede = id;
+				xThisAdminNew.xIdSede = id;			
 				xAddNewConfigNewOrg(xThisAdminNew.xIdOrg, xThisAdminNew.xIdSede);
 			}
 
 			xLoadAdmDatosOrg();
 			$("#frm_sede").reset();				
-		});		
+					
 
-		// guardar igv 
-		const _check_habilita_igv = check_habilita_igv.checked ? 0 : 1;
-		const _porcentaje_igv = porcentaje_igv.value;
-		const dataSend = {		
-			data:{
-				idsede: xThisAdminNew.xIdSede,	
-				activo: _check_habilita_igv,
-				igv: _porcentaje_igv
+			// guardar igv 
+			const _check_habilita_igv = check_habilita_igv.checked ? 0 : 1;
+			const _porcentaje_igv = porcentaje_igv.value;
+			const dataSend = {		
+				data:{
+					idsede: xThisAdminNew.xIdSede,	
+					activo: _check_habilita_igv,
+					igv: _porcentaje_igv
+				}
 			}
-		}
-		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1800', data: dataSend })
-		.done((res) => {
-			console.log('res', res);
-		});
+			$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1800', data: dataSend })
+			.done((res) => {
+				console.log('res', res);
+			});
 
+			// guardar suscripcion
+			const _sus_ultimo_mes_pago = sus_ultimo_mes_pago.value;
+			const _sus_nombre_contacto = sus_nombre_contacto.value;
+			const _sus_telefono_contacto = sus_telefono_contacto.value;
+			const _sus_fecha_inicio = fecha_inicio.value;
+			const _sus_periodo = selPeriodo.value;		
+			const _sus_idsede_plan_contratado = compPlanSelect.getPlanSeleted().idsede_plan_contratado;
+			const _sus_idsede = xThisAdminNew.xIdSede;
+
+			const _sus_dataSend = {
+				data: {
+					idsede: _sus_idsede,
+					ultimo_pago: _sus_ultimo_mes_pago,
+					nombre_contacto: _sus_nombre_contacto,
+					telefono_contacto: _sus_telefono_contacto,
+					fecha_inicio: _sus_fecha_inicio,
+					frecuencia: _sus_periodo,
+					idsede_plan_contratado: _sus_idsede_plan_contratado
+				}
+			}
+
+			console.log('_sus_dataSend', _sus_dataSend);
+
+			$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1802', data: _sus_dataSend })
+			.done((res) => {
+				console.log('res suscripcion', res);
+			});
+		});
 	}
 
 	function xAdmGuardarUsuario() {
@@ -765,7 +840,27 @@ function transferenciaCompletaMini(xfile){
 
 		xLoadCategorias();
 		xLoadHorarioTrabajo();
-		xLoadImpuestos()
+		xLoadImpuestos();
+		xLoadSuscripcionSede();
+	}
+
+	function xLoadSuscripcionSede() {
+
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1803', data: { idsede: xThisAdminNew.xIdSede } })
+		.done((res) => {
+			let dataSuscripcion = JSON.parse(res).datos[0];
+			
+			const part_ultimo_pago = dataSuscripcion.ultimo_pago.split('-');
+
+			$('#fecha_inicio').val(dataSuscripcion.fecha_inicio);
+			$('#selPeriodo').value = dataSuscripcion.frecuencia;
+
+			const inputUltimoPago = document.getElementById('sus_ultimo_mes_pago');
+			inputUltimoPago.value = `${part_ultimo_pago[0]}-${part_ultimo_pago[1]}`; // Corrección aquí
+
+			$('#sus_nombre_contacto').val(dataSuscripcion.nombre_contacto);
+			$('#sus_telefono_contacto').val(value = dataSuscripcion.telefono_contacto);
+		})
 	}
 
 	function xLoadImpuestos() {

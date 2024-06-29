@@ -21,6 +21,12 @@
             .done( function (DtItems) {
                 var xDtSecCarta=JSON.parse(DtItems);
                 xThisCompSeccion.dtSeccionCarta=xDtSecCarta.datos;
+                // selecciona el primero 
+                try {
+                    xThisCompSeccion.seccion = xThisCompSeccion.dtSeccionCarta[0];                    
+                } catch (error) {
+                    xThisCompSeccion.seccion = {};                    
+                }
                 // console.log('xThisCompSeccion.dtSeccionCarta', xThisCompSeccion.dtSeccionCarta);
             })
         }
@@ -28,6 +34,7 @@
         function selectOptionSeccion() {
             const index = xThisCompSeccion.$.compFindListSeccion.value;
             xThisCompSeccion.seccion = xThisCompSeccion.dtSeccionCarta[index];
+            xThisCompSeccion.fire('selected', xThisCompSeccion.seccion);
         }
 
 

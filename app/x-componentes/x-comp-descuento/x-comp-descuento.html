@@ -26,7 +26,7 @@
                     </div>
 
                     <div class="content-text-improte pr-1">
-                        <input type="text" class="text_importe fs-16" id="txt_imp_dsc" autocomplete="off" onblur="xFocusInputDescuento(false)" onfocus="xFocusInputDescuento(true)" onkeyup="xCalcImporteDsc()">
+                        <input type="text" class="text_importe fs-16" id="txt_imp_dsc" autocomplete="off" onblur="xFocusInputDescuento(false)" onfocus="xFocusInputDescuento(true)" onkeyup="xCalcImporteDsc()" on-keypress="validarDsct">
                     </div>
 
                     <div class="pl-1">
@@ -35,6 +35,7 @@
                         </button>
                     </div>
                 </div>
+                <p style="text-align: right;" hidden$="[[!msjCupon.visible]]" class$="[[msjCupon.color]]">{{msjCupon.label}}</p>
             </div>
 
         </div>
@@ -94,6 +95,15 @@
                 'isAgregar': false
             });
         }
+
+        xThisCompDesc.msjCupon = {
+            visible: false,
+            label: '',
+            color: ''
+        }
+
+        xThisCompDesc.$.txt_imp_dsc.disabled = false;
+
 
         // console.log('importeventa', xThisCompDesc.importeventa);
     }
@@ -174,6 +184,7 @@
         xCalcImporteDsc();
 
         xThisCompDesc.$.txt_imp_dsc.focus();
+        xThisCompDesc.tipoDscSelected = tipoDscSelected;
 
         try {
             xThisCompDesc.$.txt_imp_dsc.selected();            
@@ -182,6 +193,9 @@
     }
 
     function xCalcImporteDsc() {
+        // si es cupon de descuento
+        if (this.tipoDscSelected.idtipo_descuento === '3') return;
+
         const isDestPorcentaje = tipoDscSelected.idtipo_descuento === '2';
         var rptCalc = 0, descripcionDesct = '';
         var importeTotalPedido = xThisCompDesc.importeventa;
@@ -207,14 +221,6 @@
         }
 
         lastValCalc = rptCalc;
-        // rptCalc = rptCalc > importeInicial ? importeTotalPedido : rptCalc;
-
-        // const _dataRpt = {
-        //     'importeDesct': rptCalc,
-        //     'descripcion': descripcionDesct
-        // }
-
-        // console.log('_dataRpt', _dataRpt);
 
         xThisCompDesc.fire('changeDescuento', {
 			'value': rptCalc,
@@ -238,9 +244,31 @@
 				reflectToAttribute: true,
 				value: 0
             },
+            tipoDscSelected: {
+                type: Object,
+                notify: true,
+                reflectToAttribute: true,
+                value: {}
+            },
             classselect: {
                 type: String,
                 value: 'selected-template-1 fs-15'
+            },
+            msjCupon: {
+                type: Object,
+                value: {
+                    visible: false,
+                    label: '',
+                    color: ''
+                }
+            },
+            cuponSeleted: {
+                type: Object,
+                value: {}
+            },
+            nomTablePedido: {
+                type: String,
+                value: 'tb_det_pedidos' // table de control pedidos
             }
 		},
 		attached: function () {
@@ -255,6 +283,63 @@
         },
         setVisible: (value)=> {
             xThisCompDesc.showDetalle = value;
+        },
+        validarDsct: async(e) => {
+            if ( e.keyCode === 13 ) {
+                // si es 
+                if (this.tipoDscSelected.idtipo_descuento === '3') {
+                    console.log('verificar cupon de descuento', e.target.value);
+                    const rptCupon = await aplicarCuponDsct(e.target.value, xThisCompDesc.nomTablePedido);
+                    console.log('¿Cupón válido?', rptCupon);
+
+
+                    xThisCompDesc.msjCupon = {
+                        visible: false,
+                        label: '',
+                        color: ''
+                    }
+
+                    setTimeout(() => {
+                        xThisCompDesc.msjCupon = {
+                            visible: true,
+                            label: rptCupon.aplica ? 'Cupón válido' : 'Cupón no válido',
+                            color: rptCupon.aplica ? 'fw-600 text-success animate__animated animate__flash' : 'fw-600 text-danger animate__animated animate__flash'
+                        }
+                    }, 200);
+                
+
+                    if ( !rptCupon.aplica ) { 
+                        xThisCompDesc.cuponSeleted = null;
+                        return;
+                    } else {
+                        // const importeDescuento = rptCupon.importeDsct;                          
+                        xThisCompDesc.cuponSeleted = rptCupon;
+                        xThisCompDesc.fire('changeDescuento', {
+                            'value': rptCupon.importeDsct,
+                            'descripcion': `por cupón ${e.target.value}`,
+                            'isAgregar': true
+                        });  
+                        
+                        // e.target disabled
+                        e.target.disabled = true;
+                    }
+                } 
+            }
+        },
+        resetDescuento: () => {
+            xThisCompDesc.msjCupon = {
+                visible: false,
+                label: '',
+                color: ''
+            }
+
+            xThisCompDesc.$.txt_imp_dsc.value = '';
+            xThisCompDesc.$.txt_imp_dsc.disabled = false;
+            xThisCompDesc.$.txt_imp_dsc.focus();
+
+        },
+        getCuponDescuento: () => {
+            return xThisCompDesc.cuponSeleted;
         }
 	})
 </script>

@@ -81,9 +81,10 @@ class httpFecht {
 
         // Agregar tiempo máximo de espera de 10 segundos
         params.timeout = 10000;
-        xPopupLoad.titulo="Cargando...";
+        
 
         if(isShowPreload == true) {
+            xPopupLoad.titulo="Cargando...";
             xPopupLoad.xopen();
         }
 

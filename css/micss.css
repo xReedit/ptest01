@@ -48,6 +48,15 @@ body {
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+
+    scrollbar-width: thin;
+        /* "auto" or "thin" */
+    scrollbar-color: #bdbdbd #cdcdcd3b;
+
+    * {
+            scrollbar-width: thin;
+            scrollbar-color: #bdbdbd #cdcdcd3b;            
+        }
 }
 
 /* body{color:#333;font:13px/18px 'Open Sans',arial,sans-serif;font-weight:400;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;} */
@@ -2858,10 +2867,7 @@ input.xMiInput[required]:valid {
 
     .xCentrado {
         margin: 0 auto;
-    }
-
-    ;
-
+    }   
 }
 
 .text_puntos_2 {

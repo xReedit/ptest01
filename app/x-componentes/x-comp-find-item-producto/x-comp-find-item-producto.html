@@ -1,4 +1,98 @@
 <dom-module id="x-comp-find-item-producto">
+    <template is="dom-bind">
+        <div>
+            <input type="text" class$="[[clasecss]]" placeholder$="[[elplaceholder]]"
+                onblur="removeChartSpecialCtrl(this)" onChange="conMayusculas(this)" id="des_item_pro_comp"
+                on-keyup="xloadItemProductoComp">
+        </div>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'x-comp-find-item-producto',
+        properties: {
+            dtProItem: [],
+            idalmacenfiltro: Number,
+            onlynomproducto: Boolean,
+            onlynomalmacen: Boolean,
+            onlynomfamilia: Boolean,
+            valueInput: String,
+            clasecss: String,
+            elplaceholder: String,
+            removespecialchart: Boolean,
+        },
+        attached: function () {
+            this.removespecialchart = false;
+        },
+        xloadItemProductoComp: function (e) {
+            this.clasecss = this.clasecss === '' ? 'xTextRow2 xCursor' : this.clasecss;
+
+            const _val = e.target.value;
+            const _idFiltro = this.idalmacenfiltro || 0;
+            if (_val.length < 3) { return; }
+
+            $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=2001', data: { search: _val, idfiltro: _idFiltro } })
+                .done((DtItems) => {
+                    var xDtItems = JSON.parse(DtItems);
+                    this.dtItemProductosComp = xDtItems.datos;
+                    this.xCargarProductoItemCartaComp();
+                })
+        },
+        xCargarProductoItemCartaComp: function () {
+            var xPrecio_pro_calc = 0;
+            var xObjTxtItemPro = this.$["des_item_pro_comp"];
+            $(xObjTxtItemPro).autocomplete({
+                autoFocus: true,
+                source: this.dtItemProductosComp,
+                select: (event, ui) => {
+                    xObjTxtItemPro.value = ui.item.label;
+                    xObjTxtItemPro.dataset.id = ui.item.value;
+                    this.elementSeleted = ui.item;
+
+                    this.valueInput = this.$.des_item_pro_comp.value;
+                    this.fire('elementSeleted', this.elementSeleted);
+                    this.fire('selected', this.elementSeleted);
+
+                    return false;
+                },
+                focus: function (event, ui) { return false; },
+                change: (event, ui) => {
+                    if (ui.item === null) {
+                        xObjTxtItemPro.dataset.value = "";
+                        xObjTxtItemPro.dataset.id = "";
+
+                        this.xNewItemPro = true;
+                        this.elementSeleted = null;
+                        this.valueInput = this.$.des_item_pro_comp.value;
+                        this.fire('elementSeleted', this.elementSeleted);                        
+                        this.fire('selected', this.elementSeleted);
+                    } else { this.xNewItemPro = false; }
+                    return false;
+                }
+            });
+        },
+        removeChartSpecialCtrl: function (obj) {
+            console.log('this.removespecialchart', this.removespecialchart);
+            if (this.removespecialchart === false) { return; }
+            obj.value = removeSpecialChar(obj.value);
+        },
+        getelementSeletedAlmacen: function () {
+            return this.elementSeleted;
+        },
+        resetText: function () {
+            this.$.des_item_pro_comp.value = '';
+            this.elementSeleted = null;
+        },
+        focusText: function () {
+            this.$.des_item_pro_comp.focus();
+        },
+        getTextInput: function () {
+            return this.$.des_item_pro_comp.value;
+        }
+    })
+</script>
+
+<!-- <dom-module id="x-comp-find-item-producto">
 	<template is="dom-bind">
 		<div>
             <input type="text" 
@@ -23,25 +117,14 @@
             .done( function (DtItems) {
                 var xDtItems=JSON.parse(DtItems);
                 dtItemProductosComp=xDtItems.datos;                
-                // dtItemProductosComp.map(x => {
-                //     const _labl = x.label.split(' | ');
-                //         if (xThisCompItemProducto.onlynomproducto) {
-                //             x.label = _labl[2];
-                //         }
-                //         if (xThisCompItemProducto.onlynomalmacen) {
-                //             x.label = _labl[0] + ' | ' + _labl[2];
-                //         }
-                //         if (xThisCompItemProducto.onlynomfamilia) {
-                //             x.label = _labl[1] + ' | ' + _labl[2];
-                //         }
-                // });
                 xCargarProductoItemCartaComp();
             })
         }
 
         function xCargarProductoItemCartaComp () {
             var xPrecio_pro_calc=0;
-            var xObjTxtItemPro=$("#des_item_pro_comp");
+            // var xObjTxtItemPro=$("#des_item_pro_comp");
+            var xObjTxtItemPro = this.$["des_item_pro_comp"];
                 xObjTxtItemPro.autocomplete({
                     autoFocus:true,
                     source:dtItemProductosComp,
@@ -67,7 +150,8 @@
                             xNewItemPro=true;
                             elementSeleted = null;
                             xThisCompItemProducto.valueInput = des_item_pro_comp.value;
-                            xThisCompItemProducto.fire('elementSeleted', elementSeleted);
+                            xThisCompItemProducto.fire('elementSeleted', elementSeleted);                            
+                            xThisCompItemProducto.fire('selected', elementSeleted);
                         }else{xNewItemPro=false;}
                         return false;
                     }
@@ -115,4 +199,4 @@
             }
 		})
 	</script>
-
+ -->

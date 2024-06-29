@@ -358,8 +358,8 @@ function colocarDescuentoSubtotales(importeDesct, arrTotales, descripcionDesct =
 				importe: - importeDesct,
 				quitar: false,
 				tachado: false,
-				visible: false,
-				visible_cpe: false
+				visible: true,
+				visible_cpe: true
 			};
 			arrTotales.splice(postionInsert, 0, _row);		
 		}

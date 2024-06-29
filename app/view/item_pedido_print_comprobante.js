@@ -1113,3 +1113,4 @@ async function reimpresionDocumento(idregistro_pago) {
 		return;
 	}
 }
+

@@ -2,6 +2,8 @@
 <link rel="import" href="../../x-componentes/x-comp-direccion-google/x-comp-direccion-google.html">
 <link rel="import" href="./x-cliente-enviar-msj.html">
 <dom-module id="x-clientes">
+	<script src="../../view/httpFech.js"></script>
+	<script type="text/javascript" src="../../view/export.excel.js"></script>
 	<template is="dom">
 
 		<paper-dialog class="dialog_redondo" id="dialog_borrar" entry-animation="scale-up-animation"
@@ -136,38 +138,62 @@
 
 					<div id="div_historial">
 						<div class="x_div_linea">
-							<div id="historial" class="xitem-col-8 xBordeDe" style="height: 50vh; overflow-y: auto;">
+							<div id="historial" class="xitem-col-8 xBordeDe" style="height: 50vh; overflow-y: auto;">								
 								<div>
 									<p><strong>Historial de consumo</strong></p>
+									
 									<table width="100%">
 										<thead class="xfont10">
-											<th>#</th>
-											<th>Fecha</th>											
+											<th align="left">#</th>
+											<th align="left">Fecha</th>											
 											<th align="right">Importe</th>
 										</thead>
 										<tbody>
 											<template is="dom-repeat" items="{{selItemClieListConsumo}}" as="subitem_c">
 												<tr class="xfont10">
 													<td data-id="{{index}}"><span>{{displayIndex(index)}}</span></td>													
-													<td>{{subitem_c.fecha_mostrar}}</td>
-													<td align="right">{{subitem_c.total}}</td>
+													<td align="left">{{subitem_c.fecha_consumo}}</td>
+													<td align="right">{{fixedImporte(subitem_c.total)}}</td>
 												</tr>
 											</template>											
 										</tbody>
 									</table>
+
+									<br>
+									<p><strong>Productos mas consumidos</strong></p>
+									<table class="fw-100" width="100%">
+										<thead class="fs-10">
+											<th align="left">Producto</th>
+											<th align="right">Importe</th>
+										</thead>
+										<tbody>
+											<template is="dom-repeat" items="{{listProductosConsumidos}}" as="item">
+												<tr class="fs-10">
+													<td align="left">{{item.cantidad_item}} {{item.descripcion}}</td>
+													<td align="right">{{fixedImporte(item.total_item)}}</td>
+												</tr>
+											</template>
+									</table>
 								</div>
 							</div>
 							<div id="historial-2" class="xitem-auto">
+								<p class="fw-600">Año:</p>
+								<select name="yy" id="selYY" class="selected-template-1" on-change="selectedYear">
+									<template is="dom-repeat" items="{{listYears}}" as="yy">
+										<option value="{{yy}}">{{yy}}</option>
+									</template>
+								</select>
+								<br><br>
 								<div>
-									<label for="d1" class="xColorRow_Plomo xfont10">Cantidad: </label>
+									<label for="d1" class="xColorRow_Plomo xfont11">Cantidad: </label>
 									<h3 id="d1">{{selItemClieListConsumo.length}}</h3>
-									<label for="d2" class="xColorRow_Plomo xfont10">Importe Total: </label>
+									<label for="d2" class="xColorRow_Plomo xfont11">Importe Total: </label>
 									<h3 id="d2" class="xfont16x">{{selItemClieEstadistica.total_c}}</h3>
-									<label for="d2" class="xColorRow_Plomo xfont10">Ticket Promedio: </label>
+									<label for="d2" class="xColorRow_Plomo xfont11">Ticket Promedio: </label>
 									<h3 id="d2" class="xfont16x">{{selItemClieEstadistica.ticket}}</h3>
-									<label for="d2" class="xColorRow_Plomo xfont10">Viene cada: </label>
+									<label for="d2" class="xColorRow_Plomo xfont11">Viene cada: </label>
 									<h3 id="d2" class="xfont16x">{{selItemClieEstadistica.frecuencia}}</h3>
-									<label for="d2" class="xColorRow_Plomo xfont10">Ultima visita: </label>
+									<label for="d2" class="xColorRow_Plomo xfont11">Ultima visita: </label>
 									<h3 id="d2" class="xfont16x">{{selItemClieEstadistica.last_fecha}}</h3>
 								</div>
 								
@@ -227,6 +253,17 @@
 							</div>
 						</div>
 
+
+						<!-- descargar excel -->
+						<div class="xbtn-icon ml-2 noselect"
+							on-click="donwloadExcelClientes">
+							<img src="../../../images/excel.png">
+							<div class="titulo-content">
+								<p class="titlo">Descargar</p>
+								<p class="subtitulo">Lista en formato Excel.</p>
+							</div>
+						</div>
+
 						<!-- <div hidden$ = "[[ !isFiltroCumpleShow ]]" class="xbtn-icon ml-2 noselect" onclick="retryFilterCumple()" title="Quitar Filtro">
 							<img src="../../../images/_delete2.png">						
 						</div>					 -->
@@ -238,7 +275,7 @@
 				<input type="text" class="xMiInput xfont15" style="width:100%;" placeholder="Buscar" autofocus
 					onkeyup="xfiltrarDatos_cliente()" id="txt_buscar_cliente" enlinea>
 				<br>
-				<table width="100%">
+				<table width="100%" id="tbClientes">
 					<thead>
 						<th>#</th>
 						<th>Cliente</th>
@@ -246,11 +283,10 @@
 						<th>RUC/DNI</th>						
 						<th>Tipo</th>
 						<th width="100px">Telefono</th>
-						<th align="right">Comsumo</th>						
-						<!-- <th>f. Nacimiento</th> -->
-						<!-- <th>f. Registro</th> -->						
-						<th>Msj</th>
-						<th hidden$="[[!btnClientePe]]"></th>
+						<th align="center">Cant</th>
+						<th align="right">Comsumo</th>																	
+						<th class="out-export">Msj</th>
+						<th hidden$="[[!btnClientePe]]" class="out-export"></th>
 					</thead>
 					<tbody>
 						<template is="dom-repeat" items="{{ListClientes}}" as="item">
@@ -271,17 +307,12 @@
 								<td>{{item.ruc}}</td>
 								<td>{{item.tipo}}</td>
 								<td>{{item.telefono}}</td>
-								<td align="right">{{item.importe_consumo}}</td>
-								<!-- <td>{{item.f_registro}}</td> -->
-								<!-- <td><span class="xDeleteRow" title="Borrar" onclick="xDialogBorrarObj(this);"></span></td> -->
-								<td> 
-									<!-- <span class="xDeleteRow2" title="Anular" onclick="xDialogBorrarObj(this);"></span> -->
-									<!-- <div style="display: flex;" class="xCursor">
-										<span class="xEditRow" style="margin-right: 5px;" title="Editar" onclick="xDialogBorrarObj(this);"></span>
-									</div> -->
+								<td align="center">{{item.cantidad_consumo}}</td>
+								<td align="right">{{ fixedImporte(item.importe_consumo) }}</td>
+								<td class="out-export"> 
 									<paper-checkbox data-id="{{index}}" class="checkCliente" onchange="checkClienteSeleted(this)" hidden$="[[ !item.isCheckMsj ]]"></paper-checkbox>
 								</td>
-								<td hidden$="[[!btnClientePe]]">
+								<td hidden$="[[!btnClientePe]]" class="out-export">
 									<span data-id="{{index}}" onclick="xBorrarItemCliente(this)" class="xDeleteRow" title="Borrar"></span>
 								</td>
 							</tr>
@@ -300,6 +331,38 @@
 		<div hidden$="[[ !isShowPageMsj ]]">
 			<x-cliente-enviar-msj></x-cliente-enviar-msj>
 		</div>
+
+		<!-- donwload excel  -->
+		<div class="xInvisible">
+			<table width="100%" id="tbClientesDonwload">
+				<thead>
+					<th>#</th>
+					<th>Cliente</th>
+					<th>Correo</th>
+					<th>F. Cumpleaños</th>
+					<th>RUC/DNI</th>
+					<th>Tipo</th>
+					<th width="100px">Telefono</th>
+					<th align="center">Cant. Consumos</th>
+					<th align="right">Importe Comsumo</th>					
+				</thead>
+				<tbody>
+					<template is="dom-repeat" items="{{ListClientes}}" as="item">
+						<tr>
+							<td><span>{{displayIndex(index)}}</span></td>
+							<td>{{item.nombres}}</td>
+							<td>{{item.email}}</td>
+							<td>{{item.f_nacimiento}}</td>							
+							<td>{{item.ruc}}</td>
+							<td>{{item.tipo}}</td>
+							<td>{{item.telefono}}</td>
+							<td align="center">{{item.cantidad_consumo}}</td>
+							<td align="right">{{ fixedImporte(item.importe_consumo) }}</td>							
+						</tr>
+					</template>
+				</tbody>
+			</table>
+		</div>
 	</template>
 </dom-module>
 
@@ -311,11 +374,11 @@
 	function xIniPagination() {        
         xThisCliente.$.paginator.currentPage = 1;
         xThisCliente.$.paginator.pageRows = p_rows;
-        xThisCliente.$.paginator.listRows = [10,20,30,40];
+        xThisCliente.$.paginator.listRows = [10,20,30,40,50,100];
 	}
 	
 	function xIniCliente() {
-
+		
 
 		xThisCliente.btnClientePe = xm_log_get('app3_us').per.indexOf('e8') > -1;
 
@@ -389,7 +452,8 @@
 		compDirSearch.addEventListener('getPlaces', function (e) {
 			direcionSelected = {};
 			direcionSelected = e.detail;
-			direcionSelected.direccion = direcionSelected.formatted_address;
+			direcionSelected.direccion =
+			 direcionSelected.formatted_address;
 			direcionSelected.latitude = direcionSelected.geometry.location.lat();
 			direcionSelected.longitude = direcionSelected.geometry.location.lng();			
 			direcionSelected.ciudad = searchTypeMap('locality');
@@ -418,41 +482,64 @@
 
 			$.ajax({
 				type: 'POST',
-				url: '../../bdphp/log_005.php?op=40001',
+				url: '../../bdphp/log_005.php?op=4',
 				data: {
-					pagination: data_pagination,				
+					pagination: data_pagination,
 				}
 			}).done(res => {
-				console.log(res);
-				
-				$.ajax({
-					type: 'POST',
-					url: '../../bdphp/log_005.php?op=4',
-					data: {
-						pagination: data_pagination,
-						filtro_cumple: isFiltroCumple
-					}
-				})
-				.done((res) => {
-						res = res.split('**');
-						const _res = JSON.parse(res[0]);
-						xThisCliente.ListClientes = _res.datos;
-						// chequea si tiene telefono o email para check msj
-						xThisCliente.ListClientes.map(x => {
-							x.isCheckMsj = x.telefono != '' || x.email != '';
-							x.isShowCumple = x.dias_cumple ? true : false;
-							x.cumple_cerca = x.dias_cumple <= 6;
-						});
-
-						p_rows = res[1];
-
-						p_upadate = false; // para que no vuelva a llamar esta funcion
-						xThisCliente.$.paginator.pageRows = p_rows;
-
-						xPopupLoad.xclose();
-
+				res = res.split('**');
+				const _res = JSON.parse(res[0]);
+				xThisCliente.ListClientes = _res.datos;
+				// chequea si tiene telefono o email para check msj
+				xThisCliente.ListClientes.map(x => {
+					x.isCheckMsj = x.telefono != '' || x.email != '';
+					x.isShowCumple = x.dias_cumple ? true : false;
+					x.cumple_cerca = x.dias_cumple <= 6;
 				});
-		});		
+				p_rows = res[1];
+				p_upadate = false; // para que no vuelva a llamar esta funcion
+				xThisCliente.$.paginator.pageRows = p_rows;
+				xPopupLoad.xclose();
+			})
+
+
+		// 	$.ajax({
+		// 		type: 'POST',
+		// 		url: '../../bdphp/log_005.php?op=40001',
+		// 		data: {
+		// 			pagination: data_pagination,				
+		// 		}
+		// 	}).done(res => {
+		// 		console.log(res);
+				
+		// 		$.ajax({
+		// 			type: 'POST',
+		// 			url: '../../bdphp/log_005.php?op=4',
+		// 			data: {
+		// 				pagination: data_pagination,
+		// 				filtro_cumple: isFiltroCumple
+		// 			}
+		// 		})
+		// 		.done((res) => {
+		// 				res = res.split('**');
+		// 				const _res = JSON.parse(res[0]);
+		// 				xThisCliente.ListClientes = _res.datos;
+		// 				// chequea si tiene telefono o email para check msj
+		// 				xThisCliente.ListClientes.map(x => {
+		// 					x.isCheckMsj = x.telefono != '' || x.email != '';
+		// 					x.isShowCumple = x.dias_cumple ? true : false;
+		// 					x.cumple_cerca = x.dias_cumple <= 6;
+		// 				});
+
+		// 				p_rows = res[1];
+
+		// 				p_upadate = false; // para que no vuelva a llamar esta funcion
+		// 				xThisCliente.$.paginator.pageRows = p_rows;
+
+		// 				xPopupLoad.xclose();
+
+		// 		});
+		// });		
 	}
 
 	function xfiltrarDatos_cliente() {
@@ -520,53 +607,66 @@
 		xBorrarItem(xObjBorrar);
 		dialog_borrar.close();
 	}
+	
+	async function xLoadHistorialConsumoYY() {
+		xThisCliente.yy_historial = xThisCliente.yy_historial ? xThisCliente.yy_historial : new Date().getFullYear();
+		// informacion de consumo
+
+		const http = new httpFecht();
+		const rptHistory = await http.axiosExecuteJSON({
+			url: '../../bdphp/log_009.php?op=70',
+			method: 'POST',
+			data: {
+				yy: xThisCliente.yy_historial,
+				ids: xThisCliente.idsClienteSeleted
+			}			
+		});
+				
+				let res = rptHistory;
+
+				xThisCliente.selItemClieListConsumo = res.consumo;
+				xThisCliente.listProductosConsumidos = res.productos;
+
+				xThisCliente.selItemClieEstadistica = [];
+				xThisCliente.selItemClieEstadistica = res.consumo.reduce((a, b) => {					
+					a.calc_frecuencia = a.calc_frecuencia ? a.calc_frecuencia : 0;
+					a.calc_frecuencia = a.calc_frecuencia + (Math.floor((new Date(xSetInputDate(b.fecha_consumo)) - new Date(xSetInputDate(a.calc_fecha))) / (1000 * 60 * 60 * 24)));
+					a.calc_frecuencia = isNaN(a.calc_frecuencia) ? 0 : a.calc_frecuencia;
+					a.calc_fecha = b.fecha_consumo;
+					a.count = a.count ? parseFloat(a.count) + 1 : 2;
+					a.total_c = a.total_c ? parseFloat(a.total_c) : parseFloat(a.total);
+					a.total_show = parseFloat(a.total).toFixed(2);
+					a.total_c = parseFloat(a.total_c) + parseFloat(b.total);
+
+
+					a.frecuencia = parseInt(a.calc_frecuencia / a.count);
+					a.frecuencia = a.frecuencia === 0 ? 1 + ' dia' : a.frecuencia < 0 ? (a.frecuencia * -1) + ' dias' : a.frecuencia + ' dias';
+					a.ticket = parseFloat(a.total_c / a.count).toFixed(2);					
+					a.last_fecha = b.fecha_consumo;
+					return a;
+				});
+
+				console.log(xThisCliente.selItemClieEstadistica);
+			
+	}
 
 	function _getClienteEdit(obj){
 		const index = obj.id;
 		xThisCliente.selItemClie = xThisCliente.ListClientes[index];
 		txt_direccion.value = xThisCliente.selItemClie.direccion;
+		xThisCliente.idsClienteSeleted = xThisCliente.selItemClie.ids;
+
+		
 
 		f_nac_show.value = xSetInputDate(xThisCliente.selItemClie.f_nac);
 
 		// direcciones pwa
 		xLoadDireccionPwa();
 
+		xLoadHistorialConsumoYY()
 
-		// informacion de consumo
-		$.ajax({
-				type: 'POST',
-				url: '../../bdphp/log_005.php?op=401',
-				data: {
-					i: xThisCliente.selItemClie.idcliente
-				}
-			})
-			.done((res) => {				
-				res = JSON.parse(res);	
-				
-				xThisCliente.selItemClieListConsumo = res.datos;
-				
-				xThisCliente.selItemClieEstadistica = [];
-				xThisCliente.selItemClieEstadistica = res.datos.reduce((a, b) => {
-					a.calc_frecuencia = a.calc_frecuencia + (Math.floor((new Date(b.fecha) - new Date(a.calc_fecha)) / (1000 * 60 * 60 * 24)));
-					a.calc_frecuencia = isNaN(a.calc_frecuencia) ? 0 : a.calc_frecuencia;
-					a.calc_fecha = b.fecha;
-					a.count = a.count ? parseFloat(a.count) + 1 : 2;
-					a.total_c = a.total_c ? parseFloat(a.total_c) : parseFloat(a.total);
-					a.total_c = parseFloat(a.total_c) + parseFloat(b.total);
-					
-					
-					a.frecuencia = parseInt(a.calc_frecuencia / a.count);
-					a.frecuencia = a.frecuencia === 0 ? 1 + ' dia' : a.frecuencia + ' dias';
-					a.ticket = parseFloat(a.total_c / a.count).toFixed(2);
-					a.total_c = parseFloat(a.total_c).toFixed(2);
-					a.last_fecha = b.fecha_mostrar.split(' ')[0];
-					return a;
-				});
 
-				console.log(xThisCliente.selItemClieEstadistica);
-				console.log(xThisCliente.selItemClieListConsumo);
-								
-			});
+		
 
 
 		dialog_new_cliente.open();
@@ -727,8 +827,12 @@
 			selItemClie: [],
 			selItemClieListConsumo: [],
 			selItemClieEstadistica: [],
+			listProductosConsumidos: [],
 			ListDireccion: [],
-			btnClientePe: Boolean
+			btnClientePe: Boolean,
+			yy_historial: Number,
+			idsClienteSeleted: String,
+			listYears: [],
 		},
 		attached: function () {
 			this.selected = 0,
@@ -740,10 +844,28 @@
 			this.isShowPageMsj = false;
 			this.isDisabledBtnSendMsj = true;
 			this.labelClientesSelected = 'Checkee a que clientes enviar';
+			this.listYears = getLastThreeYears();
 			xIniCliente();
 		},
 		displayIndex: function (index) {
 			return xCeroIzq(index + 1, 1);
 		},
+		selectedYear: function (e) {
+			this.yy_historial = e.target.value;
+			xLoadHistorialConsumoYY();
+		},		
+		// fixed importe
+		fixedImporte: function (importe) {
+			return parseFloat(importe).toFixed(2);
+		},
+		donwloadExcelClientes: function () {
+			//
+			xPopupLoad.xopen();			
+			tableToExcel('tbClientesDonwload', 'Registro de Pago Detallado');
+
+			setTimeout(() => {				
+				xPopupLoad.xclose();
+			}, 2000);
+		}
 	})
 </script>

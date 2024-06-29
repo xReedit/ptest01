@@ -108,7 +108,7 @@ function xIniDocument(){
 		xComptitulo_bar.init();
 
 
-		status_CreateVariablesListen();
+		status_CreateVariablesListen();		
 
 		//  onStatusSetUsChangeSede().subscribe(res => {			
 		// 	console.log('status_isUsChangeSede', res);
@@ -210,7 +210,7 @@ async function xOpenPage(xop, parametro){
 
 			if ( parseInt(xm_log_get('datos_org_sede')[0].pwa) === 1  ) { // si socket
 				window.localStorage.removeItem("::app3_sys_first_load");
-				document.location.href='https://app.restobar.papaya.com.pe';
+				document.location.href='https://express.papaya.com.pe';
 				xLiberarRouter();
 				return;
 			} else {
@@ -441,30 +441,7 @@ function xOpenPanelDe(){
 
 
 function xGenerarMenu(op){
-	/*switch(op){
-		case 1://
-			xMenuOp='<div class="xBtnMenuLateral" onClick="xOpenPage(7)"><p>Inicio</p></div>'+
-				'<div class="xBtnMenuLateral" onClick="xOpenPage(4)"><p>Habitaciones</p></div>'+
-				'<div class="xBtnMenuLateral" onClick="xOpenPage(10)"><p>Equipaje Consignado</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(2)"><p>Reservas</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(9)"><p>Movimientos de Caja</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(8)"><p>Venta Directa</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(7)"><p>Panel de Administrador</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(6)" id="btn_configurar"><p>Configuracion</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xCerrarSession()" id="btn_configurar"><p>Cerrar Sesion</p></div>';
-			break;
-		case 2://
-			xMenuOp='<div class="xBtnMenuLateral" onClick="xOpenPage(7)"><p>Inicio</p></div>'+
-				'<div class="xBtnMenuLateral" onClick="xOpenPage(4)"><p>Habitaciones</p></div>'+
-				'<div class="xBtnMenuLateral" onClick="xOpenPage(10)"><p>Equipaje Consignado</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(2)"><p>Reservas</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(9)"><p>Movimientos de Caja</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(8)"><p>Venta Directa</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xOpenPage(5)"><p>Panel de Recepcionista</p></div>'+
-	    		'<div class="xBtnMenuLateral" onClick="xCerrarSession()" id="btn_configurar"><p>Cerrar Sesion</p></div>';
-			break;
-	}
-	$(".xBtnPanel").html(xMenuOp).trigger('create');*/
+
 
 }
 
@@ -582,4 +559,13 @@ function xDelayHere(delayInms) {
 	  }, delayInms);
 	});
   }
+
+async function callVersionChangelog() {
+	const url = '../../bdphp/api.php?route=get-version-changelog';	
+	let rpt = await http.axiosExecuteJSON({
+		type: 'GET',
+		url: url			
+	});	
+	console.log('callVersionChangelog == ', rpt);
+}
 

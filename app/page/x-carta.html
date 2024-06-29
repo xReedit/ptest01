@@ -2,6 +2,7 @@
 <link rel="import" href="../x-componentes/x-comp-productos-enlazados-item-carta/x-comp-productos-enlazados-item-carta.html">;
 <link rel="import" href="../x-componentes/x-comp-img-upload/x-comp-img-upload.html">
 <link rel="import" href="../page/x-promociones/x-promociones.html">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <dom-module id="x-carta">
 	<template>
 		<!-- <paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -122,17 +123,27 @@
 			</div>
 		</paper-dialog> -->
 
-		<paper-dialog id="dialog_orden" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+		<paper-dialog id="dialog_orden" class="dialog_redondo" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
 				<h4 id="dlg_des_item">Ordenar Secciones</h4>
-				<p>Especifique el orden en el que se mostraran las secciones en el pedido.</p>
+				<p>Arrastra y suelta las secciones en la tabla para especificar el orden en el que se mostrarán en el pedido.</p>
 				<br>
+				<div class="div-order-seccion">
 					<table id="tb_sec_orden" width="100%">
-						<thead>
+						<thead>							
 							<th>Secciones</th>
 							<th>Orden</th>
 						</thead>
+						<tbody>
+							<template is="dom-repeat" items="{{listCartaOrder}}" as="item">
+								<tr data-id={{item.idseccion}}>									
+									<td><i class="fa fa-ellipsis-v"></i> {{item.descripcion}}</td>
+									<td><p class="fs-18 fw-600 text-center" id="sec_orden"> {{ item.sec_orden }}</p></td>
+								</tr>
+							</template>
+						</tbody>
 					</table>
+				</div>
 				<br><br>
 				<div class="xBoton2 xAzul" dialog-confirm  onclick="xGuardarCambiosOrden();">Listo, guardar</div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
@@ -291,6 +302,15 @@
 		font-size: 11px;
 	}
 
+	.draggable-cursor {
+		cursor: move; /* Cambia el cursor a un icono de arrastre */
+	}
+
+	.div-order-seccion {
+		height: 60vh;
+    	overflow-x: auto;
+	}
+
 </style>
 <script>
 var xThisCarta
@@ -421,6 +441,51 @@ function xInicarta(){
 		}
 	});
 
+	$("#tb_sec_orden tbody").sortable({
+		helper: function (e, tr) {
+			var $originals = tr.children();
+			var $helper = tr.clone();
+			$helper.children().each(function (index) {
+				$(this).width($originals.eq(index).width());
+			});
+			return $helper;
+		},
+		start: function (event, ui) {
+			$('body').css('cursor', 'grabbing');  // Agrega la clase cuando el usuario comienza a arrastrar el elemento
+		},
+		stop: function (event, ui) {	
+			$('body').css('cursor', ''); // Elimina la clase cuando el usuario deja de arrastrar el elemento			
+			setTimeout(function () {
+				let newListCartaOrder = [];
+				$("#tb_sec_orden tbody tr").each(function (index, element) {
+					const id = element.dataId;
+					$(element).find('#sec_orden').text(index + 1);					
+				});
+
+				// evaluar solo los cambios
+				$("#tb_sec_orden tbody tr").each(function (index, element) {
+					const id = element.dataId;
+					const sec_orden = $(element).find('#sec_orden').text();
+					const item = xThisCarta.listCartaOrder.find(x => x.idseccion == id);
+					// evaluar con element si cambio el sec_orden
+					if (item && item.sec_orden != sec_orden) {
+						newListCartaOrder.push({
+							id: item.idseccion,
+							descripcion: item.descripcion,
+							val: sec_orden
+						});
+					}
+
+					
+				})
+				
+				console.log('newListCartaOrder', newListCartaOrder);
+				xThisCarta.arrOderSeccionSave = newListCartaOrder;
+				
+			}, 500);	
+		}
+	}).disableSelection();
+
 	
 	// $("#tab_detalle").on('iron-select',function(){
 	// 	switch(xThisCarta.selectedDetalle){
@@ -469,30 +534,33 @@ function xPasaEnterClass(){//actualiza controles input para pasa enter
 	
 }
 function xOrdenSecciones(){
+	xPopupLoad.xopen();
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2011'})
 		.done( function (dt_seccion) {
 			var xdt_seccion=$.parseJSON(dt_seccion), xcadena_sec='';
 			xdt_seccion=xdt_seccion.datos;
-			for (var i = 0; i < xdt_seccion.length; i++) {
-				xcadena_sec=String(xcadena_sec+'<tr class="row"><td>'+xdt_seccion[i].descripcion+'</td><td width="15px"><input class="xMiInput" type="number" data-id="'+xdt_seccion[i].idseccion+'" data-valini="'+xdt_seccion[i].sec_orden+'" value="'+xdt_seccion[i].sec_orden+'"><td></tr>');
-			};
-			$("#tb_sec_orden .row").remove();
-			$("#tb_sec_orden").append(xcadena_sec).trigger('create');
-			dialog_orden.open();
+			xThisCarta.listCartaOrder = [];
+			setTimeout(() => {
+				xThisCarta.listCartaOrder = JSON.parse(JSON.stringify(xdt_seccion));
+				xPopupLoad.xclose();
+				dialog_orden.open();
+			}, 200);						
 		})
 }
 function xGuardarCambiosOrden(){
-	var xsec_order_arr=[],xval_ini,xval_actual,xid_sec_orden;
+	// var xsec_order_arr=[],xval_ini,xval_actual,xid_sec_orden;
 	xPopupLoad.xopen();
-	$("#tb_sec_orden .row input").each(function(i,e){
-		xval_ini=$(e).attr('data-valini');
-		xval_actual=$(e).val();
-		xid_sec_orden=$(e).attr('data-id');
-		if(xval_ini!==xval_actual){
-			xsec_order_arr.push({'id':xid_sec_orden,'val':xval_actual});
-		}
-	})
-	if(xsec_order_arr.length===0){return;}
+	// $("#tb_sec_orden .row input").each(function(i,e){
+	// 	xval_ini=$(e).attr('data-valini');
+	// 	xval_actual=$(e).val();
+	// 	xid_sec_orden=$(e).attr('data-id');
+	// 	if(xval_ini!==xval_actual){
+	// 		xsec_order_arr.push({'id':xid_sec_orden,'val':xval_actual});
+	// 	}
+	// })
+	// if(xsec_order_arr.length===0){return;}
+	if ( xThisCarta.arrOderSeccionSave.length === 0) { return; }
+	let xsec_order_arr = xThisCarta.arrOderSeccionSave;
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2012', data:{'arr_orden':xsec_order_arr}})
 		.done( function (a) {
 			xPopupLoad.xclose();
@@ -1468,7 +1536,9 @@ Polymer({
 		ListHistorial: [],
 		idItemSelected: Number,
 		medidaImgCarta: [],
-		listIconSeccion: []
+		listIconSeccion: [],
+		listCartaOrder: [],
+		arrOderSeccionSave: [],
 		// ListSubItems: [],
 		// cantidadSubItems: 0
 	},

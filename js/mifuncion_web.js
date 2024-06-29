@@ -119,6 +119,7 @@ function xDevolverFechaFormatInputDate(fecha_string) {
 
 // setea al input date la fecha en 14/02/1990 -> 1990-02-14
 function xSetInputDate(fecha_string) {
+	if ( fecha_string == 'null' || fecha_string == null ) return '';
 	return fecha_string.split('/').reverse().join('-');
 }
 
@@ -184,6 +185,17 @@ function xDevolverFechaParte_Dada(xFecha, xParte){
 		}
 	return xrpt;
 	}
+
+function fechaNowYYYYMMDD() {
+	var date = new Date();
+	var formattedDate = date.getFullYear() + '-' +
+    ('0' + (date.getMonth()+1)).slice(-2) + '-' +
+    ('0' + date.getDate()).slice(-2) + ' ' +
+    ('0' + date.getHours()).slice(-2) + ':' +
+    ('0' + date.getMinutes()).slice(-2) + ':' +
+    ('0' + date.getSeconds()).slice(-2);
+	return formattedDate;
+}
 
 function xDevolverHora(){
 	var d = new Date();
@@ -987,4 +999,14 @@ function showInfoOpenServerPrint() {
 	_swalAlertValues.confirmButtonText = "Entendido";
 	_swalAlertValues.showCancelButton = false;
 	showAlertSwalHtmlDecision(_swalAlertValues);
+}
+
+// devolver un lista con los ultimos 3 años
+function getLastThreeYears() {
+	const currentYear = new Date().getFullYear();
+	const years = [];
+	for (let i = 0; i < 3; i++) {
+		years.push(currentYear - i);
+	}
+	return years;
 }

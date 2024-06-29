@@ -206,8 +206,7 @@
             return comprobante;
         },    
         ready: function() {      
-            // this.isSeletedFirtsOption = true;      
-            console.log('0AAA INI');
+            // this.isSeletedFirtsOption = true;                  
             xThisComComprobante=this;	
             // this.class = this.class == '' ? 'xTextRow2 xCursor' : this.class;
             getAllComprobantes();                      
@@ -215,8 +214,7 @@
         getValorIncial: function(comprobante) {
             this.fire('getValorIncialx', {values: comprobante});
         },
-        getValorSelecionado: () => {     
-            console.log('0getValorSelecionado');       
+        getValorSelecionado: () => {                 
             if (!xThisComComprobante.modoComprobanteSelected) {
                 xThisComComprobante.modoComprobanteSelected = xThisComComprobante.cardsTPC[0];  
             }
@@ -231,8 +229,7 @@
             // recargar data, ej al cambiar correlativo api                        
             getAllComprobantes();
         },
-        reset: () => {
-            console.log('AAA reset');
+        reset: () => {            
             resetListComprobante()
         },
         getClass: function (index) {
@@ -264,8 +261,7 @@
                 // this.fire('getCategoria', { categorias: e.model.item });
                 // this.fire('onChange', { categorias: e.model.item });
         },
-        resetModoComprobanteSelected: function () {
-            console.log('reset modo comprobante selected');
+        resetModoComprobanteSelected: function () {             
             this.modoComprobanteSelected = this.cardsTPC[0];
             this.modoComprobanteSelected.modo_title = '';
             this.cardsTPC[1].modo_title = 'POR CONSUMO';

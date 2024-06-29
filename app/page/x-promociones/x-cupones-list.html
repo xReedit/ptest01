@@ -1,0 +1,143 @@
+<dom-module id="x-cupones-list">
+    <link rel="import" href="./x-cupones-detalle.html">
+    <script src="../../view/httpFech.js"></script>
+    <template>
+        <style>            
+        </style>
+        <div hidden$="[[!showCuponDetalle]]" class="animate__animated animate__fadeIn">
+            <x-cupones-detalle on-close="showDetalle" id="compCuponDetalle"></x-cupones-detalle>
+        </div>
+        <div hidden$="[[showCuponDetalle]]" class="animate__animated animate__fadeIn">
+            <br>
+            <div class="xMiCard xradius" style="width:94%; max-width: 1300px;">
+                <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                    <div class="d-flexx justify-content-between align-items-center">
+                        <p class="fs-18">Cupones de descuento</p>
+                    </div>
+                </div>
+                <div class="xContentCard" style="padding: 20px;">
+                    <!-- LISTA DE CUPONES -->
+                    <div class="d-flexx justify-content-between align-items-center">
+                        <p class="fw-600 fs-18">Lista</p>
+                        <button class="btn btn-sm btn-success" on-click="newCupon">+ Crear Cupon</button>
+                    </div>
+                    <br>
+
+                    <table class="w-100">
+                        <thead>
+                            <th>Activo</th>
+                            <th width="25%">Titulo</th>
+                            <th>Creacion</th>
+                            <th>Vigencia</th>                            
+                            <th>Lanzamiento</th>
+                            <th align="center">Emitidos</th>
+                            <th align="center">Canjeados</th>
+                            <th aling="right"></th>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="{{listCupones}}">
+                                <tr>
+                                    <td>
+                                        <paper-toggle-button checked$="[[item.check_activo]]" on-change="activarCupon"></paper-toggle-button>
+                                    </td>
+                                    <td>
+                                        <p>{{item.titulo}}</p>
+                                        <p class="text-secondary fs-10">{{item.descripcion}}</p>
+                                    </td>
+                                    <td>
+                                        <p>{{item.usuario}}</p>
+                                        <p class="text-secondary fs-10">{{item.fecha_creacion}}</p>
+                                    </td>                                    
+                                    <td>
+                                        <p><span class="fw-600">Desde:</span> {{item.fecha_inicio}}</p>
+                                        <p><span class="fw-600">Hasta :</span> {{item.fecha_termina}}</p>
+                                    </td>                                    
+                                    <td>                                        
+                                        <p class="fw-600">{{item.fecha_inicio_emitir}}</p>                                        
+                                    </td>
+                                    <td align="center">{{item.cantidad_emitido}}</td>
+                                    <td align="center">{{item.cantidad_activado}}</td>
+                                    <td aling="right">
+                                        <div>                                            
+                                            <button class="btn btn-sm btn-info" data-id="{{item.idcupon}}" on-click="modificarCupon">Modificar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'x-cupones-list',
+            properties: {
+                listCupones: {
+                    type: Object,
+                    value: function() {
+                        return {};
+                    }
+                },
+                showCuponDetalle: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+            ready: function() {
+                this.showCuponDetalle = false;
+                this.loadDataCupones();
+            },
+            loadDataCupones: async function() {
+                // load lista de cupones
+                const http = new httpFecht();
+                const rpt = await http.axiosExecuteJSON({
+                    url: '../../bdphp/log_009.php?op=6001',
+                    method: 'GET'
+                });
+
+                console.log('rpt', rpt);
+                this.listCupones = rpt.datos.map(x => {
+                    x.check_activo = x.activo == '0' ? true : false;
+                    return x;
+                })                 
+            },
+            showDetalle: function() {
+                this.showCuponDetalle = !this.showCuponDetalle;
+                if (!this.showCuponDetalle) {
+                    this.loadDataCupones();
+                }
+            },
+            newCupon: function() {
+                this.$.compCuponDetalle.nuevoCupon();
+                this.showCuponDetalle = !this.showCuponDetalle;
+            },
+            modificarCupon: function(e) {
+                const idcupon = e.target.dataId;
+                
+                this.$.compCuponDetalle.cuponModificar(idcupon);
+                this.showCuponDetalle = !this.showCuponDetalle;
+            },
+            activarCupon: async function(e) {
+                const idcupon = e.model.item.idcupon;
+                const activo = e.target.checked ? 0 : 1;
+                
+                const http = new httpFecht();
+                const rpt = await http.axiosExecuteJSON({
+                    url: '../../bdphp/log_009.php?op=6003',
+                    method: 'POST',
+                    data: {
+                        idcupon: idcupon,
+                        activo: activo
+                    }
+                });
+
+                console.log('rpt', rpt);
+
+                
+            }
+        });
+    </script>
+</dom-module>

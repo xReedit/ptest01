@@ -1,94 +1,125 @@
 <dom-module id="x-comp-item-subitems">
+    <link rel="import" href="../../x-componentes/x-comp-ctrl-add-fast/x-comp-ctrl-add-fast.html">
     <template>
-        <paper-dialog id="dialog_item_comp" style="max-width: 400px; overflow-x: auto;" class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-        <div style="max-height: 82vh;">
-            <!-- descripcion producto -->
-            <div class="xheader-top">
-                <h4>{{desProducto}} <span class="xmenu_item_2" id="contetStock">{{stockProducto}}</span></h4>                
-                <!-- stock
-                <div class="xstock_item" id="contetStock">
-                    <span>stock</span>
-                    <p>{{stockProducto}}</p>
-                </div> -->
-            </div>            
-            <!-- descripcion producto -->
+        <paper-dialog id="dialog_item_comp" class="dialog_redondo dlg-subitems" 
+             class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+            <div style="max-height: 82vh;">
+                <!-- descripcion producto -->
+                <div class="xheader-top">
+                    <h4>{{desProducto}} <span class="xmenu_item_2" id="contetStock">{{stockProducto}}</span></h4>                
+                    <!-- stock
+                    <div class="xstock_item" id="contetStock">
+                        <span>stock</span>
+                        <p>{{stockProducto}}</p>
+                    </div> -->
+                </div>            
+                <!-- descripcion producto -->
 
-            <!-- body -->
-            <div class="body-content">
-                <div hidden$ = "[[ !isShowDetalleProducto ]]" class="pb-10">
-                    <span class="fs-12 color-secundario">{{detalleProducto}}</span>
-                    <!-- <div class="xLinea2"></div> -->
-                </div>                
-                <br>
-                <!-- sub items -->
-                <div hidden$="[[ !isExistSubitems ]]">
-                    <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
-                        <div>
-                            <div class="xtitulo-subitems">
-                                <div>
-                                    <p class="xBold">{{ labelUpperCase(contentSub.des) }}</p>
-                                    <span class="fs-12 color-secundario">{{contentSub.des_cant_select}} {{contentSub.subitem_cant_select}}</span>
-                                    <span class="txt-obligatorio" hidden$="[[!contentSub.isObligatorio]]">Obligatorio</span>
-                                </div>                            
-                            </div>
-                            
-                            <div>
-                                <template is="dom-repeat" items="[[contentSub.opciones]]" as="subitem">
-                                    <div class="xoption w-100 xCursor">
-                                        <paper-checkbox   
-                                            data-item = "{{subitem}}"         
-                                            data-idcontent = "{{contentSub.iditem_subitem_content}}"
-                                            data-id = "{{index}}"
-                                            checked$ = "[[subitem.selected]]"
-                                            class = "check-subitem w-100"
-                                            disabled$ = "[[subitem.disabled]]"
-                                            onchange = "addSubItem(this)"
-                                            >                                            
-                                            <div class$="[[subitem.classAgotado]]">
-                                                    {{subitem.des}}                                                
-                                                    <span class="xprecio" hidden$ = "[[!subitem.cantidad_visible]]">
-                                                        | [[subitem.cantidad]]
-                                                    </span>
-                                                    <span class="xprecio aling-derecha" hidden$ = "[[!subitem.precio_visible]]">
-                                                        + {{subitem.precio}}
-                                                    </span>
+                <!-- body -->
+                <div class="body-content">
+                    <div hidden$ = "[[ !isShowDetalleProducto ]]" class="pb-10">
+                        <span class="fs-12 color-secundario">{{detalleProducto}}</span>
+                        <!-- <div class="xLinea2"></div> -->
+                    </div>                
+                    <br>
+                    <!-- sub items -->
+                    <div hidden$="[[ !isExistSubitems ]]" class="div-content-subitems">                    
+                        <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
+                            <div class="div-subitem">
+                                <div class="xtitulo-subitems">
+                                    <div>
+                                        <p class="xBold">{{ labelUpperCase(contentSub.des) }}</p>
+                                        <span class="fs-12 color-secundario">{{contentSub.des_cant_select}} {{contentSub.subitem_cant_select}}</span>
+                                        <span class="txt-obligatorio" hidden$="[[!contentSub.isObligatorio]]">Obligatorio</span>
+                                    </div>                            
+                                </div>
+                                
+                                <div id="group-[[contentSub.iditem_subitem_content]]">
+                                    <template is="dom-repeat" items="[[contentSub.opciones]]" as="subitem">
+                                        <div class="xoption w-100 xCursor" hidden$="{{isSubItemCheckBox(contentSub.show_cant_item)}}">
+                                            <paper-checkbox   
+                                                data-item = "{{subitem}}"         
+                                                data-idcontent = "{{contentSub.iditem_subitem_content}}"
+                                                data-id = "{{index}}"
+                                                checked$ = "[[subitem.selected]]"
+                                                class = "check-subitem w-100"
+                                                disabled$ = "[[subitem.disabled]]"
+                                                onchange = "addSubItem(this)"
+                                                >                                            
+                                                <div class$="[[subitem.classAgotado]]">
+                                                        {{subitem.des}}                                                
+                                                        <span class="xprecio" hidden$ = "[[!subitem.cantidad_visible]]">
+                                                            | [[subitem.cantidad]]
+                                                        </span>
+                                                        <span class="xprecio aling-derecha" hidden$ = "[[!subitem.precio_visible]]">
+                                                            + {{subitem.precio}}
+                                                        </span>
+                                                    </div>
+                                            </paper-checkbox>
+                                        </div>
+                                        <div class="xoption w-100 xCursor" hidden$="{{!isSubItemCheckBox(contentSub.show_cant_item)}}">
+                                            <div class$="[[subitem.classAgotado]] w-100">
+                                                <div class="div-count-subitem pl-2">
+                                                    <div>
+                                                        {{subitem.des}}
+                                                        <span class="xprecio" hidden$="[[!subitem.cantidad_visible]]">
+                                                            | [[subitem.cantidad]]
+                                                        </span>                                                        
+                                                    </div>
+                                                    <div class="d-flexx align-content-center align-items-center">
+                                                        <p class="xprecio mr-2" style="width: 15px;" hidden$="[[!subitem.precio_visible]]">
+                                                            + {{subitem.precio}}
+                                                        </p>
+                                                        <x-comp-ctrl-add-fast 
+                                                            on-chagecount="handleCountChange"
+                                                            iditem_subitem_content="[[contentSub.iditem_subitem_content]]"
+                                                            subitem="{{subitem}}"                                                            
+                                                            descripcion_item_ini="[[subitem.des]]"
+                                                            max-quantity="[[contentSub.subitem_cant_select]]"
+                                                        >
+                                                        </x-comp-ctrl-add-fast>
+                                                    </div>
                                                 </div>
-                                        </paper-checkbox>
-                                    </div>
-                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
-                        </div>
-                    </template> 
+                        </template> 
+                    </div>
                     <br><br>
-                </div>
-                <!-- sub items -->
+                    <!-- sub items -->
 
-                <!-- otras indicaciones -->
-                <div class="xreferencia_item">
-                    <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
-                    <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia text-primary fw-900" id="txt_referencia" onkeyup="xChangeIndicacionesItem()">
-                    <hr>
+                    <!-- otras indicaciones -->
+                    <div class="div-add-item">                        
+                        <div class="xreferencia_item pr-2">
+                            <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
+                            <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia text-primary fw-900" id="txt_referencia" onkeyup="xChangeIndicacionesItem()">
+                            <hr>
+                        </div>
+                        <!-- otras indicaciones -->
+    
+                        <!-- tipos de consumo -->
+                        <!-- <br><br> -->
+                        <div class="add-count">
+                            <span class="xColorRow_Rojo" hidden$="[[isOptionRequeridosComplet]]">Hay opciones requeridas por marcar</span>
+                            <div class="xdlgBody" id="_xdlgBody" disabled$="[[!isOptionRequeridosComplet]]">
+                                <div class="spinner"><paper-spinner active></paper-spinner></div>
+                            </div>                
+                        </div>
+                        <!-- tipos de consumo -->
+                    </div>
                 </div>
-                <!-- otras indicaciones -->
+                <!-- body -->            
 
-                <!-- tipos de consumo -->
-                <br><br>
-                <span class="xColorRow_Rojo" hidden$="[[isOptionRequeridosComplet]]">Hay opciones requeridas por marcar</span>
-                <div class="xdlgBody" id="_xdlgBody" disabled$="[[!isOptionRequeridosComplet]]">
-                    <div class="spinner"><paper-spinner active></paper-spinner></div>
-                </div>                
-                <!-- tipos de consumo -->
-            </div>
-            <!-- body -->            
-
-            <div class="xfooter-bottom">
-                <button class="xBoton2 xPlomo xInvisible" id="dlgBtn" onclick="xListoDlgVR_comp();">
-			        Cerrar
-                </button>
-                <div class="txt-precio">
-                    {{precioProducto}}
+                <div class="xfooter-bottom">
+                    <button class="xBoton2 xPlomo xInvisible" id="dlgBtn" onclick="xListoDlgVR_comp();">
+                        Cerrar
+                    </button>
+                    <div class="txt-precio">
+                        {{precioProducto}}
+                    </div>
                 </div>
-            </div>
         </div>
 		</paper-dialog>
     </template>
@@ -125,6 +156,7 @@
     .subitem-content .xoption .xprecio {
         font-size: 10px;
         color: #757575;
+        width: 25px !important;
     }
 
     .xstock_item.xstock_item-redondo {
@@ -145,8 +177,8 @@
         font-size: 12px;
         display: inline-flex;
         border-bottom: 1px solid #e0e0e0;
-        padding-bottom: 2px;
-        padding-top: 2px;
+        padding-bottom: 5px;
+        padding-top: 5px;
     }
 
     .xoption .agotado {
@@ -157,6 +189,7 @@
     .xoption .xprecio {
         font-size: 10px;
         color: #757575;
+        width: 25px !important;
     }
 
     .xprecio.aling-derecha{
@@ -182,21 +215,21 @@
     .xheader-top {
         padding: 25px 0px 5px;
         background: white;
-        position: fixed;
-        /* top: 0; */
-        width: 355px;
+        position: sticky;
+        top: 0;
+        /* width: 355px; */
         z-index: 1;
         border-bottom: 1px solid lightgray;
         padding-bottom: 5px;
-        margin-top: -24px;
+        margin-top: -32px;
     }
 
     .xfooter-bottom {
         position: sticky;
-        bottom: -1px;
+        bottom: -10px;
         z-index: 1;
         border-top: 1px solid lightgray;
-        width: 355px;
+        /* width: 355px; */
         background: white;
         padding-top: 10px;
         padding-bottom: 10px;
@@ -212,8 +245,8 @@
 
     .body-content {
         position: relative;
-        top: 35px;
-        margin-bottom: 35px;
+        top: 15px;
+        margin-bottom: 15px;
     }
 
     #contetStock {
@@ -224,6 +257,11 @@
 
     #checkboxLabel { width: 90%;}
 
+    #checkboxLabel div {
+        display: flex;
+        justify-content: space-between;
+    }
+
     /* .paper-dialog-0 > *:first-child #dialog_item_comp {
         margin-top: 0px;
         margin-bottom: 0px;
@@ -233,6 +271,86 @@
         pointer-events:none;opacity:0.43;
     }
 
+    .div-content-subitems {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 10px; /* Espaciado vertical y horizontal entre los elementos */
+        width: 100%;
+    }
+
+    .div-add-item {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 10px; /* Ajusta este valor para cambiar el espacio entre los elementos */
+        width: 100%;
+        align-items: center;
+        background: #f2f9ff;
+        padding-top: 10px;
+    }
+
+    .div-subitem {
+        padding: 5px;
+        border-radius: 10px;
+        margin-right: 5px;
+        margin-bottom: 5px;   
+        width: 100%;     
+        display: block;
+    }
+
+    .dlg-subitems {
+        padding: 0px;
+        width: 400px;
+        overflow-x: auto;        
+        /* scrollbar-width: thin;
+        scrollbar-color: #bdbdbd white; */
+    }
+
+    .div-count-subitem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .dlg-subitems-on-option {
+        padding: 0px;
+        width: 400px !important;
+        overflow-x: auto; 
+    }    
+
+    @media screen and (min-width: 870px) {
+        .dlg-subitems {
+            width: 700px;
+        }
+
+        .div-subitem {            
+            max-width: 300px;
+            min-width: 200px;
+        }
+
+        /* .add-count {
+            width: 310px;            
+        } */
+    }
+
+    @media screen and (max-width: 870px) {
+        /* .add-count {
+            width: 100%;
+        } */
+        .div-add-item {
+            background: transparent;            
+        }
+
+        /* .div-add-item .xreferencia_item {
+            padding-right: 0px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .div-add-item {
+            flex-wrap: wrap;
+        } */
+    }
 </style>
 <script>
     var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario, keyStorageListSubItem = '::app3_listSubItem';    
@@ -276,14 +394,19 @@
 
         if (  itemPedidos_objItemSelected.subitems ) {
             if ( typeof itemPedidos_objItemSelected.subitems !== "object" ) {
-                itemPedidos_objItemSelected.subitems = JSON.parse(itemPedidos_objItemSelected.subitems);                                
+                itemPedidos_objItemSelected.subitems = JSON.parse(itemPedidos_objItemSelected.subitems);
             }
 
             // xThisComSubItem.listSubItems = [];
             // xThisComSubItem.listSubItems = itemPedidos_objItemSelected.subitems;
 
             xThisComSubItem.listContentSub = [];
+            itemPedidos_objItemSelected.subitems.map( x => {
+                x.cantidad_selected = 0;
+            });
+
             xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
+            console.log('xThisComSubItem.listContentSub', xThisComSubItem.listContentSub);
             
             isExistSubitems = true;
             
@@ -321,6 +444,49 @@
 
         dialog_item_comp.open();
         // objOptionItemSelect.checked = false;
+
+        // la cantidad de items es < 2 entonces al dialog_item_com darle la clase 'dlg-subitems-on-option'
+        if ( itemPedidos_objItemSelected.subitems.length < 2) {
+            dialog_item_comp.classList.add('dlg-subitems-on-option');
+            chageStyleElements();
+        } else {            
+            dialog_item_comp.classList.remove('dlg-subitems-on-option');
+            chageStyleElements2();
+        }
+
+        // isotope
+        setTimeout(() => {
+            $('.div-content-subitems').isotope({
+                itemSelector: '.div-subitem',
+                layoutMode: 'masonry'                
+            });
+        }, 200);
+        
+    }
+
+    function chageStyleElements() {
+        if (window.innerWidth <= 870) return;
+
+            var divSubitem = document.querySelectorAll('.div-subitem');
+            divSubitem.forEach(function (item) {
+                item.style.maxWidth = 'fit-content';
+                item.style.maxWidth = '-webkit-fill-available'
+                item.style.maxWidth = '97%';
+                // item.style.minWidth = '200px';
+            });
+
+           
+        // }
+    }
+
+    function chageStyleElements2() {
+        if (window.innerWidth <= 870) return;
+
+        var divSubitem = document.querySelectorAll('.div-subitem');
+        divSubitem.forEach(function (item) {
+            item.style.maxWidth = '300px';
+            item.style.minWidth = '200px';
+        });
     }
 
     async function getSubtItemsItem(_iditem) {
@@ -451,17 +617,47 @@
     function xListoDlgVR_comp() {
         xVerMipedidoVR();
         dialog_item_comp.close();
+        resetCmpCtrlAddFact();
+
+        // destroy isotope
+        setTimeout(() => {            
+            $('.div-content-subitems').isotope('destroy');
+        }, 100);
     }
 
-    function addSubItem(obj) {
-        const idItemContentObj = obj.dataIdcontent;
-        console.log('idItemContentObj', idItemContentObj);
-        const index = obj.dataId;
-        var subitem = obj.dataItem
-        , listChecks = []
-        , countOptionsCheks = 0;
+    function resetCmpCtrlAddFact() {
+        document.querySelectorAll('x-comp-ctrl-add-fast').forEach((e) => {
+            e.resetQuantity();
+        });
+    }   
 
-        subitem.selected = obj.checked;
+    function addSubItemCtrlCantidad(obj) {
+
+    }
+
+    // _subItemPlus = item no check
+    function addSubItem(obj, _subItemNoCheck = null) {
+        let idItemContentObj=0;
+        let listChecks = [];
+        let countOptionsCheks = 0;
+        let subitem;
+
+        // const idItemContentObj = obj.dataIdcontent;
+        // console.log('idItemContentObj', idItemContentObj);
+        // const index = obj.dataId;
+        // var subitem = obj.dataItem
+        // , listChecks = []
+        // , countOptionsCheks = 0;
+        if ( _subItemNoCheck === null ) {
+            idItemContentObj = obj.dataIdcontent;
+            subitem = obj.dataItem;
+            subitem.selected = obj.checked;
+        } else {
+            subitem = _subItemNoCheck;
+            idItemContentObj = subitem.iditem_subitem_content;
+        }
+
+        // subitem.selected = obj.checked;
 
 
     // subitem.selected = !subitem.selected;
@@ -766,6 +962,57 @@
         },
         labelUpperCase: (val) => {
             return val.toUpperCase();
+        },
+        isSubItemCheckBox: (show_cant_item) => {            
+            return show_cant_item === 1 ? true : false;
+        },
+        handleCountChange: function (e) {            
+            
+            console.log('e.detail', e.detail);
+            const maxQuantity = e.detail.maxQuantity;
+            const iditem_subitem_content = e.detail.iditem_subitem_content;
+            const subItem = e.detail.subitem;
+            const cantItemSelected = e.detail.quantity;
+            const precio_item = subItem.precio;
+            const descripcion_item = e.detail.descripcion_item_ini;
+
+            const idGruop = '#group-' + iditem_subitem_content;            
+            var group = Polymer.dom(this.root).querySelector(idGruop);
+            var items = group.querySelectorAll('x-comp-ctrl-add-fast');
+            let totalQuantity = 0;
+            items.forEach(function (item) {
+                totalQuantity += item.quantity;
+            });
+
+            if (totalQuantity >= maxQuantity) {
+                items.forEach(function (item) {
+                    var incrementControl = item.querySelector('.increment');
+                    incrementControl.classList.add('xdisabled');
+                    item.disableIncrementButton();                    
+                });
+            } else {
+                items.forEach(function (item) {                    
+                    var incrementControl = item.querySelector('.increment');
+                    incrementControl.classList.remove('xdisabled');
+                    item.enableIncrementButton();
+                });
+            }
+
+            // bucamos el item seleccionado
+            let itemSelected = xThisComSubItem.listContentSub.filter(x => x.iditem_subitem_content === iditem_subitem_content)[0];
+            itemSelected.cantidad_selected = totalQuantity;
+            
+            subItem.cantidad_selected = cantItemSelected;
+            subItem.selected = cantItemSelected > 0 ? true : false;
+            // subItem.precio = 0;
+            subItem.des = descripcion_item;
+            if (subItem.selected) {
+                subItem.precio = cantItemSelected * precio_item;
+                subItem.des = cantItemSelected > 1 ? `${cantItemSelected} ${descripcion_item}` : descripcion_item;
+            }       
+            subItem.iditem_subitem_content = iditem_subitem_content;     
+
+            addSubItem(null, subItem);
         }
 	})
 </script>

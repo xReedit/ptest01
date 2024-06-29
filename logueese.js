@@ -96,7 +96,7 @@ window.addEventListener('WebComponentsReady', function (e) {
 						// $.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'})
 						// .done(res => {
 							setClearLocalStorage(false);
-							window.location = 'app/page/m_panel.html';
+							window.location = 'app/page/x-info-status/x-info-status.html';
 							if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL)};
 						// });
 						// window.localStorage.clear();

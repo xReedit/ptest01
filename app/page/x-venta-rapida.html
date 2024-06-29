@@ -3,6 +3,7 @@
 <!-- <link rel="import" href="../x-componentes/x-comp-item-subitems-edit-list/x-comp-item-subitems-edit-list.html"> -->
 <dom-module id="x-venta-rapida">		
 	<script src="../view/httpFech.js"></script>
+	<script src="../view/cupon_manager.js"></script>
 	<link rel="import" href="../web_components/x-pago/x-pago.html">
 	<link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
 	<link rel="import" href="../web_components/paper-progress/paper-progress.html">
@@ -12,7 +13,7 @@
 	<link rel="import" href="../x-componentes/x-pedidos-por-pagar/x-pedidos-por-pagar.html">
 	<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 
-	
+	<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
 
 
@@ -371,7 +372,7 @@
 							<table width="100%" data-TablaName="pedido_subtotales" id="xtb_pedido_subtotales"></table>
 							<br>
 							<div class="p-2" hidden$="[[!showCompDescuento]]">
-								<x-comp-descuento show-detalle="false" id="component_descuento_pedido_vr" importeventa$="[[ importeTotalPedido ]]" classselect="selected-template-1 fs-11"></x-comp-descuento>
+								<x-comp-descuento nom-table-pedido="tb_pedido_detalle" show-detalle="false" id="component_descuento_pedido_vr" importeventa$="[[ importeTotalPedido ]]" classselect="selected-template-1 fs-11"></x-comp-descuento>
 							</div>
 							<div style="float:left">
 								<paper-checkbox style="padding:10px; display:block" class="noselect" id="check_reserva">Reservar</paper-checkbox><br>
@@ -625,6 +626,8 @@ function xIniVentaRapida(){
 		xLoadArrayPedido();
 		
 		xTraerDtTipoConsumo();	
+
+		loadCuponesActivos();
 		
 		xThisVentaRapida.xt_nombre_sede = xDtPrint[0].des_sede;
 		xThisVentaRapida.xt_eslogan = xDtPrint[0].eslogan;
@@ -978,6 +981,11 @@ function xIniVentaRapida(){
 		// console.log('changeDescuento xCompDescuentoPedidoVR', _rptDsc);	
 		// console.log('arrSubtTotalesDescuento', arrSubtTotalesDescuentoVR);
 		// arrSubtTotalesDescuento = colocarDescuentoSubtotales(_rptDsc.value, arrSumSubtTotales, _rptDsc.descripcion, _rptDsc.isAgregar);
+
+		if (!_rptDsc.isAgregar) {
+			// removemos el elemento de importe de descuento creado al momento de validar el cupon
+			removeCuponDsct('tb_pedido_detalle');
+		}
 
 		xSumarTotal(true);
 
@@ -2040,7 +2048,7 @@ function xVerMipedidoVR(){
 									data-idcarta_lista="${n.iditem}" 
 									data-des = "${subitem.des}"
 									data-idsubitem="${subitem.id}"
-									data-index="${index}"
+									data-index="${index}"									
 									>										
 										<td class="dis-flex" data-id="${n.idtipo_consumo}" data-ventarapida="1" data-viene-subitems-mod="1">
 												<div class="btnCount btnMenos">-</div> 
@@ -2053,7 +2061,7 @@ function xVerMipedidoVR(){
 					});
 				}
 
-				xCadenaItemArray=String('<tr class="xPedidoItem row xCursor" onclick="xOpenDlgItemVR('+ i +','+ n.iditem.toString()  +', this);" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'">'+
+				xCadenaItemArray=String('<tr class="xPedidoItem row xCursor" onclick="xOpenDlgItemVR('+ i +','+ n.iditem.toString()  +', this);" data-id="'+n.iditem+'" data-idseccion="'+n.idseccion+'" data-seccion="'+n.des_seccion+'" data-idbus="'+n.idseccion+'" data-idtipocobus="'+n.idtipo_consumo+'" data-idprocede="'+n.idprocede+'" data-procede="'+n.procede+'" data-procedeindex="'+n.procede_index+'" data-ventarapida=1 data-imprimircomanda="'+n.imprimir_comanda+'" data-iddescontar="'+n.idprocede+'" data-cant_descontar="'+n.cant_descontar+'" data-idalmacen_items="'+n.idalmacen_items+'" data-ptotal="'+n.precio_total+'" data-iditem="'+ n.iditem2 +'">'+
 					'<td width="90%">'+xCeroIzq(n.cantidad,2)+' | '+n.des+' '+xIndicacionItem+'</td>'+
 					'<td class="xInvisible" data-ColumName="cantidad" id="cant_descontar">'+xCeroIzq(n.cantidad,2)+'</td>'+
 					'<td width="10px" align="right" class="xtb_pedido_importe" data-ColumName="ptotal" id="ptotal">'+n.precio_total+'</td>'+					

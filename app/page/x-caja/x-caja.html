@@ -116,6 +116,7 @@
 								<input type="text" id="idorg" name="idorg" value="[[xt_org]]">
 								<input type="text" id="idusuario" name="idusuario" value="[[xt_idus]]">
 								<input type="text" id="fecha" name="fecha">
+								<input type="text" id="fecha_hora" name="fecha_hora">
 								<input type="text" id="tipo" name="tipo">
 							</div>
 						</form><br><br>
@@ -533,6 +534,11 @@ function xGuardarIngreso(){
 		$("#form_ingreso #monto").val(xMoneda($("#form_ingreso #monto").val()))
 		$("#form_ingreso #tipo").val(xvalIE);
 
+		// fecha hora en formato: 2019-03-21 15:02:02
+		// var fecha_hora = new Date().toISOString().slice(0, 19).replace('T', ' ');
+		// var fecha_hora = new Date()
+		$("#form_ingreso #fecha_hora").val(fechaNowYYYYMMDD())
+
 		//var xx=$("#form_ingreso").serialize();
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=ie_caja",$("#form_ingreso").serialize(),function(aa){
@@ -727,8 +733,7 @@ function xVerificar(){
 
 	
 
-	xMontoTotalCaja = txt_total_caja.value;
-	//$.post('x../../bdphp/log.php?op=16',{xid:xDataEmp.Data[0].xu,xtb:xDevolverFecha()},function(xData){
+	xMontoTotalCaja = txt_total_caja.value;	
 	$('#xTituloRpt').html('<paper-spinner active></paper-spinner>').trigger('create');
 	//$('#xTituloRpt').text('');	
 	const datos = {

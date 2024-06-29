@@ -1,13 +1,13 @@
 <dom-module id="x-comp-show-updates-sytem">    
-	<template is="dom-bind">       
+	<template>       
         <paper-dialog id="dialog_show_change_sys" modal  entry-animation="scale-up-animation"	exit-animation="fade-out-animation" class="dialog_redondo" with-backdrop>
             <div class="d-flexx justify-content-between align-items-center">
-                <p class="fs-18">Cambios y/o actualizaciones</p>
+                <p class="fs-18">Cambios y/o Actualizaciones</p>
                 <button class="btn btn-sm btn-secondary" dialog-dismiss> <i class="fa fa-close"></i> </button>
             </div>
             <div class="pr-3 pl-3 pb-2">
                 <div>
-                    <div style="padding: 5px; background: grey;">
+                    <!-- <div style="padding: 5px; background: grey;">
                         <img style="width: 100%; max-width: 500px;" id="img_gif_show" src="{{ gifSeleted.img }}" alt="">                        
                     </div>
                     <div class="d-flexx align-items-lg-center justify-content-between">
@@ -21,6 +21,20 @@
                         </div>
                         <div>
                             <button class="btn btn-sm btn-dark" onclick="nextGifNotification()"> <i class="fa fa-arrow-circle-right"></i> </button>
+                        </div>
+                    </div> -->
+                    <div>
+                        <!-- titulo -->
+                        <div>
+                            <p class="fw-600 fs-18">{{ titulo }}</p>
+                        </div>
+                        <div>
+                            <p>{{ descripcion }}</p>
+                        </div>
+                        <br>
+                        <div class="d-flexx">
+                            <button class="btn btn-sm btn-secondary mr-2" dialog-dismiss> <i class="fa fa-close"></i> Cerrar</button>
+                            <button class="btn btn-sm btn-primary" on-click="showRegister">Ver registro de cambios</button>
                         </div>
                     </div>
                 </div>
@@ -87,8 +101,6 @@
         });
     }
 
-
-
     
 
     Polymer({
@@ -99,10 +111,58 @@
             gifIndexSelected: Number,
             counTotalGif: Number,
             gifIndexSelectedShow: Number,
+            titulo: String,
+            descripcion: String,
+            route: String
 		}, 
 		attached: function() {
 			xThisShowUpdatesSys=this;
-			xCompShowUpdatesIni();
-        }
+            console.log('check changelog ===');
+			// xCompShowUpdatesIni();
+            this.callVersionChangelog();
+        },
+        callVersionChangelog: async function() {
+            const url = '../../bdphp/api.php?route=get-version-changelog';
+            const http = new httpFecht();
+            let rpt = await http.axiosExecuteJSON({
+                type: 'GET',
+                url: url,
+                isShowPreload: false
+            });
+            console.log('callVersionChangelog == ', rpt);
+            if (!rpt.success) { return; }
+
+            const dataChangelog = rpt.data;
+            this.titulo = dataChangelog.titulo;
+            this.descripcion = dataChangelog.descripcion;
+            this.route = dataChangelog.route;
+
+            this.showDialogChangeSys();
+        },
+        showRegister: function() {
+            // abrir en una nueva pestaña
+            window.open('https://blog.papaya.com.pe/changelog/v?page='+ this.route, '_blank');
+
+            // cerrar el dialogo
+            // dialog_show_change_sys.close();
+        },
+        showDialogChangeSys: async function() {
+            const _swalAlertValues = paramsSwalAlert;	
+            _swalAlertValues.html = `<div class="p-1" style="overflow: hidden;"><i class="fa fa-flag fa-2x text-primary" aria-hidden="true"></i>
+                                <p class="mt-1 fs-20 text-warning">Actualizaciones</p>
+                                <p class="mt-1 fs-18">${this.titulo}</p>
+                                <p class="fs-15">${this.descripcion}</p
+                                </div>`;
+            
+            _swalAlertValues.confirmButtonText = "Ver Cambios";
+            _swalAlertValues.cancelButtonText = "Cerrar";
+            _swalAlertValues.showCancelButton = true;
+
+            const rptDialogChange = await showAlertSwalHtmlDecision(_swalAlertValues);
+            if (rptDialogChange.value) {
+                // abrir en una nueva pestaña
+                this.showRegister();
+            }
+        }   
     })
 </script>

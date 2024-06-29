@@ -1,7 +1,103 @@
 <link rel="import" href="./x-repartidores.html">
 <link rel="import" href="./x-admin-change-sys.html">
 <dom-module id="x-admin">
+	<link rel="import" href="../../x-componentes/x-comp-select-plan/x-comp-select-plan.html">
 	<template>
+
+		<paper-dialog id="dialogSedeUp"  entry-animation="scale-up-animation" exit-animation="fade-out-animation"
+			class="dialog_redondo" with-backdrop>
+			<div class="xContent">
+				<p class="fs-20 fw-600">Restablecer Servicio</p>
+				<br>
+				<div>
+					<!-- restable el servicio a la sede -->
+					<p>Establecimiento: <span class="text-primary" id="p_razonsocial">{{sedeDown.razonsocial}}</span></p>
+					<p>Sede: <span class="text-primary" id="p_nomsede">{{sedeDown.nomsede}}</span></p>
+					<p>Ciudad: <span class="text-primary" id="p_ciudad">{{sedeDown.ciudad}}</span></p>
+					<hr>
+					<p class="fw-600 fs-18">¿Está seguro de restablecer el servicio a la sede?</p>
+					<br>
+					<div>
+						<button class="btn btn-sm btn-success" on-click="upSede">Restablecer</button>
+						<button class="btn btn-sm btn-secondary" onclick="dialogSedeUp.close()"> Cerrar</button>
+					</div>
+				</div>
+			</div>									
+		</paper-dialog>
+
+		<paper-dialog id="dialogSedeDown" entry-animation="scale-up-animation" exit-animation="fade-out-animation"
+			class="dialog_redondo" with-backdrop>
+			<div class="xContent">
+				<p class="fs-20 fw-600">Dar de baja</p>
+				<br>
+				<div>
+					<div>
+						<p>Establecimiento: <span class="text-primary" id="p_razonsocial">{{sedeDown.razonsocial}}</span></p>
+						<p>Sede: <span class="text-primary" id="p_nomsede">{{sedeDown.nomsede}}</span></p>
+						<p>Ciudad: <span class="text-primary" id="p_ciudad">{{sedeDown.ciudad}}</span></p>
+						<br>
+						<!-- motivo de baja -->
+						<p>Motivo de baja:</p>
+						<textarea class="selected-template-1 w-100" id="motivo_baja_sede"></textarea>
+						<!-- fecha de baja -->
+						<p>Fecha de baja:</p>
+						<input type="date" class="selected-template-1" id="fecha_baja_sede">
+					</div>
+					<br>
+					<hr>
+					<p class="fw-600 fs-18">¿Está seguro de dar de baja a la sede?</p>
+					<br>
+					<div>
+						<button class="btn btn-sm btn-danger" on-click="downSede">Dar de baja</button>
+						<button class="btn btn-sm btn-secondary" onclick="dialogSedeDown.close()"> Cerrar</button>
+					</div>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog id="dialogPagarServicio" entry-animation="scale-up-animation" exit-animation="fade-out-animation"
+			class="dialog_redondo" with-backdrop>
+			<div class="xContent">
+				<p class="fs-15 fw-600">Registrar pago del servicio</p>
+				<br>
+				<div>				
+					<div class="d-flexx align-items-center" hidden$="[[isShowChagePlan]]">
+						<p class="fw-600 text-primary" id="p_plancontrado">Plan contratado: </p>					
+						<i class="fa fa-refresh text-dark ml-2 xCursor" onclick="showChangePlan()"></i>
+					</div>	
+					<div hidden$="[[!isShowChagePlan]]">
+						<p>Seleccione Plan:</p>
+						<x-comp-select-plan clasecss="selected-template-1" id="compPlanSelectChange"></x-comp-select-plan>
+					</div>
+				</div>
+				<br>
+				<div class="xLinea2"></div>
+				<div class="d-flexx">
+					<div class="pr-2">
+						<p>Ultimo Mes Pagado:</p>
+						<input type="month" class="selected-template-1 xPasarEnter2" id="sus_ultimo_mes_pago_re">
+					</div>
+	
+					<div>
+						<p>Periodo:</p>
+						<select id="selPeriodoRe" class="selected-template-1 xCursor">
+							<option value="MENSUAL">MENSUAL</option>
+							<option value="SEMESTRAL">SEMESTRAL</option>
+							<option value="ANUAL">ANUAL</option>
+						</select>
+					</div>
+				</div>
+				<br>
+				<p>Importe pagado:</p>
+				<input type="text" class="selected-template-1" id="importe_pago_suscripcion">
+				<br><br>
+				<div>
+					<button class="btn btn-sm btn-success" onclick="registerPagoServicioSuscripcion()">Registrar</button>
+					<button class="btn btn-sm btn-secondary" onclick="dialogPagarServicio.close()"> Cerrar</button>
+				</div>
+
+			</div>
+		</paper-dialog>
 
 		<paper-dialog id="dialog_add_us_cpc" entry-animation="scale-up-animation"
 			exit-animation="fade-out-animation" class="dialog_redondo" with-backdrop>
@@ -125,6 +221,10 @@
 						</div>						
 						<hr>
 						<br>
+						<div>
+							<input type="text" id="textBuscarSede" class="xMiInput w-100 fs-18" placeholder="Buscar..." onkeyup="xBuscarSedesSuscritos(this)">
+						</div>
+						<br>
 						<table width="100%" id="tb_pedidos_borrados">
 							<thead>
 								<th>#</th>
@@ -134,6 +234,7 @@
 								<th>Tipo</th>						
 								<th>F. Inicio</th>						
 								<th>Estado</th>
+								<th>Pago</th>
 								<th></th>
 							</thead>
 							<tbody>
@@ -146,7 +247,23 @@
 										<td>{{item.tipo}}</td>
 										<td>{{item.finicio}}</td>
 										<td>Activo</td>
-										<td title="Modificar" onClick="xAdmModificarOrg(this)"><span class="xIconRow xCursor"><img src="../../../images/edit.png"></span></td>
+										<td>
+											<div class="text-center">
+												<span class$="{{computeClass(item.is_bloqueado)}}">
+													<span hidden$="{{_isEqual(item.is_bloqueado, '1')}}"><i class="fa fa-check"></i></span>
+													<span data-id="{{item.idsede}}" onclick="openPagoServicioSuscripcion(this)" hidden$="{{!_isEqual(item.is_bloqueado, '1')}}"><i class="fa fa-circle xCursor"></i></span>
+												</span>
+											</div>
+										</td>											
+										<td>
+											<div class="d-flexx" data-id="{{index}}">
+												<span class$="{{computeClass(item.is_baja)}}" data-id="{{index}}">
+													<i hidden$="{{!_isEqual(item.is_baja, '1')}}" title="Dado de baja" class="fa fa-arrow-down xCursor" on-click="openDialogDown"></i>
+													<i hidden$="{{_isEqual(item.is_baja, '1')}}" title="Activo" class="fa fa-rocket mr-4 xCursor" on-click="openDialogDown"></i>
+												</span>
+												<span title="Modificar" onClick="xAdmModificarOrg(this)" class="xIconRow xCursor ml-2"><img src="../../../images/edit.png"></span>
+											</div>
+										</td>
 									</tr>
 								</template>
 							</tbody>
@@ -199,7 +316,7 @@
 							<button class="xBoton2 xAzul xDerecha" onclick="xCpcNewUsRepartidor();">Nuevo</button>
 						</div>						
 						<hr>
-						<br>
+						<br>						
 						<table width="100%" id="tb_cpc">
 							<thead>
 								<th>#</th>
@@ -250,6 +367,15 @@
 		</div>
 	</template>
 </dom-module>
+<style>
+	.red {
+		color: red;
+	}
+
+	.green {
+		color: green;
+	}
+</style>
 <script type="text/javascript" src="./us_cpc.js"></script>
 <script>
 var xThisAdmin, xPopupLoad, arrSede=[];
@@ -266,8 +392,17 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 		$.ajax({ url: '../../bdphp/log_004.php?op=1' })
 		.done((res) => {
 			const _res = $.parseJSON(res);
+			arrSede = _res.datos;
 			xThisAdmin.ListSedes = _res.datos;			
 		});
+	}
+
+	function xBuscarSedesSuscritos(obj) {
+		let nom_sede = obj.value.toLowerCase();
+		console.log('nom_sede', nom_sede);
+		let arrSearch = arrSede.filter(s => s.nomsede).filter(s => s.nomsede.toLowerCase().includes(nom_sede));
+		console.log('arrSearch', arrSearch);
+		xThisAdmin.ListSedes = arrSearch;
 	}
 
 	function xLoadRepartidores(){
@@ -309,6 +444,58 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 		dialog_add_us_repartidor.open();
 	}
 
+	function openPagoServicioSuscripcion(obj) {
+		console.log('obj.dataId', obj.dataId);
+		xThisAdmin.idSedeSelectedPago = obj.dataId;
+		const rowSede = xThisAdmin.ListSedes.filter(s => s.idsede === obj.dataId)[0];
+		$('#importe_pago_suscripcion').val(rowSede.costo_restobar_fijo_mensual);
+		$('#selPeriodoRe').val(rowSede.frecuencia);
+		$('#p_plancontrado').text('Plan contratado: ' + rowSede.plan);	
+
+		const xCompSelPlanChange = document.getElementById('compPlanSelectChange');
+		xCompSelPlanChange.setPlan(rowSede.idsede_plan_contratado);
+
+		dialogPagarServicio.open();
+	}
+
+	function registerPagoServicioSuscripcion() {
+		xPopupLoad.xopen();
+		const _importe_pago_suscripcion = $('#importe_pago_suscripcion').val();
+		const _ultimo_mes_pago_re = $('#sus_ultimo_mes_pago_re').val();
+		const _selPeriodoRe = $('#selPeriodoRe').val();
+		const _idSedeSelectedPago = xThisAdmin.idSedeSelectedPago;
+
+		const xCompSelPlanChange = document.getElementById('compPlanSelectChange');
+		const _idsede_plan_contratado = xCompSelPlanChange.getPlanSeleted().idsede_plan_contratado;
+
+		const dataSendPago = {
+			data: {
+				idsede: _idSedeSelectedPago,
+				importe_pagado: _importe_pago_suscripcion,
+				ultimo_pago: _ultimo_mes_pago_re,
+				frecuencia: _selPeriodoRe,
+				idsede_plan_contratado: _idsede_plan_contratado,				
+			}
+		}
+
+		console.log('dataSendPago', dataSendPago);
+
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1804', data: dataSendPago })
+			.done((res) => {
+				console.log('res suscripcion', res);
+				dialogPagarServicio.close()
+				let rowSede = xThisAdmin.ListSedes.filter(s => s.idsede === xThisAdmin.idSedeSelectedPago)[0];
+				rowSede.is_bloqueado = '0';
+
+				xThisAdmin.ListSedes = JSON.parse(JSON.stringify(xThisAdmin.ListSedes));
+				xPopupLoad.xclose();
+			});
+	}
+
+	function showChangePlan() {
+		xThisAdmin.isShowChagePlan = !xThisAdmin.isShowChagePlan;
+	}
+
 
 	Polymer({
 			is: 'x-admin',
@@ -320,16 +507,72 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 				listRepartidores: [],
 				UsarioCpc_sedes: {},
 				UsarioRepartidorSelected: {},
+				idSedeSelectedPago: Number,
+				isShowChagePlan: false,
+				sedeDown: {},
 				// hayDatosRestaurar: boolean = true,
 			},
 			attached: function () {		
 				// this.UsarioRepartidorSelected = {};
 				this.selected = 0,
+				this.isShowChagePlan = false;
 				xThisAdmin = this;
 				xIniAdmin();
 			},
 			displayIndex: function (index) {
 				return xCeroIzq(index + 1, 1);
+			},
+			computeClass: function (is_bloqueado) {
+				return is_bloqueado === '1' ? 'red' : 'green';
+			},
+			_isEqual: function (value1, value2) {
+				return value1 === value2;
+			},
+			openDialogDown: function (obj) {
+				const index = obj.target.parentElement.dataId;
+				this.sedeDown = this.ListSedes[index];
+
+				console.log('index', this.sedeDown);
+				if ( this.sedeDown.is_baja === '0' ) {
+					dialogSedeDown.open();
+				} else {
+					dialogSedeUp.open();
+				}
+			},
+			downSede: function () {
+				const motivo_baja_sede = $('#motivo_baja_sede').val();
+				const fecha_baja_sede = $('#fecha_baja_sede').val();
+				const idsede = this.sedeDown.idsede;
+
+				const dataSend = {
+					idsede: idsede,
+					motivo_baja_sede: motivo_baja_sede,
+					fecha_baja_sede: fecha_baja_sede
+				}
+
+				$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=19', data: dataSend })
+					.done((res) => {
+						console.log('res baja', res);
+						this.sedeDown.is_bloqueado = '1';
+						this.sedeDown.is_baja = '1';
+						this.ListSedes = JSON.parse(JSON.stringify(this.ListSedes));
+						dialogSedeDown.close();
+					});
+			},
+			upSede: function () {
+				const idsede = this.sedeDown.idsede;
+				const dataSend = {
+					idsede: idsede
+				}
+
+				$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1901', data: dataSend })
+					.done((res) => {
+						console.log('res baja', res);
+						this.sedeDown.is_bloqueado = '0';
+						this.sedeDown.is_baja = '0';
+						this.ListSedes = JSON.parse(JSON.stringify(this.ListSedes));
+						dialogSedeUp.close();
+					});
 			},
 		})
 </script>

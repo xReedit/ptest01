@@ -295,10 +295,12 @@ function _cpSocketSavePedidoStorage(pedido) {
 }
 
 
-function _cpSocketComprobanteWhatApp(payload) {
-    // if (!isSocket) { return; }
-    // localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
+function _cpSocketComprobanteWhatApp(payload) {    
     this.socketCP.emit('restobar-send-comprobante-url-ws', payload);    
+}
+
+function _cpSocketCuponWhatsApp(payload) {    
+    this.socketCP.emit('restobar-send-cupones-ws', payload);    
 }
 
 function _cpSocketSendWhatAppPermisoAdmin(payload) {

@@ -397,7 +397,7 @@
 
 
         function xloadProductoItemSub(){
-            $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=16'})
+            $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=160011'})
             .done( function (DtItems) {
                 var xDtItems=$.parseJSON(DtItems);
                 xThisComSubItemEdit.dtProItem=xDtItems.datos;
@@ -452,7 +452,8 @@
                     source:xThisComSubItemEdit.dtProItem,
                     appendTo : $('#div-input-producto'),
                     select: function( event, ui ) {
-                        xObjTxtItemPro.val(ui.item.label);
+                        let _label = ui.item.label.split(' | ')[1];
+                        xObjTxtItemPro.val(_label);
                         xObjTxtItemPro.attr('data-id',ui.item.value);                                                
                         xNewItemPro=false;
                         xIdProducto_sel=ui.item.value;

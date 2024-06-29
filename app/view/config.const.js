@@ -2,8 +2,8 @@ var HEADERS_COMPROBANTE = { 'Content-Type': 'application/json', 'Authorization':
 var HEADERS_COMPROBANTE_ONLY_AUTH = { 'Authorization': '' }	
 
 // desarrollo
-var URL_SERVER = 'http://localhost:5819/v3/'; // desarrollo
-var URL_SOCKET = 'http://localhost:5819';
+var URL_SERVER = 'http://192.168.1.47:5819/v3/'; // desarrollo
+var URL_SOCKET = 'http://192.168.1.47:5819';
 var URL_IMG_CARTA = 'http://192.168.1.65/restobar/file/';
 var URL_IMG_CARTA = 'http://192.168.1.65/restobar/file/';
 

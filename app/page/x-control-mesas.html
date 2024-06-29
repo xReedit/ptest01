@@ -9,6 +9,7 @@
 	<link rel="import" href="../x-componentes/x-comp-area-mesa/x-comp-area-mesa.html">
 
 	<script src="../view/httpFech.js"></script>
+	<script src="../view/cupon_manager.js"></script>
 
 	
 	<!-- <script type="text/javascript" src="../../js/rxjs.umd.js"></script>
@@ -256,7 +257,7 @@
 										<br>
 
 										<!-- <button class="btn btn-sm btn-warning"><i class="fa fa-sort-amount-desc"></i> Aplicar Descuento</button> -->
-										<x-comp-descuento id="component_descuento_pedido" importeventa$="[[ importeTotalPedido ]]"></x-comp-descuento>
+										<x-comp-descuento nom-table-pedido="tb_det_pedidos" id="component_descuento_pedido" importeventa$="[[ importeTotalPedido ]]"></x-comp-descuento>
 
 										<br><br>
 										</div>
@@ -916,7 +917,13 @@ function xIniControlMesa(){
 	xCompDescuentoPedido=document.getElementById('component_descuento_pedido');
 	xCompDescuentoPedido.addEventListener('changeDescuento', function (e) {		
 		const _rptDsc = e.detail;
+		console.log('_rptDsc', _rptDsc);
 		arrSubtTotalesDescuento = colocarDescuentoSubtotales(_rptDsc.value, arrSumSubtTotales, _rptDsc.descripcion, _rptDsc.isAgregar);
+
+		if ( !_rptDsc.isAgregar ) {
+			// removemos el elemento de importe de descuento creado al momento de validar el cupon
+			removeCuponDsct('tb_det_pedidos');
+		}
 		
 		xSumarTotalPedidos(null, true);
 
@@ -1975,7 +1982,18 @@ async function xArmarSqlAddLUlI(){
 async function goSendPedidoFecht(_data) {
 	const _fetchApi = new httpFecht();
 	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
+
+	xCheckIsCuponCanjeadoCM();
 	return rpt;	
+}
+
+function xCheckIsCuponCanjeadoCM() {	
+	const compDescuento = document.querySelector('x-comp-descuento');
+	let cuponDecuento = compDescuento.getCuponDescuento();
+	console.log('cuponDecuento', cuponDecuento);
+	if (cuponDecuento.aplica) {
+		setCountCuponCanjeado(cuponDecuento.cupon);
+	}
 }
 
 function xLLamarPrintAddLUlI() {
@@ -2111,19 +2129,6 @@ async function xRegistrarClientePagoCP(){
 		const idP = await goSendPedidoFecht(dataSendPedido);
 		const _arrRpt = idP;
 
-		// $.ajax({ type: 'POST', url: '../../bdphp/log_001.php', 
-		// 	data:{
-		// 		p_from:'c', 
-		// 		p_items_seleccionados: JSON.stringify(xarr_items_seleccionados), 
-		// 		p_cliente: JSON.stringify(xarr_cliente), 
-		// 		p_header: JSON.stringify(xarr_header), 
-		// 		p_tipo_pago: JSON.stringify(xarr_tipo_pago), 
-		// 		p_subtotales: JSON.stringify(xarr_subtotal), 
-		// 		p_comprobante: JSON.stringify(xarr_comprobante)
-		// 	}})
-		// .done( function (xrpt_correlativo) {
-		// 	const _arrRpt = xm_all_SetResponseLog_001(xrpt_correlativo);
-
 
 			const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 			xrpt_correlativo = _arrRpt.correlativo_comprobante;
@@ -2153,6 +2158,7 @@ async function xRegistrarClientePagoCP(){
 		// }).fail(enProcesoGuardarPago = false);
 
 		xValPago.setResetFormaPago();
+		checkCuponesActivos(xarr_cliente);
 		return
 	}else{
 		//paga todo - listo
@@ -2209,6 +2215,8 @@ async function xRegistrarClientePagoCP(){
 		
 		_cpASocketNotifyPayPedido(_payloadPedidoPagado);
 		xValPago.setResetFormaPago();
+
+		checkCuponesActivos(xarr_cliente);
 	}
 }
 
@@ -3672,8 +3680,7 @@ function xGetAreaMesas() {
 function xPintarMesas() {
 	// console.log('pintar mesa');
 	let listAreasMesas = xGetAreaMesas();
-	const isShowAreas = listAreasMesas.length > 0;
-	console.log('listAreasMesas', listAreasMesas);
+	const isShowAreas = listAreasMesas.length > 0;	
 	
 	var selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x =>	x.idtipo_consumo)[0];
 	if ( !selector_tpc_local_id ) {
@@ -3711,8 +3718,7 @@ function xPintarMesas() {
 		}
 	} else {
 		// con areas establecidas		
-		for (let area of listAreasMesas) {
-			console.log('area', area);
+		for (let area of listAreasMesas) {			
 			xfilterArea = xfilterArea === '' ? `.${area.title}` : xfilterArea;
 			for (let i = parseInt(area.desde); i <= parseInt(area.hasta); i++) {
 				xtxtEstado = 'xNeutro';
@@ -3787,14 +3793,14 @@ function xPintarEstadoPedido(_objPedido = 0) {
 		_objPedido.lastIdPedido = lastIdPedidoCobrado
 	} 
 
-	console.log('run axiosExecute');
+	
 	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=501', isShowPreload:false, data: {objPedido: _objPedido}})
 	.then((dtPe) => {
 		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {objPedido: _objPedido}})
 		// .done( function (dtPe) {			
 			// if($(".grid .xMiCardPedido").length>0){return;}			
 			var xdtPe=JSON.parse(dtPe);
-			console.log('xdtPe');
+			
 			// console.log('xdtPe', xdtPe);
 
 			var xCadenaTPC=''

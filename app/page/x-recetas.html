@@ -240,11 +240,32 @@ function xAbrirDetalleReceta(obj){
 		// console.log('xdtDetalleI', xdtDetalleI);
 		var xcadena_det_i='';
 		xdtDetalleI=xdtDetalleI.datos
+		xThis.listItemsReceta = [];
 		for (var i = 0; i < xdtDetalleI.length; i++) {
+
+			const idRow = `${xdtDetalleI[i].idproducto_stock}${xdtDetalleI[i].idporcion}-${xdtDetalleI[i].descripcion}`;
+			
+			const rowItem = {
+				iditem_ingrediente: xdtDetalleI[i].iditem_ingrediente,
+				iditem: xdtDetalleI[i].iditem,
+				descripcion: xdtDetalleI[i].descripcion,
+				cantidad: xdtDetalleI[i].cantidad,
+				costo: xdtDetalleI[i].costo,
+				idporcion: xdtDetalleI[i].idporcion,
+				idproducto_stock: xdtDetalleI[i].idproducto_stock,
+				viene_de: xdtDetalleI[i].viene_de,
+				necesario: xdtDetalleI[i].necesario,
+				idrow: idRow,
+				new: 0,
+				borrado: 0,
+				modificado: 0
+			}
+
+			xThis.listItemsReceta.push(rowItem);
 
 			const _valCheckedNecesario = xdtDetalleI[i].necesario == '1' ? 'checked' : '';
 
-			xcadena_det_i=String(xcadena_det_i+'<tr class="row">'+			
+			xcadena_det_i=String(xcadena_det_i+'<tr class="row" data-id="'+ idRow +'">'+			
 			'<td><paper-checkbox '+ _valCheckedNecesario +' onchange="xIngredienteNecesario(this)"></paper-checkbox></td>'+
 			'<td data-ColumName="descripcion">'+xdtDetalleI[i].descripcion+'</td>'+
 			'<td align="right" data-ColumName="cantidad">'+xdtDetalleI[i].cantidad+'</td>'+
@@ -318,7 +339,7 @@ function xGuardarRegistroReceta(){
 	l_ingrediente=l_ingrediente.replace(/-item/g,xid_item);	
 	l_ingrediente=l_modify+' '+l_ingrediente;
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=100', data:{xsql:l_ingrediente}})
-	$.ajax({ type: 'POST', url: '../../bdphp/log_100.php?op=3', data:{xsql:l_ingrediente}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log_100.php?op=301', data:{xsql:l_ingrediente, list: xThis.listItemsReceta}})
 		.done( function (dtsuccess) {
 			xPopupLoad.xclose();
 			xNuevaIngredientes();
@@ -347,9 +368,27 @@ function xAddItemIngrediente(){
 	if (_descripcionProducto == "" || xcosto_ingrediente == "") { return; }
 
 	xcosto_ingrediente = parseFloat($("#costo_item").val()).toFixed(2);
+	const idRow = `${xidproducto_porcionado}${idProductoReceta}-${_descripcionProducto}`;
+	const _rowItem = {
+		iditem_ingrediente: 0,
+		iditem: xid_item,
+		descripcion: _descripcionProducto,
+		cantidad: xcan_item,
+		costo: xcosto_ingrediente,
+		idporcion: xidproducto_porcionado,
+		idproducto_stock: idProductoReceta,
+		viene_de: vieneDe,
+		necesario: 1,
+		idrow: idRow,
+		new: 1,
+		borrado: 0,
+		modificado: 0
+	}
+
+	xThis.listItemsReceta.push(_rowItem);
 
 
-	var xrow_ingrediente='<tr class="row">'+
+	var xrow_ingrediente='<tr class="row" data-id="'+ idRow +'">'+
 			'<td><paper-checkbox checked onchange="xIngredienteNecesario(this)"></paper-checkbox></td>'+
 			'<td data-ColumName="descripcion">'+ _descripcionProducto +'</td>'+
 			'<td align="right" data-ColumName="cantidad">'+xcan_item+'</td>'+
@@ -371,8 +410,22 @@ function xAddItemIngrediente(){
 	$("#des_porcion").focus();
 }
 
+function removeItemListReceta(idRow){
+	const index = xThis.listItemsReceta.findIndex(item => item.idrow === idRow);
+	const _rowItem = xThis.listItemsReceta.find(item => item.idrow === idRow);
+	_rowItem.borrado = 1;
+	// xThis.listItemsReceta.splice(index, 1);
+}
+
 function xIngredienteNecesario(obj) {
 	const _valCheckNecesario = obj.checked ? 1 : 0;
+	var xObj = $(obj).parent().parent();
+	var xidrow = xObj.attr('data-id');
+
+	const _rowItem = xThis.listItemsReceta.find(item => item.idrow === xidrow);
+	_rowItem.necesario = _valCheckNecesario;
+	_rowItem.modificado = 1;
+
 	$(obj).parents('tr').find('#td_necesario').text(_valCheckNecesario)
 }
 
@@ -395,6 +448,10 @@ function xRefreshImportes(){
 
 function xBorrarItemLocalPro(obj){
 	var xObj=$(obj).parent().parent();
+	
+	var xidrow=xObj.attr('data-id');
+	removeItemListReceta(xidrow);
+
 	xObj.fadeTo(550, 0, function () {$(this).remove();xSumaringredientes();});
 }
 
@@ -461,7 +518,11 @@ Polymer({
 	is:'x-recetas',
 	properties:{
 		dtProItem_porcion:Object,
-		isFromRecetaProducto:Boolean
+		isFromRecetaProducto:Boolean,
+		listItemsReceta: {
+			type: Array,
+			value: []
+		}
 	},
 	attached:function(){
 		this.isFromRecetaProducto = false;

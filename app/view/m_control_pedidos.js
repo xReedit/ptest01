@@ -70,7 +70,7 @@ function xIniControlPedido(){
 		// }, 2500);
 
 		// xOpenPage(2, "?f1=1?df1=LOCAL");
-		
+		loadCuponesActivos();
 	});
 	//if(xIdUsuario==''){	xIdUsuario=window.localStorage.getItem('::app3_woU');}
 
@@ -109,7 +109,7 @@ function xOpenPage(xop, parametro){
 			h = window.screen.availHeight-100;
 			if ( parseInt(xm_log_get('datos_org_sede')[0].pwa) === 1  ) { // si socket 
 				if ( !myWindowAppCarta ) {					
-					myWindowAppCarta = window.open('https://app.restobar.papaya.com.pe', "carta", "width=400,height="+h);
+					myWindowAppCarta = window.open('https://express.papaya.com.pe', "carta", "width=400,height="+h);
 				}
 				myWindowAppCarta.focus();
 				return;
