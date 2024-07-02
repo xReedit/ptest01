@@ -1,8 +1,8 @@
 <dom-module id="x-comp-item-subitems">
     <link rel="import" href="../../x-componentes/x-comp-ctrl-add-fast/x-comp-ctrl-add-fast.html">
     <template>
-        <paper-dialog id="dialog_item_comp" class="dialog_redondo dlg-subitems" 
-             class="xDlgItem_mipedido" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        <paper-dialog id="dialog_item_comp" class="xDlgItem_mipedido dialog_redondo dlg-subitems" 
+             modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
             <div style="max-height: 82vh;">
                 <!-- descripcion producto -->
                 <div class="xheader-top">
@@ -20,8 +20,8 @@
                     <div hidden$ = "[[ !isShowDetalleProducto ]]" class="pb-10">
                         <span class="fs-12 color-secundario">{{detalleProducto}}</span>
                         <!-- <div class="xLinea2"></div> -->
+                        <br>
                     </div>                
-                    <br>
                     <!-- sub items -->
                     <div hidden$="[[ !isExistSubitems ]]" class="div-content-subitems">                    
                         <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
@@ -86,8 +86,8 @@
                                 </div>
                             </div>
                         </template> 
+                        <br><br>
                     </div>
-                    <br><br>
                     <!-- sub items -->
 
                     <!-- otras indicaciones -->
@@ -319,7 +319,7 @@
     }    
 
     @media screen and (min-width: 870px) {
-        .dlg-subitems {
+        .dlg-subitems-with-items {
             width: 700px;
         }
 
@@ -416,6 +416,8 @@
             isExistSubitems = false;
             $('.contet-subitem').addClass('xhidden');
         }
+
+        isExistSubitems ? $('#dialog_item_comp').addClass('dlg-subitems-with-items') : $('#dialog_item_comp').removeClass('dlg-subitems-with-items');
 
         xThisComSubItem.isExistSubitems = isExistSubitems;
         

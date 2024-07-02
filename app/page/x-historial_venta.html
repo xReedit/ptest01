@@ -409,6 +409,7 @@
 						<th>Mesa</th>
 						<th>Atendido Por</th>
 						<th>Cliente</th>
+						<th>Referencia</th>
 						<th>Tipo Doc</th>
 						<th>Serie</th>
 						<th>Num Doc</th>
@@ -433,6 +434,7 @@
 								<td>{{item.nummesa}}</td>
 								<td>{{item.nom_usuario_show}}</td>
 								<td>{{item.nom_cliente}}</td>
+								<td>{{item.referencia_pedido}}</td>
 								<td>{{item.des_comprobante}}</td>
 								<td>{{item.comprobante_serie}}</td>
 								<td>{{item.comprobante_num}}</td>
@@ -1754,6 +1756,8 @@ function xGenerarReporteExcelRegistroPagoDetallado() {
 				// nom_usuario cambiar ',' por ' - '
 				x.nom_usuario_show = x.nom_usuario.split(',');
 				x.nom_usuario_show = x.nom_usuario_show.join(' - ');
+
+				x.referencia_pedido = x.referencia_pedido === x.nom_cliente ? '' : x.referencia_pedido;
 
 				x.anulado = x.estado === "1";
 				x.des_estado = x.anulado ? 'Anulado' : 'Cobrado';
