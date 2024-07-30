@@ -631,8 +631,7 @@ function transferenciaCompletaMini(xfile){
 				xAddNewConfigNewOrg(xThisAdminNew.xIdOrg, xThisAdminNew.xIdSede);
 			}
 
-			xLoadAdmDatosOrg();
-			$("#frm_sede").reset();				
+					
 					
 
 			// guardar igv 
@@ -655,7 +654,7 @@ function transferenciaCompletaMini(xfile){
 			const _sus_nombre_contacto = sus_nombre_contacto.value;
 			const _sus_telefono_contacto = sus_telefono_contacto.value;
 			const _sus_fecha_inicio = fecha_inicio.value;
-			const _sus_periodo = selPeriodo.value;		
+			const _sus_periodo = selPeriodo.value;
 			const _sus_idsede_plan_contratado = compPlanSelect.getPlanSeleted().idsede_plan_contratado;
 			const _sus_idsede = xThisAdminNew.xIdSede;
 
@@ -677,6 +676,9 @@ function transferenciaCompletaMini(xfile){
 			.done((res) => {
 				console.log('res suscripcion', res);
 			});
+
+			xLoadAdmDatosOrg();
+			$("#frm_sede").reset();		
 		});
 	}
 

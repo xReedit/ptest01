@@ -155,15 +155,15 @@ function selectOptionCompanies() {
 
 function addCompaniesContador() {
 	// const objControl = $("#tb_cpc_sede");
-	if (event.keyCode != 13) return;
+	// if (event.keyCode != 13) return;
 	if ( !_id_num_us_new_cpc ) { alert('Guarda primero el contador.'); return;}
 
-	var mes_inicio  = '';
-	if (_companySelect.mes_inicio) {
-		mes_inicio = _companySelect.mes_inicio;
-	} else {
-		mes_inicio = xDevolverFechaParte('mm') + '/' + xDevolverFechaParte('yy');
-	}
+	var mes_inicio  = xDevolverFechaFormatInputDate(txt_companies_f_inicio.value);
+	// if (_companySelect.mes_inicio) {
+	// 	mes_inicio = _companySelect.mes_inicio;
+	// } else {
+	// 	mes_inicio = xDevolverFechaParte('mm') + '/' + xDevolverFechaParte('yy');
+	// }
 	
 
 	const dataCompanies = {

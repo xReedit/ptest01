@@ -102,8 +102,8 @@
 		<paper-dialog id="dialog_add_us_cpc" entry-animation="scale-up-animation"
 			exit-animation="fade-out-animation" class="dialog_redondo" with-backdrop>
 			<div class="xContent">				
-				<div class="x_div_linea">
-					<div class="xitem1 xBordeDe">
+				<div class="d-flexx">
+					<div class="xBordeDe w-50">
 						<h3>Datos del contador</h3>
 						<hr>
 						<br>
@@ -134,7 +134,7 @@
 						<button class="xBoton2 xAzul" onclick="xCpeValidarFormSave();">Guardar</button>
 						<button class="xBoton2 xPlomo" onclick="dialog_add_us_cpc.close();">Cerrar</button>
 					</div>
-					<div class="xitem2 xBordeIzqHover">
+					<div class="xBordeIzqHover">
 						<p><strong>Establecimientos Asignados</strong></p>						
 						<hr>
 						<br>						
@@ -145,6 +145,7 @@
 								<th align="left">Sede</th>
 								<th align="left">Serie</th>
 								<th align="left">Ciudad</th>
+								<th align="left">Mes Inicio</th>
 								<th></th>
 							</thead>
 							<tbody>
@@ -162,9 +163,15 @@
 									<td>
 										<input type="number" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="txt_companies_serie" espaciar>
 									</td>
-									<td colspan="2">
-										<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="txt_companies_ciudad" onkeyup="addCompaniesContador()" espaciar>
+									<td>
+										<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="txt_companies_ciudad" espaciar>
 									</td>
+									<td>
+										<input type="month" style="width: 50px;" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="txt_companies_f_inicio" espaciar>
+									</td>		
+									<td>										
+										<button class="btn btn-sm btn-success" onclick="addCompaniesContador();">+</button>
+									</td>							
 								</tr>
 								<template is="dom-repeat" items="{{listCpc_sedes}}" as="item">
 									<tr data-t="us_cpc_sedes" data-id="{{item.idus_cpc_sedes}}" id="{{index}}">
@@ -173,6 +180,7 @@
 										<td class="xfont11">{{item.nomsede}}</td>
 										<td class="xfont11">{{item.serie}}</td>
 										<td class="xfont11">{{item.ciudad}}</td>
+										<td class="xfont11">{{item.mes_inicio}}</td>
 										<td>
 											<span class="xDeleteRow2 xCursor" title="Anular" onclick="xBorrarItem(this);"></span>
 										</td>

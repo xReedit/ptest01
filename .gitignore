@@ -1,6 +1,7 @@
 
 #ignore
 bdphp/ManejoBD.php
+app/view/config.const.js
 config.js
 file
 dist

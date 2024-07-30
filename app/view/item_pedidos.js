@@ -1424,7 +1424,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=205', data:{'idcategoria': xidCategoria}})
 	.done( function (dtCarta) {
-		var xdt_rpt=JSON.parse(dtCarta)
+		var xdt_rpt=JSON.parse(dtCarta)		
 		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
 		xGeneralDataCarta=xdt_rpt.datos;
 		// console.log('xGeneralDataCarta', xGeneralDataCarta);
