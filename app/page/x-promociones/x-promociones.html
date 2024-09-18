@@ -102,10 +102,10 @@
 
                             <div>
                                 <p class="fw-600">Titulo</p>
-                                <input type="text" class="selected-template-1 w-100" placeholder="Titulo" onChange="conMayusculas(this)" id="titulo" onKeyUp="xValidFormPromo()" required >
+                                <input type="text" class="selected-template-1 w-100" placeholder="Titulo" onChange="conMayusculas(this)" id="titulo_promo" onKeyUp="xValidFormPromo()" required >
                                 <br><br>
                                 <p class="fw-600">Descripcion</p>
-                                <textarea class="selected-template-1 w-100" maxlength="150" rows="4" id="descripcion" onKeyUp="xValidFormPromo()" required></textarea>                                
+                                <textarea class="selected-template-1 w-100" maxlength="150" rows="4" id="descripcion_promo" onKeyUp="xValidFormPromo()" required></textarea>                                
                             </div>
                             <br>
                             <div>
@@ -622,9 +622,9 @@
     }
 
     function xValidFormPromo() {
-        xThisProm.isFormValid = titulo.value !== '';
+        xThisProm.isFormValid = titulo_promo.value !== '';
         if ( !xThisProm.isFormValid ) { return; }
-        xThisProm.isFormValid = descripcion.value !== '';
+        xThisProm.isFormValid = descripcion_promo.value !== '';
         if ( !xThisProm.isFormValid ) { return; }
         xThisProm.isFormValid = diasSemana !== '';        
         if ( !xThisProm.isFormValid ) { return; }

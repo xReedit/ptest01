@@ -85,6 +85,10 @@
                             </div>
                         </div>
                     </div>
+                    <button class="btn btn-sm btn-dark" on-click="goDash2">
+                        <i class="fa fa-dashboard"></i>
+                        Nuevo Dashboard
+                    </button>
 
                     <!-- <div>
                         <p class="fs-11 text-secondary">Fecha</p>
@@ -1756,6 +1760,13 @@
 		},
 		detached:function(){
 			// grafico_meta_diaria = null;
-            _cpSocketClose(); }
+            _cpSocketClose(); 
+        },
+        goDash2: function(){
+            const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
+            const _url = 'https://modulo.papaya.com.pe/login?us=' + _dataUS + '&page=/dashboard/ventas';
+            window.open(_url, "Papaya Dashboard");
+        },
+
 	})
 </script>

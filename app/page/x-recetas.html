@@ -4,7 +4,7 @@
 	<link rel="import" href="../x-componentes/x-comp-find-producto-almacen/x-comp-find-producto-almacen.html">
 
 	<template>
-		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo" style="max-width: 700px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo" style="max-width: 900px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<p class="xfont11"><strong>En ingredientes</strong> ingrese en primer lugar el ingrediente principal, del cual se contara la cantidad en la carta y en el inventario. Ejemplo: Platos: Pechuga a la plancha, ingrediente principal: Pechuga 150gr.</p>
 				<div class="xLinea2"></div><br>
@@ -26,7 +26,7 @@
 							</tr>
 							<tr>
 								<td>Rentabilidad</td>
-								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:50%;" placeholder="Rentabilidad" id="txt_rentabilidad" espaciar disabled encendido></td>
+								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" placeholder="Rentabilidad" id="txt_rentabilidad" espaciar disabled encendido></td>
 							</tr>
 						</table>
 						<div class="xInvisible">
@@ -58,9 +58,9 @@
 
 						<table class="xtable4 w-100" id="tb_ingredientes" data-TablaName="item_ingrediente">
 							<thead>
-								<td class="xSinBorde" width="10px"></td>
-								<th class="xSinBorde" width="60%"></th>
-								<th class="xSinBorde" width="10px"></th>
+								<td class="xSinBorde" width="5px"></td>
+								<th class="xSinBorde" width="50%"></th>
+								<th class="xSinBorde" width="20px"></th>								
 								<th class="xSinBorde" width="10px"></th>
 								<th class="xSinBorde" width="10px"></th>
 							</thead>
@@ -74,8 +74,12 @@
 										onlynomalmacen="true" appendtocmp="#dialog_detalle_receta">
 									</x-comp-find-producto-almacen>									
 								</td>
-								<td><input type="number" class="xMiInput xPasarEnter2" placeholder="Cant" onChange="conMayusculas(this)" id="cant_item" required></td>
-								<td><input type="number" class="xMiInput" placeholder="Costo" onChange="conMayusculas(this)" id="costo_item" required></td>
+								<td>
+									<div>
+										<p style="margin-top: -28px; text-align: center; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="text-success w-50"><strong>{{undConvercion.unidad}}</strong></p></p>
+										<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required></td>
+									</div>
+								<td><input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required></td>
 								<td><paper-fab icon="add" onclick="xAddItemIngrediente()" title="Agregar item" class="xmini"></paper-fab></td>
 							</tr>
 						</table>
@@ -185,12 +189,30 @@ function xIniRecetas(){
 	});
 
 	$("#cant_item").on('keyup',function(){
+		if (xThis.isFromRecetaProducto) return;
+		
 		var xcosto_ingrediente=$("#costo_item").val();
 		var xcan_item=$("#cant_item").val();
 		xcosto_ingrediente=parseFloat(xcosto_ingrediente)*parseFloat(xcan_item);
 		if(isNaN(xcosto_ingrediente)){xcosto_ingrediente=0;}
 		xcosto_ingrediente=parseFloat(xcosto_ingrediente).toFixed(2);
 		$("#costo_item").val(xcosto_ingrediente);
+	});
+
+	const compProductoAlmacenReceta = document.getElementById('compProductoAlmacenReceta');
+
+	compProductoAlmacenReceta.addEventListener('productoSeleted', function(e) {
+		const _productoSelected = e.detail;
+		xThis.isProductoConversion = _productoSelected.para_receta === '1';
+		if ( xThis.isProductoConversion ) {
+			$.ajax({ type: 'POST', url: '../../bdphp/log_010.php?op=get-und-conversion-by-id', contentType: 'application/json', data: JSON.stringify({ id: _productoSelected.idunidad_conversion }) })
+			.done( function (dtUndConversion) {
+				const _dtUndConversion = JSON.parse(dtUndConversion);
+				xThis.undConvercion = _dtUndConversion.datos[0];				
+			})			
+		}
+		xThis.productoSeleted = _productoSelected;
+		console.log('productoSeleted', _productoSelected);
 	});
 }
 function xNuevoPlato(){
@@ -249,12 +271,13 @@ function xAbrirDetalleReceta(obj){
 				iditem_ingrediente: xdtDetalleI[i].iditem_ingrediente,
 				iditem: xdtDetalleI[i].iditem,
 				descripcion: xdtDetalleI[i].descripcion,
-				cantidad: xdtDetalleI[i].cantidad,
+				cantidad: xdtDetalleI[i].cantidad_show,
 				costo: xdtDetalleI[i].costo,
 				idporcion: xdtDetalleI[i].idporcion,
 				idproducto_stock: xdtDetalleI[i].idproducto_stock,
 				viene_de: xdtDetalleI[i].viene_de,
 				necesario: xdtDetalleI[i].necesario,
+				und_medida: xdtDetalleI[i].und_medida,
 				idrow: idRow,
 				new: 0,
 				borrado: 0,
@@ -266,9 +289,9 @@ function xAbrirDetalleReceta(obj){
 			const _valCheckedNecesario = xdtDetalleI[i].necesario == '1' ? 'checked' : '';
 
 			xcadena_det_i=String(xcadena_det_i+'<tr class="row" data-id="'+ idRow +'">'+			
-			'<td><paper-checkbox '+ _valCheckedNecesario +' onchange="xIngredienteNecesario(this)"></paper-checkbox></td>'+
-			'<td data-ColumName="descripcion">'+xdtDetalleI[i].descripcion+'</td>'+
-			'<td align="right" data-ColumName="cantidad">'+xdtDetalleI[i].cantidad+'</td>'+
+			// '<td></td>'+
+			'<td colspan="2" data-ColumName="descripcion"><paper-checkbox class="m-0" ' + _valCheckedNecesario +' onchange="xIngredienteNecesario(this)"></paper-checkbox>'+xdtDetalleI[i].descripcion+'</td>'+
+			'<td align="center" data-ColumName="cantidad">'+xdtDetalleI[i].cantidad_show+ xdtDetalleI[i].und_medida +'</td>'+
 			'<td align="right" data-ColumName="costo" class="row_costo">'+xdtDetalleI[i].costo+'</td>'+
 			'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarItemLocalPro(this);"></span></td>'+
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
@@ -353,6 +376,8 @@ function xAddItemIngrediente(){
 	var xcosto_ingrediente=$("#costo_item").val();
 	var xcan_item=$("#cant_item").val();
 
+	const und_conversion = xThis.isFromRecetaProducto ? xThis.undConvercion.abreviatura : '';
+
 	// if (xdes_ingrediente == "" || xcosto_ingrediente == "") { return; }
 	
 	//xcosto_ingrediente=parseFloat(parseFloat(xcosto_ingrediente)*parseFloat(xcan_item)).toFixed(2);
@@ -362,7 +387,7 @@ function xAddItemIngrediente(){
 	const vieneDe = xThis.isFromRecetaProducto ? '2' : '1';
 	const idProductoReceta = xThis.isFromRecetaProducto ? _productoSelected.value : 0;
 	const _descripcionProducto = xThis.isFromRecetaProducto ? _productoSelected.label : xdes_ingrediente;	
-	
+	const _cantidad = xThis.isFromRecetaProducto ? xcan_item / _productoSelected.factor_conversion : xcan_item;
 	xidproducto_porcionado = xThis.isFromRecetaProducto ? 0 : xidproducto_porcionado;
 
 	if (_descripcionProducto == "" || xcosto_ingrediente == "") { return; }
@@ -373,7 +398,8 @@ function xAddItemIngrediente(){
 		iditem_ingrediente: 0,
 		iditem: xid_item,
 		descripcion: _descripcionProducto,
-		cantidad: xcan_item,
+		cantidad: _cantidad,
+		cantidad_show: xcan_item,
 		costo: xcosto_ingrediente,
 		idporcion: xidproducto_porcionado,
 		idproducto_stock: idProductoReceta,
@@ -382,16 +408,17 @@ function xAddItemIngrediente(){
 		idrow: idRow,
 		new: 1,
 		borrado: 0,
-		modificado: 0
+		modificado: 0,
+		und_medida: und_conversion
 	}
 
 	xThis.listItemsReceta.push(_rowItem);
 
 
 	var xrow_ingrediente='<tr class="row" data-id="'+ idRow +'">'+
-			'<td><paper-checkbox checked onchange="xIngredienteNecesario(this)"></paper-checkbox></td>'+
-			'<td data-ColumName="descripcion">'+ _descripcionProducto +'</td>'+
-			'<td align="right" data-ColumName="cantidad">'+xcan_item+'</td>'+
+			// '<td></td>'+
+			'<td colspan="2" data-ColumName="descripcion"><paper-checkbox checked onchange="xIngredienteNecesario(this)"></paper-checkbox>'+ _descripcionProducto +'</td>'+
+			'<td align="right" data-ColumName="cantidad">'+xcan_item + und_conversion +'</td>'+
 			'<td align="right" data-ColumName="costo" class="row_costo">'+xcosto_ingrediente+'</td>'+
 			'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarItemLocalPro(this);"></span></td>'+
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
@@ -511,7 +538,8 @@ function xListaDeRecetas(){
 
 function xoptionTipoSeletedReceta(obj) {
 	const _valOption = obj.value;	
-	xThis.isFromRecetaProducto = _valOption == '2'		
+	xThis.isFromRecetaProducto = _valOption == '2';	
+	xThis.isProductoConversion = false;
 }
 
 Polymer({
@@ -522,12 +550,32 @@ Polymer({
 		listItemsReceta: {
 			type: Array,
 			value: []
+		},
+		isProductoConversion: {
+			type: Boolean,
+			value: false
+		},
+		undKardex: {},
+		undConvercion: {},
+		productoSeleted: {
+			type: Object,
+			value: {}
 		}
 	},
 	attached:function(){
 		this.isFromRecetaProducto = false;
     	xThis=this;
     	xIniRecetas();
-    }
+    },
+	calcCostoConversion: function(obj) {
+		// const obj = this.target;
+		if (!this.isFromRecetaProducto) return;
+
+		const cantidad_producto = parseFloat(obj.target.value);
+		const costo_producto = this.productoSeleted.costo_conversion * cantidad_producto;
+		console.log('cantidad_producto', costo_producto);
+
+		costo_item.value = costo_producto;
+	}
 })
 </script>

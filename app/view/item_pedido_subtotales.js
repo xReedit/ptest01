@@ -474,3 +474,8 @@ function darFormatoSubTotalesComisionRepartidor(sedeInfo, arrTotales, costoEntre
 		}
 		return arrTotales;
 	  }
+
+	function getAmountTotalSubTotales(arrTotales) {
+		const rowTotal = arrTotales[arrTotales.length - 1];
+		return rowTotal.importe;
+	}

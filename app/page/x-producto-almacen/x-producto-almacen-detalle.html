@@ -1,12 +1,14 @@
 <dom-module id="x-producto-almacen-detalle">
+    <link rel="import" href="../../x-componentes/x-comp-select-und-medida/x-comp-select-und-medida.html">    
+    <script src="../../view/httpFech.js"></script>
+    <script src="../../services/producto/produto-service.js"></script>
     <template>
-
 
         <paper-dialog modal id="dialog_additem_pro_detalle" class="dialog_redondo" modal entry-animation="scale-up-animation"
             style="min-width: 350px;" exit-animation="fade-out-animation" with-backdrop>
             <div class="xContent">
-                <h3>Modificar Producto</h3>
-                <br><br>
+                <h3>Modificar Producto</h3>                
+                <br>                
                 <div class="xLinea2"></div>
                                 
                 <form id="frm_item_pro"> 
@@ -28,13 +30,22 @@
                         </div>
 
                         <div>
-                            <p class="m-0 fs-10 text-secondary mt-2">Stock</p>
-                            <input type="text" id="stock" readonly name="no_post" placeholder="Stock" class="xMiInput xPasarEnter2"
-                                onChange="conMayusculas(this)" espaciar><br>
-                            
-                            <p class="m-0 fs-10 text-secondary mt-2">Stock Minimo</p>
-                            <input type="text" id="stock_minimo" name="stock_minimo" placeholder="Stock minimo"
-                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" required espaciar><br>                    
+                            <div class="d-flexx">
+                                <div style="max-width: 78px;">
+                                    <p class="m-0 fs-10 text-secondary mt-2">Stock</p>
+                                    <input type="text" id="stock" readonly name="no_post" placeholder="Stock" class="xMiInput xPasarEnter2"
+                                        onChange="conMayusculas(this)" espaciar>
+                                </div>
+                                <div style="max-width: 78px;">
+                                    <p class="m-0 fs-10 text-secondary mt-2">Stock Minimo</p>
+                                    <input type="text" id="stock_minimo" name="stock_minimo" placeholder="Stock minimo"
+                                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" required espaciar>
+                                </div>
+                                <br>
+                            </div>
+                            <p class="m-0 fs-10 text-secondary mt-2">Precio Compra</p>
+                            <input type="text" id="precio" name="precio" placeholder="Precio Compra" class="xMiInput xPasarEnter2"
+                                onChange="conMayusculas(this)" required espaciar><br>
         
                             <p class="m-0 fs-10 text-secondary mt-2">Precio de venta</p>
                             <input type="text" id="precio_venta" name="precio_venta" placeholder="Precio de venta x unidad"
@@ -51,7 +62,34 @@
                         <br>
                     </div>
 
-                    <br><br>
+                    <div>
+                        <br>
+                        <paper-checkbox id="check_receta" on-change="changeCheckReceta"></paper-checkbox>Se utilizará en recetas<br>
+                        <span class="text-secondary fs-11">Este producto estara disponible para las recetas.</span>
+                        <br>
+                    </div>
+
+                    <div hidden$="{{!isFactorConversion}}">                    
+                        <p style="max-width: 320px; line-height: normal;" class="fs-10"><strong>Ejemplo:</strong> Si el producto es Bolsa de azucar de 5KG, en <strong>Und Kardex</strong> (Unidad de compra) se coloca KG y en <strong>cantidad por presentacion</strong> 5, y la <strong>Und de Conversión</strong> seria gramos, ya que en las recetas se utilizara en gramos.</p>
+                        <div class="d-flexx mt-2">
+                            <div>
+                                <label for="cmbUndKardex">Und Kardex</label><br>
+                                <x-comp-select-und-medida id="cmbUndKardex"></x-comp-select-und-medida>
+                            </div>
+                            <div class="ml-2">
+                                <label for="num_cantidad_presentacion">Cantidad x Presentacion</label><br>
+                                <input type="number" class="selected-template-1" placeholder="Cantidad" id="num_cantidad_presentacion">
+                            </div>
+                        </div>
+
+                        <br>
+                        <label for="comboUndCosto">Und de Conversión</label>
+                        <p class="text-secondary fs-10 m-0">Unidad que se utilizara en las recetas</p>
+                        <x-comp-select-und-medida id="cmbUndCosto"></x-comp-select-und-medida>
+                        
+                    </div>
+
+                    <br>
                     <div class="xLinea2"></div>
 
 
@@ -61,6 +99,12 @@
                         <input type="text" id="idsede" name="idsede">
                         <input type="text" id="idproducto_familia" name="idproducto_familia">
                         <input type="text" id="venta_x_peso" name="venta_x_peso">
+                        <input type="text" id="para_receta" name="para_receta">
+                        <input type="text" id="idunidad_kardex" name="idunidad_kardex">
+                        <input type="text" id="idunidad_conversion" name="idunidad_conversion">
+                        <input type="text" id="cantidad_presentacion" name="cantidad_presentacion">
+                        <input type="text" id="factor_conversion" name="factor_conversion">
+                        <input type="text" id="costo_conversion" name="costo_conversion">
                         <!-- <input type="text" id="precio_unitario" name="precio_unitario"> -->
                     </div>
                 </form>
@@ -186,6 +230,7 @@ var xthisProductoDetalle;
 let _difStockProducto = 0
 let _msjModificarStockProducto = ''
 let _stockNowProducto = 0; 
+const productoService = new ProductoService();
 
     async function xLoadDataProductoDetalle() {
 
@@ -225,7 +270,43 @@ let _stockNowProducto = 0;
         }
         // console.log('rpt', xthisProductoDetalle.listProductoHistorial);
         xPopupLoad.xclose();
+
+        const cmbUndKardex = document.getElementById('cmbUndKardex')
+        const cmbUndCosto = document.getElementById('cmbUndCosto')
+
+        cmbUndKardex.addEventListener('onchange', (e) => {
+            console.log('cmbUndKardex', e.detail);
+            // xthisProductoDetalle.undKarexSelected = e.detail
+            cmbUndCosto.filter(e.detail.tipo)
+            calcFactorConversionUnd();
+        })
+
+        cmbUndCosto.addEventListener('onchange', (e) => {
+            calcFactorConversionUnd();
+        })
     
+    }
+
+    function calcFactorConversionUnd() {
+        const cmbUndCosto = document.getElementById('cmbUndCosto')
+        const cmbUndKardex = document.getElementById('cmbUndKardex')
+        const undCostoSelected = cmbUndCosto.get()
+        const undKarexSelected = cmbUndKardex.get()
+        const cantUndKardex = num_cantidad_presentacion.value || 0
+        const factorConversion = (cantUndKardex * undKarexSelected.conversion_a_base) / undCostoSelected.conversion_a_base
+        factor_conversion.value = factorConversion
+
+        // costo del producto por unidad de costo
+        // const stock_actual = xthisProductoDetalle.objproducto.stock
+        // const precio_compra_actual = xthisProductoDetalle.objproducto.precio
+        // const precio_x_unidad = precio_compra_actual / stock_actual
+
+        // // // const cant_total_conversion = stock_actual * factorConversion
+        // const costoConversion = precio_x_unidad / factorConversion
+        // costo_conversion.value = costoConversion
+        // // $('#frm_item_pro costo_conversion').val(costoConversion)
+
+        // console.log('costoConversion', costoConversion);
     }
 
     function xOpenModificarDetalleProducto() {
@@ -238,8 +319,27 @@ let _stockNowProducto = 0;
         $("#frm_item_pro #idproducto_familia").val(xthisProductoDetalle.objproducto.idproducto_familia)
         $("#frm_item_pro #idproducto").val(xthisProductoDetalle.objproducto.idproducto)
         $("#frm_item_pro #venta_x_peso").val(xthisProductoDetalle.objproducto.venta_x_peso)
+        $("#frm_item_pro #para_receta").val(xthisProductoDetalle.objproducto.para_receta)
+        $("#cantidad_presentacion").val(xthisProductoDetalle.objproducto.cantidad_presentacion)
+        $("#frm_item_pro #num_cantidad_presentacion").val(xthisProductoDetalle.objproducto.cantidad_presentacion)
+        $("#frm_item_pro #idunidad_kardex").val(xthisProductoDetalle.objproducto.idunidad_kardex)
+        $("#frm_item_pro #idunidad_conversion").val(xthisProductoDetalle.objproducto.idunidad_conversion)
+        $("#frm_item_pro #factor_conversion").val(xthisProductoDetalle.objproducto.factor_conversion)
+        $("#frm_item_pro #costo_conversion").val(xthisProductoDetalle.objproducto.costo_conversion)
+        $("#frm_item_pro #precio").val(xthisProductoDetalle.objproducto.precio)
+
+
+        const cmbUndKardex = document.getElementById('cmbUndKardex')
+        const cmbUndCosto = document.getElementById('cmbUndCosto')
+
+        cmbUndCosto.set(xthisProductoDetalle.objproducto.idunidad_conversion)
+        cmbUndKardex.set(xthisProductoDetalle.objproducto.idunidad_kardex)
 
         check_venta_x_peso_detalle.checked = xthisProductoDetalle.objproducto.venta_x_peso == '1'
+        check_receta.checked = xthisProductoDetalle.objproducto.para_receta == '1'
+        num_cantidad_presentacion.value = xthisProductoDetalle.objproducto.cantidad_presentacion
+        xthisProductoDetalle.isFactorConversion = check_receta.checked
+
         dialog_additem_pro_detalle.open();
     }
 
@@ -279,13 +379,27 @@ let _stockNowProducto = 0;
 
     function xGuardarModificarProducto() {
         //guardar producto
+        calcFactorConversionUnd();
+        const cmbUndKardex = document.getElementById('cmbUndKardex')
+        const cmbUndCosto = document.getElementById('cmbUndCosto')
+        
+
+
+
         xCan_item = $("#frm_item_pro #stock").val();
         // var xPrecio_und_pro = parseFloat(xPrecio_item) / parseFloat(xCan_item);
         $("#frm_item_pro #idorg").val(xIdOrg);
         $("#frm_item_pro #idsede").val(xIdSede);
 
+        const stock_actual = xthisProductoDetalle.objproducto.stock
         const _venta_x_peso = check_venta_x_peso_detalle.checked ? '1' : '0'
+        const _check_receta = check_receta.checked ? '1' : '0'
+        const _cantidad_x_presentacion = !_check_receta ? 0 : num_cantidad_presentacion.value 
         $("#frm_item_pro #venta_x_peso").val(_venta_x_peso)
+        $("#frm_item_pro #para_receta").val(_check_receta)
+        $("#frm_item_pro #cantidad_presentacion").val(_cantidad_x_presentacion)
+        $("#frm_item_pro #idunidad_kardex").val(cmbUndKardex.get().idunidad_medida)
+        $("#frm_item_pro #idunidad_conversion").val(cmbUndCosto.get().idunidad_medida)
 
         // $("#frm_item_pro #precio_unitario").val(xPrecio_und_pro);
         $.post("../../bdphp/ManejoBD_IUD.php?tb=producto", $("#frm_item_pro").serialize(), function (xUltimo_id_pro) {
@@ -298,9 +412,30 @@ let _stockNowProducto = 0;
             xthisProductoDetalle.objproducto.stock_minimo = $("#frm_item_pro #stock_minimo").val()
             xthisProductoDetalle.objproducto.precio_venta = $("#frm_item_pro #precio_venta").val()
             xthisProductoDetalle.objproducto.idproducto_familia = $("#frm_item_pro #idproducto_familia").val()
-            xthisProductoDetalle.objproducto.idproducto = $("#frm_item_pro #idproducto").val()
+            xthisProductoDetalle.objproducto.idproducto = $("#frm_item_pro #idproducto").val()            
+            xthisProductoDetalle.objproducto.venta_x_peso = _venta_x_peso
+            xthisProductoDetalle.objproducto.para_receta = _check_receta
+            xthisProductoDetalle.objproducto.idunidad_kardex = cmbUndKardex.get().idunidad_medida
+            xthisProductoDetalle.objproducto.idunidad_conversion = cmbUndCosto.get().idunidad_medida
+            xthisProductoDetalle.objproducto.cantidad_presentacion = _cantidad_x_presentacion
+            xthisProductoDetalle.objproducto.costo_conversion = $("#frm_item_pro #costo_conversion").val()
+
             xthisProductoDetalle.objproducto = JSON.parse(JSON.stringify(xthisProductoDetalle.objproducto));
 
+            // calcular costo conversion
+            calcCostoConversionProducto(stock_actual)
+            // const httpFechtApi = new httpFecht();
+            // httpFechtApi.axiosExecuteJSON({                
+            //     type: 'POST', 
+            //     url: '../../bdphp/log_010.php',
+            //     data:{
+            //         op: 'calc-costo-conversion',
+            //         idproducto: xthisProductoDetalle.objproducto.idproducto,
+            //         stock_actual: stock_actual,
+            //     }
+            // }).then(rpt => {
+            //         console.log('rpt', rpt);
+            //     })
 
             dialog_additem_pro_detalle.close();
             $("#frm_item_pro").reset();
@@ -328,8 +463,20 @@ let _stockNowProducto = 0;
                 }
             }
 
+            calcCostoConversionProducto(_stockNowProducto)
+            
+
             xthisProductoDetalle.msjStock = _msjModificarStockProducto            
         }
+
+    function calcCostoConversionProducto(stock_actual) {
+        productoService.calcCostoConversion(
+            xthisProductoDetalle.objproducto.idproducto,
+            stock_actual
+        ).then(rpt => {
+            console.log('rpt', rpt);
+        })
+    }
 
     async function saveStockModifyProducto() {
         xPopupLoad.xopen();
@@ -398,7 +545,19 @@ Polymer({
         classMsjStock: String,        
         listFamilias: [],
         listProductoHistorial: [],
-        btnProductoPe: Boolean
+        btnProductoPe: Boolean,
+        isFactorConversion: {
+            type: Boolean,
+            value: false
+        },
+        undKarexSelected: {
+            type: Object,
+            notify: true
+        },
+        undCostoSelected: {
+            type: Object,
+            notify: true
+        }
     },
     // productoChanged: (obj) => {
     //     console.log('changed productoChanged', obj);              
@@ -413,6 +572,11 @@ Polymer({
         this.btnProductoPe = false;
         xthisProductoDetalle=this;
         // xIniPorcion();
+    },
+    changeCheckReceta: function(e) {
+        this.isFactorConversion = e.target.checked    
+        dialog_additem_pro_detalle.center()  
     }    
+
 })
 </script>

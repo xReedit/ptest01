@@ -30,7 +30,7 @@
                     </div>
 
                     <div class="pl-1">
-                        <button class="btn btn-sm btn-danger" onclick="xShowDetalleDsc()">
+                        <button class="btn btn-sm btn-danger" on-click="resetDsc" onclick="xShowDetalleDsc()">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
@@ -79,7 +79,7 @@
 
 </style>
 <script>
-    var xThisCompDesc, datauSPerDsc, paseAccPer = false, keyDscStorage = '::app3_sys_tpdsc', tipoDscSelected, importeInicial = 0, lastValCalc = 0, xPermisoSupervisorDsc;
+    var xThisCompDesc, datauSPerDsc, paseAccPer = false, keyDscStorage = '::app3_sys_tpdsc', tipoDscSelectedb, importeInicial = 0, lastValCalc = 0, xPermisoSupervisorDsc;
 
     function xShowDetalleDsc() {        
         xThisCompDesc.showDetalle = !xThisCompDesc.showDetalle;
@@ -102,7 +102,7 @@
             color: ''
         }
 
-        xThisCompDesc.$.txt_imp_dsc.disabled = false;
+        xThisCompDesc.$.txt_imp_dsc.disabled = false;        
 
 
         // console.log('importeventa', xThisCompDesc.importeventa);
@@ -151,7 +151,8 @@
             try {                
                 xThisCompDesc.listTipoConceptos = JSON.parse(_dtDscStorage);
                 paseDsc = true;
-                tipoDscSelected = xThisCompDesc.listTipoConceptos[0];
+                tipoDscSelectedb = xThisCompDesc.listTipoConceptos[0];
+                xThisCompDesc.tipoDscSelected = tipoDscSelectedb;
                 // console.log('xThisCompDesc.listTipoConceptos desde el storage', xThisCompDesc.listTipoConceptos);
             } catch (error) {
                 paseDsc = false
@@ -170,7 +171,7 @@
                     if ( !res.success ) { console.log('error', res); return; }
                     xThisCompDesc.listTipoConceptos = res.datos;
 
-                    tipoDscSelected = xThisCompDesc.listTipoConceptos[0];
+                    tipoDscSelectedb = xThisCompDesc.listTipoConceptos[0];
 
                     localStorage.setItem(keyDscStorage, JSON.stringify(res.datos));
 
@@ -179,12 +180,12 @@
     }
 
     function selectedDsc(obj) {        
-        tipoDscSelected = xThisCompDesc.listTipoConceptos[obj.selectedIndex];
+        tipoDscSelectedb = xThisCompDesc.listTipoConceptos[obj.selectedIndex];
         // xThisCompDesc.$.txt_imp_dsc.value = '';
         xCalcImporteDsc();
 
         xThisCompDesc.$.txt_imp_dsc.focus();
-        xThisCompDesc.tipoDscSelected = tipoDscSelected;
+        xThisCompDesc.tipoDscSelected = tipoDscSelectedb;
 
         try {
             xThisCompDesc.$.txt_imp_dsc.selected();            
@@ -194,9 +195,9 @@
 
     function xCalcImporteDsc() {
         // si es cupon de descuento
-        if (this.tipoDscSelected.idtipo_descuento === '3') return;
+        if (tipoDscSelectedb.idtipo_descuento === '3') return;
 
-        const isDestPorcentaje = tipoDscSelected.idtipo_descuento === '2';
+        const isDestPorcentaje = tipoDscSelectedb.idtipo_descuento === '2';
         var rptCalc = 0, descripcionDesct = '';
         var importeTotalPedido = xThisCompDesc.importeventa;
 
@@ -222,6 +223,7 @@
 
         lastValCalc = rptCalc;
 
+        xThisCompDesc.importeDsc = rptCalc;
         xThisCompDesc.fire('changeDescuento', {
 			'value': rptCalc,
             'descripcion': descripcionDesct,
@@ -238,6 +240,12 @@
 		properties: {
             showDetalle: Boolean,
             listTipoConceptos: [],
+            importeDsc: {
+                type: Number,
+                notify: true,
+                reflectToAttribute: true,
+                value: 0
+            },
             importeventa: {
                 type: Number,
 				notify: true,
@@ -287,7 +295,7 @@
         validarDsct: async(e) => {
             if ( e.keyCode === 13 ) {
                 // si es 
-                if (this.tipoDscSelected.idtipo_descuento === '3') {
+                if (tipoDscSelectedb.idtipo_descuento === '3') {
                     console.log('verificar cupon de descuento', e.target.value);
                     const rptCupon = await aplicarCuponDsct(e.target.value, xThisCompDesc.nomTablePedido);
                     console.log('¿Cupón válido?', rptCupon);
@@ -320,6 +328,7 @@
                             'isAgregar': true
                         });  
                         
+                        xThisCompDesc.importeDsc = rptCupon.importeDsct;
                         // e.target disabled
                         e.target.disabled = true;
                     }
@@ -339,7 +348,22 @@
 
         },
         getCuponDescuento: () => {
-            return xThisCompDesc.cuponSeleted;
+            return xThisCompDesc.cuponSeleted || {};
+        },
+        get: () => {            
+            if ( xThisCompDesc.tipoDscSelected ) {
+                var valtxt = xThisCompDesc.$.txt_imp_dsc.value || 0;
+                xThisCompDesc.tipoDscSelected.importe = xThisCompDesc.importeDsc || 0
+                xThisCompDesc.tipoDscSelected.valor = valtxt;
+            } else {
+                xThisCompDesc.tipoDscSelected = {};
+            }            
+            return xThisCompDesc.tipoDscSelected;
+        },
+        resetDsc: () => {
+            xThisCompDesc.importeDsc = 0;
+            this.tipoDscSelectedb = null;
+            xThisCompDesc.tipoDscSelected = null;
         }
 	})
 </script>

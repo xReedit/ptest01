@@ -1509,6 +1509,7 @@ async function xGuardarPedidoVR(responde){
 	// console.log('idP', idP);
 	// return;
 
+
 	// chequea si hay productos con venta x peso para enviar el cambio de stock
 	xSendItemVentaxPesoVR(xarr_body)
 
@@ -1673,6 +1674,10 @@ async function goSendPedidoFecht(_data) {
 	const _fetchApiPedido = new httpFecht();
 	try {		
 		console.log('¿_data', _data);
+		const tipoDesc = xCompDescuentoPedidoVR.get();
+		console.log('¿tipoDesc', tipoDesc);
+		_data.p_descuento = tipoDesc.idtipo_descuento ? tipoDesc.idtipo_descuento === 0 ? null : tipoDesc : null;
+
 		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data }, true, false)
 		if (rpt) {
 			// evaluar si se descuenta el stock despues de enviar el pedido

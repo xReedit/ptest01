@@ -1,0 +1,71 @@
+<link rel="import" href="../../web_components/polymer/polymer.html">
+<dom-module id="x-comp-select-und-medida">
+    <template>       
+        <select id="selectUndMedida" class="selected-template-1" on-change="selectedUnidad">            
+            <template is="dom-repeat" items="{{listUndMedida}}" as="item">
+                <option value="[[index]]">[[item.unidad]]</option>
+            </template>
+        </select>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-select-und-medida',
+            properties: {
+                listUndMedidaFilter: {
+                    type: Array,
+                    notify: true
+                },
+                listUndMedida: {
+                    type: Array,
+                    notify: true
+                },
+                undmedida: {
+                    type: Object,
+                    notify: true,
+                    observer: 'get'
+                },
+                filtrotipo: {
+                    type: String,
+                    value: 'all'
+                }               
+            },            
+            listeners: {
+                'onchange': 'get'
+            },
+            attached: function() {
+                // Your code when the element is ready.
+                this.loadUnidadMedida();                
+            },
+            loadUnidadMedida: function() {
+                $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=23' })
+                .done((rpt) => {
+                    rpt = JSON.parse(rpt);
+                    const list = rpt.datos;    
+                    this.listUndMedida = JSON.parse(JSON.stringify(list));                    
+                    this.listUndMedidaFilter = this.listUndMedida;
+                    this.undmedida = this.listUndMedida[0];                         
+                });
+            },
+            selectedUnidad: function() {
+                const index = this.$.selectUndMedida.value;
+                this.undmedida = this.listUndMedida[index];       
+                this.fire('onchange', this.undmedida);
+            },
+            get: function() {
+                return this.undmedida;
+            },
+            set: function (id) {
+                if ( !id || id==0) return;
+                this.undmedida = this.listUndMedida.find((item) => item.idunidad_medida.toString() === id.toString());
+                // mostrar en el select
+                this.$.selectUndMedida.value = this.listUndMedida.indexOf(this.undmedida);
+            },
+            filter: function (tipo) {
+                this.filtrotipo = tipo;
+                this.listUndMedida = this.listUndMedidaFilter.filter((item) => item.tipo.toLowerCase() === tipo.toLowerCase());
+                this.undmedida = this.listUndMedida[0];
+            }
+        });
+    </script>
+</dom-module>

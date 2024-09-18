@@ -1980,6 +1980,10 @@ async function xArmarSqlAddLUlI(){
 
 
 async function goSendPedidoFecht(_data) {
+	// console.log('arrSubtTotalesDescuento', arrSubtTotalesDescuento);
+	const tipoDesc = xCompDescuentoPedido.get();
+	console.log('¿tipoDesc', tipoDesc);
+	_data.p_descuento = tipoDesc.idtipo_descuento ? tipoDesc.idtipo_descuento === 0 ? null : tipoDesc : null;
 	const _fetchApi = new httpFecht();
 	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
 
@@ -2158,7 +2162,9 @@ async function xRegistrarClientePagoCP(){
 		// }).fail(enProcesoGuardarPago = false);
 
 		xValPago.setResetFormaPago();
-		checkCuponesActivos(xarr_cliente);
+
+		const amountTotal = getAmountTotalSubTotales(xarr_subtotal);
+		checkCuponesActivos(xarr_cliente, amountTotal);
 		return
 	}else{
 		//paga todo - listo
@@ -2216,7 +2222,8 @@ async function xRegistrarClientePagoCP(){
 		_cpASocketNotifyPayPedido(_payloadPedidoPagado);
 		xValPago.setResetFormaPago();
 
-		checkCuponesActivos(xarr_cliente);
+		const amountTotal = getAmountTotalSubTotales(xarr_subtotal);
+		checkCuponesActivos(xarr_cliente, amountTotal);
 	}
 }
 

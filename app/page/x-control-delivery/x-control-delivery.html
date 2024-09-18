@@ -183,7 +183,7 @@
                                             <span class="fs-15"><i class="fa fa-motorcycle"></i></span>
                                             <p class="fw-600 m-0 fs-11">Buscando Repartidor</p>
                                             <paper-progress indeterminate class="w-100"></paper-progress>
-                                            <button hidden$="[[!item.isShowBtnCancelarSolicitud]]" onclick="xCDCancelarSolicitarRepartidorPapaya(this)" class="btn btn-sm fs-9 fw-600 btn-flat red mt-1"> Cancelar</button>
+                                            <button onclick="xCDCancelarSolicitarRepartidorPapaya(this)" class="btn btn-sm fs-9 fw-600 btn-flat red mt-1"> Cancelar</button>
                                         </div>
                                     </div>
                                     <div hidden$="[[ !item.showRepartidor ]]">
@@ -666,7 +666,7 @@ async function xCDSolicitarRepartidorPapaya(_id) {
     if (!_rowItem.isShowLoaderSearchRepartor) {  return;} // se cancelo
     _rowItem.flag_solicita_repartidor_papaya = 1;
     _rowItem.isShowLoaderSearchRepartor = true;    
-    _rowItem.isShowBtnCancelarSolicitud = false;
+    // _rowItem.isShowBtnCancelarSolicitud = false;
     xCDSetChangeListDelivery(_rowItem);
     
     const _data = {
@@ -681,10 +681,18 @@ async function xCDSolicitarRepartidorPapaya(_id) {
     }
 }
 
-function xCDCancelarSolicitarRepartidorPapaya(obj) {
+async function xCDCancelarSolicitarRepartidorPapaya(obj) {
     const _rowItem = xCDGetItemListDelivery(obj);
     _rowItem.isShowLoaderSearchRepartor = false;
     xCDSetChangeListDelivery(_rowItem);
+
+    const _data = {
+        op: 8,
+        opcion: 2,
+        idpedido: _rowItem.idpedido
+    }
+
+    const _rpt = await xCDUpdatePedidoDelivery(_data);
 }
 
 function xCDGetItemListDelivery(obj) {
@@ -1111,7 +1119,14 @@ function xCDRepartidorResumen() {
                                         .map(z => {
                                         try {                                            
                                             // return parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.costoTotalDelivery)
-                                            return parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.establecimiento.c_servicio)
+                                            const costo_entrega_a = parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.c_servicio);
+                                            const costo_entrega_b = parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.costoTotalDelivery); 
+                                            
+                                            const costo_a = isNaN(costo_entrega_a) ? 0 : costo_entrega_a;
+                                            const costo_b = isNaN(costo_entrega_b) ? 0 : costo_entrega_b;
+
+                                            return costo_a !== 0 ? costo_a : costo_b;
+                                            // return parseFloat(z.json_datos_delivery.p_header.arrDatosDelivery.establecimiento.c_servicio)
                                         } catch (error) {
                                             return 0;   
                                         }

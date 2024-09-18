@@ -14,13 +14,26 @@ async function loadCuponesActivos() {
     }
 }
 
-// funcion verica si hay cupones activos y los manda a imprimir
-function checkCuponesActivos(datosCliente) {
+// verica si hay cupones activos y los manda a imprimir
+function checkCuponesActivos(datosCliente, amountTotal) {
     const cupones = window.localStorage.getItem('::app3_sys_cupones_activos');
     if (cupones) {
+        console.log('datosCliente', datosCliente);
         const cuponesJson = JSON.parse(cupones);        
-        cuponesJson.forEach(async(cupon) => {            
-            await printerCupon(cupon, datosCliente.cliente);
+        cuponesJson.forEach(async(cupon) => {  
+            const { solo_clientes, importe_minimo } = cupon;
+            const { idcliente } = datosCliente.cliente;
+            const isSoloCliente = solo_clientes === '1';
+            const isClienteValido = idcliente !== 0;
+            const isImporteMinimoCumplido = parseFloat(amountTotal) >= parseFloat(importe_minimo);
+
+            if (isSoloCliente && !isClienteValido) {
+                return;
+            }
+
+            if ( isImporteMinimoCumplido ) {
+                await printerCupon(cupon, datosCliente.cliente);
+            }         
         });
     }
 }

@@ -75,6 +75,7 @@
                                 </div>
                             </label>
                         </div>
+                        
                         <br>
                         <br>
                         <div hidden$="[[isGeneracionAutomatica]]">
@@ -106,6 +107,25 @@
                         <p class="fw-100 text-secondary">Establece el límite de cuántos cupones se pueden canjear. Si se establece en 0, todos
                             los cupones generados pueden ser canjeados.</p>
                         <input type="number" on-input="computeFormValid" class="selected-template-1" id="cantidad_maxima" value="0" required>
+
+                        <br><br>
+                        <p class="fw-600">Importe mínimo</p>
+                        <p class="fw-100 text-secondary">Importe mínimo de compra para emitir el cupon.</p>
+                        <input type="number" on-input="computeFormValid" class="selected-template-1" id="importe_minimo" value="0" required>
+
+                        <br><br>
+                        <div>
+                            <!-- checkbox marcar solo clientes -->
+                            <div class="form-check">
+                                <paper-checkbox id="chkSoloClientes" class="form-check-input">
+                                    <p class="fw-600">Solo para clientes</p>
+                                </paper-checkbox>
+                                <p class="fw-100 text-secondary">
+                                    Si marcas esta casilla, el cupón solo se generará para los clientes que hayan proporcionado su número de DNI
+                                    o RUC al momento de emitir la boleta o factura.</p>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             
@@ -227,7 +247,7 @@
             computeFormValid: function() {
                 // verificar si titulo y descripcion están llenos
                 let _isFormValid = true;
-                if (!this.$.titulo.value && !this.$.descripcion.value) {
+                if (!this.$.titulo.value && !this.$.descripcion.value && !this.$.importe_minimo.value) {
                     _isFormValid = false;
                 }
                 // verificar si la lista de detalle está vacía
@@ -383,8 +403,10 @@
                         fecha_fin: this.$.fecha_fin.value,
                         fecha_inicio_emitir: this.$.fecha_inicio_emitir.value,
                         cantidad_maxima: this.$.cantidad_maxima.value,
+                        importe_minimo: this.$.importe_minimo.value || 0,
                         is_automatico: this.isGeneracionAutomatica ? 1 : 0,
-                        cupon_manual: this.$.codigo_cupon.value,  
+                        cupon_manual: this.$.codigo_cupon.value,
+                        solo_clientes: this.$.chkSoloClientes.checked ? 1 : 0,  
                         idcupon: this.idCuponModicar,                      
                         listDetalle: this.listDetalle                    
                 }
@@ -425,8 +447,10 @@
                 this.$.fecha_fin.value = cupon.fecha_termina;
                 this.$.fecha_inicio_emitir.value = cupon.fecha_inicio_emitir;                
                 this.$.cantidad_maxima.value = cupon.cantidad_maxima;
+                this.$.importe_minimo.value = cupon.importe_minimo;
                 this.isGeneracionAutomatica = cupon.is_automatico == '1' ? true : false;
                 this.$.codigo_cupon.value = cupon.cupon_manual;
+                this.$.chkSoloClientes.checked = cupon.solo_clientes == '1' ? true : false;
                 console.log('listDetalle', listDetalle);
 
                 this.listDetalle = []
@@ -444,7 +468,7 @@
                         descripcion_tipo: item.tipo,
                         descripcion_producto: item.descripcion,
                         cantidad_maxima: item.cantidad_maxima,
-                        is_automatico: item.is_automatico,
+                        is_automatico: item.is_automatico,                        
                         cupon_manual: item.cupon_manual
                     }
                     
@@ -461,8 +485,10 @@
                 this.$.fecha_fin.value = '';
                 this.$.fecha_inicio_emitir.value = '';
                 this.$.cantidad_maxima.value = 0;
+                this.$.importe_minimo.value = 0;
                 this.isGeneracionAutomatica = true;
                 this.$.codigo_cupon.value = '';
+                this.$.chkSoloClientes.checked = false;
 
                 this.listDetalle = [];
                 this.computeFormValid();
