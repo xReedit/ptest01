@@ -5,6 +5,7 @@
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-mesas.html">
 <link rel="import" href="../../page/x-configuraciones/x-config-sede-opciones/x-config-sede-opciones.html">
 <link rel="import" href="./x-areas-mesas/x-areas-mesas.html">
+<link rel="import" href="../../x-componentes/x-edit-tipo-precio/x-edit-tipo-precio.html">
 
 <dom-module id="x-configuraciones">
 	<template>
@@ -272,29 +273,36 @@
 						<br><br>
 						<hr>
 						<br><br>
-						<div>
-							<h3>Metodos de Pago Aceptatos.</h3>
-							
-							<table>
-								<thead>
-									<th align="left">Metodo</th>
-									<th></th>
-								</thead>
-								<tbody>									
-									<template is="dom-repeat" items="{{listMetodoPagos}}" as="itemT">
-										<tr>
-											<td> {{itemT.descripcion}}</td>
-											<!-- <td> <input type="checkbox" class="checkTP" checked$="[[itemT.aceptado]]" id="cccc" onchange="updateMetodoPagoAceptado()" data-idt = "{{itemT}}"> </td> -->
-											<td><paper-checkbox 
-												class="checkTP" 
-												checked$="{{itemT.aceptado}}" 
-												data-idt="{{itemT.idtipo_pago}}"
-												onchange="updateMetodoPagoAceptado()"></paper-checkbox></td>											
-										</tr>										
-									</template>
-								</tbody>
-							</table>
+						<div class="d-flexx">
+							<div class="mr-5">
+								<h3>Metodos de Pago Aceptatos.</h3>
+								
+								<table>
+									<thead>
+										<th align="left">Metodo</th>
+										<th></th>
+									</thead>
+									<tbody>									
+										<template is="dom-repeat" items="{{listMetodoPagos}}" as="itemT">
+											<tr>
+												<td> {{itemT.descripcion}}</td>
+												<!-- <td> <input type="checkbox" class="checkTP" checked$="[[itemT.aceptado]]" id="cccc" onchange="updateMetodoPagoAceptado()" data-idt = "{{itemT}}"> </td> -->
+												<td><paper-checkbox 
+													class="checkTP" 
+													checked$="{{itemT.aceptado}}" 
+													data-idt="{{itemT.idtipo_pago}}"
+													onchange="updateMetodoPagoAceptado()"></paper-checkbox></td>											
+											</tr>										
+										</template>
+									</tbody>
+								</table>
+	
+							</div>
 
+							<!-- tipos de precios -->
+							<div>
+								<x-edit-tipo-precio></x-edit-tipo-precio>
+							</div>
 						</div>
 
 					</div>

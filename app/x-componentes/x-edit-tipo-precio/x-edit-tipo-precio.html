@@ -1,0 +1,117 @@
+<dom-module id="x-edit-tipo-precio">
+    <template>
+            <style>
+                :host {
+                    display: block;
+                    /* padding: 16px; */
+                }
+                .tipo-precio {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 8px;
+                }
+                .tipo-precio span {
+                    flex: 1;
+                }
+                .tipo-precio button {
+                    margin-left: 8px;
+                }
+                .hidden {
+                    display: none;
+                }
+            </style>
+                        
+            <div>
+                <h3>Tipos de Precio</h3>
+                <p class="m-0">Agrega, modifica los tipos de precio que se muestran en los productos.</p>
+                <br>
+                <table>
+                    <thead>
+                        <th align="left">Descripcion</th>
+                        <td>Visible</td>
+                        <th></th>
+                    </thead>
+                    <tbody>
+                        <template is="dom-repeat" items="{{tiposPrecio}}" as="item">                    
+                            <tr>                                
+                                <td>
+                                    <input type="text" class="selected-template-1" value="{{item.titulo::input}}" on-input="mostrarBotonGuardar" onChange="conMayusculas(this)" data-index$="{{index}}">
+                                </td>
+                                <td>
+                                    <input type="checkbox" checked="{{item.visible::change}}" on-change="mostrarBotonGuardar" disabled$="{{_isDisabled(index)}}">
+                                </td>
+                                <td><button id="btn-modificar" class="btn btn-sm btn-primary hidden" on-click="guardarTitulo" data-index="{{index}}">Guardar</button></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>                    
+            </div>            
+    </template>
+    <script>
+            Polymer({
+                is: 'x-edit-tipo-precio',
+                properties: {
+                    tiposPrecio: {
+                        type: Array,
+                        notify: true
+                    },
+                    nuevoTipoPrecio: {
+                        type: String,
+                        value: ''
+                    }
+                },
+                attached: function() {
+                    this.loadTiposPrecio();
+                },
+                loadTiposPrecio: function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '../../bdphp/log_componentes.php?op=24',                        
+                    })
+                    .done( (DtProv) => {
+                        var xDtProv=JSON.parse(DtProv);
+                        const list  = xDtProv.datos.map( item => {
+                            item.visible = item.visible === '1' ? true : false;
+                            return item;
+                        });
+                        this.tiposPrecio = JSON.parse(JSON.stringify(list));                        
+                        console.log('tiposPrecio', this.tiposPrecio);
+                    });
+                },
+                agregarTipoPrecio: function() {
+                    if (this.nuevoTipoPrecio.trim() !== '') {                        
+                        this.tiposPrecio.push({ titulo: this.nuevoTipoPrecio });
+                        this.nuevoTipoPrecio = '';
+                        this.tiposPrecio = JSON.parse(JSON.stringify(this.tiposPrecio));
+                    }
+                },
+                mostrarBotonGuardar: function (e) {
+                    var index = e.target.getAttribute('data-index');                    
+                    var button = e.target.parentElement.parentElement.querySelector(`#btn-modificar`);
+                    button.classList.remove('hidden');
+                },
+                guardarTitulo: function (e) {
+                    var index = e.target.dataIndex;
+                    var nuevoTitulo = this.tiposPrecio[index].titulo;
+                    if ( nuevoTitulo.trim().length < 2 ) return;
+                    this.set(`tiposPrecio.${index}.titulo`, nuevoTitulo);
+
+                    const isVisible = this.tiposPrecio[index].visible ? '1' : '0';
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '../../bdphp/log_componentes.php?op=2401',
+                        data: { id: this.tiposPrecio[index].idtipo_precio, titulo: nuevoTitulo, visible:  isVisible}
+                    })
+                    
+                    showToastSwal('success', 'Titulo Guardado!');
+                    e.target.classList.add('hidden');
+                },
+                _isDisabled: function (index) {
+                    return index === 0;
+                }
+            });
+    </script>
+</dom-module>
+
+    

@@ -181,7 +181,8 @@
 			
 			_valImporteRestante = totalRegistrado === 0 ? 0 : _importetotal - totalRegistrado;
 			// xThisComTableFP.valImporteRestante = _valImporteRestante === 0 ? xThisComTableFP.importetotal : _valImporteRestante;
-			xThisComTableFP.valImporteRestante = _valImporteRestante < 0.01 ? 0 : _valImporteRestante;
+			xThisComTableFP.valImporteRestante = _valImporteRestante;
+			// xThisComTableFP.valImporteRestante = _valImporteRestante < 0.01 ? 0 : _valImporteRestante;
 
 			// console.log('listIni', listIni);
 			xThisComTableFP.listPagoSeleted = listIni;

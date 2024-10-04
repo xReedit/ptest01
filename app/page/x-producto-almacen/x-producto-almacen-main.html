@@ -4,6 +4,15 @@
     <link rel="import" href="./x-producto-familia.html">
     <template>
         
+        <style>
+            :host {
+                display: block;
+                padding: 16px;
+            }
+            .hidden {
+                display: none;
+            }
+        </style>
 
         <paper-dialog modal id="dialog_additem_pro" class="dialog_redondo" modal entry-animation="scale-up-animation"
             exit-animation="fade-out-animation" with-backdrop style="min-width: 350px;">
@@ -134,17 +143,28 @@
                                 <th align="left" width="20%">Familia</th>
                                 <th align="left">Producto</th>
                                 <th align="left" width="80px">Stock</th>
-                                <th align="left" width="80px">P.Venta</th>                                
+                                
+                                <template is="dom-repeat" items="{{tipoPrecios}}" as="tipo">
+                                    <th align="left" width="80px">P. {{ tipo.titulo }}</th>
+                                </template>
                                 <th align="left" width="80px">Accion</th>                                
                             </thead>
                             <tbody>
-                                <template is="dom-repeat" items="{{xdt_prodcutos}}" as="item">
-                                    <tr data-id="[[item.idproducto_stock]]" onclick="xGoDetalleProducto(this)" class="xCursor">
+                                <template is="dom-repeat" items="{{xdt_prodcutos}}" as="item" index-as="productoIndex">
+                                    <!-- onclick="xGoDetalleProducto(this)" -->
+                                    <tr data-id="[[item.idproducto_stock]]" class="xCursor">
                                         <td>{{ item.almacen }}</td>
                                         <td>{{ item.familia }}</td>
                                         <td>{{ item.producto }}</td>
                                         <td>{{ item.stock }}</td>
-                                        <td>{{ item.precio_venta }}</td>                                        
+                                        <!-- <td>{{ item.precio_venta }}</td>    -->
+                                        <template is="dom-repeat" items="{{item.tipo_precios}}" as="tipo" index-as="tipoIndex">                                            
+                                            <td>
+                                                <span on-click="mostrarInput" data-tipo-index$="{{tipoIndex}}" data-producto-index$="{{productoIndex}}">{{ tipo.precio }}</span>
+                                                <input type="text" class="hidden w-50 selected-template-1" value="{{tipo.precio::input}}" data-tipo-index$="{{tipoIndex}}"
+                                                    data-producto-index$="{{productoIndex}}" on-blur="ocultarInput" on-change="guardarPrecio">
+                                            </td>
+                                        </template>                                     
                                         <td>
                                             <button data-id="[[item.idproducto_stock]]" onclick="xGoDetalleProducto(this)"
                                                 class="btn btn-sm btn-xsm xBoton_flat_2">
@@ -222,11 +242,28 @@ var xThisAlmPro;
 
     function xLoadProductos_dt(xid_filtro) {
         $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=18'})
-            .done(function (dtPro) {
-                console.log('JSON.parse(dtPro)', JSON.parse(dtPro));
+            .done(function (dtPro) {                
                 var xdtPro = JSON.parse(dtPro).datos;  
+
+                // agregamos los tipos de precios a cada producto                
+                xdtPro = xdtPro.map(x => {
+                    x.tipo_precios = typeof x.tipo_precios === 'string' ? JSON.parse(x.tipo_precios) : x.tipo_precios;
+                    x.tipo_precios = xThisAlmPro.tipoPrecios.map(tipo => {
+                        let existingTipoPrecio = x.tipo_precios ? x.tipo_precios.find(tp => tp.idtipo_precio == tipo.idtipo_precio) : null;
+                        return {
+                            idtipo_precio: tipo.idtipo_precio,
+                            titulo: tipo.titulo,
+                            idproducto_precio: existingTipoPrecio ? existingTipoPrecio.idproducto_precio : 0,
+                            precio: existingTipoPrecio ? existingTipoPrecio.precio.toFixed(2) : (tipo.titulo === 'GENERAL' ? x.precio_venta : 0)
+                            // precio: tipo.titulo === 'GENERAL' ?  x.precio_venta : 0
+                        }
+                    })
+                    return x;
+                })
+
                 xThisAlmPro.listProductosMaster = xdtPro;
-                xThisAlmPro.xdt_prodcutos = xdtPro;                
+                xThisAlmPro.xdt_prodcutos = xdtPro;     
+                console.log('xThisAlmPro.xdt_prodcutos', xdtPro);           
                 xSumTotalProductoAlmacen();
             })
     }
@@ -376,14 +413,23 @@ var xThisAlmPro;
         $.post("../../bdphp/ManejoBD_IUD.php?tb=producto", $("#frm_item_pro_alm").serialize(), function (xUltimo_id_pro) {
             xIdProducto_sel = xUltimo_id_pro;
             $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1807', data: { 'p': xIdProducto_sel, 'a': sel_almacen_pro.value, 'c': $("#frm_item_pro_alm #stock").val() } })
-                .done(function (a) {
-                    dialog_additem_pro.close();
-                    $("#frm_item_pro_alm").reset();
-                    xPopupLoad.xclose();
-                    xLoadProductos_dt()
-                })
+            .done(function (a) {
+                dialog_additem_pro.close();
+                $("#frm_item_pro_alm").reset();
+                xPopupLoad.xclose();
+                xLoadProductos_dt()
+            })
         })
-    }        
+    }     
+    
+    async function loadTiposPrecio() {
+        $.ajax({ type: 'POST', url: '../../bdphp/log_010.php?op=get-tipo-precio-producto' })
+        .done(function (DtFam) {
+            var xDtFam = JSON.parse(DtFam);
+            xThisAlmPro.tipoPrecios = JSON.parse(JSON.stringify(xDtFam.datos));
+            console.log('xThisAlmPro.tipoPrecios', xThisAlmPro.tipoPrecios);
+        })
+    }
 
        
 
@@ -399,22 +445,91 @@ Polymer({
         totalStockProductos: Number,
         productoSeleted: [],
         listFamilias: [],
+        tipoPrecios: []
 		// listPorciones:Object,		
         // objPorcion: [],
 	},
-	attached:function(){
+	attached:async function(){
         this.isShowMainProducto = true;	
         this.isShowDetalleProducto = false	
         this.isShowDetalleFamilias = false
         this.totalProductos =0;
         this.totalStockProductos = 0;
-    	xThisAlmPro =this;
+    	xThisAlmPro =this;    
+        await loadTiposPrecio();    
     	xIniAlmacenProducto();
     },
     ready:() => {
         this.isShowMainProducto = true;
         this.isShowDetalleProducto = false
         this.isShowDetalleFamilias = false
+    },    
+    mostrarInput: function (e) {
+        var tipoIndex = e.target.getAttribute('data-tipo-index');
+        var productoIndex = e.target.getAttribute('data-producto-index');
+        var input = Polymer.dom(this.root).querySelector(`input[data-tipo-index="${tipoIndex}"][data-producto-index="${productoIndex}"]`);
+        var span = e.target;
+        if (input) {
+            input.classList.remove('hidden');
+            span.classList.add('hidden');
+            input.select();
+            input.focus();
+        }
+    },
+    ocultarInput: function (e) {
+        var tipoIndex = e.target.getAttribute('data-tipo-index');
+        var productoIndex = e.target.getAttribute('data-producto-index');
+        var input = e.target;
+        var span = Polymer.dom(this.root).querySelector(`span[data-tipo-index="${tipoIndex}"][data-producto-index="${productoIndex}"]`);
+        if (input) {
+            input.classList.add('hidden');
+            span.classList.remove('hidden');
+        }
+    },
+    guardarPrecio: function (e) {
+        var tipoIndex = e.target.getAttribute('data-tipo-index');
+        var productoIndex = e.target.getAttribute('data-producto-index');
+        var nuevoPrecio = e.target.value;
+        this.set(`xdt_prodcutos.${productoIndex}.tipo_precios.${tipoIndex}.precio`, nuevoPrecio);
+
+        // para guardar necesito el idproducto y el idtipo_precio
+        let idproducto_stock = this.xdt_prodcutos[productoIndex].idproducto_stock;
+        let idproducto = this.xdt_prodcutos[productoIndex].idproducto;
+        const itemPrecioSeleted = this.xdt_prodcutos[productoIndex].tipo_precios[tipoIndex];
+        let idtipo_precio = itemPrecioSeleted.idtipo_precio;
+        let idproducto_precio = itemPrecioSeleted.idproducto_precio || 0;
+        let tituloPrecio = itemPrecioSeleted.titulo;
+        
+        let precio = nuevoPrecio;
+
+        let dataSend = {
+            idproducto_stock: idproducto_stock,
+            idproducto: idproducto,
+            idtipo_precio: idtipo_precio,
+            idproducto_precio: idproducto_precio,            
+            precio: precio,
+            titulo: tituloPrecio
+        }
+
+        console.log('dataSend', dataSend);
+        $.ajax({
+            type: 'POST',
+            url: '../../bdphp/log_010.php?op=set-tipo-precio-producto',
+            data: JSON.stringify(dataSend)
+        })
+        .done(function (rpt) {
+            rpt = JSON.parse(rpt);
+            console.log('idproducto_precio', rpt);
+            xThisAlmPro.xdt_prodcutos[productoIndex].tipo_precios[tipoIndex].idproducto_precio = rpt.idproducto_precio;
+        })
+
+        // Aquí puedes agregar la lógica para guardar el nuevo precio en el servidor
+        // Ejemplo:
+        // $.ajax({
+        //   type: 'POST',
+        //   url: 'ruta/al/servidor',
+        //   data: { idproducto: this.productos[productoIndex].idproducto, idtipo_precio: this.productos[productoIndex].tiposPrecio[index].idtipo_precio, precio: nuevoPrecio }
+        // });
     }
 })
 </script>

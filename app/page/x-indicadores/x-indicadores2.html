@@ -1763,8 +1763,8 @@
             _cpSocketClose(); 
         },
         goDash2: function(){
-            const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
-            const _url = 'https://modulo.papaya.com.pe/login?us=' + _dataUS + '&page=/dashboard/ventas';
+            const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))            
+            const _url = `https://modulo.papaya.com.pe/login?us='${_dataUS}'&page=/dashboard/ventas`;
             window.open(_url, "Papaya Dashboard");
         },
 

@@ -54,7 +54,7 @@
 								<option value="1">Porcion</option>
 								<option value="2">Producto</option>
 							</select>				
-						</div>
+						</div> 
 
 						<table class="xtable4 w-100" id="tb_ingredientes" data-TablaName="item_ingrediente">
 							<thead>
@@ -81,7 +81,7 @@
 									</div>
 								<td><input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required></td>
 								<td><paper-fab icon="add" onclick="xAddItemIngrediente()" title="Agregar item" class="xmini"></paper-fab></td>
-							</tr>
+							</tr> 
 						</table>
 					</div>
 				</div>
@@ -376,7 +376,7 @@ function xAddItemIngrediente(){
 	var xcosto_ingrediente=$("#costo_item").val();
 	var xcan_item=$("#cant_item").val();
 
-	const und_conversion = xThis.isFromRecetaProducto ? xThis.undConvercion.abreviatura : '';
+	const und_conversion = xThis.isFromRecetaProducto ? xThis.undConvercion ? xThis.undConvercion.abreviatura : '' : '';
 
 	// if (xdes_ingrediente == "" || xcosto_ingrediente == "") { return; }
 	
@@ -387,7 +387,13 @@ function xAddItemIngrediente(){
 	const vieneDe = xThis.isFromRecetaProducto ? '2' : '1';
 	const idProductoReceta = xThis.isFromRecetaProducto ? _productoSelected.value : 0;
 	const _descripcionProducto = xThis.isFromRecetaProducto ? _productoSelected.label : xdes_ingrediente;	
-	const _cantidad = xThis.isFromRecetaProducto ? xcan_item / _productoSelected.factor_conversion : xcan_item;
+	let _cantidad = xThis.isFromRecetaProducto && _productoSelected.idunidad_conversion ? xcan_item / _productoSelected.factor_conversion : xcan_item;
+
+	// si cantidad es infinity
+	if (!isFinite(_cantidad)) {
+		_cantidad = xcan_item;
+	}
+
 	xidproducto_porcionado = xThis.isFromRecetaProducto ? 0 : xidproducto_porcionado;
 
 	if (_descripcionProducto == "" || xcosto_ingrediente == "") { return; }

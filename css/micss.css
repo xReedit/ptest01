@@ -5094,6 +5094,10 @@ ul.list_add_item2 li.divLi {
     background: darkslateblue;
     padding: 8px;
     color: whitesmoke;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .paper-toggle-button-0[checked] .toggle-button.paper-toggle-button {

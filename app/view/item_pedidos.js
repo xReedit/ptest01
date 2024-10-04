@@ -17,6 +17,7 @@ var xArrayPedidoObj
 ,xNumPedidosBD=0
 ,xGeneralArraySubTotales=[], itemPedidos_objItemSelected=[], objOptionItemSelect;
 
+let idtipo_precio_selected_vr = 0;
 //var xLocal_TotalRowsArrayImporte=0;
 // 'precio_total_calc': para calcular en regalas de carta
 $(document.body).on('click', '#_xSubMenu_body div.xBtn', handlerFnMiPedido); // mi pedido
@@ -42,6 +43,19 @@ function handlerFnMiPedido(e) {
 		// const _xmenu_item_2 = _thisObj.parents('.xmenu_item_2');
 		// const _xmenu_item_2_dataset = JSON.parse(JSON.stringify(_xmenu_item_2[0].dataset));
 
+		let precio_producto = itemPedidos_objItemSelected.precio;
+		try {			
+			if ( idtipo_precio_selected_vr !== 0 && itemPedidos_objItemSelected.tipo_precios !== '') {
+				itemPedidos_objItemSelected.tipo_precios = typeof itemPedidos_objItemSelected.tipo_precios === 'string' ? JSON.parse(itemPedidos_objItemSelected.tipo_precios) : itemPedidos_objItemSelected.tipo_precios;
+				const tipo_precio = itemPedidos_objItemSelected.tipo_precios.filter(tipo_p => tipo_p.idtipo_precio === idtipo_precio_selected_vr)
+				if ( tipo_precio.length > 0 ) {
+					precio_producto = tipo_precio[0].precio
+				}
+			}
+		} catch (error) {
+			console.error('error precio_producto', error)
+		}
+
 		var xOperacion=_thisObj.text()
 		, objCant = _thisObj.parent().find('.xCant_item')
 		, objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0 //itemPedidos_objItemSelected.xCant_item || 0// $(this).parent().find('.xCant_item')
@@ -49,7 +63,7 @@ function handlerFnMiPedido(e) {
 		//, xidItem2 = itemPedidos_objItemSelected.iditem
 		, xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem : itemPedidos_objItemSelected.iditem // _xmenu_item_2_dataset.item // _xmenu_item_2.attr('data-item') //iditem verdader
 		, xDesItem = itemPedidos_objItemSelected.des_item // _xmenu_item_2.find('.xtitulo_item').text()
-		, xPrecioItem = itemPedidos_objItemSelected.precio // _xmenu_item_2.find('.xprecio_item').text()
+		, xPrecioItem = precio_producto// itemPedidos_objItemSelected.precio // _xmenu_item_2.find('.xprecio_item').text()
 		, xIndicaciones = itemPedidos_objItemSelected.xindicaciones //_xmenu_item_2.find('#txt_referencia').val()
 		, xCantActual = parseInt(objCant_cant) //parseInt(objCant.text())
 		, xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]['cantidad'])
@@ -378,11 +392,24 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 		, xcant_max = itemPedidos_objItemSelected.stock_actual || 10000 // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
 		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
+
+		let precio_producto = itemPedidos_objItemSelected.precio;
+		try {			
+			if ( idtipo_precio_selected_vr !== 0 && itemPedidos_objItemSelected.tipo_precios !== '') {
+				itemPedidos_objItemSelected.tipo_precios = typeof itemPedidos_objItemSelected.tipo_precios === 'string' ? JSON.parse(itemPedidos_objItemSelected.tipo_precios) : itemPedidos_objItemSelected.tipo_precios;
+				const tipo_precio = itemPedidos_objItemSelected.tipo_precios.filter(tipo_p => tipo_p.idtipo_precio === idtipo_precio_selected_vr)
+				if ( tipo_precio.length > 0 ) {
+					precio_producto = tipo_precio[0].precio
+				}
+			}
+		} catch (error) {
+			console.error('error precio_producto', error)			
+		}
 		
 		// if(xli_des==""){xli_des=$(this).parent().parent().find('.xtitulo_li2').text();}//.split('|');xli_des=xli_des[1].trim();}
 		var xli_des = itemPedidos_objItemSelected.des_item // $(this).parent().parent().find('.xtitulo_li').text();
 		, xli_des_ref = itemPedidos_objItemSelected.indicaciones || '' //$(this).parent().parent().find('#xinput_li').val();
-		, xli_precio = itemPedidos_objItemSelected.precio //$(element_li_add__print).attr('data-punitario'),
+		, xli_precio = precio_producto //itemPedidos_objItemSelected.precio //$(element_li_add__print).attr('data-punitario'),
 		, xli_idimpresora = itemPedidos_objItemSelected.idimpresora //$(element_li_add__print).attr('data-idimpresora'),
 		, xli_idimpresora_otro = itemPedidos_objItemSelected.idimpresora_otro //$(element_li_add__print).attr('data-idimpresora'),
 		, xli_idprocede = itemPedidos_objItemSelected.idprocede //$(element_li_add__print).attr('data-idprocede'),

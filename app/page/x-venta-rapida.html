@@ -12,6 +12,7 @@
 	<link rel="import" href="../x-componentes/x-comp-canal-consumo/x-comp-canal-consumo.html">
 	<link rel="import" href="../x-componentes/x-pedidos-por-pagar/x-pedidos-por-pagar.html">
 	<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
+	<link rel="import" href="../x-componentes/x-comp-select/x-comp-select.html">	
 
 	<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
@@ -123,13 +124,20 @@
 		</paper-dialog>
 		  
 	  	<div class="tool-bar-vr">
-			<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDeVR();"></paper-icon-button>
-			<span onclick="xOpenPedidosCuentaPendientes()" class="xCursor fs-15 fw-600 pr-2" title="Pedidos por Cobrar">			
-				<i class="fa fa-files-o"></i>
-			</span>
-			<!-- <paper-icon-button paper-drawer-toggle onclick="xOpenPedidosCuentaPendientes();"></paper-icon-button> -->
-			<span class="title xtitulo_bar xfont18">Punto de Venta</span>			
-			<div class="xDerecha" style="display: flex; align-items: center; padding-top: 7px; margin-right: 10px;">
+			<div>
+				<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDeVR();"></paper-icon-button>
+				<span onclick="xOpenPedidosCuentaPendientes()" class="xCursor fs-15 fw-600 pr-2" title="Pedidos por Cobrar">			
+					<i class="fa fa-files-o"></i>
+				</span>
+				<!-- <paper-icon-button paper-drawer-toggle onclick="xOpenPedidosCuentaPendientes();"></paper-icon-button> -->
+				<span class="title xtitulo_bar xfont18">Punto de Venta</span>			
+			</div>
+			<div style="display: flex; align-items: center; padding-top: 7px; margin-right: 10px;">
+
+					<div class="mr-2" style="border-right: 1px solid; padding-right: 10px;" hidden$="[[!_hasItems(dataSelectTipoPrecio)]]">
+						<span class="fs-10">Precio</span>
+						<x-comp-select id="selectTipoPrecio" items="[[dataSelectTipoPrecio]]" selected-item="{{selectedItemTipoPrecio}}" color-card="#28a745"></x-comp-select>
+					</div>
 
 					<div class="mr-2">
 						<x-comp-find-card id="compFindCategoria" onchange="_getCategoria(categorias)"></x-comp-find-card>
@@ -506,6 +514,10 @@
 		background: darkslateblue;
 		padding: 8px;
 		color: whitesmoke;
+		display: flex;
+		justify-content: space-between;
+		flex-direction: row;
+		flex-wrap: wrap;
 	}
 
 	.paper-toggle-button-0[checked] .toggle-button.paper-toggle-button{
@@ -605,8 +617,8 @@ function xIniVentaRapida(){
 		xm_log_get('ini_us');
 		//if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
 		//if(xIdSede=='' || xIdSede==undefined){xIdSede=window.localStorage.getItem('::app3_woS');}
-		$("#Titulo_page").text("Venta Rapida");
-		document.title = 	"Venta Rapida";
+		$("#Titulo_page").text("Punto de Venta");
+		document.title = 	"Punto de Venta";
 		$('body').addClass('loaded');		
 		xPopupLoad=document.getElementById('xLoad');
 
@@ -1019,6 +1031,13 @@ function xIniVentaRapida(){
 
 	isTouch = true;
 
+
+	// select tipo de precio
+	const compSeletedTipoPrecio = document.getElementById('selectTipoPrecio');
+	compSeletedTipoPrecio.addEventListener('item-selected', (e) => {
+		console.log('item-selected-tp', e.detail);
+		idtipo_precio_selected_vr = e.detail.id;
+	});
 }
 
 function xValidarPedidoonBtnVR() {
@@ -1587,6 +1606,10 @@ async function xGuardarPedidoVR(responde){
 	// }).fail(guardando_vr = false);
 }
 
+function xFiltrarPorTipoPrecio() {
+	idtipo_precio_selected_vr = idtipo_precio_selected_vr === 118 ? 0 : 118;	
+}
+
 async function pagarCompPeiddoCuentaPendiente(data) {
 
 	if(data.tt_pedido==0){return;}	
@@ -1882,6 +1905,9 @@ function xLoadItemsDetalleCartaALL(){
         xClassEstado = xClassEstadoStock.split("|")[0];
         xClassEstadoStock = xClassEstadoStock.split("|")[1];
 
+		const tipo_precio = xGeneralDataCarta[p].tipo_precios == '' ? [] : JSON.parse(xGeneralDataCarta[p].tipo_precios);
+		const tipo_precio_ids = tipo_precio.map(tp => tp.idtipo_precio).join(',');
+
 		// si es producto puede modificar la cantidad
 		// ej: carne x kg  -> 1.5kg
 
@@ -1918,7 +1944,8 @@ function xLoadItemsDetalleCartaALL(){
 												'" data-iddescontar="'+xGeneralDataCarta[p].idprocede+
 												'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+
 												'" data-stock_actual="'+xGeneralDataCarta[p].cantidad+
-												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+'">'+
+												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+
+												'" data-tipo-precios="' + tipo_precio_ids + '">' +
 														'<div class="content_li">'+
 															'<div class="content-titulo">'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+
@@ -2490,7 +2517,9 @@ Polymer({
 		xIconScreen: String,
 		objSubItemQuitar: Object,
 		importeTotalPedido: Number,
-		showCompDescuento: Boolean
+		showCompDescuento: Boolean,
+		dataSelectTipoPrecio: Object,
+		selectedItemTipoPrecio: Object,
 	},
 	attached:function(){
 		this.selected_us=0;
@@ -2501,6 +2530,7 @@ Polymer({
 		// _cpSocketIsConnect();
 		_cpSocketOpen();
 		xRestorePedidoLocalStorageVR()
+		this.getDataTipoPrecio();
 
 		$("#x-main").removeClass('xContent');
 		$("#x-main").removeClass('content');
@@ -2517,6 +2547,26 @@ Polymer({
 		$("#x-main").addClass('xContent');
 		$("#x-main").addClass('content');
 		$("#panel_toolbar").removeClass('xInvisible');
-    }
+    },
+	getDataTipoPrecio: function(){
+		$.ajax({
+			type: "GET",
+			url: "../../bdphp/log_010.php?op=get-tipo-precio-producto",			
+		}).done(function(dt) {
+			dt = JSON.parse(dt);
+			dt.datos.forEach((d) => {
+				d.idtipo_precio = parseInt(d.idtipo_precio);
+				// PARA QUE TOME EL PRECIO BASE = GENERAL
+				d.idtipo_precio = d.titulo === 'GENERAL' ? 0 : d.idtipo_precio; 
+				d.id = d.idtipo_precio;
+				d.value = d.titulo;
+			});
+			xThisVentaRapida.dataSelectTipoPrecio = dt.datos;
+			console.log('0dataSelectTipoPrecio', xThisVentaRapida.dataSelectTipoPrecio);
+		});
+	},
+	_hasItems: function (items) {
+		return items && items.length > 0;
+	}
 })
 </script>

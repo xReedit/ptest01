@@ -1,78 +1,81 @@
 <dom-module id="x-comp-find-seccion">
-	<template is="dom-bind">
-		<div>
-            <!-- <input type="text" class$="[[clasecss]]" class="xMiInput xPasarEnter2 fs-12" onChange="conMayusculas(this)" id="des_seccion_carta" onkeyup="xloadSeccionCarta(this)">						 -->
-            <select id="compFindListSeccion" class$="[[clasecss]]" onchange="selectOptionSeccion()">
+    <template>
+        <div>
+            <!-- <input type="text" class$="[[clasecss]]" class="xMiInput xPasarEnter2 fs-12" onChange="conMayusculas(this)" id="des_seccion_carta" onkeyup="xloadSeccionCarta(this)"> -->
+            <select id="compFindListSeccion" class$="[[clasecss]]" on-change="selectOptionSeccion">
                 <template is="dom-repeat" items="{{dtSeccionCarta}}" as="item">
-                  <option value="[[index]]">[[item.descripcion]] </option>
+                    <option value="[[index]]">[[item.descripcion]]</option>
                 </template>
-              </select>
-		</div>
-	</template>
-</dom-module>
+            </select>
+        </div>
+    </template>
+
     <script>
-		var xThisCompSeccion, elementSeleted;
-
-        function xloadSeccionCarta(obj){
-
-            xThisCompSeccion.clasecss = xThisCompSeccion.clasecss === '' ? 'xTextRow2 xCursor' : xThisCompSeccion.clasecss;
-
-            $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=2002'})
-            .done( function (DtItems) {
-                var xDtSecCarta=JSON.parse(DtItems);
-                xThisCompSeccion.dtSeccionCarta=xDtSecCarta.datos;
-                // selecciona el primero 
-                try {
-                    xThisCompSeccion.seccion = xThisCompSeccion.dtSeccionCarta[0];                    
-                } catch (error) {
-                    xThisCompSeccion.seccion = {};                    
-                }
-                // console.log('xThisCompSeccion.dtSeccionCarta', xThisCompSeccion.dtSeccionCarta);
-            })
-        }
-
-        function selectOptionSeccion() {
-            const index = xThisCompSeccion.$.compFindListSeccion.value;
-            xThisCompSeccion.seccion = xThisCompSeccion.dtSeccionCarta[index];
-            xThisCompSeccion.fire('selected', xThisCompSeccion.seccion);
-        }
-
-
-		Polymer({
-			is: 'x-comp-find-seccion',
-			properties: {				
-                dtSeccionCarta: [],                                
+        Polymer({
+            is: 'x-comp-find-seccion',
+            properties: {
+                dtSeccionCarta: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    },
+                    notify: true
+                },
                 valueInput: String,
                 clasecss: String,
                 seccion: {
                     type: Object,
-                    // value : {},
                     reflectToAttribute: true,
-                    notify: true, 
-                    value: function() { return {}; },
+                    notify: true,
+                    value: function () {
+                        return {};
+                    },
                     observer: 'seccionNameChanged'
-                },
-			},
-            seccionNameChanged: function(seccion) {
+                }
+            },
+            seccionNameChanged: function (seccion) {
                 return seccion;
             },
-            getSeccion() {
-                return xThisCompSeccion.seccion;
-            }, 
-			attached: function () {                
-				xThisCompSeccion = this;								
-                xloadSeccionCarta();
-			},
-            getelementSeletedAlmacen: () => {                
-                return elementSeleted;
+            getSeccion: function () {
+                return this.seccion;
             },
-            resetText: () => {
-                des_seccion_carta.value = '';
-                elementSeleted = null;
+            attached: function () {
+                this.xloadSeccionCarta();
             },
-            focusText: () => {
-                des_seccion_carta.focus();
-            }
-		})
-	</script>
+            xloadSeccionCarta: function () {
+                this.clasecss = this.clasecss === '' ? 'xTextRow2 xCursor' : this.clasecss;
 
+                $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_componentes.php?op=2002'
+                }).done(function (DtItems) {
+                    var xDtSecCarta = JSON.parse(DtItems);
+                    this.dtSeccionCarta = xDtSecCarta.datos;
+                    // selecciona el primero
+                    try {
+                        this.seccion = this.dtSeccionCarta[0];
+                    } catch (error) {
+                        this.seccion = {};
+                    }
+                    this.dtSeccionCarta = JSON.parse(JSON.stringify(this.dtSeccionCarta));
+                    console.log('this.dtSeccionCarta', this.dtSeccionCarta);
+                }.bind(this));
+            },
+            selectOptionSeccion: function () {
+                const index = this.$.compFindListSeccion.selectedIndex;
+                this.seccion = this.dtSeccionCarta[index];
+                this.fire('selected', this.seccion);
+            },
+            getelementSeletedAlmacen: function () {
+                return this.elementSeleted;
+            },
+            resetText: function () {
+                this.$.des_seccion_carta.value = '';
+                this.elementSeleted = null;
+            },
+            focusText: function () {
+                this.$.des_seccion_carta.focus();
+            }
+        });
+    </script>
+</dom-module>

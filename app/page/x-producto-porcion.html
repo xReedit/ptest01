@@ -823,13 +823,24 @@ Polymer({
 		dtProFam:Object,
 		listPorciones: [],
 		medidaImgProducto: [],
-		listProductosExport: []
+		listProductosExport: [],
+		tipoPrecios:[]
 	},
 	attached:function(){
 		this.selected=0;
     	xThisProPor=this;
     	xIniProPor();
-    }
+		this.loadTiposPrecio();
+    },
+	loadTiposPrecio:function(){
+		$.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=24'})
+		.done( function (DtFam) {
+			var xDtFam=JSON.parse(DtFam);
+			this.tipoPrecios=xDtFam.datos;
+			console.log('this.tipoPrecios', this.tipoPrecios);
+			
+		})
+	},
 })
 </script>
 </dom-module>

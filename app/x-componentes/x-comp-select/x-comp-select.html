@@ -1,0 +1,90 @@
+<dom-module id="x-comp-select">
+    <template>
+        <style>
+            .card {
+                display: inline-block;
+                margin: 1px;
+                padding: 5px;
+                border: 1px solid #919191;
+                color: #9f9f9f;
+                border-radius: 10px;
+                text-align: center;
+                cursor: pointer;
+                user-select: none;
+                font-size: 10px;
+                background: #333333;
+            }
+
+            .card.selected {
+                border-color: #ffffff;
+                background-color: #ffc107;
+                color: black;
+                font-weight: 600;
+            }
+        </style>
+        <template is="dom-repeat" items="{{items}}" as="item">
+            <div class$="{{_getClass(selectedItem, item)}}" on-click="_selectCard" data-id$="{{item.id}}"
+                data-value$="{{item.value}}">
+                {{item.value}}
+            </div>
+        </template>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-select',
+            properties: {
+                items: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    },
+                    observer: '_itemsChanged'
+                },
+                selectedItem: {
+                    type: Object,
+                    notify: true,
+                    value: function () {
+                        return {};
+                    }
+                },
+                colorCard: {
+                    type: String,
+                    value: '#ffc107'
+                }
+            },
+            _itemsChanged: function (newItems, oldItems) {
+                if (newItems.length > 0) {
+                    this.async(function () {
+                        var cards = Polymer.dom(this.root).querySelectorAll('.card');
+                        var firstCard = cards[0];
+                        if (firstCard) {
+                            this._selectCard({ model: { item: newItems[0] }, target: firstCard });
+                        }
+                    });
+                }
+            },
+            _getClass: function (selectedItem, item) {
+                return selectedItem && selectedItem.id === item.id ? 'card selected' : 'card';                
+            },
+            _selectCard: function (e) {
+                // Elimina la clase 'selected' de todas las tarjetas
+                var cards = Polymer.dom(this.root).querySelectorAll('.card');
+                for (var i = 0; i < cards.length; i++) {
+                    Polymer.dom(cards[i]).classList.remove('selected');
+                    cards[i].style.backgroundColor = '#333333';
+                }
+
+                // Agrega la clase 'selected' a la tarjeta seleccionada y la enfoca
+                this.selectedIndex = this.items.indexOf(e.model.item);
+                Polymer.dom(e.target).classList.add('selected');
+                // adicionar el color card
+                e.target.style.backgroundColor = this.colorCard;              
+                e.target.focus();
+
+                this.fire('selectedItem', { id: e.model.item.id, value: e.model.item.value });
+                this.fire('item-selected', { id: e.model.item.id, value: e.model.item.value });
+            }
+        });
+    </script>
+</dom-module>
