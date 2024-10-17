@@ -213,10 +213,18 @@
             xThisCompDesc.$.txt_imp_dsc.value = valtxt;
         }
 
-        if ( isDestPorcentaje ) {
-            rptCalc = Math.round((importeInicial * (valtxt / 100)), 2);        
+        // if ( isDestPorcentaje ) {
+        //     rptCalc = Math.round((importeInicial * (valtxt / 100)), 2);        
+        //     rptCalc = rptCalc > importeInicial ? importeInicial : rptCalc;
+        //     descripcionDesct = valtxt + '%'; 
+        // } else {
+        //     rptCalc = valtxt;
+        // }
+
+        if (isDestPorcentaje) {
+            rptCalc = roundToNearestDecimal(importeInicial * (valtxt / 100));
             rptCalc = rptCalc > importeInicial ? importeInicial : rptCalc;
-            descripcionDesct = valtxt + '%'; 
+            descripcionDesct = valtxt + '%';
         } else {
             rptCalc = valtxt;
         }
@@ -229,6 +237,10 @@
             'descripcion': descripcionDesct,
             'isAgregar': true
 		});
+    }
+
+    function roundToNearestDecimal(value) {
+        return Math.round(value * 10) / 10;
     }
 
     function xFocusInputDescuento(value) {

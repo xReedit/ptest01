@@ -135,7 +135,7 @@
 			<div style="display: flex; align-items: center; padding-top: 7px; margin-right: 10px;">
 
 					<div class="mr-2" style="border-right: 1px solid; padding-right: 10px;" hidden$="[[!_hasItems(dataSelectTipoPrecio)]]">
-						<span class="fs-10">Precio</span>
+						<span class="fs-10 ml-2" style="margin-top: -15px; position: fixed;">Precios</span>
 						<x-comp-select id="selectTipoPrecio" items="[[dataSelectTipoPrecio]]" selected-item="{{selectedItemTipoPrecio}}" color-card="#28a745"></x-comp-select>
 					</div>
 
@@ -317,7 +317,7 @@
 						</ul>
 				  </div>
 				  <div class="itemsDivx c">
-				  		<div class="xEncabezadoMesa">
+				  		<div class="xEncabezadoMesa" style="min-width: 300px;">
 							
 							<table width="100%">
 								<thead class="xtable3 xFondoRowIndigo">
@@ -353,7 +353,7 @@
 							<!-- <a href="#" onclick="xNuevoPedidoVR()" class="xDerecha EnLinea xColorRow_Azul">Nuevo pedido</a>
 				  			<h4>PEDIDO</h4> -->
 				  		</div><br>
-				  		<div class="xCentradoDiv">
+				  		<div class="xCentradoDiv" style="min-width: 300px;">
 								
 								<x-comp-canal-consumo id="compCanalConsumo"></x-comp-canal-consumo>
 								<select class="xMiInput xInvisible" id="select_ulTPC"></select>
@@ -368,14 +368,14 @@
 				  		</div>
 				  		<br>
 				  		<!--Pedido-->
-				  		<div id="xBody">
+				  		<div id="xBody" style="min-width: 300px;">
 						</div>
 						
 						<br><br>
-						<div class="xLinea7"></div>
-						<div class="xLineaSombra"></div>
+						<div class="xLinea7" style="min-width: 300px;"></div>
+						<div class="xLineaSombra" style="min-width: 300px;"></div>
 						
-					    <div class="xdiv_Totales">
+					    <div class="xdiv_Totales" style="min-width: 300px;">
 							<br>
 							<table width="100%" data-TablaName="pedido_subtotales" id="xtb_pedido_subtotales"></table>
 							<br>
@@ -613,6 +613,7 @@ window.addEventListener('beforeunload', async function (e) {
 
 
 function xIniVentaRapida(){
+	xm_LogChequea();
 	// xm_LogChequea(function(){
 		xm_log_get('ini_us');
 		//if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}

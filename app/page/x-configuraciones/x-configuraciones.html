@@ -2187,19 +2187,38 @@ function xloadMetodosPagos() {
 	.done( function (res) {
 		res = JSON.parse(res);
 
-		const metodosPagosIds =  xm_log_get('datos_org_sede')[0]?.metodo_pago_aceptados || '';
+		// const metodosPagosIds =  xm_log_get('datos_org_sede')[0]?.metodo_pago_aceptados || '';
+		// console.log('metodosPagosIds',metodosPagosIds);
 
-		const aceptados = metodosPagosIds.split(',');
-		let listMetodoPagosAceptados = [];
-		xThisConfig.listMetodoPagos = [];
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1102' })
+		.done( function (resMetodosPagos) {
+			// console.log('res', res);
+			resMetodosPagos = JSON.parse(resMetodosPagos);
+			const metodosPagosIds = resMetodosPagos.datos[0].metodo_pago_aceptados;
+			const aceptados = metodosPagosIds.split(',');
+			let listMetodoPagosAceptados = [];
+			xThisConfig.listMetodoPagos = [];
 
-		res.datos.map(x => {
-			x.aceptado = !!aceptados.filter(t => parseInt(t) === parseInt(x.idtipo_pago))[0];
-			x.aceptado_a = x.aceptado ? 1 : 0;
-			listMetodoPagosAceptados.push(x);			
+			res.datos.map(x => {
+				x.aceptado = !!aceptados.filter(t => parseInt(t) === parseInt(x.idtipo_pago))[0];
+				x.aceptado_a = x.aceptado ? 1 : 0;
+				listMetodoPagosAceptados.push(x);			
+			});
+
+			xThisConfig.listMetodoPagos = listMetodoPagosAceptados;
 		});
 
-		xThisConfig.listMetodoPagos = listMetodoPagosAceptados;
+		// const aceptados = metodosPagosIds.split(',');
+		// let listMetodoPagosAceptados = [];
+		// xThisConfig.listMetodoPagos = [];
+
+		// res.datos.map(x => {
+		// 	x.aceptado = !!aceptados.filter(t => parseInt(t) === parseInt(x.idtipo_pago))[0];
+		// 	x.aceptado_a = x.aceptado ? 1 : 0;
+		// 	listMetodoPagosAceptados.push(x);			
+		// });
+
+		// xThisConfig.listMetodoPagos = listMetodoPagosAceptados;
 
 
 		// console.log('xThisConfig.listMetodoPagos', xThisConfig.listMetodoPagos);
@@ -2213,7 +2232,12 @@ function updateMetodoPagoAceptado() {
 		idAceptados += e.checked ? `${e.dataIdt},`: '';
 	});
 	
-	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1101', data:{ids: idAceptados}});
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1101', data:{ids: idAceptados}})
+	.done( function (res) {
+		console.log(res);
+		// xm_log_get('datos_org_sede')[0].metodo_pago_aceptados = idAceptados;
+	});
+
 }
 
 function checkboxChanged(event) {

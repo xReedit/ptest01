@@ -564,8 +564,8 @@
                 "num_primeros_pedidos": _num_primeros_pedidos == 0 ? null : _num_primeros_pedidos,
             },
             "header": {
-                "titulo": titulo.value,
-                "descripcion": descripcion.value,
+                "titulo": titulo_promo.value,
+                "descripcion": descripcion_promo.value,
                 "establecio_img": _establecio_img,
                 "icon": xThisProm.promoIcoGifSeleted
             }
@@ -691,8 +691,8 @@
         
         idPromoSelected = idPromo;
 
-        titulo.value = parametrosPromo.header.titulo;
-        descripcion.value = parametrosPromo.header.descripcion;
+        titulo_promo.value = parametrosPromo.header.titulo;
+        descripcion_promo.value = parametrosPromo.header.descripcion;
         xThisProm.promoIcoGifSeleted = parametrosPromo.header.icon || firstIconGif;
         setIcoGifPromo()
 
@@ -744,8 +744,8 @@
 
     function xNewPromocion() {
         idPromoSelected = 0;
-        titulo.value = '';
-        descripcion.value = '';
+        titulo_promo.value = '';
+        descripcion_promo.value = '';
         f_ini.value = '';
         f_fin.value = '';
         h_ini.value = '';

@@ -35,7 +35,7 @@
                         <template is="dom-repeat" items="{{tiposPrecio}}" as="item">                    
                             <tr>                                
                                 <td>
-                                    <input type="text" class="selected-template-1" value="{{item.titulo::input}}" on-input="mostrarBotonGuardar" onChange="conMayusculas(this)" data-index$="{{index}}">
+                                    <input type="text" class="selected-template-1" value="{{item.titulo::input}}" on-input="mostrarBotonGuardar" onChange="conMayusculas(this)" data-index$="{{index}}" disabled$="{{_isDisabled(index)}}">
                                 </td>
                                 <td>
                                     <input type="checkbox" checked="{{item.visible::change}}" on-change="mostrarBotonGuardar" disabled$="{{_isDisabled(index)}}">
