@@ -200,13 +200,16 @@
 					<th align="left" colspan="8"><span class="text-primary fw-600 fs-15">[[cantRegistroPagos]]</span> Registros encontrados</th>
 					<th align="right" >
 						<!-- <button class="btn btn-sm btn-success" onclick="xGenerarReporteExcelRegistroPago()"><i class="fa fa-file-excel-o"></i> Exportar</button> -->
-						<div class="dropdown">
-							<button class="btn btn-sm btn-success"><i class="fa fa-file-excel-o"></i> Exportar <i class="fa fa-angle-down"></i></button>
-							<div class="dropdown-content">
-								<a href="#" onclick="xGenerarReporteExcelRegistroPago()">Resumen</a>
-								<a href="#" onclick="xGenerarReporteExcelRegistroPagoDetallado()">Detallado</a>								
-							</div>
-						</div>
+						 <!-- <div style="display: flex;width: 290px;justify-content: flex-end;"> -->
+							 <!-- <button class="btn btn-sm btn-primary mr-2"><i class="fa fa-caret-square-o-right"></i> Consolidado de Caja</button> -->
+							 <div class="dropdown">							
+								 <button class="btn btn-sm btn-success"><i class="fa fa-file-excel-o"></i> Exportar <i class="fa fa-angle-down"></i></button>
+								 <div class="dropdown-content">
+									 <a href="#" onclick="xGenerarReporteExcelRegistroPago()">Resumen</a>
+									 <a href="#" onclick="xGenerarReporteExcelRegistroPagoDetallado()">Detallado</a>								
+								 </div>
+							 </div>
+						 <!-- </div> -->
 					</th>
 				</thead>
 				<thead style="height: 50px;">

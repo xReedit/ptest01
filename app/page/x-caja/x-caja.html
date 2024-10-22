@@ -290,42 +290,48 @@
 
 					<br><br>
 					<!-- CONSOLIDADO -->
-					<div class="xTxtCierreCajaContenedor mt-2" hidden$="[[ !isShowLastCierres ]]">
-						<div hidden$="[[!isShowContentConsolidado]]">
+					<!-- hidden$="[[ !isShowLastCierres ]]" -->
+					<div class="xTxtCierreCajaContenedor mt-2">
+						<!-- <div hidden$="[[!isShowContentConsolidado]]"> -->
 							<hr>
-							<div hidden$="[[!isShowConsolidado]]">
+							<div hidden$="[[!isShowConsolidado]]" style="background: #d9d9d9; display: inline-block;padding: 7px; border-radius: 5px;">
 								<p>Para ofrecer un consolidado, todos los usuarios deben cerrar caja. Falta cerrar: {{ listUsuarioFaltaCerrar }}</p>
 							</div>
-							<div hidden$="[[isShowConsolidado]]">
+							<div hidden$="[[isShowConsolidado]]" style="background: #d9d9d9; display: inline-block;padding: 7px; border-radius: 5px;">
 								<p class="mr-2 fw-600 fs-15">Consolidado de Ventas y Operaciones de Todas las Cajas.</p>
-								<br>
-								<button class="btn btn-sm btn-primary" onclick="xGenerarConsolidadoCaja()">Genear consolidado</button>
-								<button class="btn btn-sm btn-dark mr-1" hidden$="[[!isShowBtnDownloadConsolidado]]" onclick="donwloadConsolidadoCaja()"><i class="fa fa-download"></i> Descargar Consolidado</button>								
 								<p id="title_consolidado" class="mr-2 fw-600 text-secondary"></p>
+								<br>
+								<div class="pb-2">
+									<button class="btn btn-sm btn-primary" onclick="xGenerarConsolidadoCaja()">Genear consolidado</button>
+									<button class="btn btn-sm btn-dark mr-1" hidden$="[[!isShowBtnDownloadConsolidado]]" onclick="donwloadConsolidadoCaja()"><i class="fa fa-download"></i> Descargar Consolidado</button>
+								</div>
 							</div>
+						<!-- </div> -->
+
+						<div hidden$="[[ !isShowLastCierres ]]">
+							<hr>
+							<br>
+							<p class="fw-600 fs-18">Ultimos cierres de caja</p>
+							<br>
+							<table width="100%">
+								<thead>
+									<th align="left">Fecha</th>
+									<th align="left">Usuario</th>
+									<th></th>
+								</thead>
+								<tbody>
+									<template is="dom-repeat" items="{{listCierres}}" as="item">
+										<tr>
+											<td>{{ item.fecha }}  {{ item.hora }}</td>									
+											<td>{{ item.usuario }}</td>
+											<td>
+												<button class="btn btn-sm btn-info" data-id="[[item.idprint_server_detalle]]" onclick="reImprimirCierreHistory(this)" >Re-imprimir</button>
+											</td>
+										</tr>
+									</template>
+								</tbody>
+							</table>
 						</div>
-						<hr>
-						<br>
-						<p class="fw-600 fs-18">Ultimos cierres de caja</p>
-						<br>
-						<table width="100%">
-							<thead>
-								<th align="left">Fecha</th>
-								<th align="left">Usuario</th>
-								<th></th>
-							</thead>
-							<tbody>
-								<template is="dom-repeat" items="{{listCierres}}" as="item">
-									<tr>
-										<td>{{ item.fecha }}  {{ item.hora }}</td>									
-										<td>{{ item.usuario }}</td>
-										<td>
-											<button class="btn btn-sm btn-info" data-id="[[item.idprint_server_detalle]]" onclick="reImprimirCierreHistory(this)" >Re-imprimir</button>
-										</td>
-									</tr>
-								</template>
-							</tbody>
-						</table>
 					</div>
 					<br><br>
 				</div>
@@ -1132,6 +1138,9 @@ function xEscribirDatosHtml(isConsolidado = false){
 	} else {
 		$("#div_datos_consolidado").append(xbody_datos).trigger('create');
 		titleFilePDFCierre = "Consolidado de caja desde " + dateIniConsolidado + " hasta " + dateFinConsolidado;
+		setTimeout(() => {
+			xDownloadPdfCierre(0, true);
+		}, 1500);
 	}
 
 	const titulo_print_cierre = isConsolidado ? 'Consolidado de Caha' : 'Cierre de Caja';
@@ -1405,11 +1414,14 @@ function xGenerarConsolidadoCaja() {
 		const arrTitulo = JSON.parse(xresConsolidado.datos[0]['titulo']);
 
 		const xArrayConsolidadoPrint = cocinarDataCierre(arrData, arrTitulo);
+		xArrayCierrePrint = xArrayConsolidadoPrint;
 		xIniArraysPrint(true); // impresora
 
 		xImprimirCierre(xArrayEncabezadoCierre, xArrayConsolidadoPrint, true);
 		xEscribirDatosHtml(true);
 		xThisCaja.isShowBtnDownloadConsolidado = true;
+		
+
 		xPopupLoad.xclose();
 	});
 }
