@@ -284,20 +284,20 @@
 							<button disabled$="[[isCuentasPorCobrar]]" class="btn btn-success" onclick="xVerificar();"><i class="fa fa-check pr-1"></i>Verificar</button>
 							<button class="btn btn-dark" onclick="dialog_info_supervisor.open()"><i class="fa fa-money pr-1"></i>Cuanto Tengo?</button>
 							<!-- <button class="btn btn-info" onclick="xOpenDialogPermisoRemotoUs()"><i class="fa fa-volume-control-phone pr-1"></i>Permiso Remoto</button> -->
-			            </div>
+			            </div> 
 			            <!-- <button onclick="xCocinarResumenBoletas();">Enviar Resumen</button> -->
 					</div>
 
 					<br><br>
 					<!-- CONSOLIDADO -->
 					<!-- hidden$="[[ !isShowLastCierres ]]" -->
-					<div class="xTxtCierreCajaContenedor mt-2">
-						<!-- <div hidden$="[[!isShowContentConsolidado]]"> -->
+					<div class="xTxtCierreCajaContenedor mt-2" hidden$="[[ !isShowLastCierres ]]">
+						<div hidden$="[[!isShowContentConsolidado]]">
 							<hr>
-							<div hidden$="[[!isShowConsolidado]]" style="background: #d9d9d9; display: inline-block;padding: 7px; border-radius: 5px;">
+							<div hidden$="[[isShowConsolidado]]" style="background: #d9d9d9; display: inline-block;padding: 7px; border-radius: 5px;">
 								<p>Para ofrecer un consolidado, todos los usuarios deben cerrar caja. Falta cerrar: {{ listUsuarioFaltaCerrar }}</p>
 							</div>
-							<div hidden$="[[isShowConsolidado]]" style="background: #d9d9d9; display: inline-block;padding: 7px; border-radius: 5px;">
+							<div hidden$="[[!isShowConsolidado]]" style="background: #d9d9d9; display: inline-block;padding: 7px; border-radius: 5px;">
 								<p class="mr-2 fw-600 fs-15">Consolidado de Ventas y Operaciones de Todas las Cajas.</p>
 								<p id="title_consolidado" class="mr-2 fw-600 text-secondary"></p>
 								<br>
@@ -306,7 +306,7 @@
 									<button class="btn btn-sm btn-dark mr-1" hidden$="[[!isShowBtnDownloadConsolidado]]" onclick="donwloadConsolidadoCaja()"><i class="fa fa-download"></i> Descargar Consolidado</button>
 								</div>
 							</div>
-						<!-- </div> -->
+						</div>
 
 						<div hidden$="[[ !isShowLastCierres ]]">
 							<hr>
@@ -590,7 +590,7 @@ function xGetDataCierre(idBitacora) {
 		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70001', data:{id: idBitacora, objdata: _objRunCierre }})
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=70001', data:{id: idBitacora }})
 		.done(_res => {
-			// console.log('run cierre registro ',_res)
+			console.log('run cierre registro ',_res)
 		})
 
 		// const arrData = JSON.parse(resCierre.datos[0]['data']);
@@ -1223,8 +1223,8 @@ function xloadLastCierres() {
 			.done(function (res) {
 				res = JSON.parse(res).datos;
 				console.log('res', res);
-				xThisCaja.isShowConsolidado = res.length > 0;
-				xThisCaja.isShowContentConsolidado = xThisCaja.isShowConsolidado;
+				xThisCaja.isShowContentConsolidado = res.length > 0;//parseInt(res[0].showConsolidado) == 1;
+				xThisCaja.isShowConsolidado = parseInt(res[0].showConsolidado) == 1;
 				xThisCaja.listUsuarioFaltaCerrar = res.map(x => x.nombres).join(', ');
 		});
 	});
