@@ -508,11 +508,11 @@
             p_fecha = d[1]===undefined ? '' : '01/' + d[1] + '/' + d[0];                        
             // xThisCpe.$.paginator.currentPage = 1;            
             xLoadCpeEmitidos('6');
-            xResumenMesTotaleCpe();
+            // xResumenMesTotaleCpe();
     }
 
     function xResumenMesTotaleCpe() {
-        console.log('p_fecha', p_fecha);
+        // console.log('p_fecha', p_fecha);
         $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '602', fecha_mes: p_fecha} })
         .done(function (res) {            
             res = JSON.parse(res);
@@ -521,6 +521,44 @@
             const _totalImporteCpe = xThisCpe.listResumenCpeEmitidos.map(x => removeComas(x.total)).reduce((a, b) => a+b, 0);
             xThisCpe.listResumenCpeEmitidosTotal = numeroConComas(_totalImporteCpe.toFixed(2));
         });
+
+        // let _listResumenCpeEmitidos =[
+        //     {
+        //         nom_comprobante: 'FACTURA',
+        //         cantidad: 0,
+        //         total: 0
+        //     },
+        //     {
+        //         nom_comprobante: 'BOLETA',
+        //         cantidad: 0,
+        //         total: 0
+        //     },
+        //     {
+        //         nom_comprobante: 'NOTA',
+        //         cantidad: 0,
+        //         total: 0
+        //     }
+        // ]
+        // // resumen de listCpe
+        // xThisCpe.ListCpe.map(x => {
+        //     _listResumenCpeEmitidos.map(y => {
+        //         if (x.nom_comprobante === y.nom_comprobante) {
+        //             y.cantidad += 1;
+        //             y.total += parseFloat(removeComas(x.total));                    
+        //         }
+        //     })
+        // });
+
+        // xThisCpe.listResumenCpeEmitidosTotal = numeroConComas(_listResumenCpeEmitidos.map(x => removeComas(x.total)).reduce((a, b) => a+b, 0).toFixed(2));
+
+        // _listResumenCpeEmitidos.map(x => {
+        //     x.total = numeroConComas(x.total.toFixed(2));
+        // });
+
+        // xThisCpe.listResumenCpeEmitidos = _listResumenCpeEmitidos
+
+        // console.log('listResumenCpeEmitidos', _listResumenCpeEmitidos);
+
     }
 
     function xIniPagination() {        
@@ -566,7 +604,7 @@
             res = $.parseJSON(res[0]);
             xDataRes = res.datos;
             
-            // console.log(xDataRes);
+            console.log(xDataRes);
             // estado   0 = ok registrado enviado
             //          1 = registrado no enviado por que es boleta
             //          2 = no registrado si es boleta y si es factura no enviado
@@ -657,7 +695,7 @@
                 }, 100);
             }
 
-            
+            xResumenMesTotaleCpe();
         });
 
     }   
@@ -1209,6 +1247,9 @@
         },
         _isEqualToLoading : (item) => {
             return item.isReenviandoLoading;
+        },
+        _formatMoney: function (item) {
+            return numeroConComas(item);
         },
         // reenviarComprobante: (item) => {
         // console.log('item', item);
