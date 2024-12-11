@@ -1,0 +1,93 @@
+<dom-module id="x-comp-cierre-lote-pinpad">
+    <template>
+        <style>            
+
+
+            .progress-container paper-progress {
+                width: 100%;
+            }
+
+            .message {
+                margin-top: 10px;
+                padding: 10px;
+                border-radius: 5px;
+                text-align: center;
+            }
+
+            .message.success {
+                background-color: #d4edda;
+                color: #155724;
+            }
+
+            .message.error {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+        </style>
+
+        <div class="container" hidden$="isHiddenCierreLote">
+            <!-- <button class="button" on-click="runCierreLote" disabled$="[[isLoading]]">Correr Cierre de Lote</button> -->
+            <div class="progress-container" hidden$="[[!isLoading]]">
+                <paper-progress indeterminate></paper-progress>
+            </div>
+            <div class$="message [[messageStatus]]" hidden$="[[!message]]">
+                [[message]]
+            </div>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-cierre-lote-pinpad',
+            properties: {
+                isLoading: {
+                    type: Boolean,
+                    value: false
+                },
+                message: {
+                    type: String,
+                    value: ''
+                },
+                messageStatus: {
+                    type: String,
+                    value: ''
+                },
+                isHiddenCierreLote: {
+                    type: Boolean,
+                    value: true
+                }
+            },
+            runCierreLote: async function () {
+                this.set('isLoading', true);
+                this.set('message', '');
+                this.set('messageStatus', '');
+
+                // verificamos si esta activo el uso de pinpad
+                const sede = xm_log_get('datos_org_all_sede')[0];
+                if (sede.is_active_pinpad == '0') {
+                    return false;
+                }
+
+                this.isHiddenCierreLote = false;
+
+
+                try {
+                    const result = await runPorcesoCierreLotePinPad();                    
+
+                    if (result.success) {
+                        this.set('message', 'Pinpad - Cierre de lote realizado correctamente');
+                        this.set('messageStatus', 'success');
+                    } else {
+                        this.set('message', result.message);
+                        this.set('messageStatus', 'error');
+                    }
+                } catch (error) {
+                    this.set('message', 'Error inesperado: ' + error.message);
+                    this.set('messageStatus', 'error');
+                } finally {
+                    this.set('isLoading', false);
+                }
+            }
+        });
+    </script>
+</dom-module>

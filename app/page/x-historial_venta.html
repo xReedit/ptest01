@@ -5,8 +5,11 @@
 
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
+	<!-- <link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso2.html"> -->
 	<link rel="import" href="../x-componentes/x-comp-anular-comprobante/x-comp-anular-comprobante.html">
+	<link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-remove-operation-pinpad.html"
 
+	<!-- <script async src="../services/pinpad.services.js"></script>	 -->
 	
 
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
@@ -22,6 +25,7 @@
 	<script type="text/javascript" src="../../js/PNotifyHistory.js"></script>
 	<script async type="text/javascript" src="../../js/picket.js"></script>
 	<script async type="text/javascript" src="../../js/picket.date.js"></script>
+	
 	<link rel="stylesheet" href="../../css/PNotifyBrightTheme.css">
 	
 
@@ -42,7 +46,10 @@
 		<x-comp-anular-comprobante id="compAnularComprobante"></x-comp-anular-comprobante>
 
 		<x-comp-dialog-permiso></x-comp-dialog-permiso>		
-		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1"></x-pass>
+
+		<x-comp-remove-operation-pinpad id="compRemoveOperationPinPad"></x-comp-remove-operation-pinpad>
+
+		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1" permisoremoto="false"></x-pass>
 		<paper-dialog id="dialog_motivo_anular_historial" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h4>ANULAR</h4>
@@ -72,9 +79,12 @@
 				<div>
 					<div class="d-flexx justify-content-between align-items-center header-registro-venta">						
 						<div style="zoom: 0.9;">
-							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png"><p>Anular pedido</p></div></paper-button>
+							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 90px;" onclick="xOpenAnularPedidoHistorial(this);" id="btn_anular_pedido_rp">
+								<i class="fa fa-unlock text-success mr-1 punto-flotante-verde xInvisible" style="position: absolute;"></i>
+								<img src="../../images/_delete_pedido.png"><p>Anular Registro</p>
+							</div></paper-button>
 							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 100px;" onclick="xImprimirPrecuentaHistorial();"><img src="../../images/_pre_cuenta.png"><p>Imprimir pre-cuenta</p></div></paper-button>
-							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>							
+							<paper-button><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="xAbrirDialogComprobante();"><img src="../../images/_comprobante.png"><p>Emitir Comprobante</p></div></paper-button>
 							<paper-button hidden$="[[!xIsPuedeReimprimirCPE]]"><div class="xMiBoton_icon_lateral2" style="margin-top:-15px; width: 50px;" onclick="reImprimirComprobante();"><img src="../../images/_print_vr.png"><p>Reimprimir Comprobante</p></div></paper-button>
 						</div>
 						<button class="btn btn-sm btn-secondary ml-2" dialog-dismiss>X</button>
@@ -111,7 +121,18 @@
 						</div>
 					</div>
 					<div class="xLinea2"></div><br><br>
-					<div id="xBody"></div>						
+					<div id="xBody"></div>	
+					<div style="float: right; text-align: right;" hidden$="[[isHiddenOptionsPinPad]]">
+						<h4>Opciones del pinpad</h4>
+						<div class="mb-3">
+							<button hidden$="[[isHiddenOptionsPinPadBtnRemove]]" class="btn btn-sm btn-danger" onclick="xOpenDialogAnularOperacionPinPad()"><i class="fa fa-trash"></i>
+								<span class="fs-12">Anular Operación</span>
+							</button>						
+							<button id="btnRePrintPinPad" class="btn btn-sm btn-warning" onclick="reemprimirPinpad()"><i class="fa fa-print"></i>
+								<span class="fs-12">Reimprimir Voucher</span>
+							</button>
+						</div>
+					</div>					
 				</div>				
 			</div>						
 		</paper-dialog>
@@ -202,7 +223,7 @@
 						<!-- <button class="btn btn-sm btn-success" onclick="xGenerarReporteExcelRegistroPago()"><i class="fa fa-file-excel-o"></i> Exportar</button> -->
 						 <!-- <div style="display: flex;width: 290px;justify-content: flex-end;"> -->
 							 <!-- <button class="btn btn-sm btn-primary mr-2"><i class="fa fa-caret-square-o-right"></i> Consolidado de Caja</button> -->
-							 <div class="dropdown">							
+							 <div class="dropdown">
 								 <button class="btn btn-sm btn-success"><i class="fa fa-file-excel-o"></i> Exportar <i class="fa fa-angle-down"></i></button>
 								 <div class="dropdown-content">
 									 <a href="#" onclick="xGenerarReporteExcelRegistroPago()">Resumen</a>
@@ -869,14 +890,29 @@ var data_pagination={}, p_rows=0, p_fecha='';
 		var p=e.detail.xRpts[0].p;
 		if(p===1){
 			xPermisoSupervisor=e.detail.xRpts[0].us;
-			if ( xThisHistVenta.opPermisoPass == 0 ) {
-				// xAnularPedidoHistorial();
-				// xCronometro_us=30;
-				// xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
-				xAnularPedidoHistorial();
-			} else {
-				xShowChangeMetodoPagoRegistro();
+			switch (xThisHistVenta.opPermisoPass) {
+				case 0:
+					xAnularPedidoHistorial();
+					break;
+				case 1:
+					xShowChangeMetodoPagoRegistro();
+					break;
+				case 2:
+					xShowAnularOperacionPinPad();
+					break;
+			
+				default:
+					break;
 			}
+
+			// if ( xThisHistVenta.opPermisoPass == 0 ) {
+			// 	// xAnularPedidoHistorial();
+			// 	// xCronometro_us=30;
+			// 	// xRefreshPermiso=setInterval(function () {xcronometro_permiso()},1000);
+			// 	xAnularPedidoHistorial();
+			// } else {
+			// 	xShowChangeMetodoPagoRegistro();
+			// }
 		}
 	});
 
@@ -927,6 +963,13 @@ function openAnularComp() {
 
 function xOpenDialogAnularPedido() {
 	xThisHistVenta.opPermisoPass = 0;
+	xPSupervisor.solicitarPermisoRemoto(true);
+	pass_us.open();
+}
+
+function xOpenDialogAnularOperacionPinPad() {
+	xThisHistVenta.opPermisoPass = 2;
+	xPSupervisor.solicitarPermisoRemoto(false);
 	pass_us.open();
 }
 
@@ -964,21 +1007,100 @@ async function xAbrirDialogComprobante() {
 	// xThisHistVenta.$.dialog_comprobante.open();
 }
 
-function xOpenAnularPedidoHistorial(){
+async function xOpenAnularPedidoHistorial(){	
+	const rowItem = xThisHistVenta.listRegistroPagoFilter.find(i => i.idregistro_pago === xidregistro_pago_sel);
+	if ( rowItem.showRemove ) {
+		const rowStorage = await getFindRowStorageSolicudPermisoRemota(5, 'idregistro_pago', xidregistro_pago_sel)
+		xPermisoSupervisor = rowStorage.data.idusuario_admin;
+		xAnularPedidoHistorial();
+		return
+	}
+
+	xGetArraySolicitudRemotoAnularPedido();
 	dialog_motivo_anular_historial.open();
-	//pass_us.open();
 }
-function xAnularPedidoHistorial(){
-	//armar sql devolucion de stock
-	var _xidpedid_txt_change='';
-	var xArrayAnularItems=[];
-	$("#tb_det_pedidos .row").each(function(index,element){
-		_xidpedid_txt_change=_xidpedid_txt_change+','+$(element).attr('data-idpedido');;
+
+function xGetArraySolicitudRemotoAnularPedido() {
+
+	// let idpedidos = new Set();
+	// $("#tb_det_pedidos .row").each(function (index, element) {
+	// 	idpedidos.add($(element).attr('data-idpedido'));
+	// })
+	// const numPedidosRegistro = idpedidos.size;
+	// idpedidos = Array.from(idpedidos).join(',');
+
+	const { idpedidos, numPedidosRegistro } = getIdPedidosRegistroPago();
+
+
+	xCompArraySolitaPermiso = {
+		tipo_permiso: 5,
+		obj: {
+			idregistro_pago: xidregistro_pago_sel,
+			motivo: $("#txt_motivo_anular").val(),
+			importe: xTotalItemSel,
+			idpedidos: idpedidos,
+			numpedidos: numPedidosRegistro,
+			tipoconsumo: xdt_h[0].des_consumo
+		},
+		motivo: $("#txt_motivo_anular").val(),
+		importe: xTotalItemSel,
+		idpedidos: idpedidos,
+		numpedidos: numPedidosRegistro,
+		tipoconsumo: xdt_h[0].des_consumo
+	}
+}
+
+function getIdPedidosRegistroPago() {
+	let idpedidos = new Set();
+	$("#tb_det_pedidos .row").each(function (index, element) {
+		idpedidos.add($(element).attr('data-idpedido'));
 	})
-	_xidpedid_txt_change=_xidpedid_txt_change.slice(1);
-	//
+	const numPedidosRegistro = idpedidos.size;
+	idpedidos = Array.from(idpedidos).join(',');
+	return { idpedidos, numPedidosRegistro }
+}
+
+async function xAnularPedidoHistorial(){
+	//armar sql devolucion de stock
+	// var _xidpedid_txt_change='';
+	
+
+	// $("#tb_det_pedidos .row").each(function(index,element){
+	// 	_xidpedid_txt_change=_xidpedid_txt_change+','+$(element).attr('data-idpedido');;
+	// })
+	// _xidpedid_txt_change=_xidpedid_txt_change.slice(1);
+	// //
+
+	const { idpedidos, numPedidosRegistro } = getIdPedidosRegistroPago();
+
+	var xArrayAnularItems = xGetItemFromPedidosAnular('#tb_det_pedidos', idpedidos);
+	console.log('xArrayAnularItems', xArrayAnularItems);
+
+	// lanzar mensaje sweetalert para saber si desea recuperar stock de los productos del pedido anular
+	// const _swalAlertValues = paramsSwalAlert;
+	// _swalAlertValues.title = '<p class="fw-600 fs-18">Atención!</p>';
+	// _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+	// 							<p class="mt-1 fs-18
+	// 							">¿Desea recuperar el stock de los productos del registro a anular?</p>
+	// 						</div>`;
+	// _swalAlertValues.confirmButtonText = 'Si';
+	// _swalAlertValues.denyButtonText = 'No';
+	// _swalAlertValues.showDenyButton = true;
+	// _swalAlertValues.showCancelButton = true;
+
+	let isRecuperarStock = 0;
+	const rptRecuperarStock = await showMsjRecuperarStock()
+							
+	if ( rptRecuperarStock.isDismissed){
+		return;
+	}
+
+	if ( rptRecuperarStock.isConfirmed ) {
+		isRecuperarStock = 1;		
+	}	
+
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :'', xPedidos:_xidpedid_txt_change, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor,'viene_historial':xidregistro_pago_sel}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular : xArrayAnularItems, xPedidos: idpedidos, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor,'viene_historial':xidregistro_pago_sel, 'xisRecuperarStock': isRecuperarStock}})
 	.done( function (dt_xx) {
 		xPopupLoad.xclose();
 		$(".xMiBoton_icon_lateral").attr('disabled', true);
@@ -1096,6 +1218,7 @@ function xloadHistorial(){
 			x.des_consumo = x.des_consumo === 'CONSUMIR EN EL LOCAL' ? 'EN LOCAL' : x.des_consumo;
 			x.class_tpc = x.des_consumo === 'DELIVERY' ? 'bg-delivery' : x.des_consumo === 'PARA LLEVAR' ? 'bg-llevar' : 'bg-mesa';
 			x.class_tpc = `badge fs-12 ${x.class_tpc}`;
+			x.showRemove = x.permission_delete == '1';
 
 			const _importeTotalRegistro = x.anulado ? 0 : parseFloat(x.total);			
 			importeTotalRegistrado = importeTotalRegistrado + _importeTotalRegistro;
@@ -1355,6 +1478,7 @@ function xloadDetallePago(obj){
 
 	const _indexRow = obj.dataId;
 	const rowItem = xThisHistVenta.listRegistroPagoFilter[_indexRow];
+	console.log('rowItem', rowItem);
 	// const rowItem = xThisHistVenta.listAtendidoPorFilter[_indexRow];
 
 	index_historial = _indexRow;
@@ -1414,9 +1538,18 @@ function xloadDetallePago(obj){
 			
 		})
 
-		setTimeout(() => {			
+		setTimeout(() => {
 			xPopupLoad.xclose();
 			dialog_registro_detalle.open();
+
+			setTimeout(() => {
+				if ( rowItem.showRemove ) {
+					$('#btn_anular_pedido_rp .punto-flotante-verde').removeClass('xInvisible');
+				} else {
+					$('#btn_anular_pedido_rp .punto-flotante-verde').addClass('xInvisible');
+				}
+			}, 500);
+			
 		}, 800);
 
 	})
@@ -1455,18 +1588,39 @@ function xLoadMipedidoBDHistorial(dt){
 		xArraySeccion_r=new Array();
 
 		//xCantItems=0;
+		console.log('xDtBd', xDtBd);
 		for (i in xDtBd) {
+			console.log('xDtBd[i]', xDtBd[i]);
 			if(xArrayTpC[b].id==xDtBd[i].idtipo_consumo){
 					xNom_seccion=xDtBd[i].des_seccion;
 					//seccion
 					if(xArraySeccion_r[xDtBd[i].idseccion_index]==null){xArraySeccion_r[xDtBd[i].idseccion_index]='<tr><td colspan="5" class="xBold">'+xNom_seccion+'</td></tr>'; }
-					xCadenaItemArray_h=String('<tr class="row" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+'" data-idpedido="'+xDtBd[i].idpedido+'" data-idtipoconsumo="'+xDtBd[i].idtipo_consumo+'">'+
-									'<td width="7px" class="click_row_dt_p" id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2) +'</td>'+
-									'<td class="click_row_dt_p" width="50%">'+xDtBd[i].descripcion+'</td>'+
-									'<td class="click_row_dt_p" align="right" id="td_importe">'+xMoneda(xDtBd[i].ptotal)+'</td>'+
-									//'<td align="center" class="td_op" data-op="cambiar" data-procede="'+xDtBd[i].procede+'"><img src="../../images/_change.png" title="Cambiar" class="'+xdisabled_procede +' '+xdisabled_btn_cambiar+'"></td>'+
-									//'<td align="center" class="td_op" data-op="borrar" data-procede=0><img src="../../images/_delete3.png" title="Borrar" class="'+xdisabled_btn_cambiar+'"></td>'+
-								'</tr>');
+					// xCadenaItemArray_h=String('<tr class="row" data-i="'+i+'" data-idpedidodetalle="'+xDtBd[i].idpedido_detalle+'" data-idpedido="'+xDtBd[i].idpedido+'"+ data-idtipoconsumo="'+xDtBd[i].idtipo_consumo+' data-descripcion='+ xDtBd[i].descripcion+'>'+
+					// 				'<td width="7px" class="click_row_dt_p" id="td_cant">'+xCeroIzq(xDtBd[i].cantidad,2) +'</td>'+
+					// 				'<td class="click_row_dt_p" width="50%">'+xDtBd[i].descripcion+'</td>'+
+					// 				'<td class="click_row_dt_p" align="right" id="td_importe">'+xMoneda(xDtBd[i].ptotal)+'</td>'+									
+					// 			'</tr>');
+					xCadenaItemArray_h = `
+						<tr class="row" 
+							data-i="${i}" 
+							data-idpedidodetalle="${xDtBd[i].idpedido_detalle}" 
+							data-idpedido="${xDtBd[i].idpedido}" 
+							data-idtipoconsumo="${xDtBd[i].idtipo_consumo}" 
+							data-idseccion="${xDtBd[i].idseccion}"
+							data-idimpresora_seccion="${xDtBd[i].idimpresora_seccion}"
+							data-descripcion="${xDtBd[i].descripcion}"
+							data-des_tp="${xDtBd[i].des_tp}"
+							data-iddescontar="${xDtBd[i].iddescontar}"
+							data-cant_item="${xDtBd[i].cantidad}"
+							data-is_cantidad_nd=${xDtBd[i].is_cantidad_nd}
+							data-cant_descontar="${xDtBd[i].cant_descontar}"
+							data-descontar="${xDtBd[i].descontar_en}"
+							">
+							<td width="7px" class="click_row_dt_p" id="td_cant">${xCeroIzq(xDtBd[i].cantidad, 2)}</td>
+							<td class="click_row_dt_p" width="50%">${xDtBd[i].descripcion}</td>
+							<td class="click_row_dt_p" align="right" id="td_importe">${xMoneda(xDtBd[i].ptotal)}</td>
+						</tr>
+					`;
 
 					//xCantItems=parseInt(xCantItems)+parseInt(xDtBd[i].cantidad);
 					xArraySeccion_r[xDtBd[i].idseccion_index]=xArraySeccion_r[xDtBd[i].idseccion_index]+xCadenaItemArray_h;
@@ -1485,6 +1639,8 @@ function xLoadMipedidoBDHistorial(dt){
 	$("#xBody div").remove();
 	$("#xBody").html(xCadenaGrupo_r).trigger('create');
 	xSumarTotalesHis();
+
+	// getDataPagoPinPad();
 }
 function xSumarTotalesHis(){
 	//subtotales
@@ -1524,11 +1680,52 @@ function xSumarTotalesHis(){
 			
 			xcadena_total='<div class="d-flexx justify-content-end mb-2"><table width="50%" id="tb_totales" class="xRowPading4">'+xcadena_total+'</table></div><br>'+xhtml_anulado;
 			$("#xBody").append(xcadena_total).trigger('create');
+		
+			const isShowOptionPinPad = xdt_tpp.find(x => x.idtipo_pago == 12) ? true : false;
+			xThisHistVenta.isHiddenOptionsPinPad = !isShowOptionPinPad && !rowIsCierreOn;
+			if ( isShowOptionPinPad ) {
+				getDataPagoPinPad(rowIsCierreOn);
+			}
 		})
+
 	})
 
 
 	dialog_registro_detalle.center();
+
+	
+}
+
+// datos de la operacion con pinpad
+function getDataPagoPinPad(rowIsCierreOn) {
+	xThisHistVenta.isHiddenOptionsPinPadBtnRemove = rowIsCierreOn;
+	console.log('xidregistro_pago_sel', xidregistro_pago_sel);
+	const dataSend = {idregistro_pago: xidregistro_pago_sel};
+	$.ajax({ type: 'POST', url: '../../bdphp/log_010.php?op=get-data-pago-pinpad', data:JSON.stringify(dataSend)})
+	.done( function (dt) {
+		dt = JSON.parse(dt);
+		console.log('dt - pinpad', dt);
+		if ( dt.success ) {
+			const dataPinPad = JSON.parse(dt.datos[0].data_response);			
+			xThisHistVenta.registro_pago_pinpad = dataPinPad;
+			console.log('dataPinPad', dataPinPad);
+		}
+	})
+}
+
+async function reemprimirPinpad() {
+	btnRePrintPinPad.disabled = true;
+	xPopupLoad.xopen();
+	const printData = xThisHistVenta.registro_pago_pinpad.data.print_data;
+	const refPrint = extractRefFromPrintData(printData)
+	const rptReepresion = await reemprimirVoucherPinPad(refPrint);
+	xPopupLoad.xclose();
+	btnRePrintPinPad.disabled = false;
+	if ( rptReepresion.success ) {
+		showToastSwal('success', 'Reimpresion exitosa', 'Se reimpresion el voucher correctamente');
+	} else {
+		showToastSwal('error', 'Error al reimpresion', 'No se pudo reimpresion el voucher');
+	}
 }
 
 function xMandarCocinarImpresionComprobante_historial() {		
@@ -1863,6 +2060,48 @@ async function xPermisoChangeTP(obj) {
 	pass_us.open();
 }
 
+async function xShowAnularOperacionPinPad() {
+	xThisHistVenta.openDlgRemovePinPad();
+	// const _swalAlertValues = paramsSwalAlert;        	
+	// _swalAlertValues.title = '<i class="fa fa-trash text-danger"></i><p class="fw-600 fs-18">Anular Operación PinPad</p>';
+	// _swalAlertValues.html = `		
+	// 	<p>Motivo de anulación</p>
+	// 	<input id="txt_motivo_anular_pinpad" class="selected-template-1 text-center" type="text" placeholder="Motivo" />
+	// 	<br>
+	// 	<p>Número de operación</p>
+	// 	<input id="txt_operacion_pinpad" class="selected-template-1 text-center" type="text" placeholder="# de operación" />					
+	// `;
+	// _swalAlertValues.confirmButtonText = 'Anular';
+	// _swalAlertValues.showCancelButton = true;
+
+	// const _rowItem = xThisHistVenta.listRegistroPagoFilter.find(x => x.idregistro_pago === xidregistro_pago_sel);
+	// console.log('_rowItem', _rowItem);
+
+	// const rptDialog = await showAlertSwalHtmlDecision(_swalAlertValues,1)
+	// if ( rptDialog.isConfirmed ) {		
+	// 		const _motivoAnular = document.getElementById('txt_motivo_anular_pinpad').value;
+	// 		const _operacionPinPad = document.getElementById('txt_operacion_pinpad').value;
+	// 		if (_operacionPinPad === '') {
+	// 			showToastSwal('error', 'Ingrese el número de operación');
+	// 			return;
+	// 			// setTimeout(() => {						
+	// 			// 	xShowAnularOperacionPinPad();
+	// 			// }, 1500);
+	// 		}
+	// 		console.log('_motivoAnular', _motivoAnular);
+	// 		console.log('_operacionPinPad', _operacionPinPad);
+	
+	// 		const dataSend = {
+	// 			idregistro_pago: xidregistro_pago_sel,
+	// 			motivo_anular: _motivoAnular,
+	// 			data_adicional: _operacionPinPad,					
+	// 			amount: _rowItem.total,
+	// 		}
+	
+	// 		sendRemovePinPad(dataSend);			
+	// }
+}
+
 async function xShowChangeMetodoPagoRegistro() {
         const _swalAlertValues = paramsSwalAlert;        
         _swalAlertValues.title = '<p class="fw-600 fs-18">Elige el metodo de pago</p>';
@@ -1920,15 +2159,49 @@ async function xShowChangeMetodoPagoRegistro() {
 		}
 	}
 
+	// function que recibe registro de pago y actualiza el row de persmiso remoto para anular el registro de pago
+	function xRPAnularRegistroPago(idregistro_pago) {
+		// buscar por idregistro
+		const _rowItem = xThisHistVenta.listRegistroPagoFilter.find(x => x.idregistro_pago === idregistro_pago);
+		_rowItem.showRemove = true;
+
+		if ( xidregistro_pago_sel === idregistro_pago ) {
+			xPermisoSupervisor = _rowItem.idusuario_admin;
+			// verificar si dialog_registro_detalle esta abierto
+			if ( xThisHistVenta.$.dialog_registro_detalle.opened ) {				
+				xThisHistVenta.isHiddenOptionsPinPadBtnRemove = false;
+				$('#btn_anular_pedido_rp .punto-flotante-verde').removeClass('xInvisible');				
+			}
+		}
+		
+	}
+
 	function showMsjChangeHoraClose() {
 		const _swalAlertValues = paramsSwalAlert;  
 		_swalAlertValues.title = '<p class="fw-600 fs-18 text-warning">Hora de cierre</p>';
 		_swalAlertValues.html = '<p class="fs-16">Para cambiar la hora de cierre vaya a las opciones principales "Datos del sistema / Sede / Variables."</p>';
 		_swalAlertValues.confirmButtonText = 'Entendido';
 		_swalAlertValues.showCancelButton = false;
+		_swalAlertValues.showDenyButton = false;		
+		
 
 		showAlertSwalHtml(_swalAlertValues)
 	
+	}
+
+	async function showMsjRecuperarStock() {
+		const _swalAlertValuesStock = paramsSwalAlert;
+		_swalAlertValuesStock.title = '<p class="fw-600 fs-18">Atención!</p>';
+		_swalAlertValuesStock.html = `<div class="pb-2" style="display: inline-flex;">                    
+								<p class="mt-1 fs-18
+								">¿Desea recuperar el stock de los productos del registro a anular?</p>
+							</div>`;
+		_swalAlertValuesStock.confirmButtonText = 'Si';
+		_swalAlertValuesStock.denyButtonText = 'No';
+		_swalAlertValuesStock.showDenyButton = true;
+		_swalAlertValuesStock.showCancelButton = true;
+
+		return await showAlertSwalHtmlDecision(_swalAlertValuesStock)
 	}
 
 	
@@ -1971,7 +2244,10 @@ Polymer({
 				importe: '',
 				idusuario_admin: ''
 			}
-		},		
+		},	
+		isHiddenOptionsPinPad: Boolean,	
+		isHiddenOptionsPinPadBtnRemove: Boolean,
+		registro_pago_pinpad : Number,
 	},
 	attached:function(){
 		this.opPermisoPass=0; // anular pedido
@@ -1980,6 +2256,8 @@ Polymer({
 		this.xYaPedidoCerrado = true;
 		this.isCierreCaja = false;
 		this.horaCierre = '00:00';
+		this.isHiddenOptionsPinPad = true;
+		this.isHiddenOptionsPinPadBtnRemove = true;
     	xThisHistVenta=this;
 		xIniHistVenta();
 		
@@ -1993,8 +2271,17 @@ Polymer({
 		_cpSocketClose();
     },
 	displayIndex: function(index) {
-            return xCeroIzq(index + 1,1);
-        }
+        return xCeroIzq(index + 1,1);
+    },
+	getDataPinPad: function() {
+		
+	},
+	openDlgRemovePinPad: function() {
+		const _rowItem = xThisHistVenta.listRegistroPagoFilter.find(x => x.idregistro_pago === xidregistro_pago_sel);
+		console.log('_rowItem', _rowItem);
+		this.$.compRemoveOperationPinPad.setRowRegistroPago(_rowItem);
+		this.$.compRemoveOperationPinPad.open(); 
+	},
 })
 </script>
 </dom-module>

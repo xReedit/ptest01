@@ -150,6 +150,11 @@
 			const index=obj.dataIndex;	
 			const idSelect = obj.dataId;
 			xThisComTipoPagoOption.idselect = idSelect;
+
+			if ( xThisComTipoPagoOption.listOptionPago.length === 0 ) {
+				getAllTipoPagoOption();
+			}
+
 			xThisComTipoPagoOption.reqcliente = xThisComTipoPagoOption.listOptionPago[index].requiere_cliente;
 			xThisComTipoPagoOption.limite = xThisComTipoPagoOption.listOptionPago[index].limite;
 			

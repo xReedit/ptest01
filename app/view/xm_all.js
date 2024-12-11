@@ -446,6 +446,7 @@ function setClearLocalStorage(redirec = true) {
 	var lasIdSede = window.localStorage.getItem('::app3_sys_last_s');
 	var show_opcion_item = window.localStorage.getItem('::app3_sys_vr_show_opcion');
 	var vr_touch_item = window.localStorage.getItem('::app3_sys_vr_touch');
+	const pinpad_sn = window.localStorage.getItem('::app3_pinpad_sn');
 	
 	// zona de despacho
 	var app3_woZD = window.localStorage.getItem('::app3_woZD');
@@ -459,6 +460,7 @@ function setClearLocalStorage(redirec = true) {
 	if (lasIdSede) {window.localStorage.setItem('::app3_sys_last_s', lasIdSede); }
 	if (show_opcion_item) {window.localStorage.setItem('::app3_sys_vr_show_opcion', show_opcion_item); }
 	if (vr_touch_item) {window.localStorage.setItem('::app3_sys_vr_touch', vr_touch_item); }
+	if (pinpad_sn) {window.localStorage.setItem('::app3_pinpad_sn', pinpad_sn); }
 
 	// zona de despacho
 	if (app3_woZD) { window.localStorage.setItem('::app3_woZD', app3_woZD); }

@@ -1,0 +1,148 @@
+<dom-module id="x-comp-handler-pinpad">
+    <template>
+        <style>
+            
+        </style>
+
+        <table>
+            <thead>                
+                <th align="center">
+                    <p class="m-0">Modelo</p>
+                    <span class="fs-9 text-secondary">Modelo marca del pinpad</span>
+                </th>
+                <th align="center">
+                    <p class="m-0">SN pinpad</p>
+                    <span class="fs-9 text-secondary">El SN se encuentra atrás del pinpad</span>
+                </th>
+                <th align="center">
+                    <p class="m-0">Area</p>
+                    <span class="fs-9 text-secondary">Caja 1, Caja 2...</span>
+                </th>
+                <th align="center"></th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="center">
+                        <input type="text" onChange="conMayusculas(this)" class="selected-template-1" placeholder="Modelo" id="pinpad_descripcion"> 
+                    </td>
+                    <td align="center">
+                        <input type="text" onChange="conMayusculas(this)" class="selected-template-1" placeholder="SN del dospositivo" id="pinpad_sn">
+                    </td>
+                    <td align="center">
+                        <input type="text" onChange="conMayusculas(this)" class="selected-template-1" placeholder="Area" id="pinpad_area">
+                    </td>
+                    <td align="center">
+                        <button class="btn btn-sm btn-primary" on-click="addPinpad">+ Agregar</button>
+                    </td>
+                </tr>
+                <template is="dom-repeat" items="{{pinpads}}" as="pinpad">
+                    <tr>
+                        <td align="center">
+                            <p>[[pinpad.descripcion]]</p>
+                            <p class="fs-9">[[pinpad.fecha_registro]]</p>                            
+                        </td>
+                        <td align="center">[[pinpad.pinpad_sn]]</td>
+                        <td align="center">[[pinpad.area]]</td>
+                        <td align="center">
+                            <button class="btn btn-sm btn-danger" on-click="removePinpad"><i class="fa fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-handler-pinpad',
+            properties: {
+                pinpads: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                newPinpadSN: {
+                    type: String,
+                    value: ''
+                },
+                newCajaDescripcion: {
+                    type: String,
+                    value: ''
+                }
+            },
+            _asignarPinpad: function (e) {
+                var pinpad = e.model.pinpad;
+                // Lógica para asignar el pinpad a la caja
+                console.log('Asignar pinpad:', pinpad);
+                // Aquí puedes agregar la lógica para actualizar el estado del pinpad
+            },
+            addPinpad: function () {
+                const pinpad = {
+                    descripcion : this.$.pinpad_descripcion.value,
+                    pinpad_sn : this.$.pinpad_sn.value,
+                    area : this.$.pinpad_area.value                  
+                };
+
+                console.log('ChannelMergerNode', pinpad);
+
+                $.ajax({
+                    url: '../../bdphp/log_010.php?op=add-pinpad',
+                    type: 'POST',
+                    data: JSON.stringify(pinpad)
+                })
+                .done(function (data) {
+                    console.log('data', data);
+                })
+            },
+            removePinpad : async function(e) {
+                const pinpad = e.model.pinpad;
+                console.log('pinpad', pinpad);
+
+                const _swalAlertValues = paramsSwalAlert;
+                _swalAlertValues.title = '<p class="fw-600 fs-20">Borrar PinPad</p>';
+                _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <p class="fs-15">Esta seguro de borrar este PinPad <strong>${pinpad.pinpad_sn}</strong><br> Asegurese que ninguna usuario lo este utilizando.</p>
+                                </div>`;
+                _swalAlertValues.confirmButtonText = 'Si, borrar';
+                _swalAlertValues.showCancelButton = true;
+                const rptDialog = await showAlertSwalHtmlDecision(_swalAlertValues, 1)
+                if (rptDialog.value) {
+                    this.runRemovePinpad(pinpad);
+                    this.getListPinPad();
+                }                
+                
+            },
+            runRemovePinpad: (pinpad) => {
+                $.ajax({
+                    url: '../../bdphp/log_010.php?op=remove-pinpad',
+                    type: 'POST',
+                    data: JSON.stringify(pinpad)
+                })
+                    .done(function (data) {
+                        console.log('data', data);
+                    })
+            },
+            ready: function () {   
+                this.getListPinPad();             
+            },
+            getListPinPad : function(){
+                var self = this;
+                $.ajax({
+                    url: '../../bdphp/log_010.php?op=get-list-pinpad',
+                    type: 'GET',
+                    success: (data) => {
+                        console.log('data', data);            
+                        const rpt = JSON.parse(data);            
+                        this.pinpads = rpt.datos;
+                        console.log(rpt);
+                    },
+                    error: function (error) {
+                        console.log('Error:', error);
+                    }
+                });
+            }
+        });
+    </script>
+</dom-module>

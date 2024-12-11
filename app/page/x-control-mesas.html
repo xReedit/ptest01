@@ -101,7 +101,7 @@
 				</div>
 				<br>
 				<div>
-					<button class="btn btn-success mr-1" dialog-dismiss onclick="pass_us.open();">Listo</button>
+					<button class="btn btn-success mr-1" dialog-dismiss onclick="xCMDlgMotivoAnular();">Listo</button>
 					<button class="btn btn-danger" dialog-dismiss>Cancelar</button>
 
 					<!-- <div class="xBoton2 xVerde" dialog-dismiss onclick="pass_us.open();">Listo</div> -->
@@ -1525,8 +1525,9 @@ function xAnularPedido(isRecuperarStock = false, motivoAnularEstablecido = ''){
 	xArrayAnularItems = xCPGetItemPedidosAnular()
 	console.log('xArrayAnularItems', xArrayAnularItems);
 
-	const _isCheckRecuperarStock = isRecuperarStock ? isRecuperarStock : check_recuperar_stock.checked;
+	const _isCheckRecuperarStock = xThisCM.isCheckRecuperarStock; // isRecuperarStock ? isRecuperarStock : check_recuperar_stock.checked;
 	const _valRecuperarBorrarItem =  _isCheckRecuperarStock ? '1' : '0';	
+	
 	
 	// impresion de anulacion
 	const infoDataPedido = {
@@ -1544,6 +1545,7 @@ function xAnularPedido(isRecuperarStock = false, motivoAnularEstablecido = ''){
 	.then((dt_xx) => {
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM,'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	// .done( function (dt_xx) {
+		xThisCM.isCheckRecuperarStock = false;
 		xPopupLoad.xclose();
 		xActualizarItems();
 		//xLoadMesas()
@@ -2115,7 +2117,10 @@ async function xRegistrarClientePagoCP(){
 	// cambio para sumar los costos negativos, si es que es delivery y el comercio paga
 	xarr_subtotal = arrSumSubtTotales;
 	// xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
-	
+
+	console.log('xarr_tipo_pago', xarr_tipo_pago);
+	const reponsePinpad = xValPago.getResponsePinPad();
+	console.log('reponsePinpad', reponsePinpad);
 	
 	if(!xcheckItemsSeleccionados.esSeleccionTotal || !xcheckItemsSeleccionados.esSeleccionTodoPeidoLista){ //si es pago parcial
 		//registrar pago - ok
@@ -2132,6 +2137,8 @@ async function xRegistrarClientePagoCP(){
 
 		const idP = await goSendPedidoFecht(dataSendPedido);
 		const _arrRpt = idP;
+
+		
 
 
 			const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
@@ -2160,6 +2167,10 @@ async function xRegistrarClientePagoCP(){
 			_cpASocketNotifyPayPedido(_payloadPedidoPagado);
 
 		// }).fail(enProcesoGuardarPago = false);
+
+		// save transaction pinpad si corresponde
+		saveTransactionPinPad(xIdRegistroPago, xarr_tipo_pago, reponsePinpad);
+		xValPago.cleanResponsePinPad();
 
 		xValPago.setResetFormaPago();
 
@@ -2220,6 +2231,11 @@ async function xRegistrarClientePagoCP(){
 			}
 		
 		_cpASocketNotifyPayPedido(_payloadPedidoPagado);
+
+		// save transaction pinpad si corresponde
+		saveTransactionPinPad(xIdRegistroPago, xarr_tipo_pago, reponsePinpad);
+		xValPago.cleanResponsePinPad();
+
 		xValPago.setResetFormaPago();
 
 		const amountTotal = getAmountTotalSubTotales(xarr_subtotal);
@@ -3201,6 +3217,7 @@ async function xCMCheckPermisoBorrar() {
 
 			// evaluamos si selecciono el check check_recuperar_stock_dialog_borrar
 			const _valRecuperarBorrarItem = _checkRecuperarStock !== '' ? check_recuperar_stock_dialog_borrar.checked : false;	
+			xThisCM.isCheckRecuperarStock = _valRecuperarBorrarItem;
 
 			if ( xCompArraySolitaPermiso.tipo_permiso === 1 )  {
 				xEliminarItemPedido(_valRecuperarBorrarItem, _dataSolicitudPermiso.motivo);
@@ -3229,6 +3246,7 @@ async function xCMCheckPermisoBorrar() {
 function xGetPermisoEliminarItem() {
 	// console.log(check_recuperar_stock.checked);
 	const _valRecuperarBorrarItem = check_recuperar_stock.checked ? '1' : '0';
+	xThisCM.isCheckRecuperarStock = check_recuperar_stock.checked;
 	localStorage.setItem('::app3_woRestoreStock', _valRecuperarBorrarItem);
 
 	if(xCronometro_us>0 && xCronometro_us!=30) {
@@ -3250,12 +3268,13 @@ function xGoProcessBorrar() {
 function xEliminarItemPedido(isRecuperarStock = null, motivoAnularEstablecido = ''){
 	//xArrayItemEliminar
 	// enviar condicion de aumentar stock
-	const _isCheckRecuperarStock = isRecuperarStock !== null ? isRecuperarStock : check_recuperar_stock.checked;
+	const _isCheckRecuperarStock = xThisCM.isCheckRecuperarStock; //isRecuperarStock !== null ? isRecuperarStock : check_recuperar_stock.checked;
 	const _valRecuperarBorrarItem = _isCheckRecuperarStock ? '1' : '0';
 	xPopupLoad.xopen();
 	
 	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=3042', data: { xarr: xArrayItemEliminar, u: xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem, xMotivo: motivoAnularEstablecido } })
 	.then((e_rpt) => {
+		xThisCM.isCheckRecuperarStock = false;
 		// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=3042', data:{xarr:xArrayItemEliminar,u:xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 		// .done( function (e_rpt) {
 		//e_rpt=$.parseJSON(e_rpt):
@@ -4932,6 +4951,11 @@ function xShowCantidadPedidosBorrados() {
 	
 }
 
+function xCMDlgMotivoAnular() {
+	xThisCM.isCheckRecuperarStock = check_recuperar_stock_all_pedido.checked;
+	pass_us.open()
+}
+
 // function addContadorLoad() {
 // 	var contadoLoad = parseInt(localStorage.getItem('::app3_sys_count_load_m'));
 // 	contadoLoad = isNaN(contadoLoad) ? 1 : contadoLoad + 1;
@@ -5010,11 +5034,13 @@ Polymer({
 		listRepartidor: [],
 		importeTotalPedido: Number,
 		showVisibleAreaMesas: Boolean,
+		isCheckRecuperarStock: Boolean,
 		// hidden_container_registro_pago: boolean = false,
 		// valid_form_cliente_pago: boolean = false,
 		// valid_monto_pago: boolean = false
 	},
 	attached:function(){				
+		this.isCheckRecuperarStock = false;
 		xThisCM = this;
 		xThisCM.select_page = 0;	
 		

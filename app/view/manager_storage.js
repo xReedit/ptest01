@@ -97,9 +97,25 @@ async function findStorageSolicudPermisoRemota(id, tipo_permiso){
         findRowSolicitud = findRowStorageSolicudPermisoRemota(id, tipo_permiso, dataStorageSolicitudRemota);
     }
     
-    return findRowSolicitud;
+    return findRowSolicitud;    
+}
 
-    
+// busca segun argumento y valor en data.data
+async function getFindRowStorageSolicudPermisoRemota(tipo_permiso,key,value){
+    let dataStorageSolicitudRemota = getStorageSolicitudPermisoRemota()
+    if (!dataStorageSolicitudRemota) {
+        dataStorageSolicitudRemota = await findStorageSolicudPermisoRemotaWithRequest();        
+    }
+
+    // Filtrar por tipo_permiso
+    const filteredData = dataStorageSolicitudRemota.filter(item => item.tipo_permiso === tipo_permiso);
+    if (filteredData.length === 0) {
+        return null;
+    }
+
+    // Buscar dentro de data.data por el argumento específico
+    const foundItem = filteredData.find(item => item.data.data[key] === value);
+    return foundItem || null;
 }
 
 function findRowStorageSolicudPermisoRemota(id, tipo_permiso, dataStorageSolicitudRemota) {

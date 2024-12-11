@@ -122,7 +122,7 @@
 					<!-- <paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
 						class="btnAdd2"></paper-fab>
 					<br> -->
-					<x-comp-table-forma-pago id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="[[pedidoPagadoFromAPP]]"></x-comp-table-forma-pago>
+					<x-comp-table-forma-pago class="ctablefp" id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="[[pedidoPagadoFromAPP]]"></x-comp-table-forma-pago>
 					<br>
 
 					<!-- <table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
@@ -468,11 +468,21 @@
 		
 		xtipoP = [];
 		var xdif_text='', xPase=0;
-		xCompTableFP=document.getElementById('comp-table-fp');
+		xCompTableFP=document.getElementById('comp-table-fp');		
+
+		xCompTableFP.addEventListener('xCompTablePinPadSuccess', function (e) {			
+			console.log('xCompTablePinPadSuccess');
+			xThisPago.change_monto_pago_valid = true;
+			xListoRegistraPago(e.detail);
+		});
+
 		xCompTableFP.addEventListener('xCompTableChange', function (e) {
 			// console.log('valor table pago ', e.detail);
-			const evento = e.detail.evento;
+			const evento = e.detail.evenwwwto;
 			xtipoP = e.detail.datos;
+
+			const lastTpPago = xtipoP[xtipoP.length - 1];
+			xThisPago.is_tp_pinpad = lastTpPago.id == 12 ? true : false;
 			
 			const xsuma_total=e.target.valImporteRestante;
 			if (xsuma_total <= 0) {
@@ -495,6 +505,8 @@
 			if ( xThisPago.clienteModel && xThisPago.tipoPagoRequiereCliente) {
 				xThisPago.tipoPagoRequiereCliente = xThisPago.clienteModel.nombres === '' ? true : false;
 			}
+
+			xThisPago.change_monto_pago_valid = xThisPago.is_tp_pinpad ? false : xThisPago.change_monto_pago_valid;
 
 			xFireSend(xPase)
 
@@ -672,9 +684,14 @@
 				// return;
 			}
 		} else {
-			if (xThisPago.clienteModel.num_doc === '') { 
+			try {				
+				if (xThisPago.clienteModel.num_doc === '') { 
+					xThisPago.$.sel_cliente.invalid = false;
+					xThisPago.mensajeErrorDocumento = '';			
+				}
+			} catch (error) {
 				xThisPago.$.sel_cliente.invalid = false;
-				xThisPago.mensajeErrorDocumento = '';			
+				xThisPago.mensajeErrorDocumento = '';	
 			}
 		}
 		
@@ -1003,6 +1020,7 @@
 			ComprobanteRequiereCliente: boolean = false,
 			tipoPagoRequiereCliente: boolean = false,
 			pedidoPagadoFromAPP: boolean = false, // el pedido fue pagado desde la app papaya express
+			is_tp_pinpad: boolean = false,
 			// modoSoloComprobante: boolean = false,
 			_tipo: {
 				type: Number,
@@ -1021,6 +1039,7 @@
 				type: Boolean,
 				value: false,
 			},
+			componenteTablaFP: Object,
 		},
 		attached: function () {
 			//this.total='83.00';
@@ -1029,6 +1048,7 @@
 			this.isShowSearchSunat = false;
 			this.isBtnPrinterCpe = false;
 			this.changeDatosClienteSave = null;
+			this.is_tp_pinpad = false;
 			//this.placeholder_clie='Cliente | Publico en General';		
 			xThisPago = this;
 			xIiniPago();
@@ -1149,6 +1169,14 @@
 		},
 		setTelefonoCliente: (telefono) => {
 			$("#clie_telefono").val(telefono);	
-		}
+		},
+		getResponsePinPad : () => {			
+			// this.componenteTablaFP = Polymer.dom(this.root).querySelector('#comp-table-fp');
+			return xCompTableFP.getResponsePinPad();
+		},
+		cleanResponsePinPad: () => {
+			// this.componenteTablaFP = this.$.compTableFp;
+			xCompTableFP.cleanResponsePinPad();
+		},
 	})
 </script>

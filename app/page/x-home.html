@@ -3,6 +3,8 @@
 
 	<!-- <link rel="import" href="../x-componentes/x-comp-find-ubigeo/x-comp-find-ubigeo.html"> -->
 	<!-- <link rel="import" href="../x-componentes/x-edit-tipo-precio/x-edit-tipo-precio.html"> -->
+	<!-- <link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-handler-pinpad.html"> -->
+	<!-- <link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-remove-operation-pinpad.html"> -->
 	<template>
 		<!-- <x-edit-tipo-precio></x-edit-tipo-precio> -->
 		<!-- <x-config-sede-opciones></x-config-sede-opciones> -->
@@ -13,7 +15,11 @@
 		<br>		 -->		
 		<!-- <x-comp-find-ubigeo></x-comp-find-ubigeo> -->
 		 <!-- <button onclick="xOpenRegistroPedidos()">registro pedidos</button> -->
-		
+		<!-- <x-comp-handler-pinpad></x-comp-handler-pinpad> -->
+		 <!-- <x-comp-set-pinpad></x-comp-set-pinpad>		 
+		<br> -->
+		<!-- <x-comp-remove-operation-pinpad id="compremovepinpad"></x-comp-remove-operation-pinpad>
+		<button onclick="xOpenAnularOperacion()">anular operacion</button> -->
 		<br>
 
 		<div id="xBodyOp">
@@ -195,6 +201,10 @@ function abrirToast() {
 	toast = document.getElementById('toast');
 	toast.text = "aaaaaaaaaaa";	
 	toast.show();
+}
+
+function xOpenAnularOperacion() {
+	xThisHome.$.compremovepinpad.open();
 }
 
 

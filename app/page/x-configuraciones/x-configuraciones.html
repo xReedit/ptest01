@@ -1,6 +1,7 @@
 <link rel="import" href="../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <link rel="import" href="../../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+<link rel="import" href="../../x-componentes/x-comp-handler-pinpad/x-comp-handler-pinpad.html">
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-config.html">
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-mesas.html">
 <link rel="import" href="../../page/x-configuraciones/x-config-sede-opciones/x-config-sede-opciones.html">
@@ -209,6 +210,7 @@
 				<paper-tab>EMISION DE COMPROBANTES</paper-tab>
 				<paper-tab>CARTA APP</paper-tab>				
 				<paper-tab>AREAS Y MESAS</paper-tab>
+				<paper-tab>PIN PAD</paper-tab>
 			</paper-tabs>
 			<div class="xLinea2"></div>
 				<br>
@@ -894,6 +896,20 @@
 					<!-- AREAS Y MESAS -->
 					<div id="div_areas_mesas" class="xContent">						
 						<x-areas-mesas></x-areas-mesas>
+					</div>
+
+					<!-- CONFIGURACION DE PIN PAD -->
+					<div id="div_pin_pad" class="xContent">
+						<h3>Agregar PinPad</h3>
+						<p>
+							Para agregar un pinpad, debe especificar los siguientes datos: <br>
+							Especifique el modelo por ejemplo <strong>P400</strong>. El numero SN que se encuentra en la parte de atrás del pinpad. <br>
+							Y el area donde estara ubicado el pinpad, por ejemplo <strong>caja 1</strong> o <strong>caja 2</strong>.							
+						</p>
+						<br>
+						<p>Luego de agregar el pinpad, cada area debe asignarse el que le corresponde y hacer la prueba de conexión.</p>
+						<br>
+						<x-comp-handler-pinpad></x-comp-handler-pinpad>
 					</div>
 				</iron-pages>
 			</div>

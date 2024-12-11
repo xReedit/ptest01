@@ -1,5 +1,60 @@
-<!-- <script  type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAknWQFyVH1RpR2OAL0vRTHTapaIpfKSqo&libraries=places"></script> -->
+<!-- <script  type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script> -->
 <dom-module id="x-comp-direccion-google">
+    <template>
+        <input type="text" class="xMiInput xPasarEnter2 w-100" id="autocomplete" placeholder="DIRECCION O COORDENADAS">
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'x-comp-direccion-google',
+        properties: {
+
+        },
+        attached: function () {
+            this.xCompDatosDelInitDir();
+        },
+        xCompDatosDelInitDir: function () {
+            this.onBusquedaApi();
+        },
+        onBusquedaApi: function () {
+            const autocomplete = this.$.autocomplete;
+            const search = new google.maps.places.Autocomplete(autocomplete);
+            search.addListener('place_changed', () => {
+                const place = search.getPlace();
+                this.fire('getPlaces', place);
+            });
+
+            autocomplete.addEventListener('input', () => {
+                const input = autocomplete.value;
+                const isCordenada = this.isCoordinates(input)
+                if (this.isCoordinates(input)) {
+                    this.searchCoordinates(input);
+                }
+            });
+        },
+        isCoordinates: function (input) {
+            const regex = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
+            return regex.test(input.trim());
+        },
+        searchCoordinates: function (input) {
+            const coords = input.split(',').map(coord => parseFloat(coord.trim()));
+            const latlng = new google.maps.LatLng(coords[0], coords[1]);
+            const geocoder = new google.maps.Geocoder();
+
+            geocoder.geocode({ 'location': latlng }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    this.$.autocomplete.value = results[0].formatted_address;
+                    this.fire('getPlaces', results[0]);
+                } else {
+                    console.error('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        }
+    });
+</script>
+
+<!-- <script  type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAknWQFyVH1RpR2OAL0vRTHTapaIpfKSqo&libraries=places"></script> -->
+<!-- <dom-module id="x-comp-direccion-google">
 	<template is="dom-bind">        
 		<input type="text" class="xMiInput xPasarEnter2 w-100" id="autocomplete" placeholder="DIRECCION">
 	</template>
@@ -31,4 +86,4 @@
 			xCompDatosDelInitDir();
 		}
     })
-</script>
+</script> -->

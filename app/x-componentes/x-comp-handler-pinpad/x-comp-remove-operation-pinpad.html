@@ -1,0 +1,154 @@
+<dom-module id="x-comp-remove-operation-pinpad">
+    <template>
+        <style>
+            /* Estilos del componente */
+            .container {
+                padding: 20px;
+                /* border: 1px solid #ccc; */
+                border-radius: 5px;
+                background-color: #f9f9f9;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .input-field-1 {
+                margin-bottom: 10px;
+            }
+
+            .input-field-1 label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .input-field-1 input,
+            .input-field-1 textarea {
+                width: 100%;
+                padding: 8px;
+                box-sizing: border-box;
+            }
+
+            .button {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+        </style>
+
+    <paper-dialog id="dlgRemovePinPad" class="dialog_redondo" modal style="min-width:320px;" entry-animation="scale-up-animation"
+    exit-animation="fade-out-animation" with-backdrop>
+        <div class="container">
+            <p class="fs-18 fw-600">Anular Operación</p>
+            <div class="input-field-1">
+                <label for="operationNumber">Número de Operación</label>
+                <input class="selected-template-1" type="text" id="operationNumber" value="{{operationNumber::input}}">
+            </div>
+            <div class="input-field-1">
+                <label for="reason">Motivo</label>
+                <textarea class="selected-template-1" id="reason" value="{{reason::input}}"></textarea>
+            </div>
+
+            <div class="pb-3">
+                <div class="w-100 animate__animated fadeIn" hidden$="[[!isLoading]]">
+                    <paper-progress class="w-100" indeterminate></paper-progress>
+                </div>
+                <div class$="response-message [[responseStatus]]" hidden$="[[!responseMessage]]">
+                    [[responseMessage]]
+                </div>
+            </div>
+
+            <div hidden$="[[isLoading]]">
+                <button class="btn btn-sm btn-primary" on-click="sendCancelRequest" disabled$="[[!canSend]]">Enviar Solicitud</button>
+                <button class="btn btn-sm btn-dark" dialog-dismiss>Cancelar</button>
+            </div>
+        </div>
+    </paper-dialog>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-remove-operation-pinpad',
+            properties: {
+                operationNumber: {
+                    type: String,
+                    value: ''
+                },
+                reason: {
+                    type: String,
+                    value: ''
+                },
+                canSend: {
+                    type: Boolean,
+                    computed: '_computeCanSend(operationNumber, reason)'
+                },
+                rowRegistro: {
+                    type: Number,
+                    value: 0
+                },
+                isLoading: {
+                    type: Boolean,
+                    value: false
+                },
+                responseMessage: {
+                    type: String,
+                    value: ''
+                },
+                responseStatus: {
+                    type: String,
+                    value: ''
+                }
+            },
+            _computeCanSend: function (operationNumber, reason) {
+                return operationNumber.trim() !== '' && reason.trim() !== '';
+            },
+            sendCancelRequest: async function () {                  
+                this.isLoading = true;
+                this.responseMessage = 'Enviando Solciitud...';                
+                this.responseStatus = '';                
+
+                const dataSend = {
+                    idregistro_pago: this.rowRegistro.idregistro_pago,
+                    motivo_anular: this.reason,
+                    data_adicional: this.operationNumber,
+                    amount: this.rowRegistro.total,
+                }
+                console.log('dataSend', dataSend);
+
+                const rptAnulacion = await sendRemovePinPad(dataSend);
+                
+                if ( rptAnulacion.success ) {
+                    this.responseMessage = 'Solicitud enviada exitosamente';
+                    this.responseStatus = 'success';
+
+                    setTimeout(() => {
+                        this.$.dlgRemovePinPad.close();
+                        this.isLoading = false;
+                        this.responseMessage = '';
+                        this.responseStatus = '';
+                        this.operationNumber = '';
+                        this.reason = '';                        
+                    }, 2000);
+                } else {
+                    this.isLoading = false;
+                    this.responseMessage = rptAnulacion.data.message;
+                    this.responseStatus = 'error';
+
+                }              
+            },
+            open: function () {
+                this.$.dlgRemovePinPad.open();
+            },
+            setRowRegistroPago: function (rowRegistro) {
+                this.rowRegistro = rowRegistro;
+            }   
+        });
+    </script>
+</dom-module>

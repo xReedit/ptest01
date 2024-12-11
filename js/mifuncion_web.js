@@ -1010,3 +1010,37 @@ function getLastThreeYears() {
 	}
 	return years;
 }
+
+
+function xGetItemFromPedidosAnular(xtable, idpedidos) {
+	// xCheckPedidos();
+	var xArrayAnularItems = [];
+	const tablefind = `${xtable} .row`;
+	$(tablefind).each(function (index, element) {
+		var xcantidad_remove_item = parseFloat($(element).find('#td_cant').text());
+		var xidpeddido_item = $(element).attr('data-idpedido');
+		var xid_descontar_item = $(element).attr('data-iddescontar');
+		var xcant_descontar = $(element).attr('data-cant_descontar');
+		var xitabla_item = $(element).attr('data-descontar');
+		xArrayAnularItems.push({
+			'idpedidos': idpedidos,
+			'm_a': $("#txt_motivo_anular").val(),
+			'c': xcant_descontar,
+			'cant_item': xcantidad_remove_item,
+			'descripcion': $(element).attr('data-descripcion'),
+			'des_tp': $(element).attr('data-des_tp'),
+			'idimpresora_seccion': $(element).attr('data-idimpresora_seccion'),
+			'idtipoconsumo': $(element).attr('data-idtipoconsumo'),
+			'idseccion': $(element).attr('data-idseccion'),
+			'iddescontar': xid_descontar_item,
+			'tabladescontar': xitabla_item,
+			'is_cantidad_nd': $(element).attr('data-is_cantidad_nd')
+		})
+	})
+	//
+	// xPopupLoad.xopen();
+
+	console.log('xArrayAnularItems', xArrayAnularItems);
+	return xArrayAnularItems;
+
+}

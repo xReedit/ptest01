@@ -5,7 +5,9 @@
 	<!-- <script rel="preload" type="text/javascript" src="../../../js/socket.io.js"></script> -->
 	<link rel="import" href="../../x-componentes/x-comp-printer-local-select/x-comp-printer-local-select.html">
 	<link rel="preload" href="../../../images/_msj_envio_sunat.gif" as="image" media="(max-width: 600px)">
-	<link rel="import" href="../../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
+	<link rel="import" href="../../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">	
+	<link rel="import" href="../../x-componentes/x-comp-handler-pinpad/x-comp-set-pinpad.html">
+	<link rel="import" href="../../x-componentes/x-comp-handler-pinpad/x-comp-cierre-lote-pinpad.html">
 	<script async src="../../view/httpFech.js"></script>
 	<script type="text/javascript" src="../../view/notifica.js"></script>
 	<script type="text/javascript" src="../../../js/PNotify.js"></script>
@@ -96,8 +98,9 @@
 			<div class="xLinea2"></div>
       		<br><br>
       		<iron-pages selected="{{selected}}">
-	      		<div id="ingreso_caja">
-					<div class="xDivImpresora">
+	      		<div id="ingreso_caja">					
+					<div class="xDivImpresora d-flexx">						
+						<x-comp-set-pinpad></x-comp-set-pinpad>
 						<x-comp-printer-local-select></x-comp-printer-local-select>
 					</div>
 					<div>
@@ -266,6 +269,8 @@
 						</div>
 						<div id="xTituloRpt2"></div>
 
+						
+
 			            </form><br>
 						<!-- respuesta solicitud cierre -->
 						<div id="div_espera_rpt" class="xInvisible">
@@ -285,10 +290,15 @@
 							<button class="btn btn-dark" onclick="dialog_info_supervisor.open()"><i class="fa fa-money pr-1"></i>Cuanto Tengo?</button>
 							<!-- <button class="btn btn-info" onclick="xOpenDialogPermisoRemotoUs()"><i class="fa fa-volume-control-phone pr-1"></i>Permiso Remoto</button> -->
 			            </div> 
+
+						<div>
+							<x-comp-cierre-lote-pinpad id="compCierrePinPad"></x-comp-cierre-lote-pinpad>
+						</div>
 			            <!-- <button onclick="xCocinarResumenBoletas();">Enviar Resumen</button> -->
 					</div>
 
 					<br><br>
+					
 					<!-- CONSOLIDADO -->
 					<!-- hidden$="[[ !isShowLastCierres ]]" -->
 					<div class="xTxtCierreCajaContenedor mt-2" hidden$="[[ !isShowLastCierres ]]">
@@ -322,10 +332,12 @@
 								<tbody>
 									<template is="dom-repeat" items="{{listCierres}}" as="item">
 										<tr>
-											<td>{{ item.fecha }}  {{ item.hora }}</td>									
+											<td>{{ item.fecha }}</td>									
 											<td>{{ item.usuario }}</td>
 											<td>
-												<button class="btn btn-sm btn-info" data-id="[[item.idprint_server_detalle]]" onclick="reImprimirCierreHistory(this)" >Re-imprimir</button>
+												<button class="btn btn-sm btn-info" data-id="[[item.idusuario_bitacora_cierre]]" onclick="reImprimirCierreHistory(this)" >Re-imprimir</button>
+												<button class="btn btn-sm btn-warning" data-id="[[item.idusuario_bitacora_cierre]]"
+													onclick="reImprimirCierreHistory(this, true)">PDF</button>
 											</td>
 										</tr>
 									</template>
@@ -735,6 +747,11 @@ function verifyCuentasPagar() {
 	}
 }
 
+function xRunCierreLotePinpad() {
+	const _compCierrePinPad = document.getElementById('compCierrePinPad');
+	_compCierrePinPad.runCierreLote();
+}
+
 function xVerificar(){
 
 	
@@ -762,6 +779,7 @@ function xVerificar(){
 
 		if(isConforme){
 			xRpt='<h3>OK cuadre conforme.</h3>';xColor='#060'; 
+			xRunCierreLotePinpad()
 			xArmarArrayPrint(res.idbitacora);
 			xloadLastCierres()
 		} else {
@@ -1199,7 +1217,15 @@ function xDownloadPdfCierre(op = 0, isConsolidado = false) {
 }
 
 function xloadLastCierres() {	
-	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12'})
+	// $.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12'})
+	// .done(function (res) {		
+	// 	res = JSON.parse(res).datos;
+	// 	xThisCaja.listCierres = res;
+	// 	xThisCaja.isShowLastCierres = res.length > 0;		
+	// 	// console.log('xThisCaja.listCierres', xThisCaja.listCierres);
+	// });
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=12000'})
 	.done(function (res) {		
 		res = JSON.parse(res).datos;
 		xThisCaja.listCierres = res;
@@ -1223,39 +1249,77 @@ function xloadLastCierres() {
 			.done(function (res) {
 				res = JSON.parse(res).datos;
 				console.log('res', res);
-				xThisCaja.isShowContentConsolidado = res.length > 0;//parseInt(res[0].showConsolidado) == 1;
+				xThisCaja.isShowContentConsolidado = res.length > 0 && res[0].cantidad > 1;//parseInt(res[0].showConsolidado) == 1;
 				xThisCaja.isShowConsolidado = parseInt(res[0].showConsolidado) == 1;
 				xThisCaja.listUsuarioFaltaCerrar = res.map(x => x.nombres).join(', ');
 		});
 	});
 }
 
-function reImprimirCierreHistory(obj) {	
-	const _cpe = obj.dataId;
-	xPopupLoad.xopen()	
-	$.ajax({ type: 'POST', 
-		url: '../../bdphp/log_005.php?op=1703',
-		data:{idprint: _cpe}})
-	.done( function (res) {
-		var _detalle_json = JSON.parse(res).datos;
-		_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
+function reImprimirCierreHistory(obj, isPDF = false) {	
+	const idbitacora = obj.dataId;
+	xPopupLoad.xopen();
+	xPopupLoad.titulo="Obteniendo Datos...";
 
-		// const rowItem = xThisHistVenta.listRegistro[index_historial];
-		const _dataPrint = {
-			detalle_json: _detalle_json.detalle_json,
-			idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
-			hora: xDevolverHora(),
-			nomUs: 'Caja',
-			nom_documento: "cuadre-caja"
+	const itemCierre = xThisCaja.listCierres.find(x => x.idusuario_bitacora_cierre == idbitacora);
+	const arrData = JSON.parse(itemCierre.detalle_cierre);
+	const arrTitulo = JSON.parse(itemCierre.detalle_titulo);
+
+	xArrayCierrePrint = cocinarDataCierre(arrData, arrTitulo);
+	
+
+	if ( isPDF ) {
+		xPopupLoad.xopen();
+		xEscribirDatosHtml();				
+	} else {
+		xIniArraysPrint();
+		if ( isPrintCierreCaja ) {
+			xImprimirCierre(xArrayEncabezadoCierre, xArrayCierrePrint, true);
+			xPopupLoad.xopen();
 		}
+	}
 
-		_cpSocketprinterOnly(_dataPrint);
+	setTimeout(() => {
+		xPopupLoad.xclose();
+	}, 1500);	
+	
+	
+	// const _cpe = obj.dataId;
+	// xPopupLoad.xopen()	
+	// $.ajax({ type: 'POST', 
+	// 	url: '../../bdphp/log_005.php?op=1703',
+	// 	data:{idprint: _cpe}})
+	// .done( function (res) {
+	// 	var _detalle_json = JSON.parse(res).datos;
+	// 	_detalle_json = _detalle_json.length > 0 ? _detalle_json[0] : _detalle_json;
 
-		setTimeout(() => {
-			xPopupLoad.xclose()
-		}, 1500);
-	});
+	// 	// const rowItem = xThisHistVenta.listRegistro[index_historial];
+	// 	const _dataPrint = {
+	// 		detalle_json: _detalle_json.detalle_json,
+	// 		idprint_server_detalle: _detalle_json.idprint_server_detalle + new Date().getMilliseconds(), // para que en print server
+	// 		hora: xDevolverHora(),
+	// 		nomUs: 'Caja',
+	// 		nom_documento: "cuadre-caja"
+	// 	}
+
+	// 	if ( isPDF ) {
+	// 		xArrayCierrePrint = cocinarDataCierre(arrData, arrTitulo);
+	// 		xDownloadPdfCierre(1);
+	// 		xPopupLoad.xclose();
+	// 		return;
+	// 	}
+
+	// 	_cpSocketprinterOnly(_dataPrint);
+
+	// 	setTimeout(() => {
+	// 		xPopupLoad.xclose()
+	// 	}, 1500);
+	// });
 }
+
+
+
+
 
 function recibirAdelanto(obj) {
 	const indexList = obj.dataId;

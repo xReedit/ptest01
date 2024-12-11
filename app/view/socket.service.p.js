@@ -178,6 +178,15 @@ function listenSocketP() {
         saveStorageSolicitudPermisoRemota(res);
     });
 
+    // notifica cambio de metodo de pago a registro de pagos
+    this.socketCP._listen('restobar-permiso-remove-registro-pago', res => {        
+        console.log('res restobar-permiso-remove-registro-pago ===', res);
+        xRPAnularRegistroPago(res.data.data.idregistro_pago); // control de pedidos
+        pNotificaSolicitudAceptada(res);
+
+        saveStorageSolicitudPermisoRemota(res);
+    });
+
     // notifica cerrar caja
     this.socketCP._listen('restobar-permiso-cerrar-caja', res => {
         console.log('restobar-permiso-cerrar-caja', res);              

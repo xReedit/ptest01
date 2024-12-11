@@ -689,10 +689,10 @@ function xImprimirCualquierLista(dataToPrinter, idestructura = 5, nomfile = 'lis
 	dataToPrinter.encabezado.nom_us = xm_log_get('app3_us').nomus;
 
 	const _data = {
-		Array_enca: dataToPrinter.encabezado,
+		Array_enca: dataToPrinter.encabezado || '',
 		Array_print: dataToPrinter.impresora,
 		ArrayItem: dataToPrinter.lista, //xArrayCuerpo, para borrar los null
-		ArraySubTotales: dataToPrinter.subtotales	
+		ArraySubTotales: dataToPrinter.subtotales || ''	
 	}
 
 	// if (_sys_local === 1) {

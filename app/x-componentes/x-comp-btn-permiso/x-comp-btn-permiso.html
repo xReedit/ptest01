@@ -1,6 +1,9 @@
 <dom-module id="x-comp-btn-permiso">
     <template>        
-        <button class="btn btn-sm btn-permiso template-1" onclick="xCompDSR_open()">
+        <!-- onclick="xCompDSR_open()" -->
+        <button class="btn btn-sm btn-permiso template-1"         
+        on-click="openPermisoDialog"
+        >
             <i class="fa fa-key" aria-hidden="true"></i>
             Permiso Remoto
         </button>
@@ -47,6 +50,20 @@
                 },
                 open: function () {
                     xThisCompBtnPermiso.$.dialog_solicitud_remota_permiso.open();
+                },
+                openPermisoDialog: function () {
+                    
+                    const dialog = document.querySelector('x-comp-dialog-permiso');
+                    if (dialog) {
+                        dialog.openDialog();
+                    } else {
+                        console.error('No se encontró el componente x-comp-dialog-permiso');
+                    }
+
+                    xpass_d.close();
+                    dialog_borrar_item.close();
+                    dialog_motivo_anular.close()
+                    
                 }
             })
         </script>

@@ -10,7 +10,7 @@
 				<table class$="{{_class}}" style="width: 100%;" id="table_op_fp">
 					<thead>
 						<th align="left">Forma de pago</th>
-						<th align="left">Monto</th>
+						<th align="left" style="min-width: 100px;"></th>
 					</thead>
 					<tbody>											
 						<template is="dom-repeat" items="{{listTabla}}" as="item">
@@ -35,15 +35,57 @@
 									</div>
 								</td>
 								<td>
-									<input type="number" min="1"									
-										id$="{{item.idText}}"
-										pattern="[0-9]+([\.,][0-9]+)?" step="any"
-										class="xMiInput xfont16 xtxtCentro xmonto" 
-										onblur="xRetornaMoneda(this)" 
-										onkeyup="xCalcImporte()"
-										disabled="{{item.deshabilitado}}"
-										onclick="this.select();"
-										value$="{{item.importe}}" anchofull>
+									<div class="w-100">
+										<input type="number" min="1"									
+											hidden$="[[!item.contentPinPad.hidden_content]]"
+											id$="{{item.idText}}"
+											pattern="[0-9]+([\.,][0-9]+)?" step="any"
+											class="xMiInput xfont16 xtxtCentro xmonto animated" 
+											onblur="xRetornaMoneda(this)" 
+											onkeyup="xCalcImporte()"
+											disabled="{{item.deshabilitado}}"
+											onclick="this.select();"
+											value$="{{item.importe}}" anchofull>
+	
+										<!-- pinpad -->
+										<div hidden$="[[item.contentPinPad.hidden_content]]" class="animated animate__headShake">
+
+											<div hidden$="[[item.contentPinPad.transaction.show]]">
+												<div hidden$="[[item.contentPinPad.hidden_progress]]">
+													<paper-progress id="tp_pinpad_loader_progress" indeterminate style="width: 100%;"></paper-progress>
+													<p class="text-success fs-11 fw-600" hidden$="[[!item.contentPinPad.transaction.loader]]">Procesando pago, espere</p>
+												</div>
+												<div hidden$="[[!item.contentPinPad.hidden_progress]]" class="w-100">
+													<div hidden$="[[!item.contentPinPad.success]]" class="d-flexx justify-content-between align-items-center">
+														<p class="text-success fs-9 fw-600">Pinpad Disponible</p>												
+														<button class="btn btn-sm btn-success" on-click="sendOrderPinPad">Cobrar [[item.contentPinPad.amount]]</button>
+													</div>
+													<div hidden$="[[item.contentPinPad.success]]">
+														<p class="text-danger fs-11 fw-600">[[item.contentPinPad.message]]</p>
+													</div>
+												</div>											
+											</div>
+
+											<!-- resultado de la transacción -->
+											<div hidden$="[[!item.contentPinPad.transaction.show]]">
+												<div hidden$="[[!item.contentPinPad.transaction.loader]]">
+													<paper-progress id="tp_pinpad_loader_progress" indeterminate style="width: 100%;"></paper-progress>
+													<p class="text-success fs-12 fw-600" hidden$="[[!item.contentPinPad.transaction.loader]]">Procesando, espere.</p>
+												</div>
+
+												<div hidden$="[[item.contentPinPad.transaction.loader]]">
+													<div hidden$="[[!item.contentPinPad.transaction.success]]" class="d-flexx justify-content-between align-items-center">
+														<p class="text-success fs-12 fw-600">[[item.contentPinPad.transaction.message]]</p>
+														<i class="fa fa-check text-success"></i>
+													</div>
+													<div hidden$="[[item.contentPinPad.transaction.success]]" class="d-flexx justify-content-between align-items-center">														
+														<p class="text-danger fs-12 fw-600">[[item.contentPinPad.transaction.message]]</p>
+														<i class="fa fa-times text-danger"></i>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
 								</td>
 							</tr>
 						</template>
@@ -68,8 +110,7 @@
 			// if (!xCompOptionPago) {return; }
 			xCompOptionPago=document.getElementById('comp-pago-option');
 			try {		
-				$(document).on('getValorIncial', '.tpf_option', function (e) {
-					// console.log('getValorIncial comp-tp', e.detail);
+				$(document).on('getValorIncial', '.tpf_option', function (e) {					
 					itemOptionTpSelected = e.detail.values;
 					xCalcImporte();
 
@@ -85,6 +126,7 @@
 			} catch (error) {
 				
 			}
+
 			
 		}
 
@@ -118,7 +160,20 @@
 				importe: _valImporteRestante.toFixed(2),
 				deshabilitado: false,
 				novisibles: _noVisibles,
-				hiddenIconBorrar: _hiddenIconBorrar
+				hiddenIconBorrar: _hiddenIconBorrar,
+				contentPinPad: {
+					hidden_content: true,
+					hidden_progress: true,
+					amount: 0,
+					success: false,
+					message: '',
+					transaction: {
+						show: false,
+						loader: false,
+						success: false,
+						message: '',
+					}
+				},
 			});
 
 			xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
@@ -142,7 +197,7 @@
 			// xCalcImporte();
 		}
 
-		function xCalcImporte() {
+		function xCalcImporte() {			
 
 			// console.log('listIni tabla forma pago', listIni);
 			var totalRegistrado=0, importeGrabar=0, _importeRecibido=0, _importeRestante=0, _importetotal;
@@ -183,8 +238,19 @@
 			// xThisComTableFP.valImporteRestante = _valImporteRestante === 0 ? xThisComTableFP.importetotal : _valImporteRestante;
 			xThisComTableFP.valImporteRestante = _valImporteRestante;
 			// xThisComTableFP.valImporteRestante = _valImporteRestante < 0.01 ? 0 : _valImporteRestante;
+			
+			
+			xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
 
-			// console.log('listIni', listIni);
+			const lastTpPago = listIni[listIni.length-1];
+			if ( lastTpPago.id==12 ) {
+				xThisComTableFP.evalPinPad(lastTpPago);
+			} else {
+				lastTpPago.contentPinPad.hidden_content = true;
+				lastTpPago.contentPinPad.hidden_progress = true;
+			}
+			xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));				
+			
 			xThisComTableFP.listPagoSeleted = listIni;
 			xThisComTableFP.fire('xCompTableChange', {datos: listIni, evento: event});
 		}
@@ -240,6 +306,8 @@
 					notify: true,
 					reflectToAttribute: true
 				},
+				pindPadShowCheck: {type: Boolean, value: false},
+				pinPadResponse: {type: Object, value: {}},
 			},
 			listeners: {
 				'onchange': 'getTipoTablePagoOption'
@@ -273,8 +341,7 @@
 				setTimeout(() => {					
 					xIniCompTableOption();
 					xResetFirstOption();
-				}, 200);
-				// console.log('================= clear tabla tp pagos');
+				}, 200);				
 			},
 			_isEqualToApp: () => {
 				// console.log('=========== _isEqualToApp', xThisComTableFP.ispagoapp);
@@ -283,7 +350,86 @@
 			getListPagoSeleted: () => {
 				return xThisComTableFP.listPagoSeleted;
 			},
-			// addRow: () => { _addRow(); }
+			evalPinPad: async (item) => {		
+				if (this.pindPadShowCheck ) return;
+
+				this.pindPadShowCheck = true;		
+				item.contentPinPad.hidden_content = false;
+				item.contentPinPad.hidden_progress = false;						
+				item.contentPinPad.success = false;
+				item.contentPinPad.message = '';
+
+				const assignedPinpadSN = localStorage.getItem('::app3_pinpad_sn');
+				if ( !assignedPinpadSN ) {					
+					item.contentPinPad.hidden_progress = true;
+					item.contentPinPad.success = false;
+					item.contentPinPad.message = `PinPad no asignado.`;
+					xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));										
+					return;
+				}
+
+				const rptPinpad = await testConnectionPinPad(assignedPinpadSN);
+				this.pindPadShowCheck = false;	
+				console.log('rptPinpad', rptPinpad);
+				item.contentPinPad.success = rptPinpad.success;				
+				if (rptPinpad.success) {
+					item.contentPinPad.hidden_progress = true;											
+					const filteredList = xThisComTableFP.listTabla.filter(x => x.id != 12);
+					const totalList = filteredList.map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+
+					let amount = parseFloat(xThisComTableFP.importetotal) - totalList;
+					amount = amount === 0 ? xThisComTableFP.importetotal : amount;
+					amount = parseFloat(amount).toFixed(2);
+					item.contentPinPad.amount = amount;
+					item.importe_recibido = amount;
+					item.importe = amount;
+					
+					const _nom = '#tpf_option' + item.index;
+					$(_nom).val(amount);
+
+				} else {
+
+					item.contentPinPad.hidden_progress = true;
+					item.contentPinPad.message = `PinPad no disponible.`;
+				}	
+				
+				xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
+			},
+			sendOrderPinPad : async (e) => {
+				const _item = e.model.item;				
+				const item = listIni[_item.index];
+
+				item.contentPinPad.transaction.show = true;
+				item.contentPinPad.transaction.loader = true;
+				xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
+
+				const transaction = {
+					operation: '01',					
+					amount: item.importe,
+				};
+
+				console.log('transaction', transaction);
+			
+				const rptOrder = await sendTransactionPinPad(transaction);
+				item.contentPinPad.transaction.show = true;
+				item.contentPinPad.transaction.loader = false;
+				item.contentPinPad.transaction.success = rptOrder.success;
+				item.contentPinPad.transaction.message = rptOrder.success ? rptOrder.data.message : 'Error no se pudo realizar la transacción.';
+				xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
+
+				if ( rptOrder.success ) {
+					xThisComTableFP.fire('xCompTablePinPadSuccess', rptOrder)
+				}
+				
+				console.log('rptOrder', rptOrder);
+				this.pinPadResponse = rptOrder;
+			},
+			getResponsePinPad: () => {
+				return this.pinPadResponse;
+			},
+			cleanResponsePinPad: () => {
+				this.pinPadResponse = {};
+			}
 		})
 	</script>
 
