@@ -109,7 +109,21 @@
         </paper-dialog>
     </template>
 
-    <script>
+    <script>        
+    // var xCompArraySolitaPermiso = {
+    //         tipo_permiso: 0,
+    //         motivo: '',
+    //         idusuario_admin: 0,
+    //         idusuario_solicita: 0,
+    //         nomusuario_solicita: '',
+    //         nomusuario_admin: '',
+    //         nomsede: '',
+    //         data: {},
+    //         solicitud: '',
+    //         solicitudHtml: '',
+    //         link: '',
+    //     }
+
         Polymer({
             is: 'x-comp-dialog-permiso',
             properties: {
@@ -214,9 +228,12 @@
             _loadSolicitudData: function () {
                 const solicitud = xCompArraySolitaPermiso;
                 let descripcionEliminar = '';
+                let _descripcionEliminarNoHtml = '';
 
                 if (solicitud.tipo_permiso === 1) {
+                    const desOperacion = `${solicitud.mesa === '0' ? `del pedido ${solicitud.numpedido}` : `de la mesa ${solicitud.mesa}`}`;
                     descripcionEliminar = `<span class="fw-600 text-danger">Eliminar</span> <strong>${solicitud.mesa === '0' ? `del pedido ${solicitud.numpedido}` : `de la mesa ${solicitud.mesa}`}</strong> el producto <strong>${solicitud.obj.descripcion.toLowerCase()} (${solicitud.obj.precio_unitario}).</strong>`;
+                    _descripcionEliminarNoHtml = `Eliminar ${desOperacion} el producto ${solicitud.obj.descripcion.toLowerCase()} (${solicitud.obj.precio_unitario}).`;
                 } else if (solicitud.tipo_permiso === 2) {
                     const pedidoPlural = solicitud.obj.length > 1;
                     const tituloPedidoPlural = pedidoPlural ? 'los pedidos' : 'el pedido';
