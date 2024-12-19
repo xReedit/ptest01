@@ -10,6 +10,7 @@
 	<script rel="preload"  type="text/javascript" src="../view/xm_all.js"></script>	
 	<script rel="preload"  type="text/javascript" src="../view/config.const.js"></script>
 	<script type="text/javascript" src="../view/httpFech.js"></script>
+	<link rel="import" href="../x-componentes/x-pedidos-despachados/x-pedidos-despachados.html">
 	
 	<!-- <script rel="preload"  type="text/javascript" src="../view/socket.master.service.js"></script> -->
 	
@@ -193,10 +194,11 @@
 			</div>
 			<div id="div_pedidos_despachados">
 				<br>
-				<h3 class="xBold">Pedidos Despachados <span class="xCursor xDerecha"><a onclick="xVerDepacho();">Regresar</a></span></h3>
+				<!-- <h3 class="xBold">Pedidos Despachados <span class="xCursor xDerecha"><a onclick="xVerDepacho();">Regresar</a></span></h3>
 				<div class="xLinea"></div><br>
-				<div class="grid_pedidos_despachados">
-				</div>
+				<div class="grid_pedidos_despachados">					
+				</div> -->
+				<x-pedidos-despachados id="compPedidoDespachados"></x-pedidos-despachados>
 			</div>
 			<div id="div_pedidos_reserva">
 				<br>
@@ -538,48 +540,50 @@ function xVerPedidosDespachados(){
 	catch(e){}
 	$(xtb_obj).html('<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>').trigger('create');
 
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2103', data:{'idzona':xdata_zona.idseccion}})
-	.done( function (dt_pe_d) {		
-		var xdtPe=$.parseJSON(dt_pe_d),xCadenaNumMesa='',xcont_mesa='',xdes_mesa_pedido='',xcolor_tiempo_transcurrido='xFondoRowverde_estado_pedido',x_tiempo_transcurrido,xmin_tt;
-		xdtPe=xdtPe.datos;
-		for (var i = 0; i < xdtPe.length; i++) {
-			xindex=i;xdes_mesa_pedido='Mesa';
-			if(xdtPe[xindex].nummesa==='' || xdtPe[xindex].nummesa==='0'){xdes_mesa_pedido='Pedido';xcont_mesa=xCeroIzq(xdtPe[xindex].correlativo_dia,4);}else{xcont_mesa=xCeroIzq(xdtPe[xindex].nummesa,2);}
+	xThisZonaDespacho.$.compPedidoDespachados.showPedidosDespachados(xdata_zona.idseccion);
 
-			xcolor_tiempo_transcurrido='xFondoRowverde_estado_pedido';
-			x_tiempo_transcurrido=xdtPe[xindex].despachado_tiempo
-			xmin_tt=x_tiempo_transcurrido.split(':');
-			xmin_tt=xmin_tt[0];
-			if(xmin_tt>=xtiempo_maximo){
-				xcolor_tiempo_transcurrido='xFondoRowRojo_estado_pedido';
-			}else if(xmin_tt>=tiempo_medio){
-				xcolor_tiempo_transcurrido='xFondoRowAmarillo_estado_pedido';
-			}
+	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2103', data:{'idzona':xdata_zona.idseccion}})
+	// .done( function (dt_pe_d) {		
+	// 	var xdtPe=$.parseJSON(dt_pe_d),xCadenaNumMesa='',xcont_mesa='',xdes_mesa_pedido='',xcolor_tiempo_transcurrido='xFondoRowverde_estado_pedido',x_tiempo_transcurrido,xmin_tt;
+	// 	xdtPe=xdtPe.datos;
+	// 	for (var i = 0; i < xdtPe.length; i++) {
+	// 		xindex=i;xdes_mesa_pedido='Mesa';
+	// 		if(xdtPe[xindex].nummesa==='' || xdtPe[xindex].nummesa==='0'){xdes_mesa_pedido='Pedido';xcont_mesa=xCeroIzq(xdtPe[xindex].correlativo_dia,4);}else{xcont_mesa=xCeroIzq(xdtPe[xindex].nummesa,2);}
 
-			xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xCursor '+xcolor_tiempo_transcurrido+'" data-hora="'+xdtPe[xindex].despacho_tiempo+'" data-color="'+xcolor_tiempo_transcurrido+'" data-p="'+xdtPe[xindex].idpedido+'" data-nummesa="'+xdtPe[xindex].nummesa+'" data-correlativo="'+xdtPe[xindex].correlativo_dia+'"  data-numpedido="'+xdtPe[xindex].numpedido+'" onclick="xVerDetallePD(this)">'+
-						'<p class="tipo">'+xdes_mesa_pedido+'</p>'+
-						'<h3 class="numero xBold">'+xcont_mesa+'</h3>'+
-						'<p class="referencia xfont9">'+xdtPe[xindex].idpedido+'</p>'+
-					    '<p class="referencia xfont12">'+xdtPe[xindex].referencia+'</p>'+
-					    '<p class="tiempo xBold">'+x_tiempo_transcurrido+'</p>'+
-					'</div>');
-		};
+	// 		xcolor_tiempo_transcurrido='xFondoRowverde_estado_pedido';
+	// 		x_tiempo_transcurrido=xdtPe[xindex].despachado_tiempo
+	// 		xmin_tt=x_tiempo_transcurrido.split(':');
+	// 		xmin_tt=xmin_tt[0];
+	// 		if(xmin_tt>=xtiempo_maximo){
+	// 			xcolor_tiempo_transcurrido='xFondoRowRojo_estado_pedido';
+	// 		}else if(xmin_tt>=tiempo_medio){
+	// 			xcolor_tiempo_transcurrido='xFondoRowAmarillo_estado_pedido';
+	// 		}
 
-		//$aa.isotope('reloadItems');
-		$(xtb_obj).html($(xCadenaNumMesa)).trigger('create').isotope({
-		  itemSelector: '.xMiCardPedido',
-		//   layoutMode: 'cellsByRow',
-		//   percentPosition: true,
-		//   sortBy: [ 'numero' ],
-		// //   layoutMode: 'cellsByRow',
-		//   masonry: {
-		// 		columnWidth: 120
-		// 	}
-		});
+	// 		xCadenaNumMesa=String(xCadenaNumMesa+'<div class="xMiCardPedido xCursor '+xcolor_tiempo_transcurrido+'" data-hora="'+xdtPe[xindex].despacho_tiempo+'" data-color="'+xcolor_tiempo_transcurrido+'" data-p="'+xdtPe[xindex].idpedido+'" data-nummesa="'+xdtPe[xindex].nummesa+'" data-correlativo="'+xdtPe[xindex].correlativo_dia+'"  data-numpedido="'+xdtPe[xindex].numpedido+'" onclick="xVerDetallePD(this)">'+
+	// 					'<p class="tipo">'+xdes_mesa_pedido+'</p>'+
+	// 					'<h3 class="numero xBold">'+xcont_mesa+'</h3>'+
+	// 					'<p class="referencia xfont9">'+xdtPe[xindex].idpedido+'</p>'+
+	// 				    '<p class="referencia xfont12">'+xdtPe[xindex].referencia+'</p>'+
+	// 				    '<p class="tiempo xBold">'+x_tiempo_transcurrido+'</p>'+
+	// 				'</div>');
+	// 	};
 
-		//$aa.isotope('fitRows');
-		//$(".grid_pedidos_despachados").isotope();
-	})
+	// 	//$aa.isotope('reloadItems');
+	// 	$(xtb_obj).html($(xCadenaNumMesa)).trigger('create').isotope({
+	// 	  itemSelector: '.xMiCardPedido',
+	// 	//   layoutMode: 'cellsByRow',
+	// 	//   percentPosition: true,
+	// 	//   sortBy: [ 'numero' ],
+	// 	// //   layoutMode: 'cellsByRow',
+	// 	//   masonry: {
+	// 	// 		columnWidth: 120
+	// 	// 	}
+	// 	});
+
+	// 	//$aa.isotope('fitRows');
+	// 	//$(".grid_pedidos_despachados").isotope();
+	// })
 }
 function xVerDetallePD(obj){
 	var xid_p=$(obj).attr('data-p'),xcolor_estado=$(obj).attr('data-color');

@@ -5,6 +5,7 @@
 	<!-- <link rel="import" href="../x-componentes/x-edit-tipo-precio/x-edit-tipo-precio.html"> -->
 	<!-- <link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-handler-pinpad.html"> -->
 	<!-- <link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-remove-operation-pinpad.html"> -->
+	<!-- <link rel="import" href="../x-componentes/x-pedidos-despachados/x-pedidos-despachados.html"> -->
 	<template>
 		<!-- <x-edit-tipo-precio></x-edit-tipo-precio> -->
 		<!-- <x-config-sede-opciones></x-config-sede-opciones> -->
@@ -20,6 +21,8 @@
 		<br> -->
 		<!-- <x-comp-remove-operation-pinpad id="compremovepinpad"></x-comp-remove-operation-pinpad>
 		<button onclick="xOpenAnularOperacion()">anular operacion</button> -->
+		<!-- <button onclick="showPedidosDespachados()">Show Pedido despachados</button>
+		<x-pedidos-despachados id="compPedidoDespachados"></x-pedidos-despachados> -->
 		<br>
 
 		<div id="xBodyOp">
@@ -203,10 +206,13 @@ function abrirToast() {
 	toast.show();
 }
 
-function xOpenAnularOperacion() {
-	xThisHome.$.compremovepinpad.open();
-}
+// function xOpenAnularOperacion() {
+// 	xThisHome.$.compremovepinpad.open();
+// }
 
+// function showPedidosDespachados() {
+// 	xThisHome.$.compPedidoDespachados.showPedidosDespachados('38,67,68,69,70')
+// }
 
 
 Polymer({

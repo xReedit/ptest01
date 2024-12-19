@@ -1,0 +1,251 @@
+<dom-module id="x-pedidos-despachados">
+    <template>
+        <style>
+            .container {
+                padding: 20px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            .pedido {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                /* border-bottom: 1px solid #ddd; */
+            }
+
+            .pedido:last-child {
+                border-bottom: none;
+            }
+
+            .pedido-header {
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
+            .pedido-info {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .pedido-info span {
+                margin-bottom: 5px;
+            }
+            .pedido-estado {
+                width: 50px;
+                height: 20px;
+                border-radius: 3px;
+                text-align: center;
+            }
+            .color-verde {
+                background-color: green;
+                color: white;
+            }
+            .color-amarillo {
+                background-color: yellow;
+                color: black;
+            }
+            .color-rojo {
+                background-color: red;
+                color: white;
+            }
+        </style>
+
+        <paper-dialog id="dlgDetallePedidoDespachado" style="max-width: 550px;" class="dialog_redondo" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+            <div>
+                <table class="w-100 fs-11">
+                    <thead>
+                        <th align="left" style="width: 20px;">Cant</th>
+                        <th align="left" style="max-width: 250px;">Producto</th>
+                        <th align="right">Total</th>
+                    </thead>
+                    <tbody>
+                        <template is="dom-repeat" items="{{listProductos}}" as="producto">
+                            <tr>
+                                <td align="left" style="width: 20px;">{{producto.cantidad}}</td>
+                                <td align="left" style="max-width: 250px;">{{producto.descripcion}}</td>
+                                <td align="right">{{producto.total}}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <br>
+                <button class="btn btn-sm btn-dark" dialog-dismiss>
+                    Cerrar
+                </button>
+            </div>
+        </paper-dialog>
+
+        <div class="container mt-2 mb-5">
+            <div class="pedido-header">Pedidos Despachados</div>
+
+            <div class="d-flexx justify-content-end">
+                <template is="dom-repeat" items="{{resumenPedido}}" as="resumen">
+                    <div class="pedido">
+                        <div class="fw-600">{{resumen.titulo}}</div>
+                        <div class$="[[resumen.class]]">{{resumen.cantidad}}</div>
+                    </div>
+                </template>
+            </div>
+            <hr>
+
+            <table class="w-100">
+                <thead>
+                    <th>#</th>
+                    <th align="center">Despachado</th>
+                    <th align="center">Usuario</th>
+                    <th align="left">Pedido</th>
+                    <th align="center">Canal</th>                    
+                    <th align="right">Total</th>
+                    <td></td>
+                </thead>
+                <tbody>                    
+                    <template is="dom-repeat" items="{{pedidos}}" as="pedido">
+                        <tr>
+                            <td>{{displayIndex(index)}}</td>
+                            <td align="center">
+                                <div class$="{{_getColorClass(pedido.color_despacho)}}">
+                                    {{pedido.tiempo_despacho}}
+                                </div>
+                                <p class="fw-600 fs-11">{{pedido.fecha_despacho}}</p>
+                            </td>
+                            <td align="center">{{pedido.nom_usuario}}</td>
+                            <td align="left">
+                                <div>
+                                    <span class="fs-11 fw-600">Correlativo:</span> {{pedido.correlativo_dia}}<br>
+                                    <span class="fs-11 fw-600">Nro. Pedido:</span> {{pedido.idpedido}}<br>                                    
+                                    <span class="fs-11 fw-600">Fecha:</span> {{pedido.fecha_pedido}}
+                                </div>
+                            </td>
+                            <td align="center">
+                                <p>{{pedido.des_tc}}</p>
+                                <p class="fw-600 fs-11">{{pedido.referencia}}</p>
+
+                            </td>                            
+                            <td align="right">{{pedido.total}}</td>
+                            <td>
+                                <button class="xBoton_flat_2 xCursor ml-2" on-click="verPedido">Ver</button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>            
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-pedidos-despachados',
+            properties: {
+                pedidos: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                listProductos: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                resumenPedido: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
+                }
+            },
+            showPedidosDespachados: function (zona) {
+                const dataSend = {
+                    idzona: zona
+                }
+                xPopupLoad.xopen();
+                $.ajax({
+                    url: '../../bdphp/log_010.php?op=get-list-pedidos-despachados',
+                    method: 'POST',
+                    data: JSON.stringify(dataSend),            
+                }).done(function (data) {
+                    const datosPedidosDespachados = JSON.parse(data);
+                    this.pedidos = datosPedidosDespachados.datos;
+                    this.getResumen();
+                    console.log('0this.pedidos', this.pedidos);
+                    xPopupLoad.xclose();
+                }.bind(this));
+            },
+            displayIndex: function (index) {
+                return xCeroIzq(index + 1, 1);
+            },
+            _getColorClass: function (colorDespacho) {
+                console.log('colorDespacho', colorDespacho);
+                switch (colorDespacho) {
+                    case '1':
+                        return 'pedido-estado bg-success text-white';
+                    case '2':
+                        return 'pedido-estado bg-warning';
+                    case '3':
+                        return 'pedido-estado bg-danger text-white';
+                    default:
+                        return '';
+                }
+            },
+            verPedido: function (e) {
+                const idpedido = e.model.pedido.idpedido;
+                console.log('idpedido', idpedido);
+                $.ajax({
+                    url: '../../bdphp/log_010.php?op=get-pedido-despachado',
+                    method: 'POST',
+                    data: JSON.stringify({idpedido: idpedido}),
+                }).done((data) => {
+                    const datosPedido = JSON.parse(data);
+                    this.listProductos = datosPedido.datos;
+                    console.log('datosPedido', datosPedido);    
+                    this.$.dlgDetallePedidoDespachado.open();                
+                });                
+            },
+            getResumen: function () {
+                // resumen de cuantos pedidos atendidos a tiempo, atrasados y no atendidos
+                // segun la propiedad color_despacho
+                let resumen = {
+                    verde: 0,
+                    amarillo: 0,
+                    rojo: 0
+                };
+                this.pedidos.forEach(pedido => {
+                    switch (pedido.color_despacho) {
+                        case '1':
+                            resumen.verde++;
+                            break;
+                        case '2':
+                            resumen.amarillo++;
+                            break;
+                        case '3':
+                            resumen.rojo++;
+                            break;
+                    }                    
+                });
+
+                this.resumenPedido = [
+                    {
+                        titulo: 'A Tiempo',
+                        cantidad: resumen.verde,
+                        class: 'bg-success text-white text-center pedido-estado ml-2'
+                    },
+                    {
+                        titulo: 'A Limite',
+                        cantidad: resumen.amarillo,
+                        class: 'bg-warning text-center pedido-estado ml-2'
+                    },
+                    {
+                        titulo: 'Atrasados',
+                        cantidad: resumen.rojo,
+                        class: 'bg-danger text-white text-center pedido-estado ml-2'
+                    }
+                ]
+            }
+        });
+    </script>
+</dom-module>

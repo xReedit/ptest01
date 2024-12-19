@@ -1682,8 +1682,10 @@ function xSumarTotalesHis(){
 			$("#xBody").append(xcadena_total).trigger('create');
 		
 			const isShowOptionPinPad = xdt_tpp.find(x => x.idtipo_pago == 12) ? true : false;
-			xThisHistVenta.isHiddenOptionsPinPad = !isShowOptionPinPad && !rowIsCierreOn;
+			xThisHistVenta.isHiddenOptionsPinPad = !isShowOptionPinPad;		
+			
 			if ( isShowOptionPinPad ) {
+				xThisHistVenta.isHiddenOptionsPinPad = !rowIsCierreOn;
 				getDataPagoPinPad(rowIsCierreOn);
 			}
 		})
