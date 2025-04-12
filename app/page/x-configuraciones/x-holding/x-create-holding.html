@@ -1,0 +1,565 @@
+<dom-module id="x-create-holding">
+    <link rel="import" href="../../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
+    <link rel="import" href="../../../x-componentes/x-comp-search-data/x-comp-search-data.html">
+    <link rel="import" href="../../../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">    
+
+    <template>
+        <style>
+            :host {
+                display: block;
+                padding: 16px;
+            }
+
+            paper-card {
+                width: 100%;
+                padding: 16px;
+            }
+
+            .buttons {
+                margin-top: 16px;
+            }
+        </style>
+
+        <paper-tabs selected="{{selected_holding}}" id="tab_cnf" scrollable>
+            <paper-tab>Marcas</paper-tab>
+            <paper-tab>Tipo Pago</paper-tab>
+        </paper-tabs>
+        <div class="xLinea2"></div>
+        <br>
+
+        <iron-pages selected="{{selected_holding}}">  
+            <!-- Holding-->
+            <div id="div_holding">
+                <h3>Marcas</h3>            
+                <!-- <paper-checkbox checked="{{isHolding}}">Es Holding</paper-checkbox> -->
+                <hr>
+                <div>
+                    <!-- hidden$="[[!isHolding]]" -->
+                    <div>
+                        <input class="selected-template-1" onChange="conMayusculas(this)" id="text_nom_holding" type="text" placeholder="Nombre" value="{{holding.nombre}}" required>
+                        <input class="selected-template-1" onChange="conMayusculas(this)" id="text_ciudad_holding" type="text" placeholder="Ciudad" value="{{holding.ciudad}}" required>                    
+                        <button class="btn btn-sm btn-primary" on-click="guardarCambios">Guardar Cambios</button>
+                    </div>
+                    <!-- marcas -->
+                    <div hidden$="[[!isShowMarcas]]">
+                        <hr>
+                        <h3>Marcas</h3>
+                        <span class="fw-100 text-secundary">El nombre e imagen comercial son los que figuran en el app mesero y QR.</span>
+                        <br><br><br>
+                        <table class="w-100">
+                            <thead>
+                                <th>Sede</th>
+                                <th>Nombre Comercial</th>
+                                <th>Oferta Comercial</th>
+                                <th>Imagen Comercial</th>                            
+                                <th>.</th>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <x-comp-search-data 
+                                            id="searchSede" 
+                                            class="xMiInput"                                       
+                                            label="Buscar Sede"
+                                            source-data="[[listSedes]]"
+                                            search-key="nombre"
+                                            display-key="nombre"
+                                            min-chars="2"
+                                            on-item-selected="handleSedeSelection">
+                                        </x-comp-search-data>
+                                    </td>
+                                    <td>
+                                        <input class="xMiInput" onChange="conMayusculas(this)" type="text" placeholder="Nombre Comercial" value="{{holding_marca.marcas.nombre_marca}}" id="textMarcaNom" required>
+                                    </td>
+                                    <td>
+                                        <input class="xMiInput" type="text" placeholder="Imagen Comercial" value="{{holding_marca.marcas.imagen_url}}" id="textMarcaImagen" required>
+                                    </td>
+                                    <td>
+                                        <input class="xMiInput" onChange="conMayusculas(this)" type="text" placeholder="Oferta Comercial" value="{{holding_marca.marcas.oferta_comercial}}" id="textMarcaOferta" required>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" on-click="addMarca">Agregar Marca</button>
+                                    </td>
+                                </tr>
+                                <template is="dom-repeat" items="{{listMarcaShow}}">
+                                    <tr>
+                                        <td>
+                                            <span class="fs-900 mr-1">{{displayIndex(index)}}</span>
+                                            <span>{{item.nom_sede}}</span>                                        
+                                        </td>
+                                        <td>{{item.nombre_comercial}}</td>
+                                        <td>{{item.oferta_comercial}}</td>
+                                        <td style="max-width: 200px;">
+                                            <img src$="{{item.imagen_url_comercial}}" width="180px" alt="" class="xCursor" on-click="changeImage">                                           
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger"
+                                            on-click="removeMarca" data-id="{{item.idsede_holding_marcas}}"
+                                            ><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <br>
+                        <button class="btn btn-primary" on-click="saveMarcas">Guardar Marcas</button>
+                        <br><br>
+                    </div>
+                </div>
+
+            </div>            
+            <!-- Tipo Pago -->
+            <div id="div_tipo_pago">
+                <h3>Tipo Pago</h3>
+                <p class="text-secondary fs-11">En este se configuran los tipos de pago aceptados y comisiones</p>
+                <br>
+                <div>
+                    
+                    <table>
+                        <thead>
+                            <th>Tipo Pago</th>
+                            <th>Comision</th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <x-comp-find-tipo-pago
+                                        id="findTipoPago"
+                                        class="xMiInput">
+                                    </x-comp-find-tipo-pago>
+                                </td>
+                                <td>
+                                    <input class="xMiInput" id="textComision" type="number" placeholder="Comision" value="0" required>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" on-click="addTipoPago">Agregar</button>
+                                </td>
+                            </tr>
+                            <template is="dom-repeat" items="[[listTipoPago]]">
+                                <tr>
+                                    <td>{{item.nom_tipo_pago}}</td>
+                                    <td>{{item.comision}}%</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" on-click="removeTipoPago"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <br>
+                </div>
+            </div>     
+        </iron-pages>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-create-holding',
+
+            properties: {
+                selected_holding: {
+                    type: Number,
+                    value: 0
+                },
+                isHolding: {
+                    type: Boolean,
+                    value: false
+                },
+                isShowMarcas: {
+                    type: Boolean,
+                    value: false
+                },
+                holding: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            idsede_holding: null,
+                            idsede: null,
+                            nombre: '',
+                            ciudad: ''                            
+                        };
+                    }
+                },
+                holding_marca: {
+                    type: Object,
+                    value: function () {
+                        return {
+                            idsede: '',
+                            nom_sede: '',
+                            nombre_comercial: '',
+                            imagen_url_comercial: '',
+                            oferta_comercial: ''
+                        };
+                    }
+                },
+                listSedes: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                listMarcas: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                listMarcaShow: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                sedeSelected: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
+                },
+                listTipoPago: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                }
+            },
+
+            ready: function () {
+                xPopupLoad.xopen();
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({op: 'get-holding'})
+                })             
+                .done((response) => {
+                    console.log(response);
+                    let rptData = JSON.parse(response);
+                    rptData = rptData.datos[0];
+                    this.holding.idsede_holding = rptData.idsede_holding;
+                    this.holding.idsede = rptData.idsede;
+                    this.holding.nombre = rptData.nombre;
+                    this.holding.ciudad = rptData.ciudad;
+
+                    this.$.text_ciudad_holding.value = this.holding.ciudad;
+                    this.$.text_nom_holding.value = this.holding.nombre;
+
+                    this.loadHoldinMarcas();
+
+                    this.isShowMarcas = true;
+                });   
+
+                this.loadDataSedes();
+                this.loadTipoPagoHolding();
+            },
+
+            loadHoldinMarcas: function() {
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({op: 'get-load-holding-marcas', idsede_holding: this.holding.idsede_holding})
+                })
+                .done((response) => {
+                    console.log(response);
+                    let rptData = JSON.parse(response);
+                    this.listMarcas = rptData.datos;
+                    this.listMarcaShow = this.listMarcas.filter(item => !item.is_remove);
+                    this.listMarcaShow = JSON.parse(JSON.stringify(this.listMarcaShow));
+                    xPopupLoad.xclose();
+                });
+            },
+
+            loadDataSedes: function () {
+                $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=1001'})
+                .done( (dtSede) => {
+                    dtSede=JSON.parse(dtSede);	                     
+                    console.log('dtSede', dtSede);
+                    this.listSedes = dtSede.datos;                                    
+                });
+            },
+
+            guardarCambios: function () {
+                this.holding.nombre = this.$.text_nom_holding.value.toUpperCase();
+                this.holding.ciudad = this.$.text_ciudad_holding.value.toUpperCase();
+                this.holding.idsede = xIdSede;                
+                const dataSend = {
+                    op: 'set-holding',
+                    holding: this.holding
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(dataSend)
+                })
+                .done((response) => {
+                    console.log(response);
+                    const rptData = JSON.parse(response);
+                    this.holding.idsede_holding = rptData.idsede_holding;
+                    this.isShowMarcas = true;
+                });                    
+            },
+
+            addMarca: function () {
+                const rowMarcar = {
+                    idsede_marca: this.sedeSelected.idsede,
+                    idsede_holding: this.holding.idsede_holding,
+                    nom_sede: this.sedeSelected.nombre,
+                    nombre_comercial: this.$.textMarcaNom.value,
+                    imagen_url_comercial: this.$.textMarcaImagen.value,
+                    oferta_comercial: this.$.textMarcaOferta.value,
+                    is_new: true,
+                    is_remove: false
+                }
+
+                this.listMarcas.push(rowMarcar);
+                this.listMarcaShow = this.listMarcas.filter(item => !item.is_remove);
+
+                this.listMarcaShow = JSON.parse(JSON.stringify(this.listMarcaShow));
+
+                console.log('rowMarcar', this.listMarcaShow);
+            },
+
+            submitForm: function () {
+                if (!this.$.holdingForm.validate()) {
+                    return;
+                }
+
+                // TODO: Implement API call to save holding data
+                console.log('Saving holding:', this.holding);
+            },
+
+            handleSedeSelection: function (event) {
+                const selectedSede = event.detail.item;
+                this.sedeSelected = selectedSede;
+                console.log('selectedSede', selectedSede);
+                // this.holding_marca.idsede = selectedSede.idsede;
+                // this.holding_marca.nom_sede = selectedSede.nombre;
+            },
+            saveMarcas: function () {
+                xPopupLoad.xopen();
+                const dataSend = {
+                    op: 'set-holdin-marcas',
+                    marcas: this.listMarcas
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(dataSend)
+                })
+                .done((response) => {
+                    console.log(response);
+                    xPopupLoad.xclose();
+                });                    
+            },
+            removeMarca: async function (obt) {
+                const _swalAlertValues = paramsSwalAlert;		
+                _swalAlertValues.title = 'Eliminar Marca';
+                _swalAlertValues.text = '¿Está seguro de eliminar la marca?';
+                _swalAlertValues.type = 'warning';
+                _swalAlertValues.showCancelButton = true;
+                _swalAlertValues.confirmButtonText = 'Si, eliminar';
+                _swalAlertValues.cancelButtonText = 'Cancelar';                
+                _swalAlertValues.html = '';
+
+                const rptBorrarMarca = await showAlertSwalHtmlDecision(_swalAlertValues);
+                if (!rptBorrarMarca.isConfirmed) return;
+
+                const index = obt.model.index;
+                let marca = this.listMarcas[index];
+                marca.is_remove = true;
+                this.listMarcaShow = this.listMarcas.filter(item => !item.is_remove);    
+                this.listMarcaShow = JSON.parse(JSON.stringify(this.listMarcaShow));                
+            },
+            displayIndex: function (index) {
+                return xCeroIzq(index + 1, 1);
+            },
+            changeImage : async function (obt) {
+                const img = obt.model.item.imagen_url_comercial;
+                const _swalAlertValues = paramsSwalAlert;		
+                _swalAlertValues.title = 'Cambiar imagen comercial';
+                _swalAlertValues.html = `<input id="changeImageMarca" class="selected-template-1" placeholder="URL de la imagen" value="${img}">`;
+                _swalAlertValues.showCancelButton = true;
+                _swalAlertValues.confirmButtonText = 'Listo Cambiar';                                
+                _swalAlertValues.type = 'info';
+
+                const rptChangeImage = await showAlertSwalHtmlDecision(_swalAlertValues);
+                if (rptChangeImage.isConfirmed) {
+                    const newUrlImage = document.getElementById('changeImageMarca').value;
+                    console.log('newUrlImage', newUrlImage);
+                    obt.model.item.imagen_url_comercial = newUrlImage;
+                    this.saveChangeImage(obt.model.item.idsede_holding_marcas, newUrlImage);
+
+                    // refrescar la imagen con la nueva imagen
+                    this.listMarcaShow = JSON.parse(JSON.stringify(this.listMarcaShow));
+                }
+                
+            },
+
+            saveChangeImage: function (idsede_holding_marcas, newUrlImage) {
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(
+                        {
+                            op: 'set-change-image-marca-holding',
+                            idsede_holding_marcas: idsede_holding_marcas,
+                            url_image: newUrlImage
+                        })
+                }).
+                done((response) => {
+                    console.log(response);
+                });
+            },
+
+            loadTipoPagoHolding: function () {
+                // if (!this.holding || !this.holding.idsede_holding) return;
+                
+                $.ajax({ 
+                    type: 'POST', 
+                    url: '../../bdphp/log_010.php', 
+                    data: JSON.stringify({ 
+                        op: 'get-holding-metodo-pago',
+                        idsede_holding: this.holding.idsede_holding 
+                    }) 
+                })
+                .done((response) => {
+                    console.log(response);
+                    const rptData = JSON.parse(response);
+                    this.listTipoPago = rptData.datos || [];
+                });
+            },
+            
+            addTipoPago: function() {
+                const tipoPago = this.$.findTipoPago.list_tipo_pago;
+                const comision = this.$.textComision.value;
+                
+                if (!tipoPago || !comision) {
+                    alert('Debe seleccionar un tipo de pago y especificar una comisión');
+                    return;
+                }
+                
+                // Verificar si ya existe este tipo de pago
+                const existente = this.listTipoPago.find(item => item.idtipo_pago === tipoPago.idtipo_pago);
+                if (existente) {
+                    alert('Este tipo de pago ya ha sido agregado');
+                    return;
+                }
+                
+                // Llamar directamente al endpoint para agregar
+                xPopupLoad.xopen();
+                const dataSend = {
+                    op: 'set-holding-metodo-pago',
+                    idtipo_pago: tipoPago.idtipo_pago,
+                    comision: comision,
+                    idsede_holding: this.holding.idsede_holding,
+                    estado: 0
+                };
+                
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(dataSend)
+                })
+                .done((response) => {
+                    console.log('Tipo de pago agregado:', response);
+                    xPopupLoad.xclose();
+                    this.$.textComision.value = '0';
+                    this.loadTipoPagoHolding(); // Recargar la lista
+                })
+                .fail((error) => {
+                    console.error('Error al agregar tipo de pago:', error);
+                    xPopupLoad.xclose();
+                    alert('Error al agregar el tipo de pago');
+                });
+            },
+            
+            removeTipoPago: async function(e) {
+                const _swalAlertValues = paramsSwalAlert;
+                _swalAlertValues.title = 'Eliminar Tipo de Pago';
+                _swalAlertValues.text = '¿Está seguro de eliminar este tipo de pago?';
+                _swalAlertValues.type = 'warning';
+                _swalAlertValues.showCancelButton = true;
+                _swalAlertValues.confirmButtonText = 'Si, eliminar';
+                _swalAlertValues.cancelButtonText = 'Cancelar';
+                _swalAlertValues.html = '';
+
+                const rptBorrar = await showAlertSwalHtmlDecision(_swalAlertValues);
+                if (!rptBorrar.isConfirmed) return;
+
+                const index = e.model.index;
+                const tipoPago = this.listTipoPago[index];
+                
+                // Llamar directamente al endpoint para marcar como eliminado
+                xPopupLoad.xopen();
+                const dataSend = {
+                    op: 'set-holding-metodo-pago',
+                    id: tipoPago.idsede_holding_metodo_pago,
+                    idtipo_pago: tipoPago.idtipo_pago,
+                    comision: tipoPago.comision,
+                    estado: 1 // Marcar como eliminado
+                };
+                
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(dataSend)
+                })
+                .done((response) => {
+                    console.log('Tipo de pago eliminado:', response);
+                    xPopupLoad.xclose();
+                    this.loadTipoPagoHolding(); // Recargar la lista
+                })
+                .fail((error) => {
+                    console.error('Error al eliminar tipo de pago:', error);
+                    xPopupLoad.xclose();
+                    alert('Error al eliminar el tipo de pago');
+                });
+            },
+            
+            saveTiposPago: function() {
+                if (!this.listTipoPago || this.listTipoPago.length === 0) {
+                    return;
+                }
+                
+                xPopupLoad.xopen();
+                
+                // Guardar cada tipo de pago individualmente
+                const promises = this.listTipoPago.map(tipoPago => {
+                    const dataSend = {
+                        op: 'set-holding-metodo-pago',
+                        idtipo_pago: tipoPago.idtipo_pago,
+                        comision: tipoPago.comision,
+                        estado: tipoPago.estado || 0
+                    };
+                    
+                    // Si tiene ID, lo incluimos para actualizar
+                    if (tipoPago.idsede_holding_metodo_pago && tipoPago.idsede_holding_metodo_pago > 0) {
+                        dataSend.id = tipoPago.idsede_holding_metodo_pago;
+                    }
+                    
+                    return $.ajax({
+                        type: "POST",
+                        url: '../../bdphp/log_010.php',
+                        data: JSON.stringify(dataSend)
+                    });
+                });
+                
+                // Esperar a que todas las solicitudes terminen
+                Promise.all(promises)
+                .then(responses => {
+                    console.log('Respuestas:', responses);
+                    xPopupLoad.xclose();
+                    this.loadTipoPagoHolding();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    xPopupLoad.xclose();
+                    alert('Error al guardar los tipos de pago');
+                });
+            },
+
+        });
+    </script>
+</dom-module>

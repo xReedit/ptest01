@@ -374,16 +374,32 @@
 				console.log('rptPinpad', rptPinpad);
 				item.contentPinPad.success = rptPinpad.success;				
 				if (rptPinpad.success) {
+
+					
+
 					item.contentPinPad.hidden_progress = true;											
 					const filteredList = xThisComTableFP.listTabla.filter(x => x.id != 12);
 					const totalList = filteredList.map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
 
 					let amount = parseFloat(xThisComTableFP.importetotal) - totalList;
+
+					// si el importe es menor que a 1 entonces el pago no se procesa debe ser mayor a 1
+					if (amount <= 1) {
+						item.contentPinPad.hidden_progress = true;
+						item.contentPinPad.success = false;
+						item.contentPinPad.message = `El importe restante debe ser mayor a 1.`;
+						xThisComTableFP.listTabla = JSON.parse(JSON.stringify(listIni));
+						return;
+					}
+
+
 					amount = amount === 0 ? xThisComTableFP.importetotal : amount;
 					amount = parseFloat(amount).toFixed(2);
 					item.contentPinPad.amount = amount;
 					item.importe_recibido = amount;
 					item.importe = amount;
+
+					
 					
 					const _nom = '#tpf_option' + item.index;
 					$(_nom).val(amount);

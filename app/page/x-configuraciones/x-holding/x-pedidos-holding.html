@@ -1,0 +1,603 @@
+<!-- para la administracion del holding -  todas las marcas -->
+<script type="text/javascript" src="../../../view/socket.service.p.js"></script>
+<dom-module id="x-pedidos-holding">
+    <template>   
+        
+        <br>
+        <div class="xMiCard xradius" style="width:85%; max-width: 1100px;">
+            <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                <div class="d-flexx justify-content-between align-items-center">
+                    <h3>Pedidos por Marcas</h3>
+                </div>
+            </div>
+            <div class="xLinea2"></div>
+            <div class="xContentCard" style="padding: 20px;">
+                <div class="container">
+                    <!-- Agregar filtro de marcas -->
+                    <div class="filter-section mb-2 d-flexx justify-content-between align-items-end">
+                        <div class="d-flexx">
+                            <div>
+                                <p class="fw-600">Marca</p>
+                                <select class="selected-template-1 fs-15" id="filterMarca" on-change="_filterByMarca">
+                                    <option value="">Todas las marcas</option>
+                                    <template is="dom-repeat" items="[[listaMarcas]]">
+                                        <option value="[[item.marca]]">[[item.marca]]</option>
+                                    </template>
+                                </select>
+                            </div>
+                
+                            <div class="ml-3">
+                                <p class="fw-600">Fecha</p>
+                                <input type="text" style="height: 20px;" class="selected-template-1 xCursor"
+                                    id="txt_fecha_pedido_holding" placeholder="Elige fecha">
+                            </div>
+                        </div>
+                
+                        <div>
+                            <p>[[cuentaDebitarMarca]]</p>
+                        </div>
+                    </div>
+                    <hr>
+                
+                
+                
+                    <table class="w-100">
+                        <thead>
+                            <th>#</th>
+                            <th align="left">Fecha</th>
+                            <th align="center">Atendido Por</th>
+                            <th align="center">Marca</th>
+                            <th align="center">Mesa</th>
+                            <th align="right">Total</th>
+                            <th align="center">Medio</th>
+                            <th>Estado</th>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="[[pedidosFiltrados]]">
+                                <tr class="pedido-item">
+                                    <td>{{displayIndex(index)}}</td>
+                                    <td>[[item.fecha]]</td>
+                                    <td align="center">[[item.nom_us]]</td>
+                                    <td align="center">[[item.marca]]</td>
+                                    <td align="center">
+                                        <p>Mesa: [[item.nummesa]]</p>
+                                    </td>
+                                    <td align="right">[[item.total_r]]</td>
+                                    <td align="center">
+                                        <img src="[[item.icon_show]]" alt="Método de pago" width="16" class="ml-1">
+                                        <!-- metodos de pago -->
+                                        <!-- <div class="d-flexx">
+                                                    <template is="dom-repeat" items="[[item.tipo_pago]]" as="metodo">
+                                                        <img src="[[_getIconByTipoPago(metodo)]]" alt="[[metodo.name]]" width="16" class="ml-1">
+                                                    </template>
+                                                </div> -->
+                                    </td>
+                                    <td>
+                                        <span class$="[[_getDebitadoClass(item.estado_debitado)]]">[[item.estado_debitado]]</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                
+                
+                    <!-- Agregar resumen de pagos -->
+                    <br>
+                    <div class="resumen-section mt-3">
+                        <p class="fw-600 fs-15 mb-2">Resumen de Pagos</p>
+                        <div class="resumen-content">
+                            <div class="resumen-metodos">
+                                <template is="dom-repeat" items="[[resumenMetodosPago]]">
+                                    <div class="metodo-item">
+                                        <div class="mr-2">
+                                            <img src="[[item.icon]]" alt="[[item.name]]" width="32">
+                                        </div>
+                                        <div>
+                                            <span class="metodo-name">[[item.name]]:</span>
+                                            <span class="metodo-total">S/. [[item.total]]</span>
+                                            <!-- Show commission if applicable -->
+                                            <template is="dom-if" if="[[item.hasCommission]]">
+                                                <div class="comision-info fs-14">
+                                                    <span class="comision-rate">Comisión ([[item.commissionRate]]%):</span>
+                                                    <span class="comision-amount">-S/. [[item.commissionAmount]]</span>
+                                                    <span class="total-after-commission">Total neto: S/.
+                                                        [[item.totalAfterCommission]]</span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="total-general ml-5">
+                                <div><strong>Total Pedidos:</strong> <span>[[totalPedidos]]</span></div>
+                                <div><strong>Total General:</strong> <span>S/. [[totalGeneral]]</span></div>
+                                <div><strong>Total Comisiones:</strong> <span>S/. [[totalComisiones]]</span></div>
+                                <div><strong>Total Neto a Debitar:</strong> <span class="fw-600 fs-18">S/. [[totalNeto]]</span></div>
+                            </div>
+                
+                            <div>
+                                <div ml-2 hidden$="[[!showBtnDebitar]]">
+                                    <button class="btn btn-primary" on-click="debitarPedidos">Debitar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="fw-600" id="p_fecha_debitado"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+    </template>
+
+    <style>
+        /* Add these styles to your existing styles */
+        .comision-info {            
+            font-size: 0.9em;
+            color: #666;
+        }
+    
+        .total-general div {
+            margin: 5px 0;
+        }
+    
+        .comision-amount {
+            color: #d32f2f;
+        }
+    
+        .total-after-commission {
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .metodo-item {
+            display: flex;            
+            margin: 5px 0;
+        }
+
+        .resumen-content{
+            display: flex;
+            font-size: 14px;     
+        }
+    </style>
+
+    <script>
+        Polymer({
+            is: 'x-pedidos-holding',
+            properties: {
+                pedidos: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                listIdsPedidos: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                pedidosFiltrados: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                listaMarcas: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                resumenMetodosPago: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                totalGeneral: {
+                    type: String,
+                    value: '0.00'
+                },
+                commissionRate: {
+                    type: Number,
+                    value: 2.5
+                },
+                totalComisiones: {
+                    type: String,
+                    value: '0.00'
+                },
+                totalNeto: {
+                    type: String,
+                    value: '0.00'
+                },
+                totalPedidos: {
+                    type: Number,
+                    value: 0
+                },
+                showBtnDebitar: {
+                    type: Boolean,
+                    value: false
+                },
+                marcaSeleccionada: {
+                    type: Object,
+                    value: function () { return {}; }
+                },
+                fechaDebitado: {
+                    type: String,
+                    value: ''
+                },
+                cuentaDebitarMarca: {
+                    type: String,
+                    value: ''
+                },
+                fechaSelected : {
+                    type: String,
+                    value: ''
+                },
+            },
+
+            attached: function () {
+                this.pedidos = [];
+                this._initializeSocket();
+                $('body').addClass('loaded');
+            },
+
+            detached: function () {
+                
+            },
+
+            _pintarPedidoHolding: function (pedido) {                                
+                console.log('pedido', pedido);
+                this.getPedidoById(pedido.idpedido);
+            },
+
+            async getPedidoById(idpedido) {
+                console.log('idpedido', idpedido);    
+                const searchItem = this.searchItemInPedidos(idpedido);
+                if (searchItem) {                    
+                    return;
+                }
+
+                this.listIdsPedidos.push(idpedido);
+                
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-pedido-holding-by-id',
+                        idpedido: idpedido
+                    })
+                }).done(dt => {                    
+                    let itemPedido = JSON.parse(dt).datos[0];                    
+                    this.addPedidoInPedidos(itemPedido);                    
+                });
+            },
+
+            _initializeSocket: async function () {
+                _cpSocketOpen();
+                await this.getComisionMetodoPago();                          
+                this.getPedidosHoldingByDay();    
+                this.showBtnDebitar = false;
+                
+                
+                $('#txt_fecha_pedido_holding').pickadate({
+                    format: 'dd mmmm, yyyy',
+                    today: 'Hoy',
+                    clear: 'Borrar',
+                    close: 'Cerrar',
+                    onSet: (context) => {                        
+                        const fechaInput = context.select ? xDevolverFechaDada2(context.select) : '';
+                        this.fechaSelected = xSetInputDate(fechaInput);
+                        console.log('this.fechaSelected', this.fechaSelected);                        
+                        this.getPedidosHoldingByDay();
+                    }
+                });
+            },
+
+            searchItemInPedidos: function (idpedido_search) {
+                return this.listIdsPedidos.find((idpedido) => {
+                    return idpedido == idpedido_search;                    
+                });
+            },
+
+            getPedidosHoldingByDay() {
+                this.pedidos = [];
+                this.pedidosFiltrados = [];
+                const fecha = this.fechaSelected === '' ? new Date().toISOString().split('T')[0] : this.fechaSelected;
+                console.log('fecha', fecha);
+                $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-pedidos-holding-by-day',
+                        fecha: fecha,
+                        idsede_holding: 6
+                    })
+                }).done(dt => {
+                    console.log('getPedidosHolding', JSON.parse(dt));
+                    let pedidos = JSON.parse(dt).datos;
+                    if (pedidos.length === 0) {                        
+                        this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
+                        this._actualizarResumen();
+                        return;
+                    }
+
+                    pedidos.forEach(itemPedido => {
+                        this.addPedidoInPedidos(itemPedido);                        
+                    });
+
+                    
+
+                    console.log('this.pedidos', this.pedidos);
+                });
+            },
+
+            addPedidoInPedidos(itemPedido) {
+                const pedidJson = JSON.parse(itemPedido.pedido_json);
+                itemPedido.tipo_pago = pedidJson.p_header.paymentMozo.methods
+                
+                const hasDigitalPayment = itemPedido.tipo_pago.some(metodo =>
+                    this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
+                );
+
+                itemPedido.estado_debitado = itemPedido.debitado == '1' ? 'Debitado' : 'Pendiente';
+
+                itemPedido.icon_show = hasDigitalPayment ? '../../images/pinpad.png' : itemPedido.tipo_pago[0].icon;
+
+                this.pedidos.push(itemPedido);
+                this.pedidosFiltrados = this.pedidos;
+                this.listIdsPedidos.push(itemPedido.idpedido);
+
+                this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
+
+                // Actualizar lista de marcas
+                this._actualizarListaMarcas();
+                this._actualizarResumen();
+
+            },
+
+            _actualizarListaMarcas() {
+                // Obtener marcas únicas
+                const marcasUnicas = [...new Set(this.pedidos.map(p => {
+                    return {
+                        marca: p.marca,
+                        idsede: p.idsede
+                    }
+                }))];
+                console.log('marcasUnicas', marcasUnicas);
+
+                // agrupar marcas por idsede
+                this.listaMarcas = marcasUnicas.reduce((acc, marca) => {
+                    const marcaEncontrada = acc.find(m => m.marca === marca.marca);
+                    if (!marcaEncontrada) {                                            
+                        acc.push({
+                            marca: marca.marca,
+                            idsede: marca.idsede
+                        });
+                    }
+                    return acc;
+                }, []);
+                
+            },
+
+            _filterByMarca(e) {
+                const nomMarcaSeleccionada = e.target.value;
+                this.marcaSeleccionada = this.listaMarcas.find(m => m.marca === nomMarcaSeleccionada);
+                console.log('marcaSeleccionada', this.marcaSeleccionada);
+                this.showBtnDebitar = nomMarcaSeleccionada !== '';
+                this.fechaDebitado = '';
+                this.cuentaDebitarMarca = '';
+
+                if (!nomMarcaSeleccionada) {
+                    this.pedidosFiltrados = this.pedidos;
+                } else {
+                    this.pedidosFiltrados = this.pedidos.filter(p => p.marca === nomMarcaSeleccionada);
+                    const hasNonDebitedOrders = this.pedidosFiltrados.some(p => p.debitado !== '1');
+                    this.showBtnDebitar = hasNonDebitedOrders;
+
+                    if (!hasNonDebitedOrders) {
+                        const idregistro_pago_marca = this.pedidosFiltrados[0].idregistro_pago_marca;
+                        this.getRegistroPagoMarca(idregistro_pago_marca);
+                    }
+
+                    this.getCuentaDebitarMarca();
+                }
+
+                this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
+                this._actualizarResumen();
+            },
+
+            _actualizarResumen() {
+                let resumen = {};
+                let total = 0;
+                let totalComisiones = 0;
+                let registrosProcesados = new Set();
+
+                // Initialize digital payments category
+                resumen['digital'] = {
+                    id: 'digital',
+                    name: 'Medios Digitales POS',
+                    icon: '../../images/pinpad.png', // Update with your POS icon path
+                    total: 0,
+                    hasCommission: true,
+                    commissionRate: this.metodosConComision[0].comision, // Assuming same rate for all digital
+                    commissionAmount: 0,
+                    totalAfterCommission: 0
+                };
+
+                this.pedidosFiltrados.forEach(pedido => {
+                    if (registrosProcesados.has(pedido.idregistro_pago)) {
+                        return;
+                    }
+
+                    registrosProcesados.add(pedido.idregistro_pago);
+                    const pedidoTotal = parseFloat(pedido.total_r) || 0;
+
+                    // Check if pedido has any digital payment method
+                    const hasDigitalPayment = pedido.tipo_pago.some(metodo =>
+                        this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
+                    );
+
+                    if (hasDigitalPayment) {
+                        // Add to digital payments total
+                        resumen['digital'].total += pedidoTotal;
+                        const commission = (pedidoTotal * resumen['digital'].commissionRate) / 100;
+                        resumen['digital'].commissionAmount += commission;
+                        totalComisiones += commission;
+                    } else {
+                        // Handle non-digital payments
+                        pedido.tipo_pago.forEach(metodo => {
+                            if (!resumen[metodo.id]) {
+                                resumen[metodo.id] = {
+                                    id: metodo.id,
+                                    name: metodo.name,
+                                    icon: metodo.icon,
+                                    total: 0,
+                                    hasCommission: false,
+                                    commissionAmount: 0,
+                                    totalAfterCommission: 0
+                                };
+                            }
+                            const amount = parseFloat(metodo.amount_real) || 0;
+                            resumen[metodo.id].total += amount;
+                        });
+                    }
+
+                    total += pedidoTotal;
+                });
+
+                // Format and update UI
+                this.resumenMetodosPago = Object.values(resumen)
+                    .filter(item => item.total > 0) // Only show methods with amounts
+                    .map(item => ({
+                        ...item,
+                        total: item.total.toFixed(2),
+                        commissionAmount: item.commissionAmount.toFixed(2),
+                        totalAfterCommission: (item.total - item.commissionAmount).toFixed(2)
+                    }));
+
+                this.totalGeneral = total.toFixed(2);
+                this.totalComisiones = totalComisiones.toFixed(2);
+                this.totalNeto = (total - totalComisiones).toFixed(2);
+                this.totalPedidos = this.pedidosFiltrados.length;
+            },
+
+            getComisionMetodoPago: async function (metodo) {
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-comision-metodo-pago-holding'                        
+                    })
+                }).done(dt => {
+                    console.log('getComisionMetodoPago', JSON.parse(dt));
+                    const comisiones = JSON.parse(dt).datos;
+                    console.log('comision', comisiones);
+                    this.metodosConComision = comisiones;
+                });
+            }, 
+
+            debitarPedidos: async function () {
+
+                let _swalAlertValuesMeta = paramsSwalAlert;
+                _swalAlertValuesMeta.title = '<p class="fw-600 fs-20">Número de Operación</p>';
+                _swalAlertValuesMeta.html = '<div class="p-3" style="display: inline-flex; border-radius:5px">' +
+                    '<input type="number" placeholder="# Opercion bancaria" class="xMiInput text-center text-white fs-20 w-100" id="txt_numero_operacion_debitado">' +
+                    '</div>';
+                _swalAlertValuesMeta.confirmButtonText = 'Listo, guardar';
+                _swalAlertValuesMeta.showCancelButton = true;
+
+                const rptNumOperacion = await showAlertSwalHtmlDecision(_swalAlertValuesMeta, 1)
+                if (rptNumOperacion.isDismissed) return;                    
+                
+                const idsPedidos = this.pedidosFiltrados.map(p => p.idpedido).join(',');
+                const numOperacion = document.getElementById('txt_numero_operacion_debitado').value;
+                const dataSend = {
+                    op: 'debitar-pedidos-holding',
+                    idpedidos: idsPedidos,
+                    numoperacion: numOperacion,
+                    resumen: this.resumenMetodosPago,
+                    idsede: this.marcaSeleccionada.idsede
+                }
+                console.log('object', dataSend);
+                
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'set-debitar-pedido-holding',
+                        idpedidos: idsPedidos,
+                        numoperacion: numOperacion,
+                        resumen: JSON.stringify(this.resumenMetodosPago),
+                        idsede: this.marcaSeleccionada.idsede
+                    })
+                }).done(dt => {                    
+                    this.getPedidosHoldingByDay();
+                });
+            },
+
+            getRegistroPagoMarca: async function (idregistro_pago_marca) {
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-registro-pago-marca',
+                        idregistro_pago_marca: idregistro_pago_marca
+                    })
+                }).done(dt => {
+                    console.log('getRegistroPagoMarca', JSON.parse(dt));
+                    const dataRegistro = JSON.parse(dt).datos[0];
+                    this.fechaDebitado =  `Fecha Debitado:  ${dataRegistro.fecha} <br> Numero Operación: ${dataRegistro.num_operacion}`;
+                    p_fecha_debitado.innerHTML = this.fechaDebitado;
+                });
+            },
+
+            getCuentaDebitarMarca: async function () {
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-cuenta-debitar-marca',
+                        idsede_marca: this.marcaSeleccionada.idsede
+                    })
+                }).done(dt => {
+                    console.log('getCuentaDebitarMarca', JSON.parse(dt));
+                    this.cuentaDebitarMarca = `Cuenta a Debitar: ${JSON.parse(dt).datos[0].cuenta_debitar}`;
+                });
+            },
+            
+            _getIconByTipoPago: function (metodo) {
+                return metodo.id == '1' ? metodo.icon : '../../images/pinpad.png';
+            },
+
+            _getDebitadoClass: function (estado) {
+                return estado === 'Debitado' ? 'text-success' : 'text-danger';
+            },
+
+            _verDetalle: function (e) {
+                var idpedido = e.target.dataset.pedido;
+                this.fire('ver-detalle-pedido', {
+                    idpedido: idpedido
+                });
+            },
+
+            _marcarListo: function (e) {
+                var idpedido = e.target.dataset.pedido;
+                this.socket.send(JSON.stringify({
+                    action: 'pedido_listo',
+                    idpedido: idpedido 
+                }));
+
+                // Remove from list
+                var index = this.pedidos.findIndex(function (p) {
+                    return p.idpedido == idpedido;
+                });
+                if (index !== -1) {
+                    this.splice('pedidos', index, 1);
+                }
+            },
+
+            _formatTime: function (timestamp) {
+                return new Date(timestamp).toLocaleTimeString();
+            },
+            displayIndex: function (index) {
+                const total = this.pedidos.length;
+                const reverseIndex = total - index;
+                return xCeroIzq(reverseIndex, 1);
+            },
+        });
+    </script>
+</dom-module>

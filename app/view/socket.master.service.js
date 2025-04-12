@@ -3,6 +3,8 @@
 
 class socketService {
     static instance = null;
+    // static socket = io();
+    static socket = null;
 
     dataSocket = {};
     _socket = _socketSuperMaster;
@@ -40,7 +42,6 @@ class socketService {
         // verificar si hay una conexion activa con estos datos dataSocket
         this._idConexSocket = localStorage.getItem('app3_us_skt') || '';
         
-        
         this.getDataClient();
         
         if ( this._socket && this._socket.connected)  {
@@ -55,6 +56,7 @@ class socketService {
         this.whenSocketIsConnect();
         this.isSocketConnectSource.next(true);
     }
+
 
     whenSocketIsConnect() { // cuando esta conectado
         this.listenStatus();
@@ -153,4 +155,6 @@ class socketService {
     }
 
 }
+
+window.socketService = socketService;
 

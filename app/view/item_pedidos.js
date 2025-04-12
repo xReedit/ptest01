@@ -81,7 +81,7 @@ function handlerFnMiPedido(e) {
 		, xidalmacen_items = itemPedidos_objItemSelected.idalmacen_items // _xmenu_item_2.attr('data-idalmacen_items')
 		, xidDescontar=xRowidporcion
 		, xPrecioTotal
-		, xcant_max = parseInt(xStockActual)
+		, xcant_max = itemPedidos_objItemSelected.stock_actual !== undefined && itemPedidos_objItemSelected.stock_actual !== null ? itemPedidos_objItemSelected.stock_actual : 10000
 		, xidcategoria = itemPedidos_objItemSelected.idcategoria
 		, xStockActual = xcant_max //$(element_li_add__print).attr('data-stock_actual');
 		, xSotockSocket = xcant_max
@@ -228,6 +228,7 @@ function handlerFnMiPedido(e) {
 					iditem: itemPedidos_objItemSelected.iditem,
 					// isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,
 					isalmacen: itemPedidos_objItemSelected.procede.toString() === '0' ? 1 : 0,
+					// isalmacen: itemPedidos_objItemSelected.procede.toString() === '0' ? 1 : 0,
 					isporcion: itemPedidos_objItemSelected.isporcion,
 					subitems: typeof itemPedidos_objItemSelected.subitems === 'string' ? JSON.parse(itemPedidos_objItemSelected.subitems): itemPedidos_objItemSelected.subitems,
 					subitems_selected: itemPedidos_objItemSelected.subitems_selected,
@@ -389,7 +390,7 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 		xsigno = isRowItemPedido ? '+' : xsigno;
 		var objCant_cant = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][xidItem] ? xArrayPedidoObj[xidTipoConsumo][xidItem]['cantidad'] : 0 : 0
 		, xcant = cant_venta_x_peso !== null ? cant_venta_x_peso : parseInt(objCant_cant) //cant_venta_x_peso si se calcula x peso //parseInt(element_cant_li_sel.text()),		
-		, xcant_max = itemPedidos_objItemSelected.stock_actual || 10000 // element_cant_li_sel.attr('data-cantmax'),
+		, xcant_max = itemPedidos_objItemSelected.stock_actual !== undefined && itemPedidos_objItemSelected.stock_actual !== null ? itemPedidos_objItemSelected.stock_actual : 10000 // element_cant_li_sel.attr('data-cantmax'),
 		, xli_tipoconsumo = xidTipoConsumo //$("#select_ulTPC option:selected").val(),
 		, xli_iditem = xidItem; //$(element_li_add__print).attr('data-idcl');
 
@@ -414,7 +415,7 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 		, xli_idimpresora_otro = itemPedidos_objItemSelected.idimpresora_otro //$(element_li_add__print).attr('data-idimpresora'),
 		, xli_idprocede = itemPedidos_objItemSelected.idprocede //$(element_li_add__print).attr('data-idprocede'),
 		, xli_Procede = itemPedidos_objItemSelected.procede //$(element_li_add__print).attr('data-procede'),
-		, xli_Procede_index = itemPedidos_objItemSelected.procede_index // $(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodeg,
+		, xli_Procede_index = itemPedidos_objItemSelected.procede_index // $(element_li_add__print).attr('data-procedeindex');//para odernar al momento de imprimir: primero carta luego 1 bodega
 		, xidsecion = itemPedidos_objItemSelected.idseccion
 		, xidsecion_index = itemPedidos_objItemSelected.idseccion_index
 		, xdes_seccion = itemPedidos_objItemSelected.des_seccion
@@ -1438,7 +1439,6 @@ function xCargarCategoriaActual(responde){
 	//})
 }
 
-
 //load general para item del la carta
 // carta lista y boodega
 //para venta_rapida y mipedido se actualiza cada nuevo pedido o cada 60segundos de inactividad
@@ -1623,7 +1623,7 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 						// const cant_item = parseInt($(element).find('#cant_descontar').text());
 						const precioUnitario_item=parseFloat($(element).find('#punitario').text());
 
-						// xPrecio_item_bus = parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
+						// xPrecio_item_bus=parseFloat(parseFloat(cant_item * precioUnitario_item)-(diferencia * precioUnitario_item));
 						xPrecio_item_bus = parseFloat(parseFloat(diferencia * precioUnitario_item));
 						xPrecio_item_bus = xPrecio_mostrado - xPrecio_item_bus; // descuenta del precio que se muestra en pantalla( precio que ya fue procesado)
 						xPrecio_item_bus = xPrecio_item_bus < 0 ? '0.00' : xMoneda(xPrecio_item_bus);
@@ -1659,7 +1659,6 @@ function xGeneralValidarRegalasCarta(xObjEvaluar,esarray){
 
 				for (var y = 0; y < xArrayEv.length; y++) {
 					if(xArrayEv[y] == null){continue;}
-					if(xCantidadBuscar <= 0){break;}
 					$.map(xArrayEv[y], function(n, z) {
 						if (typeof n ==="object"){
 							var xIdRowTb=n.idseccion;

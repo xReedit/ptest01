@@ -28,6 +28,8 @@
 						  <select class="xTextRow2" id="select_rol" onchange="tipoUsuario(this)">
 							  <option value="0">COLABORADOR</option>
 							  <option value="1">ADMINISTRADOR</option>
+							  <option value="2">MESERO / MOZO</option>
+							  <option value="4">CAJERO</option>
 							  <option value="3">REPARTIDOR / DELIVERISTA</option>
 							  <!-- <option value="2">ZONA</option> -->
 						  </select>
@@ -136,6 +138,8 @@
 							<paper-checkbox class="checkA" data-id='C5,'> Andalitica Modulo Gerencial</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='C6,'> Configurar Encuestas</paper-checkbox><br>
 							<br>
+														
+
 							<h4>PERMISOS</h4>
 							<paper-checkbox class="checkP" data-id='Pe1,'>Eliminar pedidos</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe2,'>Reimprimir Pedido</paper-checkbox><br>
@@ -425,10 +429,58 @@ function xGoBorrarUsuario() {
 
 
 function tipoUsuario($event) {
-	xThis.showFormRepartidor = $event.selectedIndex === 2;	
+	xThis.showFormRepartidor = $event.selectedIndex === 4; // Updated index for REPARTIDOR
+	
+	// Automatically set permissions based on role
+	if ($event.value) {
+		// Clear all checkboxes first
+		$(".checkA").each(function(index, element){
+			element.checked = false;
+		});
+		$(".checkP").each(function(index, element){
+			element.checked = false;
+		});
+		
+		// Set permissions based on role
+		switch ($event.value) {
+			case "1": // ADMINISTRADOR - All permissions
+				$(".checkA").each(function(index, element){
+					element.checked = true;
+				});
+				$(".checkP").each(function(index, element){
+					element.checked = true;
+				});
+				break;
+				
+			case "2": // MESERO / MOZO - Only "Realizar Pedidos"
+				$(".checkA").each(function(index, element){
+					if (element.dataset.id === 'A2,') { // Realizar Pedidos
+						element.checked = true;
+					}
+				});
+				break;
+				
+			case "4": // CAJERO - Specific permissions
+				$(".checkA").each(function(index, element){
+					// Check specific permissions for Cajero
+					if (
+						element.dataset.id === 'A2,' || // Realizar Pedidos
+						element.dataset.id === 'A3,' || // Caja
+						element.dataset.id === 'A4,' || // Control de Mesas
+						element.dataset.id === 'A5,' || // Punto de Venta
+						element.dataset.id === 'A7,' || // Registro de pagos
+						element.dataset.id === 'A8,' || // Zona de Despacho
+						element.dataset.id === 'A10,' || // Facturador CPE
+						element.dataset.id === 'A11,' || // CPE Emitidos
+						element.dataset.id === 'A12,' // Servidor de Impresion
+					) {
+						element.checked = true;
+					}
+				});
+				break;
+		}
+	}
 }
-
-
 Polymer({
 	is:'x-usuarios',
 	properties:{

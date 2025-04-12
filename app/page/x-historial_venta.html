@@ -1685,9 +1685,10 @@ function xSumarTotalesHis(){
 			xThisHistVenta.isHiddenOptionsPinPad = !isShowOptionPinPad;		
 			
 			if ( isShowOptionPinPad ) {
-				xThisHistVenta.isHiddenOptionsPinPad = !rowIsCierreOn;
+				xThisHistVenta.isHiddenOptionsPinPad = rowIsCierreOn;
 				getDataPagoPinPad(rowIsCierreOn);
-			}
+			} 
+			
 		})
 
 	})
@@ -1710,6 +1711,7 @@ function getDataPagoPinPad(rowIsCierreOn) {
 		if ( dt.success ) {
 			const dataPinPad = JSON.parse(dt.datos[0].data_response);			
 			xThisHistVenta.registro_pago_pinpad = dataPinPad;
+			xThisHistVenta.isHiddenOptionsPinPad = dt.datos[0].estado === '1' ? true : false;
 			console.log('dataPinPad', dataPinPad);
 		}
 	})

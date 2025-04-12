@@ -321,30 +321,39 @@
 							
 							<table width="100%">
 								<thead class="xtable3 xFondoRowIndigo">
-								<th align="center" width="30%">MESA</th>
-								<th align="left">REFERENCIA / CLIENTE</th>
+									<th align="center" width="30%">MESA</th>
+									<th align="left">REFERENCIA / CLIENTE</th>
 								</thead>
 								<tr class="xSinBorde">
-								<td>
-									<input
-									type="number"
-									class="xMiInput xfont18 xtxt_enca xBold xAlinearCentro w-100"
-									id="txt_mesa"
-									data-val="mesa"
-									min="0"
-									/>
-								</td>
-								<td>
-									<input
-									type="text"
-									class="xMiInput xtxt_enca xfont16 w-100"
-									maxlength="50"
-									onchange="conMayusculas(this)"
-									onkeyup="removeSpecialCharObj(this)"
-									data-val="referencia"
-									id="txt_ref_vr"									
-									/>
-								</td>
+									<td>
+										<input
+										type="number"
+										class="xMiInput xfont18 xtxt_enca xBold xAlinearCentro w-100"
+										id="txt_mesa"
+										data-val="mesa"
+										min="0"
+										/>
+									</td>
+									<td>
+										<input
+										type="text"
+										class="xMiInput xtxt_enca xfont16 w-100"
+										maxlength="50"
+										onchange="conMayusculas(this)"
+										onkeyup="removeSpecialCharObj(this)"
+										data-val="referencia"
+										id="txt_ref_vr"									
+										/>
+									</td>
+									<tr hidden$="[[!showCodeLocalizator]]">
+										<td colspan="2">
+											<div class="d-flexx justify-content-center align-items-center" style=" background: #cdefff; border-radius: 8px; padding: 5px 10px; border: 1px solid #dddddd;">
+												<p class="mr-2">Codigo Localizador</p>
+												<input type="number" id="text_code_localizator" class="selected-template-1 text-center fs-18" placeholder="Codigo Localizador" style="max-width: 180px;">
+												<i class="fa fa-map-marker fs-20 fw-900 text-primary ml-2"></i>
+											</div>
+										</td>
+									</tr>
 								</tr>
 							</table>
 							<div class="xLinea7"></div>
@@ -628,7 +637,11 @@ function xIniVentaRapida(){
 
 		xArrayRegla=xm_log_get('reglas_de_carta');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
 		xDtPrint=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
-		xNumMesasBd=parseInt(xDtPrint[0].mesas);
+		xNumMesasBd=parseInt(xDtPrint[0].mesas);		
+
+		const dataHolding = xm_log_get('datos_sede_holding')
+		xThisVentaRapida.showCodeLocalizator = dataHolding.length > 0;
+		console.log('dataHolding', dataHolding);
 
 		const xper_acc_vr = xm_log_get('app3_woPer');
 		xThisVentaRapida.showCompDescuento = xper_acc_vr.indexOf('Pe5') > -1;
@@ -1012,6 +1025,10 @@ function xIniVentaRapida(){
 		xtxt_descuento_focus_vr = e.detail;
 	})	
 
+	$('#text_code_localizator').on('focus', function(e) {
+		xtxt_descuento_focus_vr = true;
+	});
+
 
 	$("#dialog_pagar_vr").on('iron-overlay-opened',function(){
 		component_pago_vr.setFocusTxt();
@@ -1232,6 +1249,8 @@ function xNuevoPedidoVR() {
 	xLimpiarItemIndicaciones();
 	xLoadArrayPedido();
 	xPopupLoad.xopen();
+
+	text_code_localizator.value = '';
 		
 
 	// reset pedido socket si no se envio
@@ -1698,14 +1717,25 @@ async function goSendPedidoFecht(_data) {
 	const _fetchApiPedido = new httpFecht();
 	try {		
 		console.log('¿_data', _data);
+		const codigo_localizador = text_code_localizator.value || '';		
 		const tipoDesc = xCompDescuentoPedidoVR.get();
 		console.log('¿tipoDesc', tipoDesc);
 		_data.p_descuento = tipoDesc.idtipo_descuento ? tipoDesc.idtipo_descuento === 0 ? null : tipoDesc : null;
 
 		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data }, true, false)
 		if (rpt) {
+
+			// si hay codigo localizador guardar
+			if (codigo_localizador!=='') {
+				$.ajax({ 
+					type: 'POST', 
+					url: '../../bdphp/log_010.php', 
+					data:JSON.stringify({op:'set-codigo-localizador', idpedido:rpt.idpedido, codigo_localizador:codigo_localizador})
+				})
+			}
+
 			// evaluar si se descuenta el stock despues de enviar el pedido
-			const checkIsUpdateStockAfter = getVariableSede('update_stock_after') 
+			const checkIsUpdateStockAfter = getVariableSede('update_stock_after')
 			if (checkIsUpdateStockAfter) {
 				// item_pedidos.js
 				console.log('checkIsUpdateStockAfter', checkIsUpdateStockAfter);
@@ -2521,11 +2551,13 @@ Polymer({
 		showCompDescuento: Boolean,
 		dataSelectTipoPrecio: Object,
 		selectedItemTipoPrecio: Object,
+		showCodeLocalizator: Boolean,
 	},
 	attached:function(){
 		this.selected_us=0;
 		this.showCompDescuento = false
 		this.xIconScreen = 'icons:fullscreen';
+		this.showCodeLocalizator = false;
     	xThisVentaRapida=this;
 		xIniVentaRapida();
 		// _cpSocketIsConnect();

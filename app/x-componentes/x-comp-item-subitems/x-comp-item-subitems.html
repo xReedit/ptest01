@@ -380,7 +380,7 @@
         
         xThisComSubItem.isShowDetalleProducto = xThisComSubItem.detalleProducto !== '';
         _precioProductoIni = compGetTotalItemTPC();
-        xThisComSubItem.precioProducto = _precioProductoIni;
+        xThisComSubItem.precioProducto = parseFloat(_precioProductoIni).toFixed(2);
 
         
 
@@ -406,7 +406,7 @@
             });
 
             xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
-            console.log('xThisComSubItem.listContentSub', xThisComSubItem.listContentSub);
+            // console.log('xThisComSubItem.listContentSub', xThisComSubItem.listContentSub);
             
             isExistSubitems = true;
             
@@ -668,7 +668,7 @@
       const contetnSubSelect = xThisComSubItem.listContentSub.filter(x => x.iditem_subitem_content === idItemContentObj)[0];
       const listCheckContentSelect = contetnSubSelect.opciones;
       const listSubItemChecked = listCheckContentSelect.filter((x) => x.selected);
-      let countSelectReq = listSubItemChecked.length;
+      let countSelectReq = listSubItemChecked.length;      
 
       // seleccionar solo los permitidos
       listSubItemChecked.map( (_subItem, i) =>  {
@@ -691,7 +691,11 @@
         }
       });
 
-      countOptionsCheks = listCheckContentSelect.filter((x) => x.selected).length;
+    //   countOptionsCheks = listCheckContentSelect.filter((x) => x.selected).length;
+      countOptionsCheks = listSubItemChecked.reduce((a, b) => a + parseFloat(b.cantidad_selected), 0);
+      if ( isNaN(countOptionsCheks) ) { // si no hay cantidad entonces es check
+          countOptionsCheks = listCheckContentSelect.filter((x) => x.selected).length;
+      }
       
       if ( contetnSubSelect.subitem_required_select === 1 ) {
           contetnSubSelect.isObligatorio = countOptionsCheks === contetnSubSelect.subitem_cant_select ? false : true;
@@ -753,7 +757,7 @@
             });
 
             var _totalItemSelect =  parseFloat(compGetTotalItemTPC());
-            _totalItemSelect = _totalItemSelect === 0 ? _precioProductoIni : _totalItemSelect;
+            _totalItemSelect = _totalItemSelect === 0 ? parseFloat(_precioProductoIni) : _totalItemSelect;
             xThisComSubItem.precioProducto = parseFloat(_totalItemSelect + _importeChecks).toFixed(2);
         } else {
             // si viene del btn add +
@@ -970,13 +974,18 @@
         },
         handleCountChange: function (e) {            
             
-            console.log('e.detail', e.detail);
+            // console.log('e.detail', e.detail);
             const maxQuantity = e.detail.maxQuantity;
             const iditem_subitem_content = e.detail.iditem_subitem_content;
             const subItem = e.detail.subitem;
             const cantItemSelected = e.detail.quantity;
             const precio_item = subItem.precio;
             const descripcion_item = e.detail.descripcion_item_ini;
+
+            // Store the original price if not already stored
+            if (!subItem.precio_inicial) {
+                subItem.precio_inicial = precio_item;
+            }
 
             const idGruop = '#group-' + iditem_subitem_content;            
             var group = Polymer.dom(this.root).querySelector(idGruop);
@@ -1006,12 +1015,17 @@
             
             subItem.cantidad_selected = cantItemSelected;
             subItem.selected = cantItemSelected > 0 ? true : false;
-            // subItem.precio = 0;
             subItem.des = descripcion_item;
+            
             if (subItem.selected) {
-                subItem.precio = cantItemSelected * precio_item;
+                // Calculate price based on the original price and quantity
+                subItem.precio = cantItemSelected * subItem.precio_inicial;
                 subItem.des = cantItemSelected > 1 ? `${cantItemSelected} ${descripcion_item}` : descripcion_item;
-            }       
+            } else {
+                // Reset price to original when not selected
+                subItem.precio = 0;
+            }
+            
             subItem.iditem_subitem_content = iditem_subitem_content;     
 
             addSubItem(null, subItem);

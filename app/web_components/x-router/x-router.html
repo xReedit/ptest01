@@ -73,6 +73,10 @@
 			<app-route path="/distribuicion_recibe" import="x-distribuicion-recibir/x-distribuicion-recibir-list.html"></app-route>
 			<app-route path="/resitro_pedidos" import="x-registro-pedidos/x-registro-pedidos.html"></app-route>
 			<app-route path="/prueba" import="x-pruebas.html"></app-route>
+			<app-route path="/pedidos_previo_pago" import="x-configuraciones/x-holding/x-pedidos-by-marca.html"></app-route>
+			<app-route path="/pedidos_marca" import="x-configuraciones/x-holding/x-pedidos-holding.html"></app-route>
+			<app-route path="/pedidos_meseros" import="x-configuraciones/x-holding/x-pedidos-meseros.html"></app-route>
+			
 		</app-router>
 	</template>
 </dom-module>
@@ -82,6 +86,15 @@ function xIniRouter(){
 	// alert('carga xrouter');
 	if(router==undefined){router = document.querySelector('app-router');}
 	router.addEventListener('state-change', function(xevent) {
+	// Check if the route is one of the holding-related routes
+	const holdingRoutes = ['pedidos_previo_pago', 'pedidos_marca', 'pedidos_meseros'];
+	const currentHash = window.location.hash.replace('#/', '');
+	
+	// Skip the AJAX check if it's a holding route
+	if (holdingRoutes.includes(currentHash)) {
+		return;
+	}
+	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-108',data:{p:window.location.hash},async: false})
 	.done( function (a) {
 		if(a==1){

@@ -489,7 +489,7 @@ function xm_LogIni(responde){
 	})
 }
 function xm_LogChequea(responde){
-  
+  var callback = typeof responde === 'function' ? responde : function () { };
   var xdt_log=window.localStorage.getItem("::app3_woDUS");
   var _xdt_log= xdt_log
   if (_xdt_log === null){
@@ -510,13 +510,15 @@ function xm_LogChequea(responde){
           xm_LogIni(function(a){if(a){responde(true)}});
           break;
         case "1":
-          responde(true)
+        //   responde(true)
+		  callback(true);
           break;
         case "2":
           xVerificarSession();
           break;
         default:
-          window.localStorage.setItem("::app3_woDUS",rpt); return responde(true);
+          window.localStorage.setItem("::app3_woDUS",rpt);
+		  callback(true);
           break;
       }
       //if(rpt==="1"){xm_LogIni(function(a){if(a){responde(true)}});}else{window.localStorage.setItem("::app3_woDUS",rpt); return responde(false);}
@@ -594,6 +596,9 @@ function xm_log_get(seccion){
 	case 'datos_sede_variables':// * sedes
       xdt_rpt=xdt_log.sede.datos_sede_variables;
 	  break;	
+	case 'datos_sede_holding':// * sedes
+	  xdt_rpt=xdt_log.sede.datos_sede_holding;
+	  break;
 	
 		// xDtUS(3)
   }

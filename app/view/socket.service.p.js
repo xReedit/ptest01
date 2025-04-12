@@ -1,11 +1,12 @@
 // var socketCP;
 // var socketCP = socketCP ? socketCP : new socketService();
-var socketCP = socketService.getInstance(); 
+var socketCP; 
 
 function _cpSocketOpen() { 
     // if (isSocket) {
         // isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
         
+        this.socketCP = socketService.getInstance(); 
         
         if ( !this.socketCP._socket) {            
             console.log('socket connect new');
@@ -40,14 +41,43 @@ function listenSocketP() {
 
     // restore si hay
     this.socketCP.listen('nuevoPedido').subscribe(res => {
-        // console.log('nuevoPedido msocket', res);
+        console.log('nuevoPedido msocket', res);
         try {                
-            _cpSocketPintarPedido(res);           
+            _cpSocketPintarPedido(res);                       
 
             if(res.p_header.delivery.toString() == '1') {                
                 xCDAddItemRow(res);
             }
-        } catch (error) {}            
+        } catch (error) {
+            console.log('error nuevoPedido');
+        }            
+
+        try {
+            const pedidosHoldingComponent = document.querySelector('x-pedidos-holding');
+            if (pedidosHoldingComponent) {
+                pedidosHoldingComponent._pintarPedidoHolding(res);
+            }
+        } catch (error) {
+            console.log('error pedidosHoldingComponent');            
+        }
+
+        try {
+            const pedidosHoldingMeserosComponent = document.querySelector('x-pedidos-meseros');
+            if (pedidosHoldingMeserosComponent) {
+                pedidosHoldingMeserosComponent._pintarPedidoHolding(res);
+            }
+        } catch (error) {
+            console.log('error pedidosHoldingMeserosComponent');            
+        }
+
+        try {
+            const pedidosHoldingMarcaComponent = document.querySelector('x-pedidos-by-marca');
+            if (pedidosHoldingMarcaComponent) {
+                pedidosHoldingMarcaComponent._pintarPedidoHolding(res);
+            }
+        } catch (error) {
+            console.log('error pedidosHoldingMarcaComponent');            
+        }
     });
 
 
@@ -72,13 +102,22 @@ function listenSocketP() {
 
     this.socketCP.listen('printerOnly').subscribe(res => {
         try { // puede venir de zona de despacho        
-            _cpSocketPintarPedido(res);
+            _cpSocketPintarPedido(res);            
 
             if(res.delivery.toString() == '1') {
                 xCDAddItemRow(res);
             }
 
         } catch (error) {}
+
+        try {
+            const pedidosHoldingMarcaComponent = document.querySelector('x-pedidos-by-marca');
+            if (pedidosHoldingMarcaComponent) {
+                pedidosHoldingMarcaComponent._pintarPedidoHolding(res);
+            }
+        } catch (error) {
+            console.log('error pedidosHoldingMarcaComponent');            
+        }
     });
 
     // NOTIFICAR PAGO CLIENTE FROM APP
@@ -199,6 +238,33 @@ function listenSocketP() {
         xCajaResPermisoRemoto(res);
     });
 
+    // notifica a marca que el mozo esta en camino
+    this.socketCP._listen('notificar-marca-mozo-en-camino', res => {
+        console.log('notificar-marca-mozo-en-camino', res);
+        try {
+            const pedidosHoldingMarcaComponent = document.querySelector('x-pedidos-by-marca');
+            if (pedidosHoldingMarcaComponent) {
+                pedidosHoldingMarcaComponent._pintarMozoEnCamino(res);
+            }
+        } catch (error) {
+            console.log('error pedidosHoldingMarcaComponent');            
+        }
+    });
+
+    // notifica que el cliente indico numero de mesa donde se encuentra
+    this.socketCP.listen('restobar-send-number-table-client').subscribe(res => {
+        console.log('restobar-send-number-table-client', res);        
+
+        try {
+            const pedidosHoldingMarcaComponent = document.querySelector('x-pedidos-by-marca');
+            if (pedidosHoldingMarcaComponent) {
+                pedidosHoldingMarcaComponent.updateUbicacionCliente(res);
+            }
+        } catch (error) {
+            console.log('error pedidosHoldingMarcaComponent');            
+        }
+    });
+
     
 
 }
@@ -317,6 +383,13 @@ function _cpSocketSendWhatAppPermisoAdmin(payload) {
     // localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
     this.socketCP.emit('restobar-send-msj-ws-solicitud-permiso', payload);    
 }
+
+function _cpSocketEmitCallMozoHolding(payload) {
+    // if (!isSocket) { return; }
+    // localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
+    this.socketCP.emit('restobar-call-mozo-holding', payload);    
+}
+
 
 
 

@@ -144,7 +144,7 @@
 						</tbody>
 					</table>
 				</div>
-				<br><br>
+				<br><br>				
 				<div class="xBoton2 xAzul" dialog-confirm  onclick="xGuardarCambiosOrden();">Listo, guardar</div>
 				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
 			</div>
@@ -173,12 +173,23 @@
 							<br><br>
 							<span>Colocar <strong>SP (segun porcion)</strong> en catidad para que el sistema actualize las cantidades segun las porciones que existen del ingrediente principal en la receta.</span>
 						</div>
-						<div class="xSubEncanezadoCard xFondoRowPlomo">
-							<select id="SelCarta" class="SelCarta xTextRow2 xfont18 xColorRow_blanco xCursor" inline></select>
-							<div class="xfont15 xEnLinea">Utlima modificacion: <b><span id="f_uc"></span></b></div>
+						<div class="xSubEncanezadoCard xFondoRowPlomo d-flexx align-items-center justify-content-between">
+							<div>
+								<select id="SelCarta" class="SelCarta xTextRow2 xfont18 xColorRow_blanco xCursor" inline></select>
+								<div class="xfont15 xEnLinea">Utlima modificacion: <b><span id="f_uc"></span></b></div>
+							</div>
+
+							<div hidden$="[[!isShowOptionsRol]]" class="d-flex justify-content-between align-items-center mr-1">
+								<button class="btn btn-sm btn-warning" onclick="convertirCarta()" title="Convertir"><i
+										class="fa fa-star"></i> Convertir</button>
+								<button class="btn btn-sm btn-dark" onclick="exportarCarta()" title="Exportar Carta"><i class="fa fa-upload"></i></button>
+								<button class="btn btn-sm btn-secondary" onclick="document.getElementById('input-importar-carta').click()" title="Importar Carta"><i class="fa fa-download"></i></button>
+								<input type="file" id="input-importar-carta" style="display: none;" accept=".json"
+									onchange="importarCarta(this.files[0])">
+							</div>
 						</div>
 						<div class="xContentCard">
-							<br>
+							<br>							
 							<div id="opPersiste">
 								<div class="xBoton2 xAzul xDerecha" onclick="xOrdenSecciones();" title="Orden en el que se mostraran las secciones en el pedido."><img src="../../images/_ordenar_carta.png"></div>
 								<div class="xBoton2 xAzul xDerecha" onclick="xImprimirCarta();" title="Imprimir"><img src="../../images/_print.png"></div>
@@ -341,6 +352,11 @@ async function xInicarta(){
 		xm_log_get('ini_us');
 		$('body').addClass('loaded');
 		$("#Titulo_page").text("Elaborar Carta");
+		try {
+			xThisCarta.isShowOptionsRol = xm_log_get('app3_us').rol == '1';
+		} catch (error) {
+			xThisCarta.isShowOptionsRol = false;
+		}
 
 		xIdCarta='';
 		xLoadItemsCategoria();
@@ -412,7 +428,7 @@ async function xInicarta(){
 	});
 
 	$('.SelCarta').on('change', (e) => {
-		xidCategoria = e.target.value;
+		xidCategoria = e.target.value;		
 		xLoadListadoCartaActual();
 	});
 
@@ -695,9 +711,10 @@ function xGuardarCambios(){
 	}
 
 	// const aaa= [xArraySeccionItem[5], xArraySeccionItem[6]];
+	console.log('array_enviar_carta', array_enviar_carta);
 	xPopupLoad.xopen();
 	array_enviar_carta.map(x => {
-		// console.log(x);
+		console.log('x ==>', x);
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204',data:{idc:xidCategoria,f:xFechaInsert,id_carta_anterior:xIdCartaAnterior,sql_array: x}})
 		.done( function (xid) {
 			xIdCartaAnterior = xid;
@@ -1586,6 +1603,120 @@ async function loadTiposPrecioCarta() {
 		})
 }
 
+function convertirCarta() {
+	// obtner url del servicio de convertir carta
+	xPopupLoad.xopen();
+	const url = '../../bdphp/log_010.php?op=get-url-servicio-carta';
+	$.ajax({ type: 'POST', url: url })
+		.done(function (response) {
+			response = JSON.parse(response);
+			const urlServicio = response.url;
+			window.open(urlServicio, '_blank');
+			xPopupLoad.xclose();
+		})
+		.fail(function (error) {
+			xPopupLoad.xclose();
+			console.log('error', error);
+		});
+}
+
+// Función para exportar la carta actual a un archivo JSON
+function exportarCarta() {
+	xPopupLoad.xopen();
+	
+	// Obtener el ID de la carta activa
+	// const idCarta = xThisCarta.dt_seccion[0].idcarta;
+	const idcategoria = $('.SelCarta').val();
+	const nomCategoria = $('.SelCarta option:selected').text();
+	// xidCategoria = $("#SelCarta option:selected").val();
+	console.log('idcategoria', idcategoria);
+	
+	// Obtener datos de la carta
+	$.ajax({ type: 'POST', url: '../../bdphp/log_carta_export.php?op=exportar-carta', data: { idcategoria: idcategoria } })
+	.done(function(response) {
+		try {
+			const data = JSON.parse(response);
+			
+			if (data.success) {
+				// Crear un objeto Blob con los datos
+				const blob = new Blob([JSON.stringify(data.datos, null, 2)], { type: 'application/json' });
+				
+				// Crear un enlace para descargar el archivo
+				const a = document.createElement('a');
+				a.href = URL.createObjectURL(blob);
+				a.download = `carta_${nomCategoria}_${new Date().toISOString().split('T')[0]}.json`;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				
+				xPopupLoad.xclose();
+				alert('Carta exportada correctamente');
+			} else {
+				xPopupLoad.xclose();
+				alert('Error al exportar la carta: ' + data.mensaje);
+			}
+		} catch (error) {
+			xPopupLoad.xclose();
+			alert('Error al procesar la respuesta: ' + error.message);
+		}
+	})
+	.fail(function(error) {
+		xPopupLoad.xclose();
+		alert('Error en la solicitud: ' + error.statusText);
+	});
+}
+
+// Función para importar una carta desde un archivo JSON
+function importarCarta(file) {
+	if (!file) return;
+	
+	xPopupLoad.xopen();
+	
+	const reader = new FileReader();
+	reader.onload = function(e) {
+		try {
+			const contenido = {
+				data_import: JSON.parse(e.target.result),
+				idcategoria: $('.SelCarta').val()
+			};
+			
+			// Enviar los datos al servidor para importar
+			$.ajax({ 
+				type: 'POST', 
+				url: '../../bdphp/log_carta_export.php?op=importar-carta', 
+				data: { datos: JSON.stringify(contenido) }
+			})
+			.done(function(response) {
+				try {
+					const data = JSON.parse(response);
+					
+					if (data.success) {
+						xPopupLoad.xclose();
+						alert('Carta importada correctamente. ID de la nueva carta: ' + data.idcarta);
+						// Recargar la página para mostrar la carta importada
+						location.reload();
+					} else {
+						xPopupLoad.xclose();
+						alert('Error al importar la carta: ' + data.mensaje);
+					}
+				} catch (error) {
+					xPopupLoad.xclose();
+					alert('Error al procesar la respuesta: ' + error.message);
+				}
+			})
+			.fail(function(error) {
+				xPopupLoad.xclose();
+				alert('Error en la solicitud: ' + error.statusText);
+			});
+		} catch (error) {
+			xPopupLoad.xclose();
+			alert('El archivo seleccionado no es un JSON válido: ' + error.message);
+		}
+	};
+	
+	reader.readAsText(file);
+}
+
 
 Polymer({
 	is:'x-carta',
@@ -1599,12 +1730,14 @@ Polymer({
 		listCartaOrder: [],
 		arrOderSeccionSave: [],
 		tipoPrecios: [],
+		isShowOptionsRol: Boolean,
 		// ListSubItems: [],
 		// cantidadSubItems: 0
 	},
 	attached:function(){
 		this.selected=0;
 		this.selectedDetalle = 0;
+		this.isShowOptionsRol = false;
     	xThisCarta=this;		
     	xInicarta();
 

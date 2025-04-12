@@ -293,7 +293,7 @@
         $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=903'})
 	    .done( function (res) {
             res = JSON.parse(res);
-            // console.log('mesas', res.datos[0].mesas);            
+            console.log('mesas', res);            
             xThisCartaVMesas.objListMesasQr = JSON.parse(res.datos[0].mesas);
             const _lengthList = xThisCartaVMesas.objListMesasQr.length
             const _numPartList = _lengthList <= 20 ? 0 : parseInt(_lengthList / 20)

@@ -1,0 +1,1080 @@
+<!-- marca del holdig -->
+<script type="text/javascript" src="../../../view/socket.service.p.js"></script>
+<dom-module id="x-pedidos-by-marca">
+    <template>
+
+        <br>
+        <div class="xMiCard xradius" style="width:85%; max-width: 1100px;">
+            <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                <div class="d-flexx justify-content-between align-items-center">
+                    <div>
+                        <h3>Pedidos Registrados en Patio</h3>                    
+                        <p class="m-0">Pedidos registrados previo pago</p>
+                    </div>
+                </div>
+            </div>
+            <div class="xLinea2"></div>
+            <div class="xContentCard" style="padding: 20px;">
+
+                <div class="container">
+                    
+                    <br>
+                
+                    <!-- Filtro de fecha -->
+                    <div>
+                        <p class="fw-600">Fecha</p>
+                        <input type="text" style="height: 20px;" class="selected-template-1 xCursor" id="txt_fecha_pedido_marca"
+                            placeholder="Elige fecha">
+                    </div>
+                    <hr>
+                
+                    <!-- Tabla de pedidos -->
+                    <table class="w-100">
+                        <thead>
+                            <th>#</th>
+                            <th align="left">Fecha</th>
+                            <th align="center">Atendido Por</th>
+                            <th align="center">Referencia</th>
+                            <th align="center">Ubicación</th>
+                            <th align="right">Total</th>
+                            <th align="center">Medio</th>
+                            <th align="center">Acción</th>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="[[pedidosFiltrados]]">
+                                <tr class="pedido-item" data-pedido$="[[item.idpedido]]">
+                                    <td>{{displayIndex(index)}}</td>
+                                    <td>[[item.fecha]]</td>
+                                    <td align="center">[[item.nom_us]]</td>
+                                    <td align="center">
+                                        <p>[[item.referencia]]</p>
+                                        <template is="dom-if" if="[[_isHolding(item.is_holding)]]">
+                                            <p class="text-primary fw-600 fs-10">PATIO</p>
+                                        </template>
+                                    </td>
+                                    <td align="center">
+                                        <div class="d-flexx align-items-center justify-content-center">
+                                            <template is="dom-if" if="[[item.showClienteNumberTable]]">
+                                                <span class="location-indicator mr-2"></span>
+                                            </template>
+                                            <p class$="[[_getShowNumberTable(item.showClienteNumberTable)]]">[[item.nummesa]]</p>
+                                        </div>
+                                    </td>
+                                    <td align="right">[[item.total_r]]</td>
+                                    <td align="center">
+                                        <template is="dom-if" if="[[!item.showHolding]]">
+                                            <template is="dom-repeat" items="[[item.tipo_pago]]" as="metodo">
+                                                <img src="[[metodo.icon]]" alt="Método de pago" width="16" class="ml-1">
+                                            </template>
+                                        </template>
+                                        <template is="dom-if" if="[[item.showHolding]]">
+                                            <img src="[[item.icon_show]]" alt="Método de pago" width="16" class="ml-1">
+                                        </template>
+                                    </td>
+                                    <td align="center">
+                                        <!-- Botones de acción según el estado del pedido -->
+                                        <template is="dom-if" if="[[_showBotonLlamarMesero(item)]]">
+                                            <button class="fs-10 btn btn-sm btn-warning" on-click="_handleLlamarMesero"
+                                                id="btnCallPedidoListo" data-pedido$="[[item.idpedido]]" data-mesa$="[[item.nummesa]]"
+                                                data-referencia$="[[item.referencia]]" data-idusuario$="[[item.idusuario]]">
+                                                Llamar Mesero
+                                            </button>
+                                        </template>
+                                        <template is="dom-if" if="[[_showBotonPedidoListo(item)]]">
+                                            <button class="fs-10 btn btn-sm btn-info" on-click="_handleMarcarPedidoListo"
+                                                data-pedido$="[[item.idpedido]]">
+                                                Pedido Listo
+                                            </button>
+                                        </template>
+                                        <template is="dom-if" if="[[_showBotonEntregado(item)]]">
+                                            <button class="fs-10 btn btn-sm btn-success" on-click="_handleMarcarEntregado"
+                                                data-pedido$="[[item.idpedido]]">
+                                                Entregado
+                                            </button>
+                                        </template>
+                                        <template is="dom-if" if="[[_isPedidoEntregado(item)]]">
+                                            <p class="text-success m-0">Entregado ✓</p>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                
+                    <!-- Resumen de Pagos -->
+                    <div class="resumen-section mt-5">
+                        <p class="fw-600 fs-15 mb-2">Resumen de Pagos</p>
+                        <div class="resumen-content">
+                            <div class="resumen-metodos">
+                                <!-- Resumen de ventas en caja -->
+                                <div id="resumen-caja-container">
+                                    <template is="dom-repeat" items="[[resumenCaja]]">
+                                        <template is="dom-if" if="[[item.isHeader]]">
+                                            <div class="metodo-header">
+                                                <span class="metodo-name">[[item.name]]</span>
+                                                <span class="metodo-total">S/. [[item.total]]</span>
+                                            </div>
+                                        </template>
+                                        <template is="dom-if" if="[[!item.isHeader]]">
+                                            <div class="metodo-item">
+                                                <div class="mr-2">
+                                                    <img src="[[item.icon]]" alt="[[item.name]]" width="32">
+                                                </div>
+                                                <div>
+                                                    <span class="metodo-name">[[item.name]]:</span>
+                                                    <span class="metodo-total">S/. [[item.total]]</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </div>
+                
+                                <!-- Espacio entre secciones -->
+                                <!-- <div class="seccion-separador" hidden$="[[!hayContenidoDoble]]"></div> -->
+                
+                                <!-- Resumen de ventas en patio -->
+                                <div id="resumen-patio-container">
+                                    <template is="dom-repeat" items="[[resumenPatio]]">
+                                        <template is="dom-if" if="[[item.isHeader]]">
+                                            <div class="metodo-header">
+                                                <span class="metodo-name">[[item.name]]</span>
+                                                <span class="metodo-total">S/. [[item.total]]</span>
+                                            </div>
+                                        </template>
+                                        <template is="dom-if" if="[[!item.isHeader]]">
+                                            <div class="metodo-item">
+                                                <div class="mr-2">
+                                                    <img src="[[item.icon]]" alt="[[item.name]]" width="32">
+                                                </div>
+                                                <div>
+                                                    <span class="metodo-name">[[item.name]]:</span>
+                                                    <span class="metodo-total">S/. [[item.total]]</span>
+                                                    <!-- Información de comisión si aplica -->
+                                                    <template is="dom-if" if="[[item.hasCommission]]">
+                                                        <div class="comision-info fs-14">
+                                                            <span class="comision-rate">Comisión ([[item.commissionRate]]%):</span>
+                                                            <span class="comision-amount">-S/. [[item.commissionAmount]]</span>
+                                                            <span class="total-after-commission">Total neto: S/.
+                                                                [[item.totalAfterCommission]]</span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </div>
+                
+                                <!-- Totales generales -->
+                                <div class="total-general">
+                                    <div><strong>Total Pedidos:</strong> <span>[[totalPedidos]]</span></div>
+                                    <div><strong>Total Caja:</strong> <span>S/. [[totalCaja]]</span></div>
+                                    <div><strong>Total Patio:</strong> <span>S/. [[totalPatio]]</span></div>
+                                    <div><strong>Total General:</strong> <span class="fw-600 fs-18">S/. [[totalGeneral]]</span></div>
+                                </div>
+                            </div>
+                
+                            <div class="text-right">
+                                <p class="fw-600" id="p_fecha_debitado"></p>
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+        </div>
+
+        
+    </template>
+
+    <style>
+
+        .resumen-metodos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        
+        
+        /* Add these styles to your existing styles */
+        .comision-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .total-general div {
+            margin: 5px 0;
+        }
+
+        .comision-amount {
+            color: #d32f2f;
+        }
+
+        .total-after-commission {
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .metodo-item {
+            display: flex;
+            margin: 5px 0;
+        }
+
+        .resumen-content {
+            display: flex;
+            font-size: 14px;
+        }
+
+        .location-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+            
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(46, 204, 113, 0);
+            }
+            
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+
+        /* Agregar estilos para la transición */
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+
+        .fade-in {
+            opacity: 1;
+            transition: opacity 0.3s ease-in;
+        }
+
+        .metodo-header {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #1976d2;
+            margin-top: 10px;
+            padding: 5px 0;
+            border-bottom: 2px solid #1976d2;
+        }
+
+        .metodo-separator {
+            height: 1px;
+            background: #eee;
+            margin: 15px 0;
+        }
+    </style>
+
+    <script>
+        Polymer({
+            is: 'x-pedidos-by-marca',
+            properties: {
+                pedidos: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                listIdsPedidos: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                pedidosFiltrados: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                listaMarcas: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                resumenMetodosPago: {
+                    type: Array,
+                    value: function () { return []; }
+                },
+                totalCaja: {
+                    type: String,
+                    value: '0.00'
+                },
+                commissionRate: {
+                    type: Number,
+                    value: 2.5
+                },
+                totalPatio: {
+                    type: String,
+                    value: '0.00'
+                },
+                totalGeneral: {
+                    type: String,
+                    value: '0.00'
+                },
+                totalPedidos: {
+                    type: Number,
+                    value: 0
+                },
+                showBtnDebitar: {
+                    type: Boolean,
+                    value: false
+                },
+                marcaSeleccionada: {
+                    type: Object,
+                    value: function () { return {}; }
+                },
+                fechaDebitado: {
+                    type: String,
+                    value: ''
+                },
+                cuentaDebitarMarca: {
+                    type: String,
+                    value: ''
+                },
+                fechaSelected: {
+                    type: String,
+                    value: ''
+                },
+                pedidosLlamando: {
+                    type: Object,
+                    value: function () { return {}; }
+                },
+                pedidosListos: {
+                    type: Object,
+                    value: function() { return {}; }
+                }
+            },
+
+            attached: function () {
+                this.pedidos = [];
+                this._initializeSocket();
+            },
+
+            detached: function () {
+
+            },
+
+            _pintarPedidoHolding: function (pedido) {
+                console.log('pedido', pedido);
+                setTimeout(() => {
+                    this.getPedidoById(pedido.idpedido);
+                }, 2000);
+            },
+            _pintarMozoEnCamino: function (idpedido) {
+                console.log('idpedido', idpedido);
+                const index = this.pedidosFiltrados.findIndex(p => p.idpedido === idpedido);
+                if (index === -1) return;
+
+                // Update the UI to show "En camino" status
+                // Update the UI to show "En camino" status
+                let pedido = this.pedidosFiltrados[index];
+                if (pedido.estado == '2') return;
+
+                pedido.estado=2;
+
+
+                const tr = this.$$(`.pedido-item[data-pedido="${idpedido}"]`);
+                if (!tr) return;
+                                
+                const btnLlamar = tr.querySelector('#btnCallPedidoListo');
+
+                btnLlamar.disabled = true;
+                btnLlamar.textContent = 'En camino...';
+                btnLlamar.classList.remove('btn-warning');
+                btnLlamar.classList.add('btn-primary');
+                
+                // setTimeout(() => {
+                //     btnLlamar.disabled = false;
+                //     btnLlamar.textContent = 'Llamar Mesero';
+                //     btnLlamar.classList.remove('btn-primary');
+                //     btnLlamar.classList.add('btn-warning');
+                // }, 1000);            
+                
+
+                // marcar y guardar como pedido listo set-pedido-listo
+                setTimeout(() => {
+                    $.ajax({
+                        type: 'POST',
+                        url: '../../bdphp/log_010.php',
+                        data: JSON.stringify({
+                            op: 'set-pedido-listo',
+                            idpedido: idpedido
+                        })
+                    }).done(dt => {
+                        const response = JSON.parse(dt);
+                        if (response.success) {
+                            // Ocultar botón actual
+                            btnLlamar.style.display = 'none';
+
+                            // Actualizar estado en la UI
+                            this.set(`pedidosFiltrados.${index}.estado`, '2');
+
+                            // Crear y mostrar botón "Entregado"
+                            const btnEntregado = document.createElement('button');
+                            btnEntregado.className = 'fs-10 btn btn-sm btn-success fade-in';
+                            btnEntregado.textContent = 'Entregado';
+                            btnEntregado.dataset.pedido = idpedido;
+                            btnEntregado.addEventListener('click', this.marcarEntregado.bind(this));
+                            btnLlamar.parentNode.appendChild(btnEntregado);
+                        }
+                    });
+                }, 5000);   
+                
+                
+            },
+
+            async getPedidoById(idpedido) {
+                console.log('idpedido', idpedido);
+                if (!idpedido) return;
+
+                const searchItem = this.searchItemInPedidos(idpedido);
+                if (searchItem) {
+                    return;
+                }
+
+                this.listIdsPedidos.push(idpedido);
+
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-pedido-marca-by-id',
+                        idpedido: idpedido
+                    })
+                }).done(dt => {
+                    console.log('JSON.parse(dt)' , JSON.parse(dt));
+                    let itemPedido = JSON.parse(dt).datos[0];
+                    this.addPedidoInPedidos(itemPedido);
+                });
+            },
+
+            _initializeSocket: async function () {
+                _cpSocketOpen();
+                await this.getComisionMetodoPago();
+                this.getPedidosMarcaByDay();
+                this.showBtnDebitar = false;
+
+
+                $('#txt_fecha_pedido_marca').pickadate({
+                    format: 'dd mmmm, yyyy',
+                    today: 'Hoy',
+                    clear: 'Borrar',
+                    close: 'Cerrar',
+                    onSet: (context) => {
+                        const fechaInput = context.select ? xDevolverFechaDada2(context.select) : '';
+                        this.fechaSelected = xSetInputDate(fechaInput);
+                        console.log('this.fechaSelected', this.fechaSelected);
+                        this.getPedidosMarcaByDay();
+                    }
+                });
+            },
+
+            searchItemInPedidos: function (idpedido_search) {
+                return this.listIdsPedidos.find((idpedido) => {
+                    return idpedido == idpedido_search;
+                });
+            },
+
+            getPedidosMarcaByDay() {
+                this.pedidos = [];
+                this.pedidosFiltrados = [];
+                const fecha = this.fechaSelected === '' ? new Date().toISOString().split('T')[0] : this.fechaSelected;
+                console.log('fecha', fecha);
+                $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-pedidos-marca-by-day',
+                        fecha: fecha,
+                        idsede_holding: 6
+                    })
+                }).done(dt => {
+                    console.log('getPedidosHolding', JSON.parse(dt));
+                    let pedidos = JSON.parse(dt).datos;
+                    if (pedidos.length === 0) {
+                        this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
+                        this._actualizarResumen();                        
+                        return;
+                    }
+
+                    pedidos.forEach(itemPedido => {
+                        this.addPedidoInPedidos(itemPedido);
+                    });
+
+
+                    this.elaborarTotales();
+
+                    console.log('this.pedidos', this.pedidos);
+                });
+            },
+
+            addPedidoInPedidos(itemPedido) {
+                // Parse tipo_pago from string to array
+                itemPedido.tipo_pago = JSON.parse(itemPedido.tipo_pago);
+                itemPedido.showHolding = itemPedido.is_holding == '1';
+
+                // Format icon path and handle payment methods
+                if (itemPedido.is_holding === '1') {
+                    // For holding orders, show digital payment icon if any digital payment exists
+                    const hasDigitalPayment = itemPedido.tipo_pago.some(metodo =>
+                        this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
+                    );
+                    itemPedido.icon_show = hasDigitalPayment ? '../../images/pinpad.png' : '../../images/_tp_01.png';
+                } else {
+                    // For non-holding orders, show all payment methods
+                    itemPedido.tipo_pago = itemPedido.tipo_pago.map(tp => ({
+                        ...tp,
+                        icon: `../../images/${tp.icon}`,
+                        name: tp.descripcion
+                    }));
+                    itemPedido.icon_show = itemPedido.tipo_pago[0].icon;
+                }
+
+                // Set estado_debitado
+                itemPedido.estado_debitado = itemPedido.debitado == '1' ? 'Debitado' : 'Pendiente';
+                itemPedido.total_r = itemPedido.total;
+
+                // Insert new item at the beginning of the array
+                this.unshift('pedidos', itemPedido);
+                this.pedidosFiltrados = this.pedidos;
+
+                // Force update
+                this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
+                this._actualizarResumen();
+            },
+            
+/**
+ * Actualiza el resumen de pagos, separando claramente entre ventas locales y ventas del patio
+ * @private
+ */
+
+
+_actualizarResumen() {
+    // Crear dos objetos de resumen completamente separados
+    const resumenCaja = {
+        titulo: 'VENTAS EN CAJA',
+        metodos: {},
+        total: 0
+    };
+    
+    const resumenPatio = {
+        titulo: 'VENTAS EN PATIO',
+        metodos: {},
+        total: 0,
+        comision: {
+            total: 0,
+            porcentaje: this.metodosConComision?.length > 0 ? this.metodosConComision[0].comision : 2.5
+        }
+    };
+    
+    // Inicializar categoría de pagos digitales para el patio
+    resumenPatio.metodos['digital'] = {
+        id: 'digital',
+        name: 'Medios Digitales POS (PATIO)',
+        icon: '../../images/pinpad.png', 
+        total: 0,
+        hasCommission: true,
+        commissionRate: resumenPatio.comision.porcentaje,
+        commissionAmount: 0
+    };
+    
+    // Set para evitar procesar pagos duplicados
+    const registrosProcesados = new Set();
+    
+    // Procesar cada pedido y asignarlo a Caja o Patio
+    this.pedidosFiltrados.forEach(pedido => {
+        // Evitar duplicados por idregistro_pago
+        if (registrosProcesados.has(pedido.idregistro_pago)) return;
+        registrosProcesados.add(pedido.idregistro_pago);
+        
+        const isPatio = pedido.is_holding === '1';
+        const resumen = isPatio ? resumenPatio : resumenCaja;
+        const comisionRate = resumenPatio.comision.porcentaje;
+        
+        // busca si hay medios digitales
+        const hasDigitalPayment = pedido.tipo_pago.some(metodo =>
+            this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
+        );
+
+        // si hay medios digtales suma todo a digital
+        if (isPatio && hasDigitalPayment) {
+
+            // suma todos los medios digitales
+            
+            const sumMetodosPago = pedido.tipo_pago.reduce((acc, metodo) => {
+                return acc + parseFloat(metodo.amount_real);
+            }, 0);
+
+            resumenPatio.total = sumMetodosPago;
+
+            resumen.metodos['digital'].total += sumMetodosPago;
+
+            // Calcular comisión
+            const comisionMonto = (sumMetodosPago * comisionRate) / 100;
+            resumen.metodos['digital'].commissionAmount += comisionMonto;
+            resumenPatio.comision.total += comisionMonto;
+
+            return;
+        }
+
+        // Procesar cada método de pago
+        pedido.tipo_pago.forEach(metodo => {
+            const montoMetodo = parseFloat(metodo.amount_real) || 0;
+            const idMetodo = metodo.id || '1'; // Default a efectivo si no hay ID
+            
+            // Asegurar que tenemos una descripción válida para el método de pago
+            const descripcionMetodo = metodo.descripcion || metodo.name || 'Efectivo';
+            
+        
+                // Si no existe el método, lo inicializamos
+                if (!resumen.metodos[idMetodo]) {
+                    resumen.metodos[idMetodo] = {
+                        id: idMetodo,
+                        name: descripcionMetodo + (isPatio ? ' (PATIO)' : ''),
+                        icon: pedido.icon_show || `../../images/${metodo.icon || '_tp_01.png'}`,
+                        total: 0,
+                        hasCommission: false,
+                        commissionRate: 0,
+                        commissionAmount: 0
+                    };
+                }
+                
+                // Actualizar totales del método
+                resumen.metodos[idMetodo].total += montoMetodo;
+        
+            resumen.total += montoMetodo;
+        });
+    });
+    
+    // Eliminar la categoría de pagos digitales si no tiene monto
+    if (resumenPatio.metodos['digital'].total === 0) {
+        delete resumenPatio.metodos['digital'];
+    }
+    
+    // Construir arrays UI separados para Caja y Patio
+    const resumenCajaArray = [];
+    const resumenPatioArray = [];
+    
+    // VENTAS EN CAJA - Encabezado
+    if (Object.keys(resumenCaja.metodos).length > 0) {
+        resumenCajaArray.push({
+            name: resumenCaja.titulo,
+            isHeader: true,
+            total: resumenCaja.total.toFixed(2)
+        });
+        
+        // Métodos de pago de Caja
+        Object.values(resumenCaja.metodos)
+            .sort((a, b) => b.total - a.total) // Ordenar por monto, de mayor a menor
+            .forEach(metodo => {
+                resumenCajaArray.push({
+                    ...metodo,
+                    total: metodo.total.toFixed(2)
+                });
+            });
+    }
+    
+    // VENTAS EN PATIO - Encabezado
+    if (Object.keys(resumenPatio.metodos).length > 0) {
+
+        // const totalResumenPatio = resumenPatio.metodos.map(t => t.total).reduce((a, b) => a + b, 0);
+
+        resumenPatioArray.push({
+            name: resumenPatio.titulo,
+            isHeader: true,
+            total: (resumenPatio.total - resumenPatio.comision.total).toFixed(2) // Total neto
+        });
+        
+        // Métodos de pago de Patio
+        Object.values(resumenPatio.metodos)
+            .sort((a, b) => b.total - a.total) // Ordenar por monto, de mayor a menor
+            .forEach(metodo => {
+                const itemResumen = {
+                    ...metodo,
+                    total: metodo.total.toFixed(2)
+                };
+                
+                // Añadir datos de comisión si aplica
+                if (metodo.hasCommission) {
+                    itemResumen.commissionAmount = metodo.commissionAmount.toFixed(2);
+                }
+                itemResumen.totalAfterCommission = (metodo.total - metodo.commissionAmount).toFixed(2);
+                
+                resumenPatioArray.push(itemResumen);
+            });
+    }
+    
+    // Actualizar propiedades para uso en UI
+    this.set('resumenCaja', resumenCajaArray);
+    this.set('resumenPatio', resumenPatioArray);
+    
+    // Verificar si hay contenido en ambos arrays para mostrar la separación visual
+    this.set('hayContenidoDoble', resumenCajaArray.length > 0 && resumenPatioArray.length > 0);
+    
+    // Calcular totales generales
+    // const totalVentas = resumenCaja.total + resumenPatio.total;
+    // const totalPatio = resumenPatio.comision.total;
+    
+    // this.totalCaja = totalVentas.toFixed(2);
+    // this.totalPatio = totalPatio.toFixed(2);
+    // this.totalGeneral = (totalVentas - totalPatio).toFixed(2);
+    this.totalPedidos = this.pedidosFiltrados.length;
+    
+    // Guardar referencias
+    this._resumenLocal = resumenCaja;
+    this._resumenPatio = resumenPatio;
+    
+    // Y ahora para mantener la compatibilidad con el HTML existente, 
+    // combinamos ambos arrays para 'resumenMetodosPago'
+    this.set('resumenMetodosPago', [...resumenCajaArray, ...resumenPatioArray]);
+},
+
+elaborarTotales: function (resumen) {
+    console.log('resumenCaja', this.resumenCaja);
+    console.log('resumenPatio', this.resumenPatio);
+    let totalResumenPatio = 0;
+    let totalResumenCaja = 0;
+    
+    if ( this.resumenPatio.length > 0 ) {
+        totalResumenPatio = this.resumenPatio.filter(t => !t.isHeader).map(t => parseFloat(t.totalAfterCommission)).reduce((a, b) => a + b, 0);
+        this.resumenPatio[0].total = totalResumenPatio.toFixed(2);
+    }
+
+    if ( this.resumenCaja.length > 0 ) {
+        totalResumenCaja = this.resumenCaja[0].total;        
+    }
+
+    this.totalCaja = totalResumenCaja;
+    this.totalPatio = totalResumenPatio.toFixed(2);
+    this.totalGeneral = (parseFloat(this.totalCaja) + parseFloat(this.totalPatio)).toFixed(2);
+},
+
+/**
+ * Verifica si un método de pago tiene comisión
+ * @param {string|number} idMetodo - ID del método de pago
+ * @returns {boolean} - True si tiene comisión
+ * @private
+ */
+_tieneComision(idMetodo) {
+    return this.metodosConComision?.some(c => c.idtipo_pago == idMetodo) || false;
+},
+
+            getComisionMetodoPago: async function (metodo) {
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-comision-metodo-pago-holding'
+                    })
+                }).done(dt => {
+                    console.log('getComisionMetodoPago', JSON.parse(dt));
+                    const comisiones = JSON.parse(dt).datos;
+                    console.log('comision', comisiones);
+                    this.metodosConComision = comisiones;
+                });
+            },
+
+            debitarPedidos: async function () {
+
+                let _swalAlertValuesMeta = paramsSwalAlert;
+                _swalAlertValuesMeta.title = '<p class="fw-600 fs-20">Número de Operación</p>';
+                _swalAlertValuesMeta.html = '<div class="p-3" style="display: inline-flex; border-radius:5px">' +
+                    '<input type="number" placeholder="# Opercion bancaria" class="xMiInput text-center text-white fs-20 w-100" id="txt_numero_operacion_debitado">' +
+                    '</div>';
+                _swalAlertValuesMeta.confirmButtonText = 'Listo, guardar';
+                _swalAlertValuesMeta.showCancelButton = true;
+
+                const rptNumOperacion = await showAlertSwalHtmlDecision(_swalAlertValuesMeta, 1)
+                if (rptNumOperacion.isDismissed) return;
+
+                const idsPedidos = this.pedidosFiltrados.map(p => p.idpedido).join(',');
+                const numOperacion = document.getElementById('txt_numero_operacion_debitado').value;
+                const dataSend = {
+                    op: 'debitar-pedidos-holding',
+                    idpedidos: idsPedidos,
+                    numoperacion: numOperacion,
+                    resumen: this.resumenMetodosPago,
+                    idsede: this.marcaSeleccionada.idsede
+                }
+                console.log('object', dataSend);
+
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'set-debitar-pedido-holding',
+                        idpedidos: idsPedidos,
+                        numoperacion: numOperacion,
+                        resumen: JSON.stringify(this.resumenMetodosPago),
+                        idsede: this.marcaSeleccionada.idsede
+                    })
+                }).done(dt => {
+                    this.getPedidosMarcaByDay();
+                });
+            },
+
+            getRegistroPagoMarca: async function (idregistro_pago_marca) {
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-registro-pago-marca',
+                        idregistro_pago_marca: idregistro_pago_marca
+                    })
+                }).done(dt => {
+                    console.log('getRegistroPagoMarca', JSON.parse(dt));
+                    const dataRegistro = JSON.parse(dt).datos[0];
+                    this.fechaDebitado = `Fecha Debitado:  ${dataRegistro.fecha} <br> Numero Operación: ${dataRegistro.num_operacion}`;
+                    p_fecha_debitado.innerHTML = this.fechaDebitado;
+                });
+            },
+
+            getCuentaDebitarMarca: async function () {
+                await $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-cuenta-debitar-marca',
+                        idsede_marca: this.marcaSeleccionada.idsede
+                    })
+                }).done(dt => {
+                    console.log('getCuentaDebitarMarca', JSON.parse(dt));
+                    this.cuentaDebitarMarca = `Cuenta a Debitar: ${JSON.parse(dt).datos[0].cuenta_debitar}`;
+                });
+            },
+
+            llamarPedidoListo: function (e) {
+                const button = e.target;
+                const idpedido = button.dataset.pedido;
+                const mesa = button.dataset.mesa;
+                const referencia = button.dataset.referencia; 
+                const idusuario = button.dataset.idusuario;
+
+                if (this.pedidosLlamando[idpedido]) return;
+
+                // Disable button and change text
+                button.disabled = true;
+                button.textContent = 'Llamando...';
+                this.pedidosLlamando[idpedido] = true;
+
+                const datosSede = xm_log_get('datos_org_all_sede')[0];
+                const referenciaText = `Mesa: ${mesa} - ${referencia}`;
+                
+                const dataSendNotify = {  
+                    idsede_notificar: datosSede.idsede,
+                    idorg_notificar: datosSede.idorg,
+                    idusuario: idusuario,
+                    idpedido: idpedido,
+                    nom_marca: datosSede.nombre,
+                    referencia: referenciaText,
+                }
+
+                console.log('dataSendNotify', dataSendNotify);
+                _cpSocketEmitCallMozoHolding(dataSendNotify);
+
+                // Reset button after 1 second
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.textContent = 'Llamar Mesero';
+                    delete this.pedidosLlamando[idpedido];
+                }, 5000);
+            },
+
+            marcarPedidoListo: function(e) {
+                const idpedido = e.target.dataset.pedido;
+                const button = e.target;
+
+                if (this.pedidosListos[idpedido]) return;
+
+                // Disable button and add fade out
+                button.disabled = true;
+                button.classList.add('fade-out');
+                button.textContent = 'Procesando...';
+
+                setTimeout(() => {
+                    // Llamar al servicio para actualizar estado
+                    $.ajax({
+                        type: 'POST',
+                        url: '../../bdphp/log_010.php',
+                        data: JSON.stringify({
+                            op: 'set-pedido-listo',
+                            idpedido: idpedido
+                        })
+                    }).done(dt => {
+                        const response = JSON.parse(dt);
+                        if (response.success) {
+                            // Ocultar botón actual
+                            button.style.display = 'none';
+
+                            // Actualizar estado en la UI
+                            const index = this.pedidosFiltrados.findIndex(p => p.idpedido === idpedido);
+                            if (index !== -1) {
+                                this.set(`pedidosFiltrados.${index}.estado`, '2');
+                                
+                                // Crear y mostrar botón "Entregado"
+                                const btnEntregado = document.createElement('button');
+                                btnEntregado.className = 'fs-10 btn btn-sm btn-success fade-in';
+                                btnEntregado.textContent = 'Entregado';
+                                btnEntregado.dataset.pedido = idpedido;
+                                btnEntregado.addEventListener('click', this.marcarEntregado.bind(this));
+                                button.parentNode.appendChild(btnEntregado);
+                            }
+                        } else {
+                            button.disabled = false;
+                            button.classList.remove('fade-out');
+                            button.textContent = 'Pedido Listo';
+                            delete this.pedidosListos[idpedido];
+                        }
+                    });
+                }, 2000); // Delay de 2 segundos
+            },
+
+            marcarEntregado: function(e) {
+                const idpedido = e.target.dataset.pedido;
+                const button = e.target;
+                const tr = button.closest('tr');
+
+                button.disabled = true;
+                button.classList.add('fade-out');
+                button.textContent = 'Procesando...';
+
+                setTimeout(() => {
+                    $.ajax({
+                        type: 'POST',
+                        url: '../../bdphp/log_010.php',
+                        data: JSON.stringify({
+                            op: 'set-pedido-entregado',
+                            idpedido: idpedido
+                        })
+                    }).done(dt => {
+                        const response = JSON.parse(dt);
+                        if (response.success) {
+                            // Ocultar botón
+                            button.style.display = 'none';
+
+                            // Actualizar estado en la UI y mostrar mensaje
+                            const index = this.pedidosFiltrados.findIndex(p => p.idpedido === idpedido);
+                            if (index !== -1) {
+                                this.set(`pedidosFiltrados.${index}.estado`, '3');
+                                
+                                // Crear y mostrar mensaje "Entregado"
+                                const mensajeEntregado = document.createElement('p');
+                                mensajeEntregado.className = 'text-success m-0 fade-in';
+                                mensajeEntregado.textContent = 'Entregado ✓';
+                                button.parentNode.appendChild(mensajeEntregado);
+                            }
+                        } else {
+                            button.disabled = false;
+                            button.classList.remove('fade-out');
+                            button.textContent = 'Entregado';
+                        }
+                    });
+                }, 2000); // Delay de 2 segundos
+            },
+
+            updateUbicacionCliente: function (data) {
+                let idpedidos = data.idpedidos.split(',');
+                const numberMesa = data.numberTable;
+
+                this.pedidosFiltrados.forEach(pedido => {
+                    if (idpedidos.includes(pedido.idpedido)) {
+                        pedido.showClienteNumberTable = true 
+                        pedido.nummesa = `Ubicacion: ${numberMesa}`; 
+                    }
+                });
+
+                this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
+            },
+
+            _getIconByTipoPago: function (metodo) {
+                return metodo.id == '1' ? metodo.icon : '../../images/pinpad.png';
+            },
+
+            _getDebitadoClass: function (estado) {
+                return estado === 'Debitado' ? 'text-success' : 'text-danger';
+            },
+
+            _getShowNumberTable: function (estado) {
+                return estado ? 'text-success fw-900' : 'text-dark fw-100';
+            },
+            
+            _showBotonLlamarMesero: function(item) {
+                // Solo para pedidos de holding (patio) que no estén listos ni entregados
+                return item.is_holding === '1' && item.estado !== '2' && item.estado !== '3';
+            },
+
+            _showBotonPedidoListo: function(item) {
+                // Para pedidos normales (no holding) o con ubicación conocida, que no estén listos ni entregados
+                return (item.is_holding !== '1' || item.showClienteNumberTable) && 
+                       item.estado !== '2' && 
+                       item.estado !== '3';
+            },
+
+            _showBotonEntregado: function(item) {
+                // Para pedidos marcados como listos (estado = 2)
+                return item.estado === '2';
+            },
+
+            _isPedidoEntregado: function(item) {
+                return item.estado === '3';
+            },
+
+            _formatTime: function (timestamp) {
+                return new Date(timestamp).toLocaleTimeString();
+            },
+            _isHolding: function (isHolding) {
+                return isHolding === '1';
+            },
+            displayIndex: function (index) {
+                const total = this.pedidos.length;
+                const reverseIndex = total - index;
+                return xCeroIzq(reverseIndex, 1);
+            },
+
+/**
+ * Maneja el evento de hacer clic en "Llamar Mesero"
+ * @param {Event} e - Evento de clic
+ * @private
+ */
+_handleLlamarMesero: function(e) {
+    this.llamarPedidoListo(e);
+},
+
+/**
+ * Maneja el evento de hacer clic en "Marcar Pedido Listo"
+ * @param {Event} e - Evento de clic
+ * @private
+ */
+_handleMarcarPedidoListo: function(e) {
+    this.marcarPedidoListo(e);
+},
+
+/**
+ * Maneja el evento de hacer clic en "Marcar Entregado"
+ * @param {Event} e - Evento de clic
+ * @private
+ */
+_handleMarcarEntregado: function(e) {
+    this.marcarEntregado(e);
+},
+
+/**
+ * Maneja el evento de hacer clic en "Debitar Pedidos"
+ * @param {Event} e - Evento de clic
+ * @private
+ */
+_handleDebitarPedidos: function(e) {
+    this.debitarPedidos(e);
+},
+
+        });
+    </script>
+</dom-module>

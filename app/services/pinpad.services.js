@@ -3,7 +3,17 @@ const httpClient = new httpFecht();
 const checkPinPad = async (pinPadSN) => {
     const url = `${URL_PINPAD}/check`;
     const params = { pinPadSN, xIdSede };    
-    return await httpClient.postJson(url, params);   
+    const rptCheck =  await httpClient.postJson(url, params);   
+
+    if ( rptCheck.success ) {
+        return rptCheck;
+    }
+
+    await setUserPinPad(pinPadSN);
+    await loginPinPad(pinPadSN);
+
+    // intentar realizar la prueba de conexion nuevamente
+    return await httpClient.postJson(url, params);    
 }
 
 const setUserPinPad = async (pinPadSN) => {
@@ -46,6 +56,8 @@ const sendTransactionPinPad = async (transaction, currency) => {
     const url = `${URL_PINPAD}/transaccion`;
     const params = { pinPadSN, xIdSede, transaction };
     const rptTransaction = await httpClient.postJson(url, params); 
+
+    console.log('rptTransaction', rptTransaction);
     
     if ( rptTransaction.success ) {
         sendPrinterPinPad(rptTransaction.data.print_data);
@@ -112,7 +124,7 @@ const saveTransactionPinPad = async (idregistro_pago, xtipoPago, response_pinpad
         data: JSON.stringify(params)
     })
     .done(function (data) {
-        console.log('data', data);
+        console.log('saveTransactionPinPad', data);
     })
 
 }
@@ -121,7 +133,7 @@ const sendRemovePinPad = async (transaccion, currency) => {
     const transaction = {
         ...transaccion,
         operation: '06',
-        currency: currency || 'PEN'        
+        currency: currency || 'PEN'
     }
 
     const url = `${URL_PINPAD}/remove`;
@@ -129,12 +141,12 @@ const sendRemovePinPad = async (transaccion, currency) => {
     const params = { pinPadSN, xIdSede, transaction };
     console.log('params', params);
     const rptRemove = await httpClient.postJson(url, params);
-    if (rptRemove.success) {
-        saveRemovePinPad(transaction)
-    }
-
-    return rptRemove;    
     console.log('rptRemove', rptRemove);
+    if (rptRemove.success) {
+        sendPrinterPinPad(rptRemove.data.print_data);
+        saveRemovePinPad(transaction)
+    }    
+    return rptRemove;    
 }
 
 const saveRemovePinPad = async (transaction) => {
@@ -189,7 +201,9 @@ const sendPrinterPinPad = async (printData) => {
         impresora: printer,
         lista: printData,
         subtotales: [],
-        encabezado: [],
+        encabezado: {
+            nom_us: ''
+        },
     }
 
     xImprimirCualquierLista(dataSendPrint, 11, 'pos');

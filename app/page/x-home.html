@@ -6,6 +6,10 @@
 	<!-- <link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-handler-pinpad.html"> -->
 	<!-- <link rel="import" href="../x-componentes/x-comp-handler-pinpad/x-comp-remove-operation-pinpad.html"> -->
 	<!-- <link rel="import" href="../x-componentes/x-pedidos-despachados/x-pedidos-despachados.html"> -->
+	<!-- <link rel="import" href="../page/x-configuraciones/x-holding/x-create-holding.html"> -->
+	<!-- <link rel="import" href="../page/x-configuraciones/x-holding/x-pedidos-holding.html">
+	<link rel="import" href="../page/x-configuraciones/x-holding/x-pedidos-meseros.html"> -->
+	<!-- <link rel="import" href="../page/x-configuraciones/x-holding/x-pedidos-by-marca.html"> -->
 	<template>
 		<!-- <x-edit-tipo-precio></x-edit-tipo-precio> -->
 		<!-- <x-config-sede-opciones></x-config-sede-opciones> -->
@@ -23,6 +27,11 @@
 		<button onclick="xOpenAnularOperacion()">anular operacion</button> -->
 		<!-- <button onclick="showPedidosDespachados()">Show Pedido despachados</button>
 		<x-pedidos-despachados id="compPedidoDespachados"></x-pedidos-despachados> -->
+		<!-- <x-create-holding></x-create-holding> -->
+		
+		<!-- <x-pedidos-holding></x-pedidos-holding>		 -->
+		<!-- <x-pedidos-meseros></x-pedidos-meseros> -->
+		<!-- <x-pedidos-by-marca></x-pedidos-by-marca> -->
 		<br>
 
 		<div id="xBodyOp">
@@ -135,9 +144,39 @@ function xLoadAcc(){
 		xVerificarAcc();
 }
 
-function xVerificarAcc(){
+async function xVerificarAcc(){
 	xArray_us_home=xm_log_get('app3_Us_home');
 	xper_bd=xm_log_get('app3_woA');
+
+	const dataSede = xm_log_get('datos_org_sede');
+	const dataSedeMarca = xm_log_get('datos_sede_holding');
+
+	let isHoldingCenter = false;
+	try {
+		isHoldingCenter = dataSede[0].is_holding === '1';		
+	} catch (error) {
+		console.error('Error al verificar is_holding:', error);
+	}
+
+	console.log('dataSede', dataSede);
+	console.log('dataSedeMarca', dataSedeMarca);
+
+	
+	try {		
+		if (isHoldingCenter) {
+			await getHoldingOpcionesCenter();
+		}
+	
+		if (dataSedeMarca.length > 0) {
+			await getHoldingOpcionesMarca();
+		}
+	} catch (error) {
+		console.error('Error al cargar opciones de holding:', error);
+	}
+
+
+	console.log('xArray_us_home', xArray_us_home);
+
 	//xLoadSetDatosSession(function(acc){
 		//xper_bd=acc;
 		var xCharAcc='';
@@ -198,6 +237,44 @@ function xVerificarAcc(){
 
 	// verificar si hay problemas de cpe xml
 	// checkAlertCPESede()
+}
+
+async function getHoldingOpcionesMarca() {
+	const dt = await $.ajax({
+		type: 'POST',
+		url: '../../bdphp/log_010.php?op=get-holding-opciones-marca'
+	});			
+	
+	const rpt = JSON.parse(dt);	
+	try {			
+		addHoldingOpciones(rpt.datos);
+	} catch (error) {
+		console.log(error);			
+	}
+}
+
+async function getHoldingOpcionesCenter() {
+	const dt = await $.ajax({
+		type: 'POST',
+		url: '../../bdphp/log_010.php?op=get-holding-opciones-center'
+	});			
+	const rpt = JSON.parse(dt);	
+	try {	
+		addHoldingOpciones(rpt.datos);		
+	} catch (error) {
+		console.log(error);			
+	}
+}
+
+function addHoldingOpciones(listOpciones) {
+	// solo si el usuario tiene mas de 4 opciones asignadas
+	xper_bd = xper_bd.split(',');
+	if (xper_bd.length < 4) return;
+	listOpciones.forEach(element => {
+		xArray_us_home.push(element);		
+		xper_bd.push(element.codigo);
+		xper_bd = xper_bd.join(',');
+	});
 }
 
 function abrirToast() {

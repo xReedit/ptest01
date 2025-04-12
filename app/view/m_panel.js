@@ -368,6 +368,9 @@ async function xOpenPage(xop, parametro){
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;
 		case 56: xruta = '/distribuicion_recibe'; break;
+		case 57: xruta = '/pedidos_previo_pago'; break;
+		case 58: xruta = '/pedidos_marca'; break;
+		case 59: xruta = '/pedidos_meseros'; break;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);
