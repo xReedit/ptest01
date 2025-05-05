@@ -3,266 +3,383 @@
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../paper-spinner/paper-spinner.html">
 <!-- <script type="text/javascript" src="../../view/xm_all.js"></script> -->
 
 <dom-module id="x-user-login">
-	<template>	
-		<paper-dialog id="dialogMSj" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>	
-	      <h2>{{xDialogTitulo}}</h2>
-	      <p>{{xDialogDetalle}}</p>	      	      
-	    </paper-dialog>
+	<link rel="import" href="../paper-progress/paper-progress.html">
+	<template>
+		<paper-dialog id="dialogMSj" entry-animation="scale-up-animation" exit-animation="fade-out-animation"
+			with-backdrop>
+			<h2>{{xDialogTitulo}}</h2>
+			<p>{{xDialogDetalle}}</p>
+		</paper-dialog>
 
 		<!-- <div class="xContentLogin xCentradoVerticalHorizontal xSombraDiv xTransicion3s"> -->
 		<div class="xContentLogin xSombraDiv xCentradoVerticalHorizontal xTransicion3s">
-			<div class="xrunalogo size1 xCentradoVertical"><span class="xIndicadorVr xDerecha" style="margin-right: -25px;">2m</span></div>
+			<div class="xrunalogo size1 xCentradoVertical"><span class="xIndicadorVr xDerecha"
+					style="margin-right: -25px;">2o</span></div>
 			<div class="xOlvideClaveUser xTransicion3s xInvisible" id="div1">
 				<div class="xCentrado">
 					<h2 class="xTituloUser">Se te olvido tu clave</h2>
 					<p>Puedes restablecerla</p>
-				</div><br>				
-					<paper-input label="Correo de registro" type="email" required auto-validate id="correo"></paper-input>				
-					<br>
-					<paper-button tabindex="0" raised class="colorful" onclick="xEnviar('div1')";>Enviar</paper-button>				
-					<br><br>
-					<div>						
-						<a href="#" onclick="xPasarA(2,this);" class="Btn_div2">Logguearse</a>					
-					</div>				
+				</div><br>
+				<paper-input label="Correo de registro" type="email" required auto-validate id="correo"></paper-input>
+				<br>
+				<paper-button tabindex="0" raised class="colorful" onclick="xEnviar('div1')" ;>Enviar</paper-button>
+				<br><br>
+				<div>
+					<a href="#" onclick="xPasarA(2,this);" class="Btn_div2">Logguearse</a>
+				</div>
 				<br><br><br>
-			</div>						
+			</div>
 			<div class="xLoginUser xTransicion3s" id="div2">
-				<div class="xCentrado">					
+				<div class="xCentrado">
 					<h2 class="xTituloUser">{{xtitulo}}</h2>
 					<p>Logueese</p>
 
-					<div hidden$="[[!xisNotificaPagar]]">
+					<div hidden$="[[!xisNotificaPagar]]" class="animate__animated animate__shakeX">
 						<hr>
 						<h3 style="color: rgb(204, 55, 55); font-weight: 600;">Recuerde pagar el servivcio.</h3>
+						<p style="color: rgb(204, 55, 55);">{{xMsjNotifica}}</p>
 					</div>
 
-				</div><br>								
-					<paper-input label="Usuario" required auto-validate id="usuarioIngresar"></paper-input>
-					<paper-input label="Clave" type="password" required auto-validate id="passIngresar"></paper-input>
-					<br><br>
-					<paper-button tabindex="0" raised class="colorful" onclick="xEnviar('div2')";>Ingresar</paper-button>
-					<br><br><br>
-					<div>						
-						<a href="#" onclick="xPasarA(1,this);" class="Btn_div1">Olvide mi clave</a>
-						<a href="#" class="aIzq Btn_div3" onclick="xPasarA(3,this);">Registrarme</a>
-					</div>				
+				</div><br>
+				<paper-input label="Usuario" auto-validate id="usuarioIngresar" error-message="Ingrese su usuario"></paper-input>
+				<paper-input label="Clave" type="password" required auto-validate id="passIngresar" error-message="Ingrese su clave"></paper-input>
+				
+				
+				<br><br>
+				<div style="display: flex; align-items: center; justify-content: center;">
+					<paper-button hidden$="[[xIsLoading]]" disabled$="[[xIsLoading]]" tabindex="0" raised class="colorful" onclick="xEnviar('div2')" disabled="[[xIsLoading]]" ;>Ingresar</paper-button>
+				</div>				
 				<br>
-			</div>						
+				<div style="text-align: left; width: 100%;">
+					<p hidden$="[[!xErrorCredenciales]]" class="animate__animated animate__shakeX" style="color: #d32f2f; margin: 0; padding: 0;">
+						Credenciales incorrectas, usuario o clave incorrecto
+					</p>
+					<div hidden$="[[!xIsLoading]]" class="text-center animate__animated animate__fadeIn">
+						<p>Conectando...</p>
+						<paper-progress  indeterminate class="w-100"></paper-progress>
+					</div>
+				</div>
+				<!-- <br><br><br>
+				<div>
+					<a href="#" onclick="xPasarA(1,this);" class="Btn_div1">Olvide mi clave</a>
+					<a href="#" class="aIzq Btn_div3" onclick="xPasarA(3,this);">Registrarme</a>
+				</div> -->
+				<br>
+
+				
+			</div>
 			<div class="xRegistrarUser xInvisible xTransicion3s" id="div3">
 				<div class="xCentrado">
 					<h2 class="xTituloUser">Registro</h2>
 					<p>Comienza a utilizar nuestros servicios ahora!.</p>
-				</div><br>								
-					<paper-input label="Usuario  Ej: jperez" required auto-validate id="usuario"></paper-input>
-					<paper-input label="Correo" type="email" required auto-validate id="correo"></paper-input>
-					<paper-input label="Clave" type="password" required auto-validate id="pass"></paper-input>
-					<paper-input label="Repita su clave" type="password" required auto-validate id="pass2"></paper-input>
-					<br><br>
-					<paper-button tabindex="0" raised class="colorful" onclick="xEnviar('div3')";>Listo</paper-button>
-					<br><br>
-					<div>						
-						<a href="#" onclick="xPasarA(2,this);" class="Btn_div2">Ya soy usuario</a>
-					</div>				
+				</div><br>
+				<paper-input label="Usuario  Ej: jperez" required auto-validate id="usuario"></paper-input>
+				<paper-input label="Correo" type="email" required auto-validate id="correo"></paper-input>
+				<paper-input label="Clave" type="password" required auto-validate id="pass"></paper-input>
+				<paper-input label="Repita su clave" type="password" required auto-validate id="pass2"></paper-input>
+				<br><br>
+				<paper-button tabindex="0" raised class="colorful" onclick="xEnviar('div3')" ;>Listo</paper-button>
+				<br><br>
+				<div>
+					<a href="#" onclick="xPasarA(2,this);" class="Btn_div2">Ya soy usuario</a>
+				</div>
 			</div>
 		</div>
-	
+
 		<style type="text/css">
 			paper-button[raised].colorful {
-		      background: #ff4081;
-		      color: #fff;
-		    }
+				background: #ff4081;
+				color: #fff;
+			}
+
 			paper-button.colorful {
-		      color: #ff4081;
-		      width: 100%;
-		      margin: 0;
-		      font-size: 18px;
-		    }
-		    .xContentLogin{ 
-					width: 260px; background: #FAFAFA; padding: 25px;
-					padding-top: 90px; 
-					border-radius: 4px;
-					overflow:hidden;
-					height: auto;			 
-				}
-			
+				color: #ff4081;
+				width: 100%;
+				margin: 0;
+				font-size: 18px;
+			}
+
+			.xContentLogin {
+				width: 260px;
+				background: #FAFAFA;
+				padding: 25px;
+				padding-top: 90px;
+				border-radius: 4px;
+				overflow: hidden;
+				height: auto;
+			}
+
 			.xBorderContentLogin {
 				border: 1px solid #bdbdbd;
 			}
 
-		    .aIzq{ float: right; }
-		    .xInvisible{visibility:hidden;}    
-		    .xVisible{opacity: 1;}
-		    .xTransicion3s{-webkit-transition: all 0.3s ease;-o-transition: all 0.3s ease;-ms-transition: all 0.3s ease;-moz-transition: all 0.3s ease;  transition: all 0.3s ease;}
-		    .xTituloUser{font-weight: 500;}
-		    /*.xcontentUser{    	
+			.aIzq {
+				float: right;
+			}
+
+			.xInvisible {
+				visibility: hidden;
+			}
+
+			.xVisible {
+				opacity: 1;
+			}
+
+			.xTransicion3s {
+				-webkit-transition: all 0.3s ease;
+				-o-transition: all 0.3s ease;
+				-ms-transition: all 0.3s ease;
+				-moz-transition: all 0.3s ease;
+				transition: all 0.3s ease;
+			}
+
+			.xTituloUser {
+				font-weight: 500;
+			}
+
+			/*.xcontentUser{    	
 		    	height: 260px;
 		    }*/
-			
-			a{color:#2979ff;font-weight:600;text-decoration: none;}
-			a:hover{ color:#F0C;}
-		</style>		
+
+			a {
+				color: #2979ff;
+				font-weight: 600;
+				text-decoration: none;
+			}
+
+			a:hover {
+				color: #F0C;
+			}
+		</style>
 	</template>
 </dom-module>
 <script>
-var xThis;
-var xRpts;
+	var xThis;
+	var xRpts;
 
-function xPasarA(op,xObjOrigen){	
-	var xDiv;	
-	xThis.xop=op;
-	switch(op){
-		case 1:xDiv='#div1';xAlto='290px';break;
-		case 2:xDiv='#div2';xAlto='auto';break;
-		case 3:xDiv='#div3';xAlto='472px';break;
+	function xPasarA(op, xObjOrigen) {
+		var xDiv;
+		xThis.xop = op;
+		switch (op) {
+			case 1: xDiv = '#div1'; xAlto = '290px'; break;
+			case 2: xDiv = '#div2'; xAlto = 'auto'; break;
+			case 3: xDiv = '#div3'; xAlto = '472px'; break;
+		}
+		$(xObjOrigen).parent().parent().fadeOut(900, function () {
+			$(xDiv).removeClass('xInvisible');
+			$(".xContentLogin").css('height', xAlto);
+			$(xDiv).fadeIn(500);
+		});
 	}
-	$(xObjOrigen).parent().parent().fadeOut(900,function(){
-		$(xDiv).removeClass('xInvisible');
-		$(".xContentLogin").css('height',xAlto);		
-		$(xDiv).fadeIn(500);		
-	});
-}
 
-function xvalidateFormLogin(des,responde) {
-	var obj=$('#'+des);
-	var a=true;
-	obj.find('paper-input').each(function(e,element){
-		if(!element.validate()){a=false;}
-	});
-	responde(a);
-}
+	function xvalidateFormLogin(des, responde) {
+		var obj = $('#' + des);
+		var a = true;
+		obj.find('paper-input').each(function (e, element) {
+			if (!element.validate()) { a = false; }
+		});
+		responde(a);
+	}
 
-function xEnviar(xfrm){
-	xRpts=new Array();
-	var us='';
-	var p='';
-	var p2='';
-	var correo='';
-	
-	xvalidateFormLogin(xfrm,function(a){
-		if(a===false){return;}		
-		switch (xThis.xop){
-			case 1:
-				correo=$('#div1 #correo').val();
-				break;
-			case 2:
-				us=$('#div2 #UsuarioIngresar').val();
-				p=$('#div2 #passIngresar').val();
-				break;
-			case 3:
-				correo=$('#div3 #correo').val();
-				us=$('#div3 #usuario').val();
-				p=$('#div3 #pass').val();
-				p2=$('#div3 #pass2').val();
-				
-				if(p!=p2){p2='';$('#div3 #pass2').val('');return}
-				break;
+	function xEnviar(xfrm) {
+		xRpts = new Array();
+		var us = '';
+		var p = '';
+		var p2 = '';
+		var correo = '';
+
+		// Ocultar mensaje de error previo
+		xThis.xErrorCredenciales = false;
+
+		xvalidateFormLogin(xfrm, function (a) {
+			if (a === false) { 
+				// Mostrar mensajes de error específicos para campos vacíos
+				if (xThis.xop === 2) {
+					var usuario = $('#div2 #usuarioIngresar').val();
+					var password = $('#div2 #passIngresar').val();
+					
+					if (!usuario) {
+						$('#div2 #usuarioIngresar')[0].invalid = true;
+					}
+					if (!password) {
+						$('#div2 #passIngresar')[0].invalid = true;
+					}
+				}
+				return; 
 			}
 
-		xRpts.push({'us':us,'p':p, 'co':correo});	
-		xThis.fire('xSend', {xRpts});
-	});	
-}
+			// Activar el indicador de carga
+			xThis.xIsLoading = true;
 
-Polymer({
-    is: 'x-user-login',
-    properties:{
-    	xdiv_visibles:{type:Array,value:[1,1,1]},    	
-    	xDialogTitulo:{type:String, value:'Incorrecto'},
-    	xDialogDetalle:{type:String, value:'Usuario o clave incorrecto'},
-    	xop:2,
-		xisNotificaPagar: {
-				type: Boolean,				
+			switch (xThis.xop) {
+				case 1:
+					correo = $('#div1 #correo').val();
+					break;
+				case 2:
+					us = $('#div2 #usuarioIngresar').val();
+					p = $('#div2 #passIngresar').val();
+					break;
+				case 3:
+					correo = $('#div3 #correo').val();
+					us = $('#div3 #usuario').val();
+					p = $('#div3 #pass').val();
+					p2 = $('#div3 #pass2').val();
+
+					if (p != p2) { 
+						p2 = ''; 
+						$('#div3 #pass2').val(''); 
+						xThis.xIsLoading = false;
+						return; 
+					}
+					break;
+			}
+
+			xRpts.push({ 'us': us, 'p': p, 'co': correo });
+			
+			// Enviar los datos y manejar la respuesta
+			setTimeout(() => {			
+				xThis.fire('xSend', { xRpts });
+			}, 1000);
+			
+			// El loading se desactivará cuando se reciba la respuesta
+			// en el evento correspondiente en logueese.js
+		});
+	}
+
+	Polymer({
+		is: 'x-user-login',
+		properties: {
+			xdiv_visibles: { type: Array, value: [1, 1, 1] },
+			xDialogTitulo: { type: String, value: 'Incorrecto' },
+			xDialogDetalle: { type: String, value: 'Usuario o clave incorrecto' },
+			xop: 2,
+			xisNotificaPagar: {
+				type: Boolean,
 				notify: true
 			},
-    	xtitulo:{type:String, value:'...'}
-    },
-    ready:function(){
-    	this.xop=2;
-		this.xisNotificaPagar = false;
-    	var xDivValVisible;
-    	$("#dialogMSj")
-    	$("#dialogMSj").on('iron-overlay-closed',function(){
-    		passIngresar.$.input.focus()
-		})
+			xMsjNotifica: {
+				type: String,
+				value: '',
+				notify: true
+			},
+			xtitulo: { type: String, value: '...' },
+			// Nuevas propiedades para el loading y mensajes de error
+			xIsLoading: {
+				type: Boolean,
+				value: false,
+				notify: true
+			},
+			xErrorCredenciales: {
+				type: Boolean,
+				value: false,
+				notify: true
+			}
+		},
+		ready: function () {
+			this.xop = 2;
+			this.xisNotificaPagar = false;
+			var xDivValVisible;
+			$("#dialogMSj")
+			$("#dialogMSj").on('iron-overlay-closed', function () {
+				passIngresar.$.input.focus()
+			})
 
-    	$("#div2 #UsuarioIngresar").focus();
-		$("#div2 #UsuarioIngresar").on('keyup',function(e){var code=e.which; 		
-			if ( code==13||code==186 ) {passIngresar.$.input.focus()}
-		})
-		$('#div2 #passIngresar').on('keyup',function(e){var code=e.which;
-			var code=e.which; if ( code==13||code==186 ) {xEnviar('div2')}
-		})
+			$("#div2 #UsuarioIngresar").focus();
+			$("#div2 #UsuarioIngresar").on('keyup', function (e) {
+				var code = e.which;
+				if (code == 13 || code == 186) { passIngresar.$.input.focus() }
+			})
+			$('#div2 #passIngresar').on('keyup', function (e) {
+				var code = e.which;
+				var code = e.which; if (code == 13 || code == 186) { xEnviar('div2') }
+			})
 
-    	for (var i = 0; i < this.xdiv_visibles.length; i++) {
-    		xDivValVisible=this.xdiv_visibles[i];
-    		switch (i){
-    			case 0://div1 - recuperar clave
-    				if(xDivValVisible===0){//no visible
-    					$("#div1").remove();
-    					$('.Btn_div1').remove();
-    				}
-    				break;
-    			case 1://div1 - login
-    				if(xDivValVisible===0){//no visible
-    					$("#div2").remove();
-    					$('.Btn_div2').remove();
-    				}
-    				break;
-    			case 2://div2 - registrarme
-    				if(xDivValVisible===0){//no visible
-    					$("#div3").remove();
-    					$('.Btn_div3').remove();
-    				}
-    				break;
-    		}
-    	};
-    	xThis=this; 
+			for (var i = 0; i < this.xdiv_visibles.length; i++) {
+				xDivValVisible = this.xdiv_visibles[i];
+				switch (i) {
+					case 0://div1 - recuperar clave
+						if (xDivValVisible === 0) {//no visible
+							$("#div1").remove();
+							$('.Btn_div1').remove();
+						}
+						break;
+					case 1://div1 - login
+						if (xDivValVisible === 0) {//no visible
+							$("#div2").remove();
+							$('.Btn_div2').remove();
+						}
+						break;
+					case 2://div2 - registrarme
+						if (xDivValVisible === 0) {//no visible
+							$("#div3").remove();
+							$('.Btn_div3').remove();
+						}
+						break;
+				}
+			};
+			xThis = this;
 
-		xThis.viewSedePay();
+			xThis.viewSedePay();
 
-    	/*$("#div2 #pass").keyup(function(e){
-			var code = e.which; // recommended to use e.which, it's normalized across browsers
-		    if(code==13)e.preventDefault();
-		    if(code==32||code==13||code==188||code==186){
-		        xEnviar('div2');
-		    }
-		});*/
-    },
-    xocurrencia:function(op){
-    	var dialogMSj=document.getElementById('dialogMSj');    	
-    	switch(op){
-    		case 0://clave o usuario incorrecto;
-    			$("#div2 #passIngresar").val('');
-    			$("#div2 #passIngresar").focus();
-    			this.xDialogTitulo='Incorrecto';
-    			this.xDialogDetalle='Usuario o clave incorrecto';
-				dialogMSj.open();
-    			break;
-    		case 1://usuario no disponible
-    			var xUsuNodisponible=$("#div3 #usuario").val();
-    			$("#div3 #usuario").val('');
-    			$("#div3 #usuario").focus();
-    			this.xDialogTitulo='No Disponible';
-    			this.xDialogDetalle='El usuario '+xUsuNodisponible+' no se encuentra disponible.';
-				dialogMSj.open();
-    			break;
-    	}
-    },
-	viewSedePay: function() {
-		const i = atob(localStorage.getItem('::app3_sys_last_s'));
-		$.ajax({ type: 'POST', url: 'bdphp/log_005.php?op=5000', data:{i:i}})
-		.done( function (dt) {
-			const _dt  = JSON.parse(dt).datos[0];
-			xThis.xisNotificaPagar = parseInt(_dt.notifica) === 1;
+			/*$("#div2 #pass").keyup(function(e){
+				var code = e.which; // recommended to use e.which, it's normalized across browsers
+				if(code==13)e.preventDefault();
+				if(code==32||code==13||code==188||code==186){
+					xEnviar('div2');
+				}
+			});*/
+		},
+		xocurrencia: function (op) {
+			// Desactivar el indicador de carga en todos los casos
+			this.xIsLoading = false;
+			
+			var dialogMSj = document.getElementById('dialogMSj');
+			switch (op) {
+				case 0://clave o usuario incorrecto;
+					$("#div2 #passIngresar").val('');
+					$("#div2 #passIngresar").focus();
+					
+					// Mostrar mensaje de error en línea en lugar del diálogo
+					this.xErrorCredenciales = true;
+					
+					// También mantener el diálogo por compatibilidad
+					this.xDialogTitulo = 'Incorrecto';
+					this.xDialogDetalle = 'Usuario o clave incorrecto';
+					// dialogMSj.open(); // Comentado para usar el mensaje en línea
+					break;
+				case 1://usuario no disponible
+					var xUsuNodisponible = $("#div3 #usuario").val();
+					$("#div3 #usuario").val('');
+					$("#div3 #usuario").focus();
+					this.xDialogTitulo = 'No Disponible';
+					this.xDialogDetalle = 'El usuario ' + xUsuNodisponible + ' no se encuentra disponible.';
+					dialogMSj.open();
+					break;
+				case 2: // Éxito en el login
+					// Solo desactivar el loading, el resto se maneja en logueese.js
+					this.xErrorCredenciales = false;
+					break;
+			}
+		},
+		viewSedePay: function () {
+			const i = atob(localStorage.getItem('::app3_sys_last_s'));
+			$.ajax({ type: 'POST', url: 'bdphp/log_005.php?op=5000', data: { i: i } })
+				.done(function (dt) {
+					const _dt = JSON.parse(dt).datos[0];
+					setTimeout(() => {
+						xThis.xisNotificaPagar = parseInt(_dt.notifica) === 1;
+						xThis.xMsjNotifica = _dt.msj_adicional;	
+						
+					}, 2000);
 
-			// console.log('dt', _dt);
-			// console.log('xThis.xisNotificaPagar', xThis.xisNotificaPagar);
-		});
-		
-	}
-});
+					console.log('dt notificacion de pago', _dt);
+					// console.log('xThis.xisNotificaPagar', xThis.xisNotificaPagar);
+				});
+
+		}
+	});
 </script>
-

@@ -24,10 +24,9 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
   
 
 // $(this).one('pageshow',function(){
-window.addEventListener('WebComponentsReady', function (e) {	
-
+window.addEventListener('WebComponentsReady', function (e) {
 	this.getFrase();
-
+	this.getFestivo();
 
 	console.log(
 		"Native HTML Imports?", 'import' in document.createElement('link'),
@@ -77,29 +76,43 @@ window.addEventListener('WebComponentsReady', function (e) {
 		var p=e.detail.xRpts[0].p;
 		var c=e.detail.xRpts[0].co;
 
-		xdialog.xopen();
-		// alert(JSON.stringify(e.detail));
+		// No mostrar el diálogo de carga, usamos el spinner en su lugar
+		// xdialog.xopen();
 		
 		switch(xul.xop){
 			case 1://
 				break;
 			case 2:
+				// Validar que los campos no estén vacíos
+				if (!u || !p) {
+					// Desactivar el loading
+					xul.xIsLoading = false;
+					return;
+				}
+
 				// localStorage.removeItem('::app3_woDUS');
-
-				$.ajax({ type: 'POST', url: 'bdphp/log.php?op=-1', data:{u:u, p:p}})
-				.done( function (dt) {
+				$.ajax({ 
+					type: 'POST', 
+					url: 'bdphp/log.php?op=-1', 
+					data: {u:u, p:p},
+					timeout: 10000 // 10 segundos de timeout
+				})
+				.done(function (dt) {
 					if(dt==1){
+						// Login exitoso
+						xul.xocurrencia(2); // Indicar éxito (desactiva el loading)
 						var printL = window.localStorage.getItem('::app3_woIpPrintLoC');
-
 						
 						//destruye sessuion // anterior
 						// $.ajax({ type: 'POST', url: 'bdphp/log.php?op=-103'})
 						// .done(res => {
-							setClearLocalStorage(false);
-							window.location = 'app/page/x-info-status/x-info-status.html';
-							if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL)};
+						setClearLocalStorage(false);
+						window.location = 'app/page/x-info-status/x-info-status.html';
+						if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL)};
 						// });
 						// window.localStorage.clear();
+						
+						// Comentado - código antiguo
 						// document.location.href='app/page/m_panel.html';
 						// location.href='app/page/m_panel.html';
 						// confirm('eee');
@@ -110,13 +123,13 @@ window.addEventListener('WebComponentsReady', function (e) {
 						// 	location.href='app/page/m_panel.html';
 						//  }
 						// window.Headers
-
-					}else{
-						xdialog.xclose();
-						//alert('Usuario o clave incorrecto');
+					} else {
+						// Credenciales incorrectas
 						xul.xocurrencia(0);
+						// Cerrar el diálogo de carga si estuviera abierto
+						xdialog.xclose();
 					}
-				});
+				})
 				break;
 			case 3://registrar
 				//verificar disponibilidad usuario
@@ -149,8 +162,40 @@ function getFrase() {
 	});
 }
 
-
-// (function() {
+function getFestivo() {
+	fetch('bdphp/log_005.php?op=10001')
+		.then(res => {
+			return res.json();
+		}).then(res => {
+			// Verificar si hay datos en la respuesta
+			if (res.datos && res.datos.length > 0) {
+				const data = res.datos[0];
+				console.log('getFestivo', data);
+				
+				// Actualizar el banner festivo con los datos de la BD
+				const festiveMessage = document.querySelector('.festive-message');
+				const festiveText = document.getElementById('festive-text');
+				const festiveIcon = document.getElementById('festive-icon');
+				
+				// Establecer el mensaje y la imagen
+				festiveText.textContent = data.mensaje;
+				festiveIcon.src = data.url_img;
+				
+				// Mostrar el banner
+				festiveMessage.style.display = 'block';
+			} else {
+				// Si no hay mensaje festivo para hoy, ocultar el banner
+				const festiveMessage = document.querySelector('.festive-message');
+				festiveMessage.style.display = 'none';
+			}
+		})
+		.catch(error => {
+			console.error('Error al obtener mensaje festivo:', error);
+			// En caso de error, ocultar el banner
+			const festiveMessage = document.querySelector('.festive-message');
+			festiveMessage.style.display = 'none';
+		});
+}
 // 	if ('registerElement' in document
 // 		&& 'import' in document.createElement('link')
 // 		&& 'content' in document.createElement('template')) {

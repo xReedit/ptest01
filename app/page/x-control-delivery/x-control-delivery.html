@@ -534,12 +534,28 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
 
     return rowData.map(x => {
                 var _datosDelivery;
-                const isDataJson = x.json_datos_delivery || x.json_datos_delivery !== '' ? true : false;
+                // Verificar si json_datos_delivery existe y no está vacío
+                const isDataJson = x.json_datos_delivery && x.json_datos_delivery !== '' ? true : false;
                 x.isDataJson = isDataJson;
                 
-
-                x.json_datos_delivery = isDataJson ? JSON.parse(x.json_datos_delivery) : []                                    
-                _datosDelivery = isDataJson ? x.json_datos_delivery.p_header.arrDatosDelivery : [];                 
+                // Verificar si json_datos_delivery ya es un objeto o necesita ser parseado
+                if (isDataJson) {
+                    if (typeof x.json_datos_delivery === 'string') {
+                        try {
+                            x.json_datos_delivery = JSON.parse(x.json_datos_delivery);
+                        } catch (e) {
+                            console.error('Error al parsear json_datos_delivery:', e);
+                            x.json_datos_delivery = [];
+                        }
+                    }
+                    // Si ya es un objeto, no necesita ser parseado
+                } else {
+                    x.json_datos_delivery = [];
+                }
+                
+                // Obtener datos de delivery de forma segura
+                _datosDelivery = isDataJson && x.json_datos_delivery.p_header && x.json_datos_delivery.p_header.arrDatosDelivery ? 
+                                x.json_datos_delivery.p_header.arrDatosDelivery : [];
 
                 // if ( !!_datosDelivery.direccion ) {
                 //     return;

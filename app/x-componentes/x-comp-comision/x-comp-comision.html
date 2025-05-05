@@ -1,0 +1,365 @@
+
+<dom-module id="x-comp-comision">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+
+            .comision-container {
+                /* margin: 10px 0; */
+                position: relative;
+                display: inline-block;
+            }
+
+            .comision-container {
+                display: flex;
+                align-items: stretch;
+            }
+            
+            .comision-button {
+                background-color: #f3f3f3;
+                border-radius: 4px 0 0 4px;
+                padding: 5px 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                min-width: 150px;
+                /* box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); */
+                font-weight: 500;
+                border: 1px solid #bdbdbd;
+                border-radius: 3px;
+            }
+
+            .comision-button iron-icon {
+                margin-left: 8px;
+            }
+            
+            .cancel-button {
+                background-color: #dc3545;
+                color: white;
+                border-radius: 0 4px 4px 0;
+                width: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                /* box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); */
+                margin-left: -5px;
+                border: 1px solid #bdbdbd;
+            }
+
+            .comision-input {
+                margin-top: 40px;
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                max-width: 300px;
+                z-index: 101;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+
+            .comision-input.visible {
+                display: block;
+            }
+
+            paper-input {
+                width: 100%;
+                --paper-input-container-input: {
+                    padding: 8px;
+                };
+                --paper-input-container: {
+                    padding: 0;
+                };
+            }
+
+            .suggestions {
+                border-radius: 4px;
+                position: absolute;
+                width: 100%;
+                max-width: 300px;
+                max-height: 200px;
+                overflow-y: auto;
+                background: white;
+                border: 1px solid #ddd;
+                border-top: none;
+                z-index: 100;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                display: none;
+            }
+
+            .suggestions.visible {
+                display: block;
+            }
+
+            .suggestion-item {
+                padding: 8px 16px;
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .suggestion-item:hover {
+                background-color: #f5f5f5;
+            }
+            
+            iron-icon[suffix] {
+                color: #5f6368;
+                cursor: pointer;
+            }
+
+            .suggestion-porcentaje {
+                color: #4285f4;
+                font-weight: bold;
+            }
+
+            paper-dialog {
+                width: 300px;
+                max-width: 300px;
+                padding: 16px;
+                border-radius: 8px;
+            }
+
+            .dialog-buttons {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 16px;
+            }
+
+            .dialog-buttons paper-button {
+                margin-left: 8px;
+            }
+
+            .save-button {
+                background-color: #4285f4;
+                color: white;
+            }
+
+            .cancel-button {
+                color: #ffffff;
+            }
+        </style>
+
+        <div hidden$="{{!isShowComponent}}" class="comision-container" on-tap="handleContainerClick">
+            <div class="comision-button" on-tap="toggleInput">
+                <span>{{buttonText}}</span>
+                <iron-icon icon="arrow-drop-down"></iron-icon>
+            </div>
+            
+            <template is="dom-if" if="{{selectedComision}}">
+                <div class="cancel-button" on-tap="cancelComision">
+                    <i class="fa fa-times style-scope x-comp-descuento text-white"></i>
+                </div>
+            </template>
+            
+            <div class="comision-input" id="comisionInputContainer">                
+                <div class="suggestions" id="suggestions">
+                    <template is="dom-repeat" items="{{filteredComisiones}}">
+                        <div class="suggestion-item" on-tap="selectComision" data-index$="{{index}}">
+                            <span>{{item.descripcion}}</span>
+                            <span class="suggestion-porcentaje">{{item.porcentaje}}%</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-comp-comision',
+
+            properties: {
+                comisiones: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    },
+                    notify: true
+                },
+                filteredComisiones: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                searchText: {
+                    type: String,
+                    value: ""
+                },
+                selectedComision: {
+                    type: Object,
+                    notify: true,
+                    value: null
+                },
+                _forceShowSuggestions: {
+                    type: Boolean,
+                    value: false
+                },
+                buttonText: {
+                    type: String,
+                    computed: '_computeButtonText(selectedComision)'
+                },
+                isShowComponent: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+            
+            _computeButtonText: function(selectedComision) {
+                return selectedComision ? selectedComision.descripcion + ' ' + selectedComision.porcentaje + '%' : 'Aplicar Comisión';
+            },
+
+            ready: function () {
+                // Cargar comisiones guardadas si existen
+                this._loadComisiones();
+                
+                // Cerrar sugerencias y el input al hacer clic fuera
+                document.addEventListener('click', function(e) {
+                    // No cerrar si el clic fue en el propio input o en el icono de flecha
+                    if (e.target === this.$.comisionInput || 
+                        (e.target.tagName === 'IRON-ICON' && e.target.icon === 'arrow-drop-down')) {
+                        return;
+                    }
+                    
+                    // Si el clic fue en el botón o dentro del componente, no hacer nada
+                    if (this.contains(e.target)) {
+                        return;
+                    }
+                    
+                    // Si el clic fue fuera, cerrar todo
+                    this.$.suggestions.classList.remove('visible');
+                    this.$.comisionInputContainer.classList.remove('visible');
+                }.bind(this));
+            },
+            
+            toggleInput: function(e) {
+                // Detener la propagación para evitar que handleContainerClick se active
+                if (e) {
+                    e.stopPropagation();
+                }
+                
+                this.$.comisionInputContainer.classList.toggle('visible');
+                if (this.$.comisionInputContainer.classList.contains('visible')) {
+                    this.showAllOptions();
+                    // Enfocar el input después de mostrarlo
+                    setTimeout(() => {
+                        if (this.$.comisionInput) {
+                            this.$.comisionInput.focus();
+                        }
+                    }, 100);
+                }
+            },
+            
+            handleContainerClick: function() {
+                // Si la lista de sugerencias está visible, ocultarla
+                if (this.$.suggestions.classList.contains('visible')) {
+                    this.$.suggestions.classList.remove('visible');
+                    this.$.comisionInputContainer.classList.remove('visible');
+                }
+            },
+
+            _loadComisiones: function () {
+                var self = this;
+                // Cargar comisiones directamente desde la base de datos
+                $.ajax({
+                    url: '../../bdphp/log_componentes.php?op=25',                                        
+                    success: function (response) {
+                        const data = JSON.parse(response);
+                        self.comisiones = data.datos;
+                        console.log('self.comisiones', self.comisiones);
+                        self.isShowComponent = self.comisiones.length > 0;
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error cargando comisiones:", error);
+                    }
+                });
+            },
+            
+            handleSearchInput: function(e) {
+                var text = this.searchText.toLowerCase().trim();
+                
+                // Filtrar comisiones que coincidan con el texto
+                if (text === '') {
+                    // Si está vacío, mostrar todas las comisiones
+                    this.filteredComisiones = this.comisiones.slice();
+                } else {
+                    this.filteredComisiones = this.comisiones.filter(function(comision) {
+                        return comision.descripcion.toLowerCase().includes(text);
+                    });
+                }
+                
+                // Mostrar sugerencias si hay texto o si se hizo clic en el campo
+                if (this.filteredComisiones.length > 0 || this._forceShowSuggestions) {
+                    this.$.suggestions.classList.add('visible');
+                } else {
+                    this.$.suggestions.classList.remove('visible');
+                }
+            },
+            
+            showAllOptions: function(e) {
+                // Prevenir que el evento se propague para evitar que el listener de documento lo cierre
+                if (e) {
+                    e.stopPropagation();
+                }
+                
+                // Marcar que queremos mostrar todas las sugerencias
+                this._forceShowSuggestions = true;
+                
+                // Mostrar todas las comisiones
+                this.filteredComisiones = this.comisiones.slice();
+                this.$.suggestions.classList.add('visible');
+            },
+            
+            selectComision: function(e) {
+                // Detener la propagación para evitar que handleContainerClick se active
+                if (e) {
+                    e.stopPropagation();
+                }
+                
+                var index = e.currentTarget.dataset.index;
+                var comision = this.filteredComisiones[index];
+                
+                // Cancelar cualquier timeout pendiente
+                if (this.searchTimeout) {
+                    clearTimeout(this.searchTimeout);
+                }
+                
+                // Actualizar selección
+                this.selectedComision = comision;
+                this.searchText = comision.descripcion;
+                
+                // Ocultar sugerencias y el input
+                this.$.suggestions.classList.remove('visible');
+                this.$.comisionInputContainer.classList.remove('visible');
+                this._forceShowSuggestions = false;
+                
+                // Notificar selección
+                this.fire('comision-selected', this.selectedComision);
+            },
+            
+            cancelComision: function(e) {
+                // Detener la propagación para evitar que handleContainerClick se active
+                if (e) {
+                    e.stopPropagation();
+                }
+                
+                // Eliminar la comisión seleccionada
+                this.selectedComision = null;
+                this.searchText = "";
+                
+                // Notificar que se canceló la comisión
+                // this.fire('comision-selected', null);
+                this.fire('comision-canceled', {});
+            },
+
+
+        });
+    </script>
+</dom-module>

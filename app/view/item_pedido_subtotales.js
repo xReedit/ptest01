@@ -416,6 +416,143 @@ function colocarDescuentoSubtotales(importeDesct, arrTotales, descripcionDesct =
 
 }
 
+/**
+ * Coloca o actualiza una comisión en los subtotales
+ * @param {Object} comisionData - Datos de la comisión seleccionada
+ * @param {Array} arrTotales - Array de totales del pedido
+ * @param {Boolean} isAgregaComision - Indica si se agrega o quita la comisión
+ * @returns {Array} - Array de totales actualizado
+ */
+function colocarComisionSubtotales(comisionData, arrTotales, isAgregaComision = true) {
+	// Validar que arrTotales sea un array válido
+	if (!arrTotales || !Array.isArray(arrTotales) || arrTotales.length === 0) {
+		return arrTotales || [];
+	}
+	
+	// Obtener la fila del total (siempre la última)
+	const rowTotal = arrTotales[arrTotales.length - 1];
+	if (!rowTotal) return arrTotales;
+	
+	// CASO 1: Eliminar comisiones
+	if (!isAgregaComision) {
+		// Eliminar todas las comisiones y recalcular
+		removeAllComisiones(arrTotales);
+		recalcularTotal(arrTotales);
+		actualizarIGV(arrTotales);
+		return arrTotales;
+	}
+	
+	// CASO 2: Si no hay datos de comisión, solo retornar
+	if (!comisionData) {
+		return arrTotales;
+	}
+	
+	// CASO 3: Agregar o actualizar comisión
+	// Buscar si ya existe esta comisión específica
+	const comisionId = 'com_' + comisionData.idconf_print_detalle;
+	const arrComision = arrTotales.find(x => x.id === comisionId || 
+										(x.idconf_print_detalle && x.idconf_print_detalle === comisionData.idconf_print_detalle));
+	
+	// Si la comisión ya existe, retornar sin hacer cambios
+	if (arrComision) {
+		console.log('La comisión ya existe, no se realizan cambios');
+		return arrTotales;
+	}
+	
+	// Calcular el importe de la comisión para la nueva comisión
+	const subtotal = parseFloat(rowTotal.importe);
+	const porcentaje = parseFloat(comisionData.porcentaje);
+	const importeComision = (subtotal * porcentaje / 100).toFixed(2);
+	
+	// Agregar nueva comisión
+	const nuevaComision = {
+			descripcion: comisionData.descripcion + ' ' + porcentaje + '%',
+			esImpuesto: 0,
+			id: comisionId,
+			importe: importeComision,
+			idconf_print_detalle: comisionData.idconf_print_detalle,
+			quitar: false,
+			tachado: false,
+			visible: true,
+			visible_cpe: true
+		};
+		
+		// Insertar antes del total
+		arrTotales.splice(arrTotales.length - 1, 0, nuevaComision);
+	
+	// Recalcular totales e IGV
+	recalcularTotal(arrTotales);
+	actualizarIGV(arrTotales);
+	
+	return arrTotales;
+}
+
+
+/**
+ * Elimina todas las comisiones del array de totales
+ * @param {Array} arrTotales - Array de totales
+ */
+function removeAllComisiones(arrTotales) {
+	// Identificar comisiones por ID o por idconf_print_detalle
+	const comisiones = arrTotales.filter(x => 
+		(x.id && typeof x.id === 'string' && x.id.startsWith('com_')) || 
+		x.idconf_print_detalle
+	);
+	
+	if (comisiones.length > 0) {
+		// Obtener índices a eliminar
+		const indicesToRemove = comisiones.map(com => arrTotales.indexOf(com))
+			.filter(index => index !== -1)
+			.sort((a, b) => b - a); // Ordenar de mayor a menor
+		
+		// Eliminar desde el índice mayor al menor
+		indicesToRemove.forEach(index => arrTotales.splice(index, 1));
+	}
+}
+
+/**
+ * Recalcula el total sumando todos los elementos excepto el total
+ * @param {Array} arrTotales - Array de totales
+ */
+function recalcularTotal(arrTotales) {
+	const rowTotal = arrTotales[arrTotales.length - 1];
+	if (!rowTotal) return;
+	
+	const totalCalculado = arrTotales
+		.filter(x => x && x.descripcion && x.descripcion.toUpperCase() !== 'TOTAL')
+		.map(x => parseFloat(x.importe || 0))
+		.reduce((a, b) => a + b, 0);
+	
+	rowTotal.importe = totalCalculado.toFixed(2);
+}
+
+/**
+ * Actualiza el IGV basado en el total
+ * @param {Array} arrTotales - Array de totales
+ */
+function actualizarIGV(arrTotales) {
+	const rowTotal = arrTotales[arrTotales.length - 1];
+	if (!rowTotal) return;
+	
+	// Verificar si tiene IGV activo
+	const xCartaSubtotalesIgv = xm_log_get('carta_subtotales');
+	const _rowIGVConfig = xCartaSubtotalesIgv.filter(x => x.descripcion === 'I.G.V')[0];
+	
+	if (_rowIGVConfig && _rowIGVConfig.activo && _rowIGVConfig.activo.toString() === "0") {
+		const rowIgv = arrTotales.find(x => x.descripcion === 'I.G.V');
+		const rowSubTotal = arrTotales[0];
+		
+		if (rowIgv && rowSubTotal) {
+			const porcentajeIGV = parseFloat(parseFloat(_rowIGVConfig.monto) / 100);
+			const totalOperacionesGravadas = xCalcMontoBaseIGV(rowTotal.importe, porcentajeIGV);
+			const totalIGV = parseFloat(rowTotal.importe - totalOperacionesGravadas).toFixed(2);
+			
+			rowIgv.importe = parseFloat(totalIGV).toFixed(2);
+			rowSubTotal.importe = (parseFloat(rowTotal.importe) - totalIGV).toFixed(2);
+		}
+	}
+}
+
 
 // quitamos servicio delivery y propina del subtotal
   // flagSolicitaRepartidor = cuando comercio con repartidor propio solicita repartidor de la red papaya express

@@ -87,16 +87,16 @@
                             <thead>
                                 <th>#</th>
                                 <th>Producto</th>
-                                <th>Cant</th>
-                                <th align="right">Importe</th>
+                                <th align="right">Cant</th>
+                                <!-- <th align="right">Importe</th> -->
                             </thead>
                             <tbody>
                                 <template is="dom-repeat" items="{{listDataTopPorciones}}" as="item">
                                     <tr>
                                         <td>{{displayIndex(index)}}</td>
                                         <td>{{ item.key }}</td>
-                                        <td>{{ item.value.count_show }}</td>
-                                        <td align="right">{{ item.value.importe_show }}</td>
+                                        <td align="right">{{ item.value.count_show }}</td>
+                                        <!-- <td align="right">{{ item.value.importe_show }}</td> -->
                                     </tr>
                                 </template>
                             </tbody>

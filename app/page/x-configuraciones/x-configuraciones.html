@@ -544,7 +544,10 @@
 							<br><br>
 
 							<h3 class="xBold">SERVICIOS NO FACTURABLES</h3>
-							<p>Servicios no facturables como: propinas o donativos, importes que no son percibido por el restaurante. <br> Por ejemplo para cargar el servicio de atencion (propinas) podria configurar: Descripcion: Servicio , Porcentaje: 10. <br> Esto sumaria 10% del total de la cuenta. Que seria percibido por el mozo que atendio el pedido o mesa.</p>
+							<p>Servicios no facturables como: propinas o donativos, importes que no son percibido por el restaurante. <br> Por ejemplo para cargar el servicio de atencion (propinas) podria configurar: Descripcion: Servicio , Porcentaje: 10. <br> Esto sumaria 10% del total de la cuenta. Que seria percibido por el mozo que atendio el pedido o mesa.
+							<br><br>
+							Si el servicio es opcional, se cobra siempre que el usuario lo marque.
+							</p>
 							<div class="xLinea2"></div><br>
 							<br>
 							<form method="post" id="formProcentajeNoFacturable">
@@ -552,11 +555,18 @@
 									<tr data-id="" class="xSinBorde">
 										<td><input type="text" class="xMiInput" placeholder="Descripcion" onChange="conMayusculas(this)" name="descripcion" id="descripcion" required></td>
 										<td><input type="number" min="0" class="xMiInput" placeholder="porcentaje" pattern="0|[1-9][0-9]*" name="porcentaje" id="porcentaje" required></td>
+										<td align="center">
+											<p>Opcional</p>
+											<paper-checkbox id="check_opcional_no_facturable" class="check_opcional"></paper-checkbox>
+										</td>
 										<td><paper-fab icon="add" onclick="xAddPorcentaje()" title="Guardar" tabindex="0"></paper-fab></td>
 									</tr>
 								</table>
 								<div class="xInvisible">
+									<input type="text" id="idsede" name="idsede">
+									<input type="text" id="idorg" name="idorg">
 									<input type="text" id="idconf_print" name="idconf_print">
+									<input type="text" id="is_opcional" name="is_opcional">
 								</div>
 							</form>
 							<br><br>
@@ -1893,10 +1903,28 @@ function xLoadPorcentaje(){
 
 		for (var i = 0; i < xdtPor.length; i++) {
 			const checkActivo = parseInt(xdtPor[i].activo) === 0 ? 'checked' : '';
+			xdtPor[i].isOpcional = xdtPor[i].is_opcional === '1';
 			if ( parseInt(xdtPor[i].es_impuesto) === 1 ) {
-				xCadenaPor = String(xCadenaPor+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td><paper-checkbox class="check_porcentaje_impuesto" '+ checkActivo +'></paper-checkbox></td><td>'+xdtPor[i].descripcion+'</td><td style="width: 25%;"><span onclick="xModRowImpuesto(this);">'+xdtPor[i].porcentaje+'</span></td></tr>');
+				xCadenaPor += `<tr class="row" data-t="conf_print_detalle" data-id="${xdtPor[i].idconf_print_detalle}">
+					<td>
+						<paper-checkbox class="check_porcentaje_impuesto" ${checkActivo}></paper-checkbox>
+					</td>
+					<td>${xdtPor[i].descripcion}</td>
+					<td style="width: 25%;">
+						<span onclick="xModRowImpuesto(this);">${xdtPor[i].porcentaje}</span>
+					</td>					
+				</tr>`;
 			} else {
-				xCadenaPorNoFacturable = String(xCadenaPorNoFacturable+'<tr class="row" data-t="conf_print_detalle" data-id="'+xdtPor[i].idconf_print_detalle+'"><td>'+xdtPor[i].descripcion+'</td><td>'+xdtPor[i].porcentaje+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
+				xCadenaPorNoFacturable += `<tr class="row" data-t="conf_print_detalle" data-id="${xdtPor[i].idconf_print_detalle}">
+					<td>${xdtPor[i].descripcion}</td>
+					<td>${xdtPor[i].porcentaje}</td>
+					<td>
+						<p class="fs-10 fw-600 text-primary">${xdtPor[i].isOpcional == '1' ? 'Opcional' : 'Aplica Automaticamente'}</p>
+					</td>
+					<td>
+						<div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div>
+					</td>
+				</tr>`;
 			}			
 		};
 
@@ -1934,9 +1962,21 @@ function xAddPorcentaje(){
 	xcadena='';
 	xvalidateForm('formProcentajeNoFacturable',function(a){
 		if(a===false){return;}
+		$("#formProcentajeNoFacturable #idsede").val(xThisConfig.xt_idsede);
+		$("#formProcentajeNoFacturable #idorg").val(xThisConfig.xt_org);
 		$("#formProcentajeNoFacturable #idconf_print").val(xIdConf);
+		const isOpional = check_opcional_no_facturable.checked ? '1' : '0';
+		const isTextOpcional = isOpional === '0' ? 'Aplica Automaticamente' : 'Opcional';		
+		$("#formProcentajeNoFacturable #is_opcional").val(isOpional);
+
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=conf_print_detalle",$("#formProcentajeNoFacturable").serialize(),function(xUltimoId){
-			xcadena=String(xcadena+'<tr class="row" data-t="conf_print_detalle" data-id="'+xUltimoId+'"><td>'+$("#formProcentajeNoFacturable #descripcion").val()+'</td><td>'+$("#formProcentajeNoFacturable #porcentaje").val()+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
+			// xcadena=String(xcadena+'<tr class="row" data-t="conf_print_detalle" data-id="'+xUltimoId+'"><td>'+$("#formProcentajeNoFacturable #descripcion").val()+'</td><td>'+$("#formProcentajeNoFacturable #porcentaje").val()+'</td><td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>');
+			xcadena = `<tr class="row" data-t="conf_print_detalle" data-id="${xUltimoId}">
+				<td>${$("#formProcentajeNoFacturable #descripcion").val()}</td>
+				<td>${$("#formProcentajeNoFacturable #porcentaje").val()}</td>
+				<td align="center"><p class="fs-10 fw-600 text-primary">${isTextOpcional}</p></td>
+				<td><div class="xDeleteRow" onClick="xDialogBorrarObj(this)" title="Borrar"></div></td></tr>`
+
 			$("#tb_porcentaje_no_facturable").append(xcadena).trigger('create');
 			$('#tb_porcentaje_no_facturable').reset();
 			$("#tb_porcentaje_no_facturable #descripcion").focus();

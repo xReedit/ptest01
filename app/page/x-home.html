@@ -10,6 +10,7 @@
 	<!-- <link rel="import" href="../page/x-configuraciones/x-holding/x-pedidos-holding.html">
 	<link rel="import" href="../page/x-configuraciones/x-holding/x-pedidos-meseros.html"> -->
 	<!-- <link rel="import" href="../page/x-configuraciones/x-holding/x-pedidos-by-marca.html"> -->
+	<!-- <link rel="import" href="../x-componentes/x-comp-comision/x-comp-comision.html"> -->
 	<template>
 		<!-- <x-edit-tipo-precio></x-edit-tipo-precio> -->
 		<!-- <x-config-sede-opciones></x-config-sede-opciones> -->
@@ -32,8 +33,8 @@
 		<!-- <x-pedidos-holding></x-pedidos-holding>		 -->
 		<!-- <x-pedidos-meseros></x-pedidos-meseros> -->
 		<!-- <x-pedidos-by-marca></x-pedidos-by-marca> -->
+		<!-- <x-comp-comision id="comisionSelector" on-comision-selected="handleComisionSelected"></x-comp-comision> -->
 		<br>
-
 		<div id="xBodyOp">
 		</div>
 		<!--div id="Div_op1">
@@ -126,6 +127,11 @@ function xIniHome(){
 		e.stopImmediatePropagation()
 		return false;
 	})
+
+	const compComision = document.getElementById('comisionSelector');
+	compComision.addEventListener('comision-selected', function(e) {
+		console.log('Comision seleccionada:', e.detail.comision);
+	});
 }
 function xLoadAcc(){
 		/*

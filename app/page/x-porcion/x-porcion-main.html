@@ -133,6 +133,7 @@ var xThisProPor;
                 xdtPor = xdtPor.datos.map(x => { x.modificado = false; return x });
                 xThisProPor.listPorciones = xdtPor;
                 for (var i = 0; i < xdtPor.length; i++) {
+                    xdtPor[i].stock = parseFloat(xdtPor[i].stock);
                     xtr_stock_por = xdtPor[i].stock;
                     xcadena_por = String(xcadena_por + '<tr class="row" data-idp="' + xdtPor[i].idporcion + '">'
                         + '<td>' + xdtPor[i].familia + '</td>'

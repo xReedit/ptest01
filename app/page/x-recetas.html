@@ -387,10 +387,15 @@ function xAddItemIngrediente(){
 	const vieneDe = xThis.isFromRecetaProducto ? '2' : '1';
 	const idProductoReceta = xThis.isFromRecetaProducto ? _productoSelected.value : 0;
 	const _descripcionProducto = xThis.isFromRecetaProducto ? _productoSelected.label : xdes_ingrediente;	
-	let _cantidad = xThis.isFromRecetaProducto && _productoSelected.idunidad_conversion ? xcan_item / _productoSelected.factor_conversion : xcan_item;
+	let _cantidad = xcan_item;
+
+	if ( xThis.isFromRecetaProducto  ) {
+		const _rptCalculo = calcularCantidadDescuento(xcan_item, xThis.undConvercion, _productoSelected);
+		_cantidad = _rptCalculo.cantidadDescontar;
+	}
 
 	// si cantidad es infinity
-	if (!isFinite(_cantidad)) {
+	if (isNaN(_cantidad) || !isFinite(_cantidad)) {
 		_cantidad = xcan_item;
 	}
 
@@ -442,6 +447,68 @@ function xAddItemIngrediente(){
 	$("#cant_item").val('');
 	$("#des_porcion").focus();
 }
+
+	/**
+	 * Calcula la cantidad exacta a descontar del inventario basado en la cantidad usada en la receta
+	 * y los objetos de unidad de conversión y producto seleccionado.
+	 * 
+	 * @param {number} cantidadReceta - Cantidad usada en la receta (ej: 3 para 3 onzas de pisco)
+	 * @param {Object} undConvercion - Objeto con información de la unidad de conversión
+	 * @param {Object} productoSeleccionado - Objeto con información del producto seleccionado
+	 * @returns {Object} Objeto con la cantidad a descontar y detalles adicionales
+	 */
+	function calcularCantidadDescuento(cantidadReceta, undConvercion, productoSeleccionado) {
+		// Validar parámetros de entrada
+		if (isNaN(cantidadReceta) || cantidadReceta <= 0) {
+			return {
+				error: true,
+				mensaje: 'La cantidad de la receta debe ser un número positivo',
+				cantidadDescontar: 0
+			};
+		}
+
+		// Extraer información relevante de los objetos
+		const unidadReceta = undConvercion.abreviatura || '';
+		const factorConversion = parseFloat(productoSeleccionado.factor_conversion) || 0;
+
+		// Obtener la unidad de kardex (podría necesitar una consulta adicional)
+		// const unidadInventario = obtenerAbreviaturaUnidadKardex(productoSeleccionado.idunidad_kardex) || 'LT';
+
+		if (!factorConversion || factorConversion <= 0) {
+			return {
+				error: true,
+				mensaje: 'El factor de conversión debe ser un número positivo',
+				cantidadDescontar: cantidadReceta
+			};
+		}
+
+		// Calcular la cantidad a descontar del inventario
+		const cantidadDescontar = cantidadReceta / factorConversion;
+
+		// Verificar si el resultado es válido
+		if (isNaN(cantidadDescontar) || !isFinite(cantidadDescontar)) {
+			return {
+				error: true,
+				mensaje: 'Error en el cálculo de conversión',
+				cantidadDescontar: cantidadReceta
+			};
+		}
+
+		// Redondear a 4 decimales para evitar errores de punto flotante
+		const cantidadRedondeada = parseFloat(cantidadDescontar.toFixed(4));
+
+		// Devolver un objeto con toda la información relevante
+		return {
+			error: false,
+			cantidadReceta: cantidadReceta,
+			unidadReceta: unidadReceta,
+			cantidadDescontar: cantidadRedondeada,
+			// unidadInventario: unidadInventario,
+			factorConversion: factorConversion,
+			textoReceta: `${cantidadReceta} ${unidadReceta}`,
+			textoInventario: `${cantidadRedondeada} `
+		};
+	}
 
 function removeItemListReceta(idRow){
 	const index = xThis.listItemsReceta.findIndex(item => item.idrow === idRow);

@@ -1,5 +1,76 @@
 <dom-module id="x-cuentas-por-cobrar">
-    <template>        
+    <script src="../../view/xSOAPSunat.js"></script>
+    
+    <template>  
+        
+        
+
+        <!-- Diálogo para mostrar detalles del consumo -->
+        <paper-dialog id="dialog_registro_detalle_consumo" class="dialog_redondo"
+            style="overflow: auto; overscroll-behavior: auto; min-width: 50%; max-width: 700px;"
+            entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+        
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="d-flexx justify-content-between align-items-center header-dialog">
+                        <h4>Detalle del Consumo</h4>
+                        <button class="btn btn-sm btn-secondary ml-2" dialog-dismiss>X</button>
+                    </div>
+                    <div class="modal-body mt-3">
+                        <div id="detalle-consumo-contenido">                            
+                            <!-- Aquí se cargará dinámicamente el contenido del detalle -->
+                            <div>       
+                                <p><strong>Fecha Consumo:</strong> {{consumoDetalle.fecha_consumo}}</p>
+                                <p><strong>Transcurrido:</strong> {{consumoDetalle.pasaron}}</p>                                                                
+                            </div>
+                            <br>
+                            <table class="w-100">
+                                <thead>
+                                    <tr>
+                                        <th>Descripción</th>
+                                        <th align="center">Cantidad</th>
+                                        <th align="right">Precio</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detalle-items">
+                                    <!-- Aquí se cargarán los items -->
+                                    <template is="dom-repeat" items="[[listItemsConsumo]]">
+                                        <tr>
+                                            <td>{{item.descripcion}}</td>
+                                            <td align="center">{{item.cantidad}}</td>
+                                            <td align="right">{{item.ptotal}}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                            
+                            <br>
+                            <div style="display: flex; align-items: flex-end; flex-direction: column;" class="mr-2">
+                                <p><strong>Total Consumo:</strong> {{consumoDetalle.importe}}</p>
+                                <p><strong>Total Pagado:</strong> {{consumoDetalle.pagado}}</p>
+                                <p><strong>Debe Aún:</strong> {{consumoDetalle.debe}}</p>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" hidden$="[[!tieneComprobante(consumoDetalle.external_id)]]" on-tap="verPdfComprobante">
+                            <i class="fa fa-file-pdf-o"></i> Ver Comprobante
+                        </button>
+                        <button dialog-dismiss class="btn btn-secondary">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </paper-dialog>
+
+
+
+
+
+
+
+
+
         <div class="p-2">
             <div class="d-flexx justify-content-between">
                 <p class="fw-600 fs-15">Cuentas por Cobrar</p>
@@ -109,28 +180,39 @@
                 <section>
                     <div class="grid-container">
                         <div class="column1">
-                            <div class="column-title">
+                            <div class="column-title d-flex justify-content-between align-items-center">
                                 <p>Consumos al credito</p>
+                                <p class="fw-600 text-primary">Total: <span id="total-consumos-credito">0.00</span></p>
                             </div>
                             <div class="div-table">
                                 <table class="w-100 fs-12">
                                     <thead>
+                                        <th style="width: 30px;"><input type="checkbox" id="check-all-consumos" onclick="selectAllConsumos(this)"></th>
                                         <th>#</th>
                                         <th>Fecha</th>
                                         <th>Consumo</th>
                                         <th>Pagado</th>
-                                        <th>Debe</th>
+                                        <th>Debe</th>                                        
                                     </thead>
                                     <tbody>
                                         <template is="dom-repeat" items="{{listConsumosCreditoCliente}}">
                                             <tr>
+                                                <td>
+                                                    <input type="checkbox" class="consumo-check" data-index="{{index}}" data-id="{{item.idregistro_pago_detalle}}" data-debe="{{item.debe}}" onclick="calcularTotalSeleccionado()">
+                                                </td>
                                                 <td>{{displayIndex(index)}}</td>
                                                 <td>
                                                     <p>{{item.fecha}}</p>
                                                     <p hidden$="[[item.isCuentaPagada]]" class="fs-10 text-secondary">{{item.pasaron}}</p>
                                                     <span hidden$="[[!item.isCuentaPagada]]" class="badge badge-primary">{{item.pasaron}}</span>
                                                 </td>
-                                                <td>{{item.total}}</td>
+                                                <td>
+                                                    {{item.total}}
+                                                    <button class="btn btn-sm btn-xsm xBoton_flat_2" data-id="{{item.idregistro_pago_detalle}}"
+                                                        onclick="verDetalleConsumo(this)">
+                                                        Ver
+                                                    </button>
+                                                </td>
                                                 <td>{{item.pagado}}</td>
                                                 <td>{{item.debe}}</td>
                                             </tr>
@@ -141,8 +223,9 @@
                         </div>
 
                         <div class="column2">
-                            <div class="column-title">
+                            <div class="column-title d-flex justify-content-between align-items-center">
                                 <p>Historial de Pagos</p>
+                                <p class="fw-600 text-success">Total: <span id="total-historial-pagos">0.00</span></p>
                             </div>
                             <div class="div-table">
                                 <table class="w-100 fs-12">
@@ -192,6 +275,12 @@
                         <div>
                             <p class="fw-600 fs-15">Importe a Pagar</p>
                             <p class="fs-11 text-secondary">Indique aqui el importe que pagará</p>
+                            
+                            <!-- Etiqueta para mostrar el importe seleccionado -->
+                            <div id="div-importe-seleccionado" style="display: none; margin-bottom: 5px;">
+                                <p class="fw-600 fs-13 text-primary">Importe seleccionado: <span id="importe-seleccionado">0.00</span></p>
+                            </div>
+                            
                             <input 
                                 type="number"
                                 class="xMiInput fs-23 fw-600" 
@@ -352,6 +441,11 @@
             // cargar los consumos del cliente
             xPopupLoad.xopen();
             xThisCuentasPorCobrar.enabledBtnCobrarCuenta = false;
+            
+            // Resetear la etiqueta de importe seleccionado
+            const divImporteSeleccionado = document.getElementById('div-importe-seleccionado');
+            if (divImporteSeleccionado) divImporteSeleccionado.style.display = 'none';
+            
             const _dataSend = {
                 idcliente: xThisCuentasPorCobrar.objCuentaCobrar.idcliente
             }
@@ -365,6 +459,17 @@
                     x.isCuentaPagada = x.flag_pagado == '1';
                     return x;
                 });
+                
+                // Calcular y mostrar el total de consumos al crédito
+                let totalConsumosCredito = 0;
+                rpt.datos.forEach(item => {
+                    totalConsumosCredito += parseFloat(removeComas(item.debe));
+                });
+                
+                const spanTotalConsumosCredito = document.getElementById('total-consumos-credito');
+                if (spanTotalConsumosCredito) {
+                    spanTotalConsumosCredito.textContent = totalConsumosCredito.toFixed(2);
+                }
                 // suma los totales
                 let _totalesListCreditoCliente = {
                     total: 0,
@@ -388,6 +493,19 @@
                 _totalesListCreditoCliente.debe_show = _totalesListCreditoCliente.debe;
                 
                 xThisCuentasPorCobrar.arrTotalesListCreditoCliente = _totalesListCreditoCliente;
+                
+                // Resetear los checkboxes después de cargar los datos
+                setTimeout(() => {
+                    // Resetear el checkbox principal
+                    const checkAll = document.getElementById('check-all-consumos');
+                    if (checkAll) checkAll.checked = false;
+                    
+                    // Resetear todos los checkboxes individuales
+                    const consumoChecks = document.querySelectorAll('.consumo-check');
+                    consumoChecks.forEach(check => {
+                        check.checked = false;
+                    });
+                }, 100);
             }
 
             xListCuentaPagarHistoriaPagosCliente(); // historial de pagos
@@ -410,7 +528,70 @@
                     x.hora = x.fecha_hora.split(' ')[1];
                     return x;
                 });
+                
+                // Calcular y mostrar el total del historial de pagos
+                let totalHistorialPagos = 0;
+                rpt.datos.forEach(item => {
+                    totalHistorialPagos += parseFloat(removeComas(item.importe));
+                });
+                
+                const spanTotalHistorialPagos = document.getElementById('total-historial-pagos');
+                if (spanTotalHistorialPagos) {
+                    spanTotalHistorialPagos.textContent = totalHistorialPagos.toFixed(2);
+                }
 
+            }
+        }
+
+        // Función para seleccionar/deseleccionar todos los consumos
+        function selectAllConsumos(checkbox) {
+            const isChecked = checkbox.checked;
+            const consumoChecks = document.querySelectorAll('.consumo-check');
+            
+            consumoChecks.forEach(check => {
+                check.checked = isChecked;
+            });
+            
+            // Calcular el total de las cuentas seleccionadas
+            calcularTotalSeleccionado();
+        }
+        
+        // Función para calcular el total de las cuentas seleccionadas
+        function calcularTotalSeleccionado() {
+            const consumosSeleccionados = document.querySelectorAll('.consumo-check:checked');
+            let totalSeleccionado = 0;
+            
+            // Sumar los importes de los consumos seleccionados
+            consumosSeleccionados.forEach(check => {
+                const debe = parseFloat(removeComas(check.dataDebe));
+                if (!isNaN(debe)) {
+                    totalSeleccionado += debe;
+                }
+            });
+            
+            // Mostrar u ocultar la etiqueta de importe seleccionado
+            const divImporteSeleccionado = document.getElementById('div-importe-seleccionado');
+            const spanImporteSeleccionado = document.getElementById('importe-seleccionado');
+            
+            if (consumosSeleccionados.length > 0) {
+                // Hay consumos seleccionados, mostrar la etiqueta
+                if (divImporteSeleccionado) divImporteSeleccionado.style.display = 'block';
+                if (spanImporteSeleccionado) spanImporteSeleccionado.textContent = totalSeleccionado.toFixed(2);
+            } else {
+                // No hay consumos seleccionados, ocultar la etiqueta
+                if (divImporteSeleccionado) divImporteSeleccionado.style.display = 'none';
+            }
+            
+            // Actualizar el campo de importe a pagar
+            const inputImporte = document.getElementById('txt_importe_pago_cuenta_credito');
+            if (inputImporte) {
+                inputImporte.value = totalSeleccionado.toFixed(2);
+                // Marcar que el valor proviene de los checkboxes
+                inputImporte.fromCheckbox = true;
+                // Disparar el evento para actualizar los cálculos
+                xValidarBtnPagoCuentaCobrar(inputImporte);
+                // Restablecer la bandera
+                inputImporte.fromCheckbox = false;
             }
         }
 
@@ -428,6 +609,22 @@
                 if ( _pagado > 0 ) {
                     xThisCuentasPorCobrar.enabledBtnCobrarCuenta = true;
                 }
+            }
+            
+            // Si el usuario modifica manualmente el importe, desmarcar checkboxes y ocultar etiqueta
+            if (!obj.fromCheckbox) {
+                // Ocultar la etiqueta de importe seleccionado
+                const divImporteSeleccionado = document.getElementById('div-importe-seleccionado');
+                if (divImporteSeleccionado) divImporteSeleccionado.style.display = 'none';
+                
+                // Desmarcar todos los checkboxes
+                const checkAll = document.getElementById('check-all-consumos');
+                if (checkAll) checkAll.checked = false;
+                
+                const consumoChecks = document.querySelectorAll('.consumo-check');
+                consumoChecks.forEach(check => {
+                    check.checked = false;
+                });
             }
 
             let _importeDebe = parseFloat(xThisCuentasPorCobrar.arrTotalesListCreditoCliente.debe);
@@ -470,36 +667,94 @@
 
         }
 
+        // Función auxiliar para procesar un consumo y calcular el pago
+        function procesarConsumo(consumo, importeDisponible) {
+            let resultado = {
+                importeRestante: importeDisponible,
+                itemPagado: null
+            };
+            
+            if (importeDisponible <= 0) return resultado;
+            
+            let _debeRow = parseFloat(removeComas(consumo.debe));
+            if (_debeRow <= 0) return resultado; // Si no debe nada, no procesar
+            
+            let _diferencia = importeDisponible - _debeRow;
+            let _pagadoRow = parseFloat(removeComas(consumo.pagado));
+            
+            // Restar el importe de este consumo del disponible
+            resultado.importeRestante = Math.max(0, _diferencia);
+            
+            if (_diferencia >= 0) {
+                // Puede pagar todo este consumo
+                _pagadoRow = parseFloat(consumo.importe);
+                _debeRow = 0;
+            } else {
+                // Pago parcial
+                _diferencia = Math.abs(_diferencia);
+                _pagadoRow = parseFloat(consumo.importe) - _diferencia;
+                _debeRow = _diferencia;
+            }
+            
+            resultado.itemPagado = {
+                idregistro_pago_detalle: consumo.idregistro_pago_detalle,
+                pagado: _pagadoRow,
+                flag_pagado: _debeRow == 0 ? '1' : '0'
+            };
+            
+            return resultado;
+        }
+        
         async function xShowProccessPagoCuentaCredito() {
             xPopupLoad.xopen();
 
+            // Verificar si hay consumos seleccionados
+            const consumosSeleccionados = document.querySelectorAll('.consumo-check:checked');
+            const haySeleccionados = consumosSeleccionados.length > 0;
+            
             // elaborar lista de item pagados de listCuentasPagar con el importe recibido
             let arrListItemsPagados = [];
-            let importePagado = xThisCuentasPorCobrar.importePagadoCuentaCobrar            
-            xThisCuentasPorCobrar.listConsumosCreditoCliente.map(x => {
-                if (importePagado > 0) {
-                    let _debeRow = parseFloat(removeComas(x.debe));
-                    let _diferencia = importePagado - _debeRow;
-                    let _pagadoRow = x.pagado;
-
-                    importePagado -= _debeRow;
-
-                    if (_diferencia > 0) {
-                        _pagadoRow = x.importe;
-                        _debeRow = 0;
-                    } else {
-                        _diferencia = _diferencia * -1;
-                        _pagadoRow = x.importe - _diferencia;
-                        _debeRow = _diferencia;
+            let importePagado = xThisCuentasPorCobrar.importePagadoCuentaCobrar;
+            
+            if (haySeleccionados) {
+                // Procesar solo los consumos seleccionados
+                // Crear un mapa de índices seleccionados para acceso rápido
+                const indicesSeleccionados = new Map();
+                consumosSeleccionados.forEach(check => {
+                    const index = parseInt(check.dataIndex);
+                    indicesSeleccionados.set(index, true);
+                });
+                
+                // Procesar solo los consumos seleccionados en el orden original
+                xThisCuentasPorCobrar.listConsumosCreditoCliente.forEach((consumo, index) => {
+                    // Solo procesar si este consumo está seleccionado
+                    if (indicesSeleccionados.has(index) && importePagado > 0) {
+                        const resultado = procesarConsumo(consumo, importePagado);
+                        importePagado = resultado.importeRestante;
+                        
+                        if (resultado.itemPagado) {
+                            arrListItemsPagados.push(resultado.itemPagado);
+                        }
                     }
-
-                    arrListItemsPagados.push({
-                        idregistro_pago_detalle: x.idregistro_pago_detalle,
-                        pagado: _pagadoRow,
-                        flag_pagado: _debeRow == 0 ? '1' : '0'
-                    })
+                });
+            } else {
+                // Si no hay selecciones, procesar por antigüedad (del más antiguo al más nuevo)
+                // Ordenamos los consumos por idregistro_pago_detalle asc
+                const consumosOrdenados = [...xThisCuentasPorCobrar.listConsumosCreditoCliente]
+                    .sort((a, b) => a.idregistro_pago_detalle - b.idregistro_pago_detalle);
+                
+                // Procesar los consumos ordenados
+                for (const consumo of consumosOrdenados) {
+                    if (importePagado <= 0) break; // No hay más importe disponible
+                    
+                    const resultado = procesarConsumo(consumo, importePagado);
+                    importePagado = resultado.importeRestante;
+                    
+                    if (resultado.itemPagado) {
+                        arrListItemsPagados.push(resultado.itemPagado);
+                    }
                 }
-            })
+            }
             
             // return;
 
@@ -535,6 +790,82 @@
             $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '11', data: _dataSend} })
         }
 
+        function verPdfComprobante() {
+            if (this.consumoDetalle.external_id == 0) return;
+            xSoapSunat_DownloadFile('pdf', this.consumoDetalle.external_id);
+        }
+        
+        // Función para ver el detalle de un consumo
+        async function verDetalleConsumo(button) {
+            const idRegistroPagoDetalle = button.dataId;
+            if (!idRegistroPagoDetalle) return;
+            
+            xPopupLoad.xopen();
+            
+            try {
+                // Buscar el consumo en la lista actual
+                const consumo = xThisCuentasPorCobrar.listConsumosCreditoCliente.find(
+                    item => item.idregistro_pago_detalle == idRegistroPagoDetalle
+                );
+                
+                if (!consumo) {
+                    xAlert.error('No se encontró información del consumo');
+                    xPopupLoad.xclose();
+                    return;
+                }
+                
+                // Obtener los items del consumo desde el servidor                
+                $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2003', data: { i: consumo.idregistro_pago } })
+                .done(function (rpt) {
+                    rpt = JSON.parse(rpt);
+                    console.log(rpt);
+                    if (rpt.success && rpt.datos) {                        
+                        consumo.fecha_consumo = xDevolverFechaDada2(consumo.fecha)
+                        xThisCuentasPorCobrar.consumoDetalle = consumo;
+                        xThisCuentasPorCobrar.listItemsConsumo = rpt.datos;                        
+                        dialog_registro_detalle_consumo.open();
+                    }
+                })
+                        
+                
+                
+                
+                // if (rpt.success && rpt.datos) {
+                //     // Limpiar la tabla de items
+                //     const tbodyItems = document.getElementById('detalle-items');
+                //     tbodyItems.innerHTML = '';
+                    
+                //     // Agregar los items a la tabla
+                //     rpt.datos.forEach((item, index) => {
+                //         const tr = document.createElement('tr');
+                        
+                //         // Crear las celdas con la información del item
+                //         tr.innerHTML = `
+                //             <td>${index + 1}</td>
+                //             <td>${item.descripcion}</td>
+                //             <td>${item.cantidad}</td>
+                //             <td>${item.precio}</td>
+                //             <td>${(parseFloat(item.cantidad) * parseFloat(item.precio)).toFixed(2)}</td>
+                //         `;
+                        
+                //         tbodyItems.appendChild(tr);
+                //     });
+                // } else {
+                //     // Si no hay items o hubo un error, mostrar un mensaje
+                //     const tbodyItems = document.getElementById('detalle-items');
+                //     tbodyItems.innerHTML = `<tr><td colspan="5" class="text-center">No hay items disponibles para este consumo</td></tr>`;
+                // }
+                
+                // Mostrar el modal
+                // $('#modal-detalle-consumo').modal('show');
+            } catch (error) {
+                console.error('Error al cargar el detalle del consumo:', error);
+                xAlert.error('Error al cargar el detalle del consumo');
+            } finally {
+                xPopupLoad.xclose();
+            }
+        }
+
         Polymer({
                 is: 'x-cuentas-por-cobrar',
                 properties: {
@@ -551,6 +882,16 @@
                     enabledBtnCobrarCuenta: Boolean,
                     importePagadoCuentaCobrar: Number,
                     showHistoryPagos: Boolean,
+                    listItemsConsumo: Array,
+                    consumoDetalle: Object
+                },
+                tieneComprobante: function(externalId) {
+                    return externalId && externalId != 0;
+                },
+                
+                verPdfComprobante: function() {
+                    if (!this.consumoDetalle || !this.consumoDetalle.external_id || this.consumoDetalle.external_id == 0) return;
+                    xSoapSunat_DownloadFile('pdf', this.consumoDetalle.external_id);
                 },
                 attached: function () {
                     this.importePagadoCuentaCobrar = 0
@@ -565,4 +906,6 @@
                 },
             })
     </script>
+    
+    
 </dom-module>

@@ -63,7 +63,7 @@
                                                     <div>
                                                         {{subitem.des}}
                                                         <span class="xprecio" hidden$="[[!subitem.cantidad_visible]]">
-                                                            | [[subitem.cantidad]]
+                                                            | {{subitem.cantidad}}
                                                         </span>                                                        
                                                     </div>
                                                     <div class="d-flexx align-content-center align-items-center">
@@ -406,7 +406,7 @@
             });
 
             xThisComSubItem.listContentSub = itemPedidos_objItemSelected.subitems;
-            // console.log('xThisComSubItem.listContentSub', xThisComSubItem.listContentSub);
+            console.log('xThisComSubItem.listContentSub', xThisComSubItem.listContentSub);
             
             isExistSubitems = true;
             
@@ -589,7 +589,7 @@
     }
 
     function cocinarListSubItemsView() {
-
+        console.log('cocinarListSubItemsView', xThisComSubItem.listContentSub);
 
         if (xThisComSubItem.listContentSub.length > 0) {
             xThisComSubItem.listContentSub.map( z => {                
@@ -600,6 +600,7 @@
                 // z.isRequeridComplet = !z.isObligatorio ? true : false;
 
                 z.opciones.map(x => {
+                    x.cantidad = parseFloat(x.cantidad);
                     x.iditem_subitem = x.iditem_subitem;                
                     x.precio_visible = parseFloat(x.precio) === 0 ? false : true;
                     x.precio = x.precio_visible ? parseFloat(x.precio) : 0;

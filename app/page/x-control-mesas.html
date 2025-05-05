@@ -7,6 +7,7 @@
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-btn-permiso.html">
 	<link rel="import" href="../x-componentes/x-comp-btn-permiso/x-comp-dialog-permiso.html">
 	<link rel="import" href="../x-componentes/x-comp-area-mesa/x-comp-area-mesa.html">
+	<link rel="import" href="../x-componentes/x-comp-comision/x-comp-comision.html">
 
 	<script src="../view/httpFech.js"></script>
 	<script src="../view/cupon_manager.js"></script>
@@ -262,6 +263,8 @@
 
 										<!-- <button class="btn btn-sm btn-warning"><i class="fa fa-sort-amount-desc"></i> Aplicar Descuento</button> -->
 										<x-comp-descuento nom-table-pedido="tb_det_pedidos" id="component_descuento_pedido" importeventa$="[[ importeTotalPedido ]]"></x-comp-descuento>
+
+										<x-comp-comision class="mt-2" id="component_comision_pedido"></x-comp-comision>
 
 										<br><br>
 										</div>
@@ -1127,6 +1130,31 @@ function xIniControlMesa(){
 		const _areaTitle = `.${e.detail.title}`;
 		$('.grid').isotope({ filter: _areaTitle });		
 	});
+
+	const compComision = document.getElementById('component_comision_pedido');
+	compComision.addEventListener('comision-selected', (e) => {
+		// Obtener los subtotales actuales
+		const arrTotales = xLocal_xDtSubTotales || [];
+		if (arrTotales.length === 0) return;
+
+		// Aplicar la comisión seleccionada
+		const comisionData = e.detail;
+		arrSubtTotalesDescuento = colocarComisionSubtotales(comisionData, arrSumSubtTotales);
+
+		xSumarTotalPedidos(null, true);
+	})
+
+	compComision.addEventListener('comision-canceled', () => {
+		// Obtener los subtotales actuales
+		const arrTotales = xLocal_xDtSubTotales || [];
+		if (arrTotales.length === 0) return;
+
+		// Eliminar todas las comisiones
+		arrSubtTotalesDescuento = colocarComisionSubtotales(null, arrSumSubtTotales, false);
+		
+		// Actualizar totales
+		xSumarTotalPedidos(null, true);
+	})
 }
 
 function xCPcloseDialogDetalle() {

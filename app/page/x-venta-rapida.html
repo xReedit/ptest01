@@ -13,6 +13,7 @@
 	<link rel="import" href="../x-componentes/x-pedidos-por-pagar/x-pedidos-por-pagar.html">
 	<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 	<link rel="import" href="../x-componentes/x-comp-select/x-comp-select.html">	
+	<link rel="import" href="../x-componentes/x-comp-comision/x-comp-comision.html">	
 
 	<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
@@ -388,8 +389,13 @@
 							<br>
 							<table width="100%" data-TablaName="pedido_subtotales" id="xtb_pedido_subtotales"></table>
 							<br>
-							<div class="p-2" hidden$="[[!showCompDescuento]]">
-								<x-comp-descuento nom-table-pedido="tb_pedido_detalle" show-detalle="false" id="component_descuento_pedido_vr" importeventa$="[[ importeTotalPedido ]]" classselect="selected-template-1 fs-11"></x-comp-descuento>
+							<div class="p-2">
+								<div hidden$="[[!showCompDescuento]]">
+									<x-comp-descuento nom-table-pedido="tb_pedido_detalle" show-detalle="false" id="component_descuento_pedido_vr" importeventa$="[[ importeTotalPedido ]]" classselect="selected-template-1 fs-11"></x-comp-descuento>
+								</div>
+								<div class="mt-2">
+									<x-comp-comision id="component_comision_pedido_vr"></x-comp-comision>
+								</div>
 							</div>
 							<div style="float:left">
 								<paper-checkbox style="padding:10px; display:block" class="noselect" id="check_reserva">Reservar</paper-checkbox><br>
@@ -427,6 +433,59 @@
 	</template>
 </dom-module>
 <style type="text/css">
+	/* Estilos para ítems en promoción */
+	.promo-item {
+		position: relative;
+		background-color: #fffbeb !important;
+		border-left: 3px solid #f59e0b !important;
+	}
+	
+	.promo-badge {
+		position: absolute;
+		top: 0;
+		right: 0;
+		background-color: #f59e0b;
+		color: white;
+		padding: 2px 6px;
+		font-size: 0.7em;
+		border-radius: 3px;
+		font-weight: bold;
+		margin-top: 5px;
+		margin-right: 5px;
+		z-index: 2;
+	}
+	
+	.descuento-tag {
+		display: inline-block;
+		background-color: #f59e0b;
+		color: white;
+		padding: 2px 5px;
+		font-size: 0.7em;
+		border-radius: 3px;
+		font-weight: bold;
+		margin-left: 5px;
+		vertical-align: middle;
+		line-height: 1;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	}
+	
+	.precio-container {
+		display: flex;
+		align-items: center;
+		margin-top: 3px;
+	}
+	
+	.precio-original {
+		text-decoration: line-through;
+		color: #888;
+		margin-right: 5px;
+		font-size: 0.85em;
+	}
+	
+	.precio-promo {
+		color: #d97706;
+		font-weight: bold;
+	}
 	/* #div_pago { width:350px; min-width: 250px;} */
 	.move a:focus{outline: none;}
 	.xdivEnLinea2x {
@@ -1056,6 +1115,39 @@ function xIniVentaRapida(){
 		console.log('item-selected-tp', e.detail);
 		idtipo_precio_selected_vr = e.detail.id;
 	});
+
+
+	const compComision = document.getElementById('component_comision_pedido_vr');
+	compComision.addEventListener('comision-selected', (e) => {
+		console.log('comision-selected', e.detail);
+		
+		// Obtener los subtotales actuales
+		const arrTotales = xLocal_xDtSubTotales || [];
+		if (arrTotales.length === 0) return;
+		
+		// Aplicar la comisión seleccionada
+		const comisionData = e.detail;
+		arrSubtTotalesDescuentoVR = colocarComisionSubtotales(comisionData, arrTotales);
+		
+		xSumarTotal(true);
+		
+		// Actualizar el total del pedido
+		// thisVR.importeTotalPedido = xSumTotal;
+	});
+	
+	compComision.addEventListener('comision-canceled', () => {
+		console.log('comision-canceled');
+		
+		// Obtener los subtotales actuales
+		const arrTotales = xLocal_xDtSubTotales || [];
+		if (arrTotales.length === 0) return;
+		
+		// Eliminar todas las comisiones
+		arrSubtTotalesDescuentoVR = colocarComisionSubtotales(null, arrTotales, false);
+				
+		// Actualizar totales
+		xSumarTotal(true);
+	});
 }
 
 function xValidarPedidoonBtnVR() {
@@ -1608,6 +1700,7 @@ async function xGuardarPedidoVR(responde){
 		
 		if(xVerificarImprimirComanda==true){
 			guardando_vr = true;
+			xLoadItemsDetalleCartaALL();			
 			xLLamarPrintVR();
 		}else{
 			xPopupLoad.xclose();
@@ -1625,6 +1718,7 @@ async function xGuardarPedidoVR(responde){
 	
 	// }).fail(guardando_vr = false);
 }
+
 
 function xFiltrarPorTipoPrecio() {
 	idtipo_precio_selected_vr = idtipo_precio_selected_vr === 118 ? 0 : 118;	
@@ -1713,6 +1807,30 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 	
 }
 
+function verifyDescuentosInCuenta(_data) {
+	// Verificar si el pedido se está enviando "a cuenta" (sin pago)
+	if (_data.p_from === '1') {
+		// Verificar si hay comisiones en los subtotales
+		const arrTotales = xLocal_xDtSubTotales || [];
+		const comisiones = arrTotales.filter(x =>
+			(x.id && typeof x.id === 'string' && x.id.startsWith('com_')) ||
+			x.idconf_print_detalle
+		);
+
+		// Si hay comisiones, quitarlas y mostrar mensaje
+		if (comisiones.length > 0) {
+			// Quitar comisiones
+			arrSubtTotalesDescuentoVR = colocarComisionSubtotales(null, arrTotales, false);
+			xSumarTotal(true);
+			
+			// Mostrar mensaje informativo
+			showAlertSwalOk('info', 'Comisiones.', 'Las comisiones se han quitado y se deben aplicar al momento de registrar el pago.', 'Listo', 1);
+		}
+	}
+}
+	
+
+
 async function goSendPedidoFecht(_data) {
 	const _fetchApiPedido = new httpFecht();
 	try {		
@@ -1721,7 +1839,9 @@ async function goSendPedidoFecht(_data) {
 		const tipoDesc = xCompDescuentoPedidoVR.get();
 		console.log('¿tipoDesc', tipoDesc);
 		_data.p_descuento = tipoDesc.idtipo_descuento ? tipoDesc.idtipo_descuento === 0 ? null : tipoDesc : null;
-
+		
+		verifyDescuentosInCuenta(_data);
+		
 		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data }, true, false)
 		if (rpt) {
 
@@ -1821,9 +1941,10 @@ function xReImprimir(){
 	xPopupLoad.xopen();
 	xLLamarPrintVR();
 }
+
 function xLoadCartaVR(){
 	//$("#_xMenu_body_vr").html('<div class="spinner xtxtCentro"><paper-spinner active></paper-spinner></div>').trigger('create');	
-	xGeneralLoadItems(xidCategoriaVR, function(){
+	xGeneralLoadItems(xidCategoriaVR, async function(){
 		xPopupLoad.xopen();
 		//var xdtCAct=data_carta;
 		//xThisVentaRapida.xdt_items=xdtCAct;
@@ -1862,6 +1983,8 @@ function xLoadCartaVR(){
 		$("#_xMenu_body_vr").append(xCadenaCarta).trigger('create');
 
 		// xDisparaEventoLoadItemInactividad()
+		xHandlerShowPromciones()
+
 		xLoadItemsDetalleCartaALL();
 
 		setTimeout(() => {			
@@ -1869,6 +1992,7 @@ function xLoadCartaVR(){
 		}, 300);
 	})
 }
+
 
 function xFiltrarItemsCartaDet(xobj){
 	var filter = xobj.dataset.id;//$(xobj).attr('data-id');
@@ -1909,11 +2033,20 @@ function xSetChangeTextModCantidad(obj) {
 	obj.select()	
 }
 
-function xLoadItemsDetalleCartaALL(){
+async function xLoadItemsDetalleCartaALL(){
 	$("#accordion ul").remove();
 	//$("#accordion").html('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
 	//var xdtItem=xThisVentaRapida.xdt_items
 	//xdtItem=JSON.parse(JSON.stringify(xdtItem));
+	
+	// obtenemos las promciones
+	let listPromociones = null;
+	try {
+		listPromociones = await xHandlerShowPromciones();
+	} catch (error) {
+		console.error('Error al obtener las promociones:', error);
+	}
+	
 
 	var xCadenaItems='';
 	var xtachar_li='';
@@ -1944,6 +2077,8 @@ function xLoadItemsDetalleCartaALL(){
 
 		// si se actualiza stock luego de confirmar el pedido
 		const _checkIsUpdateStockAfter = getVariableSede('update_stock_after') 
+
+		xAplicaItemPromo(listPromociones, xGeneralDataCarta[p]);
 		
 		xCompCant_li2 = '<span class="xcant_li2" data-cantmax="' + xCantidadMax + '">0</span>'
 		if ( xGeneralDataCarta[p].venta_x_peso == "1"  || _checkIsUpdateStockAfter) {
@@ -1958,6 +2093,14 @@ function xLoadItemsDetalleCartaALL(){
 
 		
 		
+		
+		// Verificar si el ítem está en promoción
+		let descuentoTag = '';
+		
+		// Preparar el badge de descuento si corresponde
+		if (xGeneralDataCarta[p].enPromocion) {
+			descuentoTag = ` <span class="badge badge-danger fw-100 fs-11">-${xGeneralDataCarta[p].descuento}%</span>`;
+		}
 		
 		xCadenaItems=String(xCadenaItems+'<li id="li2'+xGeneralDataCarta[p].idcarta_lista+'" class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
 												'" data-cat="'+xGeneralDataCarta[p].des_seccion+
@@ -1980,7 +2123,7 @@ function xLoadItemsDetalleCartaALL(){
 														'<div class="content_li">'+
 															'<div class="content-titulo">'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+
-																'<p class="xtitulo_li2 xt-p '+xtachar_li+'">'+xGeneralDataCarta[p].des_item+'</p>'+																
+																'<p class="xtitulo_li2 xt-p '+xtachar_li+'">'+xGeneralDataCarta[p].des_item + descuentoTag + '</p>'+																
 																'<div class="stock_item '+ xClassEstadoStock +'" id="content-stock-item"><span class="num-stock" id="numStock">' + xCeroIzq(xCantItem, 2) + '</span></div>' + 
 																'<p class="xInvisible">'+xGeneralDataCarta[p].codigo_barra+'</p>'+
 																'<input type="text" class="xMiInput xMiTextReferencia" anchofull id="xinput_li">'+

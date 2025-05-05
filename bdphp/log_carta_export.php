@@ -123,21 +123,57 @@
                     $bd->xConsulta_NoReturn($sql_carta);
                 }
 
+                $idimpresora_guardar = '0';
+
                 // Procesar cada sección y sus items
                 foreach ($datos['secciones'] as $seccion) {
+                    // Convertir descripción a mayúsculas para la búsqueda
+                    $descripcion_seccion = mb_strtoupper($seccion['descripcion'], 'UTF-8');
+                    
                     // Verificar si la sección ya existe
                     $sql_check_seccion = "
                         SELECT idseccion FROM seccion 
-                        WHERE idsede = $g_idsede AND descripcion = '{$seccion['descripcion']}'
+                        WHERE idsede = $g_idsede AND UPPER(descripcion) = '$descripcion_seccion'
                         AND estado = 0
                     ";
                     $id_seccion = $bd->xDevolverUnDato($sql_check_seccion);
+
+                    $idimpresora_seccion = $seccion['idimpresora'];                    
+
+                    if ( $idimpresora_guardar == '0' ) {
+                        if ( $idimpresora_seccion == '0' ) {
+                            // buscar impresora y crearla sino existe
+                            $sql_check_impresora = "
+                                SELECT idimpresora FROM impresora 
+                                WHERE idsede = $g_idsede|
+                                AND estado = 0 limit 1
+                            ";
+    
+                            $id_impresora = $bd->xDevolverUnDato($sql_check_impresora);
+                            if (!$id_impresora) {
+                                $sql_nueva_impresora = "
+                                    INSERT INTO impresora (idorg, idsede, descripcion, ip, estado)
+                                    VALUES ($g_ido, $g_idsede, 'CAJA', '0', 0)
+                                ";
+                                $bd->xConsulta_NoReturn($sql_nueva_impresora);
+                                $id_impresora = $bd->xDevolverUnDato("SELECT idimpresora FROM impresora WHERE idorg = $g_ido AND idsede = $g_idsede AND descripcion = '{$seccion['descripcion']}' AND estado = 0");
+                            }
+                            $idimpresora_seccion = $id_impresora;
+                        }
+
+                        $idimpresora_guardar = $idimpresora_seccion;
+                    }
+
+                    $seccion['idimpresora'] = $idimpresora_guardar;
                     
                     // Si no existe, crear la sección
                     if (!$id_seccion) {
+                        // Convertir descripción a mayúsculas
+                        $descripcion_seccion = mb_strtoupper($seccion['descripcion'], 'UTF-8');
+                        
                         $sql_nueva_seccion = "
                             INSERT INTO seccion (idorg, idsede, descripcion, idimpresora, sec_orden, img, imprimir, estado)
-                            VALUES ($g_ido, $g_idsede, '{$seccion['descripcion']}', {$seccion['idimpresora']}, 
+                            VALUES ($g_ido, $g_idsede, '$descripcion_seccion', {$seccion['idimpresora']}, 
                                     {$seccion['sec_orden']}, '{$seccion['img']}', {$seccion['imprimir']}, 0)
                         ";
                         $bd->xConsulta_NoReturn($sql_nueva_seccion);
@@ -154,16 +190,22 @@
                     
                     // Procesar cada item de la sección
                     foreach ($seccion['items'] as $item) {
+                        // Convertir descripción a mayúsculas para la búsqueda
+                        $descripcion_item = mb_strtoupper($item['descripcion'], 'UTF-8');
+                        
                         // Verificar si el item ya existe
                         $sql_check_item = "
                             SELECT iditem FROM item 
-                            WHERE idorg = $g_ido AND idsede = $g_idsede AND descripcion = '{$item['descripcion']}'
+                            WHERE idorg = $g_ido AND idsede = $g_idsede AND UPPER(descripcion) = '$descripcion_item'
                             AND estado = 0
                         ";
                         $id_item = $bd->xDevolverUnDato($sql_check_item);
                         
                         // Si no existe, crear el item
                         if (!$id_item) {
+                            // Convertir descripción a mayúsculas
+                            $descripcion_item = mb_strtoupper($item['descripcion'], 'UTF-8');
+                            
                             $detalle = isset($item['detalle']) ? "'{$item['detalle']}'" : "''";
                             $img = isset($item['img']) ? "'{$item['img']}'" : "''";
                             $is_recomendacion = isset($item['is_recomendacion']) ? $item['is_recomendacion'] : "0";
@@ -171,7 +213,7 @@
                             
                             $sql_nuevo_item = "
                                 INSERT INTO item (idorg, idsede, descripcion, precio, detalle, img, is_recomendacion, is_visible_cliente, estado)
-                                VALUES ($g_ido, $g_idsede, '{$item['descripcion']}', {$item['precio']}, $detalle, $img, $is_recomendacion, $is_visible_cliente, 0)
+                                VALUES ($g_ido, $g_idsede, '$descripcion_item', {$item['precio']}, $detalle, $img, $is_recomendacion, $is_visible_cliente, 0)
                             ";
                             $bd->xConsulta_NoReturn($sql_nuevo_item);
                             
@@ -196,11 +238,16 @@
                         
                         // Solo crear si no existe
                         if (!$carta_lista_existe) {
-                            // Crear entrada en carta_lista                            
+                            // Crear entrada en carta_lista
+                            // Asegurar que existan los valores necesarios o usar valores por defecto
+                            $item_cantidad = isset($item['cantidad']) ? $item['cantidad'] : 'ND';
+                            $item_cant_preparado = isset($item['cant_preparado']) ? $item['cant_preparado'] : '0';
+                            $item_sec_orden = isset($item['sec_orden']) ? $item['sec_orden'] : '0';
+                            
                             $sql_carta_lista = "
                                 INSERT INTO carta_lista (idcarta_lista, idcarta, idseccion, iditem, precio, cantidad, cant_preparado, sec_orden)
                                 VALUES ('$id_carta_lista', $idcarta, $id_seccion, $id_item, '{$item['precio']}', 
-                                        '{$item['cantidad']}', '{$item['cant_preparado']}', {$item['sec_orden']})
+                                        '$item_cantidad', '$item_cant_preparado', $item_sec_orden)
                             ";
                             $bd->xConsulta_NoReturn($sql_carta_lista);
                         }

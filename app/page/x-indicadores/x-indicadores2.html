@@ -219,6 +219,37 @@
                                             </div>
                                         </template>
                                         
+
+                                        <!-- DESCUENTOS APLICADOS -->
+                                        <template is="dom-if" if="[[listDescuentos.length > 0]]">                                            
+                                            <div class="mt-4 content-table-iv">                                                
+                                                <p class="fs-18 text-secondary fw-600">Descuentos aplicados <i class="fa fa-level-down text-danger"></i> </p><br>
+                                                <table>
+                                                    <thead>
+                                                        <th>Fecha</th>
+                                                        <th>Usuario</th>
+                                                        <th>Tipo Desc.</th>
+                                                        <th align="center">Cantidad</th>
+                                                        <th align="right">Importe</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        <template is="dom-repeat" items="{{listDescuentos}}" as="item">
+                                                            <tr>
+                                                                <td><p class="color-text-secondary">{{item.fecha}}</p></td>
+                                                                <td><p class="color-text-secondary">{{item.nombres}}</p></td>
+                                                                <td><p class="color-text-secondary">{{item.des_descuento}}</p></td>
+                                                                <td align="center"><p class="color-text-principal">{{item.cantidad}}</p></td>
+                                                                <td align="right"><p class="color-text-principal">{{item.importe}}</p></td>
+                                                            </tr>
+                                                        </template>
+                                                        <tr>
+                                                            <td colspan="4" align="right"><p class="fw-600 fs-15">Total</p></td>
+                                                            <td align="right"><p class="fw-600 fs-15 color-text-principal">{{totalDescuentos}}</p></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>                                            
+                                        </template>
                                     </div>
                 
                                     <!-- totales pedidos -->
@@ -920,7 +951,27 @@
                 xloadDataOtrosIngresos();
 
                 xloadDComprobantesEmitidos();
+                xloadDescuentos();
 			});
+    }
+
+    function xloadDescuentos() {        
+        // console.log('dataFiltro', dataFiltro);
+        $.ajax({
+                type: 'POST',
+                url: '../../bdphp/log_005.php?op=400',
+                data: dataFiltro
+            })
+            .done(function (res) {                
+                console.log('JSON.parse(res)', JSON.parse(res));
+                const _data = JSON.parse(res).datos;      
+                
+                xThisI2.totalDescuentos = _data.map(x => parseFloat(x.importe)).reduce((acc, item) => acc + item, 0);
+                xThisI2.totalDescuentos = parseFloat(xThisI2.totalDescuentos).toFixed(2);
+
+                xThisI2.listDescuentos = JSON.parse(JSON.stringify(_data));
+                console.log('xThisI2.listDescuentos', xThisI2.listDescuentos);
+            });
     }
 
     function xloadDataOtrosIngresos() {
@@ -946,7 +997,7 @@
 				data: dataFiltro
 			})
 			.done(function (res) {				
-                console.log(res);
+                // console.log(res);
                 
                 const _data = JSON.parse(res).datos;		
                 // crosVenta = crossfilter(_dta);
@@ -1730,6 +1781,8 @@
             listComprobantes: [],
             listCalificacionCliente: [],
             listTipoPagoIngresosVarios: [],
+            listDescuentos: [],
+            totalDescuentos: Number,
             tablaTipoPagoIngresosVarios: [],
             sedeCalificacion: String,
             dtVentasHoy: Object,    

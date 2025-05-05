@@ -2053,7 +2053,107 @@ function updateStockOnOrderCompletion(xarr_body) {
 	// lo enviamos por socket
 	if (isSocket) {
 		_cpSocketEmitItemAllModificado(listItemsSend);
-	}	
-
+	}		
 
 }
+
+// se obtiene la lista de promociones para el punto de venta
+async function xGetListPromociones() {
+	return new Promise((resolve, reject) => {
+		$.ajax({
+			type: "POST",
+			url: "../../bdphp/log_010.php?op=get-promociones",
+			success: function (dt) {
+				resolve(JSON.parse(dt));
+			},
+			error: function (err) {
+				reject(err);
+			}
+		});
+	})
+}
+
+async function xHandlerShowPromciones() {
+	console.log('xHandlerShowPromciones');
+	let promociones = await xGetListPromociones();
+	if (typeof promociones === 'string') {
+		try {
+			promociones = JSON.parse(promociones);			
+		} catch (error) {
+			console.error('Error al parsear las promociones', error);
+		}
+	}
+
+	if (promociones.datos.length > 0) {
+		promociones = JSON.parse(promociones.datos[0].promociones);
+	} else {
+		promociones = [];
+	}
+	
+	console.log('promociones', promociones)
+
+	// guardamos las promociones en localStorage
+	localStorage.setItem('::app3_sys_promociones', JSON.stringify(promociones));
+
+	return promociones;
+}
+
+// funcion obtiene el item de la carta y revisa en promociones si esta
+// pertence alguna promocion, si es asi entonces cambia el precio
+function xAplicaItemPromo(promocionesData, item) {
+
+	try {
+
+		if (item.is_promo_aplicada) {
+			item.precio = item.precioOriginal;
+			item.enPromocion = false;
+			item.is_promo_aplicada = false;
+			item.tituloPromocion = null;
+			item.descuento = null;
+		};	
+
+		if (!promocionesData) return;	
+		if (!promocionesData.lista_promociones && !promocionesData.lista_promociones.length) return;
+		
+
+		if (promocionesData.lista_promociones && promocionesData.lista_promociones.length > 0) {
+			promocionesData.lista_promociones.forEach(promocion => {
+				
+				
+
+				promocion.lista.forEach(promoItem => {
+					const idItem = promoItem.iditem;
+					const idSeccion = promoItem.idseccion;
+		
+					if (idItem == item.iditem || idSeccion == item.idseccion) {
+										
+						// Guardar el precio original antes de aplicar el descuento
+						const precioOriginal = parseFloat(item.precio);						
+						const porcentajeDescuento = parseFloat(promoItem.porc_descuento);
+						const precioFinal = precioOriginal - (precioOriginal * (porcentajeDescuento / 100));
+						
+						// Formatear el precio final con dos decimales
+						item.precio = precioFinal.toFixed(2);
+						
+						// Agregar propiedades para identificar el item como promoción
+						item.enPromocion = true;
+						item.precioOriginal = precioOriginal;
+						item.descuento = porcentajeDescuento;
+						item.tituloPromocion = promocion.parametros?.header?.titulo || 'PROMO';
+						item.is_promo_aplicada = true;
+						
+						console.log(`Promoción aplicada a ${item.des_item}: ${porcentajeDescuento}% de descuento`);
+					}			
+				})
+			})
+		}
+	} catch (error) {
+		console.error('Error al procesar promociones:', error);
+	}
+
+	
+	
+	
+}
+
+	

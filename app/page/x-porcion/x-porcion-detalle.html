@@ -53,9 +53,16 @@
                             <i class="fa fa-pencil ml-1 text-primary xCursor" onclick="xModificarDescripcionPorcionDetalle()"></i>
                         </p>
                     </div>
-                    <div>
+                    <div class="text-center mr-5">
                         <p class="fs-12 fw-600 text-secondary m-0">Stock Actual</p>
-                        <p class="fs-18 fw-600 xCursor" onclick="dialog_modificar_stock_porcion.open()"> {{objporcion.stock}} </p>
+                        <!-- <p class="fs-18 fw-600 xCursor" onclick="dialog_modificar_stock_porcion.open()"> {{objporcion.stock}} </p> -->
+                        <button class="btn btn-sm btn-xsm xBoton_flat_2 fs-20 fw-600 pl-2 pr-2"
+                            onclick="dialog_modificar_stock_porcion.open()">{{objporcion.stock}}</button>
+                    </div>
+                    <div class="text-center">
+                        <p class="fs-12 fw-600 text-secondary m-0">Recetas enlazadas</p>
+                        <button class="btn btn-sm btn-xsm xBoton_flat_2 fs-20 fw-600 pl-2 pr-2" onclick="verRecetasEnlazadas()">{{listRecetasEnlazadas.length}}</button>
+                        <!-- <p class="fs-18 fw-600 xCursor" onclick="verRecetasEnlazadas()"> {{listRecetasEnlazadas.length}} </p> -->
                     </div>
                 </div>
                 <div class="text-right d-flexx">
@@ -75,6 +82,7 @@
                         <th>Usuario</th>
                         <th>Movimiento</th>
                         <th class="text-center">Cantidad</th>
+                        <th class="text-center">Stock Total</th>
                     </thead>
                     <tbody>
                         <template is="dom-repeat" items="{{listPorcionHistorial}}" as="item">
@@ -82,8 +90,11 @@
                                 <td>{{item.fecha}}</td>
                                 <td>{{item.hora}}</td>
                                 <td>{{item.nombres}}</td>
-                                <td class$="[[ item.classMovimiento ]]">{{item.tipo_movimiento}}</td>
+                                <td class$="[[ item.classMovimiento ]]">
+                                    {{item.tipo_movimiento}}
+                                </td>
                                 <td class="fw-600 text-center">{{item.cantidad}}</td>
+                                <td class="fw-600 text-center">{{item.stock_total}}</td>
                             </tr>
                         </template>
                     </tbody>
@@ -109,24 +120,137 @@ let cantidadRecetasEnlazadasPorcion = 0
         }
         const _httpFecht = new httpFecht();
         const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=101', _data)        
-        if (rpt.success) {                        
-            xthisPorcionDetalle.listPorcionHistorial = rpt.datos;
-            xthisPorcionDetalle.listPorcionHistorial.map(x => {
-                x.classMovimiento = x.tipo_movimiento == 'Venta' ? 'fw-600 text-success' : x.tipo_movimiento == 'Aumenta' ? 'fw-600 text-primary' : 'fw-600 text-danger';
-                x.tipo_movimiento = x.tipo_movimiento.toUpperCase();
-                return x;
-            })
+        if (rpt.success) {     
+            
+            cocinarArrayHistorial(rpt.datos);
+            // console.log('rpt', rpt.datos);
+            // xthisPorcionDetalle.listPorcionHistorial = rpt.datos;
+            // xthisPorcionDetalle.listPorcionHistorial.map(x => {
+            //     x.classMovimiento = x.tipo_movimiento == 'Venta' ? 'fw-600 text-success' : x.tipo_movimiento == 'Aumenta' ? 'fw-600 text-primary' : x.tipo_movimiento == 'Recuperación' ? 'fw-600 text-warning' : 'fw-600 text-danger';
+            //     x.tipo_movimiento = x.tipo_movimiento.toUpperCase();
+            //     return x;
+            // })
         }
         // console.log('rpt', xthisPorcionDetalle.listPorcionHistorial);
         xPopupLoad.xclose();
 
         // recetas enlazadas
-        const rptCantidadReceta = await _httpFecht.postJson('../../bdphp/log_009.php?op=116', _data)
+        const rptCantidadReceta = await _httpFecht.postJson('../../bdphp/log_009.php?op=11601', _data)
         if (rptCantidadReceta.success) {
-            cantidadRecetasEnlazadasPorcion = rptCantidadReceta.datos[0].cantidad
+            cantidadRecetasEnlazadasPorcion = rptCantidadReceta.datos.length;
+            console.log('cantidadRecetasEnlazadasPorcion', cantidadRecetasEnlazadasPorcion);
+            xthisPorcionDetalle.listRecetasEnlazadas = rptCantidadReceta.datos;
         }
     
     }
+
+     function cocinarArrayHistorial(elArray) {
+        console.log('elArray', elArray);    
+            // Aplicar formato a todos los registros
+            const datosFormateados = elArray.map(item => {
+                // Determinar el signo según el tipo de movimiento
+                let signo = '';
+                if (item.tipo_movimiento === 'Venta' || item.tipo_movimiento === 'Disminuye') {
+                    signo = '-';
+                } else if (item.tipo_movimiento === 'Aumenta' || item.tipo_movimiento === 'Recuperación') {
+                    signo = '+';
+                }
+                
+                return {
+                    ...item,
+                    // Guardar la cantidad original sin signo
+                    cantidadOriginal: item.cantidad,
+                    // Agregar el signo a la cantidad
+                    cantidad: signo + item.cantidad,
+                    classMovimiento: item.tipo_movimiento === 'Venta' ? 'fw-600 text-success' :
+                        item.tipo_movimiento === 'Aumenta' ? 'fw-600 text-primary' :
+                            item.tipo_movimiento === 'Recuperación' ? 'fw-600 text-warning' :
+                                'fw-600 text-danger',
+                    tipo_movimiento: item.tipo_movimiento.toUpperCase()
+                };
+            });
+
+            // Agrupar ventas por fecha, usuario y tipo de movimiento
+            const resultado = [];
+            let ventasConsecutivas = [];
+            let ultimoTipoMovimiento = null;
+            let ultimoUsuario = null;
+            let ultimaFecha = null;
+
+            // Recorremos los datos ordenados
+            datosFormateados.forEach((item, index) => {
+                if (item.tipo_movimiento === 'VENTA') {
+                    // Si el último movimiento también fue una venta, es el mismo usuario y la misma fecha, agrupamos
+                    if (ultimoTipoMovimiento === 'VENTA' && 
+                        ultimoUsuario === item.nombres && 
+                        ultimaFecha === item.fecha) {
+                        ventasConsecutivas.push(item);
+                    } else {
+                        // Si veníamos agrupando ventas, procesamos el grupo anterior
+                        if (ventasConsecutivas.length > 0) {
+                            procesarGrupoVentas();
+                        }
+                        
+                        // Iniciamos un nuevo grupo con este item
+                        ventasConsecutivas = [item];
+                        ultimoTipoMovimiento = 'VENTA';
+                        ultimoUsuario = item.nombres;
+                        ultimaFecha = item.fecha;
+                    }
+                } else {
+                    // Si veníamos agrupando ventas, procesamos el grupo
+                    if (ventasConsecutivas.length > 0) {
+                        procesarGrupoVentas();
+                    }
+                    
+                    // Agregamos el movimiento no-venta
+                    resultado.push(item);
+                    ultimoTipoMovimiento = item.tipo_movimiento;
+                    ultimoUsuario = item.nombres;
+                    ultimaFecha = item.fecha;
+                }
+                
+                // Si es el último elemento y hay ventas pendientes de procesar
+                if (index === datosFormateados.length - 1 && ventasConsecutivas.length > 0) {
+                    procesarGrupoVentas();
+                }
+            });
+            
+            // Función para procesar un grupo de ventas consecutivas
+            function procesarGrupoVentas() {
+                if (ventasConsecutivas.length === 1) {
+                    // Si solo hay una venta, la agregamos directamente
+                    resultado.push(ventasConsecutivas[0]);
+                } else {
+                    // Si hay múltiples ventas, las agrupamos
+                    const primerVenta = ventasConsecutivas[0];
+                    // Aseguramos que todas las ventas sean del mismo usuario y fecha
+                    const usuario = primerVenta.nombres;
+                    const fecha = primerVenta.fecha;
+                    let cantidadTotal = 0;
+                    
+                    // Sumamos todas las cantidades
+                    ventasConsecutivas.forEach(venta => {
+                        cantidadTotal += parseFloat(venta.cantidad);
+                    });
+                    
+                    // Creamos un registro agrupado
+                    const ventaAgrupada = {
+                        ...primerVenta,
+                        cantidad: cantidadTotal.toString(),
+                        hora: ventasConsecutivas.length + " VENTAS",
+                        descripcion: "VENTA AGRUPADA"
+                    };
+                    
+                    resultado.push(ventaAgrupada);
+                }
+                
+                // Reiniciamos el grupo
+                ventasConsecutivas = [];
+            }
+            
+            xthisPorcionDetalle.listPorcionHistorial = resultado;
+        }
 
     function changeStockPorcion(value) {
                
@@ -134,7 +258,8 @@ let cantidadRecetasEnlazadasPorcion = 0
         _stockNowPorcion = parseFloat(value)  
 
         if ( isNaN(_stockNowPorcion)) {
-            _msjModificarStock = ''
+            _msjModificarStock = '';
+            xthisPorcionDetalle.classMsjStock = '';
         }
         else {
             if (_stockNowPorcion > _stockActualPorcion) {
@@ -148,6 +273,9 @@ let cantidadRecetasEnlazadasPorcion = 0
             }
         }
 
+
+        this.stock_total = _stockNowPorcion;
+
         xthisPorcionDetalle.msjStock = _msjModificarStock
     }
 
@@ -158,7 +286,8 @@ let cantidadRecetasEnlazadasPorcion = 0
             idporcion: xthisPorcionDetalle.objporcion.idporcion,
             movimiento:  _msjModificarStock.split(' ')[0],
             cantidad: _difStockPorcion,
-            stock_actual: _stockNowPorcion            
+            stock_actual: _stockNowPorcion,
+            stock_total: this.stock_total  
         }
 
         // console.log('_data', _data);
@@ -224,6 +353,36 @@ let cantidadRecetasEnlazadasPorcion = 0
             })
     }
 
+    function verRecetasEnlazadas() {
+        const _swalAlertValues = paramsSwalAlert;
+        let _rowTable = '';
+
+        xthisPorcionDetalle.listRecetasEnlazadas.forEach(element => {
+            _rowTable += `<tr>
+                                <td align="left">${element.descripcion}</td>
+                                <td align="right">${parseFloat(element.cantidad)}</td>
+                            </tr>`;
+        });
+
+        _swalAlertValues.title = '<p class="fw-600 fs-20">Recetas enlazadas</p>';        
+        _swalAlertValues.html = `<div class="pb-2" style="display: inline-flex;">                    
+                                    <table class="fs-12 w-100">
+                                        <thead>
+                                            <tr>
+                                                <th align="left">Producto</th>
+                                                <th align="right">Cantidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${_rowTable}
+                                        </tbody>                                                                                
+                                    </table>
+                                </div>`;        
+        _swalAlertValues.showCancelButton = false;
+        showAlertSwalHtmlDecision(_swalAlertValues, 1);
+
+    }   
+
 Polymer({
     is:'x-porcion-detalle',
     properties:{
@@ -234,9 +393,11 @@ Polymer({
             observer: 'porcionChanged',            
         },
         msjStock: String,
+        stock_total: Number,
         classMsjStock: String,
         listPorcionHistorial: [],
-        btnPorcionPe: Boolean
+        btnPorcionPe: Boolean,
+        listRecetasEnlazadas: [],
     },
     porcionChanged: (obj) => {   
         xLoadDataPorcionDetalle()  
