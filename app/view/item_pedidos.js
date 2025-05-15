@@ -217,8 +217,12 @@ function handlerFnMiPedido(e) {
 		}
 
 		
+	
+		const isSubItemCantidad = checkExistSubItemsWithCantidad(itemPedidos_objItemSelected);
+	
+	
 
-		if ( itemPedidos_objItemSelected.cantidad !== 'ND' ) {
+		if ( itemPedidos_objItemSelected.cantidad !== 'ND' || isSubItemCantidad ) {
 			if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
 				
 				itemPedidos_objItemSelected.stock_actual = xSotockSocket;
@@ -311,6 +315,14 @@ $(document.body).on('keyup', '#accordion div.xBtn_contet_li2 .input-venta-rapida
 	e.stopPropagation();
 	e.stopImmediatePropagation()
 })
+
+function checkExistSubItemsWithCantidad(item) {
+	return !item.subitems ? false :
+		Array.isArray(item.subitems) ?
+			item.subitems.some(subitem =>
+				Array.isArray(subitem.opciones) && subitem.opciones.some(opcion => opcion.cantidad !== 'ND')
+			) : false;
+};
 
 async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {		
@@ -1454,7 +1466,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 		var xdt_rpt=JSON.parse(dtCarta)		
 		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
 		xGeneralDataCarta=xdt_rpt.datos;
-		// console.log('xGeneralDataCarta', xGeneralDataCarta);
+		console.log('xGeneralDataCarta', xGeneralDataCarta);
 		if(x_rpt){return x_rpt(xGeneralDataCarta);}
 	})
 }

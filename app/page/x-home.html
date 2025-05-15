@@ -191,7 +191,10 @@ async function xVerificarAcc(){
 		var xTituloSeccion;
 		var xt;
 
-		xper_bd=xper_bd.split(',')
+		if(typeof xper_bd === 'string'){
+			xper_bd=xper_bd.split(',')
+		}
+		
 		for (var i = 0; i < xper_bd.length; i++) {
 			xCharFind=xper_bd[i];
 		

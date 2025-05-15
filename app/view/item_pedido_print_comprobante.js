@@ -749,6 +749,8 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 				nom_documento: _tipo,
 				idprint_server_detalle: UltimoIdPrint
 			}
+
+		console.log('dataSend _cpSocketEmitPrinterOnly', dataSend);
 	
 			_cpSocketEmitPrinterOnly(dataSend);
 			// return;

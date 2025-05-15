@@ -28,12 +28,22 @@
 				.done(function (dtValues) {
 					dtValues = $.parseJSON(dtValues);
 					
-					if ( xThisComAlmacen.opninguno ) {
-						dtValues.datos.unshift({idalmacen:"0", descripcion:"NINGUNO"})
+					// Añadir opción "TODOS LOS ALMACENES" al inicio si está habilitada
+					if (xThisComAlmacen.optodos) {
+						dtValues.datos.unshift({idalmacen:"", descripcion:"TODOS LOS ALMACENES"});
+					}
+					
+					// Si la opción ninguno está activada, añadirla al inicio o después de "TODOS LOS ALMACENES"
+					if (xThisComAlmacen.opninguno) {
+						if (xThisComAlmacen.optodos) {
+							dtValues.datos.splice(1, 0, {idalmacen:"0", descripcion:"NINGUNO"});
+						} else {
+							dtValues.datos.unshift({idalmacen:"0", descripcion:"NINGUNO"});
+						}
 					}
 					
 					xThisComAlmacen.list = dtValues.datos;
-					xThisComAlmacen.list_almacen = xThisComAlmacen.list[0];
+					xThisComAlmacen.list_almacen = xThisComAlmacen.list[0]; // Seleccionar la primera opción por defecto
 					xThisComAlmacen.list_almacen.index = 0;
 					xThisComAlmacen.valIdInt = xThisComAlmacen.list_almacen;
 					xThisComAlmacen.getValorIncial(xThisComAlmacen.list_almacen);
@@ -52,6 +62,12 @@
 			properties: {
 				// opNinguno: {type: Number, notify: true, reflectToAttribute: true, value: 0},
 				opninguno: {
+					type: Boolean,
+					notify: true,
+					reflectToAttribute: true,
+					value: false
+				},
+				optodos: {
 					type: Boolean,
 					notify: true,
 					reflectToAttribute: true,

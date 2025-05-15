@@ -117,14 +117,14 @@
 
                         <div class="d-flexx justify-content-between">
                             <div style="max-width: 300px;">
-                                <x-comp-find-almacen class="mr-1" id="sel_almacen_pp"></x-comp-find-almacen>
+                                <x-comp-find-almacen class="mr-1" id="sel_almacen_pp" optodos="true"></x-comp-find-almacen>
                                 <div class="mt-2">
                                     <input type="text" class="xMiInput w-100 mr-1" placeholder="Buscar por producto o familia" inline id="txt_buscar_producto_almacen">
                                     <span class="text-secondary fs-11">Busca por nombre del producto o por su familia</span>
                                 </div>
                                 <div class="mt-2">
                                     <paper-checkbox id="chec_min">Ver solo stock mínimo </paper-checkbox>
-                                    <span class="text-secondary fs-11">Productos por debajo del stock mínimo</span>
+                                    <span class="text-secondary fs-11 ml-2">Productos por debajo del stock mínimo</span>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -282,6 +282,9 @@ var xThisAlmPro;
                 xThisAlmPro.xdt_prodcutos = xdtPro;     
                 console.log('xThisAlmPro.xdt_prodcutos', xdtPro);           
                 xSumTotalProductoAlmacen();
+                
+                // No aplicamos filtro automático al cargar, mostramos todos los productos
+                // El filtro solo se aplicará cuando el usuario seleccione un almacén específico
             })
     }
 
@@ -299,19 +302,14 @@ var xThisAlmPro;
     }
     
     // Ya no necesitamos esta función porque se eliminó el selector de familia
-    
+
     function xAplicarFiltrosCombinados() {
         // Obtener valores de los filtros
         const textoBusqueda = $("#txt_buscar_producto_almacen").val().toLowerCase();
         const filtroStockMin = $("#chec_min").prop('checked');
-        const filtroAlmacen = sel_almacen_pp.getAlmacen() ? sel_almacen_pp.getAlmacen().idalmacen : '';
+        const almacenSeleccionado = sel_almacen_pp.getAlmacen();
+        const filtroAlmacen = almacenSeleccionado ? almacenSeleccionado.idalmacen : '';
 
-        if ( !filtroStockMin ) {
-            xThisAlmPro.xdt_prodcutos = xThisAlmPro.listProductosMaster;
-            xSumTotalProductoAlmacen();
-            return;
-        }
-        
         // Aplicar todos los filtros en conjunto
         xThisAlmPro.xdt_prodcutos = xThisAlmPro.listProductosMaster.filter(x => {
             // Filtro por texto de búsqueda (producto o familia)
@@ -322,8 +320,10 @@ var xThisAlmPro;
             // Filtro por stock mínimo
             const pasaStockMin = !filtroStockMin || (parseFloat(x.stock_minimo) >= parseFloat(x.stock));
             
-            // Filtro por almacén
-            const pasaAlmacen = !filtroAlmacen || x.idalmacen === filtroAlmacen;
+            // Filtro por almacén - solo aplicamos el filtro si hay un almacén seleccionado
+            // Si el almacén seleccionado es "TODOS LOS ALMACENES" (idalmacen vacío) o no hay almacén seleccionado,
+            // mostramos todos los productos
+            const pasaAlmacen = filtroAlmacen === '' || x.idalmacen === filtroAlmacen;
             
             // Producto pasa todos los filtros
             return pasaTexto && pasaStockMin && pasaAlmacen;

@@ -72,10 +72,11 @@
                                         <input class="xMiInput" onChange="conMayusculas(this)" type="text" placeholder="Nombre Comercial" value="{{holding_marca.marcas.nombre_marca}}" id="textMarcaNom" required>
                                     </td>
                                     <td>
-                                        <input class="xMiInput" type="text" placeholder="Imagen Comercial" value="{{holding_marca.marcas.imagen_url}}" id="textMarcaImagen" required>
-                                    </td>
-                                    <td>
                                         <input class="xMiInput" onChange="conMayusculas(this)" type="text" placeholder="Oferta Comercial" value="{{holding_marca.marcas.oferta_comercial}}" id="textMarcaOferta" required>
+                                    </td>
+                                    <td>                                        
+                                        <input class="xMiInput" type="text" placeholder="Imagen Comercial" value="{{holding_marca.marcas.imagen_url}}"
+                                            id="textMarcaImagen" required>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-primary" on-click="addMarca">Agregar Marca</button>
@@ -342,6 +343,8 @@
                     op: 'set-holdin-marcas',
                     marcas: this.listMarcas
                 }
+
+                console.log('dataSend', dataSend);
 
                 $.ajax({
                     type: "POST",
