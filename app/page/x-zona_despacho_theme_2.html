@@ -349,9 +349,9 @@
         /* theme-2 */
         
         /* color de fondo para el body */
-        .body-zona-theme-2 {
+        /* .body-zona-theme-2 {
             background-color: #344465 !important;
-        }
+        } */
     </style>
 </dom-module>
 <script>
@@ -1575,10 +1575,12 @@
 
             // cambiar colo fondo body
             setTimeout(() => {
+                document.body.style.backgroundImage = 'none';
                 document.body.style.backgroundColor = '#424158';                                
             }, 1500);
         },
         detached: function () {
+            document.body.style.backgroundImage = 'url("../../images/background-light.svg")';
             document.body.style.backgroundColor = '#FAFAFA';
             
             _zonaSocketClose();

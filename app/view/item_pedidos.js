@@ -104,6 +104,12 @@ function handlerFnMiPedido(e) {
 		// if(isNaN(xCantActual)){xCantActual=0}
 		// if(isNaN(xCantSeccion)){xCantSeccion=0}
 
+		// add -230725
+		if (parseFloat(xcant_max) === 0 && xOperacion === '+') {
+			return;
+		}
+
+
 		_thisObj.parents('.xpedir_item').find('.xCant_item').each(function (index, element) {
 				var xval=parseInt($(element).text());
 				if(isNaN(xval)){xval=0}

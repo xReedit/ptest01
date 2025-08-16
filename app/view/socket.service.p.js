@@ -404,17 +404,19 @@ function _cpSocketRestoreFromPedidoStorage() {
     var pedido = localStorage.getItem('::app3_sys_dta_pe_sk') ? JSON.parse(localStorage.getItem('::app3_sys_dta_pe_sk')) : null;
     var pedidoSend = [], _subItemView = [];
     if ( pedido ) {
+        
+
         pedido.filter(x => x !== null).map(x => {
             _subItemView = [];
             Object.values(x).filter(a => typeof a === 'object')
                 .map(item => {
-                    if ( item.isporcion != 'ND' ) {
+                    const isSubItemCantidad = checkExistSubItemsWithCantidad(item);
+                    if ( item.isporcion != 'ND' || isSubItemCantidad ) {
                         item.idcarta_lista = item.iditem;
                         item.cantidad_seleccionada = item.cantidad;
                         item.isalmacen = item.procede.toString() === '0' ? 1 : 0;
-                        item.isporcion = item.isporcion != 'SP' ? item.cantidad : item.isporcion;                     
+                        item.isporcion = item.isporcion != 'SP' ? item.cantidad : item.isporcion;
                         item.subitems_view = JSON.parse(JSON.stringify(item.subitems_view));                     
-                        // console.log('resetPedido item', JSON.stringify(item));
                         pedidoSend.push(item);
                     }
                 });
@@ -422,6 +424,7 @@ function _cpSocketRestoreFromPedidoStorage() {
     }    
 
     if ( pedidoSend.length > 0 ) {
+        console.log('pedidoSend resetPedido', pedidoSend);
         this.socketCP.emit('resetPedido', pedidoSend);
     }
     

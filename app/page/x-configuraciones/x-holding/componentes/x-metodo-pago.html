@@ -1,0 +1,233 @@
+<dom-module id="x-metodo-pago">
+    <link rel="import" href="../../../../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">
+    <template>
+        <style>
+            :host {
+                display: inline-block;                              
+            }
+        </style>
+        
+
+        <h3>Metodos de Pago</h3>
+        <p>En este se configuran los tipos de pago y comisiones <br> aceptados en la aplicacion del mesero</p>
+        <br>
+        <div>
+        
+            <table>
+                <thead>
+                    <th>Tipo Pago</th>
+                    <th>Comision</th>
+                    <th></th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <x-comp-find-tipo-pago id="findTipoPago" class="xMiInput">
+                            </x-comp-find-tipo-pago>
+                        </td>
+                        <td>
+                            <input class="xMiInput" id="textComision" type="number" placeholder="Comision" value="0" required>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" on-click="addTipoPago">Agregar</button>
+                        </td>
+                    </tr>
+                    <template is="dom-repeat" items="[[listTipoPago]]">
+                        <tr>
+                            <td>{{item.nom_tipo_pago}}</td>
+                            <td>{{item.comision}}%</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" on-click="removeTipoPago"><i
+                                        class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <br>
+        </div>
+
+    </template>
+    <script>
+        Polymer({
+            is: 'x-metodo-pago',
+            properties: {
+                listTipoPago: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+                holding: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
+                }
+            },
+            ready: function () {
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({ op: 'get-holding' })
+                })
+                    .done((response) => {
+                        console.log(response);
+                        let rptData = JSON.parse(response);
+                        rptData = rptData.datos[0];
+                        this.holding.idsede_holding = rptData.idsede_holding;
+                        this.holding.idsede = rptData.idsede;
+                        this.holding.nombre = rptData.nombre;
+                        this.holding.ciudad = rptData.ciudad;
+                        this.loadTipoPagoHolding();
+                    });
+            },
+            loadTipoPagoHolding: function () {
+                // if (!this.holding || !this.holding.idsede_holding) return;
+
+                $.ajax({
+                    type: 'POST',
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify({
+                        op: 'get-holding-metodo-pago',
+                        idsede_holding: this.holding.idsede_holding
+                    })
+                })
+                    .done((response) => {
+                        console.log(response);
+                        const rptData = JSON.parse(response);
+                        this.listTipoPago = rptData.datos || [];
+                    });
+            },
+            addTipoPago: function () {
+                const tipoPago = this.$.findTipoPago.list_tipo_pago;
+                const comision = this.$.textComision.value;
+
+                if (!tipoPago || !comision) {
+                    alert('Debe seleccionar un tipo de pago y especificar una comisión');
+                    return;
+                }
+
+                // Verificar si ya existe este tipo de pago
+                const existente = this.listTipoPago.find(item => item.idtipo_pago === tipoPago.idtipo_pago);
+                if (existente) {
+                    alert('Este tipo de pago ya ha sido agregado');
+                    return;
+                }
+
+                // Llamar directamente al endpoint para agregar
+                xPopupLoad.xopen();
+                const dataSend = {
+                    op: 'set-holding-metodo-pago',
+                    idtipo_pago: tipoPago.idtipo_pago,
+                    comision: comision,
+                    idsede_holding: this.holding.idsede_holding,
+                    estado: 0
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(dataSend)
+                })
+                    .done((response) => {
+                        console.log('Tipo de pago agregado:', response);
+                        xPopupLoad.xclose();
+                        this.$.textComision.value = '0';
+                        this.loadTipoPagoHolding(); // Recargar la lista
+                    })
+                    .fail((error) => {
+                        console.error('Error al agregar tipo de pago:', error);
+                        xPopupLoad.xclose();
+                        alert('Error al agregar el tipo de pago');
+                    });
+            },
+
+            removeTipoPago: async function (e) {
+                const _swalAlertValues = paramsSwalAlert;
+                _swalAlertValues.title = 'Eliminar Tipo de Pago';
+                _swalAlertValues.text = '¿Está seguro de eliminar este tipo de pago?';
+                _swalAlertValues.type = 'warning';
+                _swalAlertValues.showCancelButton = true;
+                _swalAlertValues.confirmButtonText = 'Si, eliminar';
+                _swalAlertValues.cancelButtonText = 'Cancelar';
+                _swalAlertValues.html = '';
+
+                const rptBorrar = await showAlertSwalHtmlDecision(_swalAlertValues);
+                if (!rptBorrar.isConfirmed) return;
+
+                const index = e.model.index;
+                const tipoPago = this.listTipoPago[index];
+
+                // Llamar directamente al endpoint para marcar como eliminado
+                xPopupLoad.xopen();
+                const dataSend = {
+                    op: 'set-holding-metodo-pago',
+                    id: tipoPago.idsede_holding_metodo_pago,
+                    idtipo_pago: tipoPago.idtipo_pago,
+                    comision: tipoPago.comision,
+                    estado: 1 // Marcar como eliminado
+                };
+
+                $.ajax({
+                    type: "POST",
+                    url: '../../bdphp/log_010.php',
+                    data: JSON.stringify(dataSend)
+                })
+                    .done((response) => {
+                        console.log('Tipo de pago eliminado:', response);
+                        xPopupLoad.xclose();
+                        this.loadTipoPagoHolding(); // Recargar la lista
+                    })
+                    .fail((error) => {
+                        console.error('Error al eliminar tipo de pago:', error);
+                        xPopupLoad.xclose();
+                        alert('Error al eliminar el tipo de pago');
+                    });
+            },
+
+            saveTiposPago: function () {
+                if (!this.listTipoPago || this.listTipoPago.length === 0) {
+                    return;
+                }
+
+                xPopupLoad.xopen();
+
+                // Guardar cada tipo de pago individualmente
+                const promises = this.listTipoPago.map(tipoPago => {
+                    const dataSend = {
+                        op: 'set-holding-metodo-pago',
+                        idtipo_pago: tipoPago.idtipo_pago,
+                        comision: tipoPago.comision,
+                        estado: tipoPago.estado || 0
+                    };
+
+                    // Si tiene ID, lo incluimos para actualizar
+                    if (tipoPago.idsede_holding_metodo_pago && tipoPago.idsede_holding_metodo_pago > 0) {
+                        dataSend.id = tipoPago.idsede_holding_metodo_pago;
+                    }
+
+                    return $.ajax({
+                        type: "POST",
+                        url: '../../bdphp/log_010.php',
+                        data: JSON.stringify(dataSend)
+                    });
+                });
+
+                // Esperar a que todas las solicitudes terminen
+                Promise.all(promises)
+                    .then(responses => {
+                        console.log('Respuestas:', responses);
+                        xPopupLoad.xclose();
+                        this.loadTipoPagoHolding();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        xPopupLoad.xclose();
+                        alert('Error al guardar los tipos de pago');
+                    });
+            },
+            
+        });
+    </script>
+</dom-module>

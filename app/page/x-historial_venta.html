@@ -50,7 +50,7 @@
 		<x-comp-remove-operation-pinpad id="compRemoveOperationPinPad"></x-comp-remove-operation-pinpad>
 
 		<x-pass id="pass_us" titulo="Usuario autorizado" valor="Pe1" permisoremoto="false"></x-pass>
-		<paper-dialog id="dialog_motivo_anular_historial" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<paper-dialog id="dialog_motivo_anular_historial" class="dialog_redondo" style="min-width:320px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
 				<h4>ANULAR</h4>
 				<h4 class="txt_anular_cambiar_mesa"></h4>
@@ -60,10 +60,15 @@
 					<!--textarea class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus espaciar></textarea-->
 					<input type="text" class="xMiInput" placeholder="Motivo..." id="txt_motivo_anular" autofocus>
 				</div>
-				<br><br><br>
-				<div class="xBoton2 xVerde" dialog-dismiss onclick="xOpenDialogAnularPedido();">Listo</div>
-				<div class="xBoton2 xRojo" dialog-dismiss>Cancelar</div>
 				<br><br>
+				<button class="btn btn-primary"
+					onclick="xOpenDialogAnularPedido();">
+					Listo
+				</button>
+				<button class="btn btn-secondary" dialog-dismiss>
+					Cancelar
+				</button>
+				<br>
 			</div>
 		</paper-dialog>
 
@@ -1057,7 +1062,20 @@ function getIdPedidosRegistroPago() {
 	})
 	const numPedidosRegistro = idpedidos.size;
 	idpedidos = Array.from(idpedidos).join(',');
-	return { idpedidos, numPedidosRegistro }
+
+	// obtener idpedido_detalles
+	let listIdPedidoDetalles = [];
+	try {		
+		listIdPedidoDetalles = listRegistroMaster
+		.filter(e => e.idregistro_pago === xidregistro_pago_sel)
+		.flatMap(e => e.list_productos.map(i => i.idpedido_detalle));
+	} catch (error) {
+		console.log('error', error);
+	}
+
+	const idpedidosDetalles = listIdPedidoDetalles.join(',');
+
+	return { idpedidos, numPedidosRegistro, idpedidosDetalles }
 }
 
 async function xAnularPedidoHistorial(){
@@ -1071,7 +1089,7 @@ async function xAnularPedidoHistorial(){
 	// _xidpedid_txt_change=_xidpedid_txt_change.slice(1);
 	// //
 
-	const { idpedidos, numPedidosRegistro } = getIdPedidosRegistroPago();
+	const { idpedidos, numPedidosRegistro, idpedidosDetalles } = getIdPedidosRegistroPago();
 
 	var xArrayAnularItems = xGetItemFromPedidosAnular('#tb_det_pedidos', idpedidos);
 	console.log('xArrayAnularItems', xArrayAnularItems);
@@ -1100,7 +1118,18 @@ async function xAnularPedidoHistorial(){
 	}	
 
 	xPopupLoad.xopen();
-	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular : xArrayAnularItems, xPedidos: idpedidos, xMotivo:$("#txt_motivo_anular").val(),'u':xPermisoSupervisor,'viene_historial':xidregistro_pago_sel, 'xisRecuperarStock': isRecuperarStock}})
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011',
+		data:{
+			ArrayPeAnular : xArrayAnularItems,			
+			numpedidos: numPedidosRegistro,
+			xMotivo:$("#txt_motivo_anular").val(),
+			'u':xPermisoSupervisor,
+			'viene_historial':xidregistro_pago_sel, 
+			'xisRecuperarStock': isRecuperarStock,
+			idregistro_pago: xidregistro_pago_sel,
+			idpedidosDetalles: idpedidosDetalles
+		}
+	})
 	.done( function (dt_xx) {
 		xPopupLoad.xclose();
 		$(".xMiBoton_icon_lateral").attr('disabled', true);
@@ -1153,6 +1182,7 @@ function xloadHistorial(){
 		
 		
 		xdt_h=res.datos;
+		console.log('xdt_h', xdt_h);	
 		var xNumRegistro = xdt_h.length + 1 || 0;
 		var listTipoPago = [], importeTotalRegistrado = 0, numTotalComprobantes = 0;
 

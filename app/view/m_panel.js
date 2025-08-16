@@ -76,6 +76,10 @@ function xIniDocument(){
 		 console.log('recibi alerta de notifiacion desde el panel');
 	 });
 
+	 setTimeout(() => {
+		 document.body.classList.add('x-body-svg');
+	 }, 1000);
+
  	//xVerificarSession();
  	//xSoloAccPedido();
 

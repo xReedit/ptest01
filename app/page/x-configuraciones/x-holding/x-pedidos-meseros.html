@@ -1,13 +1,32 @@
 <!-- para la administracion del holding -  pedidos de los meseros -->
 <script type="text/javascript" src="../../../view/socket.service.p.js"></script>
 <dom-module id="x-pedidos-meseros">
+    <link rel="import" href="../../../page/x-configuraciones/x-holding/componentes/x-metodo-pago.html">
     <template>
+
+        <paper-dialog class="dialog_redondo" id="dialogMetodoPago" modal with-backdrop>
+            <x-metodo-pago id="metodoPago"></x-metodo-pago>
+            <br>
+            <div>
+                <button class="btn btn-sm btn-dark" dialog-dismiss>Cerrar</button>
+            </div>
+        </paper-dialog>
 
         <br>
         <div class="xMiCard xradius" style="width:85%; max-width: 1100px;">
             <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
                 <div class="d-flexx justify-content-between align-items-center">
-                    <h3>Pedidos por Mozos</h3>
+                    <div>
+                        <h3>Pedidos cobrados por los meseros</h3>
+                        <span>En este se pueden ver los pedidos cobrados por los meseros. En la opción "Metodos de pago" se pueden configurar los <br>tipos de pago y comisiones que estarán disponibles en la aplicacion del mesero</span>
+                    </div>
+
+                    <div>                        
+                        <button class="btn btn-sm btn-secondary ml-2" on-click="getShowMetodosPago">
+                            <i class="fa fa-credit-card"></i>
+                            <span>Metodos de pago</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="xLinea2"></div>
@@ -16,7 +35,7 @@
                 
                     <!-- Agregar filtro de marcas -->
                     <div class="filter-section mb-2 d-flexx justify-content-between align-items-end">
-                        <div class="d-flexx">
+                        <div class="d-flexx align-items-end">
                             <div>
                                 <p class="fw-600">Nombre</p>
                                 <select class="selected-template-1 fs-15" id="filterMozo" on-change="_filterByMozo">
@@ -32,6 +51,10 @@
                                 <input type="text" style="height: 20px;" class="selected-template-1 xCursor" id="txt_fecha_pedido_mozo"
                                     placeholder="Elige fecha">
                             </div>
+                            <button class="btn btn-sm btn-dark ml-2" on-click="getPedidosHoldingMeserosByDay">
+                                <i class="fa fa-refresh"></i>
+                                <span>Actualizar</span>
+                            </button>
                         </div>
                     </div>
                     <hr>
@@ -194,17 +217,33 @@
                 importeTotal: {
                     type: Number,
                     value: 0
+                },
+                dataSedeHolding: {
+                    type: Object,
+                    value: function () { return {}; }
+                },
+                idsede_holding: {
+                    type: Number,
+                    value: 0
                 }
             },
 
             attached: function () {
                 this.pedidos = [];
                 this._initializeSocket();
+                this.initPage();
                 $('body').addClass('loaded');
             },
 
             detached: function () {
 
+            },
+
+            initPage: async function () {
+                // datos de sede o holding
+                this.dataSedeHolding = xm_log_get('datos_sede_holding');
+                this.idsede_holding = this.dataSedeHolding.idsede_holding || 0;
+                console.log('dataSedeHolding', this.dataSedeHolding);
             },
 
             _pintarPedidoHolding: function (pedido) {
@@ -221,16 +260,22 @@
 
                 this.listIdsPedidos.push(idpedido);
 
+                await delay(1000);
+
                 await $.ajax({
                     type: 'POST',
                     url: '../../bdphp/log_010.php',
                     data: JSON.stringify({
                         op: 'get-pedidos-holding-meseros-by-id',
-                        idpedido: idpedido
+                        idpedido: idpedido,
+                        idsede_holding: this.idsede_holding                        
                     })
                 }).done(dt => {
-                    let itemPedido = JSON.parse(dt).datos[0];
-                    this.addPedidoInPedidos(itemPedido);
+                    let listItemsPedido = JSON.parse(dt).datos;
+                    console.log('listItemsPedido', listItemsPedido);
+                    listItemsPedido.forEach(itemPedido => {
+                        this.addPedidoInPedidos(itemPedido);
+                    });
                 });
             },
 
@@ -264,14 +309,13 @@
                 xPopupLoad.xopen();
                 this.pedidos = [];
                 this.pedidosFiltrados = [];
-                const fecha = this.fechaSelected === '' ? new Date().toISOString().split('T')[0] : this.fechaSelected;                
                 $.ajax({
                     type: 'POST',
                     url: '../../bdphp/log_010.php',
                     data: JSON.stringify({
                         op: 'get-pedidos-holding-meseros-by-day',
-                        fecha: fecha,
-                        idsede_holding: 6
+                        fecha: this.fechaSelected,
+                        idsede_holding: this.idsede_holding                        
                     })
                 }).done(dt => {
                     xPopupLoad.xclose();
@@ -295,9 +339,15 @@
             },
 
             addPedidoInPedidos(itemPedido) {                
-                itemPedido.estado_cerrado = itemPedido.cerrado_mesero == '1' ? 'Cerrado' : 'Pendiente';                this.pedidos.push(itemPedido);
+                itemPedido.estado_cerrado = itemPedido.cerrado_mesero == '1' ? 'Cerrado' : 'Pendiente';
+                this.pedidos.push(itemPedido);
+
                 itemPedido.icon = `../../images/${itemPedido.icon}`;
+                
+                // Ordenar los pedidos con los más recientes primero (por idpedido descendente)
+                this.pedidos.sort((a, b) => parseInt(b.idpedido) - parseInt(a.idpedido));
                 this.pedidosFiltrados = this.pedidos;
+                
                 this.listIdsPedidos.push(itemPedido.idpedido);
 
                 this.pedidosFiltrados = JSON.parse(JSON.stringify(this.pedidosFiltrados));
@@ -431,6 +481,10 @@
                 const reverseIndex = total - index;
                 return xCeroIzq(reverseIndex, 1);
             },
+
+            getShowMetodosPago: function () {
+                dialogMetodoPago.open();
+            }
         });
     </script>
 </dom-module>

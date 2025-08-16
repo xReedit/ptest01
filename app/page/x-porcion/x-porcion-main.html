@@ -51,7 +51,7 @@
 
                     <!-- main -->
                     <div hidden$="[[isShowDetallePorcion]]">
-                        <input type="text" class="xMiInput" placeholder="Buscar" inline id="txt_buscar_porcion">
+                        <input type="text" class="xMiInput" placeholder="Buscar" inline id="txt_buscar_porcion" on-input="searchPorcion">
                         <div class="xBoton2 xAzul xDerecha" onclick="dialog_additem_porcion.open();">+ Agregar Porcion</div>
                         <br><br><br>
                         <div class="xLinea2"></div>
@@ -132,6 +132,7 @@ var xThisProPor;
                 var xtr_stock_por = '';
                 xdtPor = xdtPor.datos.map(x => { x.modificado = false; return x });
                 xThisProPor.listPorciones = xdtPor;
+                xThisProPor.listPorcionesOriginal = [...xdtPor]; // Guardar copia original para búsquedas
                 for (var i = 0; i < xdtPor.length; i++) {
                     xdtPor[i].stock = parseFloat(xdtPor[i].stock);
                     xtr_stock_por = xdtPor[i].stock;
@@ -175,6 +176,25 @@ Polymer({
         this.isShowDetallePorcion = false	
     	xThisProPor=this;
     	xIniPorcion();
-    }
+    },
+    searchPorcion: function(){
+        const _search = $("#txt_buscar_porcion").val().toLowerCase().trim();
+        
+        if (!_search) {
+            // Si no hay texto de búsqueda, mostrar todas las porciones
+            this.set('listPorciones', this.listPorcionesOriginal || this.listPorciones);
+            return;
+        }
+        
+        // Filtrar porciones por familia y descripción
+        const porcionesFiltradas = (this.listPorcionesOriginal || this.listPorciones).filter(porcion => {
+            const familia = (porcion.familia || '').toLowerCase();
+            const descripcion = (porcion.porcion || '').toLowerCase();
+            
+            return familia.includes(_search) || descripcion.includes(_search);
+        });
+        
+        this.set('listPorciones', porcionesFiltradas);
+    },
 })
 </script>

@@ -2,7 +2,7 @@
     <link rel="import" href="../../../x-componentes/x-comp-find-sede/x-comp-find-sede.html">
     <link rel="import" href="../../../x-componentes/x-comp-search-data/x-comp-search-data.html">
     <link rel="import" href="../../../x-componentes/x-comp-find-tipo-pago/x-comp-find-tipo-pago.html">    
-
+    <link rel="import" href="componentes/x-metodo-pago.html">
     <template>
         <style>
             :host {
@@ -111,7 +111,8 @@
             </div>            
             <!-- Tipo Pago -->
             <div id="div_tipo_pago">
-                <h3>Tipo Pago</h3>
+                <x-metodo-pago></x-metodo-pago>
+                <!-- <h3>Tipo Pago</h3>
                 <p class="text-secondary fs-11">En este se configuran los tipos de pago aceptados y comisiones</p>
                 <br>
                 <div>
@@ -149,7 +150,7 @@
                         </tbody>
                     </table>
                     <br>
-                </div>
+                </div> -->
             </div>     
         </iron-pages>
     </template>

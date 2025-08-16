@@ -212,7 +212,7 @@ function xIniRecetas(){
 			})			
 		}
 		xThis.productoSeleted = _productoSelected;
-		console.log('productoSeleted', _productoSelected);
+		// console.log('productoSeleted', _productoSelected);
 	});
 }
 function xNuevoPlato(){
@@ -389,7 +389,7 @@ function xAddItemIngrediente(){
 	const _descripcionProducto = xThis.isFromRecetaProducto ? _productoSelected.label : xdes_ingrediente;	
 	let _cantidad = xcan_item;
 
-	if ( xThis.isFromRecetaProducto  ) {
+	if ( xThis.isFromRecetaProducto && xThis.undConvercion ) {
 		const _rptCalculo = calcularCantidadDescuento(xcan_item, xThis.undConvercion, _productoSelected);
 		_cantidad = _rptCalculo.cantidadDescontar;
 	}
@@ -465,10 +465,18 @@ function xAddItemIngrediente(){
 				mensaje: 'La cantidad de la receta debe ser un número positivo',
 				cantidadDescontar: 0
 			};
+		}		
+
+		if (!undConvercion) {
+			return {
+				error: true,
+				mensaje: 'La unidad de conversión no es válida',
+				cantidadDescontar: cantidadReceta
+			};
 		}
 
 		// Extraer información relevante de los objetos
-		const unidadReceta = undConvercion.abreviatura || '';
+		const unidadReceta = undConvercion ? undConvercion.abreviatura : '';
 		const factorConversion = parseFloat(productoSeleccionado.factor_conversion) || 0;
 
 		// Obtener la unidad de kardex (podría necesitar una consulta adicional)
@@ -506,7 +514,7 @@ function xAddItemIngrediente(){
 			// unidadInventario: unidadInventario,
 			factorConversion: factorConversion,
 			textoReceta: `${cantidadReceta} ${unidadReceta}`,
-			textoInventario: `${cantidadRedondeada} `
+			textoInventario: cantidadRedondeada
 		};
 	}
 
@@ -646,7 +654,7 @@ Polymer({
 
 		const cantidad_producto = parseFloat(obj.target.value);
 		const costo_producto = this.productoSeleted.costo_conversion * cantidad_producto;
-		console.log('cantidad_producto', costo_producto);
+		// console.log('cantidad_producto', costo_producto);
 
 		costo_item.value = costo_producto;
 	}

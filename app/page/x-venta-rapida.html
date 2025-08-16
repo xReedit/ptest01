@@ -61,7 +61,7 @@
 	  <paper-dialog id="dialog_nuevo_pedido" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<h2>Nuevo Pedido</h2>
 			<p>
-			  Si tiene un pededido pendiente de confirmacion se borrara para generar uno nuevo.
+			  Si tiene un pedido pendiente de confirmacion se borrara para generar uno nuevo.
 			</p>
 			<br/>
 			<!--
@@ -1324,9 +1324,13 @@ function xEnviarACuenta(){
 function xNuevoPedidoDialogVR() {
 	// xPopupLoad.xopen();
 	xNuevoPedidoVR();
-	if (isSocket) {
+	// if (isSocket) {
+	// 	xLoadCartaVR();
+	// }	
+
+	setTimeout(() => {
 		xLoadCartaVR();		
-	}	
+	}, 500);
 }
 
 function xNuevoPedidoVR() {
@@ -1364,9 +1368,10 @@ function xNuevoPedidoVR() {
 			// xLoadCartaVR();
 			xPopupLoad.xclose();
 		}, 500);
-	} else  {
-		xLoadCartaVR();
-	}
+	} 
+	// else  {
+	// 	xLoadCartaVR();
+	// }
 
 	$("#xtb_pedido_subtotales tr").remove();
 	$("#tb_pedido_detalle").remove();
@@ -2160,6 +2165,8 @@ function _cpStockItemModificado(item){
 	// $(idFind)[0].dataset.stock_actual = xCantidadMax
 	$(idFind + ' #numStock').text(xCeroIzq(xCantidadMax,2));
 	$(idFind + ' span.xcant_li2').attr('data-cantmax', xCantidadMax);
+
+	$("#dialog_item_comp #contetStock").text(xCeroIzq(xCantidadMax,2));
 	
 	// clase color
 	xClassEstadoStock = xClassEstadoItem(xCantidadMax).split("|")[1];
@@ -2177,6 +2184,9 @@ function _cpStockItemModificado(item){
 	} catch (error) {}
 
 	itemPedidos_objItemSelected = xGeneralDataCarta[index];
+	itemPedidos_objItemSelected.stock_actual = xCantidadMax;
+	itemPedidos_objItemSelected.cantidad = xCantidadMax;
+	
 
 	// subitems
 	if (item.subitems) {
@@ -2697,6 +2707,7 @@ Polymer({
 		showCodeLocalizator: Boolean,
 	},
 	attached:function(){
+		document.body.style.backgroundImage = 'none';
 		this.selected_us=0;
 		this.showCompDescuento = false
 		this.xIconScreen = 'icons:fullscreen';
@@ -2713,6 +2724,8 @@ Polymer({
 		$("#panel_toolbar").addClass('xInvisible');
     },
     detached:function(){
+		document.body.style.backgroundImage = 'url("../../images/background-light.svg")';
+		document.body.style.backgroundColor = '#FAFAFA';
     	document.defaultAction = false;
 		//var eventHandler = true ? detectEvent : empty;
 		document['onkeydown'] = empty;

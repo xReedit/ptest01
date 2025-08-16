@@ -853,6 +853,7 @@
 	function xConfirmarNumeroTelefono(esValido) {
 		// Prevenir comportamiento predeterminado
 		event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+		xThisPago.telefonoVerificado = false;
 		
 		if (esValido) {
 			// El usuario confirmó que el teléfono es correcto
@@ -883,6 +884,18 @@
 		if ($("#clie_telefono").val() && $("#clie_telefono").val().trim() !== '' && !xThisPago.telefonoVerificado && xIdCliente_pago && xIdCliente_pago !== '') {
 			$("#clie_telefono").val('');
 		}
+
+		// sino esta verificado entonces no se envia el whatsapp
+		try {			
+			if (!xThisPago.telefonoVerificado) {
+				$("#clie_telefono").val('');			
+				$("#datos_cliente #clie_telefono").val('');
+				clie_telefono.value = '';
+			}
+		} catch (error) {
+			console.log(error);
+		}
+		
 		
 
 		registrando = true;

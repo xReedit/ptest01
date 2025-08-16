@@ -51,6 +51,12 @@ async function generarCuponAutomatico(idcupon) {
 }
 
 async function printerCupon(cupon, cliente) {
+
+    if (cupon.no_imprimir === '1') {
+        console.log('no imprimir');
+        return;
+    }
+
     const isPrint = xgetComprobanteImpresora(-2);    
     let printer = isPrint ? xImpresoraPrint[0] : {};
     let impresora = isPrint ? {
