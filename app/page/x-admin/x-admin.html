@@ -235,12 +235,13 @@
 						<br>
 						<table width="100%" id="tb_pedidos_borrados">
 							<thead>
-								<th>#</th>
-								<th>Razon Social</th>
-								<th>Sede</th>						
-								<th>Ciudad</th>
-								<th>Tipo</th>						
-								<th>F. Inicio</th>						
+								<th class="xCursor" data-sort="index" onclick="sortListSedes(this)"># <i class="fa fa-sort"></i></th>
+								<th class="xCursor" data-sort="razonsocial" onclick="sortListSedes(this)">Razon Social <i class="fa fa-sort"></i></th>
+								<th class="xCursor" data-sort="nomsede" onclick="sortListSedes(this)">Sede <i class="fa fa-sort"></i></th>						
+								<th class="xCursor" data-sort="ciudad" onclick="sortListSedes(this)">Ciudad <i class="fa fa-sort"></i></th>
+								<th class="xCursor" data-sort="tipo" onclick="sortListSedes(this)">Tipo <i class="fa fa-sort"></i></th>						
+								<th class="xCursor" data-sort="finicio" onclick="sortListSedes(this)">F. Inicio <i class="fa fa-sort"></i></th>
+								<th class="xCursor" data-sort="num_dias_creado" onclick="sortListSedes(this)">Antigüedad <i class="fa fa-sort"></i></th>						
 								<th>Estado</th>
 								<th>Pago</th>
 								<th></th>
@@ -254,6 +255,14 @@
 										<td>{{item.ciudad}}</td>
 										<td>{{item.tipo}}</td>
 										<td>{{item.finicio}}</td>
+										<td>
+											<div class="d-flexx align-items-center">
+												<span>{{formatTimeSinceCreation(item.num_dias_creado)}}</span>
+												<span class$="{{getAntiguedadIndicatorClass(item.num_dias_creado)}} ml-2" title$="{{getAntiguedadTitle(item.num_dias_creado)}}">
+													<i class="fa fa-circle"></i>
+												</span>
+											</div>
+										</td>
 										<td>Activo</td>
 										<td>
 											<div class="text-center">
@@ -383,10 +392,45 @@
 	.green {
 		color: green;
 	}
+	
+	.fa-sort-asc, .fa-sort-desc {
+		color: #007bff;
+	}
+	
+	.xCursor {
+		cursor: pointer;
+	}
+	
+	.indicator-new {
+		color: #28a745; /* verde */
+	}
+
+	.indicator-null {
+		color: #000000; /* verde */
+	}
+	
+	.indicator-recent {
+		color: #ffc107; /* amarillo */
+	}
+	
+	.indicator-established {
+		color: #007bff; /* azul */
+	}
+	
+	.ml-2 {
+		margin-left: 8px;
+	}
+	
+	.d-flexx {
+		display: flex;
+		align-items: center;
+	}
 </style>
 <script type="text/javascript" src="./us_cpc.js"></script>
 <script>
 var xThisAdmin, xPopupLoad, arrSede=[];
+var currentSortField = '';
+var currentSortOrder = 'asc';
 
     function xIniAdmin() {
 		xLoadCpc();
@@ -400,17 +444,133 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 		$.ajax({ url: '../../bdphp/log_004.php?op=1' })
 		.done((res) => {
 			const _res = $.parseJSON(res);
-			arrSede = _res.datos;
-			xThisAdmin.ListSedes = _res.datos;			
+			
+			// Procesar cada elemento para calcular la antigüedad
+			const datosProcessed = _res.datos.map(item => {
+				// Si ya tiene num_dias_creado, lo dejamos como está
+				if (item.num_dias_creado) {
+					item.num_dias_creado = parseInt(item.num_dias_creado);
+					return item;
+				}
+				
+				// Si no tiene num_dias_creado pero tiene finicio, calculamos los días
+				if (item.finicio) {
+					const fechaInicio = parseFechaInicio(item.finicio);
+					if (fechaInicio) {
+						const hoy = new Date();
+						const diffTime = Math.abs(hoy - fechaInicio);
+						item.num_dias_creado = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+						return item;
+					}
+				}
+				
+				// Si no hay información de fecha, asignamos 0 días (nuevo)
+				item.num_dias_creado = 0;
+				return item;
+			});
+			
+			arrSede = datosProcessed;
+			xThisAdmin.ListSedes = datosProcessed;	
+			console.log('xThisAdmin.ListSedes procesado', xThisAdmin.ListSedes);		
 		});
+	}
+	
+	// Función auxiliar para parsear fechas en diferentes formatos
+	function parseFechaInicio(fechaStr) {
+		if (!fechaStr || fechaStr === '') return null;
+		
+		// Intentar diferentes formatos de fecha
+		let fecha = null;
+		
+		// Formato YYYY-MM-DD
+		if (fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+			fecha = new Date(fechaStr);
+		}
+		// Formato DD/MM/YYYY
+		else if (fechaStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+			const parts = fechaStr.split('/');
+			fecha = new Date(parts[2], parts[1] - 1, parts[0]);
+		}
+		
+		// Verificar si la fecha es válida
+		if (fecha && !isNaN(fecha.getTime())) {
+			return fecha;
+		}
+		
+		return null;
 	}
 
 	function xBuscarSedesSuscritos(obj) {
 		let nom_sede = obj.value.toLowerCase();
 		console.log('nom_sede', nom_sede);
+		
+		// Filtrar por nombre de sede
 		let arrSearch = arrSede.filter(s => s.nomsede).filter(s => s.nomsede.toLowerCase().includes(nom_sede));
 		console.log('arrSearch', arrSearch);
+		
+		// Asignar a ListSedes manteniendo los valores calculados
 		xThisAdmin.ListSedes = arrSearch;
+		
+		// Reset sort indicators when searching
+		resetSortIndicators();
+	}
+	
+	function sortListSedes(element) {
+		// Get the sort field from data-sort attribute
+		const sortField = element.getAttribute('data-sort');
+		
+		// Toggle sort order if clicking on the same column
+		if (currentSortField === sortField) {
+			currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+		} else {
+			currentSortField = sortField;
+			currentSortOrder = 'asc';
+		}
+		
+		// Reset all sort indicators
+		resetSortIndicators();
+		
+		// Update the sort indicator for the current column
+		const icon = element.querySelector('i');
+		icon.className = currentSortOrder === 'asc' ? 'fa fa-sort-asc' : 'fa fa-sort-desc';
+		
+		// Create a copy of the array to sort
+		let sortedArray = [...xThisAdmin.ListSedes];
+		
+		// Sort the array based on the selected field
+		sortedArray.sort((a, b) => {
+			// Special case for index which is not a property of the items
+			if (sortField === 'index') {
+				return currentSortOrder === 'asc' ? 1 : -1; // Just reverse the order for index
+			}
+			
+			// Get values to compare
+			let valueA = a[sortField] ? a[sortField].toString().toLowerCase() : '';
+			let valueB = b[sortField] ? b[sortField].toString().toLowerCase() : '';
+			
+			// Compare values
+			if (valueA < valueB) {
+				return currentSortOrder === 'asc' ? -1 : 1;
+			}
+			if (valueA > valueB) {
+				return currentSortOrder === 'asc' ? 1 : -1;
+			}
+			return 0;
+		});
+		
+		// Update the ListSedes property with the sorted array
+		xThisAdmin.ListSedes = sortedArray;
+	}
+	
+	function resetSortIndicators() {
+		// Reset all sort indicators to default
+		const headers = document.querySelectorAll('th[data-sort]');
+		headers.forEach(header => {
+			const icon = header.querySelector('i');
+			if (icon) {
+				icon.className = 'fa fa-sort';
+			}
+		});
 	}
 
 	function xLoadRepartidores(){
@@ -520,7 +680,7 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 				sedeDown: {},
 				// hayDatosRestaurar: boolean = true,
 			},
-			attached: function () {		
+			ready: function () {		
 				// this.UsarioRepartidorSelected = {};
 				this.selected = 0,
 				this.isShowChagePlan = false;
@@ -528,14 +688,75 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 				xIniAdmin();
 			},
 			displayIndex: function (index) {
-				return xCeroIzq(index + 1, 1);
+				return parseInt(index) + 1;
 			},
 			computeClass: function (is_bloqueado) {
 				return is_bloqueado === '1' ? 'red' : 'green';
 			},
-			_isEqual: function (value1, value2) {
-				return value1 === value2;
+			_isEqual: function (a, b) {
+				return a === b;
 			},
+			_isNotEqual: function (a, b) {
+				return a !== b;
+			},
+			formatTimeSinceCreation: function(days) {
+			// Ya no necesitamos calcular los días, solo formatear el valor
+			if (!days) return '-';
+			
+			days = parseInt(days);
+			
+			// Convertir a años y meses si es necesario
+			if (days >= 365) {
+				const years = Math.floor(days / 365);
+				const remainingDays = days % 365;
+				const months = Math.floor(remainingDays / 30);
+				
+				if (months > 0) {
+					return `${years} año${years > 1 ? 's' : ''}, ${months} mes${months > 1 ? 'es' : ''}`;
+				} else {
+					return `${years} año${years > 1 ? 's' : ''}`;
+				}
+			} else if (days >= 30) {
+				const months = Math.floor(days / 30);
+				const remainingDays = days % 30;
+				
+				if (remainingDays > 0) {
+					return `${months} mes${months > 1 ? 'es' : ''}, ${remainingDays} día${remainingDays > 1 ? 's' : ''}`;
+				} else {
+					return `${months} mes${months > 1 ? 'es' : ''}`;
+				}
+			} else {
+				return `${days} día${days > 1 ? 's' : ''}`;
+			}
+		},
+		getAntiguedadIndicatorClass: function(days) {
+			// Ya no necesitamos calcular los días, solo determinar la clase
+			if (!days) return 'indicator-null';
+			
+			days = parseInt(days);
+			
+			if (days < 30) {
+				return 'indicator-new';
+			} else if (days >= 30 && days < 60) {
+				return 'indicator-recent';
+			} else {
+				return 'indicator-established';
+			}
+		},
+		getAntiguedadTitle: function(days) {
+			// Ya no necesitamos calcular los días, solo determinar el título
+			if (!days) return 'Comercio nuevo';
+			
+			days = parseInt(days);
+			
+			if (days < 30) {
+				return 'Comercio nuevo (menos de 30 días)';
+			} else if (days >= 30 && days < 60) {
+				return 'Comercio reciente (entre 30 y 60 días)';
+			} else {
+				return 'Comercio establecido (más de 60 días)';
+			}
+		},
 			openDialogDown: function (obj) {
 				const index = obj.target.parentElement.dataId;
 				this.sedeDown = this.ListSedes[index];
@@ -563,7 +784,7 @@ var xThisAdmin, xPopupLoad, arrSede=[];
 						console.log('res baja', res);
 						this.sedeDown.is_bloqueado = '1';
 						this.sedeDown.is_baja = '1';
-						this.ListSedes = JSON.parse(JSON.stringify(this.ListSedes));
+						this.ListSedes = JSON.parse(JSON.stringify(this.ListSedes));						
 						dialogSedeDown.close();
 					});
 			},

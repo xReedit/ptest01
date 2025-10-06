@@ -464,3 +464,38 @@ function _cpSocketVentaRegistrado() {
     this.socketCP.isRegistroVentaSource.next(true);
 }
 
+function pingMensajeria(roomId, timeout = 4000) {
+    return new Promise((resolve) => {
+        let isResolved = false;
+        
+        // Configurar timeout
+        const timeoutId = setTimeout(() => {
+            if (!isResolved) {
+                isResolved = true;
+                console.log('Ping mensajería: Timeout - No hay respuesta');
+                resolve(false);
+            }
+        }, timeout);
+        
+        // Enviar ping y escuchar respuesta
+        this.socketCP.emit('ping-mensajeria', { 
+            pingId: Date.now(),
+            timestamp: Date.now(),
+            success: true,
+            roomId
+        });
+        
+        // Escuchar la respuesta pong
+        const subscription = this.socketCP.listen('pong-mensajeria').subscribe(data => {
+            if (!isResolved) {
+                isResolved = true;
+                clearTimeout(timeoutId);
+                console.log('Ping mensajería: Respuesta recibida', data);
+                subscription.unsubscribe(); // Limpiar la suscripción
+                resolve(true);
+            }
+        });
+    });
+}
+    
+

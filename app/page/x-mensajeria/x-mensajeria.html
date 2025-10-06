@@ -1,0 +1,137 @@
+<dom-module id="x-mensajeria">
+    <script type="text/javascript" src="../../view/socket.service.p.js"></script>
+	<template>        
+        <br>
+        <div class="xMiCard xradius" style="width:85%; max-width: 1100px;">
+            <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                <h3>Conectarse a WhastApp</h3>
+                <span>Para enviar comprobantes y mensajes a sus clientes es necesario conectarse al servicio de mensajeria WhastApp.<br>Siga los siguientes pasos:</span>
+            </div>
+            <div class="xContentCard" style="height: 100%;">
+                <h4>Sigue estos simples pasos para conectarse al servicio de mensajeria WhastApp:</h4>
+                <ol>
+                    <li>
+                        <p>Descargue la aplicacion de mensajeria.</p>
+                        <div class="xMiBoton_icon" style="border: 1px solid #c5c5c5;">
+                            <a href="https://www.whatsapp.com/" target="_blank">
+                                <img src="../../../images/download_app.png" alt="mensajeria">
+                                <p>Descargar Aplicacion Mensajeria</p>
+                            </a>
+                        </div>
+                    </li>
+
+                    <br>
+                    <li>
+                        <p>Instale la aplicacion de mensajeria. Mire el video de como instalarla.</p>
+                        
+                        <button class="xMiBoton_icon"
+                        onclick="window.open('https://www.youtube.com/watch?v=GRAXRqXgCK0', '_blank')"
+                        >
+                            <i class="fa fa-youtube"></i>
+                            Ver Video
+                        </button>                        
+                    </li>
+
+                    <br>
+                    <li>
+                        <p>Coloque el codigo de comercio en la aplicacion de mensajeria.</p>
+                        <p class="fw-600">Clic en el codigo de comercio para copiarlo:</p>
+                        <div class="xMiBoton_icon fs-20 fw-600 xCursor" style="border: 1px solid #c5c5c5;" title="Click para copiar"
+                        on-click="_copyToClipboard"
+                        >
+                            <div class="d-flexx align-items-center">
+                                <span class="mr-1" id="myInput">[[codigoComercio]]</span>
+                                <i class="fa fa-copy"></i>
+                            </div>
+                        </div>     
+                        <p class="xInvisible text-primary fw-600" id="imputMensaje">Copiado</p>                   
+                    </li>
+                    <br>
+                    <li>
+                        <p>Abra la aplicacion de mensajeria.</p>
+                        <div class="xMiBoton_icon" style="border: 1px solid #c5c5c5;">
+                            <a href="http://localhost:7543/">
+                                <img src="../../../images/app_mensajeria.png" alt="mensajeria">
+                                <p>Aplicacion Mensajeria</p>
+                            </a>
+                        </div>
+                    </li>
+                    
+                </ol>
+		</div>
+	</template>
+
+    <script>
+        Polymer({
+            is:'x-mensajeria',
+            properties:{        
+                codigoComercio: {
+                    type: String,
+                    value: ''
+                }    
+            },
+            attached: function() {                                
+                xm_log_get('ini_us');
+                this.codigoComercio = xIdOrg + xIdSede;
+                setTimeout(() => {                    
+                    this.pingMensajeria();
+                }, 1000);
+            },
+            _copyToClipboard: async function () {
+                const copyText = document.getElementById("myInput");
+                const text = copyText.textContent;
+
+                try {
+                    // Intentar primero con la API moderna
+                    if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(text);
+                        this._msjConfirmacionCopiado();
+                        return;
+                    }
+
+                    // Método de respaldo para navegadores antiguos
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    Object.assign(textArea.style, {
+                        position: "fixed",
+                        left: "-9999px",
+                        top: "-9999px"
+                    });
+
+                    document.body.appendChild(textArea);
+                    textArea.select();
+
+                    if (document.execCommand('copy')) {
+                        this._msjConfirmacionCopiado();
+                    } else {
+                        throw new Error('execCommand falló');
+                    }
+
+                    document.body.removeChild(textArea);
+
+                } catch (error) {
+                    console.error('Error al copiar:', error);
+                    this._msjConfirmacionCopiado(`Error al copiar. Código: ${text}`, 4000);
+                }
+            },
+            _msjConfirmacionCopiado: function() {
+                showToastSwal('success', 'Copiado');
+                document.getElementById("imputMensaje").classList.remove("xInvisible");
+                setTimeout(() => {
+                    document.getElementById("imputMensaje").classList.add("xInvisible");
+                }, 2000);
+            },
+            pingMensajeria: async function() {
+                _cpSocketOpen();
+                const estaConectado = await pingMensajeria(this.codigoComercio);                               
+                if (estaConectado) {
+                    // Servicio disponible, redirigir a la aplicación de mensajería
+                    window.location.href = 'http://localhost:7543/';
+                } else {
+                    showToastSwal('warning', 'Servicio de mensajería no disponible');
+                }
+                $('body').addClass('loaded');
+            }
+        });
+    </script>
+</dom-module>

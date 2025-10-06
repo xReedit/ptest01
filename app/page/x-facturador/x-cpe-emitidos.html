@@ -119,9 +119,14 @@
                                     Sunat.<br>Este proceso es el mismo que se realiza al cierre de caja.</p>
                                 
                                 
-                                    <div class="d-flexx">
-                                        <button class="xBoton2 xAzul mr-2" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>                                        
-                                        <button class="xBoton2 xVerde" onclick="downloadReporteCPEEmitidos()" title="Bajar a excel"><img src="../../../images/excel.png" alt=""></button>
+                                    <div class="d-flexx justify-content-between">
+                                        <div>
+                                            <button class="xBoton2 xAzul mr-2" onclick="xEnviarResumenBoletas()">Enviar Resumen de boletas</button>                                        
+                                            <button class="xBoton2 xVerde" onclick="downloadReporteCPEEmitidos()" title="Bajar a excel"><img src="../../../images/excel.png" alt=""></button>
+                                        </div>
+                                        <div>
+                                            <button class="xBoton2 xVerde" onclick="xVincularWhatsApp()">Vincular WhastApp</button>
+                                        </div>
                                     </div>     
 
                                 <p id="xTituloRpt" class="xColorRow_Rojo"></p>
@@ -1102,6 +1107,10 @@
 
         // 		setDataListReporte(dataListReporte);	
         // 	});
+        }
+
+        function xVincularWhatsApp() {
+            xOpenPage(60);
         }
 
 
