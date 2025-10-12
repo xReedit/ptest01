@@ -127,6 +127,10 @@ function xOpenPage(xop, parametro){
 			break;
 		case 11:xruta='/control-delivery';break;
 		case 12:xruta='/pedidos-anulados';break;
+		case 60:
+			console.log('xOpenPage', 'mensajeria');
+			xruta = '/mensajeria';
+			break;
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){

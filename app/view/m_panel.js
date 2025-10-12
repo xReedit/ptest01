@@ -375,7 +375,7 @@ async function xOpenPage(xop, parametro){
 		case 57: xruta = '/pedidos_previo_pago'; break;
 		case 58: xruta = '/pedidos_marca'; break;
 		case 59: xruta = '/pedidos_meseros'; break;
-		case 60: xruta = '/mensajeria'; break;
+		case 60: xruta = '/mensajeria'; break;		
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

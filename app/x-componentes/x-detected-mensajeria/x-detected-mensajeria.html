@@ -1,0 +1,423 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<script type="text/javascript" src="../../view/socket.service.p.js"></script>
+
+<dom-module id="x-detected-mensajeria">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+            
+            .container-status {
+                padding: 12px 16px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transition: all 0.3s ease;
+            }
+            
+            /* Modo Compacto */
+            :host([compact]) .container-status {
+                padding: 6px 12px;
+                gap: 8px;
+                border-radius: 20px;
+                display: inline-flex;
+                width: auto;
+                max-width: 100%;
+            }
+            
+            .status-conectado {
+                background: #d4edda2e;
+                border: 1px solid #c3e6cb;
+                color: #202020;
+            }
+            
+            :host([compact]) .status-conectado {
+                background: rgba(40, 167, 69, 0.15);
+                border: 1px solid rgba(40, 167, 69, 0.3);
+                color: #ffffff;
+            }
+            
+            .status-desconectado {
+                background: #fff3cdb8;
+                /* border: 1px solid #ffeaa7; */
+                color: #202020;
+            }
+            
+            .icon-status {
+                font-size: 24px;
+                flex-shrink: 0;
+            }
+            
+            :host([compact]) .icon-status {
+                font-size: 16px;
+            }
+            
+            .icon-conectado {
+                color: #28a745;
+            }
+            
+            :host([compact]) .icon-conectado {
+                color: #4ade80;
+            }
+            
+            .icon-desconectado {
+                color: #ffc107;
+            }
+            
+            .content-status {
+                flex: 1;
+            }
+            
+            :host([compact]) .content-status {
+                flex: 0 1 auto;
+            }
+            
+            .title-status {
+                font-weight: 600;
+                font-size: 14px;
+                margin: 0 0 4px 0;
+            }
+            
+            :host([compact]) .title-status {
+                font-size: 13px;
+                margin: 0;
+                font-weight: 500;
+            }
+            
+            .desc-status {
+                font-size: 12px;
+                margin: 0;
+                opacity: 0.9;
+            }
+            
+            :host([compact]) .desc-status {
+                display: none; /* Ocultar descripción en modo compacto */
+            }
+            
+            .btn-conectar {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 13px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: background 0.2s;
+                white-space: nowrap;
+            }
+            
+            :host([compact]) .btn-conectar {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            
+            .btn-conectar:hover {
+                background: #0056b3;
+            }
+            
+            .btn-reconectar {
+                background: transparent;
+                color: #155724;
+                border: 1px solid #28a745;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            :host([compact]) .btn-reconectar {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+            
+            .btn-reconectar:hover {
+                background: #28a745;
+                color: white;
+            }
+            
+            .loading-dots {
+                display: inline-block;
+            }
+            
+            .loading-dots:after {
+                content: '.';
+                animation: dots 1.5s steps(3, end) infinite;
+            }
+            
+            @keyframes dots {
+                0%, 20% { content: '.'; }
+                40% { content: '..'; }
+                60%, 100% { content: '...'; }
+            }
+        </style>
+
+        <div class$="container-status [[_getStatusClass(isConectado, isChecking)]]">
+            <template is="dom-if" if="[[!isChecking]]">
+                <iron-icon 
+                    class$="icon-status [[_getIconClass(isConectado)]]" 
+                    icon="[[_getIcon(isConectado)]]">
+                </iron-icon>
+            </template>
+            
+            <template is="dom-if" if="[[isChecking]]">
+                <iron-icon class="icon-status" icon="icons:refresh" style="color: #6c757d; animation: spin 1s linear infinite;"></iron-icon>
+            </template>
+            
+            <div class="content-status">
+                <template is="dom-if" if="[[isChecking]]">
+                    <p class="title-status">Verificando conexión<span class="loading-dots"></span></p>
+                    <p class="desc-status">Comprobando servicio de mensajería</p>
+                </template>
+                
+                <template is="dom-if" if="[[_showConectado(isConectado, isChecking)]]">
+                    <p class="title-status">[[_getTituloConectado(compact)]]</p>
+                    <p class="desc-status">El servicio está activo y funcionando correctamente</p>
+                </template>
+                
+                <template is="dom-if" if="[[_showDesconectado(isConectado, isChecking)]]">
+                    <p class="title-status">[[_getTituloDesconectado(compact)]]</p>
+                    <p class="desc-status">Es necesario conectar el servicio de mensajería</p>
+                </template>
+            </div>
+            
+            <template is="dom-if" if="[[_showBotonConectar(isConectado, isChecking)]]">
+                <button class="btn-conectar" on-click="_irAMensajeria">
+                    Conectar WhastApp Ahora
+                </button>
+            </template>
+            
+            <template is="dom-if" if="[[_showBotonReconectar(isConectado, isChecking, compact)]]">
+                <button class="btn-reconectar" on-click="_verificarConexion">
+                    <iron-icon icon="icons:refresh" style="width: 14px; height: 14px; vertical-align: middle;"></iron-icon>
+                    Verificar
+                </button>
+            </template>
+        </div>
+
+        <style>
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'x-detected-mensajeria',
+            
+            properties: {
+                isConectado: {
+                    type: Boolean,
+                    value: false,
+                    notify: true
+                },
+                isChecking: {
+                    type: Boolean,
+                    value: true
+                },
+                autoCheck: {
+                    type: Boolean,
+                    value: true
+                },
+                checkInterval: {
+                    type: Number,
+                    value: 30000 // 30 segundos
+                },
+                compact: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                },
+                autoStart: {
+                    type: Boolean,
+                    value: true
+                }
+            },
+            
+            ready: function() {
+                console.log('x-detected-mensajeria: Componente inicializado');
+                
+                // Solo iniciar si autoStart está activado
+                if (this.autoStart) {
+                    this._iniciarDeteccion();
+                } else {
+                    console.log('x-detected-mensajeria: Esperando inicio manual (autoStart=false)');
+                }
+            },
+            
+            _iniciarDeteccion: function() {
+                console.log('x-detected-mensajeria: Iniciando detección...');
+                
+                // Esperar un momento para que las variables globales se carguen
+                setTimeout(() => {
+                    // Verificar conexión al cargar
+                    this._verificarConexion();
+                    
+                    // Auto-verificación periódica
+                    if (this.autoCheck) {
+                        this._startAutoCheck();
+                    }
+                }, 3000);
+            },
+            
+            detached: function() {
+                this._stopAutoCheck();
+            },
+            
+            _getCodigoComercio: function() {
+                // Estrategia 1: Intentar obtener de variables globales
+                if (typeof xIdOrg !== 'undefined' && typeof xIdSede !== 'undefined' && xIdOrg && xIdSede) {
+                    console.log('x-detected-mensajeria: Código desde variables globales:', xIdOrg + '' + xIdSede);
+                    return xIdOrg + '' + xIdSede;
+                }
+                
+                // Estrategia 2: Intentar desde localStorage
+                try {
+                    var storedIdOrg = window.localStorage.getItem('::app3_wo');
+                    var storedIdSede = window.localStorage.getItem('::app3_woS');
+                    if (storedIdOrg && storedIdSede) {
+                        console.log('x-detected-mensajeria: Código desde localStorage:', storedIdOrg + '' + storedIdSede);
+                        return storedIdOrg + '' + storedIdSede;
+                    }
+                } catch (e) {
+                    console.warn('x-detected-mensajeria: No se pudo leer localStorage', e);
+                }
+                
+                // Estrategia 3: Intentar desde xSysResto (si existe)
+                if (typeof xSysResto !== 'undefined' && xSysResto.xIdOrg && xSysResto.xIdSede) {
+                    console.log('x-detected-mensajeria: Código desde xSysResto:', xSysResto.xIdOrg + '' + xSysResto.xIdSede);
+                    return xSysResto.xIdOrg + '' + xSysResto.xIdSede;
+                }
+                
+                console.warn('x-detected-mensajeria: No se pudo obtener código de comercio, usando null (se calculará en el servidor)');
+                // Si todo falla, retornar null (la función _cpSocketPingMensajeria lo manejará)
+                return null;
+            },
+            
+            _verificarConexion: function() {
+                console.log('x-detected-mensajeria: Verificando conexión...');
+                this.isChecking = true;
+                
+                // Obtener código de comercio
+                var codigoComercio = this._getCodigoComercio();
+                console.log('x-detected-mensajeria: Código comercio =', codigoComercio);
+                
+                // Asegurar que socket está abierto
+                if (typeof _cpSocketOpen === 'function') {
+                    _cpSocketOpen();
+                }
+                
+                // Realizar ping
+                if (typeof _cpSocketPingMensajeria === 'function') {                    
+                    _cpSocketPingMensajeria(codigoComercio)
+                        .then((resultado) => {
+                            console.log('x-detected-mensajeria: Resultado ping =', resultado);
+                            this.isConectado = resultado;
+                            this.isChecking = false;
+                            
+                            // Disparar evento
+                            this.fire('mensajeria-status-changed', { 
+                                isConectado: resultado 
+                            });
+                        })
+                        .catch((error) => {
+                            console.error('x-detected-mensajeria: Error en ping', error);
+                            this.isConectado = false;
+                            this.isChecking = false;
+                        });
+                } else {
+                    console.error('x-detected-mensajeria: Función _cpSocketPingMensajeria no disponible');
+                    this.isConectado = false;
+                    this.isChecking = false;
+                }
+            },
+            
+            _startAutoCheck: function() {
+                this._stopAutoCheck();
+                this._intervalId = setInterval(() => {
+                    if (!this.isChecking) {
+                        this._verificarConexion();
+                    }
+                }, this.checkInterval);
+                
+                console.log('x-detected-mensajeria: Auto-check iniciado cada', this.checkInterval / 1000, 'segundos');
+            },
+            
+            _stopAutoCheck: function() {
+                if (this._intervalId) {
+                    clearInterval(this._intervalId);
+                    this._intervalId = null;
+                    console.log('x-detected-mensajeria: Auto-check detenido');
+                }
+            },
+            
+            _irAMensajeria: function() {
+                // console.log('x-detected-mensajeria: Redirigiendo a mensajería');
+                // window.location.href = '../x-mensajeria/mensajeria.html';
+                xOpenPage(60);
+            },
+            
+            _getStatusClass: function(isConectado, isChecking) {
+                if (isChecking) return '';
+                return isConectado ? 'status-conectado' : 'status-desconectado';
+            },
+            
+            _getIconClass: function(isConectado) {
+                return isConectado ? 'icon-conectado' : 'icon-desconectado';
+            },
+            
+            _getIcon: function(isConectado) {
+                return isConectado ? 'icons:check-circle' : 'icons:warning';
+            },
+            
+            _showConectado: function(isConectado, isChecking) {
+                return !isChecking && isConectado;
+            },
+            
+            _showDesconectado: function(isConectado, isChecking) {
+                return !isChecking && !isConectado;
+            },
+            
+            _showBotonConectar: function(isConectado, isChecking) {
+                return !isChecking && !isConectado;
+            },
+            
+            _showBotonReconectar: function(isConectado, isChecking, compact) {
+                // En modo compacto no mostrar el botón verificar
+                if (compact) return false;
+                return !isChecking && isConectado;
+            },
+            
+            // Método público para verificar desde fuera
+            checkConnection: function() {
+                this._verificarConexion();
+            },
+            
+            // Método público para iniciar manualmente
+            start: function() {
+                console.log('x-detected-mensajeria: Inicio manual solicitado');
+                if (!this._detectorIniciado) {
+                    this._detectorIniciado = true;
+                    this._iniciarDeteccion();
+                } else {
+                    console.log('x-detected-mensajeria: Ya está iniciado');
+                }
+            },
+            
+            _getTituloConectado: function(compact) {
+                return compact ? 'WhatsApp Conectado' : 'Mensajería WhatsApp Conectada';
+            },
+            
+            _getTituloDesconectado: function(compact) {
+                return compact ? 'WhatsApp Desconectado' : 'Mensajería WhatsApp Desconectada';
+            }
+        });
+    </script>
+</dom-module>

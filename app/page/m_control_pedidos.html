@@ -74,6 +74,7 @@
 	<!-- <link rel="import" href="../web_components/x-router/x-router.html"> -->
 	<link rel="import" href="../web_components/x-pass/x-pass.html">
 	<link rel="import" href="../web_components/x-pago/x-pago.html">
+	<link rel="import" href="../x-componentes/x-detected-mensajeria/x-detected-mensajeria.html">
 
 
 	<link rel="stylesheet" href="../../css/micss.css">
@@ -296,8 +297,13 @@
 
 	  <paper-header-panel main class="content-drawer">
 	    <paper-toolbar style="background: #136ab6 !important;">
-	      <div style="width: 100%" main class="xAlinearce w-100">
-	      	<h3 class="xAlinearce" id="Titulo_page">.</h3>
+	      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 15px;" main class="xAlinearce w-100">
+			<div class="d-flexx align-items-center">
+				<h3 class="xAlinearce" id="Titulo_page" style="margin: 0; white-space: nowrap;">.</h3>
+				<div style="flex: 1; max-width: 500px; margin-left: 5px;">
+					<x-detected-mensajeria id="detectorMensajeria" compact auto-start="false"></x-detected-mensajeria>
+				</div>
+			</div>
 	      	<div class="xDerecha xInvisible" id="div_filtro_header" style="display: flex; align-items: center;">
 	      	</div>
 	      </div>
@@ -307,7 +313,6 @@
 			<paper-toast id="toast" duration=0 text="." style="z-index: 1000;">
 				<i class="fa fa-wifi text-danger ml-1" id="icon-wifi"></i>
 				<paper-progress id="loading" indeterminate style="width: 100%; float: left;"></paper-progress>
-			</paper-toast>
 	    </div>
 	  </paper-header-panel>
 	</paper-drawer-panel>

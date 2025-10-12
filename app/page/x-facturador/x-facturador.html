@@ -1,5 +1,6 @@
 <link rel="import" href="../../x-componentes/x-comp-find-comprobante/x-comp-find-comprobante.html">
 <link rel="import" href="../../x-componentes/x-comp-find-item-producto/x-comp-find-item-producto.html">
+<link rel="import" href="../../x-componentes/x-detected-mensajeria/x-detected-mensajeria.html">
 <dom-module id="x-facturador">
     <script src="../../view/xm_all.js"></script>
 
@@ -28,6 +29,8 @@
         <div class="xMiCard xradius" style="max-width:1000px; width: 85%;">
             <div class="xEncanezadoCard xFondoRowAmarillo2">
                 <p>Emite comprobantes electronicos personalizados. Es decir el concepto y los montos no tienen que ser previamente registrados. <img ondblclick="xSeeFechaManual()" class="xDerecha" src="../../../images/candado.png" width="16px"></p>                
+                <br>
+                <x-detected-mensajeria></x-detected-mensajeria>
             </div>
             <div class="xContentCard" style="height: 100%;"> 
                 <!-- <input type="date" class="xMiInput xfont17 xDerecha" hidden$="[[!fecha_manual]]" style="width:200px;" id="txt_fecha" enlinea>                 -->

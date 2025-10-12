@@ -4275,6 +4275,19 @@ function xPintarEstadoPedido(_objPedido = 0) {
 
 		setTimeout(() => {
 			xPintaCountAreasMesas();
+			
+			// Iniciar detector de mensajería solo en la primera carga
+			if (firstLoad_mesas) {
+				try {
+					const detectorMensajeria = document.getElementById('detectorMensajeria');
+					if (detectorMensajeria && typeof detectorMensajeria.start === 'function') {
+						console.log('x-control-mesas: Iniciando detector de mensajería');
+						detectorMensajeria.start();
+					}
+				} catch (error) {
+					console.error('x-control-mesas: Error al iniciar detector de mensajería', error);
+				}
+			}
 		}, 500);
 }
 

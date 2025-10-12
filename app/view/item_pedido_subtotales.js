@@ -263,6 +263,7 @@ var groupBy = function(xs, key) {
 
 // quitamos servicio delivery y propina del subtotal
 function darFormatoSubTotalesDelivery(arrTotales = null) {
+	if (!arrTotales) { return; }
     // console.log(arrTotales);
     var rowTotal = arrTotales[arrTotales.length - 1];
     // -2 = servicio deliver -3 = propina

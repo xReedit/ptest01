@@ -464,7 +464,11 @@ function _cpSocketVentaRegistrado() {
     this.socketCP.isRegistroVentaSource.next(true);
 }
 
-function pingMensajeria(roomId, timeout = 4000) {
+function _cpSocketPingMensajeria(roomId=null, timeout = 4000) {
+    if (roomId === null) {
+        roomId = xIdOrg + xIdSede;
+    }
+
     return new Promise((resolve) => {
         let isResolved = false;
         

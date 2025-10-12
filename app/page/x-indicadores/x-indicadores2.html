@@ -729,7 +729,7 @@
 <script>
     var xThisI2, _listOp, dataFiltro, dataMetdataVentasDia, crosVenta, metaDiaria, _dtVentasHoy, _dtPedidoTotales, _listTipoConsumo = []
     , rangoFecha = 'fecha', configParamsChart = {}, ctxChar, ctxCharConsumo, myBarChartPrincipal, pageIndicadoresCaja, pageIndicadoresTopProducto, pageIndicadoresTopColaboradores, pageIndicadoresVersus
-    , data_pagination = {}, p_rows=0, p_desde=0, compOptionPeriodo, dataIngresoVarios;
+    , data_pagination = {}, p_rows=0, p_desde=0, compOptionPeriodo, dataIngresoVarios, isInitialLoad = true;
     function initIndicadores2() {
 
         xThisI2.sedeCalificacion = xm_log_get('datos_org_all_sede')[0].calificacion;
@@ -771,13 +771,19 @@
         compOptionPeriodo = document.getElementById('compOptionPeriodo')
         compOptionPeriodo.addEventListener('getDateSelectedOption', (e) => {
             // console.log('value date', e.detail);
-            changeOption(e.detail);
+            // Evitar ejecución durante la carga inicial (ya se ejecuta en loadMestasSede)
+            if (!isInitialLoad) {
+                changeOption(e.detail);
+            }
         })
         
         
         $("#tab_cnf").on('iron-select',function(){
             // console.log('selecte tab', xThisI2.selected_conf);
-            updatePageTab();
+            // Evitar ejecución durante la carga inicial
+            if (!isInitialLoad) {
+                updatePageTab();
+            }
         });
 
 
@@ -788,8 +794,11 @@
         xThisI2.$.paginator.addEventListener('page-limit-change', (e) => {
             // console.log('page-limit-change', e.detail.value);
             data_pagination = e.detail.value; // datos del componente
-			p_desde = data_pagination.pageDesde; // para el # de fila   			
-            loadCalificacionCliente();          
+			p_desde = data_pagination.pageDesde; // para el # de fila
+			// Evitar ejecución durante la carga inicial (ya se ejecuta en loadMestasSede)
+            if (!isInitialLoad) {
+                loadCalificacionCliente();
+            }
         });
     }
 
@@ -892,6 +901,8 @@
         dataFiltro.idsede = val.idsede;
         if ( val.idsede !== -1 ) {
             xThisI2.showVersus = false;
+            // Resetear bandera para evitar doble ejecución en cambio de sede
+            isInitialLoad = true;
             loadMestasSede();
         } else {
             // versus
@@ -925,6 +936,8 @@
 				if ( dataMeta )  {
 					metaDiaria = dataMeta.diaria;				
 					xloadDataVentas();
+					// Habilitar eventos del componente después de la carga inicial
+					isInitialLoad = false;
 				} else {
                     dialog_meta.open();
 				}
