@@ -4579,10 +4579,25 @@ function xVerificarSiActualizaItems(){
 		}
 	})
 }
-function xActualizarItems(){
-	if (!isSocket)  {
+// Control de ejecución concurrente
+var isExecutingActualizarItems = false;
 
+function xActualizarItems(){
+	// Prevenir ejecuciones múltiples simultáneas
+	if (isExecutingActualizarItems) {
+		console.log('xActualizarItems ya está ejecutándose, saltando...');
+		return;
+	}
+	
+	if (!isSocket)  {
+		isExecutingActualizarItems = true;
+		
 		xPintarEstadoPedido();
+		
+		// Liberar el flag después de completar
+		setTimeout(() => {
+			isExecutingActualizarItems = false;
+		}, 1000);
 	}
 
 }
