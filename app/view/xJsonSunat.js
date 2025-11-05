@@ -210,6 +210,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 
         const direccionEmisor = xArrayEncabezado[0].sededireccion === '' ? xArrayEncabezado[0].direccion : xArrayEncabezado[0].sededireccion;
         const nomComercioEmisor = xArrayEncabezado[0].sedenombre;
+        const telefonoEmisor = xArrayEncabezado[0].sedetelefono === '' ? xArrayEncabezado[0].telefono : xArrayEncabezado[0].sedetelefono;
         // console.log('xArrayEncabezado[0]', xArrayEncabezado);
 
         // "numero_documento": xArrayComprobante.correlativo,
@@ -248,7 +249,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
                 "ubigeo": xArrayEncabezado[0].ubigeo,
                 "direccion": `${direccionEmisor} `+ ' | ' + `${xArrayEncabezado[0].sedeciudad}`,
                 "correo_electronico": "",
-                "telefono": `${xArrayEncabezado[0].telefono}`,
+                "telefono": telefonoEmisor,
                 "codigo_del_domicilio_fiscal": xArrayEncabezado[0].codigo_del_domicilio_fiscal                
             },  
             "datos_del_cliente_o_receptor":{

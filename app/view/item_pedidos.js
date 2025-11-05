@@ -532,6 +532,10 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 
 		element_cant_li_sel.text(xcant);
 
+		if (_viene_venta_rapida == 1) { //viene de venta rapida
+			xVerMipedidoVR();
+		}
+
 		if ($(element_cant_li_sel).hasClass('input-modifica') ) {
 			if (xcant !== 0 ) {
 				$(element_cant_li_sel).val(xcant)
@@ -543,8 +547,7 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 
 		// si viene de venta rapida y es cantidad x peso 
 		// entonces no cambia stock, lo hace al finalizar la venta
-		if (_viene_venta_rapida == 1 && itemPedidos_objItemSelected.venta_x_peso == '1') {
-			xVerMipedidoVR();
+		if (_viene_venta_rapida == 1 && itemPedidos_objItemSelected.venta_x_peso == '1') {			
 			try {				
 				e.stopPropagation();
 				e.stopImmediatePropagation()
@@ -587,13 +590,6 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 
 		xcantRunSocket = true;
 
-
-
-		if (_viene_venta_rapida == 1) { //viene de venta rapida
-			xVerMipedidoVR();
-		}
-
-		// event.stopPropagation();
 		try {		
 			e.stopPropagation();
 			e.stopImmediatePropagation()

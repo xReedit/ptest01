@@ -4,7 +4,7 @@
 	// session_regenerate_id(true); 
 	require_once __DIR__ . '/SecurityGuard.php';
 	SecurityGuard::verificarAcceso(true, [102,-1112,-104,-102,-1]);
-	session_start();	
+	// session_start ya se ejecuta en SecurityGuard::verificarAcceso()	
 	//header("Cache-Control: no-cache,no-store");
 	header('content-type: text/html; charset: utf-8');
 	header('Content-Type: text/event-stream');
@@ -154,7 +154,7 @@
 				$u_per=explode('?', $u_per);
 				$u_per= isset($u_per[0]) ? $u_per[0] : null;
 
-				$pos = !empty($_SESSION['u_pas_rl']) ? strpos($_SESSION['u_pas_rl'], $u_per) : false;
+				$pos = (!empty($_SESSION['u_pas_rl']) && !empty($u_per)) ? strpos($_SESSION['u_pas_rl'], $u_per) : false;
 				// $pos = isset($_SESSION['u_pas_rl']) ? strpos($_SESSION['u_pas_rl'], $u_per) : false;
 				// $pos = isset($_SESSION['u_pas_rl']) ? strpos($_u_pas_rl, $u_per) : false;
 				// echo '$_u_pas_rl = '.$_u_pas_rl."  session_u_pas_rl=".$_SESSION['u_pas_rl']."  u_per = ".$u_per. "   pos = ".$pos."   u_pas_rl=".$_SESSION['u_pas_rl'];
@@ -3905,7 +3905,7 @@ function xDtUS($op_us){
 			break;
 		case 3012: // load datos del org sede 
 			// , s.nombre, s.ruc // 250523 remplazamos por ruc_cpe, razonsocial_cpe | para comprobantes
-			$sql_us = "SELECT s.idorg, se.idsede, se.razonsocial_cpe as nombre, se.ruc_cpe as ruc , s.direccion, s.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, '' as logo64, se.ubigeo, se.codigo_del_domicilio_fiscal
+			$sql_us = "SELECT s.idorg, se.idsede, se.razonsocial_cpe as nombre, se.ruc_cpe as ruc , s.direccion, se.telefono , se.nombre as sedenombre , se.direccion as sededireccion, se.ciudad as sedeciudad, se.telefono as sedetelefono, se.eslogan, se.authorization_api_comprobante, se.id_api_comprobante, se.facturacion_e_activo, '' as logo64, se.ubigeo, se.codigo_del_domicilio_fiscal
 				,se.sys_local, se.ip_server_local, se.pwa, se.url_api_fac
 				,se.email_cierre, se.metodo_pago_aceptados, se.habilita_verificacion_cpe, tcs.serie, se.id_api_comprobante
 				,se.is_holding

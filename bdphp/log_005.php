@@ -882,6 +882,9 @@
 						, CASE WHEN DAYOFWEEK(rp.fecha_hora) = 1 THEN 7 ELSE DAYOFWEEK(rp.fecha_hora) - 1 END num_dia";
 					break;
 				case 'mes':
+					// ->>>> 20102025  -- cuelga
+					// echo 1;
+
 					$option = $_POST['option'];
 					$mm = $option['num_mm'];
 					$yy = $option['num_yy'];
@@ -906,13 +909,14 @@
 					$columm_add = ", MONTHNAME(rp.fecha_hora) nom_mes
 					, MONTH(rp.fecha_hora) num_mes";
 					
-					// $fecha = $fecha == 0 ? 'now()' : "STR_TO_DATE('$fecha', '%d/%m/%Y')";
-					// $hoy = "if(MONTH(STR_TO_DATE(rp.fecha, '%d/%m/%Y')) = MONTH($fecha), 1 ,if(MONTH(STR_TO_DATE(rp.fecha, '%d/%m/%Y')) < MONTH($fecha) - 1, 2, 0 ))";
 					$hoy = " if(MONTH(rp.fecha_hora) = $mm, 1 ,if(MONTH(rp.fecha_hora) < $mm - 1, 2, 0 ))";					
 					$fecha = " (rp.idregistro_pago between $firstIdRegistroPago and $lastIdRegistroPago)"; // and  STR_TO_DATE(rp.fecha, '%d/%m/%Y') between date_sub($fecha,INTERVAL 2 MONTH) and $fecha";					
 					break;
 				
 				case 'rango':
+
+					// ->>>> 20102025  -- cuelga
+					// echo 1;
 					$option = $_POST['option'];
 					
 					// Validar y ajustar rango si excede 3 meses (90 días)

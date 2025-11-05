@@ -20,6 +20,7 @@
             clasecss: String,
             elplaceholder: String,
             removespecialchart: Boolean,
+            searchTimer: Object,
         },
         attached: function () {
             this.removespecialchart = false;
@@ -29,14 +30,24 @@
 
             const _val = e.target.value;
             const _idFiltro = this.idalmacenfiltro || 0;
+            
+            // Validar mínimo 3 caracteres
             if (_val.length < 3) { return; }
 
-            $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=2001', data: { search: _val, idfiltro: _idFiltro } })
-                .done((DtItems) => {
-                    var xDtItems = JSON.parse(DtItems);
-                    this.dtItemProductosComp = xDtItems.datos;
-                    this.xCargarProductoItemCartaComp();
-                })
+            // Cancelar búsqueda anterior si existe
+            if (this.searchTimer) {
+                clearTimeout(this.searchTimer);
+            }
+
+            // Aplicar delay de 400ms antes de ejecutar la búsqueda
+            this.searchTimer = setTimeout(() => {
+                $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=2001', data: { search: _val, idfiltro: _idFiltro } })
+                    .done((DtItems) => {
+                        var xDtItems = JSON.parse(DtItems);
+                        this.dtItemProductosComp = xDtItems.datos;
+                        this.xCargarProductoItemCartaComp();
+                    })
+            }, 400);
         },
         xCargarProductoItemCartaComp: function () {
             var xPrecio_pro_calc = 0;

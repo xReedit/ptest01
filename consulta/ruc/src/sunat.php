@@ -82,11 +82,11 @@
             curl_close($curl);            
             $result = json_decode($resp);
 
-			if ( $result->success ) {
-				$Nombre = $result->data->nombres;
-				$ApePat = $result->data->apellido_paterno;
-				$ApeMat = $result->data->apellido_materno;
-				$NombreCompleto = $result->data->nombre_completo;
+			if ( $result && isset($result->success) && $result->success ) {
+				$Nombre = isset($result->data->nombres) ? $result->data->nombres : '';
+				$ApePat = isset($result->data->apellido_paterno) ? $result->data->apellido_paterno : '';
+				$ApeMat = isset($result->data->apellido_materno) ? $result->data->apellido_materno : '';
+				$NombreCompleto = isset($result->data->nombre_completo) ? $result->data->nombre_completo : '';
 				$Fnac = isset($result->data->fecha_nacimiento) ? $result->data->fecha_nacimiento : '';
 
 				// $info = array(
@@ -102,13 +102,13 @@
 				// );
 
 				$info = array(
-					"RazonSocial"			=> $result->data->nombre_o_razon_social,
-					"NombreComercial" 		=> $result->data->nombre_o_razon_social,
-					"NombreComercialAleternativo"		=> $result->data->ruc,					
+					"RazonSocial"			=> isset($result->data->nombre_o_razon_social) ? $result->data->nombre_o_razon_social : '',
+					"NombreComercial" 		=> isset($result->data->nombre_o_razon_social) ? $result->data->nombre_o_razon_social : '',
+					"NombreComercialAleternativo"		=> isset($result->data->ruc) ? $result->data->ruc : '',					
 					"Tipo" 					=> "",
 					"Inscripcion" 			=> "",
-					"Estado" 				=> $result->data->estado,
-					"Direccion" 			=> $result->data->direccion_completa,
+					"Estado" 				=> isset($result->data->estado) ? $result->data->estado : '',
+					"Direccion" 			=> isset($result->data->direccion_completa) ? $result->data->direccion_completa : '',
 					"SistemaEmision" 		=> "",
 					"ActividadExterior"		=> "",
 					"SistemaContabilidad" 	=> "",
@@ -116,11 +116,11 @@
 					"ActividadEconomica" 	=> "",
 					"EmisionElectronica" 	=> "",
 					"PLE" 					=> "",
-					"ubigeo_sunat"			=> $result->data->ubigeo_sunat,
-					"condicion"				=> $result->data->condicion,
-					"departamento"			=> $result->data->departamento,
-					"provincia"				=> $result->data->provincia,
-					"distrito"				=> $result->data->distrito
+					"ubigeo_sunat"			=> isset($result->data->ubigeo_sunat) ? $result->data->ubigeo_sunat : '',
+					"condicion"				=> isset($result->data->condicion) ? $result->data->condicion : '',
+					"departamento"			=> isset($result->data->departamento) ? $result->data->departamento : '',
+					"provincia"				=> isset($result->data->provincia) ? $result->data->provincia : '',
+					"distrito"				=> isset($result->data->distrito) ? $result->data->distrito : ''
 				);
 				
 
