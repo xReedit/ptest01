@@ -366,7 +366,9 @@ function _cpSocketEmitPedidoPagoCliente(listIdCliente) {
 
 function _cpSocketSavePedidoStorage(pedido) {
     if (!isSocket) { return; }
-    localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
+    setTimeout(() => {    
+        localStorage.setItem('::app3_sys_dta_pe_sk', JSON.stringify(pedido));
+    }, 0);
 }
 
 

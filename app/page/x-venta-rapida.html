@@ -19,6 +19,18 @@
 	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
 
 
+	<script type="text/javascript" src="../view/config.const.js"></script>
+	<script type="text/javascript" src="../view/socket.master.service.js"></script>
+	<script type="text/javascript" src="../view/socket.service.p.js"></script>
+	<script type="text/javascript" src="../view/item_pedidos.js"></script>
+	<script type="text/javascript" src="../view/cpe_interno.js"></script>
+	<script type="text/javascript" src="../view/xJsonSunat.js"></script>
+	<script type="text/javascript" src="../view/xSOAPSunat.js"></script>
+	<script type="text/javascript" src="../view/item_pedido_estructura.js"></script>
+	<script type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
+	<script type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
+
+
 	<template>
 			<!-- <paper-toolbar id="panel_toolbarx">
 					<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDe();"></paper-icon-button>					
@@ -611,7 +623,7 @@
 
 <!-- <script  type="text/javascript" src="../../js/rxjs.umd.js"></script>
 <script  type="text/javascript" src="../../js/socket.io.js"></script> -->
-<script type="text/javascript" src="../view/config.const.js"></script>
+<!-- <script type="text/javascript" src="../view/config.const.js"></script>
 <script rel="prefetch" type="text/javascript" src="../view/socket.master.service.js"></script>
 
 <script rel="prefetch" type="text/javascript" src="../view/socket.service.p.js"></script>
@@ -622,7 +634,7 @@
 <script type="text/javascript" src="../view/xSOAPSunat.js"></script>
 <script type="text/javascript" src="../view/item_pedido_estructura.js"></script>
 <script type="text/javascript" src="../view/item_pedido_subtotales.js"></script>
-<script type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script>
+<script type="text/javascript" src="../view/item_pedido_print_comprobante.js"></script> -->
 <script type="text/javascript" src="../view/deNumALetras.js"></script>
 <script type="text/javascript" src="../view/manager_storage.js"></script>
 <script type="text/javascript" src="../view/cliente.service.js"></script>
@@ -706,11 +718,10 @@ function xIniVentaRapida(){
 		xThisVentaRapida.showCompDescuento = xper_acc_vr.indexOf('Pe5') > -1;
 
 		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
-		// console.log('isSocket', isSocket);
+	// console.log('isSocket', isSocket);
 
-		xLoadArrayPedido();
-		
-		xTraerDtTipoConsumo();	
+	xLoadArrayPedido();
+	xTraerDtTipoConsumo();	
 
 		loadCuponesActivos();
 		
@@ -1339,8 +1350,11 @@ function xNuevoPedidoVR() {
 	window.localStorage.removeItem("::app3_sys_dta_pe");
 	xCompDatosDelivery.resetValInit();
 	tt_pedido=0;
-	//xArrayPedido=new Array();
-	//xDtSubTotales=new Array()
+
+	xArrayPedido=new Array();
+	xDtSubTotales=new Array();
+	xArrayPedidoObj=new Array();
+	
 	xLimpiarItemSeleccionadosSubItems();
 	xLimpiarItemIndicaciones();
 	xLoadArrayPedido();
@@ -2231,19 +2245,30 @@ function xVerMipedidoVR(){
 	// xValidarReglaCarta();
 
 	//xArrayPedidoObj=xDtPedido;
-	for (var i = 0; i < xDtPedido.length; i++) {
+	// for (var i = 0; i < xDtPedido.length; i++) {
+	for (const key in xDtPedido) {
+		if (!xDtPedido.hasOwnProperty(key)) continue;
+		const i = key;
+		const tpc = xDtPedido[key];
+		if (!tpc || typeof tpc !== 'object') continue;
+		xTpConsumo = tpc.des;
+
 		xCadenaItemArray='';
 		xEncabezadoCollapse='';
 		xCadenaCollapse='';
 		xIndicacionItem='';
 		xArraySeccion=new Array();
 		xCantItems=0;
-		if(xDtPedido[i]==null){continue;}
 
-		xTpConsumo=xDtPedido[i].des;
-		$.map(xDtPedido[i], function(n, z) {
-			if (typeof n=="object"){
-				if(n!=null){
+		// if(xDtPedido[i]==null){continue;}
+		// xTpConsumo=xDtPedido[i].des;
+		// $.map(xDtPedido[i], function(n, z) {
+		// 	if (typeof n=="object"){
+		// 		if(n!=null){
+		for (const itemKey in tpc) {
+			if (!tpc.hasOwnProperty(itemKey)) continue;
+			const n = tpc[itemKey];
+			if (typeof n === "object" && n !== null) {
 				xIndicacionItem='';
 				if(n.cantidad=='00'){return;}
 				if(n.indicaciones!=undefined && n.indicaciones!=''){xIndicacionItem='<span class="xPedidoItem_indicaciones">('+n.indicaciones+')</span>';}
@@ -2301,9 +2326,12 @@ function xVerMipedidoVR(){
 				xHayPedido=1;
 				xCantItems=parseInt(xCantItems)+parseInt(n.cantidad);
 				}
-			}
+			// }
 
-		});
+		};
+	
+		// );
+
 		if(xCadenaItemArray!=''){
 			//xEncabezadoCollapse='<tr class="xfont18x"><td class="xEncabezadoTpCon noselect" data-idtpc="'+xDtPedido[i].id+'" data-col="'+xIdColapse+'" onclick="toggle(this);">'+xDtPedido[i].des+'<div class="xEncabezadoTpCon_Cant">'+xCantItems+'</div></td></tr>';
 			var xBtnDatosDelivery = xDtPedido[i].des.toUpperCase() === 'DELIVERY' ? '<div class="xDerecha xBtnDatosAdjuntos xCursor"><a onclick="dialog_datos_delivery.open()">Adjuntar Datos</a></div>' : '';
@@ -2713,11 +2741,13 @@ Polymer({
 		this.xIconScreen = 'icons:fullscreen';
 		this.showCodeLocalizator = false;
     	xThisVentaRapida=this;
-		xIniVentaRapida();
 		// _cpSocketIsConnect();
+		
+		xIniVentaRapida();		
 		_cpSocketOpen();
-		xRestorePedidoLocalStorageVR()
+		xRestorePedidoLocalStorageVR();		
 		this.getDataTipoPrecio();
+		
 
 		$("#x-main").removeClass('xContent');
 		$("#x-main").removeClass('content');

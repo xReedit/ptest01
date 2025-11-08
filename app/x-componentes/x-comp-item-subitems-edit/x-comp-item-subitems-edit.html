@@ -2,15 +2,16 @@
 <dom-module id="x-comp-item-subitems-edit">
         <template>
             <div>
-                <paper-tabs selected="{{selected}}" id="tab_subitem">
+                <!-- <paper-tabs selected="{{selected}}" id="tab_subitem">
                     <paper-tab>Titulos</paper-tab>
-                    <paper-tab>Opciones</paper-tab>
-                </paper-tabs>
-                <div class="xLinea2"></div>
+                    <paper-tab disabled="true">Opciones</paper-tab>
+                </paper-tabs> 
+                <div class="xLinea2"></div>-->
 
                 <iron-pages selected="{{selected}}">
                     <!-- titulos -->
-                    <div>                        
+                    <div>                                
+                        <p><strong>Seleccionables o Grupos </strong> <small>Coloque un titulo para agrupar las opciones o modificadores</small></p>                                                                
                         <table width="100%">
                             <thead>
                                 <th width="80%">
@@ -44,12 +45,25 @@
 
                     <!-- sub items - opciones -->
                     <div>                        
-                        <br>
-                        <paper-fab mini icon="add" onclick="addSubItem()" class="xDerecha"></paper-fab>
-                        <p class="xBold">{{contentSelect.titulo}}</p>
+                        <!-- <br> -->
+                        <!-- <paper-fab mini icon="add" onclick="addSubItem()" class="xDerecha"></paper-fab> -->
+                        <div class="d-flexx mb-2">
+                            <button class="btn btn-sm btn-secondary fs-11 mr-2" on-click="goBackTitulos"><i class="fa fa-arrow-left"></i></button>
+                            <p class="xBold fs-17">{{contentSelect.titulo}}</p>
+                        </div>
                         <div>
-                            <table class="table-max-alto">
-                                <thead width="100%" class="fs-11">
+                            <p><strong>Stock</strong> <small>Cuando se enlaza una porcion o producto toma el stock de estos.</small></p>
+                            <p><strong>Cantidad</strong> <small>El stock que descuenta al momento de hacer la venta</small></p>
+                            <table class="table-max-alto mt-2">
+                                <thead>
+                                    <th>Enlaze</th>
+                                    <th>Descripción</th>
+                                    <th>Stock</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th></th>
+                                </thead>
+                                <tr width="100%" class="fs-11">
                                     <th width="50px">
                                         <select name="" id="listTipo" style="width: 50px;" onchange="onListTipo(this)">
                                             <option value="0">Libre</option>
@@ -66,10 +80,16 @@
                                             <input type="text" class="xMiInput xPasarEnter2 w-100" placeholder="PORCION" onChange="conMayusculas(this)" id="des_item_porcion">
                                         </div>
                                     </th>
-                                    <th width="25%"><input type="text" class="xMiInput xPasarEnter2" id="txt_sub_cant" placeholder="CANT" onChange="conMayusculas(this)"></th>
-                                    <th width="25%"><input type="number" class="xMiInput" id="txt_sub_precio" placeholder="PRECIO" onChange="conMayusculas(this)" onkeyup="enterAddSubItem(event)" onblur="xRetornaMoneda(this)"></th>
-                                    <th></th>
-                                </thead>
+                                    <th width="20%"><input type="text" class="xMiInput xPasarEnter2" id="txt_sub_cant" placeholder="STOCK" onChange="conMayusculas(this)"></th>
+                                    <th width="20%"><input type="number" class="xMiInput xPasarEnter2" id="txt_sub_descuenta" placeholder="CANT"
+                                            onChange="conMayusculas(this)"></th>
+                                    <th width="30%"><input type="number" class="xMiInput" id="txt_sub_precio" placeholder="PRECIO" onChange="conMayusculas(this)" onkeyup="enterAddSubItem(event)" onblur="xRetornaMoneda(this)"></th>
+                                    <th>
+                                        <button class="btn btn-sm btn-success fs-11" onclick="addSubItem()">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                    </th>
+                                </tr>
                                 <tbody>
                                     <template is="dom-repeat" items="{{listCompSubitems}}" as="item">
                                         <tr data-index="{{index}}" data-t="item_subitem" data-id="{{item.iditem_subitem}}" class="xCursor fs-11">
@@ -78,6 +98,7 @@
                                                 {{item.descripcion}}
                                             </td>
                                             <td onclick="xModRow_subitem(this,2);" id="subICant">{{item.cantidad}}</td>
+                                            <td onclick="xModRow_subitem(this,2);" id="subIDescuenta">{{item.descuenta}}</td>
                                             <td onclick="xModRow_subitem(this,2);" id="subIPrecio">{{item.precio}}</td>
                                             <td><span class="xDeleteRow" title="Anular" onclick="xBorrarItem(this);"></span></td>
                                         </tr>
@@ -85,6 +106,7 @@
                                     <tr>                    
                                         <td>.</td>                    
                                         <td class="xBold">Cantidad Total </td>
+                                        <td>.</td>
                                         <td class="xBold">{{cantidadSubItems}}</td>
                                         <td>.</td>
                                         <td>.</td>
@@ -96,8 +118,10 @@
                         <h4>Condiciones</h4>
                         <hr>
                         
-                        <label for="txt_sub_condicion_cant">Cuantos subitem u opciones se pueden seleccionar?</label>
-                        <input type="number" style="width: 100px;" onkeyup="addSubItemItem();" class="xMiInput" id="txt_sub_condicion_cant" placeholder="Cant" onChange="conMayusculas(this)">
+                        <div class="d-flexx align-items-center justify-content-between">
+                            <label for="txt_sub_condicion_cant">Cuantos subitem u opciones se pueden seleccionar?</label>
+                            <input type="number" style="width: 100px;" onkeyup="addSubItemItem();" class="xMiInput" id="txt_sub_condicion_cant" placeholder="Cant" onChange="conMayusculas(this)">
+                        </div>
                         <br><br>
                         <paper-checkbox id="xcheck_show_cant_item" onchange="addSubItemItem();">Cantidad seleccionable en las opciones? Es decir el cliente podrá seleccionar mas de uno en cada opción.</paper-checkbox>
                         <br><br>
@@ -134,29 +158,68 @@
             xThisComSubItemEdit.inputProductoHidden = true;
             xThisComSubItemEdit.inputProcionHidden = true;
             xThisComSubItemEdit.isCompartido = false;
+            
+            // Asegurar que el input de cantidad esté habilitado y limpio al iniciar (tipo Libre por defecto)
+            const inputCant = document.getElementById('txt_sub_cant');
+            if (inputCant) {
+                inputCant.disabled = false;
+                inputCant.value = '';
+            }
+            
+            // Asegurar que el input de descuenta esté deshabilitado con valor 1 (tipo Libre por defecto)
+            const inputDescuenta = document.getElementById('txt_sub_descuenta');
+            if (inputDescuenta) {
+                inputDescuenta.disabled = true;
+                inputDescuenta.value = '1';
+            }
+            
             xloadProductoItemSub();
             xLoadListItemSubContentCompartidos();
         }
 
         function onListTipo($event) {
+            const inputCant = document.getElementById('txt_sub_cant');
+            const inputDescuenta = document.getElementById('txt_sub_descuenta');
+            
             switch ($event.value) {
-                case "0":
+                case "0": // Libre
                     xThisComSubItemEdit.inputLibreHidden = false;
                     xThisComSubItemEdit.inputProductoHidden = true;
                     xThisComSubItemEdit.inputProcionHidden = true;
+                    
+                    // Habilitar y limpiar el input de cantidad
+                    inputCant.disabled = false;
+                    inputCant.value = '';
+                    
+                    // Deshabilitar y poner 1 en descuenta
+                    inputDescuenta.disabled = true;
+                    inputDescuenta.value = '1';
                     break;
-                case "1":
+                case "1": // Porción
                     xThisComSubItemEdit.inputLibreHidden = true;
                     xThisComSubItemEdit.inputProductoHidden = true;
                     xThisComSubItemEdit.inputProcionHidden = false;
+                    
+                    // Deshabilitar y poner ND en cantidad
+                    inputCant.disabled = true;
+                    inputCant.value = 'ND';
+                    
+                    // Habilitar descuenta
+                    inputDescuenta.disabled = false;
                     break;
-                case "2": // producto
+                case "2": // Producto
                     xThisComSubItemEdit.inputLibreHidden = true;
                     xThisComSubItemEdit.inputProductoHidden = false;
                     xThisComSubItemEdit.inputProcionHidden = true;
+                    
+                    // Deshabilitar y poner ND en cantidad
+                    inputCant.disabled = true;
+                    inputCant.value = 'ND';
+                    
+                    // Habilitar descuenta
+                    inputDescuenta.disabled = false;
                     break;            
             }
-            // console.log('evento ', $event);
         }
 
         function xloadSubItemsContent(iditem) {
@@ -274,7 +337,8 @@
                 precio: txt_sub_precio.value,
                 cant_select: txt_sub_condicion_cant.value,
                 required_select: xcheck_subitem_required.checked ? 1 : 0,
-                controlable: xcheck_controlable.checked ? 1 : 0
+                controlable: xcheck_controlable.checked ? 1 : 0,
+                descuenta: txt_sub_descuenta.value
             } 
             
             // xPopupLoad.xopen();
@@ -284,8 +348,24 @@
             .done( function (a) {                
                 xloadSubitems(iditemContentSelect);
 
-                txt_sub_des.value = '';
-                txt_sub_cant.value = '';
+                // Limpiar solo el campo de descripción según el tipo
+                if (isLibre) {
+                    txt_sub_des.value = '';
+                    // Mantener foco en txt_sub_des
+                    setTimeout(() => txt_sub_des.focus(), 100);
+                } else if (isPorcion) {
+                    des_item_porcion.value = '';
+                    // Mantener foco en des_item_porcion
+                    setTimeout(() => des_item_porcion.focus(), 100);
+                } else if (isProducto) {
+                    des_item_producto.value = '';
+                    // Mantener foco en des_item_producto
+                    setTimeout(() => des_item_producto.focus(), 100);
+                }
+                
+                // NO limpiar txt_sub_cant, txt_sub_descuenta, txt_sub_precio
+                // Estos valores deben permanecer
+                
                 // xPopupLoad.xclose();
             });
 
@@ -346,14 +426,16 @@
         function xSaveSubItemMod(_tr) {
             
             const index = _tr.dataIndex;
-            const tr_cant = $(_tr).find('#subICant').text();
-            const tr_precio = $(_tr).find('#subIPrecio').text();
-            const tr_des = $(_tr).find('#subIDes').text();
+            const tr_cant = $(_tr).find('#subICant').text().trim();
+            const tr_precio = $(_tr).find('#subIPrecio').text().trim();
+            const tr_des = $(_tr).find('#subIDes').text().trim();
+            const tr_descuenta = $(_tr).find('#subIDescuenta').text().trim();
             
             var _subItemMod = xThisComSubItemEdit.listCompSubitems[index];
             _subItemMod.cantidad = tr_cant;
             _subItemMod.precio = tr_precio.trim();
             _subItemMod.descripcion = tr_des;
+            _subItemMod.descuenta = tr_descuenta;
 
             sumCantSubitem();
 
@@ -614,7 +696,11 @@
 
                 this.selected=0; 
                 xInitSubItemsEdit();
-            } 
+            },
+            goBackTitulos: function () {
+                this.selected=0;
+            }
+            
         })
     </script>
     

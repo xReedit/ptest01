@@ -750,19 +750,19 @@
     // viene del check y no del btn add +
     function compItemSumImporte(fromToCheck = false) {
         if ( fromToCheck ) {
-            var _importeChecks = 0;
+            let _importeChecks = 0;
             xThisComSubItem.listContentSub.map(t => {
                 t.opciones.filter(o => o.selected).map(o => {
                     _importeChecks += parseFloat(o.precio);
                 });
             });
 
-            var _totalItemSelect =  parseFloat(compGetTotalItemTPC());
+            let _totalItemSelect =  parseFloat(compGetTotalItemTPC());
             _totalItemSelect = _totalItemSelect === 0 ? parseFloat(_precioProductoIni) : _totalItemSelect;
             xThisComSubItem.precioProducto = parseFloat(_totalItemSelect + _importeChecks).toFixed(2);
         } else {
             // si viene del btn add +
-            xThisComSubItem.precioProducto =  compGetTotalItemTPC();
+            // xThisComSubItem.precioProducto =  compGetTotalItemTPC();
         }
     }
 
