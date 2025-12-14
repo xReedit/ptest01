@@ -450,6 +450,7 @@ const productoService = new ProductoService();
 
             if (isNaN(_stockNowProducto)) {
                 _msjModificarStockProducto = ''
+                xthisProductoDetalle.classMsjStock = ''
             }
             else {
                 if (_stockNowProducto > _stockActualPorcion) {
@@ -462,9 +463,6 @@ const productoService = new ProductoService();
                     xthisProductoDetalle.classMsjStock = 'fw-600 text-danger'
                 }
             }
-
-            calcCostoConversionProducto(_stockNowProducto)
-            
 
             xthisProductoDetalle.msjStock = _msjModificarStockProducto            
         }

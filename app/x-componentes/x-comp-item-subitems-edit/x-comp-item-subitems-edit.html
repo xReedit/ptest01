@@ -65,10 +65,11 @@
                                 </thead>
                                 <tr width="100%" class="fs-11">
                                     <th width="50px">
-                                        <select name="" id="listTipo" style="width: 50px;" onchange="onListTipo(this)">
+                                        <select name="" id="listTipo" style="width: 70px;" onchange="onListTipo(this)">
                                             <option value="0">Libre</option>
                                             <option value="1">Porcion</option>
                                             <option value="2">Producto</option>
+                                            <option value="3">Subreceta</option>
                                         </select>
                                     </th>
                                     <th width="40%">                                        
@@ -78,6 +79,9 @@
                                         </div>
                                         <div id="div-input-porcion" hidden$="{{inputProcionHidden}}">
                                             <input type="text" class="xMiInput xPasarEnter2 w-100" placeholder="PORCION" onChange="conMayusculas(this)" id="des_item_porcion">
+                                        </div>
+                                        <div id="div-input-subreceta" hidden$="{{inputSubrecetaHidden}}">
+                                            <input type="text" class="xMiInput xPasarEnter2 w-100" placeholder="SUBRECETA" onChange="conMayusculas(this)" id="des_item_subreceta">
                                         </div>
                                     </th>
                                     <th width="20%"><input type="text" class="xMiInput xPasarEnter2" id="txt_sub_cant" placeholder="STOCK" onChange="conMayusculas(this)"></th>
@@ -157,6 +161,7 @@
             xThisComSubItemEdit.inputLibreHidden = false;
             xThisComSubItemEdit.inputProductoHidden = true;
             xThisComSubItemEdit.inputProcionHidden = true;
+            xThisComSubItemEdit.inputSubrecetaHidden = true;
             xThisComSubItemEdit.isCompartido = false;
             
             // Asegurar que el input de cantidad esté habilitado y limpio al iniciar (tipo Libre por defecto)
@@ -175,6 +180,7 @@
             
             xloadProductoItemSub();
             xLoadListItemSubContentCompartidos();
+            xloadSubrecetasItemSub();
         }
 
         function onListTipo($event) {
@@ -186,6 +192,7 @@
                     xThisComSubItemEdit.inputLibreHidden = false;
                     xThisComSubItemEdit.inputProductoHidden = true;
                     xThisComSubItemEdit.inputProcionHidden = true;
+                    xThisComSubItemEdit.inputSubrecetaHidden = true;
                     
                     // Habilitar y limpiar el input de cantidad
                     inputCant.disabled = false;
@@ -199,6 +206,7 @@
                     xThisComSubItemEdit.inputLibreHidden = true;
                     xThisComSubItemEdit.inputProductoHidden = true;
                     xThisComSubItemEdit.inputProcionHidden = false;
+                    xThisComSubItemEdit.inputSubrecetaHidden = true;
                     
                     // Deshabilitar y poner ND en cantidad
                     inputCant.disabled = true;
@@ -211,6 +219,7 @@
                     xThisComSubItemEdit.inputLibreHidden = true;
                     xThisComSubItemEdit.inputProductoHidden = false;
                     xThisComSubItemEdit.inputProcionHidden = true;
+                    xThisComSubItemEdit.inputSubrecetaHidden = true;
                     
                     // Deshabilitar y poner ND en cantidad
                     inputCant.disabled = true;
@@ -218,7 +227,20 @@
                     
                     // Habilitar descuenta
                     inputDescuenta.disabled = false;
-                    break;            
+                    break;
+                case "3": // Subreceta
+                    xThisComSubItemEdit.inputLibreHidden = true;
+                    xThisComSubItemEdit.inputProductoHidden = true;
+                    xThisComSubItemEdit.inputProcionHidden = true;
+                    xThisComSubItemEdit.inputSubrecetaHidden = false;
+                    
+                    // Deshabilitar y poner ND en cantidad
+                    inputCant.disabled = true;
+                    inputCant.value = 'ND';
+                    
+                    // Habilitar descuenta
+                    inputDescuenta.disabled = false;
+                    break;
             }
         }
 
@@ -304,6 +326,7 @@
             const isPorcion = !xThisComSubItemEdit.inputProcionHidden;
             const isProducto = !xThisComSubItemEdit.inputProductoHidden;
             const isLibre = !xThisComSubItemEdit.inputLibreHidden;
+            const isSubreceta = !xThisComSubItemEdit.inputSubrecetaHidden;
             var descripcion_item = txt_sub_des.value;
 
             if ( isProducto) {
@@ -317,19 +340,30 @@
 
             if ( isPorcion ) {
                 if ( xNewItemPorcion ) {
-                    alert('Debe seleccionar una procion de lista');
+                    alert('Debe seleccionar una porcion de lista');
                     return;
                 }
 
                 descripcion_item = des_item_porcion.value;
             }
 
+            if ( isSubreceta ) {
+                if ( xNewItemSubreceta ) {
+                    alert('Debe seleccionar una subreceta de lista');
+                    return;
+                }
+
+                descripcion_item = des_item_subreceta.value;
+            }
+
             const dataSubItem = {
                 isPorcion: isPorcion,
                 isProducto: isProducto,
                 isLibre: isLibre,
+                isSubreceta: isSubreceta,
                 idproducto: xIdProducto_sel,
                 idporcion: xidproducto_porcionado,
+                idsubreceta: xidsubreceta_sel,
                 iditem_subitem_content: iditemContentSelect,
                 iditem: iditemSelect, 
                 descripcion: descripcion_item,
@@ -361,6 +395,12 @@
                     des_item_producto.value = '';
                     // Mantener foco en des_item_producto
                     setTimeout(() => des_item_producto.focus(), 100);
+                } else if (isSubreceta) {
+                    des_item_subreceta.value = '';
+                    xidsubreceta_sel = 0;
+                    xNewItemSubreceta = true;
+                    // Mantener foco en des_item_subreceta
+                    setTimeout(() => des_item_subreceta.focus(), 100);
                 }
                 
                 // NO limpiar txt_sub_cant, txt_sub_descuenta, txt_sub_precio
@@ -579,6 +619,50 @@
             });
         }
 
+        // Variable global para subreceta seleccionada
+        var xidsubreceta_sel = 0;
+        var xNewItemSubreceta = true;
+
+        function xloadSubrecetasItemSub() {
+            $.ajax({ type: 'POST', url: '../../bdphp/log_subrecetas.php?op=listar_autocomplete'})
+            .done(function(DtSubrecetas) {
+                var xDtSubrecetas = typeof DtSubrecetas === 'string' ? JSON.parse(DtSubrecetas) : DtSubrecetas;
+                xThisComSubItemEdit.dtSubrecetas = xDtSubrecetas.datos;
+                xCargarSubrecetaItemSub();
+            });
+        }
+
+        function xCargarSubrecetaItemSub() {
+            var xObjTxtSubreceta = $("#des_item_subreceta");
+            xObjTxtSubreceta.autocomplete({
+                autoFocus: true,
+                source: xThisComSubItemEdit.dtSubrecetas,
+                appendTo: $('#div-input-subreceta'),
+                minLength: 0,
+                select: function(event, ui) {
+                    xObjTxtSubreceta.val(ui.item.label);
+                    xObjTxtSubreceta.attr('data-id', ui.item.value);
+                    xidsubreceta_sel = ui.item.value;
+                    xNewItemSubreceta = false;
+                    $("#txt_sub_precio").val(ui.item.precio_unitario);
+                    return false;
+                },
+                focus: function(event, ui) { return false; },
+                change: function(event, ui) {
+                    if (ui.item === null) {
+                        xObjTxtSubreceta.attr('data-value', "");
+                        xObjTxtSubreceta.attr('data-id', "");
+                        xidsubreceta_sel = 0;
+                        xNewItemSubreceta = true;
+                        $("#txt_sub_precio").val("");
+                    } else {
+                        xNewItemSubreceta = false;
+                    }
+                    return false;
+                }
+            });
+        }
+
         function xBorrarItemSubItem(obj) {
             xRowObj=obj.parentNode.parentNode;
             xIdROw = $(xRowObj).attr('data-id') || xRowObj.dataId;
@@ -669,8 +753,10 @@
                 inputLibreHidden: false,
                 inputProductoHidden: true,
                 inputProcionHidden: true,
+                inputSubrecetaHidden: true,
                 dtProItem:Object,
                 dtProItem_porcion: Object,
+                dtSubrecetas: Object,
                 dtListContentCompartido: Object,
                 contentSelect: Object,
                 cantidadSubItems: 0
@@ -680,7 +766,8 @@
                 xThisComSubItemEdit = this;       
                 inputLibreHidden = false;
                 inputProductoHidden = true;
-                inputProcionHidden = true;       
+                inputProcionHidden = true;
+                inputSubrecetaHidden = true;
                 // xInitSubItemsEdit();				                
             },
             loadSubItemIni: function () {

@@ -1,0 +1,591 @@
+<dom-module id="x-subrecetas">
+	<link rel="import" href="../../x-componentes/x-comp-find-producto-almacen/x-comp-find-producto-almacen.html">
+
+	<template>
+		<!-- Dialog para editar/crear subreceta -->
+		<paper-dialog id="dialog_detalle_subreceta" class="dialog_redondo" style="max-width: 900px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">
+				<p class="xfont11"><strong>Subrecetas</strong> son componentes reutilizables que pueden incluirse en varias recetas. Ejemplo: "Cuarto de pollo" puede usarse en "Combo familiar" y "Promo 2x1".</p>
+				<div class="xLinea2"></div><br>
+				<div class="x_div_linea">
+					<div class="xitem1 xBordeDe">
+						<h3 id="xdes_subreceta_titulo" class="xInvisible">Nueva subreceta</h3>
+						<table class="xtable4" id="tb_subreceta">
+							<tr id="tr_des_subreceta">
+								<td>Descripción</td>
+								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:100%;" onChange="conMayusculas(this)" placeholder="Nombre de la subreceta" id="txt_descripcion_sub" espaciar></td>
+							</tr>
+							<tr>
+								<td>Costo fijo</td>
+								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:50%;" placeholder="Costo" id="txt_costo_sub" onblur="xRetornaMoneda(this)" espaciar></td>
+							</tr>
+							<tr>
+								<td>Costo calculado</td>
+								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:50%;" placeholder="Costo calculado" id="txt_costo_calculado" espaciar disabled></td>
+							</tr>
+						</table>
+						<div class="xInvisible">
+							<form id="frm_subreceta" method="post" action="#">
+								<input type="text" id="idsubreceta" name="idsubreceta">
+								<input type="text" id="idorg" name="idorg">
+								<input type="text" id="idsede" name="idsede">
+								<input type="text" id="descripcion" name="descripcion">
+								<input type="text" id="costo" name="costo">
+							</form>
+						</div>
+					</div>
+					<div class="xitem3" style="width:100% !important;">						
+						<p class="fs-17 fw-600">Ingredientes de la subreceta</p>
+						<p style="font-size: 11px;line-height: 1.4;font-weight: 600;">Activa el check para indicar que el ingrediente es necesario. Si este ingrediente se queda sin stock, los platos que usen esta subreceta quedarán sin stock.</p>
+						<br>
+
+						<div>
+							<p class="text-secondary fs-10">Desde:</p>
+							<select class="selected-template-1" id="select_tipo_ingrediente" onchange="xoptionTipoSeletedSubreceta(this)">
+								<option value="1">Porcion</option>
+								<option value="2">Producto</option>
+							</select>				
+						</div> 
+
+						<table class="xtable4 w-100" id="tb_ingredientes_sub" data-TablaName="subreceta_ingrediente">
+							<thead>
+								<td class="xSinBorde" width="5px"></td>
+								<th class="xSinBorde" width="50%"></th>
+								<th class="xSinBorde" width="20px"></th>								
+								<th class="xSinBorde" width="10px"></th>
+								<th class="xSinBorde" width="10px"></th>
+							</thead>
+							<tr class="xSinBorde" data-id="">
+								<td colspan="2">									
+									<input hidden$="[[isFromProducto]]" type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Buscar porción" onChange="conMayusculas(this)" required id="des_porcion_sub">
+									<x-comp-find-producto-almacen 
+										id="compProductoAlmacenSubreceta"
+										hidden$="[[!isFromProducto]]"
+										placeholder="Producto"
+										onlynomalmacen="true" appendtocmp="#dialog_detalle_subreceta">
+									</x-comp-find-producto-almacen>									
+								</td>
+								<td>
+									<div>
+										<p style="margin-top: -28px; text-align: center; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="text-success w-50"><strong>{{undConvercion.unidad}}</strong></p></p>
+										<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversionSub" id="cant_item_sub" required>
+									</div>
+								</td>
+								<td><input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item_sub" readonly$="[[isProductoConversion]]" required></td>
+								<td><paper-fab icon="add" onclick="xAddIngredienteSubreceta()" title="Agregar ingrediente" class="xmini"></paper-fab></td>
+							</tr> 
+						</table>
+					</div>
+				</div>
+			</div>
+			<br>
+			<div class="xLinea2"></div>
+			<br><br>
+			<div class="xContent">
+				<div class="xBoton2 xAzul" onclick="xGuardarSubreceta();">Listo, guardar</div>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+			</div>
+			<br>
+		</paper-dialog>
+
+		<!-- Listado principal -->
+		<br>
+		<div class="xMiCard xradius" style="width:80%">
+			<div class="xEncanezadoCard xFondoRowAmarillo4">
+				<p>Define <strong>subrecetas reutilizables</strong> que pueden incluirse en varias recetas.</p>
+				<p>Ejemplo: "Cuarto de pollo" puede usarse en "Combo familiar", "Promo 2x1", etc.</p>
+			</div>
+			<div class="xContentCard">
+                <div class="d-flexx justify-content-between">
+                    <h3>Listado de subrecetas</h3>
+                    <div class="xBoton2 xVerde xDerecha" onclick="xNuevaSubreceta()">Nueva subreceta</div>                    
+                </div>
+				<br>
+				<input type="text" class="xMiInput" placeholder="Buscar..." style="width:100%;" id="txt_bus_sub" onkeyup="xBuscarSubreceta()">
+				<br><br><br>
+				<table class="sortable" width="100%" id="tb_subrecetas">
+					<thead>
+						<tr>
+							<th width="70%" class="xCursor">Descripción</th>
+							<th width="15%" align="right" class="xCursor">Costo</th>
+							<th width="15%" align="center">Acciones</th>
+						</tr>
+					</thead>
+					<tbody id="tbody_subrecetas">
+					</tbody>
+				</table>
+			</div>
+			<br><br>
+		</div>
+	</template>
+
+	<style>
+		/* Asegurar que el autocomplete se muestre sobre el dialog */
+		.ui-autocomplete {
+			z-index: 9999 !important;
+			max-height: 200px;
+			overflow-y: auto;
+			overflow-x: hidden;
+		}
+	</style>
+
+</dom-module>
+<script>
+var xThisSub;
+var xidporcion_sub = 0;
+var xtt_ingredientes_sub = 0;
+var xes_nueva_subreceta = 0;
+var xid_subreceta = "";
+
+function xIniSubrecetas() {
+	xPopupLoad = document.getElementById('xLoad');
+	xm_LogChequea(function() {
+		xm_log_get('ini_us');
+		$('body').addClass('loaded');
+		$("#Titulo_page").text("Subrecetas");
+		$("#tb_subrecetas tbody").append('<tr class="row"><td colspan="3"><paper-spinner active></paper-spinner></td></tr>').trigger('create');
+
+		xListaDeSubrecetas();
+		xloadDataSubrecetas();
+	});
+
+	// Enter para pasar al siguiente input
+	$('.xPasarEnter2').on('keyup', function(e) {
+		var code = e.which;
+		if (code == 13 || code == 186) {
+			var inputs = $('input');
+			var a = inputs.index(document.activeElement);
+			if (inputs[a + 1] !== null) {
+				var nextBox = inputs[a + 1];
+				if (nextBox === undefined) { return; }
+				if (nextBox.disabled) { nextBox = inputs[a + 2]; }
+				if (nextBox == undefined) { return; }
+				nextBox.focus();
+				nextBox.select();
+			}
+			event.stopPropagation();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			return false;
+		}
+	});
+
+	$("#costo_item_sub").on('keyup', function(e) {
+		var code = e.which;
+		if (code == 13 || code == 186) {
+			xAddIngredienteSubreceta();
+		}
+	});
+
+	$("#txt_bus_sub").on('keyup', function() {
+		xBuscarTbData($("#tb_subrecetas"), $(this).val());
+	});
+
+	$("#cant_item_sub").on('keyup', function() {
+		if (xThisSub.isFromProducto) return;
+		
+		var xcosto_ingrediente = $("#costo_item_sub").val();
+		var xcan_item = $("#cant_item_sub").val();
+		xcosto_ingrediente = parseFloat(xcosto_ingrediente) * parseFloat(xcan_item);
+		if (isNaN(xcosto_ingrediente)) { xcosto_ingrediente = 0; }
+		xcosto_ingrediente = parseFloat(xcosto_ingrediente).toFixed(2);
+		$("#costo_item_sub").val(xcosto_ingrediente);
+	});
+
+	// Listener para producto seleccionado
+	const compProductoAlmacenSubreceta = document.getElementById('compProductoAlmacenSubreceta');
+	compProductoAlmacenSubreceta.addEventListener('productoSeleted', function(e) {
+		const _productoSelected = e.detail;
+		xThisSub.isProductoConversion = _productoSelected.para_receta === '1';
+		if (xThisSub.isProductoConversion) {
+			$.ajax({ type: 'POST', url: '../../../bdphp/log_010.php?op=get-und-conversion-by-id', contentType: 'application/json', data: JSON.stringify({ id: _productoSelected.idunidad_conversion }) })
+			.done(function(dtUndConversion) {
+				const _dtUndConversion = JSON.parse(dtUndConversion);
+				xThisSub.undConvercion = _dtUndConversion.datos[0];
+			});
+		}
+		xThisSub.productoSeleted = _productoSelected;
+	});
+}
+
+function xNuevaSubreceta() {
+	xes_nueva_subreceta = 1;
+	xLimpiarFormSubreceta();
+	$("#tr_des_subreceta").removeClass('xInvisible');
+	$("#xdes_subreceta_titulo").addClass('xInvisible');
+	dialog_detalle_subreceta.open();
+}
+
+function xLimpiarFormSubreceta() {
+	$("#tb_ingredientes_sub .row").remove();
+	$("#tb_ingredientes_sub .row_tt").remove();
+	$("#frm_subreceta")[0].reset();
+	$("#txt_descripcion_sub").val('');
+	$("#txt_costo_sub").val('');
+	$("#txt_costo_calculado").val('');
+	$("#des_porcion_sub").val('');
+	$("#cant_item_sub").val('');
+	$("#costo_item_sub").val('');
+	
+	xtt_ingredientes_sub = 0;
+	xid_subreceta = "";
+	xThisSub.listIngredientes = [];
+	dialog_detalle_subreceta.close();
+}
+
+function xAbrirDetalleSubreceta(obj) {
+	xLimpiarFormSubreceta();
+	xid_subreceta = $(obj).attr('data-id');
+	xes_nueva_subreceta = 0;
+
+	var xdes_tr = $(obj).find('#xtr_des').text().trim();
+	$("#tr_des_subreceta").addClass('xInvisible');
+	$("#xdes_subreceta_titulo").removeClass('xInvisible');
+	$("#xdes_subreceta_titulo").text(xdes_tr);
+	$("#txt_descripcion_sub").val(xdes_tr);
+
+	$("#txt_costo_sub").val($(obj).find('#xtr_costo').text());
+
+	// Cargar ingredientes
+	$("#tb_ingredientes_sub").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>').trigger('create');
+	$.ajax({ type: 'POST', url: '../../bdphp/log_subrecetas.php?op=get_ingredientes', data: { id: xid_subreceta } })
+	.done(function(dtDetalleI) {
+		var xdtDetalleI = dtDetalleI;
+		var xcadena_det_i = '';
+		xdtDetalleI = xdtDetalleI.datos;
+		xThisSub.listIngredientes = [];
+
+		for (var i = 0; i < xdtDetalleI.length; i++) {
+			const idRow = xdtDetalleI[i].idsubreceta_ingrediente;
+			
+			const rowItem = {
+				idsubreceta_ingrediente: xdtDetalleI[i].idsubreceta_ingrediente,
+				idsubreceta: xdtDetalleI[i].idsubreceta,
+				descripcion: xdtDetalleI[i].descripcion,
+				cantidad: xdtDetalleI[i].cantidad_show,
+				costo: xdtDetalleI[i].costo,
+				idporcion: xdtDetalleI[i].idporcion,
+				idproducto_stock: xdtDetalleI[i].idproducto_stock,
+				viene_de: xdtDetalleI[i].viene_de,
+				necesario: xdtDetalleI[i].necesario,
+				und_medida: xdtDetalleI[i].und_medida,
+				idrow: idRow,
+				new: 0,
+				borrado: 0,
+				modificado: 0
+			};
+
+			xThisSub.listIngredientes.push(rowItem);
+
+			const _valCheckedNecesario = xdtDetalleI[i].necesario == '1' ? 'checked' : '';
+
+			xcadena_det_i = String(xcadena_det_i + '<tr class="row" data-id="' + idRow + '">' +
+				'<td colspan="2" data-ColumName="descripcion"><paper-checkbox class="m-0" ' + _valCheckedNecesario + ' onchange="xIngredienteNecesarioSub(this)"></paper-checkbox>' + xdtDetalleI[i].descripcion + '</td>' +
+				'<td align="center" data-ColumName="cantidad">' + xdtDetalleI[i].cantidad_show + xdtDetalleI[i].und_medida + '</td>' +
+				'<td align="right" data-ColumName="costo" class="row_costo">' + xdtDetalleI[i].costo + '</td>' +
+				'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarIngredienteSub(this);"></span></td>' +
+				'<td data-ColumName="idporcion" class="xInvisible">' + xdtDetalleI[i].idporcion + '</td>' +
+				'<td data-ColumName="idproducto_stock" class="xInvisible">' + xdtDetalleI[i].idproducto_stock + '</td>' +
+				'<td data-ColumName="viene_de" class="xInvisible">' + xdtDetalleI[i].viene_de + '</td>' +
+				'<td class="xInvisible" data-ColumName="necesario" id="td_necesario">' + xdtDetalleI[i].necesario + '</td>' +
+				'</tr>');
+		}
+
+		$("#tb_ingredientes_sub .row").remove();
+		$("#tb_ingredientes_sub").append(xcadena_det_i).trigger('create');
+		xSumarIngredientesSub();
+	});
+
+	dialog_detalle_subreceta.open();
+}
+
+function xloadDataSubrecetas() {
+	// Cargar porciones para autocomplete
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1701' })
+	.done(function(DtItemsPor) {
+		var xDtItemsPor = $.parseJSON(DtItemsPor);
+		xThisSub.dtPorciones = xDtItemsPor.datos;
+		console.log('Porciones cargadas:', xThisSub.dtPorciones);
+		xCargarPorcionesTxtSub();
+	})
+	.fail(function(error) {
+		console.error('Error cargando porciones:', error);
+	});
+}
+
+function xGuardarSubreceta() {
+	xPopupLoad.xopen();
+
+	const descripcion = xes_nueva_subreceta == 1 ? $("#txt_descripcion_sub").val() : $("#xdes_subreceta_titulo").text();
+	const costo = $("#txt_costo_sub").val() || '0.00';
+
+	if (descripcion.trim() === '') {
+		xPopupLoad.xclose();
+		alert('Ingrese una descripción para la subreceta');
+		return;
+	}
+
+	const dataSubreceta = {
+		idsubreceta: xid_subreceta,
+		descripcion: descripcion,
+		costo: costo,
+		idorg: xIdOrg,
+		idsede: xIdSede,
+		ingredientes: xThisSub.listIngredientes
+	};
+
+	$.ajax({ 
+		type: 'POST', 
+		url: '../../bdphp/log_subrecetas.php?op=guardar', 
+		data: { data: JSON.stringify(dataSubreceta) }
+	})
+	.done(function(response) {
+		xPopupLoad.xclose();
+		xLimpiarFormSubreceta();
+		xListaDeSubrecetas();
+	});
+}
+
+function xAddIngredienteSubreceta() {
+	var xdes_ingrediente = $("#des_porcion_sub").val();
+	var xcosto_ingrediente = $("#costo_item_sub").val();
+	var xcan_item = $("#cant_item_sub").val();
+
+	const und_conversion = xThisSub.isFromProducto ? xThisSub.undConvercion ? xThisSub.undConvercion.abreviatura : '' : '';
+
+	const compProductoAlmacenSubreceta = document.getElementById('compProductoAlmacenSubreceta');
+	const _productoSelected = compProductoAlmacenSubreceta.getProductoSeletedAlmacen();
+	const vieneDe = xThisSub.isFromProducto ? '2' : '1';
+	const idProducto = xThisSub.isFromProducto ? _productoSelected.value : 0;
+	const _descripcion = xThisSub.isFromProducto ? _productoSelected.label : xdes_ingrediente;
+	let _cantidad = xcan_item;
+
+	if (xThisSub.isFromProducto && xThisSub.undConvercion) {
+		const _rptCalculo = calcularCantidadDescuentoSub(xcan_item, xThisSub.undConvercion, _productoSelected);
+		_cantidad = _rptCalculo.cantidadDescontar;
+	}
+
+	if (isNaN(_cantidad) || !isFinite(_cantidad)) {
+		_cantidad = xcan_item;
+	}
+
+	xidporcion_sub = xThisSub.isFromProducto ? 0 : xidporcion_sub;
+
+	if (_descripcion == "" || xcosto_ingrediente == "") { return; }
+
+	xcosto_ingrediente = parseFloat($("#costo_item_sub").val()).toFixed(2);
+	const idRow = Date.now(); // ID único temporal
+
+	const _rowItem = {
+		idsubreceta_ingrediente: 0,
+		idsubreceta: xid_subreceta,
+		descripcion: _descripcion,
+		cantidad: _cantidad,
+		cantidad_show: xcan_item,
+		costo: xcosto_ingrediente,
+		idporcion: xidporcion_sub,
+		idproducto_stock: idProducto,
+		viene_de: vieneDe,
+		necesario: 1,
+		idrow: idRow,
+		new: 1,
+		borrado: 0,
+		modificado: 0,
+		und_medida: und_conversion
+	};
+
+	xThisSub.listIngredientes.push(_rowItem);
+
+	var xrow_ingrediente = '<tr class="row" data-id="' + idRow + '">' +
+		'<td colspan="2" data-ColumName="descripcion"><paper-checkbox checked onchange="xIngredienteNecesarioSub(this)"></paper-checkbox>' + _descripcion + '</td>' +
+		'<td align="right" data-ColumName="cantidad">' + xcan_item + und_conversion + '</td>' +
+		'<td align="right" data-ColumName="costo" class="row_costo">' + xcosto_ingrediente + '</td>' +
+		'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarIngredienteSub(this);"></span></td>' +
+		'<td data-ColumName="idporcion" class="xInvisible">' + xidporcion_sub + '</td>' +
+		'<td data-ColumName="idproducto_stock" class="xInvisible">' + idProducto + '</td>' +
+		'<td data-ColumName="viene_de" class="xInvisible">' + vieneDe + '</td>' +
+		'<td class="xInvisible" data-ColumName="necesario" id="td_necesario">1</td>' +
+		'</tr>';
+
+	$("#tb_ingredientes_sub").append(xrow_ingrediente).trigger('create');
+	xSumarIngredientesSub();
+
+	$("#des_porcion_sub").val('');
+	$("#costo_item_sub").val('');
+	$("#cant_item_sub").val('');
+	$("#des_porcion_sub").focus();
+}
+
+function calcularCantidadDescuentoSub(cantidadReceta, undConvercion, productoSeleccionado) {
+	if (isNaN(cantidadReceta) || cantidadReceta <= 0) {
+		return { error: true, cantidadDescontar: 0 };
+	}
+
+	if (!undConvercion) {
+		return { error: true, cantidadDescontar: cantidadReceta };
+	}
+
+	const factorConversion = parseFloat(productoSeleccionado.factor_conversion) || 0;
+
+	if (!factorConversion || factorConversion <= 0) {
+		return { error: true, cantidadDescontar: cantidadReceta };
+	}
+
+	const cantidadDescontar = cantidadReceta / factorConversion;
+
+	if (isNaN(cantidadDescontar) || !isFinite(cantidadDescontar)) {
+		return { error: true, cantidadDescontar: cantidadReceta };
+	}
+
+	return {
+		error: false,
+		cantidadDescontar: parseFloat(cantidadDescontar.toFixed(4)),
+		unidadReceta: undConvercion.abreviatura,
+		factorConversion: factorConversion
+	};
+}
+
+function xBorrarIngredienteSub(obj) {
+	var xObj = $(obj).parent().parent();
+	var xidrow = xObj.attr('data-id');
+
+	// Marcar como borrado en la lista
+	const _rowItem = xThisSub.listIngredientes.find(item => item.idrow == xidrow);
+	if (_rowItem) {
+		_rowItem.borrado = 1;
+	}
+
+	xObj.fadeTo(550, 0, function() { $(this).remove(); xSumarIngredientesSub(); });
+}
+
+function xIngredienteNecesarioSub(obj) {
+	const _valCheckNecesario = obj.checked ? 1 : 0;
+	var xObj = $(obj).parent().parent();
+	var xidrow = xObj.attr('data-id');
+
+	const _rowItem = xThisSub.listIngredientes.find(item => item.idrow == xidrow);
+	if (_rowItem) {
+		_rowItem.necesario = _valCheckNecesario;
+		_rowItem.modificado = 1;
+	}
+
+	$(obj).parents('tr').find('#td_necesario').text(_valCheckNecesario);
+}
+
+function xSumarIngredientesSub() {
+	xtt_ingredientes_sub = parseFloat(xSumaCantRow($("#tb_ingredientes_sub"), '.row_costo')).toFixed(2);
+	$("#tb_ingredientes_sub .row_tt").remove();
+	$("#tb_ingredientes_sub").append('<tr class="row_tt"><td align="right" colspan="4"><strong>' + xtt_ingredientes_sub + '</strong></td><td></td></tr>').trigger('create');
+	$("#txt_costo_calculado").val(xtt_ingredientes_sub);
+}
+
+function xCargarPorcionesTxtSub() {
+	var xObjTxtPorcion = $("#des_porcion_sub");
+	
+	// Destruir autocomplete previo si existe
+	if (xObjTxtPorcion.hasClass('ui-autocomplete-input')) {
+		xObjTxtPorcion.autocomplete('destroy');
+	}
+	
+	xObjTxtPorcion.autocomplete({
+		autoFocus: true,
+		source: xThisSub.dtPorciones,
+		appendTo: '#dialog_detalle_subreceta',
+		minLength: 0,
+		select: function(event, ui) {
+			xObjTxtPorcion.val(ui.item.label);
+			xObjTxtPorcion.attr('data-id', ui.item.value);
+			xidporcion_sub = ui.item.value;
+			$("#costo_item_sub").val(ui.item.precio_unitario);
+			$("#cant_item_sub").val(1);
+			return false;
+		},
+		focus: function(event, ui) { return false; },
+		change: function(event, ui) {
+			if (ui.item === null) {
+				xObjTxtPorcion.attr('data-value', "");
+				xObjTxtPorcion.attr('data-id', "");
+				xidporcion_sub = 0;
+				$("#costo_item_sub").val('');
+				$("#cant_item_sub").val(1);
+			}
+			return false;
+		}
+	});
+}
+
+function xListaDeSubrecetas() {
+	$.ajax({ type: 'POST', url: '../../bdphp/log_subrecetas.php?op=listar' })
+	.done(function(dtSubrecetas) {
+		var xdtSubrecetas = dtSubrecetas;
+		var xcadena_row = '';
+		xdtSubrecetas = xdtSubrecetas.datos;
+
+		for (var i = 0; i < xdtSubrecetas.length; i++) {
+			xcadena_row = String(xcadena_row + '<tr class="row xCursor" data-id="' + xdtSubrecetas[i].idsubreceta + '" onclick="xAbrirDetalleSubreceta(this)">' +
+				'<td id="xtr_des">' + xdtSubrecetas[i].descripcion + '</td>' +
+				'<td align="right" id="xtr_costo">' + xdtSubrecetas[i].costo + '</td>' +
+				'<td align="center"><span class="xDeleteRow" title="Eliminar" onclick="event.stopPropagation(); xEliminarSubreceta(' + xdtSubrecetas[i].idsubreceta + ');"></span></td>' +
+				'</tr>');
+		}
+
+		$("#tb_subrecetas .row").remove();
+		$("#tb_subrecetas tbody").append(xcadena_row).trigger('create');
+	});
+}
+
+function xEliminarSubreceta(idsubreceta) {
+	if (!confirm('¿Está seguro de eliminar esta subreceta?')) { return; }
+
+	$.ajax({ type: 'POST', url: '../../bdphp/log_subrecetas.php?op=eliminar', data: { id: idsubreceta } })
+	.done(function(response) {
+		xListaDeSubrecetas();
+	});
+}
+
+function xBuscarSubreceta() {
+	xBuscarTbData($("#tb_subrecetas"), $("#txt_bus_sub").val());
+}
+
+function xoptionTipoSeletedSubreceta(obj) {
+	const _valOption = obj.value;
+	xThisSub.isFromProducto = _valOption == '2';
+	xThisSub.isProductoConversion = false;
+}
+
+Polymer({
+	is: 'x-subrecetas',
+	properties: {
+		dtPorciones: Object,
+		isFromProducto: {
+			type: Boolean,
+			value: false
+		},
+		listIngredientes: {
+			type: Array,
+			value: function() { return []; }
+		},
+		isProductoConversion: {
+			type: Boolean,
+			value: false
+		},
+		undConvercion: {},
+		productoSeleted: {
+			type: Object,
+			value: function() { return {}; }
+		}
+	},
+	attached: function() {
+		this.isFromProducto = false;
+		xThisSub = this;
+		xIniSubrecetas();
+	},
+	calcCostoConversionSub: function(obj) {
+		if (!this.isFromProducto) return;
+
+		const cantidad_producto = parseFloat(obj.target.value);
+		const costo_producto = this.productoSeleted.costo_conversion * cantidad_producto;
+		costo_item_sub.value = costo_producto;
+	}
+});
+</script>

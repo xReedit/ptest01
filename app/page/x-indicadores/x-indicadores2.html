@@ -85,7 +85,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-dark" on-click="goDash2">
+                    <button class="btn btn-sm btn-animated-border" on-click="goDash2">
                         <i class="fa fa-dashboard"></i>
                         Nuevo Dashboard
                     </button>
@@ -542,6 +542,73 @@
     </template>
 </dom-module>
 <style>
+    /* Botón animado con borde brillante */
+    .btn-animated-border {
+        position: relative;
+        padding: 8px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        overflow: hidden;
+        z-index: 1;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-animated-border::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0, #ff0080);
+        background-size: 400% 400%;
+        border-radius: 10px;
+        z-index: -2;
+        animation: borderGlow 3s ease infinite;
+    }
+
+    .btn-animated-border::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        bottom: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 6px;
+        z-index: -1;
+    }
+
+    .btn-animated-border:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-animated-border:active {
+        transform: translateY(0);
+    }
+
+    .btn-animated-border i {
+        margin-right: 6px;
+    }
+
+    @keyframes borderGlow {
+        0% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
     .border-header-e {
         border-radius: 5px;
         border: 1px solid #e0e0e0;

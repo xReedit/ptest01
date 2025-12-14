@@ -50,9 +50,10 @@
 						<div>
 							<!-- select seleccione si es "porcion" o  "producto" -->
 							<p class="text-secondary fs-10">Desde:</p>
-							<select class="selected-template-1" onchange="xoptionTipoSeletedReceta(this)">
+							<select class="selected-template-1" id="select_tipo_receta" onchange="xoptionTipoSeletedReceta(this)">
 								<option value="1">Porcion</option>
 								<option value="2">Producto</option>
+								<option value="3">Subreceta</option>
 							</select>				
 						</div> 
 
@@ -66,7 +67,8 @@
 							</thead>
 							<tr class="xSinBorde" data-id="">
 								<td colspan="2">									
-									<input hidden$="[[isFromRecetaProducto]]" type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Descripcion" onChange="conMayusculas(this)" required id="des_porcion">
+									<input type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Buscar porción" onChange="conMayusculas(this)" required id="des_porcion">
+									<input type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Buscar subreceta" onChange="conMayusculas(this)" id="des_subreceta" style="display:none;">
 									<x-comp-find-producto-almacen 
 										id="compProductoAlmacenReceta"
 										hidden$="[[!isFromRecetaProducto]]"
@@ -76,9 +78,10 @@
 								</td>
 								<td>
 									<div>
-										<p style="margin-top: -28px; text-align: center; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="text-success w-50"><strong>{{undConvercion.unidad}}</strong></p></p>
-										<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required></td>
+										<p style="margin-top: -28px; text-align: center; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="text-success w-50"><strong>{{undConvercion.unidad}}</strong></span></p>
+										<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required>
 									</div>
+								</td>
 								<td><input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required></td>
 								<td><paper-fab icon="add" onclick="xAddItemIngrediente()" title="Agregar item" class="xmini"></paper-fab></td>
 							</tr> 
@@ -104,8 +107,13 @@
 				<p>Es importante primero definir las porciones que se utilizaran como ingredientes.</p>
 			</div>
 			<div class="xContentCard">
-				<h3>Listado de platos</h3>
-				<div class="xBoton2 xVerde xDerecha" onclick="xNuevoPlato()">Nueva receta</div>
+				<div class="d-flexx justify-content-between">
+					<h3>Listado de platos</h3>
+					<div class="d-flexx">
+						<!-- <div class="xBoton2 xVerde xDerecha" onclick="xNuevoPlato()">Nueva Receta</div> -->
+						<div class="xBoton2 xVerde xDerecha" onclick="xGoSubReceta()">Subreceta</div>
+					</div>
+				</div>
 				<br>
 				<input type="text" class="xMiInput" placeholder="Buscar..." style="width:100%;" id="txt_bus">
 				<br><br><br>
@@ -125,7 +133,13 @@
 	</template>
 
 	<style>
-		
+		/* Asegurar que el autocomplete se muestre sobre el dialog */
+		.ui-autocomplete {
+			z-index: 9999 !important;
+			max-height: 200px;
+			overflow-y: auto;
+			overflow-x: hidden;
+		}
 	</style>
 
 </dom-module>
@@ -265,7 +279,8 @@ function xAbrirDetalleReceta(obj){
 		xThis.listItemsReceta = [];
 		for (var i = 0; i < xdtDetalleI.length; i++) {
 
-			const idRow = `${xdtDetalleI[i].idproducto_stock}${xdtDetalleI[i].idporcion}-${xdtDetalleI[i].descripcion}`;
+			const idSubreceta = xdtDetalleI[i].idsubreceta || 0;
+			const idRow = `${xdtDetalleI[i].idproducto_stock}${xdtDetalleI[i].idporcion}${idSubreceta}-${xdtDetalleI[i].descripcion}`;
 			
 			const rowItem = {
 				iditem_ingrediente: xdtDetalleI[i].iditem_ingrediente,
@@ -275,6 +290,7 @@ function xAbrirDetalleReceta(obj){
 				costo: xdtDetalleI[i].costo,
 				idporcion: xdtDetalleI[i].idporcion,
 				idproducto_stock: xdtDetalleI[i].idproducto_stock,
+				idsubreceta: idSubreceta,
 				viene_de: xdtDetalleI[i].viene_de,
 				necesario: xdtDetalleI[i].necesario,
 				und_medida: xdtDetalleI[i].und_medida,
@@ -297,6 +313,7 @@ function xAbrirDetalleReceta(obj){
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
 			'<td data-ColumName="idporcion" class="xInvisible">'+xdtDetalleI[i].idporcion+'</td>'+
 			'<td data-ColumName="idproducto_stock" class="xInvisible">' + xdtDetalleI[i].idproducto_stock + '</td>' +
+			'<td data-ColumName="idsubreceta" class="xInvisible">' + idSubreceta + '</td>' +
 			'<td data-ColumName="viene_de" class="xInvisible">' + xdtDetalleI[i].viene_de + '</td>' +
 			'<td class="xInvisible" data-ColumName="necesario" id="td_necesario">'+xdtDetalleI[i].necesario+'</td>'+
 			'</tr>');
@@ -318,6 +335,14 @@ function xloadDataRecetas(){
 		var xDtItemsPor=$.parseJSON(DtItemsPor);
 		xThis.dtProItem_porcion=xDtItemsPor.datos;
 		xCargarDtProcionesTxt();
+	})
+
+	// Cargar subrecetas para autocomplete
+	$.ajax({ type: 'POST', url: '../../bdphp/log_subrecetas.php?op=listar_autocomplete'})
+	.done( function (DtSubrecetas) {	
+		var xDtSubrecetas=DtSubrecetas;
+		xThis.dtSubrecetas=xDtSubrecetas.datos;
+		xCargarSubrecetasTxt();
 	})
 }
 function xUpdateNewItem(){
@@ -384,9 +409,19 @@ function xAddItemIngrediente(){
 
 	const compProductoAlmacenReceta = document.getElementById('compProductoAlmacenReceta');
 	const _productoSelected = compProductoAlmacenReceta.getProductoSeletedAlmacen();
-	const vieneDe = xThis.isFromRecetaProducto ? '2' : '1';
+	
+	// Determinar viene_de: 1=Porcion, 2=Producto, 3=Subreceta
+	let vieneDe = '1';
+	if (xThis.isFromRecetaProducto) vieneDe = '2';
+	if (xThis.isFromSubreceta) vieneDe = '3';
+	
 	const idProductoReceta = xThis.isFromRecetaProducto ? _productoSelected.value : 0;
-	const _descripcionProducto = xThis.isFromRecetaProducto ? _productoSelected.label : xdes_ingrediente;	
+	const idSubreceta = xThis.isFromSubreceta ? xidsubreceta_seleccionada : 0;
+	
+	// Descripción según el tipo
+	let _descripcionProducto = xdes_ingrediente;
+	if (xThis.isFromRecetaProducto) _descripcionProducto = _productoSelected.label;
+	if (xThis.isFromSubreceta) _descripcionProducto = $("#des_subreceta").val();	
 	let _cantidad = xcan_item;
 
 	if ( xThis.isFromRecetaProducto && xThis.undConvercion ) {
@@ -399,12 +434,12 @@ function xAddItemIngrediente(){
 		_cantidad = xcan_item;
 	}
 
-	xidproducto_porcionado = xThis.isFromRecetaProducto ? 0 : xidproducto_porcionado;
+	xidproducto_porcionado = xThis.isFromRecetaProducto || xThis.isFromSubreceta ? 0 : xidproducto_porcionado;
 
 	if (_descripcionProducto == "" || xcosto_ingrediente == "") { return; }
 
 	xcosto_ingrediente = parseFloat($("#costo_item").val()).toFixed(2);
-	const idRow = `${xidproducto_porcionado}${idProductoReceta}-${_descripcionProducto}`;
+	const idRow = `${xidproducto_porcionado}${idProductoReceta}${idSubreceta}-${_descripcionProducto}`;
 	const _rowItem = {
 		iditem_ingrediente: 0,
 		iditem: xid_item,
@@ -414,6 +449,7 @@ function xAddItemIngrediente(){
 		costo: xcosto_ingrediente,
 		idporcion: xidproducto_porcionado,
 		idproducto_stock: idProductoReceta,
+		idsubreceta: idSubreceta,
 		viene_de: vieneDe,
 		necesario: 1,
 		idrow: idRow,
@@ -435,6 +471,7 @@ function xAddItemIngrediente(){
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
 			'<td data-ColumName="idporcion" class="xInvisible">'+xidproducto_porcionado+'</td>'+
 			'<td data-ColumName="idproducto_stock" class="xInvisible">' + idProductoReceta + '</td>' +
+			'<td data-ColumName="idsubreceta" class="xInvisible">' + idSubreceta + '</td>' +
 			'<td data-ColumName="viene_de" class="xInvisible">' + vieneDe + '</td>' +
 			'<td class="xInvisible" data-ColumName="necesario" id="td_necesario">1</td>'+
 			'</tr>';
@@ -443,9 +480,17 @@ function xAddItemIngrediente(){
 	xSumaringredientes();
 
 	$("#des_porcion").val('');
+	$("#des_subreceta").val('');
 	$("#costo_item").val('');
 	$("#cant_item").val('');
-	$("#des_porcion").focus();
+	xidsubreceta_seleccionada = 0;
+	
+	// Focus según el tipo seleccionado
+	if (xThis.isFromSubreceta) {
+		$("#des_subreceta").focus();
+	} else {
+		$("#des_porcion").focus();
+	}
 }
 
 	/**
@@ -619,15 +664,78 @@ function xListaDeRecetas(){
 
 function xoptionTipoSeletedReceta(obj) {
 	const _valOption = obj.value;	
-	xThis.isFromRecetaProducto = _valOption == '2';	
+	xThis.isFromRecetaProducto = _valOption == '2';
+	xThis.isFromSubreceta = _valOption == '3';
 	xThis.isProductoConversion = false;
+
+	// Mostrar/ocultar inputs según selección
+	if (_valOption == '1') {
+		$("#des_porcion").show();
+		$("#des_subreceta").hide();
+	} else if (_valOption == '3') {
+		$("#des_porcion").hide();
+		$("#des_subreceta").show();
+	} else {
+		$("#des_porcion").hide();
+		$("#des_subreceta").hide();
+	}
+}
+
+// Variable global para subreceta seleccionada
+var xidsubreceta_seleccionada = 0;
+
+function xCargarSubrecetasTxt(){
+	var xObjTxtSubreceta = $("#des_subreceta");
+	
+	// Destruir autocomplete previo si existe
+	if (xObjTxtSubreceta.hasClass('ui-autocomplete-input')) {
+		xObjTxtSubreceta.autocomplete('destroy');
+	}
+	
+	console.log('Subrecetas cargadas:', xThis.dtSubrecetas);
+	
+	xObjTxtSubreceta.autocomplete({
+		autoFocus: true,
+		source: xThis.dtSubrecetas,
+		appendTo: '#dialog_detalle_receta',
+		minLength: 0,
+		select: function(event, ui) {
+			xObjTxtSubreceta.val(ui.item.label);
+			xObjTxtSubreceta.attr('data-id', ui.item.value);
+			xidsubreceta_seleccionada = ui.item.value;
+			$("#costo_item").val(ui.item.precio_unitario);
+			$("#cant_item").val(1);
+			return false;
+		},
+		focus: function(event, ui) { return false; },
+		change: function(event, ui) {
+			if (ui.item === null) {
+				xObjTxtSubreceta.attr('data-value', "");
+				xObjTxtSubreceta.attr('data-id', "");
+				xidsubreceta_seleccionada = 0;
+				$("#costo_item").val('');
+				$("#cant_item").val(1);
+			}
+			return false;
+		}
+	});
+}
+
+function xGoSubReceta() {
+	// Navegar a la página de subrecetas
+	window.location.href = '#/subreceta';
 }
 
 Polymer({
 	is:'x-recetas',
 	properties:{
 		dtProItem_porcion:Object,
+		dtSubrecetas:Object,
 		isFromRecetaProducto:Boolean,
+		isFromSubreceta: {
+			type: Boolean,
+			value: false
+		},
 		listItemsReceta: {
 			type: Array,
 			value: []
@@ -645,6 +753,7 @@ Polymer({
 	},
 	attached:function(){
 		this.isFromRecetaProducto = false;
+		this.isFromSubreceta = false;
     	xThis=this;
     	xIniRecetas();
     },
