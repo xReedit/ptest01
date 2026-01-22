@@ -106,10 +106,29 @@
 					<div>
 						<br>
 						<form id="form_ingreso" onsubmit="return false">
-							<select class="xTextRow2 xfont18 xCursor" id="selecie" style="width:200px">
-								<option value="1">INGRESO A CAJA</option>
-								<option value="2">SALIDA DE CAJA</option>
-							</select><br><br>
+							<div class="xcaja-tipo-wrap">
+								<h3>Movimientos de caja</h3>
+								<p class="text-secundary">Registre el ingreso o salida de efectivo en caja.</p>
+								<br>
+
+								<div class="xcaja-tipo-grid">
+									<div class="xMiBoton_icon_option option-tcc xcaja-tipo-option" selected data-tipo="1" data-index="0" onclick="selectOptionIE(this)">
+										<img src="../../../images/_ingreso_caja.png" alt="">
+										<p>INGRESO</p>
+									</div>
+									<div class="xMiBoton_icon_option option-tcc xcaja-tipo-option" data-tipo="2" data-index="1" onclick="selectOptionIE(this)">
+										<img src="../../../images/_salida_caja.png" alt="">
+										<p>SALIDA</p>
+									</div>
+								</div>
+								<select class="xTextRow2 xfont18 xCursor" id="selecie" style="width:200px; display:none;">
+									<option value="1">INGRESO A CAJA</option>
+									<option value="2">SALIDA DE CAJA</option>
+								</select>
+							</div>
+							<br>
+							<div id="xcaja_motivos" class="xcaja-motivos"></div>
+							<br><br>
 							<p>Detalle el motivo del movimiento de efectivo.</p>
 							<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" placeholder="Motivo" id="motivo" name="motivo" required>
 							<br><br>
@@ -123,7 +142,9 @@
 								<input type="text" id="tipo" name="tipo">
 							</div>
 						</form><br><br>
-						<paper-button tabindex="0" raised class="xverde" onclick="xGuardarIngreso();"><iron-icon icon="save"></iron-icon>Listo Guardar</paper-button>
+						<button id="btnGuardarIE" class="btn btn-success" onclick="xGuardarIngreso();" disabled>
+							<i class="fa fa-check pr-1"></i>Listo Guardar
+						</button>
 						<br><br><br>
 						<h4>Resumen de movimientos que aun no tienen cierre</h4>
 						<div class="xLinea2"></div>
@@ -394,6 +415,27 @@
 		float: right;
 	}
 
+	.option-tcc {
+		text-align: center;
+		width: 75px;
+		padding: 10px;		
+	}
+
+	.option-tcc p {
+		margin-top: 10px;
+		font-size: 15px;
+		font-weight: 600;
+	}
+
+	.xcaja-tipo-option[selected][data-tipo="1"] {
+		border-color: #43a047;
+		background: rgb(93 215 98 / 32%);
+	}
+
+	.xcaja-tipo-option[selected][data-tipo="2"] {
+		border-color: #c62828;
+		background: rgb(243 129 129 / 29%);
+	}
 </style>
 
 <script type="text/javascript" src="./cocinar.resumen.boletas.js"></script>
@@ -501,6 +543,10 @@ function xIniCaja(){
 		var code=e.which;
 		if ( code==13||code==186 ) {xGuardarIngreso();}
 	})
+
+	$("#form_ingreso #motivo, #form_ingreso #monto").on('keyup change input', function(){
+		xCajaUpdateBtnGuardarState();
+	});
 	$("#form_egreso #monto").on('keyup',function(e){
 		var code=e.which;
 		if ( code==13||code==186 ) {xGuardarEgreso();}
@@ -535,8 +581,82 @@ function xIniCaja(){
 	
 	xThisCaja.isCheckCuentasPorCobrar = getVariableSede('switch2') ;
 	verifyCuentasPagar();
+	xCajaSetTipoIE(1);
+	xCajaUpdateBtnGuardarState();
 	
 
+}
+
+function xCajaUpdateBtnGuardarState(){
+	var btn = document.getElementById('btnGuardarIE');
+	if(!btn){ return; }
+	var motivoEl = document.getElementById('motivo');
+	var montoEl = document.getElementById('monto');
+	var motivo = motivoEl ? String(motivoEl.value || '').trim() : '';
+	var monto = montoEl ? parseFloat(montoEl.value) : NaN;
+	var ok = motivo.length > 0 && !isNaN(monto) && monto > 0;
+	btn.disabled = !ok;
+}
+
+function selectOptionIE(obj){
+	var tipo = parseInt(obj.getAttribute('data-tipo') || '1');
+	xCajaSetTipoIE(tipo);
+}
+
+function xCajaGetMotivosByTipo(tipo){
+	if(parseInt(tipo) === 2){
+		return [
+			{ t: 'RETIRO DE EFECTIVO', i: 'fa-money' },
+			{ t: 'COMPRA DE INSUMOS', i: 'fa-shopping-cart' },
+			{ t: 'PAGO DE SERVICIOS', i: 'fa-bolt' },
+			{ t: 'PAGO A PROVEEDOR', i: 'fa-truck' },
+			{ t: 'FALTANTE DE CAJA', i: 'fa-exclamation-triangle' },
+			{ t: 'OTROS EGRESOS', i: 'fa-ellipsis-h' }
+		];
+	}
+	return [
+		{ t: 'APERTURA DE CAJA', i: 'fa-unlock-alt' },
+		{ t: 'INGRESO DE EFECTIVO', i: 'fa-plus-circle' },
+		{ t: 'SOBRANTE DE CAJA', i: 'fa-check-circle' },
+		{ t: 'COBRO DE DEUDA', i: 'fa-handshake-o' },
+		{ t: 'OTROS INGRESOS', i: 'fa-ellipsis-h' }
+	];
+}
+
+function xCajaRenderMotivos(tipo){
+	var cont = document.getElementById('xcaja_motivos');
+	if(!cont){ return; }
+	var arr = xCajaGetMotivosByTipo(tipo);
+	var html = '';
+	for(var i = 0; i < arr.length; i++){
+		html += '<div class="xMiBoton_icon_option xcaja-motivo-option" onclick="xCajaSetMotivo(\'' + arr[i].t + '\')">'
+			+ '<i class="fa ' + arr[i].i + '" aria-hidden="true"></i>'
+			+ '<p class="mt-2">' + arr[i].t + '</p>'
+			+ '</div>';
+	}
+	cont.innerHTML = html;
+}
+
+function xCajaSetMotivo(txt){
+	var el = document.getElementById('motivo');
+	if(!el){ return; }
+	el.value = txt;
+	try { el.focus(); } catch(e) {}
+}
+
+function xCajaSetTipoIE(tipo){
+	var sel = document.getElementById('selecie');
+	if(sel){ sel.value = String(tipo); }
+	var nodes = document.querySelectorAll('.xcaja-tipo-option');
+	if(nodes && nodes.length){
+		for(var i = 0; i < nodes.length; i++){
+			var nTipo = parseInt(nodes[i].getAttribute('data-tipo') || '0');
+			if(nTipo === parseInt(tipo)) { nodes[i].setAttribute('selected', true); }
+			else { nodes[i].removeAttribute('selected'); }
+		}
+	}
+	xCajaRenderMotivos(tipo);
+	xCajaUpdateBtnGuardarState();
 }
 function xGuardarIngreso(){
 	if ( guadandoIngresoSalida ) { return; }

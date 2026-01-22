@@ -1,21 +1,37 @@
 <dom-module id="x-porcion-detalle">    
     <template>
 
+        <script type="text/javascript" src="../../../js/mi.sweet.alert.js"></script>
+        <script src="../../../js/porcion.utils.js"></script>
+        <link rel="import" href="x-porcion-codigo-unico.html">
+
+        <x-porcion-codigo-unico id="comp_codigo_unico" idporcion="{{objporcion.idporcion}}" porcion-nombre="{{objporcion.porcion}}" codigo-sugerido="{{codigoSugerido}}" on-codigo-generado="onCodigoGenerado" on-codigo-vinculado="onCodigoVinculado" on-codigo-modificado="onCodigoModificado"></x-porcion-codigo-unico>
+
         <paper-dialog modal id="dialog_modificar_stock_porcion" class="dialog_redondo" modal
             entry-animation="scale-up-animation" style="max-width: 600px;" exit-animation="fade-out-animation" with-backdrop>
             <div class="xContent">
                 <h3>Modificar Stock</h3>
                 <span class="fw-100 text-secondary fs-11">Todas las modificaciones se registrarán en el historial de cambios.</span>
                 <div class="xLinea2"></div><br>
+                
+                <template is="dom-if" if="[[conversionActiva]]">
+                    <div class="d-flexx align-items-center mb-3" style="gap: 10px;">
+                        <label class="fs-12 text-secondary m-0">Unidad:</label>
+                        <select id="select_unidad_stock" class="selected-template-1" style="width: auto;" onchange="toggleUnidadStock()">
+                            <option value="base">{{objporcion.porcion}}</option>
+                            <option value="alternativa">[[conversionActiva.nombre_unidad_alternativa]]</option>
+                        </select>
+                    </div>
+                </template>
+                
                 <div class="d-flexx justify-content-between">
                     <div style="max-width: 90px;">
                         <p class="fs-12 text-secondary m-0">Stock Actual</p>
-                        <p class="fs-15 fw-600"> {{objporcion.stock}} </p>
-                        <!-- <input type="number" placeholder="Ingrese nuevo stock" class="xMiInput xPasarEnter2" value={{objporcion.stock}} readonly> -->                        
+                        <p class="fs-15 fw-600" id="stock_actual_display"> {{objporcion.stock}} </p>
                     </div>
                     <div class="w-50">
                         <p class="fs-15 text-dark m-0 fw-600">Cual es el nuevo Stock?</p>
-                        <input type="number" id="stock_new" placeholder="Ingrese nuevo stock" class="xMiInput xPasarEnter2" onchange="changeStockPorcion(this.value)" onkeyup="changeStockPorcion(this.value)">
+                        <input type="number" id="stock_new" placeholder="Ingrese nuevo stock" class="xMiInput xPasarEnter2" onchange="changeStockPorcion(this.value)" onkeyup="changeStockPorcion(this.value)" step="0.01">
                         
                     </div>
                 </div>  
@@ -45,57 +61,171 @@
 
         <div>
             <!-- head -->
-            <div class="d-flexx justify-content-between align-items-center">
+            <div class="d-flexx justify-content-between align-items-start">
                 <div class="d-flexx">
-                    <div class="mr-5">
-                        <p class="fs-12 text-secondary m-0">Descripcion</p>
+                    <div class="mr-5">                        
                         <p class="fs-18 fw-600"> {{objporcion.porcion}} 
                             <i class="fa fa-pencil ml-1 text-primary xCursor" onclick="xModificarDescripcionPorcionDetalle()"></i>
                         </p>
-                    </div>
-                    <div class="text-center mr-5">
-                        <p class="fs-12 fw-600 text-secondary m-0">Stock Actual</p>
-                        <!-- <p class="fs-18 fw-600 xCursor" onclick="dialog_modificar_stock_porcion.open()"> {{objporcion.stock}} </p> -->
-                        <button class="btn btn-sm btn-xsm xBoton_flat_2 fs-20 fw-600 pl-2 pr-2"
-                            onclick="dialog_modificar_stock_porcion.open()">{{objporcion.stock}}</button>
-                    </div>
-                    <div class="text-center">
-                        <p class="fs-12 fw-600 text-secondary m-0">Recetas enlazadas</p>
-                        <button class="btn btn-sm btn-xsm xBoton_flat_2 fs-20 fw-600 pl-2 pr-2" onclick="verRecetasEnlazadas()">{{listRecetasEnlazadas.length}}</button>
-                        <!-- <p class="fs-18 fw-600 xCursor" onclick="verRecetasEnlazadas()"> {{listRecetasEnlazadas.length}} </p> -->
+
+                        <div class="mt-2 xCursor">
+                            <table>
+                                <tr onclick="dialog_modificar_stock_porcion.open()">
+                                    <td align="left" class="pl-0">STOCK ACTUAL</td>
+                                    <td><p class="fs-15 fw-600 pl-2 pr-2">{{objporcion.stock}}</p></td>
+                                </tr>
+                                <template is="dom-if" if="[[conversionActiva]]">
+                                    <tr onclick="dialog_modificar_stock_porcion.open()">
+                                        <td align="left" class="pl-0">[[conversionActiva.nombre_unidad_alternativa]]</td>
+                                        <td><p class="fs-15 fw-600 pl-2 pr-2">{{stockConvertido}}</p></td>
+                                    </tr>
+                                </template>
+                                <tr onclick="verRecetasEnlazadas()">
+                                    <td align="left" class="pl-0">RECETAS ENLAZADAS</td>
+                                    <td><p class="fs-15 fw-600 pl-2 pr-2">{{listRecetasEnlazadas.length}}</p></td>
+                                </tr>
+                                <tr onclick="abrirDialogCodigoUnico()">
+                                    <td align="left" class="pl-0">CÓDIGO ÚNICO</td>
+                                    <td>
+                                        <template is="dom-if" if="[[codigoUnico]]">
+                                            <p class="fs-13 fw-600 pl-2 pr-2 text-success">[[codigoUnico]]</p>
+                                        </template>
+                                        <template is="dom-if" if="[[!codigoUnico]]">
+                                            <template is="dom-if" if="[[codigoSugerido]]">
+                                                <p class="fs-12 pl-2 pr-2 text-warning">[[codigoSugerido]]</p>
+                                            </template>                                            
+                                            <p class="fs-12 pl-2 pr-2 text-danger">Sin código</p>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>                    
                     </div>
                 </div>
                 <div class="text-right d-flexx">
-                    <button class="btn btn-sm btn-primary ml-1" onclick="dialog_modificar_stock_porcion.open()">Modificar Stock</button>                                        
+                    <button class="btn btn-sm btn-primary ml-1" onclick="dialog_modificar_stock_porcion.open()">Modificar Stock</button>
+                    <button class="btn btn-sm btn-secondary ml-1" onclick="toggleConfigConversion()"><i class="fa fa-cog mr-1"></i> Conversión</button>
                     <button hidden$=[[!btnPorcionPe]] class="btn btn-sm btn-danger ml-1" onclick="xEliminarPorcionDetalle()"><i class="fa fa-trash mr-1"></i> Eliminar</button>
                 </div>
             </div>
+            <!-- Configuración de conversión -->
+            <div id="config_conversion" style="display: none; margin-top: 20px; padding: 15px; background: rgb(240 247 255); border-radius: 8px;">
+                <h4 class="fs-16 fw-600 mb-3">Configurar Conversión de Unidades</h4>
+                <div class="d-flexx align-items-end" style="gap: 15px;">
+                    <div style="flex: 1;">
+                        <label class="fs-12 text-secondary">Nombre de unidad alternativa</label>
+                        <input type="text" id="input_nombre_unidad" class="xMiInput" placeholder="Ej: POLLO ENTERO" value="{{nombreUnidadAlternativa::input}}">
+                    </div>
+                    <div style="width: 150px;">
+                        <label class="fs-12 text-secondary">Factor de conversión</label>
+                        <input type="number" id="input_factor_conversion" class="xMiInput" placeholder="Ej: 8" step="0.01" min="0.01" value="{{factorConversion::input}}">
+                    </div>
+                    <button class="btn btn-success btn-sm" onclick="guardarConversion()"><i class="fa fa-save mr-1"></i> Guardar</button>
+                    <template is="dom-if" if="[[conversionActiva]]">
+                        <button class="btn btn-danger btn-sm" onclick="eliminarConversion()"><i class="fa fa-trash mr-1"></i> Eliminar</button>
+                    </template>
+                </div>
+                <p class="fs-11 text-secondary mt-2 mb-0">
+                    <i class="fa fa-info-circle"></i> El factor indica cuántas unidades base equivalen a 1 unidad alternativa. 
+                    Ejemplo: Si 8 octavos = 1 pollo, el factor es 8.
+                </p>
+            </div>
+            
             <!-- historial -->
             <div>
                 <br><br>
-                <p class="fs-18 text-secondary">Historial de cambios</p>
+                <div class="d-flexx justify-content-between align-items-end">
+                    <div>
+                        <p class="fs-18 text-secondary m-0">Historial de cambios</p>
+                        <p class="fs-11 text-secondary m-0">{{historialResumenTexto}}</p>
+                    </div>
+                    <div class="d-flexx align-items-center">
+                        <div class="mr-2">
+                            <input type="text" class="selected-template-1" placeholder="Buscar (usuario / movimiento)" value="{{historialFiltroTexto::input}}">
+                        </div>
+                        <div class="mr-2">
+                            <select class="selected-template-1"value="{{historialFiltroTipo::change}}">
+                                <option value="">TODOS</option>
+                                <option value="VENTA">VENTA</option>
+                                <option value="VENTA DEVOLUCION">VENTA DEVOLUCION</option>
+                                <option value="AUMENTA">AUMENTA</option>
+                                <option value="DISMINUYE">DISMINUYE</option>
+                                <option value="RECUPERACIÓN">RECUPERACIÓN</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="limpiarFiltrosHistorial()">Limpiar</button>
+                    </div>
+                </div>
                 <hr>
+                <div class="d-flexx" style="gap: 10px; flex-wrap: wrap;">
+                    <div class="xBoton_flat_2" style="padding: 8px 10px; border-radius: 8px;">
+                        <p class="fs-11 text-secondary m-0">Movimientos</p>
+                        <p class="fs-15 fw-600 m-0">{{historialTotalMov}}</p>
+                    </div>
+                    <div class="xBoton_flat_2" style="padding: 8px 10px; border-radius: 8px;">
+                        <p class="fs-11 text-secondary m-0">Cant. vendida</p>
+                        <p class="fs-15 fw-600 m-0">{{historialTotalVentas}}</p>
+                    </div>
+                    <div class="xBoton_flat_2" style="padding: 8px 10px; border-radius: 8px;">
+                        <p class="fs-11 text-secondary m-0">Cant. devuelta</p>
+                        <p class="fs-15 fw-600 m-0">{{historialTotalDevoluciones}}</p>
+                    </div>
+                    <div class="xBoton_flat_2" style="padding: 8px 10px; border-radius: 8px;">
+                        <p class="fs-11 text-secondary m-0">Neto (ventas + devol.)</p>
+                        <p class="fs-15 fw-600 m-0">{{historialNeto}}</p>
+                    </div>
+                    <div class="xBoton_flat_2" style="padding: 8px 10px; border-radius: 8px;">
+                        <p class="fs-11 text-secondary m-0">Último movimiento</p>
+                        <p class="fs-12 fw-600 m-0">{{historialUltimo}}</p>
+                    </div>
+                </div>
+                <br>
                 <table class="w-100">
                     <thead>
-                        <th>Fecha</th>
-                        <th>Hora</th>
-                        <th>Usuario</th>
-                        <th>Movimiento</th>
-                        <th class="text-center">Cantidad</th>
-                        <th class="text-center">Stock Total</th>
+                        <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Fecha</th>
+                        <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Hora</th>
+                        <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Usuario</th>
+                        <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Movimiento</th>
+                        <th class="text-right" style="position: sticky; top: 0; background: #fff; z-index: 1;">Cantidad</th>
+                        <th class="text-right" style="position: sticky; top: 0; background: #fff; z-index: 1;">Stock Total</th>
                     </thead>
                     <tbody>
-                        <template is="dom-repeat" items="{{listPorcionHistorial}}" as="item">
-                            <tr>
-                                <td>{{item.fecha}}</td>
-                                <td>{{item.hora}}</td>
-                                <td>{{item.nombres}}</td>
-                                <td class$="[[ item.classMovimiento ]]">
-                                    {{item.tipo_movimiento}}
-                                </td>
-                                <td class="fw-600 text-center">{{item.cantidad}}</td>
-                                <td class="fw-600 text-center">{{item.stock_total}}</td>
-                            </tr>
+                        <template is="dom-repeat" items="{{listPorcionHistorialView}}" as="item">
+                            <template is="dom-if" if="[[item.isGroup]]">
+                                <tr style="background: #f8fafc;">
+                                    <td colspan="6" style="padding: 10px 8px; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;">
+                                        <div class="d-flexx justify-content-between align-items-center">
+                                            <div class="d-flexx align-items-center" style="gap: 10px;">
+                                                <button class="btn btn-sm btn-secondary" data-fecha$="[[item.fecha]]" onclick="toggleGrupoHistorial(this.getAttribute('data-fecha'))">[[item.icono]]</button>
+                                                <div>
+                                                    <p class="m-0 fw-600">[[item.fecha]]</p>
+                                                    <div class="d-flexx" style="gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#eef2ff;" class="fs-11">Inicio: [[item.stockInicio]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#ecfeff;" class="fs-11 text-primary">Aumenta +[[item.aumenta]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#fef2f2;" class="fs-11 text-danger">Venta -[[item.disminuye]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#f3f4f6;" class="fs-11">Fin: [[item.stockFinal]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#f0fdf4;" class="fs-11 text-success">Cant. Ventas: [[item.ventas]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#fff7ed;" class="fs-11 text-warning">Cant. Devol.: [[item.devoluciones]]</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="fs-12 text-secondary">[[item.total]] movimientos</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template is="dom-if" if="[[!item.isGroup]]">
+                                <tr>
+                                    <td>{{item.fecha}}</td>
+                                    <td>{{item.hora}}</td>
+                                    <td>{{item.nombres}}</td>
+                                    <td class$="[[ item.classMovimiento ]]">
+                                        <span style="display: inline-block; padding: 2px 8px; border-radius: 10px; background: #f3f4f6;" class$="[[ item.classMovimiento ]]">{{item.tipo_movimiento}}</span>
+                                    </td>
+                                    <td class$="fw-600 text-right [[ item.classCantidad ]]" style="font-variant-numeric: tabular-nums;">{{item.cantidad}}</td>
+                                    <td class="fw-600 text-right" style="font-variant-numeric: tabular-nums;">{{item.stock_total}}</td>
+                                </tr>
+                            </template>
                         </template>
                     </tbody>
                 </table>
@@ -141,6 +271,12 @@ let cantidadRecetasEnlazadasPorcion = 0
             console.log('cantidadRecetasEnlazadasPorcion', cantidadRecetasEnlazadasPorcion);
             xthisPorcionDetalle.listRecetasEnlazadas = rptCantidadReceta.datos;
         }
+        
+        // cargar conversión de unidades si existe
+        await cargarConversionActiva();
+        
+        // cargar código único si existe
+        await cargarCodigoUnico();
     
     }
 
@@ -162,6 +298,7 @@ let cantidadRecetasEnlazadasPorcion = 0
                     cantidadOriginal: item.cantidad,
                     // Agregar el signo a la cantidad
                     cantidad: signo + item.cantidad,
+                    classCantidad: (signo === '-') ? 'text-danger' : (signo === '+') ? 'text-primary' : '',
                     classMovimiento: item.tipo_movimiento === 'Venta' ? 'fw-600 text-success' :
                         item.tipo_movimiento === 'Aumenta' ? 'fw-600 text-primary' :
                             item.tipo_movimiento === 'Recuperación' ? 'fw-600 text-warning' :
@@ -170,113 +307,228 @@ let cantidadRecetasEnlazadasPorcion = 0
                 };
             });
 
-            // Agrupar ventas por fecha, usuario y tipo de movimiento
-            const resultado = [];
-            let ventasConsecutivas = [];
-            let ultimoTipoMovimiento = null;
-            let ultimoUsuario = null;
-            let ultimaFecha = null;
+            xthisPorcionDetalle.listPorcionHistorial = datosFormateados;
+            calcularResumenHistorial(datosFormateados);
+            aplicarFiltrosHistorial();
+        }
 
-            // Recorremos los datos ordenados
-            datosFormateados.forEach((item, index) => {
-                if (item.tipo_movimiento === 'VENTA') {
-                    // Si el último movimiento también fue una venta, es el mismo usuario y la misma fecha, agrupamos
-                    if (ultimoTipoMovimiento === 'VENTA' && 
-                        ultimoUsuario === item.nombres && 
-                        ultimaFecha === item.fecha) {
-                        ventasConsecutivas.push(item);
-                    } else {
-                        // Si veníamos agrupando ventas, procesamos el grupo anterior
-                        if (ventasConsecutivas.length > 0) {
-                            procesarGrupoVentas();
-                        }
-                        
-                        // Iniciamos un nuevo grupo con este item
-                        ventasConsecutivas = [item];
-                        ultimoTipoMovimiento = 'VENTA';
-                        ultimoUsuario = item.nombres;
-                        ultimaFecha = item.fecha;
-                    }
-                } else {
-                    // Si veníamos agrupando ventas, procesamos el grupo
-                    if (ventasConsecutivas.length > 0) {
-                        procesarGrupoVentas();
-                    }
-                    
-                    // Agregamos el movimiento no-venta
-                    resultado.push(item);
-                    ultimoTipoMovimiento = item.tipo_movimiento;
-                    ultimoUsuario = item.nombres;
-                    ultimaFecha = item.fecha;
+    function calcularResumenHistorial(list) {
+        const totalMov = (list || []).length;
+        let totalVentaCant = 0;
+        let totalDevolCant = 0;
+        let netoVentaDevol = 0;
+
+        (list || []).forEach(x => {
+            const tipo = (x.tipo_movimiento || '').toUpperCase();
+            const n = parseFloat((x.cantidad || '0').toString().replace(',', '.'));
+            if (!isNaN(n)) {
+                if (tipo === 'VENTA') {
+                    totalVentaCant += Math.abs(n);
+                    netoVentaDevol += n;
                 }
-                
-                // Si es el último elemento y hay ventas pendientes de procesar
-                if (index === datosFormateados.length - 1 && ventasConsecutivas.length > 0) {
-                    procesarGrupoVentas();
+                if (tipo === 'VENTA DEVOLUCION') {
+                    totalDevolCant += Math.abs(n);
+                    netoVentaDevol += n;
+                }
+            }
+        });
+
+        const ultimo = (list && list.length > 0) ? list[0] : null;
+
+        xthisPorcionDetalle.historialTotalMov = totalMov;
+        xthisPorcionDetalle.historialTotalVentas = (isNaN(totalVentaCant) ? '0' : totalVentaCant.toString());
+        xthisPorcionDetalle.historialTotalDevoluciones = (isNaN(totalDevolCant) ? '0' : totalDevolCant.toString());
+        xthisPorcionDetalle.historialNeto = (isNaN(netoVentaDevol) ? '0' : netoVentaDevol.toString());
+        xthisPorcionDetalle.historialUltimo = ultimo ? `${ultimo.fecha} ${ultimo.hora} - ${ultimo.nombres} - ${ultimo.tipo_movimiento}` : '';
+        const totalFiltrado = (xthisPorcionDetalle.listPorcionHistorialFiltered || []).length;
+        xthisPorcionDetalle.historialResumenTexto = totalMov ? `Mostrando ${totalFiltrado} de ${totalMov}` : '';
+    }
+
+    function aplicarFiltrosHistorial() {
+        if (!xthisPorcionDetalle) return;
+
+        const src = xthisPorcionDetalle.listPorcionHistorial || [];
+        const txt = ((xthisPorcionDetalle.historialFiltroTexto || '') + '').trim().toUpperCase();
+        const tipo = ((xthisPorcionDetalle.historialFiltroTipo || '') + '').trim().toUpperCase();
+
+        let out = src;
+        if (tipo) {
+            out = out.filter(x => ((x.tipo_movimiento || '') + '').toUpperCase() === tipo);
+        }
+        if (txt) {
+            out = out.filter(x => {
+                const u = ((x.nombres || '') + '').toUpperCase();
+                const t = ((x.tipo_movimiento || '') + '').toUpperCase();
+                const f = ((x.fecha || '') + '').toUpperCase();
+                const h = ((x.hora || '') + '').toUpperCase();
+                return (u.indexOf(txt) > -1) || (t.indexOf(txt) > -1) || (f.indexOf(txt) > -1) || (h.indexOf(txt) > -1);
+            });
+        }
+
+        xthisPorcionDetalle.listPorcionHistorialFiltered = out;
+        cocinarVistaAgrupadaHistorial();
+        xthisPorcionDetalle.historialResumenTexto = (src.length ? `Mostrando ${out.length} de ${src.length}` : '');
+    }
+
+    function cocinarVistaAgrupadaHistorial() {
+        if (!xthisPorcionDetalle) return;
+        const list = xthisPorcionDetalle.listPorcionHistorialFiltered || [];
+
+        if (!xthisPorcionDetalle.historialCollapsed) {
+            xthisPorcionDetalle.historialCollapsed = {};
+        }
+
+        const grouped = [];
+        const byFecha = {};
+
+        list.forEach(x => {
+            const f = x.fecha || '';
+            if (!byFecha[f]) byFecha[f] = [];
+            byFecha[f].push(x);
+        });
+
+        const fechas = Object.keys(byFecha);
+        fechas.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+
+        fechas.forEach(fecha => {
+            const items = byFecha[fecha] || [];
+            const colapsado = !!xthisPorcionDetalle.historialCollapsed[fecha];
+
+            let ventas = 0;
+            let devoluciones = 0;
+            let neto = 0;
+            let aumenta = 0;
+            let disminuye = 0;
+
+            items.forEach(it => {
+                const tipo = ((it.tipo_movimiento || '') + '').toUpperCase();
+                if (tipo === 'VENTA') ventas += 1;
+                if (tipo === 'VENTA DEVOLUCION') devoluciones += 1;
+                const n = parseFloat((it.cantidad || '0').toString().replace(',', '.'));
+                if (!isNaN(n)) {
+                    neto += n;
+                    if (tipo === 'AUMENTA' || tipo === 'RECUPERACIÓN') {
+                        if (n > 0) aumenta += n;
+                    }
+                    if (tipo === 'VENTA' || tipo === 'DISMINUYE') {
+                        if (n < 0) disminuye += Math.abs(n);
+                    }
                 }
             });
-            
-            // Función para procesar un grupo de ventas consecutivas
-            function procesarGrupoVentas() {
-                if (ventasConsecutivas.length === 1) {
-                    // Si solo hay una venta, la agregamos directamente
-                    resultado.push(ventasConsecutivas[0]);
-                } else {
-                    // Si hay múltiples ventas, las agrupamos
-                    const primerVenta = ventasConsecutivas[0];
-                    // Aseguramos que todas las ventas sean del mismo usuario y fecha
-                    const usuario = primerVenta.nombres;
-                    const fecha = primerVenta.fecha;
-                    let cantidadTotal = 0;
-                    
-                    // Sumamos todas las cantidades
-                    ventasConsecutivas.forEach(venta => {
-                        cantidadTotal += parseFloat(venta.cantidad);
-                    });
-                    
-                    // Creamos un registro agrupado
-                    const ventaAgrupada = {
-                        ...primerVenta,
-                        cantidad: cantidadTotal.toString(),
-                        hora: ventasConsecutivas.length + " VENTAS",
-                        descripcion: "VENTA AGRUPADA"
-                    };
-                    
-                    resultado.push(ventaAgrupada);
-                }
-                
-                // Reiniciamos el grupo
-                ventasConsecutivas = [];
+
+            const newest = items[0] || null;
+            const oldest = items.length ? items[items.length - 1] : null;
+            const newestStock = newest ? parseFloat((newest.stock_total || '0').toString().replace(',', '.')) : NaN;
+            const oldestStockAfter = oldest ? parseFloat((oldest.stock_total || '0').toString().replace(',', '.')) : NaN;
+            const oldestQty = oldest ? parseFloat((oldest.cantidad || '0').toString().replace(',', '.')) : NaN;
+
+            const stockFinal = isNaN(newestStock) ? '' : newestStock.toString();
+            const stockInicio = (!isNaN(oldestStockAfter) && !isNaN(oldestQty)) ? (oldestStockAfter - oldestQty).toString() : '';
+
+            const icono = colapsado ? '+' : '-';
+            const aumentaTxt = (isNaN(aumenta) ? '0' : aumenta.toString());
+            const disminuyeTxt = (isNaN(disminuye) ? '0' : disminuye.toString());
+
+            grouped.push({
+                isGroup: true,
+                fecha,
+                total: items.length,
+                stockInicio,
+                stockFinal,
+                aumenta: aumentaTxt,
+                disminuye: disminuyeTxt,
+                ventas,
+                devoluciones,
+                icono,
+            });
+
+            if (!colapsado) {
+                items.forEach(it => grouped.push({ ...it, isGroup: false }));
             }
-            
-            xthisPorcionDetalle.listPorcionHistorial = resultado;
+        });
+
+        xthisPorcionDetalle.listPorcionHistorialView = grouped;
+    }
+
+    function toggleGrupoHistorial(fecha) {
+        if (!xthisPorcionDetalle) return;
+        if (!xthisPorcionDetalle.historialCollapsed) {
+            xthisPorcionDetalle.historialCollapsed = {};
         }
+        xthisPorcionDetalle.historialCollapsed[fecha] = !xthisPorcionDetalle.historialCollapsed[fecha];
+        cocinarVistaAgrupadaHistorial();
+    }
+
+    function limpiarFiltrosHistorial() {
+        if (!xthisPorcionDetalle) return;
+        xthisPorcionDetalle.historialFiltroTexto = '';
+        xthisPorcionDetalle.historialFiltroTipo = '';
+        aplicarFiltrosHistorial();
+    }
+
+    function toggleUnidadStock() {
+        const select = document.getElementById('select_unidad_stock');
+        const stockDisplay = document.getElementById('stock_actual_display');
+        const inputStock = document.getElementById('stock_new');
+        
+        if (!select || !stockDisplay || !xthisPorcionDetalle) return;
+        
+        const unidad = select.value;
+        const stockBase = parseFloat(xthisPorcionDetalle.objporcion.stock) || 0;
+        
+        if (unidad === 'alternativa' && xthisPorcionDetalle.conversionActiva) {
+            const factor = parseFloat(xthisPorcionDetalle.conversionActiva.factor_conversion) || 1;
+            const stockConv = (stockBase / factor).toFixed(2);
+            stockDisplay.textContent = stockConv;
+        } else {
+            stockDisplay.textContent = stockBase;
+        }
+        
+        // Limpiar input
+        if (inputStock) inputStock.value = '';
+        xthisPorcionDetalle.msjStock = '';
+        xthisPorcionDetalle.classMsjStock = '';
+    }
 
     function changeStockPorcion(value) {
-               
-        const _stockActualPorcion = parseFloat(xthisPorcionDetalle.objporcion.stock)  
-        _stockNowPorcion = parseFloat(value)  
+        const _stockActualPorcion = parseFloat(xthisPorcionDetalle.objporcion.stock);
+        let valorIngresado = parseFloat(value);
+        
+        // Verificar si está usando unidad alternativa
+        const select = document.getElementById('select_unidad_stock');
+        const usandoUnidadAlternativa = select && select.value === 'alternativa';
+        
+        // Si usa unidad alternativa, convertir a unidad base
+        if (usandoUnidadAlternativa && xthisPorcionDetalle.conversionActiva) {
+            const factor = parseFloat(xthisPorcionDetalle.conversionActiva.factor_conversion) || 1;
+            _stockNowPorcion = valorIngresado * factor;
+        } else {
+            _stockNowPorcion = valorIngresado;
+        }
 
-        if ( isNaN(_stockNowPorcion)) {
+        if (isNaN(_stockNowPorcion)) {
             _msjModificarStock = '';
             xthisPorcionDetalle.classMsjStock = '';
-        }
-        else {
+        } else {
             if (_stockNowPorcion > _stockActualPorcion) {
                 _difStockPorcion = _stockNowPorcion - _stockActualPorcion;
-                _msjModificarStock = 'Aumenta Stock en: ' + _difStockPorcion;
-                xthisPorcionDetalle.classMsjStock = 'fw-600 text-primary'
+                const unidadTexto = usandoUnidadAlternativa && xthisPorcionDetalle.conversionActiva 
+                    ? ` (${valorIngresado} ${xthisPorcionDetalle.conversionActiva.nombre_unidad_alternativa} = ${_difStockPorcion.toFixed(2)} ${xthisPorcionDetalle.objporcion.porcion})`
+                    : '';
+                _msjModificarStock = 'Aumenta Stock en: ' + _difStockPorcion.toFixed(2) + unidadTexto;
+                xthisPorcionDetalle.classMsjStock = 'fw-600 text-primary';
             } else {
                 _difStockPorcion = _stockActualPorcion - _stockNowPorcion;
-                _msjModificarStock = 'Disminuye Stock en: ' + _difStockPorcion;
-                xthisPorcionDetalle.classMsjStock = 'fw-600 text-danger'
+                const unidadTexto = usandoUnidadAlternativa && xthisPorcionDetalle.conversionActiva 
+                    ? ` (${valorIngresado} ${xthisPorcionDetalle.conversionActiva.nombre_unidad_alternativa} = ${_stockNowPorcion.toFixed(2)} ${xthisPorcionDetalle.objporcion.porcion})`
+                    : '';
+                _msjModificarStock = 'Disminuye Stock en: ' + _difStockPorcion.toFixed(2) + unidadTexto;
+                xthisPorcionDetalle.classMsjStock = 'fw-600 text-danger';
             }
         }
 
-
         this.stock_total = _stockNowPorcion;
-
-        xthisPorcionDetalle.msjStock = _msjModificarStock
+        xthisPorcionDetalle.msjStock = _msjModificarStock;
     }
 
     async function saveStockModifyPorcion() {
@@ -396,8 +648,37 @@ Polymer({
         stock_total: Number,
         classMsjStock: String,
         listPorcionHistorial: [],
+        listPorcionHistorialFiltered: [],
+        listPorcionHistorialView: [],
+        historialFiltroTexto: {
+            type: String,
+            value: '',
+            observer: 'historialFiltrosChanged',
+        },
+        historialFiltroTipo: {
+            type: String,
+            value: '',
+            observer: 'historialFiltrosChanged',
+        },
+        historialCollapsed: Object,
+        historialTotalMov: Number,
+        historialTotalVentas: Number,
+        historialTotalDevoluciones: Number,
+        historialNeto: String,
+        historialUltimo: String,
+        historialResumenTexto: String,
         btnPorcionPe: Boolean,
         listRecetasEnlazadas: [],
+        conversionActiva: Object,
+        stockConvertido: String,
+        nombreUnidadAlternativa: String,
+        factorConversion: Number,
+        codigoUnico: String,
+        codigoSugerido: String,
+        codigoVincular: String,
+    },
+    historialFiltrosChanged: () => {
+        aplicarFiltrosHistorial();
     },
     porcionChanged: (obj) => {   
         xLoadDataPorcionDetalle()  
@@ -406,6 +687,154 @@ Polymer({
         this.btnPorcionPe = false;
         xthisPorcionDetalle =this;
         // xIniPorcion();
-    }    
+    },
+    onCodigoGenerado: function(e) {
+        // Actualizar el código único cuando se genera uno nuevo
+        if (e.detail && e.detail.codigo) {
+            this.codigoUnico = e.detail.codigo;
+        }
+    },
+    onCodigoVinculado: function(e) {
+        // Actualizar el código único cuando se vincula con uno existente
+        if (e.detail && e.detail.codigo) {
+            this.codigoUnico = e.detail.codigo;
+        }
+    },
+    onCodigoModificado: function(e) {
+        // Actualizar el código único cuando se modifica
+        if (e.detail && e.detail.codigo) {
+            this.codigoUnico = e.detail.codigo;
+            this.codigoSugerido = ''; // Limpiar el código sugerido
+        }
+    }
 })
+
+// FUNCIONES PARA CONVERSIÓN DE UNIDADES
+function toggleConfigConversion() {
+    const div = document.getElementById('config_conversion');
+    if (div.style.display === 'none') {
+        div.style.display = 'block';
+    } else {
+        div.style.display = 'none';
+    }
+}
+
+async function cargarConversionActiva() {
+    if (!xthisPorcionDetalle || !xthisPorcionDetalle.objporcion) return;
+    
+    const _httpFecht = new httpFecht();
+    const data = { idporcion: xthisPorcionDetalle.objporcion.idporcion };
+    const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=124', data);
+    
+    if (rpt.success && rpt.datos && rpt.datos.length > 0) {
+        const conv = rpt.datos[0];
+        xthisPorcionDetalle.conversionActiva = conv;
+        xthisPorcionDetalle.stockConvertido = calcularStockConvertido(conv.stock, conv.factor_conversion);
+        xthisPorcionDetalle.nombreUnidadAlternativa = conv.nombre_unidad_alternativa;
+        xthisPorcionDetalle.factorConversion = parseFloat(conv.factor_conversion);
+    } else {
+        xthisPorcionDetalle.conversionActiva = null;
+        xthisPorcionDetalle.stockConvertido = '';
+        xthisPorcionDetalle.nombreUnidadAlternativa = '';
+        xthisPorcionDetalle.factorConversion = null;
+    }
+}
+
+function calcularStockConvertidoLocal() {
+    if (!xthisPorcionDetalle || !xthisPorcionDetalle.conversionActiva) return;
+    
+    const stock = parseFloat(xthisPorcionDetalle.objporcion.stock) || 0;
+    const factor = parseFloat(xthisPorcionDetalle.conversionActiva.factor_conversion) || 1;
+    xthisPorcionDetalle.stockConvertido = calcularStockConvertido(stock, factor);
+}
+
+async function guardarConversion() {
+    if (!xthisPorcionDetalle) return;
+    
+    const nombre = (xthisPorcionDetalle.nombreUnidadAlternativa || '').trim();
+    const factor = parseFloat(xthisPorcionDetalle.factorConversion);
+    
+    if (!nombre) {
+        showToastSwal('error', 'Debe ingresar el nombre de la unidad alternativa');
+        return;
+    }
+    
+    if (!factor || factor <= 0) {
+        showToastSwal('error', 'El factor de conversión debe ser mayor a 0');
+        return;
+    }
+    
+    xPopupLoad.xopen();
+    const _httpFecht = new httpFecht();
+    const data = {
+        idporcion: xthisPorcionDetalle.objporcion.idporcion,
+        nombre_unidad_alternativa: nombre.toUpperCase(),
+        factor_conversion: factor
+    };
+    
+    const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=122', data);
+    xPopupLoad.xclose();
+    
+    if (rpt.success) {
+        showToastSwal('success', 'Conversión guardada correctamente');
+        await cargarConversionActiva();
+        toggleConfigConversion();
+    } else {
+        const errorMsg = rpt.error || rpt.details || 'Error al guardar la conversión';
+        showToastSwal('error', errorMsg);
+        console.error('Error completo:', rpt);
+    }
+}
+
+async function eliminarConversion() {
+    if (!xthisPorcionDetalle || !xthisPorcionDetalle.conversionActiva) return;
+    
+    const _swalAlertValues = paramsSwalAlert;
+    _swalAlertValues.title = '¿Eliminar conversión?';
+    _swalAlertValues.text = '¿Está seguro de eliminar esta conversión de unidades?';
+    _swalAlertValues.icon = 'warning';
+    _swalAlertValues.showCancelButton = true;
+    const result = await showAlertSwalHtmlDecision(_swalAlertValues, 1);
+    if (!result.isConfirmed) return;
+    
+    xPopupLoad.xopen();
+    const _httpFecht = new httpFecht();
+    const data = {
+        idporcion_unidad_conversion: xthisPorcionDetalle.conversionActiva.idporcion_unidad_conversion
+    };
+    
+    const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=123', data);
+    xPopupLoad.xclose();
+    
+    if (rpt.success) {
+        showToastSwal('success', 'Conversión eliminada correctamente');
+        xthisPorcionDetalle.conversionActiva = null;
+        xthisPorcionDetalle.stockConvertido = '';
+        xthisPorcionDetalle.nombreUnidadAlternativa = '';
+        xthisPorcionDetalle.factorConversion = null;
+        toggleConfigConversion();
+    } else {
+        showToastSwal('error', 'Error al eliminar la conversión');
+    }
+}
+
+// FUNCIONES PARA CÓDIGO ÚNICO
+function abrirDialogCodigoUnico() {
+    const comp = document.getElementById('comp_codigo_unico');
+    if (comp) comp.open();
+}
+
+async function cargarCodigoUnico() {
+    if (!xthisPorcionDetalle || !xthisPorcionDetalle.objporcion) return;
+    
+    const _httpFecht = new httpFecht();
+    const data = { idporcion: xthisPorcionDetalle.objporcion.idporcion };
+    const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=126', data);
+    
+    if (rpt.success && rpt.datos && rpt.datos.length > 0) {
+        xthisPorcionDetalle.codigoUnico = rpt.datos[0].codigo;
+    } else {
+        xthisPorcionDetalle.codigoUnico = '';
+    }
+}
 </script>

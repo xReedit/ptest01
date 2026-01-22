@@ -1,6 +1,7 @@
 <dom-module id="x-porcion-main">    
     
     <link rel="import" href="./x-porcion-detalle.html">
+    <script src="../../../js/porcion.utils.js"></script>
     <template>
 
         <paper-dialog modal id="dialog_additem_porcion" class="dialog_redondo" modal entry-animation="scale-up-animation"
@@ -60,17 +61,33 @@
                         
                         <table width="100%">
                             <thead>
-                                <th align="left" width="20%">Familia</th>
-                                <th align="left">Porcion</th>
-                                <th align="left" width="90px">Stock</th>
+                                <th align="left">Porción</th>
+                                <th align="left">Stock</th>                                
+                                <th align="left" width="120px">Código Único</th>
                                 <th width="5px"></th>
                             </thead>
                             <tbody>
                                 <template is="dom-repeat" items="{{listPorciones}}" as="item">
                                     <tr data-id="[[item.idporcion]]" onclick="xGoDetallePorcion(this)">
-                                        <td>{{ item.familia }}</td>
-                                        <td class="xCursor"> {{ item.porcion }}</td>
-                                        <td class="sumar_stock xCursor">{{ item.stock }}</td>
+                                        <td class="xCursor">{{ item.porcion }}</td>
+                                        <td class="sumar_stock xCursor">
+                                            <span class="fw-600">[[item.stock]]</span>
+                                            <template is="dom-if" if="[[item.nombre_unidad_alternativa]]">
+                                                <span class="fs-12 text-secondary">
+                                                    <i class="fa fa-exchange mr-1"></i>
+                                                    <span class="fw-600">[[calcularStockConvertidoLocal(item.stock, item.factor_conversion)]]</span>
+                                                    [[item.nombre_unidad_alternativa]]
+                                                </span>
+                                            </template>
+                                        </td>                                        
+                                        <td>
+                                            <template is="dom-if" if="[[item.codigo_unico]]">
+                                                <span class="fs-12 fw-600 text-success">[[item.codigo_unico]]</span>
+                                            </template>
+                                            <template is="dom-if" if="[[!item.codigo_unico]]">
+                                                <span class="fs-11 text-secondary">Sin código</span>
+                                            </template>
+                                        </td>
                                         <td>
                                             <button data-id="[[item.idporcion]]" onclick="xGoDetallePorcion(this)" class="btn btn-sm btn-xsm xBoton_flat_2">
                                                 Detalle
@@ -196,5 +213,8 @@ Polymer({
         
         this.set('listPorciones', porcionesFiltradas);
     },
+    calcularStockConvertidoLocal: function(stock, factorConversion) {
+        return calcularStockConvertido(stock, factorConversion)
+    }
 })
 </script>

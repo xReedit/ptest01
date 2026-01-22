@@ -78,6 +78,7 @@
 			<app-route path="/pedidos_meseros" import="x-configuraciones/x-holding/x-pedidos-meseros.html"></app-route>
 			<app-route path="/mensajeria" import="x-mensajeria/x-mensajeria.html"></app-route>
 			<app-route path="/subreceta" import="x-subrecetas/x-subrecetas.html"></app-route>
+			<app-route path="/print-server" import="x-print-server-donwload/x-print-server-donwload.html"></app-route>
 			
 		</app-router>
 	</template>
@@ -89,7 +90,7 @@ function xIniRouter(){
 	if(router==undefined){router = document.querySelector('app-router');}
 	router.addEventListener('state-change', function(xevent) {
 	// Check if the route is one of the holding-related routes
-	const holdingRoutes = ['pedidos_previo_pago', 'pedidos_marca', 'pedidos_meseros', 'mensajeria'];
+	const holdingRoutes = ['pedidos_previo_pago', 'pedidos_marca', 'pedidos_meseros', 'mensajeria','print-server'];
 	const currentHash = window.location.hash.replace('#/', '');
 	
 	// Skip the AJAX check if it's a holding route

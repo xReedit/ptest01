@@ -375,7 +375,7 @@ use function PHPSTORM_META\sql_injection_subst;
             // $sql = "select idtipo_pago, comision from sede_holding_metodo_pago where idsede = $g_idsede";
             $sql = "select s.idtipo_pago, s.comision from sede_holding_marcas shm
                     inner join sede_holding_metodo_pago s on s.idsede_holding = shm.idsede_holding 
-                where idsede_marca = $g_idsede";
+                where idsede_marca = $g_idsede and s.comision > 0";
             $bd->xConsulta($sql);         
             break;
 

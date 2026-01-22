@@ -38,6 +38,7 @@
                             <th align="center">Ubicación</th>
                             <th align="right">Total</th>
                             <th align="center">Medio</th>
+                            <th align="center">Comisión</th>
                             <th align="center">Acción</th>
                         </thead>
                         <tbody>
@@ -69,6 +70,17 @@
                                         </template>
                                         <template is="dom-if" if="[[item.showHolding]]">
                                             <img src="[[item.icon_show]]" alt="Método de pago" width="16" class="ml-1">
+                                        </template>
+                                    </td>
+                                    <td align="center">
+                                        <template is="dom-if" if="[[item.hasCommission]]">
+                                            <div class="comision-detalle">
+                                                <span class="text-danger fs-12">-S/. [[item.commissionAmount]]</span>
+                                                <span class="text-muted fs-10">([[item.commissionRate]]%)</span>
+                                            </div>
+                                        </template>
+                                        <template is="dom-if" if="[[!item.hasCommission]]">
+                                            <span class="text-muted fs-12">-</span>
                                         </template>
                                     </td>
                                     <td align="center">
@@ -457,10 +469,12 @@
             },
 
             _initializeSocket: async function () {
-                _cpSocketOpen();
+                _cpSocketOpen();                
                 await this.getComisionMetodoPago();
                 this.getPedidosMarcaByDay();
                 this.showBtnDebitar = false;
+
+                $('body').addClass('loaded');
 
 
                 $('#txt_fecha_pedido_marca').pickadate({
@@ -513,6 +527,8 @@
                     this.elaborarTotales();
 
                     console.log('this.pedidos', this.pedidos);
+
+                    $('body').addClass('loaded');
                 });
             },
 
@@ -523,11 +539,16 @@
 
                 // Format icon path and handle payment methods
                 if (itemPedido.is_holding === '1') {
-                    // For holding orders, show digital payment icon if any digital payment exists
-                    const hasDigitalPayment = itemPedido.tipo_pago.some(metodo =>
-                        this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
-                    );
-                    itemPedido.icon_show = hasDigitalPayment ? '../../images/pinpad.png' : '../../images/_tp_01.png';
+                    // Si tiene un solo método de pago, mostrar ese método
+                    if (itemPedido.tipo_pago.length === 1) {
+                        itemPedido.icon_show = `../../images/${itemPedido.tipo_pago[0].icon}`;
+                    } else {
+                        // Si tiene varios métodos de pago, verificar si hay algún pago digital
+                        const hasDigitalPayment = itemPedido.tipo_pago.some(metodo =>
+                            this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
+                        );
+                        itemPedido.icon_show = hasDigitalPayment ? '../../images/pinpad.png' : `../../images/${itemPedido.tipo_pago[0].icon}`;
+                    }
                 } else {
                     // For non-holding orders, show all payment methods
                     itemPedido.tipo_pago = itemPedido.tipo_pago.map(tp => ({
@@ -541,6 +562,32 @@
                 // Set estado_debitado
                 itemPedido.estado_debitado = itemPedido.debitado == '1' ? 'Debitado' : 'Pendiente';
                 itemPedido.total_r = itemPedido.total;
+
+                // Calcular comisión individual para pedidos de patio con pagos digitales
+                itemPedido.hasCommission = false;
+                itemPedido.commissionAmount = '0.00';
+                itemPedido.commissionRate = '0.00';
+                
+                if (itemPedido.is_holding === '1') {
+                    const hasDigitalPayment = itemPedido.tipo_pago.some(metodo =>
+                        this.metodosConComision.some(c => parseInt(c.idtipo_pago) === parseInt(metodo.id))
+                    );
+                    
+                    if (hasDigitalPayment) {
+                        // Calcular comisión solo sobre métodos digitales
+                        const sumMetodosDigitales = itemPedido.tipo_pago.reduce((acc, metodo) => {
+                            const esDigital = this.metodosConComision.some(c => c.idtipo_pago == metodo.id);
+                            return acc + (esDigital ? parseFloat(metodo.amount_real) : 0);
+                        }, 0);
+                        
+                        const comisionRate = this.metodosConComision?.length > 0 ? this.metodosConComision[0].comision : 2.5;
+                        const comisionMonto = (sumMetodosDigitales * comisionRate) / 100;
+                        
+                        itemPedido.hasCommission = true;
+                        itemPedido.commissionAmount = comisionMonto.toFixed(2);
+                        itemPedido.commissionRate = parseFloat(comisionRate).toFixed(2);
+                    }
+                }
 
                 // Insert new item at the beginning of the array
                 this.unshift('pedidos', itemPedido);
@@ -599,59 +646,50 @@ _actualizarResumen() {
         const resumen = isPatio ? resumenPatio : resumenCaja;
         const comisionRate = resumenPatio.comision.porcentaje;
         
-        // busca si hay medios digitales
+        // Usar el total del pedido
+        const totalPedido = parseFloat(pedido.total_r) || 0;
+        
+        // Verificar si hay métodos digitales
         const hasDigitalPayment = pedido.tipo_pago.some(metodo =>
             this.metodosConComision.some(c => c.idtipo_pago == metodo.id)
         );
-
-        // si hay medios digtales suma todo a digital
+        
         if (isPatio && hasDigitalPayment) {
-
-            // suma todos los medios digitales
+            // Si hay pagos digitales, agregar a la categoría "digital"
+            resumen.metodos['digital'].total += totalPedido;
             
-            const sumMetodosPago = pedido.tipo_pago.reduce((acc, metodo) => {
-                return acc + parseFloat(metodo.amount_real);
+            // Calcular comisión solo sobre los métodos digitales
+            const sumMetodosDigitales = pedido.tipo_pago.reduce((acc, metodo) => {
+                const esDigital = this.metodosConComision.some(c => c.idtipo_pago == metodo.id);
+                return acc + (esDigital ? parseFloat(metodo.amount_real) : 0);
             }, 0);
-
-            resumenPatio.total = sumMetodosPago;
-
-            resumen.metodos['digital'].total += sumMetodosPago;
-
-            // Calcular comisión
-            const comisionMonto = (sumMetodosPago * comisionRate) / 100;
+            
+            const comisionMonto = (sumMetodosDigitales * comisionRate) / 100;
             resumen.metodos['digital'].commissionAmount += comisionMonto;
             resumenPatio.comision.total += comisionMonto;
-
-            return;
+        } else {
+            // Determinar el método de pago principal (el primero o el de mayor monto)
+            const metodoPrincipal = pedido.tipo_pago[0];
+            const idMetodo = metodoPrincipal.id || '1';
+            const descripcionMetodo = metodoPrincipal.descripcion || metodoPrincipal.name || 'Efectivo';
+            
+            // Crear/actualizar categoría del método principal
+            if (!resumen.metodos[idMetodo]) {
+                resumen.metodos[idMetodo] = {
+                    id: idMetodo,
+                    name: descripcionMetodo + (isPatio ? ' (PATIO)' : ''),
+                    icon: `../../images/${metodoPrincipal.icon || '_tp_01.png'}`,
+                    total: 0,
+                    hasCommission: false,
+                    commissionRate: 0,
+                    commissionAmount: 0
+                };
+            }
+            resumen.metodos[idMetodo].total += totalPedido;
         }
-
-        // Procesar cada método de pago
-        pedido.tipo_pago.forEach(metodo => {
-            const montoMetodo = parseFloat(metodo.amount_real) || 0;
-            const idMetodo = metodo.id || '1'; // Default a efectivo si no hay ID
-            
-            // Asegurar que tenemos una descripción válida para el método de pago
-            const descripcionMetodo = metodo.descripcion || metodo.name || 'Efectivo';
-            
         
-                // Si no existe el método, lo inicializamos
-                if (!resumen.metodos[idMetodo]) {
-                    resumen.metodos[idMetodo] = {
-                        id: idMetodo,
-                        name: descripcionMetodo + (isPatio ? ' (PATIO)' : ''),
-                        icon: pedido.icon_show || `../../images/${metodo.icon || '_tp_01.png'}`,
-                        total: 0,
-                        hasCommission: false,
-                        commissionRate: 0,
-                        commissionAmount: 0
-                    };
-                }
-                
-                // Actualizar totales del método
-                resumen.metodos[idMetodo].total += montoMetodo;
-        
-            resumen.total += montoMetodo;
-        });
+        // Acumular en el total general
+        resumen.total += totalPedido;
     });
     
     // Eliminar la categoría de pagos digitales si no tiene monto

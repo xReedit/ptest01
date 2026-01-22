@@ -316,22 +316,27 @@ async function xOpenPage(xop, parametro){
 
 			break;
 		case 27:			
-			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
-			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
-			const _xr = btoa(JSON.stringify(_xdataOrg));
-			// const versionPrintServer = 'print-server' // parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? 'print-server' : 'print-server-1.2';
-			// const _urlPrintServver = 'http://'+ipPrintServerLocal+versionPrintServer+'/print-server.html?o='+_xr
+			// const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
+			// const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
+			// const _xr = btoa(JSON.stringify(_xdataOrg));
 			
-			// local 10022022
-			const versionPrintServer = 'restobar/print/client/index.html'; 
-			const _urlLocal = 'http://'+ipPrintServerLocal;
-			const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			
-			const rptPingServerPrint = await pingServerPrintLocal(_urlLocal);
-			console.log('rptPingServerPrint', rptPingServerPrint);
-			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			if ( rptPingServerPrint ) {
-				window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
-			}
+			// // local 10022022
+			// const versionPrintServer = 'restobar/print/client/index.html'; 
+			// const _urlLocal = 'http://'+ipPrintServerLocal;
+			// const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			
+			// const rptPingServerPrint = await pingServerPrintLocal(_urlLocal);
+			// console.log('rptPingServerPrint', rptPingServerPrint);
+			// // window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+			// if ( rptPingServerPrint ) {
+			// 	window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
+			// }
+
+
+			// implementar search-print-server
+			xPopupLoad.xopen();
+			await searchAndRedirectPrintServer();
+			xPopupLoad.xclose();
+
 			return; 		
 		case 41: xruta = '/indicadores'; break;
 		case 42: xruta = '/mozo_virtual'; break;
