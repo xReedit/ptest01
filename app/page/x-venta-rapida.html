@@ -1720,7 +1720,7 @@ async function xGuardarPedidoVR(responde){
 		if(xVerificarImprimirComanda==true){
 			guardando_vr = true;
 			xLoadItemsDetalleCartaALL();			
-			xLLamarPrintVR();
+			xLLamarPrintVR(idP);
 		}else{
 			xPopupLoad.xclose();
 			if (isSocket) { _cpSocketClearStorage(); }
@@ -1808,7 +1808,7 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 
 	if(xVerificarImprimirComanda==true){
 		guardando_vr = true;
-		xLLamarPrintVR();
+		xLLamarPrintVR(idP);
 	}else{
 		xPopupLoad.xclose();
 		if (isSocket) { _cpSocketClearStorage(); }
@@ -1942,7 +1942,7 @@ function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {
 // 	})	
 // }
 
-function xLLamarPrintVR() {
+function xLLamarPrintVR(idPedido) {
 	xCocinarImprimirComanda(xArrayEnca,xArrayPedidoObj,xarr_subtotales, (res)=>{
 		if(res==false){ //si no hay error
 			xPopupLoad.xclose();
@@ -1951,7 +1951,7 @@ function xLLamarPrintVR() {
 		} else {
 			dialog_erro_print.open();
 		}
-	});
+	}, idPedido);
 }
 
 function xReImprimir(){

@@ -2,6 +2,7 @@
     
     <link rel="import" href="./x-porcion-detalle.html">
     <script src="../../../js/porcion.utils.js"></script>
+    <script src="../../../js/sedes.cache.js"></script>
     <template>
 
         <paper-dialog modal id="dialog_additem_porcion" class="dialog_redondo" modal entry-animation="scale-up-animation"
@@ -17,11 +18,33 @@
                 <br>
                 <form id="frm_add_porcion">
                     <input type="text" id="descripcion" name="descripcion" placeholder="Descripcion de la porcion"
-                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
+                        class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" onInput="generarCodigoSugeridoNuevaPorcion()" autofocus required espaciar><br>
                     <input type="text" id="peso" name="peso" placeholder="Peso" class="xMiInput xPasarEnter2"
                         onChange="conMayusculas(this)" autofocus required espaciar><br>
                     <input type="text" id="stock" name="stock" placeholder="Cantidad" class="xMiInput xPasarEnter2"
                         onChange="conMayusculas(this)" autofocus required espaciar><br>
+                    
+                    <div class="mb-2">
+                        <label class="fs-12 text-secondary">Código Único (sugerido)</label>
+                        <input type="text" id="codigo_unico" name="codigo_unico" placeholder="Código único" 
+                            class="xMiInput" readonly style="background: #f0f9ff; font-weight: 600; color: #059669;">
+                        <p class="fs-11 text-secondary mt-1 mb-0">
+                            <i class="fa fa-info-circle mr-1"></i>
+                            El código se genera automáticamente basado en el nombre de la porción
+                        </p>
+                    </div>
+                    
+                    <div id="container_multisede" style="display: none;" class="mb-2">
+                        <label class="fs-12">
+                            <input type="checkbox" id="registrar_todas_sedes" onchange="toggleSedesLista()">
+                            <span class="fw-600">Registrar en todas las sedes</span>
+                        </label>
+                        <div id="lista_sedes" style="display: none; margin-left: 20px; margin-top: 10px;">
+                            <p class="fs-11 text-secondary mb-1">Sedes donde se registrará:</p>
+                            <div id="sedes_disponibles" class="fs-12"></div>
+                        </div>
+                    </div>
+                    
                     <div class="xInvisible">
                         <input type="text" id="idporcion" name="idporcion">
                         <input type="text" id="idorg" name="idorg">
@@ -53,7 +76,7 @@
                     <!-- main -->
                     <div hidden$="[[isShowDetallePorcion]]">
                         <input type="text" class="xMiInput" placeholder="Buscar" inline id="txt_buscar_porcion" on-input="searchPorcion">
-                        <div class="xBoton2 xAzul xDerecha" onclick="dialog_additem_porcion.open();">+ Agregar Porcion</div>
+                        <div class="xBoton2 xAzul xDerecha" onclick="abrirDialogAgregarPorcion();">+ Agregar Porcion</div>
                         <br><br><br>
                         <div class="xLinea2"></div>
                         <br>
@@ -63,13 +86,17 @@
                             <thead>
                                 <th align="left">Porción</th>
                                 <th align="left">Stock</th>                                
-                                <th align="left" width="120px">Código Único</th>
                                 <th width="5px"></th>
                             </thead>
-                            <tbody>
+                            <tbody> 
                                 <template is="dom-repeat" items="{{listPorciones}}" as="item">
                                     <tr data-id="[[item.idporcion]]" onclick="xGoDetallePorcion(this)">
-                                        <td class="xCursor">{{ item.porcion }}</td>
+                                        <td class="xCursor">
+                                            <p class="m-0 p-0">{{ item.porcion }}</p>
+                                            <template is="dom-if" if="[[item.codigo_unico]]">
+                                                <span class="fs-10 fw-600 text-success">[[item.codigo_unico]]</span>
+                                            </template>
+                                        </td>
                                         <td class="sumar_stock xCursor">
                                             <span class="fw-600">[[item.stock]]</span>
                                             <template is="dom-if" if="[[item.nombre_unidad_alternativa]]">
@@ -79,15 +106,7 @@
                                                     [[item.nombre_unidad_alternativa]]
                                                 </span>
                                             </template>
-                                        </td>                                        
-                                        <td>
-                                            <template is="dom-if" if="[[item.codigo_unico]]">
-                                                <span class="fs-12 fw-600 text-success">[[item.codigo_unico]]</span>
-                                            </template>
-                                            <template is="dom-if" if="[[!item.codigo_unico]]">
-                                                <span class="fs-11 text-secondary">Sin código</span>
-                                            </template>
-                                        </td>
+                                        </td>                                                                              
                                         <td>
                                             <button data-id="[[item.idporcion]]" onclick="xGoDetallePorcion(this)" class="btn btn-sm btn-xsm xBoton_flat_2">
                                                 Detalle
@@ -119,25 +138,167 @@
 </dom-module>
 <script>
 var xThisProPor;
+let sedesDisponibles = [];
+let siguienteNumeroSecuencial = '';
 
     function xIniPorcion() {
         $("#Titulo_page").text("Porciones");
         xLoadPorciones();
         $('body').addClass('loaded');
     }
+    
+    async function abrirDialogAgregarPorcion() {
+        // Limpiar formulario
+        document.getElementById('frm_add_porcion').reset();
+        document.getElementById('codigo_unico').value = '';
+        
+        // Verificar sedes disponibles
+        await verificarSedesDisponibles();
+        
+        // Cargar estado guardado del checkbox
+        const estadoGuardado = localStorage.getItem('registrar_todas_sedes_preferencia');
+        const checkbox = document.getElementById('registrar_todas_sedes');
+        if (estadoGuardado !== null) {
+            checkbox.checked = estadoGuardado === 'true';
+        } else {
+            checkbox.checked = false;
+        }
+        
+        // Mostrar/ocultar lista según el estado del checkbox
+        const lista = document.getElementById('lista_sedes');
+        lista.style.display = checkbox.checked ? 'block' : 'none';
+        
+        // Obtener siguiente número secuencial
+        await obtenerSiguienteNumero();
+        
+        dialog_additem_porcion.open();
+    }
+    
+    async function verificarSedesDisponibles() {
+        try {
+            // Usar cache centralizado
+            const sedes = await SedesCache.obtenerSedesDisponibles();
+            
+            if (sedes && sedes.length > 1) {
+                sedesDisponibles = sedes;
+                document.getElementById('container_multisede').style.display = 'block';
+                
+                // Mostrar lista de sedes
+                let htmlSedes = '';
+                sedesDisponibles.forEach(sede => {
+                    const esSedeActual = sede.idsede == xIdSede;
+                    htmlSedes += `<span class="${esSedeActual ? 'fw-600' : ''}">
+                        <i class="fa fa-${esSedeActual ? 'check-circle text-success' : 'circle-o'} mr-1"></i>
+                        ${sede.descripcion} ${esSedeActual ? '(Actual)' : ''}
+                    </span> | `;
+                });
+                document.getElementById('sedes_disponibles').innerHTML = htmlSedes;
+            } else {
+                sedesDisponibles = [];
+                document.getElementById('container_multisede').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error al verificar sedes:', error);
+        }
+    }
+    
+    async function obtenerSiguienteNumero() {
+        try {
+            const _httpFecht = new httpFecht();
+            const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=132', {});
+            
+            if (rpt.success && rpt.siguiente_numero) {
+                siguienteNumeroSecuencial = rpt.siguiente_numero;
+            }
+        } catch (error) {
+            console.error('Error al obtener número secuencial:', error);
+        }
+    }
+    
+    function generarCodigoSugeridoNuevaPorcion() {
+        const descripcion = document.getElementById('descripcion').value;
+        if (descripcion && siguienteNumeroSecuencial) {
+            const codigo = generarCodigoUnicoPorcion(descripcion, siguienteNumeroSecuencial);
+            document.getElementById('codigo_unico').value = codigo;
+        }
+    }
+    
+    function toggleSedesLista() {
+        const checkbox = document.getElementById('registrar_todas_sedes');
+        const lista = document.getElementById('lista_sedes');
+        lista.style.display = checkbox.checked ? 'block' : 'none';
+        
+        // Guardar preferencia en localStorage
+        localStorage.setItem('registrar_todas_sedes_preferencia', checkbox.checked.toString());
+        console.log('Preferencia guardada: Registrar en todas las sedes =', checkbox.checked);
+    }
 
 
-    function xGuardarItemPorcionPorcion() {
-        xvalidateFormInput('frm_add_porcion', function (a) {
+    async function xGuardarItemPorcionPorcion() {
+        xvalidateFormInput('frm_add_porcion', async function (a) {
             if (a === false) { return; }
+            
             xPopupLoad.xopen();
-            $("#frm_add_porcion #idorg").val(xIdOrg);
-            $("#frm_add_porcion #idsede").val(xIdSede);
-            $.post("../../bdphp/ManejoBD_IUD.php?tb=porcion", $("#frm_add_porcion").serialize(), function (xUltimo_id_por) {
+            
+            const descripcion = document.getElementById('descripcion').value;
+            const peso = document.getElementById('peso').value;
+            const stock = document.getElementById('stock').value;
+            const codigoUnico = document.getElementById('codigo_unico').value;
+            const registrarTodasSedes = document.getElementById('registrar_todas_sedes').checked;
+            
+            try {
+                const _httpFecht = new httpFecht();
+                
+                if (registrarTodasSedes && sedesDisponibles.length > 1) {
+                    // Registrar en todas las sedes
+                    let registrosExitosos = 0;
+                    for (let sede of sedesDisponibles) {
+                        const data = {
+                            descripcion: descripcion,
+                            peso: peso,
+                            stock: stock,
+                            idorg: xIdOrg,
+                            idsede: sede.idsede,
+                            codigo_unico: codigoUnico
+                        };
+                        
+                        console.log(`Registrando en sede ${sede.idsede} (${sede.descripcion}):`, data);
+                        const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=134', data);
+                        console.log(`Respuesta sede ${sede.idsede}:`, rpt);
+                        
+                        if (rpt.success) {
+                            registrosExitosos++;
+                        }
+                    }
+                    
+                    showToastSwal('success', `Porción registrada en ${registrosExitosos} de ${sedesDisponibles.length} sedes`);
+                } else {
+                    // Registrar solo en la sede actual
+                    $("#frm_add_porcion #idorg").val(xIdOrg);
+                    $("#frm_add_porcion #idsede").val(xIdSede);
+                    
+                    const data = {
+                        descripcion: descripcion,
+                        peso: peso,
+                        stock: stock,
+                        idorg: xIdOrg,
+                        idsede: xIdSede,
+                        codigo_unico: codigoUnico
+                    };
+                    
+                    const rptData = await _httpFecht.postJson('../../bdphp/log_009.php?op=134', data);
+                    console.log(rptData);
+                    showToastSwal('success', 'Porción registrada correctamente');
+                }
+                
                 xLoadPorciones();
-                xPopupLoad.xclose();
                 dialog_additem_porcion.close();
-            })
+            } catch (error) {
+                console.error('Error al guardar porción:', error);
+                showToastSwal('error', 'Error al guardar la porción');
+            }
+            
+            xPopupLoad.xclose();
         });
     }
     function xLoadPorciones() {

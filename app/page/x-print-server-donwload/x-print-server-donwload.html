@@ -231,7 +231,7 @@ function xIniPrintServerDownload() {
 	$('body').addClass('loaded');
 	$("#Titulo_page").text("Servidor de Impresión");
 	
-	checkServerStatus();
+	// checkServerStatus();
 }
 
 async function checkServerStatus() {
@@ -288,7 +288,7 @@ function xDownloadPrintServer(platform) {
 	var url = urls[platform];
 	
 	if (!url || url === '') {
-		xShowMensajeToast('La descarga para ' + platform + ' aún no está disponible');
+		xShowMensajeToast('La descarga para ' + platform + ' aún no está disponible'); 
 		return;
 	}
 	

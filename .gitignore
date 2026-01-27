@@ -5,4 +5,5 @@ app/view/config.const.js
 config.js
 file
 dist
+docs
 minify.sh

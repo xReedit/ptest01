@@ -1,6 +1,7 @@
 <!-- <script src="../webcomponentsjs/webcomponents-lite.js"></script> -->
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../app-router/app-router.html">
+<script type="text/javascript" src="../../../js/mi.sweet.alert.js"></script>
 
 <dom-module is='x-router'>
 	<!--mode="auto|pushstate|hash"-->
@@ -71,14 +72,16 @@
 			<app-route path="/proveedores" import="x-proveedores/x-proveedores.html"></app-route>
 			<app-route path="/proveedores" import="x-proveedores/x-proveedores.html"></app-route>
 			<app-route path="/distribuicion_recibe" import="x-distribuicion-recibir/x-distribuicion-recibir-list.html"></app-route>
-			<app-route path="/resitro_pedidos" import="x-registro-pedidos/x-registro-pedidos.html"></app-route>
+			<app-route path="/pedidos_registrados" import="x-registro-pedidos/x-registro-pedidos.html"></app-route>
 			<app-route path="/prueba" import="x-pruebas.html"></app-route>
 			<app-route path="/pedidos_previo_pago" import="x-configuraciones/x-holding/x-pedidos-by-marca.html"></app-route>
 			<app-route path="/pedidos_marca" import="x-configuraciones/x-holding/x-pedidos-holding.html"></app-route>
 			<app-route path="/pedidos_meseros" import="x-configuraciones/x-holding/x-pedidos-meseros.html"></app-route>
 			<app-route path="/mensajeria" import="x-mensajeria/x-mensajeria.html"></app-route>
 			<app-route path="/subreceta" import="x-subrecetas/x-subrecetas.html"></app-route>
-			<app-route path="/print-server" import="x-print-server-donwload/x-print-server-donwload.html"></app-route>
+			<app-route path="/print-server" import="x-print-server-donwload/x-print-server-donwload.html"></app-route>			
+			<app-route path="/solicitar-producto-main" import="x-solicitar-producto/x-solicitar-producto-main.html"></app-route>
+			<app-route path="/solicitar-producto" import="x-solicitar-producto/x-solicitar-producto.html"></app-route>
 			
 		</app-router>
 	</template>
@@ -94,14 +97,19 @@ function xIniRouter(){
 	const currentHash = window.location.hash.replace('#/', '');
 	
 	// Skip the AJAX check if it's a holding route
-	if (holdingRoutes.includes(currentHash)) {
+	if (holdingRoutes.includes(currentHash)) { 
 		return;
 	}
 	
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-108',data:{p:window.location.hash},async: false})
 	.done( function (a) {
 		if(a==1){
-			xevent.preventDefault()
+			xevent.preventDefault();
+			ToastAlertSwal.fire({
+				icon: 'warning',
+				title: 'Acceso Restringido - Solicite permisos al administrador',
+				timer: 3000
+			});
 		}
 	});
 

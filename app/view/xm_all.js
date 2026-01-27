@@ -990,45 +990,99 @@ function getDataUsRRHH() {
 
 
 // verifica el codigo de error de la sunat 
-async function xVerificarCodeResponseCPE(response) {
-    const _listCodeErrosCpe = xm_log_get('cpe_alerts');
+async function xVerificarCodeResponseCPE(response, external_id = '') {
+	if (!response.code) {
+		return;
+	}
+
     const codeResponseCPE = response.code;
 
-    // busca el codigo de error en la lista
-    const _codeCpe = _listCodeErrosCpe.filter(x => x.code == codeResponseCPE)[0];
-    if ( _codeCpe ) {
-		if ( _codeCpe.nivel == '1' ) { // pausar         
-				
-
-				const fetchData = new httpFecht();
-				const _dataSend = {
-					"tipo": "error",
-					"mensaje": response.description || response.message,
+    // Consultar directamente la tabla sunat_errores por el código
+    const fetchData = new httpFecht();
+    const _dataConsulta = {
+        "codigo": codeResponseCPE
+    };
+    
+    const _codeCpe = await fetchData.postJson('../../bdphp/log_009.php?op=33', _dataConsulta);
+    
+    if ( _codeCpe && _codeCpe.success && _codeCpe.data ) {
+		const errorData = _codeCpe.data;
+		
+		// Verificar si es un rechazo (rechazo == 1)
+		const isRechazo = errorData.rechazo == '1';
+		
+		if ( isRechazo ) {
+			// Es un RECHAZO: bloquear facturación y guardar en cpe_error
+			const fetchData = new httpFecht();
+			const _dataSend = {
+				"tipo": "error",
+				"mensaje": response.description || response.message,
+				"codigo": response.code,
+			}
+			
+			// Bloquear facturación electrónica
+			await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
+			
+			// Guardar en tabla cpe_error
+			if (external_id !== '') {
+				const _dataCpeError = {
+					"external_id": external_id,
+					"idsunat_errores": errorData.idsunat_errores,
 					"codigo": response.code,
+					"mensaje": response.description || response.message
 				}
-				
-				await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
-				// console.log('rpt', rpt);
+				await fetchData.postJson('../../bdphp/log_009.php?op=32', _dataCpeError);
+			}
 
-				const _swalAlertValues = paramsSwalAlert; 
-				_swalAlertValues.html = `<div class="p-1"> 
-											<p class="fw-600 fs-20 text-danger">Problemas con la facturación electrónica.</p>
-											<p class="fw-100 fs-14">${_dataSend.mensaje}</p>
-											<p class="fw-600 fs-14 text-warning">Comuniquese con soporte técnico.</p>
-										</div>`;
-				_swalAlertValues.showCancelButton = false;
-				_swalAlertValues.showConfirmButton = true;
-				_swalAlertValues.confirmButtonText = 'Entendido.';
+			// Mostrar alerta de RECHAZO
+			const _swalAlertValues = paramsSwalAlert; 
+			_swalAlertValues.html = `<div class="p-1"> 
+										<p class="fw-600 fs-20 text-danger">Error Crítico - Comprobante RECHAZADO</p>
+										<p class="fw-100 fs-14">Código: ${response.code}</p>
+										<p class="fw-100 fs-14">${_dataSend.mensaje}</p>
+										<p class="fw-600 fs-14 text-warning">Comuníquese con soporte técnico.</p>
+									</div>`;
+			_swalAlertValues.showCancelButton = false;
+			_swalAlertValues.showConfirmButton = true;
+			_swalAlertValues.confirmButtonText = 'Entendido.';
 
-				const rptSwlalCPE = await showAlertSwalHtmlDecision(_swalAlertValues);
-				if ( rptSwlalCPE.isConfirmed ) {
-					// recarga la pagina, para cargar nuevamente los valores
-					setTimeout(() => {
-						window.location.reload();
-					}, 1500);
-				}        
+			const rptSwlalCPE = await showAlertSwalHtmlDecision(_swalAlertValues);
+			if ( rptSwlalCPE.isConfirmed ) {
+				// recarga la pagina, para cargar nuevamente los valores
+				setTimeout(() => {
+					window.location.reload();
+				}, 1500);
+			}        
 			
 		} else {
+			// Es una OBSERVACIÓN: solo mostrar mensaje sin bloquear
+			
+			// Guardar en tabla cpe_error para registro histórico
+			if (external_id !== '') {
+				const fetchData = new httpFecht();
+				const _dataCpeError = {
+					"external_id": external_id,
+					"idsunat_errores": errorData.id,
+					"codigo": response.code,
+					"mensaje": response.description || response.message
+				}
+				await fetchData.postJson('../../bdphp/log_009.php?op=32', _dataCpeError);
+			}
+			
+			// Mostrar alerta de OBSERVACIÓN (menos crítica)
+			const _swalAlertValues = paramsSwalAlert; 
+			_swalAlertValues.html = `<div class="p-1"> 
+										<p class="fw-600 fs-18 text-warning">Observación en Comprobante</p>
+										<p class="fw-100 fs-14">Código: ${response.code}</p>
+										<p class="fw-100 fs-14">${response.description || response.message}</p>
+										<p class="fw-100 fs-12 text-muted">El comprobante se procesó pero tiene observaciones.</p>
+									</div>`;
+			_swalAlertValues.showCancelButton = false;
+			_swalAlertValues.showConfirmButton = true;
+			_swalAlertValues.confirmButtonText = 'Entendido.';
+			
+			await showAlertSwalHtmlDecision(_swalAlertValues);
+			
 			return false;
 		}
 	}

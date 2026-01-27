@@ -443,7 +443,7 @@ function xgetImpresoraById(xIdPrintSearch) {
 // 	})
 // }
 
-function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, callback) {
+function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, callback, idPedido) {
 	if (xArrayCuerpo.length ===0 ) return;
 
 	var xArrayImpresoras=xm_log_get('app3_woIpPrint'); //JSON.parse(window.localStorage.getItem("::app3_woIpPrint"));
@@ -478,7 +478,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		if (xPrintLocal.img64 === "0") { xImpresoraPrint[0].logo64 = ''; } // ya no manda la img en base64 si no esta activo img64
 
 		if (parseInt(xPrintLocal.num_copias) != 0 || parseInt(xPrintLocal.copia_local) != 0 ){ //
-			xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales,(res)=>{
+			xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayCuerpo,xArraySubTotales, idPedido,(res)=>{
 				callback(res);
 				// if(rpt_print==false){callback(rpt_print); return;}
 				// xPopupLoad.titulo="Imprimiendo...";
@@ -538,7 +538,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 			xImpresoraPrint[0].papel_size = _xArrayImpresoras.papel_size;
 			if (_xArrayImpresoras.img64 === "0") { xImpresoraPrint[0].logo64 = '';}
 			
-			xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print_tpc){
+			xImprimirComandaAhora(xArrayEnca, xImpresoraPrint, xArrayBodyPrint, xArraySubTotales, idPedido,function(rpt_print_tpc){
 				callback(rpt_print_tpc);				
 			});
 
@@ -607,7 +607,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		xImpresoraPrint[0].papel_size = xArrayImpresoras[z].papel_size;
 		if (xArrayImpresoras[z].img64 === "0") { xImpresoraPrint[0].logo64 = '';}
 		
-		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales,function(rpt_print){
+		xImprimirComandaAhora(xArrayEnca,xImpresoraPrint,xArrayBodyPrint,xArraySubTotales, idPedido,function(rpt_print){
 			if(xArrayImpresoras.length==xCuentaImpresorasEvaluadas && rpt_print==false){//si todas las impresoras fueron evaluadas y no presentaron error termina la funcion
 				// setTimeout( function(){try{xNuevoPedidoMP();}catch(err){return false;}}, 2700); //nuevo pedido en mipedido
 				if(callback){
@@ -625,7 +625,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 }
 
 
-function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xArraySubtotal,callback){
+function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xArraySubtotal, idPedido, callback){
 	xPopupLoad.titulo="Imprimiendo...";
 
 	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
@@ -635,7 +635,8 @@ function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xAr
 		Array_enca: xArrayEncabezado,
 		Array_print: xImpresoraPrint,
 		ArrayItem: xArrayCuerpo.filter(x => !null), //xArrayCuerpo, para borrar los null
-		ArraySubTotales: xArraySubtotal	
+		ArraySubTotales: xArraySubtotal	,
+		idpedido: (idPedido && idPedido.idpedido) ? idPedido.idpedido : null
 	}
 
 	if (_sys_local === 1) {
@@ -726,6 +727,7 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 			break;
 	}
 	
+	const _idpedido = _data.idpedido;
 	_data = JSON.stringify(_data);	
 	_tipo = _tipo === 'pre cuenta' ? 'comanda' : _tipo;
 
@@ -735,7 +737,8 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 		data: {
 			datos: _data,
 			idprint_server_estructura: _idprint_server_estructura,
-			tipo: _tipo
+			tipo: _tipo,
+			idpedido: _idpedido
 		}
 	})
 	.done((UltimoIdPrint)=> {	

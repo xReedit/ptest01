@@ -7,7 +7,7 @@
 
 const PrintServerDetector = {
     NEW_SERVER_URL: 'http://localhost:3847',
-    NEW_SERVER_PING: 'http://localhost:3847/api/ping',
+    NEW_SERVER_PING: 'http://localhost:3847/api/ping', 
     
     getOrgData: function() {
         const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
@@ -35,32 +35,34 @@ const PrintServerDetector = {
     },
 
     checkNewServer: async function() {
+        console.log('🔍 Verificando servidor nuevo en:', this.NEW_SERVER_PING);
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
             
+            console.log('🔍 Iniciando fetch...');
             const response = await fetch(this.NEW_SERVER_PING, {
                 method: 'GET',
+                mode: 'no-cors',
                 signal: controller.signal
             });
             
             clearTimeout(timeoutId);
+            console.log('🔍 Fetch completado');
             
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.status === 'online') {
-                    return {
-                        installed: true,
-                        version: data.version || '1.0.0',
-                        hostname: data.hostname || '',
-                        isConfigured: data.isConfigured || false,
-                        serverType: 'new'
-                    };
-                }
-            }
+            console.log('✅ Servidor nuevo DETECTADO (responde en localhost:3847)');
+            return {
+                installed: true,
+                version: '1.0.0',
+                hostname: 'localhost',
+                isConfigured: true,
+                serverType: 'new'
+            };
         } catch (e) {
-            console.log('Servidor nuevo no detectado:', e.message);
+            console.log('❌ Error al detectar servidor nuevo:', e.name, '-', e.message);
+            console.log('❌ Stack:', e.stack);
         }
+        console.log('❌ Servidor nuevo NO detectado');
         return { installed: false, serverType: 'new' };
     },
 
@@ -74,7 +76,8 @@ const PrintServerDetector = {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
             
-            const response = await fetch(baseUrl + '/api/test', {
+            // Solo verificar si la baseUrl está activa, sin endpoint específico
+            const response = await fetch(baseUrl, {
                 method: 'GET',
                 mode: 'no-cors',
                 signal: controller.signal
@@ -94,21 +97,27 @@ const PrintServerDetector = {
     },
 
     detectInstalledServer: async function() {
-        console.log('Buscando servidor de impresión instalado...');
+        console.log('🔎 ========== INICIANDO BÚSQUEDA DE SERVIDOR DE IMPRESIÓN ==========');
         
+        console.log('🔎 Paso 1: Verificando servidor NUEVO (Node.js)...');
         const newServerResult = await this.checkNewServer();
+        console.log('🔎 Resultado servidor nuevo:', newServerResult);
+        
         if (newServerResult.installed) {
-            console.log('Servidor NUEVO detectado:', newServerResult);
+            console.log('✅ ========== SERVIDOR NUEVO DETECTADO Y SELECCIONADO ==========');
             return newServerResult;
         }
 
+        console.log('🔎 Paso 2: Verificando servidor LARAGON...');
         const laragonResult = await this.checkLaragonServer();
+        console.log('🔎 Resultado servidor Laragon:', laragonResult);
+        
         if (laragonResult.installed) {
-            console.log('Servidor LARAGON detectado:', laragonResult);
+            console.log('✅ ========== SERVIDOR LARAGON DETECTADO Y SELECCIONADO ==========');
             return laragonResult;
         }
 
-        console.log('No se detectó ningún servidor de impresión instalado');
+        console.log('❌ ========== NO SE DETECTÓ NINGÚN SERVIDOR DE IMPRESIÓN ==========');
         return { installed: false, serverType: 'none' };
     },
 
@@ -128,24 +137,32 @@ const PrintServerDetector = {
     },
 
     redirectToServer: async function(openInNewWindow = true) {
+        console.log('🚀 ========== INICIANDO REDIRECCIÓN AL SERVIDOR ==========');
         const serverInfo = await this.detectInstalledServer();
+        console.log('🚀 Información del servidor detectado:', serverInfo);
 
         if (!serverInfo.installed) {
+            console.log('⚠️ No hay servidor instalado, mostrando página de descarga...');
             this.showDownloadPage();
             return { success: false, reason: 'no_server' };
         }
 
+        console.log('✅ Servidor instalado, obteniendo URL de redirección...');
         const redirectUrl = this.getRedirectUrl(serverInfo);
+        console.log('🔗 URL de redirección:', redirectUrl);
         
         if (redirectUrl) {
+            console.log('🌐 Abriendo servidor de impresión en:', openInNewWindow ? 'nueva ventana' : 'misma ventana');
             if (openInNewWindow) {
                 window.open(redirectUrl, 'Servidor de Impresion');
             } else {
                 window.location.href = redirectUrl;
             }
+            console.log('✅ ========== REDIRECCIÓN EXITOSA ==========');
             return { success: true, serverType: serverInfo.serverType, url: redirectUrl };
         }
 
+        console.log('❌ No se pudo obtener URL de redirección');
         return { success: false, reason: 'no_url' };
     },
 

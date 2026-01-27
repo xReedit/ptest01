@@ -722,7 +722,7 @@ function toggleConfigConversion() {
 async function cargarConversionActiva() {
     if (!xthisPorcionDetalle || !xthisPorcionDetalle.objporcion) return;
     
-    const _httpFecht = new httpFecht();
+    const _httpFecht = new httpFecht(); 
     const data = { idporcion: xthisPorcionDetalle.objporcion.idporcion };
     const rpt = await _httpFecht.postJson('../../bdphp/log_009.php?op=124', data);
     

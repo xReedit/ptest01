@@ -17,7 +17,7 @@ function calcularStockConvertido(stock, factorConversion) {
 
 /**
  * Extrae las iniciales de un nombre de porción para generar el código
- * Ejemplos:
+ * Ejemplos: 
  * - "HAMBURGUESA DE RES 200GR" -> "HR200"
  * - "AA 200GR CECINA" -> "AA200"
  * - "CARNE DE TOYO 200GR" -> "CT200"

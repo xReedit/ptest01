@@ -1980,7 +1980,7 @@ async function xArmarSqlAddLUlI(){
 
 			if(xVerificarImprimirComanda==true){
 
-				xLLamarPrintAddLUlI();
+				xLLamarPrintAddLUlI(idP);
 				// xMandarImprimir(xArrayPrintEncaLi,xDtPrint,xArrayPedidoObj,function(rpt){
 				// 	if(rpt==true){
 				// 		//actualizar y cerrar
@@ -2036,7 +2036,7 @@ function xCheckIsCuponCanjeadoCM() {
 	}
 }
 
-function xLLamarPrintAddLUlI() {
+function xLLamarPrintAddLUlI(idPedido) {
 	xCocinarImprimirComanda(xArrayPrintEncaLi,xArrayPedidoObj,xLocal_xDtSubTotales_cp, (res)=>{
 		if(!res){ //si no hay error
 			xPopupLoad.xclose();
@@ -2047,7 +2047,7 @@ function xLLamarPrintAddLUlI() {
 		} else {
 			dialog_erro_print.open();
 		}
-	});
+	}, idPedido);
 }
 
 

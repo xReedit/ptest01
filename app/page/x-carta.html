@@ -1324,25 +1324,47 @@ function xCargarEnImputSeccion(){
 		    }
 		});
 }
-function xxxBorrarItemLocal(obj){
-	var xObj=$(obj).parent().parent();
-	var xtb=xObj.parents('table');	
-	$(xObj).fadeTo(550, 0, function () {$(this).remove(); xSumarTotal(xtb);});
+async function xxxBorrarItemLocal(obj){
+	const result = await showAlertSwalHtmlDecision({
+		title: '¿Borrar item?',
+		text: 'Esta acción no se puede deshacer',
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonText: 'Sí, borrar',
+		cancelButtonText: 'Cancelar'
+	});
+
+	if (result.isConfirmed) {
+		var xObj=$(obj).parent().parent();
+		var xtb=xObj.parents('table');	
+		$(xObj).fadeTo(550, 0, function () {$(this).remove(); xSumarTotal(xtb);});
+	}
 }
 
 // borrar item ya guardado en bd
-function xxxBorrarItemLocalBD(obj, e){
-	const xRowObj = obj.parentNode.parentNode;
-	const xTableRow = $(xRowObj).attr('data-t');
-	const xIdROw = $(xRowObj).attr('data-idborrar');
-
-	xBorrarRegistroFisico(xTableRow, xIdROw);
-
-	$(xRowObj).fadeTo(550, 0, function () { $(this).remove(); });
-	$("#Lista_Carta").trigger('create');
-
+async function xxxBorrarItemLocalBD(obj, e){
 	e.stopImmediatePropagation();
 	e.stopPropagation();
+
+	const result = await showAlertSwalHtmlDecision({
+		title: '¿Borrar item?',
+		text: 'Esta acción eliminará el item de la carta',
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonText: 'Sí, borrar',
+		cancelButtonText: 'Cancelar'
+	});
+
+	if (result.isConfirmed) {
+		const xRowObj = obj.parentNode.parentNode;
+		const xTableRow = $(xRowObj).attr('data-t');
+		const xIdROw = $(xRowObj).attr('data-idborrar');
+
+		xBorrarRegistroFisico(xTableRow, xIdROw);
+
+		$(xRowObj).fadeTo(550, 0, function () { $(this).remove(); });
+		$("#Lista_Carta").trigger('create');
+	}
 }
 
 function xBorrarSeccionLocal(obj){
@@ -1351,16 +1373,26 @@ function xBorrarSeccionLocal(obj){
 	$(xObj).fadeTo(550, 0, function () {$(this).remove();});
 }
 
-function xBorrarSeccion(obj){
-	// const xRowObj=obj.parentNode.parentNode;
-	const xRowObj= obj.parentNode;	
-	const xTableRow=$(xRowObj).attr('data-t');
-	const xIdROw=$(xRowObj).attr('data-idborrar');
+async function xBorrarSeccion(obj){
+	const result = await showAlertSwalHtmlDecision({
+		title: '¿Borrar sección?',
+		text: 'Se eliminará la sección y todos sus items',
+		icon: 'warning',
+		showCancelButton: true,
+		confirmButtonText: 'Sí, borrar',
+		cancelButtonText: 'Cancelar'
+	});
 
-	xBorrarRegistroFisico2(xTableRow,xIdROw, 'idseccion');
+	if (result.isConfirmed) {
+		const xRowObj= obj.parentNode;	
+		const xTableRow=$(xRowObj).attr('data-t');
+		const xIdROw=$(xRowObj).attr('data-idborrar');
 
-	$(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
-	$("#Lista_Carta").trigger('create');
+		xBorrarRegistroFisico2(xTableRow,xIdROw, 'idseccion');
+
+		$(xRowObj).fadeTo(550, 0, function () {$(this).remove();});
+		$("#Lista_Carta").trigger('create');
+	}
 }
 
 

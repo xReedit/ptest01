@@ -17,7 +17,7 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 
 window.addEventListener('WebComponentsReady', function (e) {	
 	
-	console.log('WebComponentsReady');
+	console.log('WebComponentsReady'); 
 	$("#PanelDe").on("transitionend", function(a) {
 		if (this.selected == "main") {
 		  $("#PanelDe").css("z-index", "0");
@@ -316,26 +316,26 @@ async function xOpenPage(xop, parametro){
 
 			break;
 		case 27:			
-			// const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
-			// const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
-			// const _xr = btoa(JSON.stringify(_xdataOrg));
+			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
+			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
+			const _xr = btoa(JSON.stringify(_xdataOrg));
 			
-			// // local 10022022
-			// const versionPrintServer = 'restobar/print/client/index.html'; 
-			// const _urlLocal = 'http://'+ipPrintServerLocal;
-			// const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			
-			// const rptPingServerPrint = await pingServerPrintLocal(_urlLocal);
-			// console.log('rptPingServerPrint', rptPingServerPrint);
-			// // window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
-			// if ( rptPingServerPrint ) {
-			// 	window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
-			// }
+			// local 10022022
+			const versionPrintServer = 'restobar/print/client/index.html'; 
+			const _urlLocal = 'http://'+ipPrintServerLocal;
+			const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			
+			const rptPingServerPrint = await pingServerPrintLocal(_urlLocal);
+			console.log('rptPingServerPrint', rptPingServerPrint);
+			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+			if ( rptPingServerPrint ) {
+				window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
+			}
 
 
 			// implementar search-print-server
-			xPopupLoad.xopen();
-			await searchAndRedirectPrintServer();
-			xPopupLoad.xclose();
+			// xPopupLoad.xopen();
+			// await searchAndRedirectPrintServer();
+			// xPopupLoad.xclose();
 
 			return; 		
 		case 41: xruta = '/indicadores'; break;
@@ -380,7 +380,8 @@ async function xOpenPage(xop, parametro){
 		case 57: xruta = '/pedidos_previo_pago'; break;
 		case 58: xruta = '/pedidos_marca'; break;
 		case 59: xruta = '/pedidos_meseros'; break;
-		case 60: xruta = '/mensajeria'; break;		
+		case 60: xruta = '/mensajeria'; break;	
+		case 61: xruta = '/pedidos_registrados'; break;	
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

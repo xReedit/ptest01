@@ -548,8 +548,10 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             const _rptCPESuccess = _rptCPEResponse.success
             if ( _isCPEResponseCode ) { // si tiene code lo analiza
             // if (!_rptCPESuccess) {
-                // analizamos el code error                            
-                xVerificarCodeResponseCPE(_rptCPEResponse)
+                // analizamos el code error
+                // Pasar external_id para guardar en cpe_error
+                const _external_id = res.data?.external_id || '';
+                xVerificarCodeResponseCPE(_rptCPEResponse, _external_id)
             }
         } catch (error) {
             

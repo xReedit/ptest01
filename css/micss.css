@@ -2603,6 +2603,53 @@ input.xMiInput[required]:valid {
     padding: 15px;
 }
 
+/* mi card estilo 2 */
+.xMiCard2 {
+    display: table;
+    margin: 0 auto;
+    text-align: left;
+    /* border: 3px solid #cdcdcd; */
+    width: 90%;
+    max-width: 1250px;
+    background: #f0f3fa;
+    border-radius: 10px;
+}
+
+.xMiCard2.xradius {
+    border-radius: 5px;
+}
+
+.xMiCard2 .xEncanezadoCard {
+    background: #ffffff;
+    color: #1e1f21;
+    border-radius: 10px 10px 0px 0px;
+    border-bottom: 1px solid #ffffff;
+    padding: 15px;
+}
+
+.xMiCard2 .xEncanezadoCard .xencabezado_img {
+    vertical-align: middle;
+}
+
+.xMiCard2 .xSubEncanezadoCard {
+    border-bottom: 1px solid #DDD;
+    padding: 15px;
+}
+
+.xMiCard2 .xContentCard {
+    margin: 20px;
+    border: 1px solid #ebebeb;
+    border-radius: 5px;
+    background: #ffffff;
+    border-top: 3px solid #4b6ca5;
+    padding: 20px;
+}
+
+.xMiCard2 .xPieCard {
+    border-top: 1px solid #DDD;
+    padding: 15px;
+}
+
 .xHeaderPersiste {
     position: fixed;
     top: 0px;

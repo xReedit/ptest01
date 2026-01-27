@@ -4,66 +4,214 @@
     <link rel="stylesheet" href="../../../css/searchableOptionList.css">
     <script src="../../../js/searchableOptionList.js"></script>
     <script async src="../../view/httpFech.js"></script>
+    <script type="text/javascript" src="../../view/notifica.js"></script>
+    <script type="text/javascript" src="../../view/socket.service.p.js"></script>
+    <script type="text/javascript" src="../../../js/PNotify.js"></script>
+    <script type="text/javascript" src="../../../js/PNotifyConfirm.js"></script>
+    <script type="text/javascript" src="../../../js/PNotifyHistory.js"></script>
+    <script async type="text/javascript" src="../../../js/picket.js"></script>
+    <script async type="text/javascript" src="../../../js/picket.date.js"></script>
+    <link rel="stylesheet" href="../../../css/PNotifyBrightTheme.css">
     <!-- sweetalert -->
     <script src="../../../js/sweetalert2.js"></script>
     <script type="text/javascript" src="../../../js/mi.sweet.alert.js"></script>
     
     <template>
 
-        <div class="p-5" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">
-            <div class="d-flexx w-100 justify-content-between flex-wrap">
+        <!-- Diálogo de detalle del pedido -->
+        <paper-dialog id="dialog_pedido_detalle" class="dialog_redondo" style="overflow: auto; overscroll-behavior: auto; min-width: 50%; max-width: 700px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+            <div class="mb-2">
                 <div>
-                    <h3>Registro de Pedidos</h3>
-                </div>
-                <div class="div-info mb-1">
-                    <div class="div-border text-center p-2 mr-1 div-indicador" style="max-width: 80px;">
-                        <p class="fs-12 fw-600 text-secondary">Pedidos</p>
-                        <p class="fw-600 fs-15">100</p>
+                    <div class="d-flexx justify-content-between align-items-center header-registro-venta">
+                        <div>
+                            <h3>Detalle del Pedido</h3>
+                        </div>
+                        <button class="btn btn-sm btn-secondary ml-2" dialog-dismiss>X</button>
                     </div>
-                    <div class="div-border text-center p-2 mr-1 div-indicador" style="max-width: 80px;">
-                        <p class="fs-12 fw-600 text-secondary">Pedidos</p>
-                        <p class="fw-600 fs-15">100</p>
+                    <br>
+
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button id="btn_reimprimir_detalle" class="btn btn-sm btn-flat" onclick="xReimprimirComandaDetalle()" 
+                            title="Reimprimir comanda">
+                            🖨️ Reimprimir Comanda
+                        </button>
                     </div>
+                    <br>
+                    
+                    <label for="txt_cliente_det" class="xfont10">Cliente:</label>
+                    <p><span id="txt_cliente_det" class="xfont20">- </span></p>
+                    <div class="xLinea2"></div>
+                    
+                    <label for="txt_referencia_det" class="xfont10">Referencia:</label>
+                    <p><span id="txt_referencia_det" class="xfont20">- </span></p>
+                    <div class="xLinea2"></div><br>
+                    
+                    <div class="x_div_linea">
+                        <div>
+                            <label for="txt_mesa_det" class="xfont10">Mesa/Pedido:</label>
+                            <p id="txt_mesa_det" class="xfont20">00</p>
+                        </div>
+                        <div>
+                            <label for="txt_mozo_det" class="xfont10">Atendido por:</label>
+                            <p id="txt_mozo_det" class="xfont20"></p>
+                        </div>
+                        <div>
+                            <label for="txt_canal_det" class="xfont10">Canal:</label>
+                            <p id="txt_canal_det" class="xfont20"></p>
+                        </div>
+                        <div>
+                            <label for="txt_fecha_det" class="xfont10">Fecha:</label>
+                            <p id="txt_fecha_det" class="xfont20"></p>
+                        </div>
+                    </div>
+                    <div class="xLinea2"></div><br><br>
+                    
+                    <div id="xBodyPedido"></div>
                 </div>
             </div>
-        
+        </paper-dialog>
 
+        <div class="p-5" style="max-width: 1200px !important; min-width: 750px !important; margin: 0 auto;">
+            <div class="d-flexx w-100 justify-content-between flex-wrap">
+                <div class="d-flexx align-items-center">
+                    <div class="pr-2">
+                        <img src="../../../images/_pedidos_registrados.png" alt="pedidos_registrados">
+                    </div>
+                    <div>
+                        <h3>Pedidos Registrados</h3>
+                        <p class="fw-600 fs-14 text-secondary">Lista de pedidos registrados</p>
+                    </div>                
+                </div>
+            </div>
+            <br>
+        
             <!-- filtros -->
             <div class="div-border div-filter">
-                <div id="input-date">
-                    <p class="fw-900">Ver Desde</p>
+                <div>
+                    <p class="fw-900">Fecha</p>
                     <input type="text" style="height: 20px;" class="selected-template-1 xCursor" id="txt_fecha"
                         placeholder="Elige fecha">
+                </div>
+                
+                <div style="width: 95%;">
+                    <p class="fw-900">Filtro</p>
+                    <div class="content-div-filtro">
+                        <select class="js-select2-pedidos selected-template-1" id="selectFilter" multiple>
+                            <optgroup label="Atendido Por">
+                                <template is="dom-repeat" items="{{listAtendidoPorFilter}}" as="item">
+                                    <option value$="[[item]]">{{item.nom_usuario}}</option>
+                                </template>
+                            </optgroup>
+                            <optgroup label="Canal de Consumo">
+                                <template is="dom-repeat" items="{{listCanalConsumoFilter}}" as="item">
+                                    <option value$="[[item]]">{{item.descripcion}}</option>
+                                </template>
+                            </optgroup>
+                            <optgroup label="Cobrado">
+                                <template is="dom-repeat" items="{{listEstadoFilter}}" as="item">
+                                    <option value$="[[item]]">{{item.descripcion}}</option>
+                                </template>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="fw-900">Buscar</p>
+                    <input type="text" style="height: 20px;" placeholder="Indique criterio a buscar..." class="selected-template-1 w-100"
+                        onkeyup="buscarEnListaPedidos(this.value)" >
                 </div>
             </div>
 
             <!-- table -->
             <table class="w-100 content-table-delivery">
                 <thead>
-                    <th align="left" colspan="6"><span class="text-primary fw-600 fs-15">[[cantRegistroPagos]]</span> Registros
-                        encontrados</th>
-                    <th align="right">
-                        <!-- <button class="btn btn-sm btn-success" onclick="xGenerarReporteExcelRegistroPago()"><i class="fa fa-file-excel-o"></i> Exportar</button> -->
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-success"><i class="fa fa-file-excel-o"></i> Exportar <i
-                                    class="fa fa-angle-down"></i></button>
-                            <div class="dropdown-content">
-                                <a href="#" onclick="xGenerarReporteExcelRegistroPago()">Resumen</a>
-                                <a href="#" onclick="xGenerarReporteExcelRegistroPagoDetallado()">Detallado</a>
+                    <tr>
+                        <th align="left" colspan="2"><span class="text-primary fw-600 fs-15">[[cantPedidos]]</span> Registros encontrados</th>
+                        <th align="right" colspan="7">
+                            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                                <div class="div-border text-center p-2 div-indicador" style="min-width: 100px;">
+                                    <p class="fs-10 fw-600 text-secondary mb-1">Total Pedidos</p>
+                                    <p class="fw-600 fs-18 text-primary mb-0">{{ totalPedidos }}</p>
+                                </div>
+                                <div class="div-border text-center p-2 div-indicador" style="min-width: 100px;">
+                                    <p class="fs-10 fw-600 text-secondary mb-1">Cobrados</p>
+                                    <p class="fw-600 fs-16 text-success mb-0">{{ pedidosCobrados }}</p>
+                                </div>
+                                <div class="div-border text-center p-2 div-indicador" style="min-width: 100px;">
+                                    <p class="fs-10 fw-600 text-secondary mb-1">Pendientes</p>
+                                    <p class="fw-600 fs-16 text-warning mb-0">{{ pedidosPendientes }}</p>
+                                </div>
+                                <div class="div-border text-center p-2 div-indicador" style="min-width: 120px;">
+                                    <p class="fs-10 fw-600 text-secondary mb-1">Importe Total</p>
+                                    <p class="fw-600 fs-18 text-primary mb-0">S/. {{ importeTotal }}</p>
+                                </div>
+                                <!-- <div class="dropdown">
+                                    <button class="btn btn-sm btn-success"><i class="fa fa-file-excel-o"></i> Exportar <i
+                                            class="fa fa-angle-down"></i></button>
+                                    <div class="dropdown-content">
+                                        <a href="#" onclick="xGenerarReporteExcelPedidos()">Resumen</a>
+                                        <a href="#" onclick="xGenerarReporteExcelPedidosDetallado()">Detallado</a>
+                                    </div>
+                                </div> -->
                             </div>
-                        </div>
-                    </th>
+                        </th>
+                    </tr>
+                    <tr style="height: 50px;">
+                        <th>#</th>
+                        <th align="left">Fecha/Hora</th>
+                        <th align="left">Atendido Por</th>
+                        <th align="left">Canal</th>
+                        <th align="center">Cobrado</th>                        
+                        <th align="center">Mesa/Pedido</th>
+                        <th align="center">Productos</th>
+                        <th align="right">Importe</th>
+                    </tr>
                 </thead>
-                <thead style="height: 50px;">
-                    <th>#</th>
-                    <th align="left">Fecha</th>
-                    <th align="left">Atendido Por</th>
-                    <th align="left">Canal</th>
-                    <th align="left">Cliente</th>
-                    <th align="center">Cobrado</th>                    
-                    <th align="center" style="min-width: 130px;">Importe</th>
-                    <!-- <th width="50px" style="width: 50px;"></th> -->
-                </thead>
+                <tbody>
+                    <template is="dom-repeat" items="[[listPedidosFilter]]" as="item">
+                        <tr class$="[[ item.row_class ]]">
+                            <td>
+                                <span class="fw-600 mr-1">{{item.num}}</span>
+                            </td>
+                            <td>
+                                <p class="fs-11">{{ item.fecha_des }}</p>
+                                <p class="fs-11">{{ item.hora }}</p>
+                            </td>
+                            <td>
+                                <div>
+                                    <p class="fs-11">{{ item.nom_usuario_show }}</p>
+                                </div>
+                            </td>
+                            <td>
+                                <p class$="[[item.class_tpc]]">{{ item.des_consumo }}</p>
+                                <p class="badge badge-secondary fs-12" hidden$="[[ item.isDelivery ]]">{{ item.mesa }}</p>
+                                <div class="d-flexx">
+                                    <p class="badge badge-success mr-2" hidden$="[[ !item.isScanCodigo ]]">App</p>
+                                    <p class="fs-10 fw-600">Correlativo: {{ item.correlativo_dia }}</p>
+                                </div>
+                            </td>
+                            <td align="center">
+                                <span class$="[[item.badge_estado]]">{{ item.estado_texto }}</span>
+                            </td>                            
+                            <td align="center">
+                                <p class="fs-12 fw-600">{{ item.mesa_pedido }}</p>
+                                <p class="fs-10 fw-600 text-secondary">{{ item.nom_cliente }}</p>
+                                <p class="fs-10 fw-600 text-secondary">{{ item.referencia_pedido }}</p>    
+                            </td>
+                            <td align="center">
+                                <span class="badge badge-info">{{ item.cant_productos }}</span>
+                                <span class$="[[ item.badge_impreso ]]" style="font-size: 10px; margin-right: 5px;">{{ item.texto_impreso }}</span>
+                            </td>
+                            <td align="right">
+                                <div class="d-flexx justify-content-end align-items-center">
+                                    <p class="fw-600 text-info fs-15 mr-2">S/. {{ item.total }}</p>                                    
+                                    <button class="xBoton_flat_2 xCursor mr-1" onclick="xLoadDetallePedido(this)" data-id="{{index}}">Ver</button>                                    
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
             </table>
         </div>
     </template>
@@ -89,12 +237,9 @@
 
         .div-filter {
             display: grid;
-            /* grid-template-columns: 40% 60%; */
             grid-template-columns: 1fr 3fr 3fr;
             column-gap: 30px;
-            /* background: white; */
             padding: 20px;
-            /* border-radius: 5px; */
             margin-bottom: 10px;
             align-items: center;
         }
@@ -103,26 +248,552 @@
             display: flex;
             justify-content: flex-end;
         }
+
+        .div-indicador {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header-registro-venta {
+            background: #d4d4d4;
+            padding: 20px 25px 10px;
+            margin-top: -32px;
+            margin-right: -32px;
+            margin-left: -32px;
+        }
+
+        .bg-delivery {
+            background-color: #f8f6c2;
+        }
+
+        .bg-llevar {
+            background-color: #81fad3;
+        }
+
+        .bg-mesa {
+            background-color: #46d9f2;
+        }
+
+        .row-anulado {
+            background: #ffe8f0;
+            text-decoration: line-through;
+            color: red;
+        }
+
+        .x_div_linea {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .xLinea2 {
+            border-bottom: 1px solid #e0e0e0;
+            margin: 10px 0;
+        }
     </style>
 
     <script>
+        var xThisRegistroPedidos;
+        var xfecha_pedidos = '';
+        var xidpedido_sel;
+        var data_pagination_pedidos = {}, p_rows_pedidos = 0, p_fecha_pedidos = '';
+        var listPedidosMaster = [];
+
         Polymer({
             is: 'x-registro-pedidos',
-            properties: {},
+            properties: {
+                listPedidosFilter: {
+                    type: Array,
+                    value: []
+                },
+                listPedidosMaster: {
+                    type: Array,
+                    value: []
+                },
+                listAtendidoPorFilter: {
+                    type: Array,
+                    value: []
+                },
+                listCanalConsumoFilter: {
+                    type: Array,
+                    value: []
+                },
+                listEstadoFilter: {
+                    type: Array,
+                    value: []
+                },
+                cantPedidos: {
+                    type: Number,
+                    value: 0
+                },
+                totalPedidos: {
+                    type: String,
+                    value: '0'
+                },
+                pedidosCobrados: {
+                    type: String,
+                    value: '0'
+                },
+                pedidosPendientes: {
+                    type: String,
+                    value: '0'
+                },
+                importeTotal: {
+                    type: String,
+                    value: '0.00'
+                }
+            },
             attached: function () {
+                xThisRegistroPedidos = this;
                 $("#Titulo_page").text("Registro de Pedidos");
                 $('body').addClass('loaded');
                 
-                $(this.$.txt_fecha).pickadate({
-                    format: 'dd mmmm, yyyy',
-                    today: 'Hoy',
-                    clear: 'Borrar',
-                    close: 'Cerrar',                    
-                    onSet: function (context) {
-                        
-                    }
-                });
+                xIniRegistroPedidos();
             },
         });
+
+        var xPedidoDetalleActual = null;
+        var xIndexPedidoDetalleActual = -1;
+
+        function xIniRegistroPedidos() {
+            xPopupLoad = document.getElementById('xLoad');
+
+            xm_LogChequea(function() {
+                xm_log_get('ini_us');
+                xLoadPedidos();
+            });
+
+            $('#txt_fecha').pickadate({
+                format: 'dd mmmm, yyyy',
+                today: 'Hoy',
+                clear: 'Borrar',
+                close: 'Cerrar',
+                onSet: function(context) {
+                    xfecha_pedidos = context.select ? xDevolverFechaDada2(context.select) : '';
+                    console.log('xfecha_pedidos', xfecha_pedidos);
+                    p_fecha_pedidos = xfecha_pedidos;
+                    xLoadPedidos();
+                }
+            });
+
+            $(".js-select2-pedidos").select2({
+                placeholder: "Aplicar Filtro",
+                allowHtml: true,
+                allowClear: true,
+                tags: true,
+                width: "100%",
+            });
+
+            $(".js-select2-pedidos").on("change", (e) => {
+                const _arrOpSelected = [...e.target.selectedOptions].map(i => JSON.parse(i.value));
+                xPedidosListFilter(_arrOpSelected);
+            });
+        }
+
+        function convertirFechaISO(fecha) {
+            // Convierte fecha de DD/MM/YYYY a YYYY-MM-DD
+            if (!fecha || fecha === '') {
+                const hoy = new Date();
+                return hoy.toISOString().split('T')[0];
+            }
+            
+            const partes = fecha.split('/');
+            if (partes.length === 3) {
+                return `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+            return fecha;
+        }
+
+        function xLoadPedidos() {
+            xPopupLoad.titulo = 'Cargando pedidos...';
+            xPopupLoad.xopen();
+
+            const fechaOriginal = p_fecha_pedidos !== '' ? p_fecha_pedidos : xDevolverFecha();
+            const fechaISO = convertirFechaISO(fechaOriginal);
+            data_pagination_pedidos.pageFecha = fechaISO;
+
+            $.ajax({ 
+                type: 'POST', 
+                url: '../../bdphp/log_010.php?op=get-registro-pedidos', 
+                data: { pagination: data_pagination_pedidos }
+            })
+            .done(function(res) {
+                res = JSON.parse(res);
+                console.log('Pedidos cargados:', res);
+
+                var xdt_pedidos = res.datos;
+                var xNumRegistro = xdt_pedidos.length + 1 || 0;
+                var importeTotalRegistrado = 0;
+                var countCobrados = 0, countPendientes = 0;
+
+                xThisRegistroPedidos.listAtendidoPorFilter = [];
+                xThisRegistroPedidos.listCanalConsumoFilter = [];
+                xThisRegistroPedidos.listEstadoFilter = [
+                    { descripcion: 'COBRADO', key: 'estado_cobrado', value: '1' },
+                    { descripcion: 'PENDIENTE', key: 'estado_cobrado', value: '0' }
+                ];
+
+                xdt_pedidos.map((x, index) => {
+                    const _fecha = x.fecha_hora.split(' ');
+                    x.fecha_des = _fecha[0];
+                    x.hora = _fecha[1];
+
+                    x.isScanCodigo = parseInt(x.scan_qr) !== 0;
+                    x.mesa = x.nummesa === '0' ? '' : 'Mesa ' + x.nummesa;
+                    x.mesa_pedido = x.nummesa === '0' ? 'P-' + x.idpedido : 'Mesa ' + x.nummesa;
+
+                    x.referencia_pedido = x.referencia_pedido === x.nom_cliente ? '' : x.referencia_pedido;
+
+                    x.estado_cobrado = x.idregistro_pago !== null && x.idregistro_pago !== "0";
+                    x.estado_texto = x.estado_cobrado ? 'COBRADO' : 'PENDIENTE';
+                    x.badge_estado = x.estado_cobrado ? 'badge badge-success' : 'badge badge-warning';
+
+                    if (x.estado_cobrado) {
+                        countCobrados++;
+                    } else {
+                        countPendientes++;
+                    }
+
+                    x.anulado = x.estado === "1";
+                    x.row_class = x.anulado ? 'row-anulado' : '';
+
+                    x.isDelivery = x.des_consumo === 'DELIVERY';
+                    x.des_consumo = x.des_consumo === 'CONSUMIR EN EL LOCAL' ? 'EN LOCAL' : x.des_consumo;
+                    x.class_tpc = x.des_consumo === 'DELIVERY' ? 'bg-delivery' : x.des_consumo === 'PARA LLEVAR' ? 'bg-llevar' : 'bg-mesa';
+                    x.class_tpc = `badge fs-12 ${x.class_tpc}`;
+
+                    x.correlativo_dia = x.correlativo_dia || '';
+
+                    var listNomUsuarios = x.nom_usuario.split(',');
+                    listNomUsuarios = listNomUsuarios.map(n => n.split(' ')[0]);
+                    x.nom_usuario = listNomUsuarios.join(',');
+                    x.nom_usuario_show = x.nom_usuario.split(',').join(' - ');
+
+                    x.cant_productos = x.cant_productos || '0';
+                    x.total = parseFloat(x.total || 0).toFixed(2);
+                    
+                    // Convertir impreso a booleano (1 = true, 0 = false)
+                    x.impreso = parseInt(x.impreso) === 1;
+                    x.texto_impreso = x.impreso ? '✓ Impreso' : '✗ No Impreso';
+                    x.badge_impreso = x.impreso ? 'badge badge-success' : 'badge badge-secondary';
+
+                    const _importeTotalPedido = x.anulado ? 0 : parseFloat(x.total);
+                    importeTotalRegistrado = importeTotalRegistrado + _importeTotalPedido;
+
+                    const _itemAtendidoPor = xThisRegistroPedidos.listAtendidoPorFilter.find(i => i.idusuario === x.idusuario);
+                    if (!_itemAtendidoPor) {
+                        const _row = { idusuario: x.idusuario, nom_usuario: x.nom_usuario, key: 'idusuario', value: x.idusuario };
+                        xThisRegistroPedidos.listAtendidoPorFilter.push(_row);
+                    }
+
+                    const _itemCanalConsumo = xThisRegistroPedidos.listCanalConsumoFilter.find(i => i.idtipo_consumo === x.idtipo_consumo);
+                    if (!_itemCanalConsumo) {
+                        const _row = { idtipo_consumo: x.idtipo_consumo, descripcion: x.des_consumo, key: 'idtipo_consumo', value: x.idtipo_consumo };
+                        xThisRegistroPedidos.listCanalConsumoFilter.push(_row);
+                    }
+
+                    xNumRegistro--;
+                    x.num = xCeroIzq(xNumRegistro);
+
+                    x.charbusqueda = `${x.nom_usuario} ${x.correlativo_dia} ${x.des_consumo} ${x.nom_cliente} ${x.referencia_pedido} ${x.total} ${x.mesa} ${x.estado_texto}`;
+                    x.charbusqueda = x.charbusqueda.toLowerCase();
+                });
+
+                xThisRegistroPedidos.listPedidosMaster = JSON.parse(JSON.stringify(xdt_pedidos));
+                xThisRegistroPedidos.listPedidosFilter = xThisRegistroPedidos.listPedidosMaster;
+                listPedidosMaster = xdt_pedidos;
+
+                xThisRegistroPedidos.listAtendidoPorFilter = JSON.parse(JSON.stringify(xThisRegistroPedidos.listAtendidoPorFilter));
+                xThisRegistroPedidos.listCanalConsumoFilter = JSON.parse(JSON.stringify(xThisRegistroPedidos.listCanalConsumoFilter));
+
+                xThisRegistroPedidos.totalPedidos = xCeroIzq(xdt_pedidos.length, 2);
+                xThisRegistroPedidos.pedidosCobrados = xCeroIzq(countCobrados, 2);
+                xThisRegistroPedidos.pedidosPendientes = xCeroIzq(countPendientes, 2);
+                xThisRegistroPedidos.importeTotal = numeroConComas(importeTotalRegistrado.toFixed(2));
+                xThisRegistroPedidos.cantPedidos = xThisRegistroPedidos.listPedidosFilter.length;
+
+                xPopupLoad.xclose();
+            })
+            .fail(function(error) {
+                console.error('Error al cargar pedidos:', error);
+                xPopupLoad.xclose();
+            });
+        }
+
+        function xPedidosListFilter(_listFilter) {
+            var _list = xThisRegistroPedidos.listPedidosMaster;
+            _listFilter.map(i => {
+                _list = xPedidosFilterByCodes(_list, i.key, i.value);
+            });
+
+            xThisRegistroPedidos.listPedidosFilter = JSON.parse(JSON.stringify(_list));
+            xResumenPedidosTotales();
+        }
+
+        function xPedidosFilterByCodes(array, key, value) {
+            if (key === 'estado_cobrado') {
+                return array.filter((o) => o[key] === (value === '1'));
+            }
+            return array.filter((o) => o[key] == value);
+        }
+
+        function xResumenPedidosTotales() {
+            const totalRegistros = xThisRegistroPedidos.listPedidosFilter.length;
+            let totalCobrados = 0, totalPendientes = 0, importeTotal = 0;
+
+            xThisRegistroPedidos.listPedidosFilter.forEach(item => {
+                if (item.estado_cobrado) {
+                    totalCobrados++;
+                } else {
+                    totalPendientes++;
+                }
+                importeTotal += parseFloat(item.total);
+            });
+
+            xThisRegistroPedidos.totalPedidos = xCeroIzq(totalRegistros, 2);
+            xThisRegistroPedidos.pedidosCobrados = xCeroIzq(totalCobrados, 2);
+            xThisRegistroPedidos.pedidosPendientes = xCeroIzq(totalPendientes, 2);
+            xThisRegistroPedidos.importeTotal = numeroConComas(importeTotal.toFixed(2));
+            xThisRegistroPedidos.cantPedidos = totalRegistros;
+        }
+
+        function buscarEnListaPedidos(valor) {
+            if (valor === '') {
+                xThisRegistroPedidos.listPedidosFilter = JSON.parse(JSON.stringify(xThisRegistroPedidos.listPedidosMaster));
+                xResumenPedidosTotales();
+                return;
+            }
+
+            const valorBusqueda = valor.toLowerCase();
+            const _listFilter = xThisRegistroPedidos.listPedidosMaster.filter(x => x.charbusqueda.includes(valorBusqueda));
+            xThisRegistroPedidos.listPedidosFilter = JSON.parse(JSON.stringify(_listFilter));
+            xResumenPedidosTotales();
+        }
+
+        function xLoadDetallePedido(obj) {
+            xPopupLoad.xopen();
+
+            const _indexRow = obj.dataId;
+            const rowItem = xThisRegistroPedidos.listPedidosFilter[_indexRow];
+            console.log('rowItem pedido', rowItem);
+
+            xidpedido_sel = rowItem.idpedido;
+            xPedidoDetalleActual = rowItem;
+            xIndexPedidoDetalleActual = _indexRow;
+
+            $.ajax({ 
+                type: 'POST', 
+                url: '../../bdphp/log_010.php?op=get-detalle-pedido', 
+                data: { idpedido: xidpedido_sel }
+            })
+            .done(function(dtPbdet) {
+                var xdtPbdet = $.parseJSON(dtPbdet);
+                var xArrayDtOrden = xdtPbdet.datos;
+                console.log('Detalle pedido:', xArrayDtOrden);
+
+                $("#txt_cliente_det").text(rowItem.nom_cliente);
+                $("#txt_referencia_det").text(rowItem.referencia_pedido || '-');
+                $("#txt_mesa_det").text(rowItem.mesa_pedido);
+                $("#txt_mozo_det").text(rowItem.nom_usuario_show);
+                $("#txt_canal_det").text(rowItem.des_consumo);
+                $("#txt_fecha_det").text(rowItem.fecha_des + ' ' + rowItem.hora);
+
+                // Mostrar u ocultar botón de reimpresión según estado de impresión
+                // if (rowItem.impreso) {
+                //     $("#btn_reimprimir_detalle").show();
+                // } else {
+                //     $("#btn_reimprimir_detalle").hide();
+                // }
+
+                xLoadDetallePedidoBody(xArrayDtOrden);
+
+                setTimeout(() => {
+                    xPopupLoad.xclose();
+                    dialog_pedido_detalle.open();
+                }, 500);
+            })
+            .fail(function(error) {
+                console.error('Error al cargar detalle:', error);
+                xPopupLoad.xclose();
+            });
+        }
+
+        function xLoadDetallePedidoBody(dt) {
+            var xCadenaGrupo = '';
+            var xArrayTpC = [];
+            var xArraySeccion = [];
+
+            for (a in dt) {
+                if (xArrayTpC[dt[a].idtipo_consumo] == null) {
+                    xArrayTpC[dt[a].idtipo_consumo] = { 'id': dt[a].idtipo_consumo, 'des': dt[a].des_tp };
+                }
+            }
+
+            for (b in xArrayTpC) {
+                var xCadenaItemArray = '';
+                var xEncabezadoCollapse = '';
+                var xCadenaCollapse = '';
+                xArraySeccion = [];
+
+                for (i in dt) {
+                    if (xArrayTpC[b].id == dt[i].idtipo_consumo) {
+                        var xNom_seccion = dt[i].des_seccion;
+                        var xImpresoras = '';
+                        
+                        // Construir texto de impresoras
+                        if (dt[i].nom_impresora && dt[i].nom_impresora !== 'Sin impresora') {
+                            xImpresoras = '<span class="fs-11 text-info">🖨️ ' + dt[i].nom_impresora;
+                            if (dt[i].nom_impresora_otro && dt[i].nom_impresora_otro !== '') {
+                                xImpresoras += ' | ' + dt[i].nom_impresora_otro;
+                            }
+                            xImpresoras += '</span>';
+                        } else {
+                            xImpresoras = '<span class="fs-11 text-secondary">🖨️ Ninguno</span>';
+                        }
+                        
+                        if (xArraySeccion[dt[i].idseccion_index] == null) {
+                            xArraySeccion[dt[i].idseccion_index] = '<tr><td colspan="3" class="xBold">' + xNom_seccion + ' ' + xImpresoras + '</td></tr>';
+                        }
+
+                        xCadenaItemArray = `
+                            <tr>
+                                <td width="7px">${xCeroIzq(dt[i].cantidad, 2)}</td>
+                                <td width="50%">${dt[i].descripcion}</td>
+                                <td align="right">${xMoneda(dt[i].ptotal)}</td>
+                            </tr>
+                        `;
+
+                        xArraySeccion[dt[i].idseccion_index] = xArraySeccion[dt[i].idseccion_index] + xCadenaItemArray;
+                    }
+                }
+
+                xEncabezadoCollapse = '<tr><td colspan="3" class="xFondoRowBlanco xBold">' + xArrayTpC[b].des + '</td></tr>';
+                for (a in xArraySeccion) {
+                    xCadenaCollapse = String(xCadenaCollapse + xArraySeccion[a]);
+                }
+
+                xCadenaGrupo = String(xCadenaGrupo + xEncabezadoCollapse + xCadenaCollapse);
+            }
+
+            xCadenaGrupo = '<div><table width="100%" class="xRowPading4">' + xCadenaGrupo + '</table></div>';
+            $("#xBodyPedido div").remove();
+            $("#xBodyPedido").html(xCadenaGrupo).trigger('create');
+
+            xSumarTotalesPedido();
+        }
+
+        function xSumarTotalesPedido() {
+            $.ajax({ 
+                type: 'POST', 
+                url: '../../bdphp/log_010.php?op=get-subtotales-pedido', 
+                data: { idpedido: xidpedido_sel }
+            })
+            .done(function(dt_subt) {
+                var xdt_subt = $.parseJSON(dt_subt);
+                if (!xdt_subt.success) {
+                    return;
+                }
+                xdt_subt = xdt_subt.datos;
+                console.log('Subtotales:', xdt_subt);
+
+                var xcadena_total = '';
+                for (var i = 0; i < xdt_subt.length; i++) {
+                    const classTachado = parseInt(xdt_subt[i].tachado) === 1 ? 'xTachar' : '';
+                    xcadena_total = String(xcadena_total + '<tr class="' + classTachado + '"><td>' + xdt_subt[i].descripcion.toUpperCase() + '</td><td align="right">' + xdt_subt[i].importe + '</td></tr>');
+                }
+
+                xcadena_total = '<div class="d-flexx justify-content-end mb-2"><table width="50%" class="xRowPading4">' + xcadena_total + '</table></div><br>';
+                $("#xBodyPedido").append(xcadena_total).trigger('create');
+            });
+        }
+
+        function xGenerarReporteExcelPedidos() {
+            console.log('Exportar pedidos resumen');
+        }
+
+        function xGenerarReporteExcelPedidosDetallado() {
+            console.log('Exportar pedidos detallado');
+        }
+
+        function xReimprimirComandaDetalle() {
+            if (!xPedidoDetalleActual) {
+                console.log('No se seleccionó ningún pedido');            
+                return;
+            }
+            const rowItem = xPedidoDetalleActual;            
+
+            // Mostrar alerta de confirmación con SweetAlert
+            const mensajeAlerta = rowItem.impreso 
+                ? '<p><strong>⚠️ ADVERTENCIA DE REIMPRESIÓN</strong></p><p>Este pedido <strong>YA FUE IMPRESO</strong> anteriormente.</p><p>Reimprimir podría generar <strong>confusión en el área de producción</strong> y causar que el pedido se duplique.</p><p>¿Está seguro que desea continuar con la reimpresión?</p>'
+                : '<p>¿Está seguro que desea imprimir este pedido?</p>';
+
+            Swal.fire({
+                icon: 'warning',
+                title: rowItem.impreso ? 'Confirmar Reimpresión' : 'Confirmar Impresión',
+                html: mensajeAlerta,
+                showCancelButton: true,
+                confirmButtonText: 'Sí, reimprimir',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#4285F4',
+                cancelButtonColor: '#d33',
+                ...backgroundAlertSwal
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    xEjecutarReimpresion(rowItem);
+                }
+            });
+        }
+
+        function xEjecutarReimpresion(rowItem) {
+            xPopupLoad.titulo = 'Obteniendo datos de impresión...';
+            xPopupLoad.xopen();
+
+            $.ajax({
+                type: 'POST',
+                url: '../../bdphp/log_010.php?op=get-datos-reimpresion-pedido',
+                data: { idpedido: rowItem.idpedido }
+            })
+            .done(function(response) {
+                const res = JSON.parse(response);
+                console.log('Datos de reimpresión:', res);
+
+                if (!res.success || !res.datos || res.datos.length === 0) {
+                    xPopupLoad.xclose();
+                    xNotifica('No se encontraron datos de impresión para este pedido', 'error');
+                    return;
+                }
+
+                const datoPrint = res.datos[0];
+                
+                // Preparar datos para enviar al socket
+                const dataSend = {
+                    detalle_json: typeof datoPrint.detalle_json === 'string' ? JSON.parse(datoPrint.detalle_json) : datoPrint.detalle_json,
+                    idprint_server_estructura: datoPrint.idprint_server_estructura,
+                    tipo: datoPrint.tipo,
+                    descripcion_doc: datoPrint.tipo,
+                    nom_documento: datoPrint.tipo,
+                    idprint_server_detalle: datoPrint.idprint_server_detalle
+                };
+
+                console.log('Datos a enviar para reimpresión:', dataSend);
+
+                // Verificar si existe la función socket
+                if (typeof _cpSocketEmitPrinterOnly === 'function') {
+                    _cpSocketEmitPrinterOnly(dataSend);
+                    xPopupLoad.xclose();
+                    xNotifica('Comanda enviada a impresión', 'success');
+                } else {
+                    xPopupLoad.xclose();
+                    xNotifica('Error: Función de impresión no disponible', 'error');
+                    console.error('_cpSocketEmitPrinterOnly no está definida');
+                }
+            })
+            .fail(function(error) {
+                console.error('Error al obtener datos de reimpresión:', error);
+                xPopupLoad.xclose();
+                xNotifica('Error al obtener datos de impresión', 'error');
+            });
+        }
     </script>
 </dom-module>

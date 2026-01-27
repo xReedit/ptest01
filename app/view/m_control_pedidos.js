@@ -131,6 +131,9 @@ function xOpenPage(xop, parametro){
 			console.log('xOpenPage', 'mensajeria');
 			xruta = '/mensajeria';
 			break;
+		case 61:
+			xruta = '/pedidos_registrados';
+			break;
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){

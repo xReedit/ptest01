@@ -1,5 +1,6 @@
 <dom-module id="x-porcion-codigo-unico">
     <script src="../../../js/porcion.utils.js"></script>
+    <script src="../../../js/sedes.cache.js"></script>
     <template>
         <style>
             .codigo-display {
@@ -108,15 +109,17 @@
                         </p>
                     </div>
 
-                    <div class="text-center mb-3">
-                        <p class="fs-12 text-secondary">o</p>
-                        <button class="btn btn-sm btn-info" onclick="mostrarPanelVincular()">
-                            <i class="fa fa-link mr-1"></i> Vincular con Código Existente
-                        </button>
-                    </div>
+                    <!-- Solo mostrar opción de vincular si hay múltiples sedes -->
+                    <template is="dom-if" if="[[tieneMultiplesSedes]]">
+                        <div class="text-center mb-3">
+                            <p class="fs-12 text-secondary">o</p>
+                            <button class="btn btn-sm btn-info" onclick="mostrarPanelVincular()">
+                                <i class="fa fa-link mr-1"></i> Vincular con Código Existente
+                            </button>
+                        </div>
 
-                    <!-- Panel de vinculación -->
-                    <div id="panel_vincular" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                        <!-- Panel de vinculación -->
+                        <div id="panel_vincular" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
                         <p class="fs-14 fw-600 mb-2">Vincular con código existente:</p>
                         <div class="mb-2">
                             <label class="fs-12 text-secondary">Buscar por código o nombre de porción</label>
@@ -134,11 +137,12 @@
                                 Cancelar
                             </button>
                         </div>
-                        <p class="fs-11 text-secondary mt-2 mb-0">
-                            <i class="fa fa-lightbulb-o mr-1"></i>
-                            Busca el código por su valor o por el nombre de la porción.
-                        </p>
-                    </div>
+                            <p class="fs-11 text-secondary mt-2 mb-0">
+                                <i class="fa fa-lightbulb-o mr-1"></i>
+                                Busca el código por su valor o por el nombre de la porción.
+                            </p>
+                        </div>
+                    </template>
 
                     <div class="info-box mt-3">
                         <p class="fs-11 m-0">
@@ -188,6 +192,10 @@
                 sugerenciasCodigos: {
                     type: Array,
                     value: function() { return []; }
+                },
+                tieneMultiplesSedes: {
+                    type: Boolean,
+                    value: false
                 }
             },
             attached: function() {
@@ -196,9 +204,10 @@
             open: function() {
                 dialog_codigo_unico.open();
                 cargarCodigo();
+                verificarMultiplesSedes();
                 
-                // Generar código sugerido si no tiene código guardado
-                if (!this.codigoUnico) {
+                // Generar código sugerido si no tiene código guardado 
+                if (!this.codigoUnico) { 
                     this.generarCodigoSugerido();
                 }
             },
@@ -223,6 +232,18 @@
                 }
             }
         });
+
+        async function verificarMultiplesSedes() {
+            if (!xthisCodigoUnico) return;
+            
+            try {
+                // Usar cache centralizado
+                xthisCodigoUnico.tieneMultiplesSedes = await SedesCache.tieneMultiplesSedes();
+            } catch (error) {
+                console.error('Error al verificar múltiples sedes:', error);
+                xthisCodigoUnico.tieneMultiplesSedes = false;
+            }
+        }
 
         async function cargarCodigo() {
             if (!xthisCodigoUnico || !xthisCodigoUnico.idporcion) return;
