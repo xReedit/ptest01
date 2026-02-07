@@ -14,6 +14,7 @@
 	<link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 	<link rel="import" href="../x-componentes/x-comp-select/x-comp-select.html">	
 	<link rel="import" href="../x-componentes/x-comp-comision/x-comp-comision.html">	
+	<link rel="import" href="../x-componentes/x-comp-selector-mesa/x-comp-selector-mesa.html">
 
 	<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
@@ -334,18 +335,29 @@
 							
 							<table width="100%">
 								<thead class="xtable3 xFondoRowIndigo">
-									<th align="center" width="30%">MESA</th>
+									<th align="center" width="35%">MESA</th>
 									<th align="left">REFERENCIA / CLIENTE</th>
 								</thead>
 								<tr class="xSinBorde">
-									<td>
-										<input
-										type="number"
-										class="xMiInput xfont18 xtxt_enca xBold xAlinearCentro w-100"
-										id="txt_mesa"
-										data-val="mesa"
-										min="0"
-										/>
+									<td style="position: relative;">
+										<div style="display: flex; align-items: center; gap: 5px;">
+											<input
+											type="text"
+											class="xMiInput xfont18 xtxt_enca xBold xAlinearCentro"
+											id="txt_mesa"
+											data-val="mesa"
+											placeholder=""
+											style="width: 100%;"
+											/>
+											<button 
+												id="btn_buscar_mesa"
+												style="position: absolute; zoom: 0.8;"
+												class="btn btn-sm btn-primary"
+												title="Buscar mesa"
+											>
+												<i class="fa fa-search"></i>
+											</button>
+										</div>
 									</td>
 									<td>
 										<input
@@ -442,6 +454,10 @@
 			</div>
 
 		</div>
+		
+		<!-- Selector de Mesa Modal -->
+		<x-comp-selector-mesa id="selectorMesa"></x-comp-selector-mesa>
+		
 	</template>
 </dom-module>
 <style type="text/css">
@@ -854,12 +870,39 @@ function xIniVentaRapida(){
 	var eventHandler = true ? detectEvent : empty;
 	document.body['onkeydown'] = eventHandler;
 
+	// Botón buscar mesa
+	$("#btn_buscar_mesa").on('click', function() {
+		const selectorMesa = document.getElementById('selectorMesa');
+		if (selectorMesa) {
+			selectorMesa.open();
+		}
+	});
+	
+	// Listener para cuando se selecciona una mesa del modal
+	document.addEventListener('mesa-selected', function(e) {
+		if (e.detail && e.detail.codigo) {
+			$("#txt_mesa").val(e.detail.codigo);
+			$("#txt_mesa").trigger('keyup');
+		}
+	});
+
 	$("#txt_mesa").on('keyup',function(){
 		if(tt_pedido==0 || this.value==''){$("#btn_enviar_cuenta").addClass('xInvisible'); xenviar_cuenta=false}else{$("#btn_enviar_cuenta").removeClass('xInvisible'); xenviar_cuenta=true}
 
 		var xValtxtMesa=this.value;
 		xnum_mesa_valido=true;
-		if(xValtxtMesa<=0 || xValtxtMesa>xNumMesasBd){xnum_mesa_valido=false;}
+		
+		// Verificar si usa mesas alfanuméricas
+		const datosSede = xm_log_get('sede_otros_datos');
+		const esAlfanumerica = datosSede && datosSede[0] && datosSede[0].mesas_alfanumerica === "1";
+		
+		if (esAlfanumerica) {
+			// Para alfanuméricas, validar que no esté vacío
+			xnum_mesa_valido = xValtxtMesa.trim() !== '';
+		} else {
+			// Para numéricas, validar rango
+			if(xValtxtMesa<=0 || xValtxtMesa>xNumMesasBd){xnum_mesa_valido=false;}
+		}
 	})
 	/*$(".xcheck_print").on('change',function(){
 		$(".xcheck_print").attr('checked',false)
@@ -1275,12 +1318,31 @@ function xIrARegistrarPago(){
     } else {
       //pide mesa
       if (xmesa === '') {
-        alert("Indique numero de mesa. Coloque cero(0) si no corresponde");        
+        showAlertSwalOk('info', 'Mesa requerida', 'Indique numero de mesa. Coloque cero(0) si no corresponde');        
         return;
       } else {
-		xnum_mesa_valido = !isNaN(parseInt(txt_mesa.value)) ? true : false;
+		// Verificar si usa mesas alfanuméricas
+		const datosSede = xm_log_get('sede_otros_datos');
+		const esAlfanumerica = datosSede && datosSede[0] && datosSede[0].mesas_alfanumerica === "1";
+		
+		if (esAlfanumerica) {
+			// Para alfanuméricas, validar que no esté vacío y que la mesa exista
+			xnum_mesa_valido = xmesa.trim() !== '';
+			
+			if (xnum_mesa_valido && xmesa !== '0') {
+				const selectorMesa = document.getElementById('selectorMesa');
+				if (selectorMesa && !selectorMesa.validarMesaExiste(xmesa)) {
+					showAlertSwalOk('warning', 'Mesa no encontrada', "La mesa '" + xmesa + "' no existe. Por favor, seleccione una mesa válida usando el botón de búsqueda.");
+					return;
+				}
+			}
+		} else {
+			// Para numéricas, validar que sea número
+			xnum_mesa_valido = !isNaN(parseInt(txt_mesa.value)) ? true : false;
+		}
+		
         if (xnum_mesa_valido == false) {
-          alert("Numero de mesa no es valido.");          
+          showAlertSwalOk('warning', 'Mesa inválida', 'Numero de mesa no es valido.');          
           return;
         }
       }
@@ -1309,9 +1371,30 @@ function xEnviarACuenta(){
 
 	if(xenviar_cuenta==true){
 
-	xnum_mesa_valido = !isNaN(parseInt(txt_mesa.value)) ? true : false;
+	// Verificar si usa mesas alfanuméricas
+	const datosSede = xm_log_get('sede_otros_datos');
+	const esAlfanumerica = datosSede && datosSede[0] && datosSede[0].mesas_alfanumerica === "1";
+	
+	if (esAlfanumerica) {
+		// Para alfanuméricas, validar que no esté vacío y que la mesa exista
+		const mesaValue = txt_mesa.value.trim();
+		xnum_mesa_valido = mesaValue !== '';
+		
+		if (xnum_mesa_valido && mesaValue !== '0' && xdelivery === 0 && xReservar === 0 && xsolo_llevar === 0) {
+			const selectorMesa = document.getElementById('selectorMesa');
+			if (selectorMesa && !selectorMesa.validarMesaExiste(mesaValue)) {
+				showAlertSwalOk('warning', 'Mesa no encontrada', "La mesa '" + mesaValue + "' no existe. Por favor, seleccione una mesa válida usando el botón de búsqueda.");
+				guardando_vr = false;
+				return;
+			}
+		}
+	} else {
+		// Para numéricas, validar que sea número
+		xnum_mesa_valido = !isNaN(parseInt(txt_mesa.value)) ? true : false;
+	}
+	
 	if(xnum_mesa_valido==false && xdelivery === 0 && xReservar === 0 && xsolo_llevar === 0){	
-		alert('Numero de mesa no es valido.'); 
+		showAlertSwalOk('warning', 'Mesa inválida', 'Numero de mesa no es valido.'); 
 		guardando_vr = false;
 		return;
 	}
@@ -1697,8 +1780,13 @@ async function xGuardarPedidoVR(responde){
 		xNumPedido=xCeroIzq(_arrRpt.numpedido,5);
 		xIdPedido = _arrRpt.idpedido;
 
+		// Verificar si usa mesas alfanuméricas para formatear correctamente
+		const datosSede = xm_log_get('sede_otros_datos');
+		const esAlfanumerica = datosSede && datosSede[0] && datosSede[0].mesas_alfanumerica === "1";
+		const mesaFormateada = esAlfanumerica ? xmesa : xCeroIzq(xmesa,2);
+		
 		xArrayEnca={
-			m: xCeroIzq(xmesa,2),
+			m: mesaFormateada,
 			r: xMayusculaPrimera(xSoloMinuscula(xref)),
 			num_pedido: xNumPedido,
 			idpedido: _arrRpt.idpedido, // para imprimir codigo barra cuando sea delivery

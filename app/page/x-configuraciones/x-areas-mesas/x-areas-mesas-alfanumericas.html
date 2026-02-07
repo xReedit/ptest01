@@ -1,0 +1,230 @@
+<dom-module id="x-areas-mesas-alfanumericas">
+    <template is="dom">
+
+        <!-- TITULO: AREAS Y MESAS ALFANUMERICAS -->
+        <h3>Areas y Mesas Alfanuméricas</h3>
+        <p class="text-secondary">Las mesas alfanuméricas utilizan un prefijo personalizado seguido de un número. Por ejemplo: Área "Salón 1" con prefijo "S1-" y mesas S1-01 al S1-20, Área "Piso 2" con prefijo "P2-" y mesas P2-01 al P2-15.</p>
+        <div class="xLinea2"></div>
+        <br>
+
+        <table>
+            <thead>                                
+                <th class="text-left">Area</th>
+                <th class="text-center">Prefijo</th>
+                <th class="text-center">Desde</th>
+                <th class="text-center">Hasta</th>
+                <th class="text-center">Vista Previa</th>
+                <th class="text-center"></th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input class="selected-template-1" type="text" placeholder="Titulo del Area" id="tituloarea" onChange="conMayusculas(this)"></td>
+                    <td class="text-center">
+                        <input class="selected-template-1 text-center" type="text" placeholder="S1-" id="prefijo" style="width: 80px;" on-input="actualizarVistaPrevia">
+                    </td>
+                    <td class="text-center">
+                        <input class="selected-template-1 text-center" type="number" placeholder="01" id="desde" min="1" style="width: 70px;" on-input="actualizarVistaPrevia">
+                    </td>
+                    <td class="text-center">
+                        <input class="selected-template-1 text-center" type="number" placeholder="20" id="hasta" min="1" style="width: 70px;" on-input="actualizarVistaPrevia">
+                    </td>
+                    <td class="text-center">
+                        <span id="vistaPrevia" class="text-muted fs-12">--</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-primary" on-click="agregarArea">+ Agregar</button>
+                    </td>                    
+                </tr>
+                <tr>
+                    <td colspan="6" class="text-right text-danger fw-600 animated" id="alertMessage" style="display: none;"></td>
+                </tr>
+            
+                <template is="dom-repeat" items="{{listAreas}}" as="item">
+                    <tr>                        
+                        <td>{{item.titulo}}</td>
+                        <td class="text-center">{{item.prefijo}}</td>
+                        <td class="text-center">{{item.desde}}</td>
+                        <td class="text-center">{{item.hasta}}</td>
+                        <td class="text-center text-muted fs-12">{{item.ejemplo}}</td>
+                        <td class="text-center">
+                            <span class="xDeleteRow" on-click="eliminarArea"></span>
+                        </td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <br>
+        <button class="btn btn-success" disabled$="{{!isShowBtnGuardar}}" on-click="guardarCambios"><i class="fa fa-save"></i> Guardar Cambios</button>
+        <!-- <button class="btn btn-secondary" on-click="volverAtras"><i class="fa fa-arrow-left"></i> Volver</button> -->
+    </template>
+    <script>
+        var xThisAreasMesasAlfa;
+
+        Polymer({
+                is: 'x-areas-mesas-alfanumericas',
+                properties: {
+                    listAreas: {
+                        type: Array,
+                        value: []
+                    },
+                    isShowBtnGuardar: {
+                        type: Boolean,
+                        value: false
+                    }
+                },
+                attached: function () {
+                    xThisAreasMesasAlfa = this;
+                    this.loadAreas();
+                },
+                actualizarVistaPrevia: function() {
+                    let prefijo = this.$.prefijo.value.trim();
+                    let desde = this.$.desde.value;
+                    let hasta = this.$.hasta.value;
+                    
+                    if (prefijo && desde && hasta) {
+                        let desdeFormateado = this.formatearNumero(parseInt(desde));
+                        let hastaFormateado = this.formatearNumero(parseInt(hasta));
+                        this.$.vistaPrevia.textContent = `${prefijo}${desdeFormateado} al ${prefijo}${hastaFormateado}`;
+                    } else {
+                        this.$.vistaPrevia.textContent = '--';
+                    }
+                },
+                formatearNumero: function(num) {
+                    return num < 10 ? '0' + num : num.toString();
+                },
+                agregarArea: function () {
+                    let titulo = this.$.tituloarea.value.trim();
+                    let prefijo = this.$.prefijo.value.trim();
+                    let desde = parseInt(this.$.desde.value);
+                    let hasta = parseInt(this.$.hasta.value);
+
+                    if (!titulo) {
+                        this.showAlert('Debe ingresar el título del área.');
+                        return;
+                    }
+
+                    if (!prefijo) {
+                        this.showAlert('Debe ingresar un prefijo (ej: S1-, PISO1-, etc).');
+                        return;
+                    }
+
+                    if (!desde || !hasta) {
+                        this.showAlert('Debe ingresar los números desde y hasta.');
+                        return;
+                    }
+
+                    if (desde < 1 || hasta < 1) {
+                        this.showAlert('Los números de mesa deben ser mayores a 0.');
+                        return;
+                    }
+
+                    if (hasta < desde) {
+                        this.showAlert('El número "hasta" no puede ser menor que "desde".');
+                        return;
+                    }
+
+                    for (var i = 0; i < this.listAreas.length; i++) {
+                        var area = this.listAreas[i];
+                        if (area.prefijo === prefijo) {
+                            if ((desde >= area.desde && desde <= area.hasta) || (hasta >= area.desde && hasta <= area.hasta) ||
+                                (desde <= area.desde && hasta >= area.hasta)) {
+                                this.showAlert('El rango de mesas se superpone con un área existente que usa el mismo prefijo.');
+                                return;
+                            }
+                        }
+                    }
+
+                    let desdeFormateado = this.formatearNumero(desde);
+                    let hastaFormateado = this.formatearNumero(hasta);
+                    let ejemplo = `${prefijo}${desdeFormateado} al ${prefijo}${hastaFormateado}`;
+
+                    this.push('listAreas', { 
+                        titulo: titulo, 
+                        prefijo: prefijo, 
+                        desde: desde, 
+                        hasta: hasta,
+                        ejemplo: ejemplo,
+                        tipo_mesa: 'alfanumerica'
+                    });
+                    
+                    this.isShowBtnGuardar = true;
+
+                    this.$.tituloarea.value = '';
+                    this.$.prefijo.value = '';
+                    this.$.desde.value = '';
+                    this.$.hasta.value = '';
+                    this.$.vistaPrevia.textContent = '--';
+
+                    this.$.tituloarea.focus();
+                },
+                eliminarArea: async function (e) {
+                    const _swalAlertValues = paramsSwalAlert;
+                    _swalAlertValues.html = `<div class="p-1" style="overflow: hidden;"><i class="fa fa-trash-o fa-2x text-danger" aria-hidden="true"></i>
+                                <p class="mt-1 fs-18">¿Está seguro de borrar este registro?</p>
+                                </div>`;	
+
+                    _swalAlertValues.confirmButtonText = "Si, borrar";
+                    _swalAlertValues.cancelButtonText = "Cancelar";
+                    _swalAlertValues.showCancelButton = true;
+
+                    const rptDialogBorrarArea = await showAlertSwalHtmlDecision(_swalAlertValues);
+
+                    if (rptDialogBorrarArea.isConfirmed) {
+                        let index = e.model.index;
+                        this.splice('listAreas', index, 1);
+                        this.isShowBtnGuardar = true;
+                    }
+                },
+                guardarCambios: async function () {
+                    xPopupLoad.xopen();
+                    var payload = {
+                        listAreas: this.listAreas,
+                        op: 51
+                    };
+
+                    var _fetchApi = new httpFecht();
+                    const _rpt = await _fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: payload }, true, false); 
+                    if (_rpt.success) {
+                        xPopupLoad.xclose();
+                        this.isShowBtnGuardar = false;
+                        this.showAlert('Cambios guardados correctamente.', 'success');
+                    } else {
+                        xPopupLoad.xclose();
+                        this.showAlert('Ocurrió un error al guardar los cambios.');
+                    }
+                },
+                showAlert: function (message, type = 'danger') {
+                    let alertMessage = this.$.alertMessage;
+                    alertMessage.textContent = message;
+                    alertMessage.className = `text-right text-${type} fw-600 animated`;
+                    alertMessage.classList.add('animate__flash');
+                    $(alertMessage).fadeIn().delay(3000).fadeOut(function () {
+                        alertMessage.classList.remove('animate__flash');
+                    });
+                },
+                loadAreas: async function () {
+                    console.log('cargar areas alfanumericas');
+                    var _fetchApi = new httpFecht();
+                    const _rpt = await _fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 5101 } }, true, false);                    
+                    if (_rpt.success) {
+                        this.listAreas = _rpt.datos.map(area => {
+                            let desdeFormateado = this.formatearNumero(area.desde);
+                            let hastaFormateado = this.formatearNumero(area.hasta);
+                            area.ejemplo = `${area.prefijo}${desdeFormateado} al ${area.prefijo}${hastaFormateado}`;
+                            return area;
+                        });
+                        console.log('this.listAreas alfanumericas', this.listAreas);
+                    } else {
+                        this.showAlert('Ocurrió un error al cargar las áreas.');
+                    }
+                },
+                volverAtras: function() {
+                    if (this.isShowBtnGuardar) {
+                        this.showAlert('Tiene cambios sin guardar. Por favor guarde antes de salir.');
+                    } else {
+                        this.fire('volver-mesas-numericas');
+                    }
+                }
+            })
+    </script>
+</dom-module>

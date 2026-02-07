@@ -1,13 +1,30 @@
+<link rel="import" href="x-areas-mesas-alfanumericas.html">
+
 <dom-module id="x-areas-mesas">
     <template is="dom">
 
         <!-- TITULO: AREAS Y MESAS -->
-        <h3>Areas y Mesas</h3>
-        <p>Configura las áreas y mesas de tu local.</p>
+        <h3 id="titulo">Areas y Mesas</h3>
+        <p id="descripcion">Configura las áreas y mesas de tu local.</p>
         <div class="xLinea2"></div>
         <br>
 
-
+        <!-- Selector de modo -->
+        <p class="fs-15 fw-600">Selecciona el modo de las mesas:</p>        
+        <div class="xoptions-btn-content mb-3">
+            <div id="btnNumerica" class="xoptions-btn-btn" activo on-click="cambiarModo" data-modo="numerica">
+                <i class="fa fa-hashtag"></i> Numéricas (Correlativas)
+            </div>
+            <div id="btnAlfanumerica" class="xoptions-btn-btn" on-click="cambiarModo" data-modo="alfanumerica">
+                <i class="fa fa-font"></i> Alfanuméricas
+            </div>            
+        </div>
+        <div class="xLinea2"></div>
+        <br>
+        <!-- Componente de mesas numéricas -->
+        <div id="componenteNumerico" hidden$="{{!isModoNumerica}}">
+            <p class="fs-15 fw-600">Mesas numéricas y correlativas</p>
+            <p class="text-secondary">Las mesas numéricas son correlativas y se organizan por rangos. Por ejemplo: Área "Salón Principal" con mesas del 1 al 20, Área "Salón 2" con mesas del 21 al 40.</p>
         <table>
             <thead>                                
                 <th class="text-left">Area</th>
@@ -44,6 +61,12 @@
         </table>
         <br>
         <button class="btn btn-success" disabled$="{{!isShowBtnGuardar}}" on-click="guardarCambios"><i class="fa fa-save"></i> Guardar Cambios</button>
+        </div>
+
+        <!-- Componente de mesas alfanuméricas -->
+        <div hidden$="{{!isModoAlfanumerica}}">
+            <x-areas-mesas-alfanumericas id="componenteAlfa" on-volver-mesas-numericas="volverModoNumerico"></x-areas-mesas-alfanumericas>
+        </div>
     </template>
     <script>
         var xThisAreasMesas;
@@ -56,6 +79,18 @@
                         value: []
                     },
                     isShowBtnGuardar: {
+                        type: Boolean,
+                        value: false
+                    },
+                    modoActual: {
+                        type: String,
+                        value: 'numerica'
+                    },
+                    isModoNumerica: {
+                        type: Boolean,
+                        value: true
+                    },
+                    isModoAlfanumerica: {
                         type: Boolean,
                         value: false
                     }
@@ -148,6 +183,19 @@
                 },
                 loadAreas: async function () {
                     console.log('cargar areas');
+
+                    const datosSede =  xm_log_get('sede_otros_datos');
+                    console.log('datosSede', datosSede);
+                    this.isModoAlfanumerica = datosSede[0].mesas_alfanumerica === "1";
+                    this.isModoNumerica = !this.isModoAlfanumerica;
+
+                    if (this.isModoAlfanumerica) {
+                        this.cambiarModo({ currentTarget: this.$.btnAlfanumerica });
+                    } else {
+                        this.cambiarModo({ currentTarget: this.$.btnNumerica });
+                    }
+                    
+
                     var _fetchApi = new httpFecht();
                     const _rpt = await _fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 5001 } }, true, false);                    
                     if (_rpt.success) {
@@ -156,6 +204,30 @@
                     } else {
                         this.showAlert('Ocurrió un error al cargar las áreas.');
                     }
+                },
+                cambiarModo: function(e) {
+                    let modo = e.currentTarget.dataset.modo;
+                    this.modoActual = modo;
+                    this.isModoNumerica = (modo === 'numerica');
+                    this.isModoAlfanumerica = (modo === 'alfanumerica');
+                    
+                    // Actualizar atributo activo en los botones
+                    this.$.btnNumerica.removeAttribute('activo');
+                    this.$.btnAlfanumerica.removeAttribute('activo');
+                    
+                    if (modo === 'numerica') {
+                        this.$.btnNumerica.setAttribute('activo', '');
+                    } else {
+                        this.$.btnAlfanumerica.setAttribute('activo', '');
+                    }
+                },
+                getModoActivo: function(modo) {
+                    return this.modoActual === modo ? true : false;
+                },
+                volverModoNumerico: function() {
+                    this.modoActual = 'numerica';
+                    this.isModoNumerica = true;
+                    this.isModoAlfanumerica = false;
                 }
                 
             })

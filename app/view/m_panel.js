@@ -320,7 +320,7 @@ async function xOpenPage(xop, parametro){
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
 			
-			// local 10022022
+			// local 10022022 -- continuar con esto
 			const versionPrintServer = 'restobar/print/client/index.html'; 
 			const _urlLocal = 'http://'+ipPrintServerLocal;
 			const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			

@@ -94,7 +94,9 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
 
         _base = importe_total_pagar - parseFloat(importe_total_igv) + descuentoEnTotal;
-        const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
+        // const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(2);
+        const porcentaje_dsc = (descuentoEnTotal / _base).toFixed(4);
+
 
         // 040921// si hay descuentos no se registra en factura, la sunat no tiene claro que le importe el descuento, no hay ejemplos y xml da error
         // solo el igv

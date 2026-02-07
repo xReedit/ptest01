@@ -1,223 +1,692 @@
 <dom-module id="x-comp-img-upload">
-    <link rel="stylesheet" href="../../../css/croppie.css">
-    <script src="../../../js/croppie.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.1/dist/cropper.min.css">
+    <script src="https://unpkg.com/cropperjs@1.6.1/dist/cropper.min.js"></script>
     <template>        
-            <div class="pb-2" hidden$="[[isShowResult]]">
-                <!-- <button class="btn btn-sm btn-info">Cargar Imagen</button> -->
-                <a class="btn btn-sm btn-info file-btn">
-                    <span>Cargar Imagen</span>
-                    <input type="file" id="upload" value="Choose a file" accept="image/*" />
-                </a>
-
-                <button class="btn btn-sm btn-success upload-result">Establecer</button>
-                <!-- <input type="file" id="upload" value="Choose a file" accept="image/*" /> -->
+            <!-- Selector de modo -->
+            <div class="mode-selector" hidden$="[[isShowResult]]">
+                <div class="btn-group mb-3" role="group">
+                    <button type="button" class="btn btn-sm" id="btnModoSubir" onclick="xCambiarModo('subir')">📤 Subir Foto</button>
+                    <button type="button" class="btn btn-sm" id="btnModoGenerar" onclick="xCambiarModo('generar')">🔍 Buscar Imagen</button>
+                </div>
             </div>
-            <div class="upload-demo-wrap" hidden$="[[isShowResult]]">
-                <div class="upload-demo"></div>
-            </div>     
 
+            <!-- Modo: Subir Foto -->
+            <div id="modoSubir" class="modo-container" hidden$="[[isShowResult]]">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <i class="fa fa-cloud-upload fa-3x mb-3" style="color: #6c757d;"></i>
+                        <p class="mb-2"><strong>Arrastra tu imagen aquí</strong></p>
+                        <p class="text-muted mb-3">o</p>
+                        <label for="fileInput" class="btn btn-primary btn-sm">
+                            <i class="fa fa-folder-open"></i> Seleccionar archivo
+                        </label>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="cropper-container-wrapper" id="cropperWrapper" style="display: none;">
+                        <img id="cropperImage" style="max-width: 100%;">
+                        <div class="cropper-controls mt-3">
+                            <button class="btn btn-sm btn-secondary" onclick="xRotateImage(-90)" title="Rotar izquierda">
+                                <i class="fa fa-rotate-left"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="xRotateImage(90)" title="Rotar derecha">
+                                <i class="fa fa-rotate-right"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="xFlipImage('horizontal')" title="Voltear horizontal">
+                                <i class="fa fa-arrows-h"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="xFlipImage('vertical')" title="Voltear vertical">
+                                <i class="fa fa-arrows-v"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="xResetCropper()" title="Resetear">
+                                <i class="fa fa-refresh"></i>
+                            </button>
+                            <button class="btn btn-sm btn-success ml-2" onclick="xEstablecerImagen()">
+                                <i class="fa fa-check"></i> Establecer
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="xCancelarCrop()">
+                                <i class="fa fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modo: Buscar Imagen -->
+            <div id="modoGenerar" class="modo-container" hidden$="[[isShowResult]]" style="display:none;">
+                <div class="ai-generator-container">
+                    <h5 class="mb-3">Buscar imagen del producto</h5>
+                    <div class="input-group mb-3 text-center">
+                        <input type="text" id="searchInput" class="selected-template-1 w-100 text-center" placeholder="Ejemplo: ceviche peruano, lomo saltado, arroz con mariscos..." onkeypress="if(event.key==='Enter') xBuscarImagenes()">
+                        <br><br>
+                        <button class="btn btn-sm btn-primary" onclick="xBuscarImagenes()" id="btnBuscar">
+                            <span id="btnBuscarText">🔍 Buscar</span>
+                            <span id="btnBuscarSpinner" style="display:none;">
+                                <span class="spinner-border spinner-border-sm" role="status"></span> Buscando...
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- <div class="mb-3">
+                        <label class="form-label">Orientación:</label>
+                        <select id="orientationSelect" class="form-select form-select-sm">
+                            <option value="">Todas</option>
+                            <option value="landscape" selected>Horizontal</option>
+                            <option value="portrait">Vertical</option>
+                            <option value="square">Cuadrada</option>
+                        </select>
+                    </div> -->
+
+                    <!-- Galería de imágenes -->
+                    <div id="aiGallery" class="ai-gallery mt-4" style="display:none;">
+                        <h6>Selecciona la imagen que más te guste:</h6>
+                        <div class="gallery-grid" id="galleryGrid"></div>
+                        <div class="text-center mt-3" id="pexelsAttribution" style="display:none;">
+                            <small class="text-muted">Fotos proporcionadas por <a href="https://www.pexels.com" target="_blank">Pexels</a> y <a href="https://unsplash.com" target="_blank">Unsplash</a></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado final -->
             <div hidden$="[[!isShowResult]]" class="animate__animated animate__fadeIn">
-                <button class="btn btn-sm btn-secondary mb-2" onclick="xEditarComImg()">Editar</button>
-                <div id="result">
-                </div>   
+                <div hidden$="[[!isEstablecioImg]]">
+                    <button class="btn btn-sm btn-secondary mb-2" onclick="xEditarComImg()">Cambiar</button>
+                    <div id="result"></div>
+                </div>
             </div>
-        <!-- <img src="../../../file/cat.jpg" class="my-image" alt=""> -->
     </template>
 </dom-module>
 <style>    
-    .file-btn {
-        position: relative;
+    .mode-selector {
+        text-align: center;
     }
-    .file-btn input[type="file"] {
-        position: absolute;
-        top: 0;
-        left: 0;
+    
+    .btn-group button {
+        border: 2px solid #dee2e6;
+        background: white;
+        color: #495057;
+        padding: 8px 20px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-group button:first-child {
+        border-radius: 6px 0 0 6px;
+    }
+    
+    .btn-group button:last-child {
+        border-radius: 0 6px 6px 0;
+    }
+    
+    .btn-group button.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    
+    .btn-group button:hover:not(.active) {
+        background: #f8f9fa;
+    }
+
+    .modo-container {
+        min-height: 300px;
+    }
+
+    .upload-area {
         width: 100%;
-        height: 100%;
-        opacity: 0;
+        max-width: 800px;
+        margin: 0 auto;
     }
-    .upload-demo .upload-demo-wrap,
-    .upload-demo .upload-result,
-    .upload-demo.ready .upload-msg {
-        display: none;
+
+    .upload-placeholder {
+        border: 3px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 60px 20px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s;
+        cursor: pointer;
     }
-    .upload-demo.ready .upload-demo-wrap {
+
+    .upload-placeholder:hover {
+        border-color: #007bff;
+        background: #e7f3ff;
+    }
+
+    .upload-placeholder.dragover {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+
+    .cropper-container-wrapper {
+        width: 100%;
+    }
+
+    .cropper-controls {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+
+    .cropper-controls button {
+        margin: 0 3px;
+    }
+
+    #cropperImage {
+        max-height: 500px;
+        width: 100%;
+    }
+
+    .ai-generator-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .ai-gallery {
+        margin-top: 20px;
+    }
+
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .gallery-item {
+        position: relative;
+        cursor: pointer;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 3px solid transparent;
+        transition: all 0.3s;
+    }
+
+    .gallery-item:hover {
+        border-color: #007bff;
+        transform: scale(1.05);
+    }
+
+    .gallery-item.selected {
+        border-color: #28a745;
+        box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+    }
+
+    .gallery-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
         display: block;
     }
-    .upload-demo.ready .upload-result {
-        display: inline-block;    
+
+    .gallery-item .check-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #28a745;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
     }
-    .upload-demo-wrap {
-        width: 350px;
-        height: 300px;
-        margin: 0 auto;
+
+    .gallery-item.selected .check-icon {
+        display: flex;
+    }
+
+    .gallery-item .photo-source {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: bold;
+    }
+
+    .gallery-item .photo-credit {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px;
+        text-align: center;
+        font-size: 11px;
     }
 
     #result img {
         border: 2px solid #9e9e9e;
         border-radius: 5px;
+        max-width: 100%;
     }
+
 </style>
 <script>
-    var xThisCompImg, optsImg, imgCompImgBase64;
-    var $uploadCrop;
+    var xThisCompImg, imgCompImgBase64, cropperInstance, selectedAIImage = null;
+    var currentMode = 'subir';
+    var scaleX = 1, scaleY = 1;
     
     function xComIniUpLoadImg() {
-        optsImg = {
-            url: '../../file/promo_demo.JPG',
-            viewport: {
-                width: xThisCompImg.medidasimg.width,
-                height: xThisCompImg.medidasimg.height
-            },
-            // points: [77,469,280,739]
-        }
-        
-        // $('.upload-demo').croppie(optsImg);
-        demoUpload();
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const cropperWrapper = document.getElementById('cropperWrapper');
+        const cropperImage = document.getElementById('cropperImage');
 
-        // if ( xThisCompImg.medidascontent ) {
-        //     // setTimeout(() => {            
-        //         $('.upload-demo-wrap').width(xThisCompImg.medidascontent.width + 50);
-        //         $('.upload-demo-wrap').height(xThisCompImg.medidascontent.height + 50);
-        //     // }, 1000);
-        // } else {
-        //     $('.upload-demo-wrap').width(xThisCompImg.medidasimg.width + 50);
-        //     $('.upload-demo-wrap').height(xThisCompImg.medidasimg.height + 50);
-        // }
+        // Click en el área de carga
+        uploadPlaceholder.addEventListener('click', () => {
+            fileInput.click();
+        });
 
-        resetMedidas();
-        
+        // Selección de archivo
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                xCargarImagenEnCropper(file);
+            }
+        });
+
+        // Drag & Drop
+        uploadPlaceholder.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadPlaceholder.classList.add('dragover');
+        });
+
+        uploadPlaceholder.addEventListener('dragleave', () => {
+            uploadPlaceholder.classList.remove('dragover');
+        });
+
+        uploadPlaceholder.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadPlaceholder.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                xCargarImagenEnCropper(file);
+            }
+        });
+
+        xCambiarModo('subir');
     }
 
-    function resetMedidas(medida) {
-        if ( xThisCompImg.medidascontent ) {
-            // setTimeout(() => {            
-                $('.upload-demo-wrap').width(xThisCompImg.medidascontent.width + 50);
-                $('.upload-demo-wrap').height(xThisCompImg.medidascontent.height + 50);
-            // }, 1000);
-        } else {
-            $('.upload-demo-wrap').width(xThisCompImg.medidasimg.width + 50);
-            $('.upload-demo-wrap').height(xThisCompImg.medidasimg.height + 50);
-        }
+    function xCargarImagenEnCropper(file) {
+        const reader = new FileReader();
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const cropperWrapper = document.getElementById('cropperWrapper');
+        const cropperImage = document.getElementById('cropperImage');
 
-        $uploadCrop.croppie('bind', optsImg);
+        reader.onload = (e) => {
+            cropperImage.src = e.target.result;
+            uploadPlaceholder.style.display = 'none';
+            cropperWrapper.style.display = 'block';
+
+            // Destruir instancia anterior si existe
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
+
+            // Calcular aspect ratio
+            const aspectRatio = xThisCompImg.medidasimg ? 
+                (xThisCompImg.medidasimg.width / xThisCompImg.medidasimg.height) : (365 / 210);
+
+            // Crear nueva instancia de Cropper
+            cropperInstance = new Cropper(cropperImage, {
+                aspectRatio: aspectRatio,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: true,
+                cropBoxMovable: true,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+                responsive: true,
+                background: false,
+                modal: true,
+                minContainerWidth: 200,
+                minContainerHeight: 200,
+                ready: function() {
+                    // Establecer tamaño fijo del cropBox después de que Cropper esté listo
+                    const targetWidth = xThisCompImg.medidasimg ? xThisCompImg.medidasimg.width : 365;
+                    const targetHeight = xThisCompImg.medidasimg ? xThisCompImg.medidasimg.height : 210;
+                    
+                    // Obtener el contenedor de la imagen
+                    const containerData = cropperInstance.getContainerData();
+                    
+                    // Calcular el factor de escala para que el cropBox tenga el tamaño exacto
+                    const imageData = cropperInstance.getImageData();
+                    const scale = Math.min(
+                        containerData.width / targetWidth,
+                        containerData.height / targetHeight
+                    );
+                    
+                    // Establecer el tamaño del cropBox
+                    const cropBoxWidth = targetWidth * scale * 0.8;
+                    const cropBoxHeight = targetHeight * scale * 0.8;
+                    
+                    cropperInstance.setCropBoxData({
+                        width: cropBoxWidth,
+                        height: cropBoxHeight
+                    });
+                }
+            });
+
+            scaleX = 1;
+            scaleY = 1;
+        };
+
+        reader.readAsDataURL(file);
     }
 
-    function resetControlImg() {
-        // if(!$uploadCrop.data('croppie')) { return; }
-        
-        $uploadCrop.croppie('bind', optsImg);
+    function xRotateImage(degrees) {
+        if (cropperInstance) {
+            cropperInstance.rotate(degrees);
+        }
     }
 
-    function demoUpload() {
-		
-
-		function readFile(input) {
- 			if (input.files && input.files[0]) {
-	            var reader = new FileReader();
-	            
-	            reader.onload = function (e) {
-					$('.upload-demo').addClass('ready');
-	            	$uploadCrop.croppie('bind', {
-	            		url: e.target.result
-	            	}).then(function(){
-	            		// console.log('jQuery bind complete');
-	            	});
-	            	
-	            }
-	            
-	            reader.readAsDataURL(input.files[0]);
-	        }
-	        else {
-		        // console.log('Sorry - youre browser doesnt support the FileReader API');
-		    }
-		}
-
-        if(!$('.upload-demo').data('croppie')) {
-            $uploadCrop = $('.upload-demo').croppie(optsImg);
+    function xFlipImage(direction) {
+        if (cropperInstance) {
+            if (direction === 'horizontal') {
+                scaleX = scaleX * -1;
+                cropperInstance.scaleX(scaleX);
+            } else {
+                scaleY = scaleY * -1;
+                cropperInstance.scaleY(scaleY);
+            }
         }
+    }
 
-		$('#upload').on('change', function () { readFile(this); });
+    function xResetCropper() {
+        if (cropperInstance) {
+            cropperInstance.reset();
+            scaleX = 1;
+            scaleY = 1;
+        }
+    }
+
+    function xEstablecerImagen() {
+        if (!cropperInstance) return;
+
+        const targetWidth = xThisCompImg.medidasimg ? xThisCompImg.medidasimg.width : 365;
+        const targetHeight = xThisCompImg.medidasimg ? xThisCompImg.medidasimg.height : 210;
+
+        const canvas = cropperInstance.getCroppedCanvas({
+            width: targetWidth,
+            height: targetHeight,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+
+        imgCompImgBase64 = canvas.toDataURL('image/jpeg', 0.9);
         
-		$('.upload-result').on('click', function (ev) {
-			$uploadCrop.croppie('result', {
-				type: 'canvas',
-				size: 'viewport'
-			}).then(function (resp) {
-                // console.log('resp', resp);
-				popupResult({
-					src: resp
-				});
-			});
-		});
-	}
-
-    function popupResult(result) {
-		var html;
-		if (result.html) {
-			html = result.html;
-		}
-		if (result.src) {
-            imgCompImgBase64 = result.src;
-			html = '<img src="' + result.src + '" />';
-		}
-
-        $('#result').html(html);
-        xThisCompImg.isShowResult = true;		
+        xThisCompImg.isShowResult = true;
         xThisCompImg.isEstablecioImg = true;
         xThisCompImg.isUploadImg = true;
-	}
+        $('#result').html('<img src="' + imgCompImgBase64 + '" />');
+
+        xCancelarCrop();
+    }
+
+    function xCancelarCrop() {
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const cropperWrapper = document.getElementById('cropperWrapper');
+        const fileInput = document.getElementById('fileInput');
+
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+
+        uploadPlaceholder.style.display = 'block';
+        cropperWrapper.style.display = 'none';
+        fileInput.value = '';
+        scaleX = 1;
+        scaleY = 1;
+    }
+
+    function xCambiarModo(modo) {
+        currentMode = modo;
+        const modoSubir = document.getElementById('modoSubir');
+        const modoGenerar = document.getElementById('modoGenerar');
+        const btnSubir = document.getElementById('btnModoSubir');
+        const btnGenerar = document.getElementById('btnModoGenerar');
+
+        if (modo === 'subir') {
+            modoSubir.style.display = 'block';
+            modoGenerar.style.display = 'none';
+            btnSubir.classList.add('active');
+            btnGenerar.classList.remove('active');
+        } else {
+            modoSubir.style.display = 'none';
+            modoGenerar.style.display = 'block';
+            btnSubir.classList.remove('active');
+            btnGenerar.classList.add('active');
+        }
+    }
+
+    async function xBuscarImagenes() {
+        const query = document.getElementById('searchInput').value.trim();
+        // const orientation = document.getElementById('orientationSelect').value;
+        
+        if (!query) {
+            alert('Por favor, ingresa un término de búsqueda');
+            return;
+        }
+
+        const btnBuscar = document.getElementById('btnBuscar');
+        const btnText = document.getElementById('btnBuscarText');
+        const btnSpinner = document.getElementById('btnBuscarSpinner');
+        
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-block';
+        btnBuscar.disabled = true;
+
+        try {
+            const response = await fetch('../../bdphp/pexels_search.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    // orientation: orientation,
+                    per_page: 15
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.photos && data.photos.length > 0) {
+                xMostrarGaleriaIA(data.photos);
+            } else {
+                alert('No se encontraron imágenes. Intenta con otro término de búsqueda.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al buscar imágenes');
+        } finally {
+            btnText.style.display = 'inline-block';
+            btnSpinner.style.display = 'none';
+            btnBuscar.disabled = false;
+        }
+    }
+
+    function xMostrarGaleriaIA(photos) {
+        const gallery = document.getElementById('aiGallery');
+        const grid = document.getElementById('galleryGrid');
+        const attribution = document.getElementById('pexelsAttribution');
+        
+        grid.innerHTML = '';
+        
+        photos.forEach((photo, index) => {
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            const sourceIcon = photo.source === 'Unsplash' ? '📸' : '🖼️';
+            item.innerHTML = `
+                <img src="${photo.src.medium}" alt="${photo.alt || 'Imagen de comida'}">
+                <div class="check-icon">✓</div>
+                <div class="photo-source">
+                    <small>${sourceIcon} ${photo.source}</small>
+                </div>
+                <div class="photo-credit">
+                    <small>Por ${photo.photographer}</small>
+                </div>
+            `;
+            
+            item.onclick = () => xSeleccionarImagenIA(photo, item);
+            grid.appendChild(item);
+        });
+        
+        gallery.style.display = 'block';
+        attribution.style.display = 'block';
+    }
+
+    function xSeleccionarImagenIA(photo, element) {
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        element.classList.add('selected');
+        selectedAIImage = photo;
+        
+        // Cargar la imagen en Cropper para editar
+        xCargarImagenPexelsEnCropper(photo);
+    }
+
+    async function xCargarImagenPexelsEnCropper(photo) {
+        try {
+            // Usar la imagen de tamaño grande para mejor calidad
+            const imageUrl = photo.src.large || photo.src.original;
+            
+            // Descargar la imagen como blob
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            
+            // Crear un objeto File desde el blob
+            const file = new File([blob], 'pexels-image.jpg', { type: 'image/jpeg' });
+            
+            // Cambiar al modo de subir foto
+            xCambiarModo('subir');
+            
+            // Ocultar la galería
+            const gallery = document.getElementById('aiGallery');
+            if (gallery) {
+                gallery.style.display = 'none';
+            }
+            
+            // Cargar la imagen en Cropper
+            xCargarImagenEnCropper(file);
+            
+        } catch (error) {
+            console.error('Error al cargar imagen de Pexels:', error);
+            alert('Error al cargar la imagen. Por favor, intenta con otra.');
+        }
+    }
 
     function xEditarComImg() {
         xThisCompImg.isShowResult = false;
+        selectedAIImage = null;
+        
+        xCancelarCrop();
+        
+        const gallery = document.getElementById('aiGallery');
+        if (gallery) {
+            gallery.style.display = 'none';
+        }
+        
+        const aiPrompt = document.getElementById('aiPrompt');
+        if (aiPrompt) {
+            aiPrompt.value = '';
+        }
     }
 
     function setImagenFile(path_file) {
-        xThisCompImg.isShowResult = true;		
+        if (!path_file || path_file === '' || path_file === null || path_file === undefined) {
+            xThisCompImg.isShowResult = false;
+            xThisCompImg.isEstablecioImg = false;
+            xThisCompImg.isUploadImg = false;
+            imgCompImgBase64 = '';
+            return;
+        }
+        
+        xThisCompImg.isShowResult = true;
         xThisCompImg.isEstablecioImg = true;
         xThisCompImg.isUploadImg = false;
         var html = '<img src="' + path_file + '" />';
         $('#result').html(html);
+        imgCompImgBase64 = path_file;
     }
 
-
     Polymer({
-			is: 'x-comp-img-upload',
-			properties: {				
-                isShowResult: Boolean,
-                medidasimg:[],
-                medidascontent:[],
-                isEstablecioImg: Boolean,
-                isUploadImg: Boolean, // si se sube la imagen
-			},
-			attached: function () {                
-                this.isShowResult = false;
-                this.isEstablecioImg = false;
-                this.isUploadImg = false;
-				xThisCompImg = this;	
-                xComIniUpLoadImg();							
-			},
-            getImgBase64: () => {
-                return imgCompImgBase64;
-            },
-            getIsEstablecioImg: () => {
-                return xThisCompImg.isEstablecioImg;
-            },
-            getIsUploadImg: () => {
-                return xThisCompImg.isUploadImg;
-            },
-            setImgPathFile: (path_file) => {
-                setImagenFile(path_file);
-            },
-            resetControl: () => {
-                xThisCompImg.isShowResult = false;
-                xThisCompImg.isEstablecioImg = false;
-                xThisCompImg.isUploadImg = false;
-                resetControlImg();
-            },
-            setMedidas: (medida) => {
-                this.$.medidasimg = medida;
-                resetMedidas();
+        is: 'x-comp-img-upload',
+        properties: {
+            isShowResult: Boolean,
+            medidasimg: [],
+            medidascontent: [],
+            isEstablecioImg: Boolean,
+            isUploadImg: Boolean,
+        },
+        attached: function () {
+            this.isShowResult = false;
+            this.isEstablecioImg = false;
+            this.isUploadImg = false;
+            xThisCompImg = this;
+            
+            setTimeout(() => {
+                xComIniUpLoadImg();
+            }, 100);
+        },
+        getImgBase64: () => {
+            return imgCompImgBase64;
+        },
+        getIsEstablecioImg: () => {
+            return xThisCompImg.isEstablecioImg;
+        },
+        getIsUploadImg: () => {
+            return xThisCompImg.isUploadImg;
+        },
+        setImgPathFile: (path_file) => {
+            setImagenFile(path_file);
+        },
+        resetControl: () => {
+            xThisCompImg.isShowResult = false;
+            xThisCompImg.isEstablecioImg = false;
+            xThisCompImg.isUploadImg = false;
+            selectedAIImage = null;
+            
+            xCancelarCrop();
+            
+            const gallery = document.getElementById('aiGallery');
+            if (gallery) {
+                gallery.style.display = 'none';
             }
-		})	
+            
+            const aiPrompt = document.getElementById('aiPrompt');
+            if (aiPrompt) {
+                aiPrompt.value = '';
+            }
+        },
+        setMedidas: (medida) => {
+            this.medidasimg = medida;
+            
+            if (cropperInstance) {
+                const aspectRatio = medida.width / medida.height;
+                cropperInstance.setAspectRatio(aspectRatio);
+            }
+        }
+    })
 </script>

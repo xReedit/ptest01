@@ -287,8 +287,11 @@ let siguienteNumeroSecuencial = '';
                     };
                     
                     const rptData = await _httpFecht.postJson('../../bdphp/log_009.php?op=134', data);
-                    console.log(rptData);
-                    showToastSwal('success', 'Porción registrada correctamente');
+                    if (rptData.success) {
+                        showToastSwal('success', 'Porción registrada correctamente');
+                    } else {
+                        showToastSwal('error', 'Error al guardar la porción');
+                    }
                 }
                 
                 xLoadPorciones();

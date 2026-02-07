@@ -79,7 +79,7 @@
 				<h4 id="titulo_cambiar_mesa" class="txt_anular_cambiar_mesa">Cambiar de mesa todos los pedidos</h4>
 				<div>
 					<h4>Mesa:</h4>
-					<input type="text" class="xMiInput xfont18" placeholder="Ej: 01 o PISO1-01" inline id="txt_num_mesa_change" autofocus>
+					<input type="number" class="xMiInput xfont18" placeholder="Numero mesa" enlinea pattern="[0-9]+([\.,][0-9]+)?" step="any" min="1" inline id="txt_num_mesa_change" autofocus>
 				</div>
 				<br><br><br>
 				<div class="xBoton2 xVerde" dialog-confirm onclick="xCambiarMesa();">Cambiar</div>
@@ -3742,10 +3742,6 @@ function xPintarMesas() {
 	let listAreasMesas = xGetAreaMesas();
 	const isShowAreas = listAreasMesas.length > 0;	
 	
-	// Verificar si usa mesas alfanuméricas
-	const datosSede = xm_log_get('sede_otros_datos');
-	const esAlfanumerica = datosSede && datosSede[0] && datosSede[0].mesas_alfanumerica === "1";
-	
 	var selector_tpc_local_id = xm_log_get('estructura_pedido').filter(x => x.titulo === 'LOCAL').map(x =>	x.idtipo_consumo)[0];
 	if ( !selector_tpc_local_id ) {
 		selector_tpc_local_id = xm_log_get('estructura_pedido')[0];
@@ -3786,19 +3782,8 @@ function xPintarMesas() {
 			xfilterArea = xfilterArea === '' ? `.${area.title}` : xfilterArea;
 			for (let i = parseInt(area.desde); i <= parseInt(area.hasta); i++) {
 				xtxtEstado = 'xNeutro';
-				xcont_mesa = i;
-				
-				// Generar código de mesa (numérico o alfanumérico)
-				let codigoMesa = '';
-				if (esAlfanumerica && area.prefijo) {
-					// Alfanumérico: PISO1-01
-					codigoMesa = area.prefijo + xCeroIzq(i, 2);
-				} else {
-					// Numérico: 01
-					codigoMesa = xCeroIzq(xcont_mesa, 2);
-				}
-				
-				xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + ' ' + area.title +'" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0 data-area="'+ area.title +'" data-idarea="' + area.idarea_mesa +'" data-codigo-mesa="' + codigoMesa + '">' +
+				xcont_mesa = i;				
+				xCadenaNumMesa = String(xCadenaNumMesa + '<div class="xMiCardPedido xNeutro ' + selector_tpc_local + ' ' + area.title +'" data-estado="b" data-tpc="' + selector_tpc_local + '" data-abrir-detalle=0 data-area="'+ area.title +'" data-idarea="' + area.idarea_mesa +'">' +
 					'<div class="show-led-print xInvisible" title="Impreso"> <i class="fa fa-print"></i> </div>' +
 					'<div>' +
 					'<div class="show-led-precuenta xInvisible" title="Precuenta"><i class="fa fa-pencil-square-o"></i></div>' +
@@ -3806,7 +3791,7 @@ function xPintarMesas() {
 					'<div class="show-led-reserva xInvisible" title="Reserva"><i class="fa fa-tag"></i></div>' +
 					'</div>' +
 					'<p class="tipo text-secondary">Mesa</p>' +
-					'<p class="numero fs-28 p-2">' + codigoMesa + '</p>' +
+					'<p class="numero fs-28 p-2">' + xCeroIzq(xcont_mesa, 2) + '</p>' +
 					'<div class="xInvisible referencia-pedido"></div>' +
 					'<p class="tiempo xfont11">disponible</p>' +
 					'<p class="importe xBold">-</p>' +
@@ -3829,17 +3814,11 @@ function xPintarMesas() {
 		  percentPosition: true,
 		  getSortData: {
 			tpc: '[data-tpc]',
-			numero: function(itemElem) {
-				// Extraer solo la parte numérica para ordenamiento
-				const texto = $(itemElem).find('.numero').text();
-				// Buscar números en el texto (ej: "VIP08" -> "08", "S1-10" -> "10")
-				const match = texto.match(/(\d+)$/);
-				return match ? parseInt(match[1], 10) : 0;
-			},
+			numero: '.numero parseInt',
 			estado: '[data-estado]',
 			area: '[data-area]'
 		  },
-		  sortBy: 'original-order', // Ordenamiento manual, no automático
+		  sortBy: [ 'tpc','numero','estado' ],
 		  filter: xIdFiltro1,
 		  masonry: {				
 				horizontalOrder: true // manterner el order horizontal
@@ -3908,25 +3887,10 @@ function xPintarEstadoPedido(_objPedido = 0) {
 				xtxtHora='';
 
 				const _eparent = $(element).parent();
-				xcont_mesa = element.textContent.trim(); //numero mesa (puede ser numérico "01" o alfanumérico "PISO1-01")
+				xcont_mesa = element.textContent; //numero mesa
 				
 				// itemList = xdtPe.filter(x => parseInt(x.nummesa) === parseInt(xcont_mesa))[0];
-				// Comparar con el código de mesa (numérico o alfanumérico)
-				// Limpiar espacios y comparar
-				itemList = xdtPe.filter(x => {
-					const mesaPedido = String(x.nummesa).trim();
-					const mesaTarjeta = xcont_mesa;
-					
-					// Debug: mostrar comparación
-					if (index === 0 && xdtPe.length > 0) {
-						console.log('Comparando - Tarjeta:', mesaTarjeta, 'vs Pedido:', mesaPedido);
-					}
-					
-					// Comparación directa (para alfanuméricos) o con formato (para numéricos)
-					return mesaPedido === mesaTarjeta || 
-						   xCeroIzq(mesaPedido, 2) === mesaTarjeta || 
-						   xCeroIzq(x.correlativo_dia, 4) === mesaTarjeta;
-				})[0];
+				itemList = xdtPe.filter(x => xCeroIzq(x.nummesa, 2) === element.textContent || xCeroIzq(x.correlativo_dia, 4) === element.textContent)[0];
 				if ( itemList ) {
 					if (itemList.confirmar_pago === '1'  && itemList.nummesa !== '0' ) { 
 						// chequeamos si la mesa tiene pedido despues de haber pagado por app
@@ -4340,7 +4304,7 @@ function _cpSocketPintarPedido(pedido) {
 
 	if ( pedido ) {
 		if ( pedido.idpedido ) { // desde el cliente
-					
+						
 			if ( pedido.isFromVR ) {
 				_objPedido = {
 					idpedido: dt_pedido.idpedido,
@@ -4362,9 +4326,6 @@ function _cpSocketPintarPedido(pedido) {
 		}
 	
 	}
-
-	// Debug: verificar mesa alfanumérica
-	console.log('Socket Pedido - Mesa recibida:', _objPedido.nummesa, 'Tipo:', typeof _objPedido.nummesa);
 
 	// para no volver a cargar la misma mesa se pone 0 en 600ms
 	if ( lastIdPedidoPrint === _objPedido.idpedido ) { return; }
@@ -4429,29 +4390,20 @@ function _cpSocketPintarFlagPedidoImpreso(listPedidos) {
 
 function xBuscarPedidoDom(mesa = '0', numpedido = '0') {
 	var elementRpt;
-	// No convertir mesa a parseInt para soportar códigos alfanuméricos
-	const mesaStr = String(mesa).trim();
+	mesa = parseInt(mesa);	
 	numpedido = parseInt(numpedido);	
-	
-	if (mesa !== 0 && mesa !== '0') {
+	if (mesa !== 0) {
 		$('.xMiCardPedido').each((i, e) => {
-			const mesaCard = String(e.dataset.nummesa || '').trim();
-			const numeroCard = $(e).find('.numero').text().trim();
-			
-			// Comparar como string para soportar alfanuméricos (ej: "PISO1-01")
-			// Comparar tanto con data-nummesa como con el texto visible
-			if ( mesaCard === mesaStr || 
-				 numeroCard === mesaStr ||
-				 parseInt(e.dataset.nummesa) === parseInt(mesa) ) {				
+			if ( parseInt(e.dataset.nummesa) === mesa ) {				
 				elementRpt = e;
-				return false; // break del each
+				return;
 			}
 		});
 	} else {
 		$('.xMiCardPedido').each((i, e) => {
 			if ( parseInt(e.dataset.numpedido) === numpedido ) {				
 				elementRpt = e;
-				return false; // break del each
+				return;
 			}
 		});
 	}

@@ -672,13 +672,15 @@ _actualizarResumen() {
             const metodoPrincipal = pedido.tipo_pago[0];
             const idMetodo = metodoPrincipal.id || '1';
             const descripcionMetodo = metodoPrincipal.descripcion || metodoPrincipal.name || 'Efectivo';
+
+            const iconMetodo = (metodoPrincipal.icon || '_tp_01.png').split('/').pop();
             
             // Crear/actualizar categoría del método principal
             if (!resumen.metodos[idMetodo]) {
                 resumen.metodos[idMetodo] = {
                     id: idMetodo,
                     name: descripcionMetodo + (isPatio ? ' (PATIO)' : ''),
-                    icon: `../../images/${metodoPrincipal.icon || '_tp_01.png'}`,
+                    icon: `../../images/${iconMetodo}`,
                     total: 0,
                     hasCommission: false,
                     commissionRate: 0,

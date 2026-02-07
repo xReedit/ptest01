@@ -5734,3 +5734,27 @@ ul.list_add_item2 li.divLi {
 .xtabla_pedido_despacho-t1 tr td:last-child {
     border-bottom: none;
 }
+
+/* opciones multiples */
+.xoptions-btn-content {
+    display: inline-flex;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+    transition: all 0.5s;
+}
+
+.xoptions-btn-btn {
+    padding: 5px 10px 5px 10px;
+    cursor: pointer;
+    border-right: 1px solid lightgrey;
+}
+
+.xoptions-btn-btn[activo] {
+    background: #1f8fff;
+    color: white;
+}
+
+.xoptions-btn-btn:last-child {
+    border-right: 0px;
+}
