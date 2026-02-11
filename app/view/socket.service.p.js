@@ -315,6 +315,24 @@ function _cpSocketEmitItemAllModificado(listItems) {
     this.socketCP.emit('itemAllModificado', listItems);
 }
 
+///08022026
+function _cpSocketEmitReservaStock(pbody) {
+    // if (!isSocket) { return; }    
+    try {
+        const checkReservaStock = xm_log_get('sede_otros_datos')[0].use_reservas_stock;
+        console.log('checkReservaStock', checkReservaStock);
+        if (checkReservaStock == 1) {
+            const dataPedidoReservar = {
+                p_body: pbody,
+                idsede: xm_log_get('datos_org_sede')[0].idsede,
+            }        
+            this.socketCP.emit('restobar-confirmar-pedido-reservar-stock', dataPedidoReservar);
+        }    
+    } catch (error) {
+        console.log('error _cpSocketEmitReservaStock', error);
+    }
+}
+
 function _cpSocketEmitPrinterOnly(item) {
     // if (!isSocket) { return; }
     this.socketCP.emit('printerOnly', item);
@@ -503,5 +521,9 @@ function _cpSocketPingMensajeria(roomId=null, timeout = 4000) {
         });
     });
 }
+    
+
+
+
     
 

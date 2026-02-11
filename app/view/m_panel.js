@@ -320,13 +320,15 @@ async function xOpenPage(xop, parametro){
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}
 			const _xr = btoa(JSON.stringify(_xdataOrg));
 			
-			// local 10022022 -- continuar con esto
+			// local 10022022 -- continuar con esto  
 			const versionPrintServer = 'restobar/print/client/index.html'; 
 			const _urlLocal = 'http://'+ipPrintServerLocal;
 			const _urlPrintServver = _urlLocal +'/'+versionPrintServer+'?o='+_xr;			
 			const rptPingServerPrint = await pingServerPrintLocal(_urlLocal);
 			console.log('rptPingServerPrint', rptPingServerPrint);
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
+
+			
 			if ( rptPingServerPrint ) {
 				window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
 			}

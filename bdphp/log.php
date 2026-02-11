@@ -1903,6 +1903,11 @@
 			$arrItemPedido = isset($_POST['objPedido']) ? $_POST['objPedido'] : 0;	
 			$arrItemPedido = isset($arrItemPedido) ? $arrItemPedido == 0 ? 'null' : "'".json_encode($arrItemPedido)."'" : 'null';
 
+			if (isset($_POST['objPedido']['nummesa']) && ctype_digit($_POST['objPedido']['nummesa'])) {
+				$_POST['objPedido']['nummesa'] = (int)$_POST['objPedido']['nummesa'];
+				$arrItemPedido = "'".json_encode($_POST['objPedido'])."'";
+			}
+
 			$sql="CALL procedure_refresh_mesas_501(".$g_ido.",".$g_idsede.", ".$arrItemPedido.");";
 			$bd->xConsulta($sql);
 			break;
@@ -3884,7 +3889,7 @@ function xDtUS($op_us){
 			";
 			break;
 		case 308://308://otros datos de la sede // maximo_pedidos_x_hora  tiempo maximo en servir pedido por minutos ::app3_sys_dta_other
-			$sql_us="select maximo_pedidos_x_hora, mesas_alfanumerica from sede where idorg=".$g_ido." and idsede=".$g_idsede;
+			$sql_us="select idsede, maximo_pedidos_x_hora, mesas_alfanumerica, use_reservas_stock from sede where idorg=".$g_ido." and idsede=".$g_idsede;
 			break;
 		case 309:
 			$sql_us="select * from us_home_opciones where estado=0 order by idgrupo";

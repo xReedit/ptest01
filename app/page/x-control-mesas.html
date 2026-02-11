@@ -2024,6 +2024,15 @@ async function goSendPedidoFecht(_data) {
 	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
 
 	xCheckIsCuponCanjeadoCM();
+
+	// enviar a reservar stock
+	try {
+		_cpSocketEmitReservaStock(_data.p_body);
+
+	} catch (error) {
+		console.log('error checkReservaStock', error);
+	}
+	
 	return rpt;	
 }
 

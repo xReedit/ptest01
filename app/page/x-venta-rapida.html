@@ -1968,6 +1968,17 @@ async function goSendPedidoFecht(_data) {
 				console.log('checkIsUpdateStockAfter', checkIsUpdateStockAfter);
 				updateStockOnOrderCompletion(_data.p_body)
 			}
+
+
+			// enviar a reservar stock
+			try {				
+				_cpSocketEmitReservaStock(_data.p_body);
+				
+			} catch (error) {
+				console.log('error checkReservaStock', error);
+			}
+
+			
 		};
 		return rpt;
 	} catch (error) {		
