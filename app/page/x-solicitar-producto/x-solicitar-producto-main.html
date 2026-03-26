@@ -4,48 +4,7 @@
     
     <template>
         
-        <style>
-            .badge-estado {
-                display: inline-block;
-                padding: 4px 12px;
-                border-radius: 12px;
-                font-size: 11px;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-            .badge-enviado { background: #e3f2fd; color: #1976d2; }
-            .badge-visto { background: #fff3e0; color: #f57c00; }
-            .badge-atendido { background: #f3e5f5; color: #7b1fa2; }
-            .badge-despachado { background: #e8f5e9; color: #388e3c; }
-            .badge-cancelado { background: #ffebee; color: #c62828; }
-            
-            .solicitud-card {
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                padding: 16px;
-                margin-bottom: 12px;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            .solicitud-card:hover {
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                border-color: #2196f3;
-            }
-            .tab-btn {
-                padding: 12px 24px;
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-weight: 600;
-                color: #666;
-                border-bottom: 3px solid transparent;
-                transition: all 0.2s;
-            }
-            .tab-btn.active {
-                color: #2196f3;
-                border-bottom-color: #2196f3;
-            }
-        </style>
+        <link rel="stylesheet" href="../../../css/solicitud-producto.css">
 
         <paper-dialog modal id="dialog_detalle_solicitud" class="dialog_redondo" 
             style="max-width: 800px; width: 90%;"
@@ -108,8 +67,98 @@
                 </table>
                 
                 <br><br>
+                <template is="dom-if" if="[[_esEnviadaYDespachada(solicitudSeleccionada, tabActiva)]]">
+                    <div class="xBoton2 xVerde" on-click="abrirRecepcion">
+                        <i class="fa fa-check-circle mr-1"></i>Confirmar Recepción
+                    </div>
+                </template>
                 <div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
                 <br><br>
+            </div>
+        </paper-dialog>
+
+        <!-- Dialog Recepción -->
+        <paper-dialog modal id="dialog_recepcion" class="dialog_redondo" 
+            style="max-width: 900px; width: 95%;"
+            entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation" with-backdrop>
+            <div class="xContent">
+                <h3><i class="fa fa-check-circle mr-2" style="color: #388e3c;"></i>Confirmar Recepción #[[solicitudSeleccionada.idsolicitud_producto]]</h3>
+                <p class="text-secondary fs-12 m-0">Selecciona dónde ingresar cada producto recibido</p>
+                <br>
+                <div class="xLinea2"></div>
+                <br>
+
+                <template is="dom-repeat" items="[[itemsRecepcion]]" as="item" index-as="idx">
+                    <div class="solicitud-card" style="cursor: default;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class$="badge-estado badge-[[item.tipo_producto]]">[[item.tipo_producto]]</span>
+                                <span class="fw-600 fs-14 ml-2">[[item.descripcion]]</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="fs-12 text-secondary">Despachado: </span>
+                                <span class="fw-600 text-success">[[item.cantidad_despachada]]</span>
+                            </div>
+                        </div>
+
+                        <!-- Porción -->
+                        <template is="dom-if" if="[[_esPorcion(item.tipo_producto)]]">
+                            <template is="dom-if" if="[[item.match]]">
+                                <div class="mt-2 p-2" style="background: #e8f5e9; border-radius: 4px;">
+                                    <template is="dom-repeat" items="[[item.match]]" as="m" index-as="midx">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <input type="radio" name$="recep_porcion_[[idx]]" 
+                                                data-idx$="[[idx]]" data-midx$="[[midx]]"
+                                                on-change="_seleccionarPorcionRecepcion"
+                                                checked$="[[_esFirstMatch(midx)]]">
+                                            <span class="ml-2 fs-13">
+                                                [[m.descripcion]] 
+                                                <span class="text-secondary">(Stock actual: [[m.stock]])</span>
+                                            </span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template is="dom-if" if="[[!item.match]]">
+                                <div class="mt-2 p-2 match-error" style="background: #fff3f3; border-radius: 4px;">
+                                    <i class="fa fa-exclamation-triangle"></i> No se encontró porción local para recibir
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- Producto almacén -->
+                        <template is="dom-if" if="[[!_esPorcion(item.tipo_producto)]]">
+                            <template is="dom-if" if="[[item.opciones_almacen.length]]">
+                                <div class="mt-2 p-2" style="background: #e8f5e9; border-radius: 4px;">
+                                    <label class="fs-12 text-secondary">Ingresar a almacén:</label>
+                                    <select class="select-almacen mt-1" data-idx$="[[idx]]" on-change="_seleccionarAlmacenRecepcion">
+                                        <option value="">-- Seleccionar --</option>
+                                        <template is="dom-repeat" items="[[item.opciones_almacen]]" as="alm">
+                                            <option value$="[[alm.idproducto_stock]]">
+                                                [[alm.almacen_nombre]] | [[alm.producto_nombre]] (Stock: [[alm.stock]])
+                                            </option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </template>
+                            <template is="dom-if" if="[[!item.opciones_almacen.length]]">
+                                <div class="mt-2 p-2 match-error" style="background: #fff3f3; border-radius: 4px;">
+                                    <i class="fa fa-exclamation-triangle"></i> No se encontró producto local para recibir
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+
+                <br>
+                <div class="d-flex" style="gap: 8px;">
+                    <div class="xBoton2 xVerde" on-click="ejecutarRecepcion" style="flex:1;">
+                        <i class="fa fa-check-circle mr-1"></i>Confirmar Recepción
+                    </div>
+                    <div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+                </div>
+                <br>
             </div>
         </paper-dialog>
 
@@ -131,117 +180,66 @@
 
                     <div class="xContentCard" hidden$="[[isShowNuevaSolicitud]]">
                         
-                        <div class="d-flex" style="gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0;">
-                            <button class$="tab-btn [[computeActiveClass(tabActiva, 'enviadas')]]" 
-                                on-click="cambiarTab" data-tab="enviadas">
-                                <i class="fa fa-paper-plane mr-1"></i>
-                                Mis Solicitudes ([[totalEnviadas]])
-                            </button>
-                            <button class$="tab-btn [[computeActiveClass(tabActiva, 'recibidas')]]" 
-                                on-click="cambiarTab" data-tab="recibidas">
-                                <i class="fa fa-inbox mr-1"></i>
-                                Solicitudes Recibidas ([[totalRecibidas]])
-                            </button>
-                        </div>
-
-                        <div class="mb-3">
-                            <button class="btn btn-success" on-click="abrirNuevaSolicitud">
-                                <i class="fa fa-plus mr-1"></i>Nueva Solicitud
-                            </button>
-                            <button class="btn btn-secondary ml-2" on-click="cargarSolicitudes">
-                                <i class="fa fa-refresh mr-1"></i>Actualizar
-                            </button>
+                        <div class="d-flexx justify-content-between align-items-center" style="margin-bottom: 20px;">
+                            <div class="d-flexx" style="gap: 8px;">
+                                <button class="btn btn-success" on-click="abrirNuevaSolicitud">
+                                    <i class="fa fa-plus mr-1"></i>Nueva Solicitud
+                                </button>
+                                <button class="btn btn-secondary" on-click="cargarSolicitudes">
+                                    <i class="fa fa-refresh mr-1"></i>Actualizar
+                                </button>
+                            </div>
+                            <a href="#/solicitud-recibida" class="btn btn-sm btn-outline-success" style="border:2px solid #4caf50; color:#2e7d32; font-weight:600; text-decoration:none;">
+                                <i class="fa fa-inbox mr-1"></i>Solicitudes Recibidas ([[totalRecibidas]])
+                            </a>
                         </div>
 
                         <div class="xLinea2"></div>
                         <br>
 
-                        <template is="dom-if" if="[[mostrarEnviadas]]">
-                            <template is="dom-if" if="[[!listSolicitudesEnviadas.length]]">
-                                <div class="center p-4">
-                                    <i class="fa fa-inbox" style="font-size: 64px; opacity: 0.3; color: #999;"></i>
-                                    <p class="fs-16 fw-600" style="color: #999;">No hay solicitudes enviadas</p>
-                                    <p class="text-secondary">Crea una nueva solicitud para comenzar</p>
-                                </div>
-                            </template>
-                            
-                            <template is="dom-repeat" items="[[listSolicitudesEnviadas]]" as="item">
-                                <div class="solicitud-card" data-id="[[item.idsolicitud_producto]]" on-click="verDetalleSolicitud">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div>
-                                            <span class="fw-600 fs-15">#[[item.idsolicitud_producto]] - [[item.sede_destino]]</span>
-                                            <span class$="badge-estado badge-[[item.estado]] ml-2">[[item.estado]]</span>
-                                        </div>
-                                        <div class="text-secondary fs-12">
-                                            [[formatearFecha(item.fecha_solicitud)]]
-                                        </div>
-                                    </div>
-                                    <div class="d-flex" style="gap: 16px; font-size: 13px; color: #666;">
-                                        <span>
-                                            <i class="fa fa-cube mr-1"></i>
-                                            [[item.total_items]] items
-                                        </span>
-                                        <template is="dom-if" if="[[item.total_porciones]]">
-                                            <span>
-                                                <i class="fa fa-cutlery mr-1"></i>
-                                                [[item.total_porciones]] porciones
-                                            </span>
-                                        </template>
-                                        <template is="dom-if" if="[[item.total_productos_almacen]]">
-                                            <span>
-                                                <i class="fa fa-archive mr-1"></i>
-                                                [[item.total_productos_almacen]] productos
-                                            </span>
-                                        </template>
-                                    </div>
-                                    <template is="dom-if" if="[[item.nota]]">
-                                        <p class="m-0 mt-2 fs-12 text-secondary">
-                                            <i class="fa fa-comment mr-1"></i>[[item.nota]]
-                                        </p>
-                                    </template>
-                                </div>
-                            </template>
+                        <template is="dom-if" if="[[!listSolicitudesEnviadas.length]]">
+                            <div class="center p-4">
+                                <i class="fa fa-inbox" style="font-size: 64px; opacity: 0.3; color: #999;"></i>
+                                <p class="fs-16 fw-600" style="color: #999;">No hay solicitudes enviadas</p>
+                                <p class="text-secondary">Crea una nueva solicitud para comenzar</p>
+                            </div>
                         </template>
-
-                        <template is="dom-if" if="[[!mostrarEnviadas]]">
-                            <template is="dom-if" if="[[!listSolicitudesRecibidas.length]]">
-                                <div class="center p-4">
-                                    <i class="fa fa-inbox" style="font-size: 64px; opacity: 0.3; color: #999;"></i>
-                                    <p class="fs-16 fw-600" style="color: #999;">No hay solicitudes recibidas</p>
-                                    <p class="text-secondary">Cuando otras sedes te soliciten productos aparecerán aquí</p>
+                        
+                        <template is="dom-repeat" items="[[listSolicitudesEnviadas]]" as="item">
+                            <div class="solicitud-card" data-id="[[item.idsolicitud_producto]]" on-click="verDetalleSolicitud">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="fw-600 fs-15">#[[item.idsolicitud_producto]] - [[item.sede_destino]]</span>
+                                        <span class$="badge-estado badge-[[item.estado]] ml-2">[[item.estado]]</span>
+                                    </div>
+                                    <div class="text-secondary fs-12">
+                                        [[formatearFecha(item.fecha_solicitud)]]
+                                    </div>
                                 </div>
-                            </template>
-                            
-                            <template is="dom-repeat" items="[[listSolicitudesRecibidas]]" as="item">
-                                <div class="solicitud-card" data-id="[[item.idsolicitud_producto]]" on-click="verDetalleSolicitud">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div>
-                                            <span class="fw-600 fs-15">#[[item.idsolicitud_producto]] - [[item.sede_solicita]]</span>
-                                            <span class$="badge-estado badge-[[item.estado]] ml-2">[[item.estado]]</span>
-                                        </div>
-                                        <div class="text-secondary fs-12">
-                                            [[formatearFecha(item.fecha_solicitud)]]
-                                        </div>
-                                    </div>
-                                    <div class="d-flex" style="gap: 16px; font-size: 13px; color: #666;">
+                                <div class="d-flex" style="gap: 16px; font-size: 13px; color: #666;">
+                                    <span>
+                                        <i class="fa fa-cube mr-1"></i>
+                                        [[item.total_items]] items
+                                    </span>
+                                    <template is="dom-if" if="[[item.total_porciones]]">
                                         <span>
-                                            <i class="fa fa-cube mr-1"></i>
-                                            [[item.total_items]] items
+                                            <i class="fa fa-cutlery mr-1"></i>
+                                            [[item.total_porciones]] porciones
                                         </span>
-                                        <template is="dom-if" if="[[item.usuario_solicita]]">
-                                            <span>
-                                                <i class="fa fa-user mr-1"></i>
-                                                [[item.usuario_solicita]]
-                                            </span>
-                                        </template>
-                                    </div>
-                                    <template is="dom-if" if="[[item.nota]]">
-                                        <p class="m-0 mt-2 fs-12 text-secondary">
-                                            <i class="fa fa-comment mr-1"></i>[[item.nota]]
-                                        </p>
+                                    </template>
+                                    <template is="dom-if" if="[[item.total_productos_almacen]]">
+                                        <span>
+                                            <i class="fa fa-archive mr-1"></i>
+                                            [[item.total_productos_almacen]] productos
+                                        </span>
                                     </template>
                                 </div>
-                            </template>
+                                <template is="dom-if" if="[[item.nota]]">
+                                    <p class="m-0 mt-2 fs-12 text-secondary">
+                                        <i class="fa fa-comment mr-1"></i>[[item.nota]]
+                                    </p>
+                                </template>
+                            </div>
                         </template>
 
                     </div>
@@ -265,10 +263,6 @@ Polymer({
             type: Array,
             value: function() { return []; }
         },
-        listSolicitudesRecibidas: {
-            type: Array,
-            value: function() { return []; }
-        },
         detalleSolicitud: {
             type: Array,
             value: function() { return []; }
@@ -285,10 +279,6 @@ Polymer({
             type: String,
             value: 'enviadas'
         },
-        mostrarEnviadas: {
-            type: Boolean,
-            value: true
-        },
         totalEnviadas: {
             type: Number,
             value: 0
@@ -296,6 +286,14 @@ Polymer({
         totalRecibidas: {
             type: Number,
             value: 0
+        },
+        itemsRecepcion: {
+            type: Array,
+            value: function() { return []; }
+        },
+        _recepcionSelecciones: {
+            type: Object,
+            value: function() { return {}; }
         }
     },
     
@@ -316,7 +314,6 @@ Polymer({
             this.set('totalEnviadas', rptEnviadas.datos ? rptEnviadas.datos.length : 0);
             
             const rptRecibidas = await _httpFecht.postJson('../../bdphp/log_011.php?op=5', {});
-            this.set('listSolicitudesRecibidas', rptRecibidas.datos || []);
             this.set('totalRecibidas', rptRecibidas.datos ? rptRecibidas.datos.length : 0);
             
         } catch (error) {
@@ -325,12 +322,6 @@ Polymer({
         }
         
         xPopupLoad.xclose();
-    },
-    
-    cambiarTab: function(e) {
-        const tab = e.currentTarget.dataset.tab;
-        this.set('tabActiva', tab);
-        this.set('mostrarEnviadas', tab === 'enviadas');
     },
     
     abrirNuevaSolicitud: function() {
@@ -348,11 +339,7 @@ Polymer({
     
     verDetalleSolicitud: async function(e) {
         const idsolicitud = e.model.item.idsolicitud_producto;
-        
-        const solicitud = this.tabActiva === 'enviadas' 
-            ? this.listSolicitudesEnviadas.find(s => s.idsolicitud_producto == idsolicitud)
-            : this.listSolicitudesRecibidas.find(s => s.idsolicitud_producto == idsolicitud);
-        
+        const solicitud = this.listSolicitudesEnviadas.find(s => s.idsolicitud_producto == idsolicitud);
         if (!solicitud) return;
         
         this.set('solicitudSeleccionada', solicitud);
@@ -373,6 +360,148 @@ Polymer({
         }
         xPopupLoad.xclose();
     },
+
+    // ===================== RECEPCIÓN =====================
+    
+    _esEnviadaYDespachada: function(sol, tabActiva) {
+        if (!sol || !sol.estado) return false;
+        return tabActiva === 'enviadas' && sol.estado === 'despachado';
+    },
+    
+    abrirRecepcion: async function() {
+        var idsolicitud = this.solicitudSeleccionada.idsolicitud_producto;
+        this.$.dialog_detalle_solicitud.close();
+        
+        xPopupLoad.xopen();
+        try {
+            const _httpFecht = new httpFecht();
+            const rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=15', {
+                idsolicitud_producto: idsolicitud
+            });
+            
+            if (rpt.success) {
+                var items = rpt.datos || [];
+                var selecciones = {};
+                items.forEach(function(item, idx) {
+                    selecciones[idx] = {
+                        cantidad: parseFloat(item.cantidad_despachada) || 0,
+                        tipo_producto: item.tipo_producto
+                    };
+                    if (item.tipo_producto === 'porcion' && item.match && item.match.length > 0) {
+                        selecciones[idx].idporcion_local = item.match[0].idporcion;
+                    }
+                    if (item.tipo_producto === 'almacen' && item.opciones_almacen && item.opciones_almacen.length > 0) {
+                        selecciones[idx].idproducto_stock = null;
+                    }
+                });
+                
+                this.set('itemsRecepcion', items);
+                this.set('_recepcionSelecciones', selecciones);
+                this.$.dialog_recepcion.open();
+            } else {
+                showToastSwal('error', rpt.message || 'Error al cargar datos de recepción');
+            }
+        } catch (error) {
+            console.error('Error al cargar recepción:', error);
+            showToastSwal('error', 'Error al cargar datos de recepción');
+        }
+        xPopupLoad.xclose();
+    },
+    
+    _seleccionarPorcionRecepcion: function(e) {
+        var idx = parseInt(e.currentTarget.dataset.idx);
+        var midx = parseInt(e.currentTarget.dataset.midx);
+        var match = this.itemsRecepcion[idx].match[midx];
+        var sel = this._recepcionSelecciones;
+        sel[idx].idporcion_local = match.idporcion;
+        this.set('_recepcionSelecciones', sel);
+    },
+    
+    _seleccionarAlmacenRecepcion: function(e) {
+        var idx = parseInt(e.currentTarget.dataset.idx);
+        var idproducto_stock = e.currentTarget.value;
+        var sel = this._recepcionSelecciones;
+        sel[idx].idproducto_stock = idproducto_stock || null;
+        this.set('_recepcionSelecciones', sel);
+    },
+    
+    ejecutarRecepcion: async function() {
+        var self = this;
+        var detalles = [];
+        var hayError = false;
+        
+        this.itemsRecepcion.forEach(function(item, idx) {
+            var sel = self._recepcionSelecciones[idx];
+            if (!sel || sel.cantidad <= 0) return;
+            
+            var detalle = {
+                idsolicitud_producto_detalle: item.idsolicitud_producto_detalle,
+                tipo_producto: item.tipo_producto,
+                cantidad: sel.cantidad
+            };
+            
+            if (item.tipo_producto === 'porcion') {
+                if (!sel.idporcion_local) {
+                    hayError = true;
+                    return;
+                }
+                detalle.idporcion_local = sel.idporcion_local;
+            } else {
+                if (!sel.idproducto_stock) {
+                    hayError = true;
+                    return;
+                }
+                detalle.idproducto_stock = sel.idproducto_stock;
+            }
+            
+            detalles.push(detalle);
+        });
+        
+        if (hayError) {
+            showToastSwal('warning', 'Selecciona el destino para todos los items');
+            return;
+        }
+        
+        if (detalles.length === 0) {
+            showToastSwal('warning', 'No hay items para recibir');
+            return;
+        }
+        
+        xPopupLoad.xopen();
+        try {
+            const _httpFecht = new httpFecht();
+            const rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=16', {
+                idsolicitud_producto: this.solicitudSeleccionada.idsolicitud_producto,
+                detalles: detalles
+            });
+            
+            if (rpt.success) {
+                showToastSwal('success', 'Recepción confirmada. Stock actualizado.');
+                this.$.dialog_recepcion.close();
+                this.cargarSolicitudes();
+            } else {
+                showToastSwal('error', rpt.message || 'Error al confirmar recepción');
+            }
+        } catch (error) {
+            console.error('Error al recibir:', error);
+            showToastSwal('error', 'Error al confirmar recepción');
+        }
+        xPopupLoad.xclose();
+    },
+
+    // ===================== HELPERS =====================
+    
+    _esPorcion: function(tipo) {
+        return tipo === 'porcion';
+    },
+    
+    _esMatchCodigo: function(matchTipo) {
+        return matchTipo === 'codigo_unico';
+    },
+    
+    _esFirstMatch: function(midx) {
+        return midx === 0;
+    },
     
     formatearFecha: function(fecha) {
         if (!fecha) return '';
@@ -383,10 +512,6 @@ Polymer({
         const hora = String(d.getHours()).padStart(2, '0');
         const min = String(d.getMinutes()).padStart(2, '0');
         return `${dia}/${mes}/${anio} ${hora}:${min}`;
-    },
-    
-    computeActiveClass: function(tabActiva, tab) {
-        return tabActiva === tab ? 'active' : '';
     }
 });
 

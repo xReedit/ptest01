@@ -1724,7 +1724,11 @@ function importarCarta(file) {
 					
 					if (data.success) {
 						xPopupLoad.xclose();
-						alert('Carta importada correctamente. ID de la nueva carta: ' + data.idcarta);
+						var msg = 'Carta importada correctamente.';
+						if (data.stats) {
+							msg += '\nSecciones: ' + data.stats.secciones + ', Items: ' + data.stats.items;
+						}
+						alert(msg);
 						// Recargar la página para mostrar la carta importada
 						location.reload();
 					} else {

@@ -1062,7 +1062,7 @@ async function xVerificarCodeResponseCPE(response, external_id = '') {
 				const fetchData = new httpFecht();
 				const _dataCpeError = {
 					"external_id": external_id,
-					"idsunat_errores": errorData.id,
+					"idsunat_errores": errorData.idsunat_errores,
 					"codigo": response.code,
 					"mensaje": response.description || response.message
 				}

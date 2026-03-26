@@ -1,0 +1,914 @@
+<dom-module id="x-solicitud-recibida">
+    <template>
+        
+        <link rel="stylesheet" href="../../../css/solicitud-producto.css">
+
+        <!-- ============================================================ -->
+        <!-- DIALOG: Detalle de solicitud (solo lectura)                  -->
+        <!-- ============================================================ -->
+        <paper-dialog modal id="dialog_detalle" class="dialog_redondo" 
+            style="max-width: 800px; width: 90%;"
+            entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation" with-backdrop>
+            <div class="xContent">
+                <h3>Detalle de Solicitud #[[solicitudActual.idsolicitud_producto]]</h3>
+                <br>
+                <div class="mb-3">
+                    <p class="m-0"><strong>Sede origen:</strong> [[solicitudActual.sede_origen]]</p>
+                    <p class="m-0"><strong>Solicitado por:</strong> [[solicitudActual.usuario_solicita]]</p>
+                    <p class="m-0"><strong>Fecha:</strong> [[_formatFecha(solicitudActual.fecha_solicitud)]]</p>
+                    <p class="m-0"><strong>Estado:</strong> <span class$="badge-estado badge-[[solicitudActual.estado]]">[[solicitudActual.estado]]</span></p>
+                    <template is="dom-if" if="[[solicitudActual.nota]]">
+                        <p class="m-0"><strong>Nota:</strong> [[solicitudActual.nota]]</p>
+                    </template>
+                </div>
+                <div class="xLinea2"></div>
+                <br>
+                <h4>Productos Solicitados</h4>
+                <table width="100%" class="fs-13">
+                    <thead>
+                        <tr>
+                            <th align="left">Tipo</th>
+                            <th align="left">Descripcion</th>
+                            <th align="right">Cant. Solicitada</th>
+                            <th align="right">Cant. Despachada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template is="dom-repeat" items="[[detalleDialog]]" as="dd">
+                            <tr>
+                                <td><span class$="badge-tipo badge-[[dd.tipo_producto]]">[[dd.tipo_producto]]</span></td>
+                                <td>
+                                    [[dd.descripcion]]
+                                    <template is="dom-if" if="[[dd.codigo_unico]]">
+                                        <br><span class="fs-10 fw-600 text-success">[[dd.codigo_unico]]</span>
+                                    </template>
+                                </td>
+                                <td align="right" class="fw-600">[[dd.cantidad_solicitada]]</td>
+                                <td align="right">
+                                    <template is="dom-if" if="[[dd.cantidad_despachada]]">
+                                        <span class="text-success fw-600">[[dd.cantidad_despachada]]</span>
+                                    </template>
+                                    <template is="dom-if" if="[[!dd.cantidad_despachada]]">
+                                        <span class="text-secondary">-</span>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <br><br>
+                <template is="dom-if" if="[[_esDespachable(solicitudActual.estado)]]">
+                    <div class="xBoton2 xVerde" on-click="_irADespachoDesdeDialog">
+                        <i class="fa fa-truck mr-1"></i>Despachar esta solicitud
+                    </div>
+                </template>
+                <div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
+                <br><br>
+            </div>
+        </paper-dialog>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                          -->
+        <!-- ============================================================ -->
+        <div class="p-2">
+            <br>
+            <div class="xMiCard2" style="width:90%; max-width: 1250px;">
+                <div class="xEncanezadoCard d-flexx justify-content-between">
+                    <div class="div-content-head-op">
+                        <p class="fw-600 fs-18">Solicitudes Recibidas</p>
+                        <p class="fw-100 text-secondary fs-12">Gestiona y despacha las solicitudes de productos recibidas de otras sedes.</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-secondary" hidden$="[[!showDespacho]]" on-click="_volverALista">
+                            <i class="fa fa-arrow-left mr-1"></i>Atras
+                        </button>
+                    </div>
+                </div>
+                <div class="p-3 mb-5">
+
+                    <!-- ======================================== -->
+                    <!-- VISTA 1: LISTA DE SOLICITUDES            -->
+                    <!-- ======================================== -->
+                    <div class="xContentCard" hidden$="[[showDespacho]]">
+
+                        <!-- Filtros -->
+                        <div class="d-flexx" style="gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+                            <span class$="tab-filtro [[_filtroClass(filtroEstado,'todos')]]" data-filtro="todos" on-click="_cambiarFiltro">
+                                Todos <span class="badge">[[totalSolicitudes]]</span>
+                            </span>
+                            <span class$="tab-filtro [[_filtroClass(filtroEstado,'pendientes')]]" data-filtro="pendientes" on-click="_cambiarFiltro">
+                                Pendientes <span class="badge">[[totalPendientes]]</span>
+                            </span>
+                            <span class$="tab-filtro [[_filtroClass(filtroEstado,'despachado')]]" data-filtro="despachado" on-click="_cambiarFiltro">
+                                Despachados <span class="badge">[[totalDespachados]]</span>
+                            </span>
+                            <span class$="tab-filtro [[_filtroClass(filtroEstado,'recibido')]]" data-filtro="recibido" on-click="_cambiarFiltro">
+                                Recibidos <span class="badge">[[totalRecibidos]]</span>
+                            </span>
+                        </div>
+
+                        <div class="xLinea2"></div>
+                        <br>
+
+                        <template is="dom-if" if="[[_hayItems(listSolicitudesFiltradas)]]">
+                            <table class="xTabla w-100">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">#</th>
+                                        <th width="18%">Sede Origen</th>
+                                        <th width="15%">Fecha</th>
+                                        <th width="8%">Items</th>
+                                        <th width="12%">Estado</th>
+                                        <th width="20%">Nota</th>
+                                        <th width="22%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template is="dom-repeat" items="[[listSolicitudesFiltradas]]" as="sol">
+                                        <tr style="cursor:pointer;" on-click="_clickFila">
+                                            <td class="fw-600">[[sol.idsolicitud_producto]]</td>
+                                            <td class="fw-600">[[sol.sede_origen]]</td>
+                                            <td>[[_formatFecha(sol.fecha_solicitud)]]</td>
+                                            <td class="text-center fw-600">[[sol.total_items]]</td>
+                                            <td>
+                                                <span class$="badge-estado badge-[[sol.estado]]">[[sol.estado]]</span>
+                                            </td>
+                                            <td class="text-secondary">[[_truncar(sol.nota, 40)]]</td>
+                                            <td class="text-right">
+                                                <template is="dom-if" if="[[_esDespachable(sol.estado)]]">
+                                                    <span class="btn btn-sm btn-success fw-600">
+                                                        <i class="fa fa-truck"></i> Despachar
+                                                    </span>
+                                                </template>
+                                                <template is="dom-if" if="[[!_esDespachable(sol.estado)]]">
+                                                    <span class="text-secondary fs-12"><i class="fa fa-eye"></i> Ver detalle</span>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+
+                        <template is="dom-if" if="[[!_hayItems(listSolicitudesFiltradas)]]">
+                            <div class="text-center p-4 text-secondary">
+                                <i class="fa fa-inbox" style="font-size: 48px; opacity: 0.3;"></i>
+                                <p class="mt-2 mb-0">No hay solicitudes recibidas</p>
+                                <p class="fs-12 text-secondary">Las solicitudes de otras sedes apareceran aqui</p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- ======================================== -->
+                    <!-- VISTA 2: DESPACHO - 2 PANELES            -->
+                    <!-- ======================================== -->
+                    <div hidden$="[[!showDespacho]]">
+
+                        <!-- Info de la solicitud -->
+                        <div class="mb-3">
+                            <h3 style="margin:0;">Despacho de Solicitud #[[solicitudActual.idsolicitud_producto]]</h3>
+                            <p class="text-secondary fs-13 m-0">
+                                Sede: <strong>[[solicitudActual.sede_origen]]</strong> &nbsp;|&nbsp; 
+                                Fecha: <strong>[[_formatFecha(solicitudActual.fecha_solicitud)]]</strong>
+                                <template is="dom-if" if="[[solicitudActual.nota]]">
+                                    &nbsp;|&nbsp; Nota: <em>[[solicitudActual.nota]]</em>
+                                </template>
+                            </p>
+                        </div>
+
+                        <div class="xLinea2"></div>
+
+                        <!-- Progreso y boton despachar -->
+                        <div class="d-flexx justify-content-between align-items-center" style="margin:12px 0;">
+                            <div>
+                                <span class="fw-600 fs-14">Progreso: </span>
+                                <span class="fw-700 fs-16" style="color:#1976d2;">[[itemsMatcheados]]/[[totalItemsDespacho]]</span>
+                                <span class="text-secondary fs-12"> items asignados</span>
+                            </div>
+                            <div>
+                                <button class$="btn btn-sm [[_btnDespacharClass(itemsMatcheados, totalItemsDespacho)]]" 
+                                        on-click="_ejecutarDespacho"
+                                        disabled$="[[!_hayMatcheados(itemsMatcheados)]]">
+                                    <i class="fa fa-check-circle"></i> Confirmar Despacho ([[itemsMatcheados]] items)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Layout Split: 2 paneles -->
+                        <div class="despacho-container">
+                            
+                            <!-- PANEL IZQUIERDO: Productos del pedido recibido -->
+                            <div class="despacho-panel-izq">
+                                <div class="despacho-panel-header">
+                                    <i class="fa fa-list-ul"></i> Productos Solicitados ([[totalItemsDespacho]])
+                                </div>
+                                <div class="despacho-panel-body">
+                                    <template is="dom-repeat" items="[[itemsDespacho]]" as="item" index-as="idx">
+                                        <div class$="despacho-item [[_itemClass(item, itemSeleccionadoIdx, idx)]]" 
+                                             on-click="_seleccionarItem" data-idx$="[[idx]]">
+                                            
+                                            <div class="despacho-item-header">
+                                                <span class$="badge-tipo badge-[[item.tipo_producto]]">[[item.tipo_producto]]</span>
+                                                <template is="dom-if" if="[[item._matched]]">
+                                                    <span class="match-ok"><i class="fa fa-check-circle"></i> Asignado</span>
+                                                </template>
+                                                <template is="dom-if" if="[[!item._matched]]">
+                                                    <span style="color:#9e9e9e; font-size:12px;"><i class="fa fa-clock-o"></i> Pendiente</span>
+                                                </template>
+                                            </div>
+
+                                            <div class="despacho-item-desc">[[item.descripcion_solicitada]]</div>
+                                            
+                                            <div class="despacho-item-meta">
+                                                <span>Solicitado: <strong>[[item.cantidad_solicitada]]</strong></span>
+                                            </div>
+
+                                            <!-- Info del match asignado -->
+                                            <template is="dom-if" if="[[item._matched]]">
+                                                <div class="despacho-item-match-info">
+                                                    <div class="d-flexx justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="match-label">Desde mi stock: </span>
+                                                            <span class="match-value">[[item._match_desc]]</span>
+                                                            <template is="dom-if" if="[[item._match_almacen]]">
+                                                                <span class="text-secondary fs-11"> ([[item._match_almacen]])</span>
+                                                            </template>
+                                                        </div>
+                                                        <div class="d-flexx align-items-center" style="gap:8px;">
+                                                            <span class="fw-700" style="color:#1565c0;">Cant: [[item._match_cantidad]]</span>
+                                                            <button class="btn-quitar-match" on-click="_quitarMatch" data-idx$="[[idx]]">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- PANEL DERECHO: Mi stock local (almacen + porciones) -->
+                            <div class="despacho-panel-der">
+                                <div class="despacho-panel-header">
+                                    <i class="fa fa-database"></i> Mi Stock Disponible
+                                    <template is="dom-if" if="[[_tieneItemSeleccionado(itemSeleccionadoIdx)]]">
+                                        &mdash; para: <em>[[_getItemSelDesc(itemSeleccionadoIdx, itemsDespacho)]]</em>
+                                    </template>
+                                </div>
+                                <div class="despacho-panel-body">
+                                    <!-- Estado vacio: no hay item seleccionado -->
+                                    <template is="dom-if" if="[[!_tieneItemSeleccionado(itemSeleccionadoIdx)]]">
+                                        <div class="text-center p-4 text-secondary">
+                                            <i class="fa fa-hand-pointer-o" style="font-size: 48px; opacity: 0.3;"></i>
+                                            <p class="mt-2 mb-0">Selecciona un producto del panel izquierdo</p>
+                                            <p class="fs-12">Se buscara automaticamente el match en tu stock</p>
+                                        </div>
+                                    </template>
+
+                                    <!-- Item seleccionado: mostrar stock -->
+                                    <template is="dom-if" if="[[_tieneItemSeleccionado(itemSeleccionadoIdx)]]">
+                                        
+                                        <!-- Buscador -->
+                                        <label class="fw-600 fs-12">Buscar en mi stock:</label>
+                                        <input type="text" class="stock-search-input" placeholder="Escribe para filtrar..." 
+                                               id="txtBuscarStock" on-keyup="_filtrarStock">
+
+                                        <!-- Cantidad a despachar -->
+                                        <div class="despacho-cantidad-row mb-2">
+                                            <span class="fs-13 fw-600">Cantidad a despachar:</span>
+                                            <input type="number" class="despacho-cantidad-input" 
+                                                   id="txtCantidadDespacho"
+                                                   min="0.01" step="0.01"
+                                                   value$="[[cantidadDespacho]]"
+                                                   on-change="_cambiarCantidad">
+                                            <span class="text-secondary fs-12">(solicitado: [[_getCantSolicitada(itemSeleccionadoIdx, itemsDespacho)]])</span>
+                                        </div>
+
+                                        <div class="xLinea2 mb-2"></div>
+
+                                        <!-- Lista de stock disponible -->
+                                        <template is="dom-repeat" items="[[stockDisponibleFiltrado]]" as="stock" index-as="sidx">
+                                            <div class$="stock-item [[_stockSelectedClass(stock, stockSeleccionadoId)]]" 
+                                                 on-click="_seleccionarStock" data-sidx$="[[sidx]]">
+                                                <div class="d-flexx justify-content-between align-items-center">
+                                                    <div>
+                                                        <div class="stock-item-desc">[[stock.descripcion]]</div>
+                                                        <div class="stock-item-meta">
+                                                            <template is="dom-if" if="[[stock.almacen_nombre]]">
+                                                                <span><i class="fa fa-archive"></i> [[stock.almacen_nombre]]</span>
+                                                            </template>
+                                                            <template is="dom-if" if="[[stock.match_tipo]]">
+                                                                <span>
+                                                                    <template is="dom-if" if="[[_esMatchCodigo(stock.match_tipo)]]">
+                                                                        <i class="fa fa-link" style="color:#4caf50;"></i> Match por codigo
+                                                                    </template>
+                                                                    <template is="dom-if" if="[[!_esMatchCodigo(stock.match_tipo)]]">
+                                                                        <i class="fa fa-search" style="color:#ff9800;"></i> Match por nombre
+                                                                    </template>
+                                                                </span>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <div class$="stock-item-stock [[_stockClass(stock.stock)]]">
+                                                            [[stock.stock]]
+                                                        </div>
+                                                        <div class="fs-11 text-secondary">disponible</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <template is="dom-if" if="[[!_hayItems(stockDisponibleFiltrado)]]">
+                                            <div class="text-center p-3 text-secondary">
+                                                <i class="fa fa-exclamation-triangle" style="font-size:32px; color:#ff9800; opacity:0.5;"></i>
+                                                <p class="mt-2 fs-13">No se encontro stock disponible para este producto</p>
+                                            </div>
+                                        </template>
+
+                                        <!-- Boton asignar -->
+                                        <template is="dom-if" if="[[_puedeAsignar(stockSeleccionadoId)]]">
+                                            <div class="mt-2">
+                                                <button class="btn-confirmar-match" style="width:100%; padding:10px;" on-click="_confirmarMatch">
+                                                    <i class="fa fa-check"></i> Asignar este producto
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumen de despacho -->
+                        <template is="dom-if" if="[[_hayMatcheados(itemsMatcheados)]]">
+                            <div class="despacho-resumen">
+                                <p class="fw-600 fs-14 mb-2"><i class="fa fa-clipboard"></i> Resumen de Despacho</p>
+                                <template is="dom-repeat" items="[[itemsDespacho]]" as="ri">
+                                    <template is="dom-if" if="[[ri._matched]]">
+                                        <div class="despacho-resumen-row">
+                                            <span>[[ri.descripcion_solicitada]] <i class="fa fa-long-arrow-right" style="color:#999;"></i> <strong>[[ri._match_desc]]</strong></span>
+                                            <span class="fw-600" style="color:#1565c0;">[[ri._match_cantidad]]</span>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </template>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </template>
+
+    <script>
+        var xThisSolicitudRecibida;
+
+        Polymer({
+            is: 'x-solicitud-recibida',
+            properties: {
+                listSolicitudes: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                listSolicitudesFiltradas: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                filtroEstado: {
+                    type: String,
+                    value: 'todos'
+                },
+                totalSolicitudes: { type: Number, value: 0 },
+                totalPendientes: { type: Number, value: 0 },
+                totalDespachados: { type: Number, value: 0 },
+                totalRecibidos: { type: Number, value: 0 },
+
+                showDespacho: {
+                    type: Boolean,
+                    value: false
+                },
+                solicitudActual: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                detalleDialog: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                // Despacho
+                itemsDespacho: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                itemSeleccionadoIdx: {
+                    type: Number,
+                    value: -1
+                },
+                stockDisponible: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                stockDisponibleFiltrado: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                stockSeleccionadoId: {
+                    type: String,
+                    value: ''
+                },
+                cantidadDespacho: {
+                    type: Number,
+                    value: 0
+                },
+                itemsMatcheados: {
+                    type: Number,
+                    value: 0
+                },
+                totalItemsDespacho: {
+                    type: Number,
+                    value: 0
+                }
+            },
+
+            attached: function() {
+                $("#Titulo_page").text("Solicitudes Recibidas");
+                xThisSolicitudRecibida = this;
+                this._cargarSolicitudes();
+                $('body').addClass('loaded');
+            },
+
+            // ==================== LISTA ====================
+
+            _cargarSolicitudes: async function() {
+                xPopupLoad.xopen();
+                try {
+                    var _httpFecht = new httpFecht();
+                    var rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=5', {});
+                    var datos = rpt.datos || [];
+                    this.set('listSolicitudes', datos);
+                    this._calcularTotales();
+                    this._aplicarFiltro();
+                } catch (error) {
+                    console.error('Error al cargar solicitudes:', error);
+                    showToastSwal('error', 'Error al cargar solicitudes');
+                }
+                xPopupLoad.xclose();
+            },
+
+            _calcularTotales: function() {
+                var lista = this.listSolicitudes;
+                this.set('totalSolicitudes', lista.length);
+                this.set('totalPendientes', lista.filter(function(s) { 
+                    return ['enviado','visto','atendido'].indexOf(s.estado) >= 0; 
+                }).length);
+                this.set('totalDespachados', lista.filter(function(s) { return s.estado === 'despachado'; }).length);
+                this.set('totalRecibidos', lista.filter(function(s) { return s.estado === 'recibido'; }).length);
+            },
+
+            _aplicarFiltro: function() {
+                var filtro = this.filtroEstado;
+                var lista = this.listSolicitudes;
+                var filtrada;
+                if (filtro === 'todos') {
+                    filtrada = lista;
+                } else if (filtro === 'pendientes') {
+                    filtrada = lista.filter(function(s) { return ['enviado','visto','atendido'].indexOf(s.estado) >= 0; });
+                } else {
+                    filtrada = lista.filter(function(s) { return s.estado === filtro; });
+                }
+                this.set('listSolicitudesFiltradas', filtrada);
+            },
+
+            _cambiarFiltro: function(e) {
+                this.set('filtroEstado', e.currentTarget.dataset.filtro);
+                this._aplicarFiltro();
+            },
+
+            _filtroClass: function(filtroEstado, filtro) {
+                return filtroEstado === filtro ? 'activo' : '';
+            },
+
+            // ==================== DETALLE (dialog) ====================
+
+            _verDetalle: async function(e) {
+                var sol = e.model.sol;
+                this.set('solicitudActual', sol);
+                xPopupLoad.xopen();
+                try {
+                    var _httpFecht = new httpFecht();
+                    var rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=6', {
+                        idsolicitud_producto: sol.idsolicitud_producto
+                    });
+                    this.set('detalleDialog', rpt.datos || []);
+                    this.$.dialog_detalle.open();
+                } catch (error) {
+                    console.error('Error al cargar detalle:', error);
+                    showToastSwal('error', 'Error al cargar detalle');
+                }
+                xPopupLoad.xclose();
+            },
+
+            _irADespachoDesdeDialog: function() {
+                this.$.dialog_detalle.close();
+                this._iniciarDespacho(this.solicitudActual);
+            },
+
+            // ==================== DESPACHO ====================
+
+            _clickFila: function(e) {
+                var sol = e.model.sol;
+                if (this._esDespachable(sol.estado)) {
+                    this.set('solicitudActual', sol);
+                    this._iniciarDespacho(sol);
+                } else {
+                    this._verDetalleDirecto(sol);
+                }
+            },
+
+            _verDetalleDirecto: async function(sol) {
+                this.set('solicitudActual', sol);
+                xPopupLoad.xopen();
+                try {
+                    var _httpFecht = new httpFecht();
+                    var rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=6', {
+                        idsolicitud_producto: sol.idsolicitud_producto
+                    });
+                    this.set('detalleDialog', rpt.datos || []);
+                    this.$.dialog_detalle.open();
+                } catch (error) {
+                    console.error('Error al cargar detalle:', error);
+                    showToastSwal('error', 'Error al cargar detalle');
+                }
+                xPopupLoad.xclose();
+            },
+
+            _iniciarDespacho: async function(sol) {
+                xPopupLoad.xopen();
+                try {
+                    var _httpFecht = new httpFecht();
+                    var rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=13', {
+                        idsolicitud_producto: sol.idsolicitud_producto
+                    });
+
+                    if (rpt.success) {
+                        var items = rpt.datos || [];
+                        items.forEach(function(item) {
+                            item._matched = false;
+                            item._match_desc = '';
+                            item._match_almacen = '';
+                            item._match_cantidad = 0;
+                            item._match_data = null;
+                        });
+
+                        this.set('itemsDespacho', items);
+                        this.set('totalItemsDespacho', items.length);
+                        this.set('itemsMatcheados', 0);
+                        this.set('itemSeleccionadoIdx', -1);
+                        this.set('stockDisponible', []);
+                        this.set('stockDisponibleFiltrado', []);
+                        this.set('stockSeleccionadoId', '');
+                        this.set('showDespacho', true);
+
+                        // Auto-seleccionar primer item
+                        if (items.length > 0) {
+                            var self = this;
+                            setTimeout(function() {
+                                self._seleccionarItem({ currentTarget: { dataset: { idx: '0' } } });
+                            }, 100);
+                        }
+                    } else {
+                        showToastSwal('error', rpt.message || 'Error al cargar datos de despacho');
+                    }
+                } catch (error) {
+                    console.error('Error al cargar despacho:', error);
+                    showToastSwal('error', 'Error al cargar datos de despacho');
+                }
+                xPopupLoad.xclose();
+            },
+
+            _volverALista: function() {
+                var self = this;
+                if (this.itemsMatcheados > 0) {
+                    Swal.fire({
+                        title: 'Salir del despacho?',
+                        text: 'Tienes ' + this.itemsMatcheados + ' items asignados. Se perderan los cambios.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Si, salir',
+                        cancelButtonText: 'Cancelar'
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            self.set('showDespacho', false);
+                            self._cargarSolicitudes();
+                        }
+                    });
+                } else {
+                    this.set('showDespacho', false);
+                    this._cargarSolicitudes();
+                }
+            },
+
+            _seleccionarItem: function(e) {
+                var idx = parseInt(e.currentTarget.dataset.idx);
+                var item = this.itemsDespacho[idx];
+                if (!item) return;
+
+                if (item._matched) return;
+
+                this.set('itemSeleccionadoIdx', idx);
+                this.set('stockSeleccionadoId', '');
+
+                // Cargar stock disponible segun tipo del item
+                var stockList = [];
+                if (item.tipo_producto === 'porcion') {
+                    if (item.match && item.match.length > 0) {
+                        stockList = item.match.map(function(m) {
+                            return {
+                                id: 'p_' + m.idporcion,
+                                tipo: 'porcion',
+                                idporcion: m.idporcion,
+                                descripcion: m.descripcion,
+                                stock: parseFloat(m.stock),
+                                match_tipo: m.match_tipo,
+                                almacen_nombre: null
+                            };
+                        });
+                    }
+                } else {
+                    if (item.opciones_almacen && item.opciones_almacen.length > 0) {
+                        stockList = item.opciones_almacen.map(function(a) {
+                            return {
+                                id: 'a_' + a.idproducto_stock,
+                                tipo: 'almacen',
+                                idproducto_stock: a.idproducto_stock,
+                                idproducto: a.idproducto,
+                                idalmacen: a.idalmacen,
+                                descripcion: a.producto_nombre,
+                                stock: parseFloat(a.stock),
+                                match_tipo: a.match_tipo,
+                                almacen_nombre: a.almacen_nombre
+                            };
+                        });
+                    }
+                }
+
+                this.set('stockDisponible', stockList);
+                this.set('stockDisponibleFiltrado', stockList);
+                this.set('cantidadDespacho', parseFloat(item.cantidad_solicitada) || 0);
+
+                // Auto-seleccionar si solo hay 1 opcion
+                if (stockList.length === 1) {
+                    this.set('stockSeleccionadoId', stockList[0].id);
+                }
+
+                var txtBuscar = this.$$('#txtBuscarStock');
+                if (txtBuscar) txtBuscar.value = '';
+            },
+
+            _filtrarStock: function(e) {
+                var texto = (e.currentTarget.value || '').toLowerCase();
+                if (!texto) {
+                    this.set('stockDisponibleFiltrado', this.stockDisponible);
+                    return;
+                }
+                var filtrado = this.stockDisponible.filter(function(s) {
+                    return s.descripcion.toLowerCase().indexOf(texto) >= 0 ||
+                           (s.almacen_nombre && s.almacen_nombre.toLowerCase().indexOf(texto) >= 0);
+                });
+                this.set('stockDisponibleFiltrado', filtrado);
+            },
+
+            _seleccionarStock: function(e) {
+                var stock = e.model.stock;
+                this.set('stockSeleccionadoId', stock.id);
+            },
+
+            _cambiarCantidad: function(e) {
+                var val = parseFloat(e.currentTarget.value) || 0;
+                this.set('cantidadDespacho', val);
+            },
+
+            _confirmarMatch: function() {
+                var idx = this.itemSeleccionadoIdx;
+                if (idx < 0) return;
+
+                var stockId = this.stockSeleccionadoId;
+                if (!stockId) {
+                    showToastSwal('warning', 'Selecciona un producto de tu stock');
+                    return;
+                }
+
+                var cantidad = this.cantidadDespacho;
+                if (cantidad <= 0) {
+                    showToastSwal('warning', 'La cantidad debe ser mayor a 0');
+                    return;
+                }
+
+                var stockItem = this.stockDisponible.find(function(s) { return s.id === stockId; });
+                if (!stockItem) return;
+
+                this.set('itemsDespacho.' + idx + '._matched', true);
+                this.set('itemsDespacho.' + idx + '._match_desc', stockItem.descripcion);
+                this.set('itemsDespacho.' + idx + '._match_almacen', stockItem.almacen_nombre || '');
+                this.set('itemsDespacho.' + idx + '._match_cantidad', cantidad);
+                this.set('itemsDespacho.' + idx + '._match_data', stockItem);
+
+                var count = this.itemsDespacho.filter(function(i) { return i._matched; }).length;
+                this.set('itemsMatcheados', count);
+
+                this._avanzarSiguienteItem(idx);
+            },
+
+            _quitarMatch: function(e) {
+                e.stopPropagation();
+                var idx = parseInt(e.currentTarget.dataset.idx);
+
+                this.set('itemsDespacho.' + idx + '._matched', false);
+                this.set('itemsDespacho.' + idx + '._match_desc', '');
+                this.set('itemsDespacho.' + idx + '._match_almacen', '');
+                this.set('itemsDespacho.' + idx + '._match_cantidad', 0);
+                this.set('itemsDespacho.' + idx + '._match_data', null);
+
+                var count = this.itemsDespacho.filter(function(i) { return i._matched; }).length;
+                this.set('itemsMatcheados', count);
+
+                this.set('itemSeleccionadoIdx', -1);
+                var self = this;
+                setTimeout(function() {
+                    self._seleccionarItem({ currentTarget: { dataset: { idx: idx.toString() } } });
+                }, 50);
+            },
+
+            _avanzarSiguienteItem: function(currentIdx) {
+                var items = this.itemsDespacho;
+                for (var i = currentIdx + 1; i < items.length; i++) {
+                    if (!items[i]._matched) {
+                        this.set('itemSeleccionadoIdx', -1);
+                        var self = this;
+                        var nextIdx = i;
+                        setTimeout(function() {
+                            self._seleccionarItem({ currentTarget: { dataset: { idx: nextIdx.toString() } } });
+                        }, 50);
+                        return;
+                    }
+                }
+                for (var j = 0; j < currentIdx; j++) {
+                    if (!items[j]._matched) {
+                        this.set('itemSeleccionadoIdx', -1);
+                        var self2 = this;
+                        var nextIdx2 = j;
+                        setTimeout(function() {
+                            self2._seleccionarItem({ currentTarget: { dataset: { idx: nextIdx2.toString() } } });
+                        }, 50);
+                        return;
+                    }
+                }
+                // Todos matched
+                this.set('itemSeleccionadoIdx', -1);
+                this.set('stockDisponible', []);
+                this.set('stockDisponibleFiltrado', []);
+            },
+
+            _ejecutarDespacho: async function() {
+                var self = this;
+                var detalles = [];
+
+                this.itemsDespacho.forEach(function(item) {
+                    if (!item._matched) return;
+                    var stockData = item._match_data;
+                    var detalle = {
+                        idsolicitud_producto_detalle: item.idsolicitud_producto_detalle,
+                        tipo_producto: item.tipo_producto,
+                        cantidad_despachada: item._match_cantidad
+                    };
+
+                    if (item.tipo_producto === 'porcion') {
+                        detalle.idporcion_local = stockData.idporcion;
+                    } else {
+                        detalle.idproducto_stock = stockData.idproducto_stock;
+                        detalle.idalmacen = stockData.idalmacen;
+                    }
+                    detalles.push(detalle);
+                });
+
+                if (detalles.length === 0) {
+                    showToastSwal('warning', 'No hay items asignados para despachar');
+                    return;
+                }
+
+                var result = await Swal.fire({
+                    title: 'Confirmar Despacho',
+                    html: 'Se despacharan <strong>' + detalles.length + '</strong> items.<br>El stock se descontara de tu almacen.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Si, despachar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#4caf50'
+                });
+
+                if (!result.isConfirmed) return;
+
+                xPopupLoad.xopen();
+                try {
+                    var _httpFecht = new httpFecht();
+                    var rpt = await _httpFecht.postJson('../../bdphp/log_011.php?op=14', {
+                        idsolicitud_producto: self.solicitudActual.idsolicitud_producto,
+                        detalles: detalles
+                    });
+
+                    if (rpt.success) {
+                        showToastSwal('success', 'Solicitud despachada correctamente');
+                        self.set('showDespacho', false);
+                        self._cargarSolicitudes();
+                    } else {
+                        showToastSwal('error', rpt.message || 'Error al despachar');
+                    }
+                } catch (error) {
+                    console.error('Error al despachar:', error);
+                    showToastSwal('error', 'Error al despachar solicitud');
+                }
+                xPopupLoad.xclose();
+            },
+
+            // ==================== HELPERS ====================
+
+            _formatFecha: function(fecha) {
+                if (!fecha) return '';
+                var d = new Date(fecha);
+                var dia = String(d.getDate()).padStart(2, '0');
+                var mes = String(d.getMonth() + 1).padStart(2, '0');
+                var anio = d.getFullYear();
+                var hora = String(d.getHours()).padStart(2, '0');
+                var min = String(d.getMinutes()).padStart(2, '0');
+                return dia + '/' + mes + '/' + anio + ' ' + hora + ':' + min;
+            },
+
+            _truncar: function(texto, max) {
+                if (!texto) return '';
+                return texto.length > max ? texto.substring(0, max) + '...' : texto;
+            },
+
+            _esDespachable: function(estado) {
+                return ['enviado', 'visto', 'atendido'].indexOf(estado) >= 0;
+            },
+
+            _hayItems: function(arr) {
+                return arr && arr.length > 0;
+            },
+
+            _itemClass: function(item, selIdx, idx) {
+                if (item._matched) return 'matched';
+                if (selIdx === idx) return 'active';
+                return '';
+            },
+
+            _tieneItemSeleccionado: function(idx) {
+                return idx >= 0;
+            },
+
+            _getItemSelDesc: function(idx, items) {
+                if (idx < 0 || !items || idx >= items.length) return '';
+                return items[idx].descripcion_solicitada;
+            },
+
+            _getCantSolicitada: function(idx, items) {
+                if (idx < 0 || !items || idx >= items.length) return 0;
+                return items[idx].cantidad_solicitada;
+            },
+
+            _stockSelectedClass: function(stock, selId) {
+                return stock.id === selId ? 'selected' : '';
+            },
+
+            _stockClass: function(stock) {
+                var val = parseFloat(stock);
+                if (val <= 0) return 'stock-zero';
+                if (val < 5) return 'stock-low';
+                return 'stock-ok';
+            },
+
+            _esMatchCodigo: function(tipo) {
+                return tipo === 'codigo_unico';
+            },
+
+            _puedeAsignar: function(stockId) {
+                return !!stockId;
+            },
+
+            _hayMatcheados: function(count) {
+                return count > 0;
+            },
+
+            _btnDespacharClass: function(matcheados, total) {
+                if (matcheados === 0) return 'btn-secondary disabled';
+                if (matcheados === total) return 'btn-success fw-600';
+                return 'btn-warning fw-600';
+            }
+        });
+    </script>
+</dom-module>

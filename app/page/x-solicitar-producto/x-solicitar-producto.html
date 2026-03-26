@@ -2,142 +2,7 @@
     
     <template>
         
-        <style>
-            .autocomplete-container {
-                position: relative;
-            }
-            .autocomplete-resultados {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: white;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                max-height: 300px;
-                overflow-y: auto;
-                z-index: 1000;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                margin-top: 4px;
-            }
-            .autocomplete-item {
-                padding: 12px;
-                cursor: pointer;
-                border-bottom: 1px solid #f0f0f0;
-                transition: background 0.2s;
-            }
-            .autocomplete-item:hover {
-                background: #f5f5f5;
-            }
-            .badge-tipo {
-                display: inline-block;
-                padding: 2px 8px;
-                border-radius: 10px;
-                font-size: 10px;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-            .badge-almacen {
-                background: #b2dfdb;
-                color: #00695c;
-            }
-            .semaforo-badge {
-                display: inline-block;
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                margin-right: 6px;
-            }
-            .semaforo-rojo { background: #f44336; }
-            .semaforo-amarillo { background: #ff9800; }
-            .semaforo-verde { background: #4caf50; }
-            
-            .lista-item {
-                background: #fff;
-                border: 2px solid #e0e0e0;
-                border-radius: 6px;
-                padding: 10px;
-                margin-bottom: 8px;
-                cursor: pointer;
-                transition: all 0.2s;
-                position: relative;
-            }
-            .lista-item:hover {
-                border-color: #90caf9;
-            }
-            .lista-item.seleccionado {
-                background: #e3f2fd;
-                border-color: #2196f3;
-                border-width: 3px;
-            }
-            .check-icon {
-                position: absolute;
-                top: 8px;
-                right: 8px;
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: #2196f3;
-                color: white;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-            }
-            .lista-item.seleccionado .check-icon {
-                display: flex;
-            }
-            .lista-item .item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                width: 100%;
-            }
-            .lista-item .item .item-stock {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 60px;
-            }
-
-            .cantidad-input {
-                width: 80px;
-                padding: 6px 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                text-align: center;
-                font-size: 14px;
-            }
-            .tab-filtro {
-                display: inline-block;
-                padding: 8px 16px;
-                margin-right: 8px;
-                border: 2px solid #e0e0e0;
-                border-radius: 20px;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 13px;
-                font-weight: 600;
-            }
-            .tab-filtro:hover {
-                border-color: #90caf9;
-            }
-            .tab-filtro.activo {
-                background: #2196f3;
-                color: white;
-                border-color: #2196f3;
-            }
-            .tab-filtro .badge {
-                background: rgba(255,255,255,0.3);
-                padding: 2px 6px;
-                border-radius: 10px;
-                margin-left: 4px;
-                font-size: 11px;
-            }
-            .tab-filtro.activo .badge {
-                background: rgba(255,255,255,0.3);
-            }
-        </style>
+        <link rel="stylesheet" href="../../../css/solicitud-producto.css">
 
         <paper-dialog modal id="dialog_sugerencias" class="dialog_redondo" 
             style="max-width: 500px; width: 90%;"
@@ -317,7 +182,7 @@
                     </template>
 
                     <template is="dom-if" if="[[listaSolicitud.length]]">
-                        <table class="xTabla">
+                        <table class="xTabla w-100">
                             <thead>
                                 <tr>
                                     <th width="5%">#</th>
@@ -662,7 +527,7 @@ Polymer({
             if (item.tipo === 'porcion') {
                 return p.tipo === 'porcion' && p.idporcion_codigo_unico === item.idporcion_codigo_unico;
             } else {
-                return p.tipo === 'almacen' && p.id === item.id;
+                return p.tipo === 'producto' && p.id === item.id;
             }
         });
         
@@ -677,7 +542,8 @@ Polymer({
             tipo: item.tipo,
             id: item.id,
             idporcion_codigo_unico: item.idporcion_codigo_unico || null,
-            idproducto: item.tipo === 'almacen' ? item.id : null,
+            idporcion: item.tipo === 'porcion' ? item.id : null,
+            idproducto: item.tipo === 'producto' ? item.id : null,
             descripcion: item.descripcion,
             stock: item.stock,
             unidad: item.unidad_medida || '',
@@ -743,6 +609,7 @@ Polymer({
         
         const detalle = this.listaSolicitud.map(item => ({
             tipo: item.tipo,
+            idporcion: item.idporcion,
             idporcion_codigo_unico: item.idporcion_codigo_unico,
             idproducto: item.idproducto,
             descripcion: item.descripcion,

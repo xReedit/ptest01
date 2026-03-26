@@ -64,6 +64,7 @@
 						<paper-tabs selected="{{selected_conf}}" id="tab_cnf" scrollable>
 							<paper-tab>DATOS DEL ESTABLECIMINETO</paper-tab>
 							<paper-tab>CONFIGURACION APP</paper-tab>
+							<paper-tab>COMPROBANTES</paper-tab>
 						</paper-tabs>
 						<div class="xLinea2"></div>
 						<br>
@@ -87,24 +88,6 @@
 									<span class="xColorRow_verde xInvisible" id="labelSufijoValido">Sufijo Valido</span>
 		
 									<br><br>
-									<p><strong>Habilitar facturacion electronica</strong></p>
-									<label for="authorization_api_comprobante">Token</label>
-									<input type="text" class="xMiInput xPasarEnter2" id="authorization_api_comprobante" name="authorization_api_comprobante"><br>
-									<label for="id_api_comprobante">ID</label><br>
-									<input type="text" class="xMiInput xPasarEnter2" id="id_api_comprobante" name="id_api_comprobante"><br><br>
-									<paper-checkbox id="check_habilita_facturacion"><span>Habilitar Facturacion Electronica</span></paper-checkbox>
-
-									<p><strong>Reporte del contador</strong></p>
-									<paper-checkbox id="check_habilita_verificacion_cpe"><span>Habilitar verificacion uno x uno</span></paper-checkbox>
-
-									<br><br>
-									<div>																				
-										<paper-checkbox id="check_habilita_igv"><span><strong>Habilitar I.G.V</strong></span></paper-checkbox>
-										<p>Porcentaje IGV</p>
-										<input type="number" value="18" class="xMiInput xPasarEnter2" id="porcentaje_igv"><br>
-									</div>
-									
-									<br><br>
 									<p><strong>Plataforma | local o web</strong></p>							
 									<input type="text" class="xMiInput xPasarEnter2" placeholder="IP PRINT SERVER" id="ip_server_local" name="ip_server_local" espaciar>							
 									<paper-checkbox id="check_print_server"><span>Print server desde la web | version de internet</span></paper-checkbox>
@@ -121,7 +104,9 @@
 										<input type="text" id="facturacion_e_activo" name="facturacion_e_activo">
 										<input type="text" id="habilita_verificacion_cpe" name="habilita_verificacion_cpe">
 										<input type="text" id="isprinter_socket" name="isprinter_socket">
-										<input type="text" id="speech_disabled" name="speech_disabled">										
+										<input type="text" id="speech_disabled" name="speech_disabled">
+										<input type="text" id="h_authorization_api_comprobante" name="authorization_api_comprobante">
+										<input type="text" id="h_id_api_comprobante" name="id_api_comprobante">
 									</div>
 
 
@@ -320,10 +305,13 @@
 									<br><br>									
 
 									<p>Datos para delivery:</p>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="CIUDAD" id="ciudad" name="ciudad" espaciar required>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="PROVINCIA" id="provincia" name="provincia" espaciar required>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="DEPARTAMENTO" id="departamento" name="departamento" espaciar required>
-									<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO POSTAL" id="codigo_postal" name="codigo_postal" espaciar required>
+									<div class="pl-1 pr-2">
+										<x-comp-find-ubigeo class="xMiInput xPasarEnter2" id="inputCiudadDelivery"></x-comp-find-ubigeo>
+									</div>
+									<input type="hidden" id="ciudad" name="ciudad">
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="PROVINCIA" id="provincia" name="provincia" espaciar readonly>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="DEPARTAMENTO" id="departamento" name="departamento" espaciar readonly>
+									<input type="text" class="xMiInput xPasarEnter2" placeholder="CODIGO POSTAL" id="codigo_postal" name="codigo_postal" espaciar readonly>
 									<br><br><br>
 
 									<p>Atencion al publico:</p><br>
@@ -448,6 +436,64 @@
 								<div class="xBoton2 xAzul" onclick="xAdmGuardarDatosAPP();">Guardar</div>
 							</div>
 
+							<!-- NUMERACION DE COMPROBANTES -->
+							<div class="xBordeIzqHover">
+								<p><strong>Habilitar facturacion electronica</strong></p>
+								<label for="authorization_api_comprobante">Token</label>
+								<input type="text" class="xMiInput xPasarEnter2" id="authorization_api_comprobante"><br>
+								<label for="id_api_comprobante">ID</label><br>
+								<input type="text" class="xMiInput xPasarEnter2" id="id_api_comprobante"><br><br>
+								<paper-checkbox id="check_habilita_facturacion"><span>Habilitar Facturacion Electronica</span></paper-checkbox>
+
+								<p><strong>Reporte del contador</strong></p>
+								<paper-checkbox id="check_habilita_verificacion_cpe"><span>Habilitar verificacion uno x uno</span></paper-checkbox>
+
+								<br><br>
+								<div>																				
+									<paper-checkbox id="check_habilita_igv"><span><strong>Habilitar I.G.V</strong></span></paper-checkbox>
+									<p>Porcentaje IGV</p>
+									<input type="number" value="18" class="xMiInput xPasarEnter2" id="porcentaje_igv"><br>
+								</div>
+
+								<div class="xLinea2"></div><br>
+
+								<h3>Numeración de comprobantes de pago</h3>
+								<p>Indique los comprobantes de pago que emite esta sede, así como la serie y el último número correlativo emitido.</p>
+								<p>Es a partir del último correlativo emitido que el sistema empezará a enumerar los comprobantes. Ej: último correlativo emitido 100, entonces el sistema emitirá 101.</p>
+								<div class="xLinea2"></div><br>
+
+								<table id="tb_adm_comprobantes" width="100%">
+									<thead>
+										<th>Comprobante</th>
+										<th>Serie</th>
+										<th>Correlativo</th>
+										<th></th>
+									</thead>
+									<tr class="xSinBorde">
+										<td>
+											<select id="sel_tipo_comprobante_adm" class="xMiInput xCursor">
+												<template is="dom-repeat" items="{{ListTiposComprobante}}" as="tc">
+													<option value="{{tc.idtipo_comprobante}}">{{tc.descripcion}}</option>
+												</template>
+											</select>
+										</td>
+										<td><input type="text" autocomplete="off" class="xMiInput" placeholder="Serie" onChange="conMayusculas(this)" id="txt_serie_adm"></td>
+										<td><input class="xMiInput" placeholder="Correlativo" type="number" min="0" id="txt_correlativo_adm"></td>
+										<td><paper-fab mini icon="add" onclick="xAdmComprobanteAdd()" title="Agregar"></paper-fab></td>
+									</tr>
+									<template is="dom-repeat" items="{{ListComprobantesSedeAdm}}" as="comp">
+										<tr>
+											<td>{{comp.dsc_comprobante}}</td>
+											<td>{{comp.serie}}</td>
+											<td>{{comp.correlativo}}</td>
+											<td><span class="xDeleteRow xCursor" title="Eliminar" onclick="xAdmComprobanteDelete(this)" data-id$="{{comp.idtipo_comprobante_serie}}"></span></td>
+										</tr>
+									</template>
+								</table>
+								<br><br>
+								<button class="btn btn-sm btn-primary" onclick="xAdmGuardarSede();" disabled$="{{!formValid}}">Guardar</button>								
+							</div>
+
 						</iron-pages>
 						
 					</div>
@@ -468,7 +514,7 @@
 		xCompPlanSelect = document.getElementById('compPlanSelect');
 
 		xLoadAdmDatosOrg();
-		
+		xLoadTiposComprobante();
 
 
 		$("#ctrl_open_file").change(function(e) {
@@ -514,6 +560,14 @@
 			$('#formDatosAPP #ciudad').val(e.detail.value.ciudad);
 			$('#formDatosAPP #provincia').val(e.detail.value.provincia);
 			$('#formDatosAPP #departamento').val(e.detail.value.departamento);
+		})
+
+		const _inputCiudadDelivery = document.getElementById('inputCiudadDelivery');
+		_inputCiudadDelivery.addEventListener('on-selected', (e) => {
+			$('#formDatosAPP #ciudad').val(e.detail.value.ciudad);
+			$('#formDatosAPP #provincia').val(e.detail.value.provincia);
+			$('#formDatosAPP #departamento').val(e.detail.value.departamento);
+			$('#formDatosAPP #codigo_postal').val(e.detail.value.value);
 		})
 	}
 
@@ -619,8 +673,9 @@ function transferenciaCompletaMini(xfile){
 		$("#frm_sede #isprinter_socket").val(_CheckisPrinterSocket);
 		$("#frm_sede #speech_disabled").val(_check_speech_disabled);		
 		$("#frm_sede #facturacion_e_activo").val(_check_habilita_facturacion);		
-		$("#frm_sede #habilita_verificacion_cpe").val(_check_habilita_verificacion_cpe);		
-		
+		$("#frm_sede #habilita_verificacion_cpe").val(_check_habilita_verificacion_cpe);
+		$("#frm_sede #h_authorization_api_comprobante").val($('#authorization_api_comprobante').val());
+		$("#frm_sede #h_id_api_comprobante").val($('#id_api_comprobante').val());
 
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=sede", $("#frm_sede").serialize(), function (id) {
 			xPopupLoad.xclose();
@@ -741,9 +796,9 @@ function transferenciaCompletaMini(xfile){
 		$("#frm_sede #ciudad").val(dataSede.ciudad);
 		$("#frm_sede #ubigeo").val(dataSede.ubigeo);
 		$("#frm_sede #codigo_del_domicilio_fiscal").val(dataSede.codigo_del_domicilio_fiscal);
-		$("#frm_sede #authorization_api_comprobante").val(dataSede.authorization_api_comprobante);
+		$("#authorization_api_comprobante").val(dataSede.authorization_api_comprobante);
 		$("#frm_sede #sufijo").val(dataSede.sufijo);
-		$("#frm_sede #id_api_comprobante").val(dataSede.id_api_comprobante);
+		$("#id_api_comprobante").val(dataSede.id_api_comprobante);
 		$("#frm_sede #sys_local").val(dataSede.sys_local);
 		$("#frm_sede #ip_server_local").val(dataSede.ip_server_local);
 		$("#frm_sede #pwa").val(dataSede.pwa);
@@ -800,6 +855,15 @@ function transferenciaCompletaMini(xfile){
 		$("#formDatosAPP #provincia").val(dataSede.provincia);
 		$("#formDatosAPP #departamento").val(dataSede.departamento);
 		$("#formDatosAPP #codigo_postal").val(dataSede.codigo_postal);
+
+		const _inputCiudadDelivery = document.getElementById('inputCiudadDelivery');
+		_inputCiudadDelivery.setValue({
+			value: dataSede.codigo_postal || '',
+			label: dataSede.ciudad || '',
+			ciudad: dataSede.ciudad || '',
+			provincia: dataSede.provincia || '',
+			departamento: dataSede.departamento || ''
+		});
 		$("#formDatosAPP #tiempo_aprox_entrega").val(dataSede.tiempo_aprox_entrega);
 		$("#formDatosAPP #pwa_delivery_img").val(dataSede.pwa_delivery_img);
 		$("#formDatosAPP #dias_atienden").val(dataSede.dias_atienden);
@@ -844,6 +908,7 @@ function transferenciaCompletaMini(xfile){
 		xLoadHorarioTrabajo();
 		xLoadImpuestos();
 		xLoadSuscripcionSede();
+		xLoadComprobantesSede();
 	}
 
 	function xLoadSuscripcionSede() {
@@ -884,6 +949,7 @@ function transferenciaCompletaMini(xfile){
 		$("#txt_usuario").val('');
 		$("#txt_usuario_password").val('');
 		xThisAdminNew.xIdSede = '';
+		xThisAdminNew.ListComprobantesSedeAdm = [];
 		$("#frm_sede #nombre").focus();
 	}
 
@@ -1120,7 +1186,70 @@ function transferenciaCompletaMini(xfile){
 				});
 	}
 
-	
+	// ===================== COMPROBANTES =====================
+	function xLoadTiposComprobante() {
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1004' })
+		.done((res) => {
+			xThisAdminNew.ListTiposComprobante = JSON.parse(res).datos;
+		});
+	}
+
+	function xLoadComprobantesSede() {
+		if (!xThisAdminNew.xIdSede || xThisAdminNew.xIdSede === '') {
+			xThisAdminNew.ListComprobantesSedeAdm = [];
+			return;
+		}
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1003', data: { idorg: xThisAdminNew.xIdOrg, idsede: xThisAdminNew.xIdSede } })
+		.done((res) => {
+			xThisAdminNew.ListComprobantesSedeAdm = JSON.parse(res).datos;
+		});
+	}
+
+	function xAdmComprobanteAdd() {
+		const idtipo_comprobante = $('#sel_tipo_comprobante_adm').val();
+		const serie = $('#txt_serie_adm').val().toUpperCase();
+		const correlativo = $('#txt_correlativo_adm').val();
+
+		if (!xThisAdminNew.xIdSede || xThisAdminNew.xIdSede === '') {
+			alert('Primero seleccione una sede.');
+			return;
+		}
+		if (!serie || !correlativo) {
+			alert('Complete la serie y el correlativo.');
+			return;
+		}
+
+		xPopupLoad.xopen();
+		$.ajax({
+			type: 'POST',
+			url: '../../bdphp/log_004.php?op=1005',
+			data: {
+				idorg: xThisAdminNew.xIdOrg,
+				idsede: xThisAdminNew.xIdSede,
+				idtipo_comprobante: idtipo_comprobante,
+				serie: serie,
+				correlativo: correlativo
+			}
+		}).done(() => {
+			xPopupLoad.xclose();
+			$('#txt_serie_adm').val('');
+			$('#txt_correlativo_adm').val('');
+			xLoadComprobantesSede();
+		});
+	}
+
+	function xAdmComprobanteDelete(obj) {
+		const id = obj.getAttribute('data-id');
+		if (!confirm('¿Está seguro de eliminar este comprobante?')) return;
+
+		xPopupLoad.xopen();
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=1006', data: { id: id } })
+		.done(() => {
+			xPopupLoad.xclose();
+			xLoadComprobantesSede();
+		});
+	}
+	// ===================== FIN COMPROBANTES =====================
 
 	
 	Polymer({
@@ -1136,6 +1265,8 @@ function transferenciaCompletaMini(xfile){
 			ListSubCategoria: [],
 			ListSubCategoriaSuscritas: [],
 			ListSedesHorario: [],
+			ListTiposComprobante: [],
+			ListComprobantesSedeAdm: [],
 			isLinkDisponible: Boolean
 			//ListSedes: [],
 			// hayDatosRestaurar: boolean = true,

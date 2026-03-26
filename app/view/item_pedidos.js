@@ -262,12 +262,14 @@ function handlerFnMiPedido(e) {
 	
 	
 
+		const isND = itemPedidos_objItemSelected.cantidad === 'ND';
 		if ( itemPedidos_objItemSelected.cantidad !== 'ND' || isSubItemCantidad ) {
 			if ( isSocket && xcantRunSocket >= 0 && xSotockSocketRun > -1) {			
 				
 				itemPedidos_objItemSelected.stock_actual = xSotockSocket;
 				const itemNotifySocket = {
 					cantidad: xSotockSocket,
+					isND,
 					idcarta_lista: itemPedidos_objItemSelected.idcarta_lista,
 					iditem: itemPedidos_objItemSelected.iditem,
 					// isalmacen: itemPedidos_objItemSelected.procede === '0' ? 1 : 0,

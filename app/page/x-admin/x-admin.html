@@ -224,8 +224,11 @@
 				<iron-pages selected="{{selected}}">
 					<div id="div_establecimientos">
 						<div class="x_div_linea">
-							<h3>Establecimientos suscritos</h3>							
-							<button class="xBoton2 xAzul xDerecha" onclick="xAdmGoNew();">Nuevo</button>
+							<h3>Establecimientos suscritos</h3>
+							<div>
+								<button class="xBoton2 xVerde xDerecha" onclick="router.go('/adm_dashboard_stats');" style="margin-right: 10px;"><i class="fa fa-bar-chart"></i> Dashboard</button>
+								<button class="xBoton2 xAzul xDerecha" onclick="xAdmGoNew();">Nuevo</button>
+							</div>
 						</div>						
 						<hr>
 						<br>
@@ -424,6 +427,19 @@
 	.d-flexx {
 		display: flex;
 		align-items: center;
+	}
+
+	.xBoton2.xVerde {
+		background: #28a745;
+		color: white;
+		border: none;
+		padding: 8px 15px;
+		border-radius: 5px;
+		cursor: pointer;
+	}
+
+	.xBoton2.xVerde:hover {
+		background: #218838;
 	}
 </style>
 <script type="text/javascript" src="./us_cpc.js"></script>

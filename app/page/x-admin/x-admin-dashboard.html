@@ -1,0 +1,623 @@
+<dom-module id="x-admin-dashboard">
+	<template>
+		<br>
+		<div class="xMiCard xradius" style="width:calc(100% - 10%)">
+			<div class="xEncanezadoCard xFondoRowAmarillo4">
+				Dashboard de Establecimientos
+				<button class="xBoton2 xPlomo" style="float:right; margin-top:-5px;" onclick="router.go('/adm_dashboard');"><i class="fa fa-arrow-left"></i> Volver</button>
+			</div>
+			<div class="xContentCard">
+				<!-- Resumen en línea -->
+				<p class="fw-600">Resumen General</p>
+				<br>
+				<table width="100%" class="tabla-resumen">
+					<tr>
+						<td align="center" class="kpi-clickable" onclick="filtrarKPI('todos')">
+							<p class="fs-30 fw-600 text-primary">{{estadisticas.total}}</p>
+							<p class="xfont11">Total Activos</p>
+						</td>
+						<td align="center" class="kpi-clickable" onclick="filtrarKPI('mes_actual')">
+							<p class="fs-30 fw-600 text-success">{{estadisticas.mes_actual}}</p>
+							<p class="xfont11">Creados este mes</p>
+						</td>
+						<td align="center" class="kpi-clickable" onclick="filtrarKPI('mes_anterior')">
+							<p class="fs-30 fw-600">{{estadisticas.mes_anterior}}</p>
+							<p class="xfont11">Mes anterior</p>
+						</td>
+						<td align="center" class="kpi-clickable" onclick="filtrarKPI('produccion')">
+							<p class="fs-30 fw-600 text-primary">{{estadisticas.produccion}}</p>
+							<p class="xfont11">En Producción</p>
+						</td>
+						<td align="center" class="kpi-clickable" onclick="filtrarKPI('pruebas')">
+							<p class="fs-30 fw-600">{{estadisticas.pruebas}}</p>
+							<p class="xfont11">En Pruebas</p>
+						</td>
+						<td align="center" class="kpi-clickable" onclick="filtrarKPI('baja')">
+							<p class="fs-30 fw-600 red">{{estadisticas.dados_baja}}</p>
+							<p class="xfont11">Dados de Baja</p>
+						</td>
+						<td align="center">
+							<p class="fs-30 fw-600 text-success">S/ {{estadisticas.recaudacion_mes}}</p>
+							<p class="xfont11">Recaudación Mes Actual</p>
+						</td>
+					</tr>
+				</table>
+
+				<br><br>
+				<!-- Distribución por Plan -->
+				<p class="fw-600">Distribución por Plan</p>
+				<br>
+				<table width="100%">
+					<thead>
+						<th align="left">Plan</th>
+						<th align="center">Cantidad</th>
+						<th align="right">Precio Unit.</th>
+						<th align="right">Total Mensual</th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="{{resumenPlanes}}" as="plan">
+							<tr>
+								<td><strong>{{plan.descripcion}}</strong></td>
+								<td align="center">{{plan.cantidad}}</td>
+								<td align="right">S/ {{plan.importe}}</td>
+								<td align="right"><strong>S/ {{plan.totalPlan}}</strong></td>
+							</tr>
+						</template>
+					</tbody>
+					<tfoot>
+						<tr style="border-top: 2px solid #333;">
+							<td colspan="3" align="right"><strong>TOTAL GENERAL:</strong></td>
+							<td align="right"><strong class="text-primary">S/ {{totalGeneralPlanes}}</strong></td>
+						</tr>
+					</tfoot>
+				</table>
+
+				<br><br>
+				<!-- Filtros -->
+				<div class="x_div_linea">
+					<p class="fw-600">Listado de Establecimientos ({{ListSedesFiltradas.length}})</p>
+					<button class="xBoton2 xAzul" onclick="exportarExcelDashboard()"><i class="fa fa-file-excel-o"></i> Exportar</button>
+				</div>
+				<br>
+				<div class="d-flex" style="gap: 15px; flex-wrap: wrap;">
+					<input type="text" id="txtBuscarDashboard" class="xMiInput" style="min-width: 250px;" placeholder="Buscar..." onkeyup="xBuscarEstablecimientosDashboard(this)">
+					<select id="selFiltroPlan" class="selected-template-1 xCursor" onchange="filtrarPorPlan()">
+						<option value="">Todos los planes</option>
+						<template is="dom-repeat" items="{{listPlanes}}" as="p">
+							<option value="{{p.idsede_plan_contratado}}">{{p.descripcion}}</option>
+						</template>
+					</select>
+					<select id="selFiltroTipo" class="selected-template-1 xCursor" onchange="filtrarPorTipo()">
+						<option value="">Todos los tipos</option>
+						<option value="PRODUCCION">Producción</option>
+						<option value="PRUEBAS">Pruebas</option>
+					</select>
+					<select id="selFiltroPeriodo" class="selected-template-1 xCursor" onchange="filtrarPorPeriodo()">
+						<option value="">Todos los periodos</option>
+						<option value="mes_actual">Este mes</option>
+						<option value="mes_anterior">Mes anterior</option>
+						<option value="ultimos_3_meses">Últimos 3 meses</option>
+						<option value="este_anio">Este año</option>
+					</select>
+				</div>
+				<br>
+
+				<!-- Tabla de establecimientos -->
+				<table width="100%" id="tb_dashboard">
+					<thead>
+						<th class="xCursor" data-sort="index" onclick="sortListSedesDashboard(this)"># <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="razonsocial" onclick="sortListSedesDashboard(this)">Razón Social <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="nomsede" onclick="sortListSedesDashboard(this)">Sede <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="ciudad" onclick="sortListSedesDashboard(this)">Ciudad <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="tipo" onclick="sortListSedesDashboard(this)">Tipo <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="plan" onclick="sortListSedesDashboard(this)">Plan <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="finicio" onclick="sortListSedesDashboard(this)">F. Inicio <i class="fa fa-sort"></i></th>
+						<th class="xCursor" data-sort="num_dias_creado" onclick="sortListSedesDashboard(this)">Antigüedad <i class="fa fa-sort"></i></th>
+						<th>Contacto</th>
+						<th>Estado</th>
+					</thead>
+					<tbody>
+						<template is="dom-repeat" items="{{ListSedesFiltradas}}" as="item">
+							<tr data-id="{{index}}">
+								<td>{{displayIndex(index)}}</td>
+								<td>{{item.razonsocial}}</td>
+								<td>{{item.nomsede}}</td>
+								<td>{{item.ciudad}}</td>
+								<td>{{item.tipo}}</td>
+								<td>
+									<span>{{item.plan}}</span>
+									<span class="xfont11 text-muted" hidden$="{{!item.importe_plan}}"> - S/{{item.importe_plan}}</span>
+								</td>
+								<td>{{item.finicio}}</td>
+								<td>
+									<span>{{formatTimeSinceCreation(item.num_dias_creado)}}</span>
+									<span class$="{{getAntiguedadIndicatorClass(item.num_dias_creado)}} ml-2"><i class="fa fa-circle xfont10"></i></span>
+								</td>
+								<td>
+									<span hidden$="{{!item.nombre_contacto}}">{{item.nombre_contacto}}<br></span>
+									<span class="xfont11">{{displayTelefono(item.telefono_contacto)}}</span>
+								</td>
+								<td>
+									<span class$="{{getPagoClass(item.is_bloqueado)}}">{{getPagoText(item.is_bloqueado)}}</span>
+								</td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</template>
+</dom-module>
+
+<style>
+	.fs-30 { font-size: 30px; }
+	.fw-600 { font-weight: 600; }
+	.text-primary { color: #007bff; }
+	.text-success { color: #28a745; }
+	.text-muted { color: #6c757d; }
+	.xfont10 { font-size: 10px; }
+	.xfont11 { font-size: 11px; }
+	.d-flex { display: flex; }
+	.ml-2 { margin-left: 8px; }
+	.xCursor { cursor: pointer; }
+
+	.tabla-resumen td { padding: 15px; }
+	.kpi-clickable { cursor: pointer; transition: background 0.2s; border-radius: 5px; }
+	.kpi-clickable:hover { background: #f0f0f0; }
+	.kpi-active { background: #e3f2fd !important; }
+
+	.indicator-new { color: #28a745; }
+	.indicator-null { color: #999; }
+	.indicator-recent { color: #ffc107; }
+	.indicator-established { color: #007bff; }
+
+	.green { color: #28a745; }
+	.red { color: #dc3545; }
+
+	.fa-sort-asc, .fa-sort-desc { color: #007bff; }
+</style>
+
+<script>
+var xThisDashboard;
+var arrSedeDashboard = [];
+var currentSortFieldDashboard = '';
+var currentSortOrderDashboard = 'asc';
+
+function xIniDashboard() {
+	xLoadSedesDashboard();
+	xLoadPlanes();
+	$('body').addClass('loaded');
+}
+
+function xLoadSedesDashboard() {
+	$.ajax({ url: '../../bdphp/log_004.php?op=1' })
+	.done((res) => {
+		const _res = $.parseJSON(res);
+		console.log('Dashboard datos:', _res.datos);
+		
+		// Procesar datos
+		const datosProcessed = _res.datos.map(item => {
+			if (item.num_dias_creado) {
+				item.num_dias_creado = parseInt(item.num_dias_creado);
+			} else if (item.finicio) {
+				const fechaInicio = parseFechaInicioDashboard(item.finicio);
+				if (fechaInicio) {
+					const hoy = new Date();
+					const diffTime = Math.abs(hoy - fechaInicio);
+					item.num_dias_creado = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+				}
+			}
+			if (!item.num_dias_creado) item.num_dias_creado = 0;
+			return item;
+		});
+		
+		arrSedeDashboard = datosProcessed;
+		xThisDashboard.ListSedes = datosProcessed;
+		xThisDashboard.ListSedesFiltradas = datosProcessed;
+		
+		// Calcular estadísticas
+		calcularEstadisticas(datosProcessed);
+		
+		// Calcular resumen por plan
+		calcularResumenPlanes(datosProcessed);
+	});
+}
+
+function xLoadPlanes() {
+	$.ajax({ url: '../../bdphp/log_004.php?op=1002' })
+	.done((res) => {
+		const _res = $.parseJSON(res);
+		xThisDashboard.listPlanes = _res.datos;
+	});
+}
+
+function calcularEstadisticas(datos) {
+	const hoy = new Date();
+	const mesActual = hoy.getMonth();
+	const anioActual = hoy.getFullYear();
+	const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+	const anioMesAnterior = mesActual === 0 ? anioActual - 1 : anioActual;
+	
+	// Filtrar solo activos para los indicadores principales
+	const datosActivos = datos.filter(item => item.is_baja !== '1');
+	
+	let stats = {
+		total: datosActivos.length,
+		mes_actual: 0,
+		mes_anterior: 0,
+		produccion: 0,
+		pruebas: 0,
+		dados_baja: 0,
+		recaudacion_mes: 0
+	};
+	
+	// Contar dados de baja del total
+	datos.forEach(item => {
+		if (item.is_baja === '1') stats.dados_baja++;
+	});
+	
+	// Estadísticas solo de activos
+	datosActivos.forEach(item => {
+		// Contar por tipo
+		if (item.tipo === 'PRODUCCION') stats.produccion++;
+		if (item.tipo === 'PRUEBAS') stats.pruebas++;
+		
+		// Sumar recaudación estimada mensual (solo producción activos)
+		if (item.tipo === 'PRODUCCION' && item.is_bloqueado !== '1') {
+			stats.recaudacion_mes += parseFloat(item.importe_plan) || 0;
+		}
+		
+		// Contar por mes de creación
+		const fechaInicio = parseFechaInicioDashboard(item.finicio);
+		if (fechaInicio) {
+			const mes = fechaInicio.getMonth();
+			const anio = fechaInicio.getFullYear();
+			
+			if (mes === mesActual && anio === anioActual) {
+				stats.mes_actual++;
+			}
+			if (mes === mesAnterior && anio === anioMesAnterior) {
+				stats.mes_anterior++;
+			}
+		}
+	});
+	
+	stats.recaudacion_mes = stats.recaudacion_mes.toFixed(2);
+	xThisDashboard.estadisticas = stats;
+}
+
+function filtrarKPI(tipo) {
+	// Limpiar filtros de select
+	$('#selFiltroPlan').val('');
+	$('#selFiltroTipo').val('');
+	$('#selFiltroPeriodo').val('');
+	$('#txtBuscarDashboard').val('');
+	
+	// Quitar clase activa de todos
+	$('.kpi-clickable').removeClass('kpi-active');
+	
+	const hoy = new Date();
+	const mesActual = hoy.getMonth();
+	const anioActual = hoy.getFullYear();
+	const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+	const anioMesAnterior = mesActual === 0 ? anioActual - 1 : anioActual;
+	
+	let filtrado = arrSedeDashboard;
+	
+	if (tipo === 'mes_actual') {
+		filtrado = arrSedeDashboard.filter(item => {
+			const fecha = parseFechaInicioDashboard(item.finicio);
+			return fecha && fecha.getMonth() === mesActual && fecha.getFullYear() === anioActual;
+		});
+	} else if (tipo === 'mes_anterior') {
+		filtrado = arrSedeDashboard.filter(item => {
+			const fecha = parseFechaInicioDashboard(item.finicio);
+			return fecha && fecha.getMonth() === mesAnterior && fecha.getFullYear() === anioMesAnterior;
+		});
+	} else if (tipo === 'produccion') {
+		filtrado = arrSedeDashboard.filter(item => item.tipo === 'PRODUCCION');
+	} else if (tipo === 'pruebas') {
+		filtrado = arrSedeDashboard.filter(item => item.tipo === 'PRUEBAS');
+	} else if (tipo === 'baja') {
+		filtrado = arrSedeDashboard.filter(item => item.is_baja === '1');
+	}
+	
+	xThisDashboard.ListSedesFiltradas = filtrado;
+	
+	// Marcar KPI activo
+	if (tipo !== 'todos') {
+		event.currentTarget.classList.add('kpi-active');
+	}
+}
+
+function calcularResumenPlanes(datos) {
+	const resumen = {};
+	
+	// Solo contar comercios activos (no dados de baja)
+	const datosActivos = datos.filter(item => item.is_baja !== '1');
+	
+	datosActivos.forEach(item => {
+		const planKey = item.plan || 'Sin Plan';
+		if (!resumen[planKey]) {
+			resumen[planKey] = {
+				descripcion: planKey,
+				cantidad: 0,
+				importe: parseFloat(item.importe_plan) || 0,
+				precio_semestral: parseFloat(item.precio_semestral) || 0
+			};
+		}
+		resumen[planKey].cantidad++;
+	});
+	
+	// Calcular total por plan y total general
+	let totalGeneral = 0;
+	const planesArray = Object.values(resumen).map(plan => {
+		plan.totalPlan = (plan.cantidad * plan.importe).toFixed(2);
+		totalGeneral += parseFloat(plan.totalPlan);
+		plan.importe = plan.importe.toFixed(2);
+		return plan;
+	});
+	
+	xThisDashboard.resumenPlanes = planesArray.sort((a, b) => b.cantidad - a.cantidad);
+	xThisDashboard.totalGeneralPlanes = totalGeneral.toFixed(2);
+}
+
+function parseFechaInicioDashboard(fechaStr) {
+	if (!fechaStr || fechaStr === '') return null;
+	
+	let fecha = null;
+	
+	if (fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+		fecha = new Date(fechaStr);
+	} else if (fechaStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+		const parts = fechaStr.split('/');
+		fecha = new Date(parts[2], parts[1] - 1, parts[0]);
+	}
+	
+	if (fecha && !isNaN(fecha.getTime())) {
+		return fecha;
+	}
+	
+	return null;
+}
+
+function xBuscarEstablecimientosDashboard(obj) {
+	aplicarFiltros();
+}
+
+function filtrarPorPlan() {
+	aplicarFiltros();
+}
+
+function filtrarPorTipo() {
+	aplicarFiltros();
+}
+
+function filtrarPorPeriodo() {
+	aplicarFiltros();
+}
+
+function aplicarFiltros() {
+	let resultado = [...arrSedeDashboard];
+	
+	// Filtro de búsqueda
+	const textoBusqueda = document.getElementById('txtBuscarDashboard').value.toLowerCase();
+	if (textoBusqueda) {
+		resultado = resultado.filter(s => {
+			return (s.razonsocial && s.razonsocial.toLowerCase().includes(textoBusqueda)) ||
+				   (s.nomsede && s.nomsede.toLowerCase().includes(textoBusqueda)) ||
+				   (s.ciudad && s.ciudad.toLowerCase().includes(textoBusqueda));
+		});
+	}
+	
+	// Filtro por plan
+	const planSeleccionado = document.getElementById('selFiltroPlan').value;
+	if (planSeleccionado) {
+		resultado = resultado.filter(s => s.idsede_plan_contratado == planSeleccionado);
+	}
+	
+	// Filtro por tipo
+	const tipoSeleccionado = document.getElementById('selFiltroTipo').value;
+	if (tipoSeleccionado) {
+		resultado = resultado.filter(s => s.tipo === tipoSeleccionado);
+	}
+	
+	// Filtro por periodo
+	const periodoSeleccionado = document.getElementById('selFiltroPeriodo').value;
+	if (periodoSeleccionado) {
+		const hoy = new Date();
+		const mesActual = hoy.getMonth();
+		const anioActual = hoy.getFullYear();
+		
+		resultado = resultado.filter(s => {
+			const fechaInicio = parseFechaInicioDashboard(s.finicio);
+			if (!fechaInicio) return false;
+			
+			const mes = fechaInicio.getMonth();
+			const anio = fechaInicio.getFullYear();
+			
+			switch(periodoSeleccionado) {
+				case 'mes_actual':
+					return mes === mesActual && anio === anioActual;
+				case 'mes_anterior':
+					const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+					const anioMesAnterior = mesActual === 0 ? anioActual - 1 : anioActual;
+					return mes === mesAnterior && anio === anioMesAnterior;
+				case 'ultimos_3_meses':
+					const hace3Meses = new Date(hoy);
+					hace3Meses.setMonth(hace3Meses.getMonth() - 3);
+					return fechaInicio >= hace3Meses;
+				case 'este_anio':
+					return anio === anioActual;
+				default:
+					return true;
+			}
+		});
+	}
+	
+	xThisDashboard.ListSedesFiltradas = resultado;
+}
+
+function sortListSedesDashboard(element) {
+	const sortField = element.getAttribute('data-sort');
+	
+	if (currentSortFieldDashboard === sortField) {
+		currentSortOrderDashboard = currentSortOrderDashboard === 'asc' ? 'desc' : 'asc';
+	} else {
+		currentSortFieldDashboard = sortField;
+		currentSortOrderDashboard = 'asc';
+	}
+	
+	// Reset indicators
+	const headers = document.querySelectorAll('.tabla-dashboard th[data-sort]');
+	headers.forEach(header => {
+		const icon = header.querySelector('i');
+		if (icon) icon.className = 'fa fa-sort';
+	});
+	
+	const icon = element.querySelector('i');
+	icon.className = currentSortOrderDashboard === 'asc' ? 'fa fa-sort-asc' : 'fa fa-sort-desc';
+	
+	let sortedArray = [...xThisDashboard.ListSedesFiltradas];
+	
+	sortedArray.sort((a, b) => {
+		if (sortField === 'index') {
+			return currentSortOrderDashboard === 'asc' ? 1 : -1;
+		}
+		
+		let valueA = a[sortField] ? a[sortField].toString().toLowerCase() : '';
+		let valueB = b[sortField] ? b[sortField].toString().toLowerCase() : '';
+		
+		if (sortField === 'num_dias_creado') {
+			valueA = parseInt(a[sortField]) || 0;
+			valueB = parseInt(b[sortField]) || 0;
+		}
+		
+		if (valueA < valueB) return currentSortOrderDashboard === 'asc' ? -1 : 1;
+		if (valueA > valueB) return currentSortOrderDashboard === 'asc' ? 1 : -1;
+		return 0;
+	});
+	
+	xThisDashboard.ListSedesFiltradas = sortedArray;
+}
+
+function exportarExcelDashboard() {
+	let csv = 'N°,Razón Social,Sede,Ciudad,Tipo,Plan,Frecuencia,F. Inicio,Teléfono Contacto,Nombre Contacto,Estado Pago\n';
+	
+	xThisDashboard.ListSedesFiltradas.forEach((item, index) => {
+		csv += `${index + 1},"${item.razonsocial || ''}","${item.nomsede || ''}","${item.ciudad || ''}","${item.tipo || ''}","${item.plan || ''}","${item.frecuencia || ''}","${item.finicio || ''}","${item.telefono_contacto || ''}","${item.nombre_contacto || ''}","${item.is_bloqueado === '1' ? 'Pendiente' : 'Al día'}"\n`;
+	});
+	
+	const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(blob);
+	link.download = 'establecimientos_' + new Date().toISOString().slice(0,10) + '.csv';
+	link.click();
+}
+
+Polymer({
+	is: 'x-admin-dashboard',
+	properties: {
+		ListSedes: {
+			type: Array,
+			value: function() { return []; }
+		},
+		ListSedesFiltradas: {
+			type: Array,
+			value: function() { return []; }
+		},
+		listPlanes: {
+			type: Array,
+			value: function() { return []; }
+		},
+		resumenPlanes: {
+			type: Array,
+			value: function() { return []; }
+		},
+		estadisticas: {
+			type: Object,
+			value: function() {
+				return {
+					total: 0,
+					mes_actual: 0,
+					mes_anterior: 0,
+					produccion: 0,
+					pruebas: 0,
+					dados_baja: 0,
+					recaudacion_mes: '0.00'
+				};
+			}
+		},
+		totalGeneralPlanes: {
+			type: String,
+			value: '0.00'
+		}
+	},
+	ready: function() {
+		xThisDashboard = this;
+		xIniDashboard();
+	},
+	displayIndex: function(index) {
+		return parseInt(index) + 1;
+	},
+	displayTelefono: function(telefono) {
+		return telefono || 'Sin teléfono';
+	},
+	getTipoClass: function(tipo) {
+		if (tipo === 'PRODUCCION') return 'produccion';
+		if (tipo === 'PRUEBAS') return 'pruebas';
+		return '';
+	},
+	getPagoClass: function(is_bloqueado) {
+		return is_bloqueado === '1' ? 'red' : 'green';
+	},
+	getPagoText: function(is_bloqueado) {
+		return is_bloqueado === '1' ? 'Pendiente' : 'Al día';
+	},
+	calcularPorcentaje: function(cantidad) {
+		if (!this.estadisticas || !this.estadisticas.total) return 0;
+		return Math.round((cantidad / this.estadisticas.total) * 100);
+	},
+	formatTimeSinceCreation: function(days) {
+		if (!days) return '-';
+		
+		days = parseInt(days);
+		
+		if (days >= 365) {
+			const years = Math.floor(days / 365);
+			const remainingDays = days % 365;
+			const months = Math.floor(remainingDays / 30);
+			
+			if (months > 0) {
+				return `${years} año${years > 1 ? 's' : ''}, ${months} mes${months > 1 ? 'es' : ''}`;
+			} else {
+				return `${years} año${years > 1 ? 's' : ''}`;
+			}
+		} else if (days >= 30) {
+			const months = Math.floor(days / 30);
+			const remainingDays = days % 30;
+			
+			if (remainingDays > 0) {
+				return `${months} mes${months > 1 ? 'es' : ''}, ${remainingDays} día${remainingDays > 1 ? 's' : ''}`;
+			} else {
+				return `${months} mes${months > 1 ? 'es' : ''}`;
+			}
+		} else {
+			return `${days} día${days > 1 ? 's' : ''}`;
+		}
+	},
+	getAntiguedadIndicatorClass: function(days) {
+		if (!days) return 'indicator-null';
+		
+		days = parseInt(days);
+		
+		if (days < 30) {
+			return 'indicator-new';
+		} else if (days >= 30 && days < 60) {
+			return 'indicator-recent';
+		} else {
+			return 'indicator-established';
+		}
+	}
+});
+</script>
