@@ -431,12 +431,14 @@
             imageSmoothingQuality: 'high'
         });
 
-        imgCompImgBase64 = canvas.toDataURL('image/jpeg', 0.9);
-        
+        imgCompImgBase64 = canvas.toDataURL('image/png');
+
         xThisCompImg.isShowResult = true;
         xThisCompImg.isEstablecioImg = true;
         xThisCompImg.isUploadImg = true;
         $('#result').html('<img src="' + imgCompImgBase64 + '" />');
+
+        xThisCompImg.fire('setImg', imgCompImgBase64);
 
         xCancelarCrop();
     }

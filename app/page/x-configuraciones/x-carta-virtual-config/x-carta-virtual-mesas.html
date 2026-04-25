@@ -622,11 +622,18 @@
                 data: {
                     nomfile : nomfile,
                     img : imgBase64
-                }				
+                }
 			})
-			.done((res) => {				
-                console.log('ok');                
-			});
+			.done((res) => {
+                const _savedName = (res || '').toString().trim();
+                if (_savedName) {
+                    xThisCartaVMesas.imgLogoQr = URL_IMG_PROMO + _savedName + '?t=' + Date.now();
+                }
+                showToastSwal('success', 'Logo guardado');
+			})
+            .fail(() => {
+                showToastSwal('error', 'No se pudo subir el logo');
+            });
     }
 
     Polymer({
