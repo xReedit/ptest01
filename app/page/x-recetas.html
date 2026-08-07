@@ -2,31 +2,532 @@
 	<!-- <script src="../../js/mi_orden_tabla.js"></script> -->
 
 	<link rel="import" href="../x-componentes/x-comp-find-producto-almacen/x-comp-find-producto-almacen.html">
+	<link rel="import" href="../x-componentes/x-comp-select/x-comp-select.html">
 
 	<template>
-		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo" style="max-width: 900px;" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+		<style>
+			:host {
+				display: block;
+				padding: 10px;
+				--ui-bg-header: #f5f9ff;
+				--ui-bg-soft: #f8fafc;
+				--ui-bg-toolbar: #f7f8fa;
+				--ui-bg-blue: #edf2ff;
+				--ui-bg-blue-2: #eaf5ff;
+				--ui-bg-green: #eef9f3;
+				--ui-bg-gray: #f5f6f8;
+				--ui-bg-alert: #fff7f7;
+				--ui-text: #212529;
+				--ui-text-muted: #6c757d;
+				--ui-border: #e5e7eb;
+				--ui-border-soft: #edf0f2;
+				--ui-primary: #007bff;
+				--ui-success: #28a745;
+				--ui-danger: #dc3545;
+				--ui-ink: #1f2933;
+			}
+			[hidden] {
+				display: none !important;
+			}
+			.rec-shell {
+				width: 95% !important;
+				max-width: 1240px !important;
+				border: 1px solid var(--ui-border-soft) !important;
+				border-radius: 12px !important;
+				overflow: hidden;
+				background: #fff;
+			}
+			.rec-shell-head {
+				padding: 14px 16px !important;
+				background: lavenderblush !important;
+				border-bottom: 1px solid var(--ui-border-soft) !important;
+				color: var(--ui-text) !important;
+			}
+			.rec-shell-head p {
+				margin: 0;
+			}
+			.rec-shell-head .text-secondary {
+				margin-top: 3px;
+				font-size: 11px !important;
+				line-height: 1.4;
+			}
+			.rec-shell-body {
+				padding: 14px !important;
+				background: #fff;
+			}
+			.rec-toolbar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 8px 10px;
+				background: var(--ui-bg-toolbar);
+				border-radius: 8px;
+				margin-bottom: 14px;
+			}
+			.rec-toolbar-title {
+				margin: 0;
+				color: var(--ui-ink);
+				font-size: 15px;
+				font-weight: 600;
+			}
+			.rec-toolbar-note {
+				margin: 3px 0 0;
+				color: var(--ui-text-muted);
+				font-size: 11px;
+				line-height: 1.35;
+			}
+			.rec-search {
+				width: 100%;
+				box-sizing: border-box;
+			}
+			.rec-dialog {
+				width: min(92vw, 980px);
+				max-width: 980px;
+				padding: 0;
+				overflow: hidden;
+				max-height: 90vh;
+			}
+			.rec-dialog .xContent {
+				padding: 0;
+				margin: 0;
+			}
+			.rec-dialog-head {
+				padding: 14px 20px;
+				background: lavenderblush;
+				border-bottom: 1px solid var(--ui-border);
+			}
+			.rec-dialog-title {
+				margin: 0;
+				color: var(--ui-ink);
+				font-size: 15px;
+				font-weight: 600;
+			}
+			.rec-dialog-subtitle {
+				margin: 3px 0 0;
+				color: var(--ui-text-muted);
+				font-size: 11px;
+			}
+			.rec-dialog-body {
+				padding: 18px 20px;
+				background: #fff;
+				max-height: calc(90vh - 170px);
+				overflow-y: auto;
+			}
+			.rec-dialog-note {
+				padding: 10px 14px;
+				margin-bottom: 14px;
+				background: var(--ui-bg-blue-2);
+				border: none;
+				border-radius: 10px;
+				color: var(--ui-ink);
+				font-size: 11px;
+				line-height: 1.45;
+			}
+			.rec-dialog-grid {
+				display: grid;
+				grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+				gap: 16px;
+				align-items: start;
+			}
+			.rec-panel {
+				padding: 14px;
+				background: #fff;
+				border: 1px solid var(--ui-border-soft);
+				border-radius: 12px;
+			}
+			.rec-panel-soft {
+				background: var(--ui-bg-soft);
+			}
+			.rec-section-title {
+				margin: 0 0 12px;
+				color: #3f4b57;
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: .6px;
+				text-transform: uppercase;
+			}
+			#xdes_item_titulo {
+				margin: 0 0 12px;
+				color: var(--ui-ink);
+				font-size: 15px;
+				font-weight: 700;
+				line-height: 1.3;
+				word-break: break-word;
+			}
+			.rec-item-table,
+			.rec-ingredients-table,
+			.rec-list-table {
+				width: 100%;
+				border-collapse: collapse;
+				background: #fff;
+			}
+			.rec-item-table tr,
+			.rec-ingredients-table tr,
+			.rec-list-table tr {
+				border-bottom: 1px solid var(--ui-border-soft);
+			}
+			.rec-item-table tr {
+				border-bottom: none;
+			}
+			.rec-item-table {
+				border-collapse: separate;
+				border-spacing: 0 8px;
+			}
+			.rec-item-table tr:last-child,
+			.rec-ingredients-table tr:last-child,
+			.rec-list-table tr:last-child {
+				border-bottom: none;
+			}
+			.rec-item-table td,
+			.rec-ingredients-table td,
+			.rec-ingredients-table th,
+			.rec-list-table td,
+			.rec-list-table th {
+				padding: 10px 12px;
+				color: var(--ui-text);
+				font-size: 12px;
+				vertical-align: middle;
+			}
+			.rec-item-table td {
+				padding: 0;
+			}
+			.rec-item-table td:first-child {
+				width: 92px;
+				padding-right: 10px;
+				white-space: nowrap;
+			}
+			.rec-item-table td:first-child,
+			.rec-ingredients-table th,
+			.rec-list-table th {
+				color: #9aa0a6;
+				font-size: 12px;
+				font-weight: 500;
+				background: #fff;
+			}
+			.rec-list-table thead tr {
+				border-bottom: 1px solid var(--ui-border);
+			}
+			.rec-list-table tbody tr:hover,
+			.rec-ingredients-table .row:hover {
+				background: #eef5ff;
+			}
+			.rec-item-main {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				min-width: 0;
+			}
+			.rec-item-text {
+				min-width: 0;
+				flex: 1 1 auto;
+			}
+			.rec-status-badge {
+				display: inline-flex;
+				align-items: center;
+				padding: 2px 8px;
+				border-radius: 999px;
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: .2px;
+				white-space: nowrap;
+			}
+			.rec-status-badge.ok {
+				background: var(--ui-bg-green);
+				color: #227a46;
+			}
+			.rec-field-label {
+				display: block;
+				margin: 0 0 5px;
+				color: #56616c;
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: .5px;
+				text-transform: uppercase;
+			}
+			.rec-field-help {
+				display: block;
+				margin-top: 3px;
+				color: var(--ui-text-muted);
+				font-size: 10px;
+			}
+			.rec-entry-row {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 78px 96px 44px;
+				align-items: end;
+				gap: 12px;
+				margin: 4px 0 10px;
+			}
+			.rec-entry-field {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+				min-width: 0;
+			}
+			.rec-entry-field.product {
+				min-width: 0;
+			}
+			.rec-entry-field.qty {
+				min-width: 0;
+			}
+			.rec-entry-field.cost {
+				min-width: 0;
+			}
+			.rec-entry-label {
+				margin: 0;
+				color: #7b8794;
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: .4px;
+				text-transform: uppercase;
+			}
+			.rec-entry-field .xMiInput,
+			.rec-entry-field x-comp-find-producto-almacen {
+				width: 100%;
+				min-height: 36px;
+				box-sizing: border-box;
+			}
+			.rec-entry-field .xMiInput {
+				padding: 8px 10px;
+				border: 1px solid var(--ui-border) !important;
+				border-radius: 8px;
+				background: #fff;
+				color: var(--ui-ink);
+			}
+			.rec-entry-field .xMiInput::placeholder {
+				color: #98a2b3;
+				opacity: 1;
+			}
+			.rec-entry-field .xMiInput[readonly] {
+				background: var(--ui-bg-soft);
+			}
+			.rec-entry-action {
+				align-self: flex-end;
+			}
+			.rec-entry-action .btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				width: 44px;
+				height: 36px;
+				padding: 0;
+				border-radius: 8px;
+			}
+			.rec-ingredients-table {
+				table-layout: fixed;
+			}
+			.rec-ingredients-table col.col-check {
+				width: 30px;
+			}
+			.rec-ingredients-table col.col-desc {
+				width: auto;
+			}
+			.rec-ingredients-table col.col-qty {
+				width: 78px;
+			}
+			.rec-ingredients-table col.col-cost {
+				width: 96px;
+			}
+			.rec-ingredients-table col.col-action {
+				width: 44px;
+			}
+			.rec-ingredients-table thead tr,
+			.rec-ingredients-table tr.xSinBorde {
+				border-bottom: none;
+			}
+			.rec-ingredients-table thead th {
+				padding: 4px 8px 7px;
+				color: #7b8794;
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: .4px;
+				text-transform: uppercase;
+			}
+			.rec-ingredients-table thead th:nth-child(3),
+			.rec-ingredients-table thead th:nth-child(4) {
+				text-align: right;
+			}
+			.rec-ingredients-table .row td {
+				padding: 6px 8px;
+				border-bottom: none;
+			}
+			.rec-ingredients-table .row {
+				border-bottom: none;
+			}
+			.rec-ingredients-table .row td[data-ColumName="descripcion"] {
+				color: var(--ui-ink);
+				font-size: 12px;
+				font-weight: 500;
+				line-height: 1.3;
+			}
+			.rec-ingredients-table .row paper-checkbox {
+				margin-right: 8px;
+				vertical-align: middle;
+			}
+			.rec-ingredients-table .row td[data-ColumName="cantidad"],
+			.rec-ingredients-table .row td[data-ColumName="costo"] {
+				text-align: right;
+				font-variant-numeric: tabular-nums;
+				white-space: nowrap;
+			}
+			.rec-ingredients-table .row td[data-ColumName="costo"] {
+				font-weight: 600;
+			}
+			.rec-ingredients-table .row_tt td {
+				padding: 8px 8px 0;
+				font-variant-numeric: tabular-nums;
+			}
+			.rec-ingredients-table .row_tt strong {
+				color: var(--ui-ink);
+				font-size: 13px;
+			}
+			.rec-ingredients-table .row_tt {
+				border-top: none;
+				border-bottom: none;
+			}
+			.rec-ingredients-table .row_tt strong {
+				display: inline-block;
+				min-width: 96px;
+				padding-top: 6px;
+				border-top: 1px solid var(--ui-border-soft);
+				text-align: right;
+			}
+			.rec-input,
+			.rec-select,
+			.rec-product-picker {
+				width: 100%;
+				box-sizing: border-box;
+			}
+			.rec-type-picker {
+				display: inline-block;
+				max-width: 320px;
+			}
+			.rec-action-row {
+				display: flex;
+				justify-content: flex-end;
+				gap: 8px;
+				padding: 14px 20px 18px;
+				background: #fff;
+				border-top: 1px solid var(--ui-border);
+			}
+			.rec-inline-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 10px;
+				margin-bottom: 10px;
+			}
+			.rec-inline-header p,
+			.rec-inline-header h3 {
+				margin: 0;
+			}
+			.rec-muted-note {
+				color: var(--ui-text-muted);
+				font-size: 11px;
+				line-height: 1.4;
+			}
+			.rec-chip-info {
+				display: inline-flex;
+				align-items: center;
+				padding: 2px 8px;
+				background: var(--ui-bg-green);
+				border-radius: 999px;
+				color: #46525e;
+				font-size: 10px;
+				font-weight: 600;
+			}
+			.rec-display-value {
+				margin: 0;
+				padding: 7px 10px;
+				border: none;
+				border-radius: 8px;
+				background: #fff;
+				color: var(--ui-ink);
+				font-size: 13px;
+				font-weight: 600;
+				line-height: 1.3;
+				text-align: right;
+			}
+			.rec-display-value.is-muted {
+				background: #fff;
+				color: #7b8794;
+			}
+			.xLinea2 {
+				border-color: var(--ui-border-soft);
+			}
+			@media (max-width: 960px) {
+				.rec-dialog {
+					width: 92vw;
+				}
+				.rec-dialog-grid {
+					grid-template-columns: 1fr;
+				}
+				.rec-toolbar {
+					flex-direction: column;
+					align-items: stretch;
+				}
+				.rec-item-main {
+					align-items: flex-start;
+					flex-direction: column;
+					gap: 4px;
+				}
+				.rec-entry-row {
+					grid-template-columns: 1fr;
+				}
+				.rec-entry-action {
+					width: 100%;
+				}
+				.rec-entry-action .btn {
+					width: 100%;
+				}
+			}
+			@media (max-width: 560px) {
+				:host {
+					padding: 8px;
+				}
+				.rec-shell {
+					width: 100% !important;
+				}
+				.rec-action-row {
+					flex-wrap: wrap;
+					justify-content: flex-start;
+				}
+			}
+		</style>
+		<paper-dialog id="dialog_detalle_receta" class="dialog_redondo rec-dialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
-				<p class="xfont11"><strong>En ingredientes</strong> ingrese en primer lugar el ingrediente principal, del cual se contara la cantidad en la carta y en el inventario. Ejemplo: Platos: Pechuga a la plancha, ingrediente principal: Pechuga 150gr.</p>
-				<div class="xLinea2"></div><br>
-				<div class="x_div_linea">
-					<div class="xitem1 xBordeDe">
+				<div class="rec-dialog-head">
+					<h3 class="rec-dialog-title">Receta y costos del plato</h3>
+					<p class="rec-dialog-subtitle">Configura ingredientes, costos y rentabilidad con una vista compacta.</p>
+				</div>
+				<div class="rec-dialog-body">
+					<div class="rec-dialog-note"><strong>En ingredientes</strong> ingrese en primer lugar el ingrediente principal, del cual se contara la cantidad en la carta y en el inventario. Ejemplo: Platos: Pechuga a la plancha, ingrediente principal: Pechuga 150gr.</div>
+					<div class="rec-dialog-grid">
+						<div class="rec-panel rec-panel-soft">
+							<p class="rec-section-title">Resumen del plato</p>
 						<h3 id="xdes_item_titulo">Sopa de pollo</h3>
-						<table class="xtable4" id="tb_item">
+						<table class="xtable4 rec-item-table" id="tb_item">
 							<tr class="xInvisible" id="tr_des">
 								<td>Descripcion</td>
-								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:100%;" onChange="conMayusculas(this)" placeholder="Descripcion" id="txt_descripcion" espaciar></td>
+								<td colspan="2">
+									<p class="rec-display-value" id="txt_descripcion"></p>
+								</td>
+
 							</tr>
 							<tr>
 								<td>Precio</td>
-								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:50%;" placeholder="Precio" id="txt_precio" onblur="xRetornaMoneda(this)" espaciar></td>
+								<td colspan="2">
+									<!-- <input type="text" class="xPasarEnter2 xfont18" style="width:50%;" placeholder="Precio" id="txt_precio" onblur="xRetornaMoneda(this)" espaciar> -->
+									<p class="rec-display-value is-muted"  id="txt_precio"></p>
+								</td>
 							</tr>
 							<tr>
 								<td>Costo total</td>
-								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" style="width:50%;" placeholder="Costo total" id="txt_costo_t" espaciar disabled encendido></td>
+								<td colspan="2"><p class="rec-display-value is-muted" id="txt_costo_t"></p></td>
 							</tr>
 							<tr>
 								<td>Rentabilidad</td>
-								<td colspan="2"><input type="text" class="xMiInput xPasarEnter2 xfont18" placeholder="Rentabilidad" id="txt_rentabilidad" espaciar disabled encendido></td>
+								<td colspan="2"><p class="rec-display-value is-muted" id="txt_rentabilidad"></p></td>
 							</tr>
 						</table>
 						<div class="xInvisible">
@@ -42,82 +543,107 @@
 							</form>
 						</div>
 					</div>
-					<div class="xitem3"  style="width:100% !important;">						
-						<p class="fs-17 fw-600">Ingredientes</p>
-						<p style="font-size: 11px;line-height: 1.4;font-weight: 600;">Activa el check para indicar que el ingrediente es necesario para elaborar el plato. Si este ingrediente se queda sin stock entonces el plato también quedará sin stock.</p>
-						<br>
+						<div class="rec-panel">
+							<div class="rec-inline-header">
+								<div>
+									<p class="rec-section-title">Ingredientes</p>
+									<p class="rec-muted-note">Activa el check para indicar que el ingrediente es necesario para elaborar el plato. Si este ingrediente se queda sin stock entonces el plato también quedará sin stock.</p>
+								</div>
+							</div>
 
 						<div>
 							<!-- select seleccione si es "porcion" o  "producto" -->
-							<p class="text-secondary fs-10">Desde:</p>
-							<select class="selected-template-1" id="select_tipo_receta" onchange="xoptionTipoSeletedReceta(this)">
-								<option value="1">Porcion</option>
-								<option value="2">Producto</option>
-								<option value="3">Subreceta</option>
-							</select>				
+							<label class="rec-field-label">Desde</label>
+							<x-comp-select
+								id="select_tipo_receta"								
+								items="[[tipoRecetaOptions]]"
+								selected-item="{{selectedTipoReceta}}"
+								color-card="#c6e1ff"
+								border-color-card="#007bff"								
+								on-item-selected="onTipoRecetaSelected">
+							</x-comp-select>
 						</div> 
+						<br>
+						<div class="rec-entry-row">
+							<div class="rec-entry-field product">
+								<p class="rec-entry-label">Ingrediente</p>
+								<input type="text" class="xMiInput xPasarEnter2 xDesItem rec-input" placeholder="Buscar porción" onChange="conMayusculas(this)" required id="des_porcion">
+								<input type="text" class="xMiInput xPasarEnter2 xDesItem rec-input" placeholder="Buscar subreceta" onChange="conMayusculas(this)" id="des_subreceta" style="display:none;">
+								<x-comp-find-producto-almacen 
+									id="compProductoAlmacenReceta"
+									hidden$="[[!isFromRecetaProducto]]"
+									placeholder = "Producto"
+									class="rec-product-picker"
+									onlynomalmacen="true" appendtocmp="#dialog_detalle_receta">
+								</x-comp-find-producto-almacen>
+							</div>
+							<div class="rec-entry-field qty">
+								<p class="rec-entry-label">Cant</p>
+								<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required>
+							</div>
+							<div class="rec-entry-field cost">
+								<p class="rec-entry-label">Costo</p>
+								<input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required>
+							</div>
+							<div class="rec-entry-action">
+								<button class="btn btn-sm btn-success" onclick="xAddItemIngrediente()" title="Agregar item">
+									<fa class="fa fa-plus"></fa>
+								</button>
+							</div>
+						</div>
 
-						<table class="xtable4 w-100" id="tb_ingredientes" data-TablaName="item_ingrediente">
+						<table class="xtable4 w-100 rec-ingredients-table" id="tb_ingredientes" data-TablaName="item_ingrediente">
+							<colgroup>
+								<col class="col-check">
+								<col class="col-desc">
+								<col class="col-qty">
+								<col class="col-cost">
+								<col class="col-action">
+							</colgroup>
 							<thead>
-								<td class="xSinBorde" width="5px"></td>
-								<th class="xSinBorde" width="50%"></th>
-								<th class="xSinBorde" width="20px"></th>								
-								<th class="xSinBorde" width="10px"></th>
-								<th class="xSinBorde" width="10px"></th>
+								<tr>
+									<th class="xSinBorde"></th>
+									<th class="xSinBorde">Ingrediente</th>
+									<th class="xSinBorde">Cant</th>
+									<th class="xSinBorde">Costo</th>
+									<th class="xSinBorde"></th>
+								</tr>
 							</thead>
-							<tr class="xSinBorde" data-id="">
-								<td colspan="2">									
-									<input type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Buscar porción" onChange="conMayusculas(this)" required id="des_porcion">
-									<input type="text" class="xMiInput xPasarEnter2 xDesItem" placeholder="Buscar subreceta" onChange="conMayusculas(this)" id="des_subreceta" style="display:none;">
-									<x-comp-find-producto-almacen 
-										id="compProductoAlmacenReceta"
-										hidden$="[[!isFromRecetaProducto]]"
-										placeholder = "Producto"
-										onlynomalmacen="true" appendtocmp="#dialog_detalle_receta">
-									</x-comp-find-producto-almacen>									
-								</td>
-								<td>
-									<div>
-										<p style="margin-top: -28px; text-align: center; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="text-success w-50"><strong>{{undConvercion.unidad}}</strong></span></p>
-										<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required>
-									</div>
-								</td>
-								<td><input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required></td>
-								<td><paper-fab icon="add" onclick="xAddItemIngrediente()" title="Agregar item" class="xmini"></paper-fab></td>
-							</tr> 
 						</table>
-					</div>
+						<p style="margin: 4px 0 0; text-align: right; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="rec-chip-info"><strong>{{undConvercion.unidad}}</strong></span></p>
+						</div>
+				</div>
 				</div>
 			</div>
-			<br>
-			<div class="xLinea2"></div>
-			<br><br>
-			<div class="xContent">
-				<div class="xBoton2 xAzul" onclick="xUpdateNewItem();">Listo, guardar</div>
-				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div>
+			<div class="rec-action-row">
+				<button class="btn btn-primary" onclick="xUpdateNewItem();">Listo, guardar</button>
+				<button class="btn btn-secondary" dialog-dismiss>Cancelar</button>
+				<!-- <div class="xBoton2 xAzul" onclick="xUpdateNewItem();">Listo, guardar</div>
+				<div class="xBoton2 xPlomo" dialog-dismiss>Cancelar</div> -->
 			</div>
-			<br>
 		</paper-dialog>
 
 
 		<br>
-		<div class="xMiCard xradius" style="width:80%">
-			<div class="xEncanezadoCard xFondoRowAmarillo4">
+		<div class="xMiCard xradius rec-shell" style="width:80%">
+			<div class="xEncanezadoCard rec-shell-head">
 				<p>Define la receta de cada plato de la carta y <strong>obtenga el costo y rentabilidad</strong> por plato.</p>
 				<p>Es importante primero definir las porciones que se utilizaran como ingredientes.</p>
 			</div>
-			<div class="xContentCard">
-				<div class="d-flexx justify-content-between">
-					<h3>Listado de platos</h3>
+			<div class="xContentCard rec-shell-body">
+				<div class="rec-toolbar">
+					<div>
+						<h3 class="rec-toolbar-title">Listado de platos</h3>
+						<p class="rec-toolbar-note">Busca rapidamente un plato y entra a su receta para revisar ingredientes, costo y margen.</p>
+					</div>
 					<div class="d-flexx">
 						<!-- <div class="xBoton2 xVerde xDerecha" onclick="xNuevoPlato()">Nueva Receta</div> -->
 						<div class="xBoton2 xVerde xDerecha" onclick="xGoSubReceta()">Subreceta</div>
 					</div>
 				</div>
-				<br>
-				<input type="text" class="xMiInput" placeholder="Buscar..." style="width:100%;" id="txt_bus">
-				<br><br><br>
-				<table class="sortable" width="100%" id="tb_platos">
+				<input type="text" class="xMiInput rec-search" placeholder="Buscar plato..." style="width:100%;" id="txt_bus">
+				<br><br>
+				<table class="sortable rec-list-table" width="100%" id="tb_platos">
 					<thead>
 						<tr>
 						<th width="60%" class="xCursor" id="ds">Descripcion</th>
@@ -217,6 +743,12 @@ function xIniRecetas(){
 
 	compProductoAlmacenReceta.addEventListener('productoSeleted', function(e) {
 		const _productoSelected = e.detail;
+		if (!_productoSelected) {
+			xThis.isProductoConversion = false;
+			xThis.undConvercion = {};
+			xThis.productoSeleted = {};
+			return;
+		}
 		xThis.isProductoConversion = _productoSelected.para_receta === '1';
 		if ( xThis.isProductoConversion ) {
 			$.ajax({ type: 'POST', url: '../../bdphp/log_010.php?op=get-und-conversion-by-id', contentType: 'application/json', data: JSON.stringify({ id: _productoSelected.idunidad_conversion }) })
@@ -224,6 +756,8 @@ function xIniRecetas(){
 				const _dtUndConversion = JSON.parse(dtUndConversion);
 				xThis.undConvercion = _dtUndConversion.datos[0];				
 			})			
+		} else {
+			xThis.undConvercion = {};
 		}
 		xThis.productoSeleted = _productoSelected;
 		// console.log('productoSeleted', _productoSelected);
@@ -243,10 +777,16 @@ function xNuevaIngredientes(){
 	$("#tb_ingredientes .row").remove();
 	$("#tb_ingredientes .row_tt").remove();
 	$("#frm_item").reset();
-	$("#txt_descripcion").val('');
-	$("#txt_precio").val('');
-	$("#txt_costo_t").val('');
-	$("#txt_rentabilidad").val('');
+	$("#txt_descripcion").text('');
+	$("#txt_precio").text('');
+	$("#txt_costo_t").text('');
+	$("#txt_rentabilidad").text('');
+	const compProductoAlmacenReceta = document.getElementById('compProductoAlmacenReceta');
+	if (compProductoAlmacenReceta && compProductoAlmacenReceta.resetText) {
+		compProductoAlmacenReceta.resetText();
+	}
+	xThis.productoSeleted = {};
+	xThis.undConvercion = {};
 	
 	xtt_ingredientes=0;
 	xid_item="";
@@ -264,12 +804,12 @@ function xAbrirDetalleReceta(obj){
 	$("#xdes_item_titulo").removeClass('xInvisible');
 	$("#xdes_item_titulo").text(xdes_tr);
 
-	$("#txt_precio").val($(obj).find('#xtr_precio').text())
-	$("#txt_costo_t").val($(obj).find('#xtr_costo').text())
-	$("#txt_rentabilidad").val($(obj).find('#xtr_rentabilidad').text())
+	$("#txt_precio").text($(obj).find('#xtr_precio').text())
+	$("#txt_costo_t").text($(obj).find('#xtr_costo').text())
+	$("#txt_rentabilidad").text($(obj).find('#xtr_rentabilidad').text())
 
 	//detalle de ingredientes
-	$("#tb_ingredientes").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>').trigger('create');
+	$("#tb_ingredientes").append('<tr class="row"><td colspan="5"><paper-spinner active></paper-spinner></td></tr>').trigger('create');
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1702', data:{i:xid_item}})
 	.done( function (dtDetalleI) {
 		var xdtDetalleI=$.parseJSON(dtDetalleI);
@@ -293,7 +833,7 @@ function xAbrirDetalleReceta(obj){
 				idsubreceta: idSubreceta,
 				viene_de: xdtDetalleI[i].viene_de,
 				necesario: xdtDetalleI[i].necesario,
-				und_medida: xdtDetalleI[i].und_medida,
+				und_medida: xdtDetalleI[i].und_medida || '',
 				idrow: idRow,
 				new: 0,
 				borrado: 0,
@@ -304,10 +844,11 @@ function xAbrirDetalleReceta(obj){
 
 			const _valCheckedNecesario = xdtDetalleI[i].necesario == '1' ? 'checked' : '';
 
+			var cantidadDetalle = String(xdtDetalleI[i].cantidad_show || '') + String(xdtDetalleI[i].und_medida || '');
 			xcadena_det_i=String(xcadena_det_i+'<tr class="row" data-id="'+ idRow +'">'+			
 			// '<td></td>'+
 			'<td colspan="2" data-ColumName="descripcion"><paper-checkbox class="m-0" ' + _valCheckedNecesario +' onchange="xIngredienteNecesario(this)"></paper-checkbox>'+xdtDetalleI[i].descripcion+'</td>'+
-			'<td align="center" data-ColumName="cantidad">'+xdtDetalleI[i].cantidad_show+ xdtDetalleI[i].und_medida +'</td>'+
+			'<td align="right" data-ColumName="cantidad">'+ cantidadDetalle +'</td>'+
 			'<td align="right" data-ColumName="costo" class="row_costo">'+xdtDetalleI[i].costo+'</td>'+
 			'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarItemLocalPro(this);"></span></td>'+
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
@@ -359,17 +900,17 @@ function xUpdateNewItem(){
 	$("#frm_item #idsede").val(xIdSede);
 	// $("#frm_item #viene_de").val(vieneDe);
 	// $("#frm_item #idproducto").val(idProductoReceta);
-	$("#frm_item #precio").val($("#txt_precio").val());
-	$("#frm_item #costo").val($("#txt_costo_t").val());
+	$("#frm_item #precio").val($("#txt_precio").text());
+	$("#frm_item #costo").val($("#txt_costo_t").text());
 
 	if(xes_nuevo_item==1){
 		//nuevo
-		$("#frm_item #descripcion").val($("#txt_descripcion").val());
+		$("#frm_item #descripcion").val($("#txt_descripcion").text());
 	}else{
 		$("#frm_item #descripcion").val($("#xdes_item_titulo").text());
 	}
 
-	const _descripcionProducto = xes_nuevo_item ? $("#txt_descripcion").val() : $("#xdes_item_titulo").text();	
+	const _descripcionProducto = xes_nuevo_item ? $("#txt_descripcion").text() : $("#xdes_item_titulo").text();	
 	$("#frm_item #descripcion").val(_descripcionProducto);
 
 	$.post("../../bdphp/ManejoBD_IUD.php?tb=item",$("#frm_item").serialize(),function(xultimo_id_item){
@@ -401,7 +942,7 @@ function xAddItemIngrediente(){
 	var xcosto_ingrediente=$("#costo_item").val();
 	var xcan_item=$("#cant_item").val();
 
-	const und_conversion = xThis.isFromRecetaProducto ? xThis.undConvercion ? xThis.undConvercion.abreviatura : '' : '';
+	const und_conversion = xThis.isFromRecetaProducto ? ((xThis.undConvercion && xThis.undConvercion.abreviatura) || '') : '';
 
 	// if (xdes_ingrediente == "" || xcosto_ingrediente == "") { return; }
 	
@@ -423,6 +964,7 @@ function xAddItemIngrediente(){
 	if (xThis.isFromRecetaProducto) _descripcionProducto = _productoSelected.label;
 	if (xThis.isFromSubreceta) _descripcionProducto = $("#des_subreceta").val();	
 	let _cantidad = xcan_item;
+	const cantidadMostrar = String(xcan_item || '');
 
 	if ( xThis.isFromRecetaProducto && xThis.undConvercion ) {
 		const _rptCalculo = calcularCantidadDescuento(xcan_item, xThis.undConvercion, _productoSelected);
@@ -436,7 +978,7 @@ function xAddItemIngrediente(){
 
 	xidproducto_porcionado = xThis.isFromRecetaProducto || xThis.isFromSubreceta ? 0 : xidproducto_porcionado;
 
-	if (_descripcionProducto == "" || xcosto_ingrediente == "") { return; }
+	if (_descripcionProducto == "" || xcosto_ingrediente == "" || cantidadMostrar == "") { return; }
 
 	xcosto_ingrediente = parseFloat($("#costo_item").val()).toFixed(2);
 	const idRow = `${xidproducto_porcionado}${idProductoReceta}${idSubreceta}-${_descripcionProducto}`;
@@ -465,7 +1007,7 @@ function xAddItemIngrediente(){
 	var xrow_ingrediente='<tr class="row" data-id="'+ idRow +'">'+
 			// '<td></td>'+
 			'<td colspan="2" data-ColumName="descripcion"><paper-checkbox checked onchange="xIngredienteNecesario(this)"></paper-checkbox>'+ _descripcionProducto +'</td>'+
-			'<td align="right" data-ColumName="cantidad">'+xcan_item + und_conversion +'</td>'+
+			'<td align="right" data-ColumName="cantidad">'+ cantidadMostrar + und_conversion +'</td>'+
 			'<td align="right" data-ColumName="costo" class="row_costo">'+xcosto_ingrediente+'</td>'+
 			'<td><span class="xDeleteRowNeutro" title="Borrar" onclick="xBorrarItemLocalPro(this);"></span></td>'+
 			'<td data-ColumName="iditem" class="xInvisible">-item</td>'+
@@ -484,9 +1026,16 @@ function xAddItemIngrediente(){
 	$("#costo_item").val('');
 	$("#cant_item").val('');
 	xidsubreceta_seleccionada = 0;
+	if (compProductoAlmacenReceta && compProductoAlmacenReceta.resetText) {
+		compProductoAlmacenReceta.resetText();
+	}
+	xThis.productoSeleted = {};
+	xThis.undConvercion = {};
 	
 	// Focus según el tipo seleccionado
-	if (xThis.isFromSubreceta) {
+	if (xThis.isFromRecetaProducto && compProductoAlmacenReceta && compProductoAlmacenReceta.focusText) {
+		compProductoAlmacenReceta.focusText();
+	} else if (xThis.isFromSubreceta) {
 		$("#des_subreceta").focus();
 	} else {
 		$("#des_porcion").focus();
@@ -589,14 +1138,14 @@ function xSumaringredientes(){
 	xRefreshImportes();
 }
 function xRefreshImportes(){
-	var xtt_precio=$("#txt_precio").val();
+	var xtt_precio=$("#txt_precio").text();
 	var xdif_tt;
 	var xrent_por=0;
 
-	$("#txt_costo_t").val(xtt_ingredientes);
+	$("#txt_costo_t").text(xtt_ingredientes);
 	xdif_tt=parseFloat(parseFloat(xtt_precio)-parseFloat(xtt_ingredientes)).toFixed(2);
 	xrent_por=Math.round((parseFloat(xdif_tt)/parseFloat(xtt_precio))*100)+'%';
-	$("#txt_rentabilidad").val(xdif_tt+' | '+xrent_por);
+	$("#txt_rentabilidad").text(xdif_tt+' | '+xrent_por);
 }
 
 function xBorrarItemLocalPro(obj){
@@ -645,8 +1194,11 @@ function xListaDeRecetas(){
 		xdtRecetas=xdtRecetas.datos;
 
 		for (var i = 0; i < xdtRecetas.length; i++) {
+			var tieneReceta = String(xdtRecetas[i].tiene_receta || '0') === '1';
+			var totalIngredientes = parseInt(xdtRecetas[i].total_ingredientes || 0, 10) || 0;
+			var recetaBadge = tieneReceta ? '<span class="rec-status-badge ok">Receta' + (totalIngredientes > 0 ? ' ' + totalIngredientes : '') + '</span>' : '';
 			xcadena_row_receta=String(xcadena_row_receta+'<tr class="row xCursor" data-id="'+xdtRecetas[i].iditem+'" onclick="xAbrirDetalleReceta(this)">'
-				+'<td id="xtr_des">'+xdtRecetas[i].descripcion+'</td>'
+				+'<td id="xtr_des"><div class="rec-item-main"><span class="rec-item-text">'+xdtRecetas[i].descripcion+'</span>'+recetaBadge+'</div></td>'
 				+'<td align="right" id="xtr_precio">'+xdtRecetas[i].precio+'</td>'
 				+'<td align="right" id="xtr_costo">'+xdtRecetas[i].costo+'</td>'
 				+'<td align="right" id="xtr_rentabilidad">'+xdtRecetas[i].rentabilidad+'</td>'
@@ -662,11 +1214,12 @@ function xListaDeRecetas(){
 	})
 }
 
-function xoptionTipoSeletedReceta(obj) {
-	const _valOption = obj.value;	
+function xoptionTipoSeletedReceta(optionValue) {
+	const _valOption = String(optionValue || '1');
 	xThis.isFromRecetaProducto = _valOption == '2';
 	xThis.isFromSubreceta = _valOption == '3';
 	xThis.isProductoConversion = false;
+	xThis.undConvercion = {};
 
 	// Mostrar/ocultar inputs según selección
 	if (_valOption == '1') {
@@ -679,6 +1232,15 @@ function xoptionTipoSeletedReceta(obj) {
 		$("#des_porcion").hide();
 		$("#des_subreceta").hide();
 	}
+
+	const compProductoAlmacenReceta = document.getElementById('compProductoAlmacenReceta');
+	if (compProductoAlmacenReceta && compProductoAlmacenReceta.resetText) {
+		compProductoAlmacenReceta.resetText();
+	}
+	$("#des_porcion").val('');
+	$("#des_subreceta").val('');
+	$("#costo_item").val('');
+	$("#cant_item").val('');
 }
 
 // Variable global para subreceta seleccionada
@@ -691,8 +1253,6 @@ function xCargarSubrecetasTxt(){
 	if (xObjTxtSubreceta.hasClass('ui-autocomplete-input')) {
 		xObjTxtSubreceta.autocomplete('destroy');
 	}
-	
-	console.log('Subrecetas cargadas:', xThis.dtSubrecetas);
 	
 	xObjTxtSubreceta.autocomplete({
 		autoFocus: true,
@@ -749,14 +1309,34 @@ Polymer({
 		productoSeleted: {
 			type: Object,
 			value: {}
+		},
+		tipoRecetaOptions: {
+			type: Array,
+			value: function () {
+				return [];
+			}
+		},
+		selectedTipoReceta: {
+			type: Object,
+			value: function () {
+				return {};
+			}
 		}
 	},
 	attached:function(){
 		this.isFromRecetaProducto = false;
 		this.isFromSubreceta = false;
-    	xThis=this;
+	    	xThis=this;
+		this.tipoRecetaOptions = [
+			{ id: '1', value: 'Porcion' },
+			{ id: '2', value: 'Producto' },
+			{ id: '3', value: 'Subreceta' }
+		];
     	xIniRecetas();
     },
+	onTipoRecetaSelected: function (e) {
+		xoptionTipoSeletedReceta(e.detail.id);
+	},
 	calcCostoConversion: function(obj) {
 		// const obj = this.target;
 		if (!this.isFromRecetaProducto) return;

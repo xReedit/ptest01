@@ -15,7 +15,7 @@ async function ClienteService_Guardar(xarr_cliente) {
         _fetchApiCliente = new httpFecht();   
 
         try {
-            const rptCliente = await _fetchApiCliente.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'d', p_cliente:xarr_cliente} })
+            const rptCliente = await _fetchApiCliente.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data:{p_from:'d', p_cliente:xarr_cliente}, isShowPreload: false })
             rpt = rptCliente == '""' ? '' : rptCliente;
             return rpt;
         } catch (error) {

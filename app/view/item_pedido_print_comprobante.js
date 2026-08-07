@@ -6,16 +6,44 @@
 
 
 var xImpresoraPrint, _numIntCorrelativoBD;
+
+function _getSedeConfigRow() {
+	try {
+		const all = xm_log_get('datos_org_all_sede');
+		if (all && all[0]) return all[0];
+		const org = xm_log_get('datos_org_sede');
+		if (org && org[0]) return org[0];
+	} catch (e) { /* ignore */ }
+	return null;
+}
+
+function _getSysLocal() {
+	const row = _getSedeConfigRow();
+	return parseInt(row && row.sys_local != null ? row.sys_local : 0, 10) || 0;
+}
+
+function _getDatosOrgSedeArray() {
+	const org = xm_log_get('datos_org_sede');
+	if (org && org[0]) return org;
+	const row = _getSedeConfigRow();
+	return row ? [row] : [{}];
+}
 // idregistro_pago = para manda a guardar el id_externo_comprobante electronico en la tabla registro_pago
 // showPrint = true; es false si lo mando desde facturador.
 async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArrayComprobante, xArrayCliente, idregistro_pago, xidDoc, showPrint = true){
 
 	// xArrayCliente si el nombre del cliente no tiene mas de 4 caracteres coloca en blanco
-	xArrayCliente.nombres = xArrayCliente.nombres.length > 4 ? xArrayCliente.nombres : '';
+	if (xArrayCliente && xArrayCliente.nombres) {
+		xArrayCliente.nombres = xArrayCliente.nombres.length > 4 ? xArrayCliente.nombres : '';
+	} else if (xArrayCliente) {
+		xArrayCliente.nombres = xArrayCliente.nombre || xArrayCliente.nombres || '';
+	}
 
 	let rptPrint = {}
 	if ( !!xArrayComprobante ) {
-		if (xArrayComprobante.idtipo_comprobante === "0") { rptPrint.imprime = false; return rptPrint;} // ninguno no imprime
+		if (xArrayComprobante.idtipo_comprobante === "0") {
+			rptPrint.imprime = false; return rptPrint;
+		} // ninguno no imprime
 	} else {
 		rptPrint.imprime = false; return rptPrint;
 	}
@@ -37,7 +65,7 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	}
 
     // array encabezado org sede
-	var xArrayEncabezado = xm_log_get('datos_org_sede');    
+	var xArrayEncabezado = _getDatosOrgSedeArray();
 	
 	// escribir el importe total en letras
 	// siempre ultimo es es el total
@@ -69,7 +97,8 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	// || xArrayComprobante.correlativo === '#' cuando viene del facturador
 	_numIntCorrelativoBD = parseInt(xArrayComprobante.correlativo);
 	const _isNotIntNumComprobante = isNaN(_numIntCorrelativoBD);
-	if ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante || _numIntCorrelativoBD == 0) {
+	const _yaTieneCorrelativoGuia = xArrayComprobante.es_guia_remision && xArrayComprobante.correlativo && _numIntCorrelativoBD > 0;
+	if ( !_yaTieneCorrelativoGuia && ( !xArrayComprobante.correlativo || xArrayComprobante.correlativo === '' || _viene_facturador || xArrayComprobante.correlativo === '#' || _isNotIntNumComprobante || _numIntCorrelativoBD == 0)) {
 		// estas lineas lo eliminaremos
 		const numComprobante = await xGetCorrelativoComprobante(xArrayComprobante);
 		xArrayComprobante.correlativo = numComprobante; 
@@ -132,8 +161,8 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 	_arrBodyComprobante = xEstructuraItemsAgruparPrintJsonComprobante(_arrBodyComprobante);
 
 
-	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
-	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
+	const _sys_local = _getSysLocal();
+	xArrayEncabezado[0].nom_us = (xm_log_get('app3_us') || {}).nomus || '';
 
 
 	comprobarNumCorrelativoComprobante(xArrayComprobante);
@@ -214,8 +243,8 @@ function xImprimirComprobanteAhora(xArrayEncabezado,xArrayCuerpo,xArraySubtotal,
 function xImprimirComprobanteAhoraPrintPreSelect(xArrayEncabezado, xArrayCuerpo, xArraySubtotal, xArrayComprobante, xArrayCliente, xArrImpresora, callback) {
 	xPopupLoad.titulo = "Imprimiendo...";
 
-	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);	
-	xArrayEncabezado[0].nom_us = xm_log_get('app3_us').nomus;
+	const _sys_local = _getSysLocal();	
+	xArrayEncabezado[0].nom_us = (xm_log_get('app3_us') || {}).nomus || '';
 
 	comprobarNumCorrelativoComprobante(xArrayComprobante);
 
@@ -628,8 +657,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 function xImprimirComandaAhora(xArrayEncabezado,xImpresoraPrint,xArrayCuerpo,xArraySubtotal, idPedido, callback){
 	xPopupLoad.titulo="Imprimiendo...";
 
-	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
-	xArrayEncabezado.nom_us = xm_log_get('app3_us').nomus;
+	const _sys_local = _getSysLocal();
+	xArrayEncabezado.nom_us = (xm_log_get('app3_us') || {}).nomus || '';
 
 	const _data = {
 		Array_enca: xArrayEncabezado,
@@ -1078,6 +1107,292 @@ function isComprobanteConsumo(xArrayComprobante, xArraySubTotales, xArrayCuerpo)
 	return xArrayCuerpo;
 }
 
+// --- Guía de remisión en venta al crédito (sede.venta_credito_guia = 1, solo punto de venta) ---
+const ID_TIPO_PAGO_CREDITO = '2';
+
+function getVentaCreditoGuiaActivo() {
+	try {
+		const row = _getSedeConfigRow();
+		if (row && String(row.venta_credito_guia) === '1') return true;
+		const org = xm_log_get('datos_org_sede');
+		if (org && org[0] && String(org[0].venta_credito_guia) === '1') return true;
+	} catch (error) {
+		return false;
+	}
+	return false;
+}
+
+function isVentaAlCredito(arrTipoPago) {
+	const pagos = arrTipoPago || (typeof xarr_tipo_pago !== 'undefined' ? xarr_tipo_pago : []);
+	if (!pagos || pagos.length === 0) return false;
+	return pagos.every(tp => {
+		const id = String(tp.id || tp.idtipo_pago || '');
+		const des = String(tp.des_tp || tp.descripcion || '')
+			.toUpperCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '');
+		return id === ID_TIPO_PAGO_CREDITO || des.indexOf('CREDIT') >= 0;
+	});
+}
+
+async function xImprimirGuiaRemisionVentaCredito(xArrayCuerpo, xArraySubTotales, xArrayCliente, idregistro_pago, arrTipoPago) {
+	if (!isVentaAlCredito(arrTipoPago)) return;
+	if (!xArrayCuerpo || xArrayCuerpo.length === 0) return;
+
+	_cerrarPopupCargaForzado();
+
+	if (!getVentaCreditoGuiaActivo()) {
+		console.warn('Guía interna: venta_credito_guia no está activo en la sesión. Re-login después de activar en admin.');
+	}
+
+	let rowGuia = null;
+	try {
+		const parsed = await _fetchGuiaInternaNumero();
+		if (parsed && parsed.datos && parsed.datos.length > 0) {
+			rowGuia = parsed.datos[0];
+		}
+	} catch (error) {
+		console.error('Error al obtener número de guía interna', error);
+	}
+
+	if (!rowGuia || parseInt(rowGuia.correlativo, 10) < 1) {
+		console.warn('Guía interna: no se obtuvo correlativo. Verifique venta_credito_guia en sede, migración 015/016 y re-login.');
+		if (getVentaCreditoGuiaActivo()) {
+			try {
+				showAlertSwalOk('warning', 'Guía interna', 'No se pudo numerar la guía. Verifique la opción en admin, migraciones 015/016 y vuelva a iniciar sesión.');
+			} catch (e) {
+				alert('No se pudo numerar la guía interna. Verifique configuración de sede y re-login.');
+			}
+		}
+		return;
+	}
+
+	const serie = rowGuia.serie || '001';
+	const correlativo = xCeroIzq(rowGuia.correlativo, 7);
+	xMostrarGuiaRemisionInternaEnNavegador(xArrayCuerpo, xArraySubTotales, xArrayCliente, {
+		serie: serie,
+		correlativo: correlativo,
+		inicial: 'GI'
+	}, idregistro_pago);
+}
+
+async function _fetchGuiaInternaNumero() {
+	if (typeof opSede !== 'undefined' && opSede.posAjax) {
+		const res = await opSede.posAjax({
+			type: 'POST',
+			url: '../../bdphp/log_componentes.php',
+			posOp: 2101,
+			data: {},
+			timeout: 10000
+		});
+		return typeof res === 'string' ? JSON.parse(res) : res;
+	}
+	const res = await $.ajax({
+		type: 'POST',
+		url: '../../bdphp/log_componentes.php?op=2101',
+		timeout: 10000
+	});
+	return typeof res === 'string' ? JSON.parse(res) : res;
+}
+
+function _guiaEscHtml(val) {
+	return String(val == null ? '' : val)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;');
+}
+
+function xBuildGuiaRemisionInternaPrintData(xArrayCuerpo, xArraySubTotales, xArrayCliente, arrGuia, idregistro_pago) {
+	const sedeRow = _getDatosOrgSedeArray()[0] || {};
+	const subtotalesFmt = darFormatoSubTotalesParaFacturacion((xArraySubTotales || []).slice(), false);
+	const items = xEstructuraItemsJsonComprobante(xArrayCuerpo, subtotalesFmt, false);
+	const subtotales = subtotalesFmt.filter(st => st && st.descripcion && st.tachado !== true);
+	const numGuia = (arrGuia.inicial || 'GI') + '-' + arrGuia.serie + '-' + arrGuia.correlativo;
+	return {
+		sedeRow: sedeRow,
+		items: items,
+		subtotales: subtotales,
+		cliente: xArrayCliente || {},
+		numGuia: numGuia,
+		idregistro_pago: idregistro_pago,
+		fileName: 'guia_interna_' + arrGuia.serie + '_' + arrGuia.correlativo + '.html'
+	};
+}
+
+function xBuildGuiaRemisionInternaHtml(data) {
+	const sede = data.sedeRow || {};
+	const cliente = data.cliente || {};
+	const nomSede = sede.sedenombre || sede.nombre || '';
+	const ruc = sede.ruc || sede.org_ruc || '';
+	const telefono = sede.sedetelefono || '';
+	const direccion = sede.sededireccion || '';
+	const nomCliente = cliente.nombres || cliente.nombre || '';
+	const numDoc = cliente.num_doc || cliente.dni || cliente.ruc || '';
+
+	var rows = '';
+	data.items.forEach(function (item) {
+		const importe = String(item.precio_total || item.precio_print || '0.00');
+		rows += '<tr><td class="qty">' + _guiaEscHtml(item.cantidad) + '</td><td class="des">' + _guiaEscHtml(item.des || item.descripcion || '') + '</td><td class="imp">' + _guiaEscHtml(importe) + '</td></tr>';
+	});
+
+	var subtRows = '';
+	data.subtotales.forEach(function (st) {
+		const importeFmt = typeof xMoneda === 'function' ? xMoneda(st.importe) : st.importe;
+		subtRows += '<tr><td colspan="2" class="subt">' + _guiaEscHtml(st.descripcion) + '</td><td class="imp">' + _guiaEscHtml(importeFmt) + '</td></tr>';
+	});
+
+	return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + _guiaEscHtml(data.numGuia) + '</title><style>' +
+		'@page{size:80mm auto;margin:0;}' +
+		'@media print{html,body{width:80mm;max-width:80mm;margin:0;padding:2mm 3mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
+		'html,body{width:80mm;max-width:80mm;margin:0 auto;padding:2mm 3mm;' +
+		'font-family:"Courier New",Courier,monospace;font-size:11px;line-height:1.3;color:#000;background:#fff;' +
+		'box-sizing:border-box;-webkit-box-sizing:border-box;}' +
+		'*,*::before,*::after{box-sizing:border-box;}' +
+		'.ticket{width:100%;max-width:74mm;margin:0 auto;}' +
+		'.c{text-align:center;}.b{font-weight:bold;}.xs{font-size:10px;}' +
+		'.line{border-top:1px dashed #000;margin:6px 0;width:100%;}' +
+		'table{width:100%;max-width:100%;border-collapse:collapse;table-layout:fixed;}' +
+		'td{padding:1px 0;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;}' +
+		'.qty{width:8mm;text-align:left;}.des{width:auto;padding-right:2mm;}.imp{width:18mm;text-align:right;white-space:nowrap;}' +
+		'.subt{text-align:right;padding-right:2mm;}.foot{font-size:10px;margin-top:6px;line-height:1.25;}' +
+		'</style></head><body><div class="ticket">' +
+		(nomSede ? '<div class="c b">' + _guiaEscHtml(nomSede) + '</div>' : '') +
+		(ruc ? '<div class="c xs">RUC: ' + _guiaEscHtml(ruc) + '</div>' : '') +
+		(telefono ? '<div class="c xs">' + _guiaEscHtml(telefono) + '</div>' : '') +
+		(direccion ? '<div class="c xs">' + _guiaEscHtml(direccion) + '</div>' : '') +
+		'<div class="line"></div>' +
+		'<div class="c b">GUIA DE REMISION INTERNA</div>' +
+		'<div class="c b">' + _guiaEscHtml(data.numGuia) + '</div>' +
+		'<div class="c xs">Fecha: ' + _guiaEscHtml(new Date().toLocaleString()) + '</div>' +
+		(data.idregistro_pago ? '<div class="xs">Ref. pago: ' + _guiaEscHtml(data.idregistro_pago) + '</div>' : '') +
+		'<div class="line"></div>' +
+		(nomCliente ? '<div>Cliente: ' + _guiaEscHtml(nomCliente) + '</div>' : '') +
+		(numDoc ? '<div>Doc: ' + _guiaEscHtml(numDoc) + '</div>' : '') +
+		(cliente.direccion ? '<div>Dir: ' + _guiaEscHtml(cliente.direccion) + '</div>' : '') +
+		(cliente.telefono ? '<div>Tel: ' + _guiaEscHtml(cliente.telefono) + '</div>' : '') +
+		'<div class="line"></div><div class="b">Productos</div><div class="line"></div>' +
+		'<table><colgroup><col class="qty"><col class="des"><col class="imp"></colgroup>' + rows + '</table>' +
+		'<div class="line"></div><table><colgroup><col><col><col class="imp"></colgroup>' + subtRows + '</table>' +
+		'<div class="foot c">Documento interno. No tiene validez tributaria ni se envia a Sunat.</div>' +
+		'</div></body></html>';
+}
+
+function _imprimirGuiaHtmlEnNavegador(html, numGuia, fileName) {
+	var iframe = document.createElement('iframe');
+	iframe.setAttribute('title', 'Guia interna');
+	iframe.style.position = 'fixed';
+	iframe.style.top = '0';
+	iframe.style.left = '-10000px';
+	iframe.style.width = '80mm';
+	iframe.style.height = '100%';
+	iframe.style.border = '0';
+	document.body.appendChild(iframe);
+
+	var iWin = iframe.contentWindow;
+	var iDoc = iframe.contentDocument || (iWin && iWin.document);
+	if (!iDoc) {
+		alert('Guía ' + numGuia + ': no se pudo abrir la impresión. Guarde manualmente con Ctrl+P.');
+		return;
+	}
+	iDoc.open();
+	iDoc.write(html);
+	iDoc.close();
+
+	setTimeout(function () {
+		try {
+			iWin.focus();
+			iWin.print();
+		} catch (e) {
+			console.error('Guía interna print', e);
+			alert('Guía ' + numGuia + ' lista. Si no apareció impresión, use Ctrl+P.');
+		}
+		setTimeout(function () {
+			if (iframe.parentNode) { iframe.parentNode.removeChild(iframe); }
+		}, 120000);
+	}, 350);
+}
+
+function _descargarGuiaHtml(html, fileName) {
+	try {
+		var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+		var url = URL.createObjectURL(blob);
+		var a = document.createElement('a');
+		a.href = url;
+		a.download = fileName || 'guia_interna.html';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+	} catch (e) {
+		console.error('Guía interna download', e);
+	}
+}
+
+function xMostrarGuiaRemisionInternaEnNavegador(xArrayCuerpo, xArraySubTotales, xArrayCliente, arrGuia, idregistro_pago) {
+	_cerrarPopupCargaForzado();
+	var data = xBuildGuiaRemisionInternaPrintData(xArrayCuerpo, xArraySubTotales, xArrayCliente, arrGuia, idregistro_pago);
+	var html = xBuildGuiaRemisionInternaHtml(data);
+	_imprimirGuiaHtmlEnNavegador(html, data.numGuia, data.fileName);
+
+	setTimeout(function () {
+		if (typeof Swal === 'undefined') {
+			if (window.confirm('¿Descargar copia de la guía ' + data.numGuia + '?')) {
+				_descargarGuiaHtml(html, data.fileName);
+			}
+			return;
+		}
+		showAlertSwalHtmlDecision({
+			title: 'Guía de remisión interna',
+			html: '<p><strong>' + _guiaEscHtml(data.numGuia) + '</strong></p><p>¿Desea descargar una copia?</p>',
+			icon: 'info',
+			showCancelButton: true,
+			showDenyButton: false,
+			confirmButtonText: 'Descargar copia',
+			cancelButtonText: 'Cerrar',
+			didOpen: function () {
+				var container = document.querySelector('.swal2-container');
+				if (container) { container.style.zIndex = '99999'; }
+			}
+		}, 1).then(function (result) {
+			if (result.isConfirmed) {
+				_descargarGuiaHtml(html, data.fileName);
+			}
+		});
+	}, 600);
+}
+
+function _cerrarPopupCargaForzado() {
+	try {
+		if (typeof xPopupLoad !== 'undefined' && xPopupLoad && typeof xPopupLoad.xclose === 'function') {
+			xPopupLoad.xclose();
+		}
+	} catch (e) { /* ignore */ }
+	try {
+		var xLoadEl = document.getElementById('xLoad');
+		if (xLoadEl && typeof xLoadEl.xclose === 'function') {
+			xLoadEl.xclose();
+		}
+	} catch (e) { /* ignore */ }
+	try {
+		var innerDialog = document.getElementById('xdialog');
+		if (innerDialog && typeof innerDialog.close === 'function') {
+			innerDialog.close();
+		}
+	} catch (e) { /* ignore */ }
+	try {
+		var opened = document.querySelectorAll('paper-dialog[opened]');
+		for (var i = 0; i < opened.length; i++) {
+			if (opened[i].id === 'dialog_erro_print') { continue; }
+			if (typeof opened[i].close === 'function') { opened[i].close(); }
+		}
+	} catch (e) { /* ignore */ }
+}
+
+function _cerrarPopupCargaAntesGuia() {
+	_cerrarPopupCargaForzado();
+}
+
 async function reimpresionDocumento(idregistro_pago) {
 	// obtenemos la estructura de impresion
 
@@ -1107,7 +1422,7 @@ async function reimpresionDocumento(idregistro_pago) {
 
 	rpt.Array_print = xImpresoraPrint;		
 
-	const _sys_local = parseInt(xm_log_get('datos_org_sede')[0].sys_local);
+	const _sys_local = _getSysLocal();
 
 	if (_sys_local === 1) {		
 		xSendDataPrintServer(rpt, 2, 'comprobante');
@@ -1118,4 +1433,3 @@ async function reimpresionDocumento(idregistro_pago) {
 		return;
 	}
 }
-

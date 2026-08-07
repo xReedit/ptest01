@@ -47,7 +47,10 @@
 
 					// guardar los cambios de sede y org en variable local
 					updateapp3_woDUS_changeSede(objSede.idorg, objSede.idsede);
-	
+
+					// actualizar variables globales JS con la nueva sede
+					xm_log_get('ini_us');
+
 					// reload page
 					localStorage.setItem('::app3_woUsS', objSede.idsede);
 					localStorage.removeItem('::app3_sys_descat');// en mi pedido

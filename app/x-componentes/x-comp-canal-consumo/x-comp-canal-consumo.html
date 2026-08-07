@@ -35,11 +35,12 @@
             $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=18'})
 	        .done( function (dt) {
                 var listCC = JSON.parse(dt);
-                
+                xThisComCanalConsumo.canalSeleted = null;
+
                 listCC.datos.map((x, i) => {
-                    x.seleccionado = false; 
+                    x.seleccionado = false;
                     if ( i === 0) {
-                        x.seleccionado = true; 
+                        x.seleccionado = true;
                         xThisComCanalConsumo.canalSeleted = x;
                     }
 
@@ -48,13 +49,15 @@
                     }
                 });
 
-
-
-
                 xThisComCanalConsumo.listCanConsumo = listCC.datos;
+                if (xThisComCanalConsumo.canalSeleted) {
+                    xThisComCanalConsumo.getValorIncial(xThisComCanalConsumo.canalSeleted);
+                }
             });
+        }
 
-            xThisComCanalConsumo.getValorIncial(xThisComCanalConsumo.canalSeleted);
+        function reloadCanalConsumoPosSede() {
+            if (xThisComCanalConsumo) { getIniCanalConsumo(); }
         }
 
         function selectOptionTCC(obj) {

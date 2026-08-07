@@ -67,16 +67,24 @@
                         type: 'POST',
                         url: '../../bdphp/log_componentes.php?op=3'}, false, false)
                     .then(function (data) {
-                        // console.log('data', data);
-                        self.cards = data.datos;
-
-                        if (data.datos.length > 0) {
-                            self.fire('getValorIncial', { categorias: data.datos[0] });
+                        self.cards = (data && data.datos) ? data.datos : [];
+                        self.selectedIndex = 0;
+                        if (self.cards.length > 0) {
+                            self.fire('getValorIncial', { categorias: self.cards[0] });
+                        } else {
+                            self.fire('sinDatos', { tipo: 'categorias' });
                         }
                     })
                     .catch(function (error) {
                         console.error('Failed to load cards');
+                        self.fire('sinDatos', { tipo: 'categorias', error: true });
                     });
+                },
+                /** Recarga categorías al cambiar sede operativa (POS multi-sede). */
+                reloadCards: function () {
+                    this.selectedIndex = 0;
+                    this.cards = [];
+                    this.loadCards();
                 },
                 getClass: function (index) {
                     return 'card' + (index === this.selectedIndex ? ' selected' : '');

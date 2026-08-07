@@ -94,7 +94,7 @@
                     <div class="div-add-item">                        
                         <div class="xreferencia_item pr-2">
                             <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
-                            <input type="text" autocomplete="on" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia text-primary fw-900" id="txt_referencia" onkeyup="xChangeIndicacionesItem()">
+                            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="nota_plato_item" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia text-primary fw-900" id="txt_referencia" onkeyup="xChangeIndicacionesItem()">
                             <hr>
                         </div>
                         <!-- otras indicaciones -->
@@ -353,7 +353,30 @@
     }
 </style>
 <script>
-    var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario, keyStorageListSubItem = '::app3_listSubItem';    
+    var xThisComSubItem, itemPedidos_objItemSelected, isExistSubitems = false, _precioProductoIni, _precioProductoUnitario, keyStorageListSubItem = '::app3_listSubItem';
+
+    function compResetInputIndicaciones(val) {
+        var el = document.getElementById('txt_referencia');
+        if (el) {
+            el.value = val || '';
+            el.setAttribute('autocomplete', 'off');
+        }
+    }
+
+    function compGetIndicacionesFromInput() {
+        var el = document.getElementById('txt_referencia');
+        return el ? (el.value || '').trim() : '';
+    }
+
+    function compGetPedidoItemKey(item) {
+        if (xidItem) {
+            return xidItem;
+        }
+        if (!item) {
+            return '';
+        }
+        return item.iditem || item.idcarta_lista || '';
+    }
 
     async function xOpenDlgItemVR_comp(tpc, id) {
 
@@ -364,6 +387,7 @@
         const _idItem = itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem;
 
         xThisComSubItem.isOptionRequeridosComplet = false;
+        compResetInputIndicaciones('');
 
         // itemPedidos_objItemSelected = xThisComSubItem.item_select
         if ( tpc ) {
@@ -618,6 +642,7 @@
     }
 
     function xListoDlgVR_comp() {
+        compResetInputIndicaciones('');
         xVerMipedidoVR();
         dialog_item_comp.close();
         resetCmpCtrlAddFact();
@@ -724,14 +749,13 @@
 
         
         try {                        
-            const _itemObjPedido = xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista];
+            const _itemKey = compGetPedidoItemKey(itemPedidos_objItemSelected);
+            const _itemObjPedido = xArrayPedidoObj[xidTipoConsumo] ? xArrayPedidoObj[xidTipoConsumo][_itemKey] : null;
 
-            if (  _itemObjPedido.cantidad  === 1) {
-                // _indicaciones_subitem = txt_referencia.value !== '' ? txt_referencia.value : _indicaciones_subitem;
-                $("#txt_referencia").val(_indicaciones_subitem);
+            if (_itemObjPedido) {
+                _itemObjPedido.indicaciones = compGetIndicacionesFromInput();
+                window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
             }
-            _itemObjPedido.indicaciones = _indicaciones_subitem;        
-            window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
         } catch (error) {
             // aun no esta en la lista
         }
@@ -907,18 +931,27 @@
           }
         });
         dialog_item_comp.center();
-    //   $(".xmenu_item_2")
-    //     .find("#txt_referencia")
-    //     .val(xindicaciones);
+        compResetInputIndicaciones(xindicaciones || '');
     // });
-        $("#txt_referencia").val(xindicaciones);
+    //     $("#txt_referencia").val(xindicaciones);
     }
 
 
     function xChangeIndicacionesItem() {
-        // console.log('itemPedidos_objItemSelected', itemPedidos_objItemSelected);        
-        xArrayPedidoObj[xidTipoConsumo][itemPedidos_objItemSelected.idcarta_lista].indicaciones = txt_referencia.value;
-        window.localStorage.setItem("::app3_sys_dta_pe",JSON.stringify(xArrayPedidoObj));
+        if (!xidTipoConsumo) {
+            return;
+        }
+        const _itemKey = compGetPedidoItemKey(itemPedidos_objItemSelected);
+        if (!_itemKey) {
+            return;
+        }
+        const val = compGetIndicacionesFromInput();
+        try {
+            if (xArrayPedidoObj[xidTipoConsumo] && xArrayPedidoObj[xidTipoConsumo][_itemKey]) {
+                xArrayPedidoObj[xidTipoConsumo][_itemKey].indicaciones = val;
+                window.localStorage.setItem("::app3_sys_dta_pe", JSON.stringify(xArrayPedidoObj));
+            }
+        } catch (error) {}
     }
 		
 

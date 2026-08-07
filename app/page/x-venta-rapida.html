@@ -15,12 +15,14 @@
 	<link rel="import" href="../x-componentes/x-comp-select/x-comp-select.html">	
 	<link rel="import" href="../x-componentes/x-comp-comision/x-comp-comision.html">	
 	<link rel="import" href="../x-componentes/x-comp-selector-mesa/x-comp-selector-mesa.html">
+	<link rel="import" href="../x-componentes/x-comp-pos-sede/x-comp-pos-sede.html">
 
 	<script rel="preload" src="../../js/isotope.pkgd.min.js" async></script>
 	<link rel="import" href="../x-componentes/x-comp-find-card/x-comp-find-card.html">
 
 
 	<script type="text/javascript" src="../view/config.const.js"></script>
+	<script type="text/javascript" src="../view/op_sede.service.js"></script>
 	<script type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 	<script type="text/javascript" src="../view/item_pedidos.js"></script>
@@ -140,13 +142,13 @@
 	  	<div class="tool-bar-vr">
 			<div>
 				<paper-icon-button paper-drawer-toggle icon="menu" onclick="xOpenPanelDeVR();"></paper-icon-button>
-				<span onclick="xOpenPedidosCuentaPendientes()" class="xCursor fs-15 fw-600 pr-2" title="Pedidos por Cobrar">			
+				<span onclick="xOpenPedidosCuentaPendientes()" class="xCursor fs-15 fw-600 pr-2" title="Pedidos por Cobrar">
 					<i class="fa fa-files-o"></i>
 				</span>
 				<!-- <paper-icon-button paper-drawer-toggle onclick="xOpenPedidosCuentaPendientes();"></paper-icon-button> -->
-				<span class="title xtitulo_bar xfont18">Punto de Venta</span>			
+				<x-comp-pos-sede id="compPosSede"></x-comp-pos-sede>
 			</div>
-			<div style="display: flex; align-items: center; padding-top: 7px; margin-right: 10px;">
+			<div style="display: flex; align-items: center; margin-right: 10px;">
 
 					<div class="mr-2" style="border-right: 1px solid; padding-right: 10px;" hidden$="[[!_hasItems(dataSelectTipoPrecio)]]">
 						<span class="fs-10 ml-2" style="margin-top: -15px; position: fixed;">Precios</span>
@@ -608,12 +610,14 @@
 
 	.tool-bar-vr {
 		background: darkslateblue;
-		padding: 8px;
+		padding: 4px 8px;
 		color: whitesmoke;
 		display: flex;
 		justify-content: space-between;
+		align-items: center;
 		flex-direction: row;
 		flex-wrap: wrap;
+		min-height: 0;
 	}
 
 	.paper-toggle-button-0[checked] .toggle-button.paper-toggle-button{
@@ -708,10 +712,103 @@ window.addEventListener('beforeunload', async function (e) {
 
 
 
+function xParseSnapshotOpSede(raw) {
+	if (!raw || raw === '0') return null;
+	try { return JSON.parse(window.atob(raw)); } catch (e) { return null; }
+}
+
+/** Valida que el snapshot de sede operativa tenga lo minimo para el POS. */
+function xValidarSnapshotOpSede(raw, sedeNombre) {
+	var snap = (typeof raw === 'object' && raw !== null) ? raw : xParseSnapshotOpSede(raw);
+	if (!snap) {
+		return {
+			ok: false,
+			titulo: 'Sede sin datos',
+			mensaje: 'No se pudo cargar la configuración' +
+				(sedeNombre ? ' de "' + sedeNombre + '"' : '') +
+				'. Verifique que la sede esté activa y configurada para ventas.'
+		};
+	}
+	var faltas = [];
+	if (!snap.sede || !snap.sede.generales || !snap.sede.generales.length) {
+		faltas.push('impresión (conf_print)');
+	}
+	if (!snap.carta || !snap.carta.estructura_pedido || !snap.carta.estructura_pedido.length) {
+		faltas.push('tipos de consumo (Local / Llevar / Delivery)');
+	}
+	if (!snap.carta || !snap.carta.categorias || !snap.carta.categorias.length) {
+		faltas.push('categorías de carta');
+	}
+	if (faltas.length) {
+		return {
+			ok: false,
+			titulo: 'Sede no lista para ventas',
+			mensaje: 'La sede' + (sedeNombre ? ' "' + sedeNombre + '"' : '') +
+				' no tiene datos suficientes para operar en el POS. Configure: ' +
+				faltas.join(', ') + '.'
+		};
+	}
+	return { ok: true, snap: snap };
+}
+
+function xInformarSedeOpNoLista(info) {
+	try {
+		showAlertSwalOk('warning', info.titulo || 'Sede no disponible', info.mensaje || '');
+	} catch (e) {
+		alert((info.titulo || 'Sede no disponible') + '\n' + (info.mensaje || ''));
+	}
+}
+
+function xFinalizarCambioSedeOp(done) {
+	window._opSedeCambioDone = null;
+	try { xPopupLoad.xclose(); } catch (e) {}
+	if (typeof done === 'function') { done(); }
+}
+
+function xRevertirCambioSedeOp(sedeIntentada, sedePrev, done) {
+	if (sedePrev && sedePrev.idsede) {
+		opSede.set(sedePrev);
+	} else {
+		opSede.clear();
+	}
+	if (window._opSedeSnapshotPrev) {
+		try { window.sessionStorage.setItem('::app3_woDUS_op', window._opSedeSnapshotPrev); }
+		catch (e) { /* ignore */ }
+	} else {
+		try { window.sessionStorage.removeItem('::app3_woDUS_op'); } catch (e) {}
+	}
+	window._opSedeSnapshotPrev = null;
+	window.dispatchEvent(new CustomEvent('op-sede-changed', {
+		detail: { prev: sedeIntentada, current: opSede.get() }
+	}));
+	xFinalizarCambioSedeOp(done);
+	// Restaurar carta de la sede a la que se revirtió.
+	var compCat = document.getElementById('compFindCategoria');
+	if (compCat && typeof compCat.reloadCards === 'function') {
+		try { localStorage.removeItem('::app3_cat_defualt'); } catch (e) {}
+		compCat.reloadCards();
+	}
+}
+
 function xIniVentaRapida(){
 	xm_LogChequea();
 	// xm_LogChequea(function(){
 		xm_log_get('ini_us');
+
+		// Snapshot override corrupto o sede sin datos: volver a sede de pertenencia.
+		if (typeof opSede !== 'undefined' && opSede.isOverride && opSede.isOverride()) {
+			var opRaw = window.sessionStorage.getItem('::app3_woDUS_op');
+			var opCur = opSede.get();
+			var valOp = xValidarSnapshotOpSede(opRaw, opCur.nombre || opCur.ciudad);
+			if (!valOp.ok) {
+				xInformarSedeOpNoLista(valOp);
+				opSede.clear();
+				try { window.sessionStorage.removeItem('::app3_woDUS_op'); } catch (e) {}
+				window.dispatchEvent(new CustomEvent('op-sede-changed'));
+				xm_log_get('ini_us');
+			}
+		}
+
 		//if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
 		//if(xIdSede=='' || xIdSede==undefined){xIdSede=window.localStorage.getItem('::app3_woS');}
 		$("#Titulo_page").text("Punto de Venta");
@@ -722,18 +819,28 @@ function xIniVentaRapida(){
 		localStorage.removeItem('::app3_woDUS::cxe');
 		// var xDatos_p = xm_log_get("sede_generales"); //$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
 
-		xArrayRegla=xm_log_get('reglas_de_carta');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_rec"));
+		xArrayRegla=xm_log_get('reglas_de_carta') || [];
 		xDtPrint=xm_log_get('sede_generales');//$.parseJSON(window.localStorage.getItem("::app3_sys_dta_prt"));
-		xNumMesasBd=parseInt(xDtPrint[0].mesas);		
+		// Defensivo: si la sede no trae sede_generales, no reventar el init (des_sede, eslogan, mesas...).
+		if (!xDtPrint || !xDtPrint[0]) { xDtPrint = [{}]; }
+		// DIAG temporal multi-sede: ver que trae el snapshot override (se quita despues).
+		try { var __op = window.sessionStorage.getItem('::app3_woDUS_op');
+			if (__op) { var __s = JSON.parse(window.atob(__op));
+				console.log('OPSEDE SNAPSHOT idsede=', __s.us && __s.us.idsede,
+					'| generales=', JSON.stringify(__s.sede && __s.sede.generales)); } }
+		catch (e) { console.log('OPSEDE diag err', e); }
+		xNumMesasBd=(xDtPrint && xDtPrint[0]) ? parseInt(xDtPrint[0].mesas || 0) : 0;
 
-		const dataHolding = xm_log_get('datos_sede_holding')
+		const dataHolding = xm_log_get('datos_sede_holding') || [];
 		xThisVentaRapida.showCodeLocalizator = dataHolding.length > 0;
-		console.log('dataHolding', dataHolding);
 
-		const xper_acc_vr = xm_log_get('app3_woPer');
+		const xper_acc_vr = xm_log_get('app3_woPer') || '';
 		xThisVentaRapida.showCompDescuento = xper_acc_vr.indexOf('Pe5') > -1;
 
-		isSocket = parseInt(xm_log_get('datos_org_sede')[0].pwa) === 0 ? false : true;
+		const datosOrgSede = xm_log_get('datos_org_sede');
+		isSocket = (datosOrgSede && datosOrgSede[0])
+			? parseInt(datosOrgSede[0].pwa, 10) !== 0
+			: false;
 	// console.log('isSocket', isSocket);
 
 	xLoadArrayPedido();
@@ -798,7 +905,8 @@ function xIniVentaRapida(){
 		const itemTpcSelected = e.detail?.values || null;
 		if ( !itemTpcSelected ) {return; }
 
-		select_ulTPC.value = itemTpcSelected.idtipo_consumo;
+		const selTpc = document.getElementById('select_ulTPC');
+		if (selTpc) selTpc.value = itemTpcSelected.idtipo_consumo;
 
 		xdelivery = 0; 
 			xsolo_llevar = 0;
@@ -839,7 +947,8 @@ function xIniVentaRapida(){
 			
 			try {				
 				setTimeout(() => {// coloca la categoria antes seleccionada	
-					compFindCategoria.$.compFindListCategoria.value = valCategoriaLoalStorage.index;
+					const listCat = compFindCategoria && compFindCategoria.$ && compFindCategoria.$.compFindListCategoria;
+					if (listCat) listCat.value = valCategoriaLoalStorage.index;
 				}, 500);
 			} catch (error) {
 				
@@ -852,6 +961,17 @@ function xIniVentaRapida(){
 		setLocalSotrage('::app3_cat_defualt', JSON.stringify(valCategoriaLoalStorage));
 		xLoadCartaVR();
 		// $("#titulo_categoria").text(e.detail.categorias.descripcion);
+	});
+
+	compFindCategoria.addEventListener('sinDatos', function () {
+		if (typeof window._opSedeCambioDone === 'function') {
+			xInformarSedeOpNoLista({
+				titulo: 'Sede sin categorías',
+				mensaje: 'La sede seleccionada no tiene categorías de carta configuradas. No se puede cargar el menú.'
+			});
+			xRevertirCambioSedeOp(opSede.get(), window._opSedePrev, window._opSedeCambioDone);
+			window._opSedePrev = null;
+		}
 	});
 
 	// xCargarCategoriaActual(function(xcat_id){
@@ -1191,17 +1311,171 @@ function xIniVentaRapida(){
 	
 	compComision.addEventListener('comision-canceled', () => {
 		console.log('comision-canceled');
-		
+
 		// Obtener los subtotales actuales
 		const arrTotales = xLocal_xDtSubTotales || [];
 		if (arrTotales.length === 0) return;
-		
+
 		// Eliminar todas las comisiones
 		arrSubtTotalesDescuentoVR = colocarComisionSubtotales(null, arrTotales, false);
-				
+
 		// Actualizar totales
 		xSumarTotal(true);
 	});
+
+	// === POS multi-sede: integracion con x-comp-pos-sede ===
+
+	/** Limpia el pedido en curso sin abrir el popup de carga (cambio de sede). */
+	function xResetPedidoVRSilente() {
+		localStorage.removeItem('::app3_woDUS::cxe');
+		window.localStorage.removeItem('::app3_sys_dta_pe');
+		window.localStorage.removeItem('::app3_sys_dta_pe_sk');
+		if (typeof xCompDatosDelivery !== 'undefined' && xCompDatosDelivery) {
+			xCompDatosDelivery.resetValInit();
+		}
+		tt_pedido = 0;
+		xArrayPedido = new Array();
+		xDtSubTotales = new Array();
+		xArrayPedidoObj = new Array();
+		xLimpiarItemSeleccionadosSubItems();
+		xLimpiarItemIndicaciones();
+		xLoadArrayPedido();
+		const elLoc = document.getElementById('text_code_localizator');
+		if (elLoc) elLoc.value = '';
+		if (isSocket) {
+			_cpSocketRestoreFromPedidoStorage();
+			_resetCeroItemcarta();
+		}
+		$('#xtb_pedido_subtotales tr').remove();
+		$('#tb_pedido_detalle').remove();
+		$('.xcheck_print').attr('checked', false);
+		xregistrar_pago = false;
+		xenviar_cuenta = false;
+		xid_cliente_pago = 0;
+		xCount_cant_ico = 0;
+		$('#btn_registrar_pago').addClass('xInvisible');
+		$('#btn_enviar_cuenta').addClass('xInvisible');
+		$('#txt_mesa').val('');
+		$('#txt_ref_vr').val('');
+		xedit_detalle_item = false;
+		if (typeof check_reserva !== 'undefined' && check_reserva) { check_reserva.checked = false; }
+		$('#txt_bus_item').focus();
+		guardando_vr = false;
+		if (typeof xValPago !== 'undefined' && xValPago) { xValPago.setResetFormaPago(); }
+		xRpt_pago = [];
+		arrDatosAdjuntoDelivery = [];
+		if (typeof frm_cliente !== 'undefined' && frm_cliente) { frm_cliente.reset(); }
+		xLocal_SubTotal_Quitados = '';
+		if (xCompDescuentoPedidoVR) { xCompDescuentoPedidoVR.reset(); }
+	}
+
+	/**
+	 * Refresca datos de la sede operativa sin recargar la pagina.
+	 * Requiere ::app3_woDUS_op ya guardado en sessionStorage (op=-1111).
+	 */
+	function xRefrescarSedeOperativaVR(sede) {
+		var raw = window.sessionStorage.getItem('::app3_woDUS_op');
+		var val = xValidarSnapshotOpSede(raw, sede && (sede.nombre || sede.ciudad));
+		if (!val.ok) {
+			xInformarSedeOpNoLista(val);
+			xRevertirCambioSedeOp(sede, window._opSedePrev, window._opSedeCambioDone);
+			window._opSedePrev = null;
+			return;
+		}
+
+		xm_log_get('ini_us');
+
+		xArrayRegla = xm_log_get('reglas_de_carta') || [];
+		xDtPrint = xm_log_get('sede_generales');
+		if (!xDtPrint || !xDtPrint[0]) { xDtPrint = [{}]; }
+		xNumMesasBd = (xDtPrint && xDtPrint[0]) ? parseInt(xDtPrint[0].mesas || 0, 10) : 0;
+
+		var dataHolding = xm_log_get('datos_sede_holding') || [];
+		xThisVentaRapida.showCodeLocalizator = dataHolding.length > 0;
+
+		var xper_acc_vr = xm_log_get('app3_woPer') || '';
+		xThisVentaRapida.showCompDescuento = xper_acc_vr.indexOf('Pe5') > -1;
+
+		var datosOrgSede = xm_log_get('datos_org_sede') || [];
+		isSocket = datosOrgSede[0] ? parseInt(datosOrgSede[0].pwa, 10) !== 0 : false;
+		xThisVentaRapida.xt_nombre_sede = xDtPrint[0].des_sede || '';
+		xThisVentaRapida.xt_eslogan = xDtPrint[0].eslogan || '';
+
+		xResetPedidoVRSilente();
+		// Reconstruir estructura de tipos de consumo de la sede destino.
+		xArrayPedidoObj = [];
+		xArrayPedido = [];
+		xLoadArrayPedido();
+		xTraerDtTipoConsumo();
+
+		if (typeof reloadCanalConsumoPosSede === 'function') {
+			reloadCanalConsumoPosSede();
+		}
+		if (typeof xCompDatosDelivery !== 'undefined' && xCompDatosDelivery &&
+		    typeof xCompDatosDelivery.reloadInputDatalientes === 'function') {
+			xCompDatosDelivery.reloadInputDatalientes();
+		}
+
+		loadCuponesActivos();
+		if (xThisVentaRapida.getDataTipoPrecio) {
+			xThisVentaRapida.getDataTipoPrecio();
+		}
+
+		// Recarga categorias + carta (getValorIncial dispara xLoadCartaVR).
+		var compCat = document.getElementById('compFindCategoria');
+		if (compCat && typeof compCat.reloadCards === 'function') {
+			compCat.reloadCards();
+		} else if (typeof xLoadCartaVR === 'function') {
+			try { localStorage.removeItem('::app3_cat_defualt'); } catch (e) {}
+			xLoadCartaVR();
+		} else if (typeof window._opSedeCambioDone === 'function') {
+			var fnDone = window._opSedeCambioDone;
+			window._opSedeCambioDone = null;
+			fnDone();
+		}
+	}
+
+	xCompPosSedeHost = {
+		checkPedidoEnCurso: function () {
+			try { return typeof tt_pedido !== 'undefined' && parseFloat(tt_pedido) > 0; }
+			catch (e) { return false; }
+		},
+		cancelarPedidoEnCurso: function () {
+			try { xNuevoPedidoVR(); } catch (e) { console.error('cancelar pedido', e); }
+		},
+		aplicarCambioSede: function (sede, sedePrev, done) {
+			window._opSedeSnapshotPrev = window.sessionStorage.getItem('::app3_woDUS_op');
+			window._opSedePrev = sedePrev;
+			opSede.posAjax({
+				type: 'POST',
+				url: '../../bdphp/log.php',
+				posOp: -1111,
+				data: {}
+			}).done(function (rpt) {
+				var val = xValidarSnapshotOpSede(rpt, sede.nombre || sede.ciudad);
+				if (!val.ok) {
+					xInformarSedeOpNoLista(val);
+					xRevertirCambioSedeOp(sede, sedePrev, done);
+					return;
+				}
+
+				try { window.sessionStorage.setItem('::app3_woDUS_op', rpt); }
+				catch (e) { console.error('No se pudo guardar snapshot op_sede', e); }
+
+				try { localStorage.removeItem('::app3_comp_cat'); } catch (e) {}
+				try { localStorage.removeItem('::app3_cat_defualt'); } catch (e) {}
+				try { localStorage.removeItem('::app3_sys_descat'); } catch (e) {}
+
+				window._opSedeCambioDone = done;
+				window._opSedeSnapshotPrev = null;
+				xRefrescarSedeOperativaVR(sede);
+			}).fail(function (xhr) {
+				console.error('Error al cambiar de sede:', xhr && xhr.responseText);
+				try { showAlertSwalOk('error', 'Error al cambiar de sede', 'No se pudieron cargar los datos de la nueva sede.'); } catch (e) {}
+				xRevertirCambioSedeOp(sede, sedePrev, done);
+			});
+		}
+	};
 }
 
 function xValidarPedidoonBtnVR() {
@@ -1443,7 +1717,8 @@ function xNuevoPedidoVR() {
 	xLoadArrayPedido();
 	xPopupLoad.xopen();
 
-	text_code_localizator.value = '';
+	const elLocReset = document.getElementById('text_code_localizator');
+	if (elLocReset) elLocReset.value = '';
 		
 
 	// reset pedido socket si no se envio
@@ -1523,8 +1798,12 @@ function xIniFocusMoveLi(){
 
 function xRegistrarClientePagoVR(){
 	$("#btn_pago").attr('disabled', true);
-	// btn_pago.hidden=true;
 	if ( guardando_vr === true ) {return;}
+	if ( !xRpt_pago || !xRpt_pago[0] ) {
+		try { showAlertSwalOk('warning', 'Datos de pago', 'Complete los datos de pago antes de registrar.'); } catch (e) { alert('Complete los datos de pago.'); }
+		$("#btn_pago").attr('disabled', false);
+		return;
+	}
 	guardando_vr = true;
 
 	xid_cliente_pago=xRpt_pago[0].idcliente;
@@ -1568,13 +1847,13 @@ function xRegistrarClientePagoVR(){
 
 
 function xRegistrarPagoVR(xidclie,xidp){
-	var idtpc=select_ulTPC.value;	
+	var idtpc = (document.getElementById('select_ulTPC') || {}).value;	
 
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=509', data:{idclie:xidclie,tt:xMoneda(tt_pedido),idp:xidp,xArrayItems:'',ArrayPago:xRpt_pago[0].xtipo_pagos,idtipo_consumo:idtpc}})
 	// .done( function (xidC) {
 
 	const _fetchApi = new httpFecht();
-	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=509', data: { idclie: xidclie, tt: xMoneda(tt_pedido), idp: xidp, xArrayItems: '', ArrayPago: xRpt_pago[0].xtipo_pagos, idtipo_consumo: idtpc } })
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=509', data: { idclie: xidclie, tt: xMoneda(tt_pedido), idp: xidp, xArrayItems: '', ArrayPago: xRpt_pago[0].xtipo_pagos, idtipo_consumo: idtpc }, isShowPreload: false })
 	.then((xidC) => {
 		xidC=$.parseJSON(xidC);
 		if(!xidC.success){alert(xidC.error); return;}
@@ -1582,10 +1861,19 @@ function xRegistrarPagoVR(xidclie,xidp){
 		xPopupLoad.xclose();
 		xThisVentaRapida.$.dialog_pagar_vr.close();
 		//xNuevoPedidoVR();
+	})
+	.catch(function () {
+		guardando_vr = false;
+		try { xPopupLoad.xclose(); } catch (e) {}
 	});
 }
 
 async function xGuardarPedidoVR(responde){
+	function _vrAbortGuardarPedido() {
+		guardando_vr = false;
+		_cerrarPopupCargaForzado();
+	}
+
 	var xmesa=$("#txt_mesa").val()
 	, xref=$("#txt_ref_vr").val()
 	, xtotal=$(".xPedidoTotal").text()
@@ -1599,11 +1887,11 @@ async function xGuardarPedidoVR(responde){
 	, xIdPedido=''
 	, xReservar=0;
 
-	if(tt_pedido==0){return;}	
+	if(tt_pedido==0){ _vrAbortGuardarPedido(); return;}	
 	//verifica si imprime, si solo hay itmes de almacen no imprime en comanda segun confg
 	//xVerificarSiSeImprimeComanda(xArrayPedido)
 
-	if(check_reserva.checked==true){xmesa='0';$("#txt_mesa").val(0);xReservar=1;}
+	if(typeof check_reserva !== 'undefined' && check_reserva && check_reserva.checked==true){xmesa='0';$("#txt_mesa").val(0);xReservar=1;}
 
 	
 	xsolo_llevar=0;
@@ -1639,9 +1927,9 @@ async function xGuardarPedidoVR(responde){
 			: [];
 
 	var ComprobanteSeleccionado = xRpt_pago[0] ? xRpt_pago[0].comprobante : [];
-	// var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
-	// 1801222 - guarda cliente en cliente sede
-	var xid_cliente_pago = await ClienteService_Guardar(DatosCliente);
+	var _idClientePago = DatosCliente.idcliente || xRpt_pago[0].idcliente || '';
+	var _needsSaveCliente = !_idClientePago || _idClientePago === '0' || xRpt_pago[0].is_update_cliente;
+	var xid_cliente_pago = _needsSaveCliente ? await ClienteService_Guardar(DatosCliente) : _idClientePago;
 	// console.log('xid_cliente_pago', xid_cliente_pago);
 	var xidpedido_seleccionados = '';	
 	
@@ -1654,14 +1942,15 @@ async function xGuardarPedidoVR(responde){
 
 	xGeneralValidarRegalasCarta(xArrayPedidoObj,true);
 	if ( !arrSubtTotalesDescuentoVR ) {
-		if(xArmarSubtotalesArray()==0){return}
+		if(xArmarSubtotalesArray()==0){ _vrAbortGuardarPedido(); return; }
 	}
 
 	xVerificarImprimirComanda=false;
 	xVerificarSiSeImprimeComanda(xArrayPedidoObj)
 
 	// datos de la sede
-	var dataSede = xm_log_get('datos_org_all_sede')[0];
+	var dataSedeArr = xm_log_get('datos_org_all_sede') || [];
+	var dataSede = dataSedeArr[0] || {};
 	const _isComercioAppDeliveryMapa = dataSede.pwa_habilitar_busqueda_mapa;
 
 	// si no hay referencia obtiene el nombre del cliente
@@ -1738,11 +2027,11 @@ async function xGuardarPedidoVR(responde){
 
 	
 	const idP = await goSendPedidoFecht(dataSendPedido);
-	if ( !idP ) return;
-	// console.log('idP', idP);
-	// return;
+	if ( !idP ) { _vrAbortGuardarPedido(); return; }
 
+	_cerrarPopupCargaForzado();
 
+	try {
 	// chequea si hay productos con venta x peso para enviar el cambio de stock
 	xSendItemVentaxPesoVR(xarr_body)
 
@@ -1801,16 +2090,14 @@ async function xGuardarPedidoVR(responde){
 
 		// console.log('paso c');
 		// if ( p_from === '12' ) {
-		if (xrpt_correlativo !== ''){
-			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
-		}
+		await xMandarCocinarImpresionComprobante(xrpt_correlativo || '', xIdRegistroPago);
 		
 		if(xVerificarImprimirComanda==true){
 			guardando_vr = true;
 			xLoadItemsDetalleCartaALL();			
 			xLLamarPrintVR(idP);
 		}else{
-			xPopupLoad.xclose();
+			_cerrarPopupCargaForzado();
 			if (isSocket) { _cpSocketClearStorage(); }
 			xNuevoPedidoVR();			
 		}
@@ -1821,7 +2108,11 @@ async function xGuardarPedidoVR(responde){
 		
 		// console.log('FIN');
 		responde(true);
-	
+	} catch (error) {
+		console.error('xGuardarPedidoVR post-guardado', error);
+		_vrAbortGuardarPedido();
+		try { showAlertSwalOk('error', 'Error', 'No se pudo completar la venta. Revise la consola.'); } catch (e) { alert('Error al completar la venta.'); }
+	}
 	
 	// }).fail(guardando_vr = false);
 }
@@ -1886,11 +2177,7 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 	const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
 	const xrpt_correlativo = _arrRpt.correlativo_comprobante;
 
-
-	if (xrpt_correlativo !== ''){
-			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);
-		}
-		
+	await xMandarCocinarImpresionComprobante(xrpt_correlativo || '', xIdRegistroPago);
 
 	dialog_pagar_vr.close();		
 
@@ -1942,14 +2229,15 @@ async function goSendPedidoFecht(_data) {
 	const _fetchApiPedido = new httpFecht();
 	try {		
 		console.log('¿_data', _data);
-		const codigo_localizador = text_code_localizator.value || '';		
-		const tipoDesc = xCompDescuentoPedidoVR.get();
+		const codigo_localizador = (document.getElementById('text_code_localizator') || {}).value || '';		
+		const tipoDesc = (typeof xCompDescuentoPedidoVR !== 'undefined' && xCompDescuentoPedidoVR && xCompDescuentoPedidoVR.get)
+			? xCompDescuentoPedidoVR.get() : null;
 		console.log('¿tipoDesc', tipoDesc);
-		_data.p_descuento = tipoDesc.idtipo_descuento ? tipoDesc.idtipo_descuento === 0 ? null : tipoDesc : null;
+		_data.p_descuento = (tipoDesc && tipoDesc.idtipo_descuento && tipoDesc.idtipo_descuento !== 0) ? tipoDesc : null;
 		
 		verifyDescuentosInCuenta(_data);
 		
-		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data }, true, false)
+		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data, isShowPreload: false }, true, false)
 		if (rpt) {
 
 			// si hay codigo localizador guardar
@@ -1978,6 +2266,16 @@ async function goSendPedidoFecht(_data) {
 				console.log('error checkReservaStock', error);
 			}
 
+			// pedido guardado => borrar el snapshot AQUI (fuente unica de verdad).
+			// antes solo se limpiaba en algunas rutas post-venta; si la comanda fallaba y el
+			// cajero tocaba "No imprimir", xNuevoPedidoVR() restauraba por resetPedido el
+			// stock de una venta YA COBRADA (stock volvia al valor previo a la venta)
+			try {
+				if (isSocket) { _cpSocketClearStorage(); }
+			} catch (error) {
+				console.log('error clear storage pedido sk', error);
+			}
+
 			
 		};
 		return rpt;
@@ -1991,44 +2289,36 @@ async function goSendPedidoFecht(_data) {
 	
 }
 
-function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
-	// console.log('paso d');
-	if ( xRpt_pago.length > 0 ) {
-		var arr_cliente = xRpt_pago[0].cliente;
-		var arr_comprobante = xRpt_pago[0].comprobante;
+async function xMandarCocinarImpresionComprobante(correlativo, idregistro_pago) {	
+	if ( xRpt_pago.length === 0 ) return;
 
-		if (xRpt_pago[0].idcliente === '' && xdelivery === 1) {  
-			// arr_cliente = xarr_cliente.cliente; 
-			arr_cliente = {
-				"idcliente": 0,
-				"num_doc": "",
-				"nombres": xarr_cliente.cliente.nombre,
-				"direccion": xarr_cliente.cliente.direccion,
-				"telefono": xarr_cliente.cliente.telefono,
-				"referencia": xarr_cliente.cliente.referencia
-			}
+	var arr_cliente = xRpt_pago[0].cliente;
+	var arr_comprobante = xRpt_pago[0].comprobante;
+	const arrTipoPago = xRpt_pago[0].xtipo_pagos || [];
+
+	if (xRpt_pago[0].idcliente === '' && xdelivery === 1) {  
+		arr_cliente = {
+			"idcliente": 0,
+			"num_doc": "",
+			"nombres": xarr_cliente.cliente.nombre,
+			"direccion": xarr_cliente.cliente.direccion,
+			"telefono": xarr_cliente.cliente.telefono,
+			"referencia": xarr_cliente.cliente.referencia
 		}
-		// correlativo = correlativo ? correlativo === '' ? arr_comprobante.correlativo : '' : '';
-		// correlativo comprobante
-		// if ( arr_comprobante ) {
-			try {				
-				arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-			} catch (error) {}
-		// }
+	}
 
-		// quitar
-		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
-		
-		// console.log('paso E');
-		// xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
+	const _arrPedidoObj = xDataPagoPedidoPendiente ? xCargarDatosAEstructuraImpresion(xDataPagoPedidoPendiente.checkItemsSeleccionados.arrayPedidosSeleccionados) : xArrayPedidoObj;
 
-		// si es pedido de cuenta pendiente
-		const _arrPedidoObj = xDataPagoPedidoPendiente ? xCargarDatosAEstructuraImpresion(xDataPagoPedidoPendiente.checkItemsSeleccionados.arrayPedidosSeleccionados) : xArrayPedidoObj;
-		xCocinarImprimirComprobante(_arrPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
-		// if (!rpt.ok) { // si el documento electronico no es valido
-		// 	alert(rpt.msj + 'Mande a imprimir desde Registro de pagos');
-		// 	return;
-		// }
+	_cerrarPopupCargaForzado();
+
+	// Guía interna al crédito: primero (HTML + impresión navegador), sin ticketera ni bloqueo Sunat
+	await xImprimirGuiaRemisionVentaCredito(_arrPedidoObj, xarr_subtotales, arr_cliente, idregistro_pago, arrTipoPago);
+
+	if (correlativo !== '') {
+		try {				
+			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
+		} catch (error) {}
+		await xCocinarImprimirComprobante(_arrPedidoObj, xarr_subtotales, arr_comprobante, arr_cliente, idregistro_pago,-2);
 	}
 }
 
@@ -2062,8 +2352,27 @@ function xReImprimir(){
 
 function xLoadCartaVR(){
 	//$("#_xMenu_body_vr").html('<div class="spinner xtxtCentro"><paper-spinner active></paper-spinner></div>').trigger('create');	
+	var _cambioSede = typeof window._opSedeCambioDone === 'function';
 	xGeneralLoadItems(xidCategoriaVR, async function(){
-		xPopupLoad.xopen();
+		if (!_cambioSede) { xPopupLoad.xopen(); }
+
+		if (!xGeneralDataCarta || !xGeneralDataCarta.length) {
+			$('#_xMenu_body_vr div').remove();
+			$('#accordion ul').remove();
+			if (_cambioSede) {
+				xInformarSedeOpNoLista({
+					titulo: 'Carta vacía',
+					mensaje: 'La sede seleccionada no tiene productos en esta categoría. Verifique la carta de la sede.'
+				});
+				xRevertirCambioSedeOp(opSede.get(), window._opSedePrev, window._opSedeCambioDone);
+				window._opSedePrev = null;
+			} else {
+				setTimeout(function () {
+					xPopupLoad.xclose();
+				}, 300);
+			}
+			return;
+		}
 		//var xdtCAct=data_carta;
 		//xThisVentaRapida.xdt_items=xdtCAct;
 		var xCadenaCarta='';
@@ -2106,8 +2415,9 @@ function xLoadCartaVR(){
 		xLoadItemsDetalleCartaALL();
 
 		setTimeout(() => {			
-			xPopupLoad.xclose();
-		}, 300);
+			if (!_cambioSede) { xPopupLoad.xclose(); }
+			xFinalizarCambioSedeOp(window._opSedeCambioDone);
+		}, _cambioSede ? 80 : 300);
 	})
 }
 
@@ -2121,6 +2431,23 @@ function xFiltrarItemsCartaDet(xobj){
 			return;
 
 	   }
+
+	   // Filtro especial: sección virtual "PROMOCIONES"
+	   if (filter === '__PROMOS__') {
+	   		$("#accordion li").each(function(a, element) {
+	   			if (element.dataset.enPromocion === '1') $(element).show();
+	   			else $(element).hide();
+	   		});
+	   		xIniFocusMoveLi();
+	   		if ($xlist_li && $xlist_li.length > 0) {
+	   			$xlist_li.eq(0).focus();
+	   			$xlist_li.eq(0).addClass('xitem_seleccionado_li');
+	   			$xlist_li.eq(0).click();
+	   		}
+	   		xClosePanelDeVR();
+	   		return;
+	   }
+
 	   $("#accordion li").each(function(a,element) {
 	   		if(filter==element.dataset.idseccionindex){
 				$(element).show();
@@ -2133,7 +2460,7 @@ function xFiltrarItemsCartaDet(xobj){
 	$xlist_li.eq(0).focus();
   	$xlist_li.eq(0).addClass('xitem_seleccionado_li');
 	$xlist_li.eq(0).click();
-	  
+
 	xClosePanelDeVR();
 }
 
@@ -2214,10 +2541,11 @@ async function xLoadItemsDetalleCartaALL(){
 		
 		// Verificar si el ítem está en promoción
 		let descuentoTag = '';
-		
+
 		// Preparar el badge de descuento si corresponde
 		if (xGeneralDataCarta[p].enPromocion) {
-			descuentoTag = ` <span class="badge badge-danger fw-100 fs-11">-${xGeneralDataCarta[p].descuento}%</span>`;
+			const badge = xGeneralDataCarta[p].badgePromo || `-${xGeneralDataCarta[p].descuento}%`;
+			descuentoTag = ` <span class="badge badge-danger fw-100 fs-11" title="${xGeneralDataCarta[p].tituloPromocion || 'Promo'}">${badge}</span>`;
 		}
 		
 		xCadenaItems=String(xCadenaItems+'<li id="li2'+xGeneralDataCarta[p].idcarta_lista+'" class="noselect divLi" data-isli="1" data-signo="+" data-index="'+ p +'" data-idcategoria="'+xidCategoriaVR+
@@ -2237,7 +2565,9 @@ async function xLoadItemsDetalleCartaALL(){
 												'" data-cant_descontar="'+xGeneralDataCarta[p].cant_descontar+
 												'" data-stock_actual="'+xGeneralDataCarta[p].cantidad+
 												'" data-idalmacen_items="'+xGeneralDataCarta[p].idalmacen_items+
-												'" data-tipo-precios="' + tipo_precio_ids + '">' +
+												'" data-tipo-precios="' + tipo_precio_ids +
+												'" data-en-promocion="' + (xGeneralDataCarta[p].enPromocion ? '1' : '0') +
+												'" data-titulo-promo="' + (xGeneralDataCarta[p].tituloPromocion || '') + '">' +
 														'<div class="content_li">'+
 															'<div class="content-titulo">'+
 																'<div class="xicon3 xeditar xbtn_li_editar" title="editar"></div>'+
@@ -2258,6 +2588,32 @@ async function xLoadItemsDetalleCartaALL(){
 
 	$("#accordion").html(xCadenaItems).trigger('create');
 	xIniFocusMoveLi();
+
+	// === Sección virtual "PROMOCIONES" ===========================================
+	// Si hay items con promo aplicada, agregamos al panel lateral de secciones un
+	// chip "PROMOCIONES" que filtra solo los items en promo. Usamos data-id mágico
+	// "__PROMOS__" reconocido por xFiltrarItemsCartaDet.
+	try {
+		const cantPromos = xGeneralDataCarta.filter(it => it && it.enPromocion).length;
+		// Quitar la sección virtual previa si existió en un render anterior
+		$('#_xMenu_body_vr .xmenu_item_promos').remove();
+		if (cantPromos > 0) {
+			const chipHtml =
+				'<div class="xmenu_item xmenu_item_promos xCursor" data-id="__PROMOS__" ' +
+				'onclick="xFiltrarItemsCartaDet(this);" ' +
+				'style="background:linear-gradient(135deg,#ff7a00,#ff3d00); color:#fff; padding:14px 15px; border-bottom:1px solid #fff3; ' +
+				'box-shadow:inset 0 -1px 0 rgba(0,0,0,.1);">' +
+					'<p class="xtitulo_item" style="color:#fff; margin:0; font-weight:700; letter-spacing:.5px;">' +
+						'🎁 PROMOCIONES ' +
+						'<span style="display:inline-block; margin-left:6px; background:#fff; color:#ff3d00; ' +
+						'border-radius:999px; padding:1px 8px; font-size:11px; font-weight:700;">' + cantPromos + '</span>' +
+					'</p>' +
+				'</div>';
+			$('#_xMenu_body_vr').prepend(chipHtml);
+		}
+	} catch (e) {
+		console.error('Error inyectando sección virtual de promociones:', e);
+	}
 }
 
 // listen sokect change items
@@ -2299,7 +2655,8 @@ function _cpStockItemModificado(item){
 	itemPedidos_objItemSelected = xGeneralDataCarta[index];
 	itemPedidos_objItemSelected.stock_actual = xCantidadMax;
 	itemPedidos_objItemSelected.cantidad = xCantidadMax;
-	
+	itemPedidos_objItemSelected.indicaciones = '';
+	itemPedidos_objItemSelected.xindicaciones = '';
 
 	// subitems
 	if (item.subitems) {
@@ -2481,6 +2838,40 @@ function xSumarTotal(viene_dsct = false){
 
 	xLocal_xDtSubTotales = viene_dsct ? arrSubtTotalesDescuentoVR : xLocal_xDtSubTotales;
 
+	// Descuento por promociones NxN / "Nésimo a porc%" — depende de la cantidad
+	// pedida por línea, por eso no está reflejado todavía en los subtotales.
+	// Lo insertamos como fila "DESC. PROMO" justo antes del TOTAL y ajustamos
+	// el TOTAL. Compatible con flujo con/sin descuento manual.
+	try {
+		const _rptDescPromo = (typeof xCalcDescuentoPromosTotal === 'function')
+			? xCalcDescuentoPromosTotal(xArrayPedidoObj)
+			: { total: 0, detalle: [] };
+
+		if (_rptDescPromo && _rptDescPromo.total > 0 && Array.isArray(xLocal_xDtSubTotales) && xLocal_xDtSubTotales.length > 0) {
+			// Si por alguna razón ya existe la fila DESC. PROMO (re-render), la quitamos primero.
+			xLocal_xDtSubTotales = xLocal_xDtSubTotales.filter(r => !r.es_descuento_promo);
+
+			const _idxTotal = xLocal_xDtSubTotales.length - 1;
+			const _filaTotal = xLocal_xDtSubTotales[_idxTotal];
+
+			xLocal_xDtSubTotales.splice(_idxTotal, 0, {
+				descripcion: 'DESC. PROMO',
+				importe: '-' + _rptDescPromo.total.toFixed(2),
+				visible: true,
+				quitar: false,
+				es_descuento_promo: true
+			});
+
+			const _nuevoTotal = Math.max(0, parseFloat(_filaTotal.importe) - _rptDescPromo.total);
+			// Mantener el mismo tipo (number/string) que tenía _filaTotal.importe
+			_filaTotal.importe = (typeof _filaTotal.importe === 'number')
+				? +_nuevoTotal.toFixed(2)
+				: _nuevoTotal.toFixed(2);
+		}
+	} catch (e) {
+		console.error('Error aplicando descuento NxN', e);
+	}
+
 	xLocal_xDtSubTotales.forEach((element, index) => {
 		// var _fontSize,_fontSizeTitulo, titulo, _style='', _id='', _colorImporte='', xBtnQuitar='', classTachado='', textBnQuitar='(-)';
 
@@ -2549,7 +2940,7 @@ function quitarSubTotal(obj, index) {
 
 function xTraerDtTipoConsumo(){
 	//xDataLoadTipoConsumo(function(xDtTpC){
-		var xCadenaSelectUlTPC='',xDtTpC=xm_log_get('estructura_pedido');
+		var xCadenaSelectUlTPC='',xDtTpC=xm_log_get('estructura_pedido') || [];
 		for (var i = 0; i < xDtTpC.length; i++) {
 			xCadenaSelectUlTPC=String(xCadenaSelectUlTPC+'<option value="'+xDtTpC[i].idtipo_consumo+'">'+xDtTpC[i].descripcion+'</option>');
 		};
@@ -2697,7 +3088,7 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
       xCadenaItem_Detalle =
         '<div class="xdetalle_item">' +
         xCadenaItem_des_foto +
-        '<div class="xreferencia_item"><input type="text" autocomplete="on" placeholder="Escribe aqui las especificaciones..." class="xMiTextReferencia" id="txt_referencia"></div>' +
+        '<div class="xreferencia_item"><input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="nota_plato_item" placeholder="Escribe aqui las especificaciones..." class="xMiTextReferencia" id="txt_referencia"></div>' +
         xCadenaTC +
         "</div></div>";
 

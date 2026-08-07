@@ -1,33 +1,55 @@
 <dom-module id="x-comp-select">
     <template>
         <style>
+            :host {
+                display: block;
+            }
+
+            .cards {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: center;
+            }
+
             .card {
-                display: inline-block;
-                margin: 1px;
-                padding: 5px;
-                border: 1px solid #919191;
-                color: #9f9f9f;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                /* min-width: 86px; */
+                padding: 5px 7px;
+                border: 1px solid #d8dee6;
+                color: #5d6874;
                 border-radius: 10px;
                 text-align: center;
                 cursor: pointer;
                 user-select: none;
-                font-size: 10px;
-                background: #333333;
+                font-size: 11px;
+                font-weight: 600;
+                background: #ffffff;
+                transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+                outline: none;
+            }
+
+            .card:hover {
+                background: #f7f8fa;
+                border-color: #c8d2dc;
             }
 
             .card.selected {
-                border-color: #ffffff;
-                background-color: #ffc107;
-                color: black;
+                border-color: transparent;
+                color: #1f2933;
                 font-weight: 600;
             }
         </style>
-        <template is="dom-repeat" items="{{items}}" as="item">
-            <div class$="{{_getClass(selectedItem, item)}}" on-click="_selectCard" data-id$="{{item.id}}"
-                data-value$="{{item.value}}">
-                {{item.value}}
-            </div>
-        </template>
+        <div class="cards">
+            <template is="dom-repeat" items="{{items}}" as="item">
+                <div class$="{{_getClass(selectedItem, item)}}" on-click="_selectCard" data-id$="{{item.id}}"
+                    data-value$="{{item.value}}" tabindex="0">
+                    {{item.value}}
+                </div>
+            </template>
+        </div>
     </template>
 
     <script>
@@ -51,6 +73,10 @@
                 colorCard: {
                     type: String,
                     value: '#ffc107'
+                },
+                borderColorCard: {
+                    type: String,
+                    value: '#ffc107'
                 }
             },
             _itemsChanged: function (newItems, oldItems) {
@@ -72,14 +98,17 @@
                 var cards = Polymer.dom(this.root).querySelectorAll('.card');
                 for (var i = 0; i < cards.length; i++) {
                     Polymer.dom(cards[i]).classList.remove('selected');
-                    cards[i].style.backgroundColor = '#333333';
+                    cards[i].style.backgroundColor = '';
+                    cards[i].style.borderColor = '';
                 }
 
                 // Agrega la clase 'selected' a la tarjeta seleccionada y la enfoca
                 this.selectedIndex = this.items.indexOf(e.model.item);
+                this.selectedItem = e.model.item;
                 Polymer.dom(e.target).classList.add('selected');
                 // adicionar el color card
-                e.target.style.backgroundColor = this.colorCard;              
+                e.target.style.backgroundColor = this.colorCard;
+                e.target.style.borderColor = this.borderColorCard;
                 e.target.focus();
 
                 this.fire('selectedItem', { id: e.model.item.id, value: e.model.item.value });

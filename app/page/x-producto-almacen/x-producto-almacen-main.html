@@ -9,20 +9,491 @@
         <style>
             :host {
                 display: block;
-                padding: 16px;
+                padding: 10px;
+                --ui-bg-header: #f5f9ff;
+                --ui-bg-soft: #f8fafc;
+                --ui-bg-toolbar: #f7f8fa;
+                --ui-bg-blue: #edf2ff;
+                --ui-bg-blue-2: #eaf5ff;
+                --ui-bg-green: #eef9f3;
+                --ui-bg-gray: #f5f6f8;
+                --ui-bg-alert: #fff7f7;
+                --ui-text: #212529;
+                --ui-text-muted: #6c757d;
+                --ui-border: #e5e7eb;
+                --ui-border-soft: #edf0f2;
+                --ui-primary: #007bff;
+                --ui-success: #28a745;
+                --ui-danger: #dc3545;
+                --ui-ink: #1f2933;
             }
             .hidden {
                 display: none;
             }
+            .alm-shell {
+                width: 95% !important;
+                max-width: 1280px !important;
+                border: 1px solid var(--ui-border-soft) !important;
+                border-radius: 12px !important;
+                overflow: hidden;
+                background: #fff;
+            }
+            .alm-shell .xEncanezadoCard {
+                padding: 14px 16px !important;
+                /* background: #f5f9ff !important; */
+                border-bottom: 1px solid var(--ui-border-soft) !important;
+            }
+            .alm-shell .div-content-head-op .fw-600 {
+                margin: 0 0 3px;
+                font-size: 15px !important;
+                line-height: 1.2;
+            }
+            .alm-shell .div-content-head-op .text-secondary {
+                margin: 0;
+                font-size: 11px !important;
+                line-height: 1.35;
+            }
+            .alm-shell .p-3 {
+                background: #fff;
+                padding: 14px !important;
+            }
+            .alm-toolbar {
+                display: grid;
+                grid-template-columns: 230px 260px 1fr;
+                grid-template-areas:
+                    "warehouse search actions"
+                    "check check actions";
+                gap: 8px;
+                align-items: end;
+                padding: 8px 10px;
+                background: var(--ui-bg-toolbar);
+                border: 0;
+                border-radius: 8px;
+            }
+            .alm-warehouse-row {
+                grid-area: warehouse;
+                width: 100%;
+            }
+            .alm-search-row {
+                grid-area: search;
+                display: flex;
+            }
+            .alm-action-row {
+                grid-area: actions;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .alm-filter-label {
+                display: block;
+                margin: 0 0 4px;
+                color: #56616c;
+                font-size: 9px;
+                font-weight: 700;
+                letter-spacing: .6px;
+                text-transform: uppercase;
+            }
+            .alm-help {
+                display: block;
+                margin-top: 2px;
+                color: #6c757d;
+                font-size: 10px;
+            }
+            .alm-search-field {
+                width: 100%;
+                max-width: 100%;
+            }
+            .alm-check {
+                grid-area: check;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                height: 28px;
+                padding: 0;
+                color: var(--ui-ink);
+                font-size: 11px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .alm-action-row .btn {
+                width: auto;
+                text-align: center;
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+            .alm-toolbar .selected-template-1 {
+                min-height: 0 !important;
+                height: 28px;
+                padding: 3px 9px;
+                background: #fff;
+                border-color: var(--ui-border);
+                font-size: 12px;
+            }
+            .alm-toolbar x-comp-find-almacen {
+                display: block;
+            }
+            .alm-dialog {
+                min-width: 620px;
+                max-width: 720px;
+                padding: 0;
+                overflow: hidden;
+                max-height: 88vh;
+            }
+            .alm-dialog .xContent {
+                padding: 0;
+                margin: 0;
+                max-height: 88vh;
+                overflow-y: auto;
+            }
+            .alm-dialog form {
+                padding: 18px 20px 6px;
+                background: #fff;
+            }
+            .alm-dialog form > label {
+                display: block;
+                margin-bottom: 5px;
+                color: #56616c;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            .alm-dialog form > select {
+                width: 100%;
+                max-width: 320px;
+                box-sizing: border-box;
+                margin-bottom: 12px;
+            }
+            .alm-dialog form .xLinea2 {
+                border-color: var(--ui-border-soft);
+                margin: 6px 0 12px;
+            }
+            .alm-dialog form .d-flexx {
+                gap: 14px;
+                align-items: flex-start;
+            }
+            .alm-dialog form .d-flexx > div {
+                flex: 1;
+                min-width: 240px;
+            }
+            .alm-dialog form p.fs-10 {
+                margin: 8px 0 5px !important;
+                color: #56616c;
+                font-size: 11px !important;
+                font-weight: 600;
+            }
+            .alm-dialog form .selected-template-1 {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .alm-dialog form > div:not(.d-flexx):not(.xInvisible):not(.xLinea2) {
+                padding: 12px 14px;
+                margin-top: 12px;
+                background: var(--ui-bg-green);
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+            }
+            .alm-dialog .xBoton2 {
+                margin-top: 0;
+                margin-bottom: 18px;
+            }
+            .alm-dialog .xBoton2.xAzul {
+                margin-left: 20px;
+            }
+            .alm-dialog-head {
+                position: relative;
+                padding: 18px 20px;
+                background: var(--ui-bg-header);
+                border-bottom: 1px solid var(--ui-border);
+            }
+            .alm-dialog-close {
+                position: absolute;
+                top: 12px;
+                right: 14px;
+                width: 28px;
+                height: 28px;
+                padding: 0;
+                border: 1px solid var(--ui-border);
+                border-radius: 50%;
+                background: #fff;
+                color: var(--ui-ink);
+                font-size: 18px;
+                line-height: 1;
+                cursor: pointer;
+            }
+            .alm-dialog-close:hover {
+                background: var(--ui-bg-soft);
+            }
+            .alm-dialog-title {
+                margin: 0;
+                color: var(--ui-ink);
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .alm-dialog-subtitle {
+                margin: 4px 0 0;
+                color: var(--ui-text-muted);
+                font-size: 12px;
+            }
+            .alm-dialog-body {
+                padding: 18px 20px;
+                background: #fff;
+            }
+            .alm-form-section {
+                padding: 14px;
+                margin-bottom: 12px;
+                background: #fff;
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+            }
+            .alm-form-section-title {
+                margin: 0 0 12px;
+                color: #3f4b57;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: .7px;
+                text-transform: uppercase;
+            }
+            .alm-form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .alm-form-field label {
+                display: block;
+                margin-bottom: 5px;
+                color: #56616c;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            .alm-form-field .xMiInput,
+            .alm-form-field select {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .alm-option-box {
+                padding: 12px 14px;
+                background: var(--ui-bg-green);
+                border: 1px solid var(--ui-border);
+                border-radius: 12px;
+            }
+            .alm-dialog-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                padding: 14px 20px 18px;
+                background: #fff;
+                border-top: 1px solid var(--ui-border);
+            }
+            @media (max-width: 760px) {
+                .alm-dialog {
+                    min-width: 92vw;
+                }
+                .alm-dialog form .d-flexx {
+                    flex-direction: column;
+                }
+                .alm-form-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .alm-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(150px, 1fr));
+                gap: 10px;
+                margin: 12px 0 14px;
+            }
+            .alm-kpi {
+                position: relative;
+                min-height: 58px;
+                padding: 11px 13px;
+                background: #fff;
+                border: 1px solid rgba(31, 41, 51, .08);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: transform .15s ease, background .15s ease;
+            }
+            .alm-kpi:hover {
+                transform: translateY(-1px);
+                background: #f6f7f9;
+            }
+            .alm-kpi-label {
+                margin: 0 0 5px;
+                color: #56616c;
+                font-size: 9px;
+                font-weight: 700;
+                letter-spacing: .5px;
+                text-transform: uppercase;
+            }
+            .alm-kpi-value {
+                margin: 0;
+                color: var(--ui-ink);
+                font-size: 18px;
+                font-weight: 700;
+                line-height: 1.2;
+            }
+            .alm-kpi-note {
+                display: block;
+                margin-top: 3px;
+                color: #6c757d;
+                font-size: 9px;
+            }
+            .alm-kpi-products {
+                background: var(--ui-bg-blue);
+            }
+            .alm-kpi-stock {
+                background: var(--ui-bg-blue-2);
+            }
+            .alm-kpi-danger {
+                background: var(--ui-bg-alert);
+            }
+            .alm-kpi-danger .alm-kpi-value {
+                color: var(--ui-danger);
+            }
+            .alm-kpi-view {
+                background: var(--ui-bg-gray);
+            }
+            .alm-table-wrap {
+                border: none;
+                border-radius: 10px;
+                overflow: auto;
+                background: #fff;
+            }
+            .alm-table {
+                width: 100%;
+                border-collapse: collapse;
+                min-width: 980px;
+            }
+            .alm-table th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                padding: 10px 12px;
+                background: #fff;
+                border-bottom: 1px solid var(--ui-border);
+                color: #9aa0a6;
+                font-size: 12px;
+                font-weight: 500;
+                letter-spacing: 0;
+                text-align: left;
+                text-transform: none;
+            }
+            .alm-table td {
+                padding: 10px 12px;
+                border-bottom: 1px solid var(--ui-border-soft);
+                color: var(--ui-text);
+                vertical-align: middle;
+                font-size: 12px;
+            }
+            .alm-table tbody tr:hover {
+                background: #eef5ff;
+            }
+            .alm-product-name {
+                margin: 0;
+                color: #17202a;
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1.3;
+            }
+            .alm-chip {
+                display: inline-block;
+                max-width: 180px;
+                padding: 1px 7px;
+                background: var(--ui-bg-toolbar);
+                border: 0;
+                border-radius: 999px;
+                color: #5d6874;
+                font-size: 9px;
+                font-weight: 600;
+                line-height: 1.5;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .alm-stock {
+                display: inline-flex;
+                flex-direction: column;
+                gap: 2px;
+                font-variant-numeric: tabular-nums;
+            }
+            .alm-stock-main {
+                font-size: 13px;
+                font-weight: 700;
+            }
+            .alm-stock-low .alm-stock-main {
+                color: var(--ui-danger);
+            }
+            .alm-stock-alert {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                color: var(--ui-danger);
+                font-size: 10px;
+                font-weight: 700;
+            }
+            .alm-price-cell {
+                font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+            }
+            .alm-price-edit {
+                cursor: pointer;
+                color: #1f2933;
+                font-weight: 700;
+            }
+            .alm-detail-btn {
+                padding: 3px 9px;
+                border: 1px solid #d6dee8;
+                border-radius: 7px;
+                background: #f8fafc;
+                color: #344054;
+                font-size: 11px;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+            .alm-detail-btn:hover {
+                background: #eaf5ff;
+                border-color: #b9cce2;
+                color: #1f2933;
+            }
+            @media (max-width: 980px) {
+                .alm-toolbar {
+                    grid-template-columns: 1fr;
+                    grid-template-areas:
+                        "warehouse"
+                        "search"
+                        "check"
+                        "actions";
+                }
+                .alm-search-field {
+                    width: 100%;
+                }
+                .alm-action-row {
+                    justify-content: flex-start;
+                }
+                .alm-summary-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+            }
+            @media (max-width: 560px) {
+                :host {
+                    padding: 8px;
+                }
+                .alm-summary-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
         </style>
 
-        <paper-dialog modal id="dialog_additem_pro" class="dialog_redondo" modal entry-animation="scale-up-animation"
-            exit-animation="fade-out-animation" with-backdrop style="min-width: 350px;">
+        <paper-dialog modal id="dialog_additem_pro" class="dialog_redondo alm-dialog" modal entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation" with-backdrop>
             <div class="xContent">
-                <h3>Agregar Producto</h3>
+                <div class="alm-dialog-head">
+                    <button type="button" class="alm-dialog-close" dialog-dismiss aria-label="Cerrar">×</button>
+                    <h3 class="alm-dialog-title">Agregar producto</h3>
+                    <p class="alm-dialog-subtitle">Registra el producto, stock inicial y precios de venta.</p>
+                </div>
                 <form id="frm_item_pro_alm">
                     <label for="sel_almacen_pro">Almacen donde ingresa:</label><br>
-                    <select id="sel_almacen_pro" name="no_post" class="xMiInput"></select>
+                    <select id="sel_almacen_pro" name="no_post" class="selected-template-1"></select>
                     <br><br>
                     <div class="xLinea2"></div>
 
@@ -32,33 +503,33 @@
         
                             <p class="m-0 fs-10 text-secondary mt-2">Descripcion</p>
                             <input type="text" id="descripcion" name="descripcion" placeholder="Descripcion"
-                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
+                                class="selected-template-1 xPasarEnter2" onChange="conMayusculas(this)" autofocus required espaciar><br>
         
                             <p class="m-0 fs-10 text-secondary mt-2">Familia</p>
-                            <input type="text" id="sel_familia_pro_alm" name="no_post" class="xMiInput xPasarEnter2" placeholder="Familia"
+                            <input type="text" id="sel_familia_pro_alm" name="no_post" class="selected-template-1 xPasarEnter2" placeholder="Familia"
                                 onChange="conMayusculas(this)" required espaciar><br>
         
                             <p class="m-0 fs-10 text-secondary mt-2">Codigo de Barras</p>
                             <input type="text" id="codigo_barra" name="codigo_barra" placeholder="Codigo de barras"
-                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
+                                class="selected-template-1 xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
         
                             <p class="m-0 fs-10 text-secondary mt-2">Stock</p>
-                            <input type="text" id="stock" name="no_post" placeholder="Stock" class="xMiInput xPasarEnter2"
+                            <input type="text" id="stock" name="no_post" placeholder="Stock" class="selected-template-1 xPasarEnter2"
                                 onChange="conMayusculas(this)" espaciar required><br>
                         </div>
 
                         <div>
                             <p class="m-0 fs-10 text-secondary mt-2">Stock Minimo</p>
                             <input type="text" id="stock_minimo" name="stock_minimo" placeholder="Stock minimo"
-                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
+                                class="selected-template-1 xPasarEnter2" onChange="conMayusculas(this)" espaciar><br>
         
                             <p class="m-0 fs-10 text-secondary mt-2">Precio de Compra</p>
                             <input type="text" id="precio" name="precio" placeholder="Precio de compra" onblur="xRetornaMoneda(this)"
-                                class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" required espaciar><br>
+                                class="selected-template-1 xPasarEnter2" onChange="conMayusculas(this)" required espaciar><br>
         
                             <p class="m-0 fs-10 text-secondary mt-2">Precio de Venta</p>                    
                             <input type="text" id="precio_venta" name="precio_venta" placeholder="Precio de venta x unidad"
-                                onblur="xRetornaMoneda(this)" class="xMiInput xPasarEnter2 xPrecioAddPro" onChange="conMayusculas(this)"
+                                onblur="xRetornaMoneda(this)" class="selected-template-1 xPasarEnter2 xPrecioAddPro" onChange="conMayusculas(this)"
                                 required espaciar><br>
         
                             
@@ -95,8 +566,7 @@
 
         <div class="p-2">
 
-            <br>
-            <div class="xMiCard xradius" style="width:90%; max-width: 1250px;">
+            <div class="xMiCard xradius alm-shell" style="width:90%; max-width: 1250px;">
                 <div class="xEncanezadoCard d-flexx justify-content-between"
                     style="background: lavenderblush; color: #424242;">
                     <div class="div-content-head-op">
@@ -108,97 +578,114 @@
                             onclick="goMainProducto()">Atras</button>
                     </div>
                 </div>
-                <div class="p-3 mb-5">
+                <div class="p-3">
                     
 
                     <!-- main -->
                     <div hidden$="[[!isShowMainProducto]]">
                         <!-- header -->
 
-                        <div class="d-flexx justify-content-between">
-                            <div style="max-width: 300px;">
-                                <x-comp-find-almacen class="mr-1" id="sel_almacen_pp" optodos="true"></x-comp-find-almacen>
-                                <div class="mt-2">
-                                    <input type="text" class="xMiInput w-100 mr-1" placeholder="Buscar por producto o familia" inline id="txt_buscar_producto_almacen">
-                                    <span class="text-secondary fs-11">Busca por nombre del producto o por su familia</span>
+                        <div class="alm-toolbar">
+                            <div>
+                                <div class="alm-warehouse-row">
+                                    <label class="alm-filter-label">Almacen</label>
+                                    <x-comp-find-almacen id="sel_almacen_pp" optodos="true"></x-comp-find-almacen>
                                 </div>
-                                <div class="mt-2">
-                                    <paper-checkbox id="chec_min">Ver solo stock mínimo </paper-checkbox>
-                                    <span class="text-secondary fs-11 ml-2">Productos por debajo del stock mínimo</span>
+                                <div class="alm-search-row mt-1 mb-1">
+                                    <div class="alm-search-field">
+                                        <label class="alm-filter-label">Buscar</label>
+                                        <input type="text" class="selected-template-1 w-100" placeholder="Producto o familia" inline id="txt_buscar_producto_almacen">
+                                        <span class="alm-help">Busca por nombre del producto o por su familia.</span>
+                                    </div>
                                 </div>
+                                <label class="alm-check">
+                                    <paper-checkbox id="chec_min"></paper-checkbox>
+                                    <span>Solo stock minimo</span>
+                                </label>
                             </div>
-                            <div class="text-right">
+                            <div class="alm-action-row" style="flex-direction: column; align-items: flex-end;">
                                 <button class="btn btn-sm btn-secondary" onclick="goProductoFamilias();">
                                     <i class="fa fa-group"></i> Familias </button>
-                                <br>
-                                <button class="btn btn-sm btn-primary mt-1" onclick="dialog_additem_pro.open();">
+                                <button class="btn btn-sm btn-primary" onclick="dialog_additem_pro.open();">
                                     + Agregar producto </button>
-                                <br>
-                                <button class="btn btn-sm btn-success mt-1" onclick="exportarProductosExcel();">
+                                <button class="btn btn-sm btn-success" onclick="exportarProductosExcel();">
                                     <i class="fa fa-file-excel-o"></i> Exportar a Excel </button>
                             </div>
                         </div>
 
-                        <br><br><br>
-                        <div class="xLinea2"></div>
-                        <br>
+                        <div class="alm-summary-grid">
+                            <div class="alm-kpi alm-kpi-products" onclick="filtrarTodosProductosAlmacen()">
+                                <p class="alm-kpi-label">Productos filtrados</p>
+                                <p class="alm-kpi-value">{{ totalProductos }}</p>
+                                <span class="alm-kpi-note">Ver todos</span>
+                            </div>
+                            <div class="alm-kpi alm-kpi-stock" onclick="filtrarTodosProductosAlmacen()">
+                                <p class="alm-kpi-label">Stock total</p>
+                                <p class="alm-kpi-value">{{ totalStockProductos }}</p>
+                                <span class="alm-kpi-note">Segun filtro actual</span>
+                            </div>
+                            <div class="alm-kpi alm-kpi-danger" onclick="filtrarStockMinimoAlmacen()">
+                                <p class="alm-kpi-label">Bajo stock minimo</p>
+                                <p class="alm-kpi-value">{{ totalStockMinimo }}</p>
+                                <span class="alm-kpi-note">Ver alertas</span>
+                            </div>
+                            <div class="alm-kpi alm-kpi-view" onclick="filtrarTodosProductosAlmacen()">
+                                <p class="alm-kpi-label">Vista actual</p>
+                                <p class="alm-kpi-value fs-15">{{ almacenResumen }}</p>
+                                <span class="alm-kpi-note">Conservar almacen</span>
+                            </div>
+                        </div>
 
-
-                        <table width="100%">
-                            <thead>
-                                <th align="left" width="20%">Almacen</th>
-                                <th align="left" width="20%">Familia</th>
-                                <th align="left">Producto</th>
-                                <th align="left" width="80px">Stock</th>
-                                
-                                <template is="dom-repeat" items="{{tipoPrecios}}" as="tipo">
-                                    <th align="left" width="80px">P. {{ tipo.titulo }}</th>
-                                </template>
-                                <th align="left" width="80px">Accion</th>                                
-                            </thead>
-                            <tbody>
-                                <template is="dom-repeat" items="{{xdt_prodcutos}}" as="item" index-as="productoIndex">
-                                    <!-- onclick="xGoDetalleProducto(this)" -->
-                                    <tr data-id="[[item.idproducto_stock]]" class="xCursor" style$="[[_getRowStyle(item)]]">
-                                        <td>{{ item.almacen }}</td>
-                                        <td>{{ item.familia }}</td>
-                                        <td>
-                                            {{ item.producto }}
-                                        </td>
-                                        <td>
-                                            <div class="d-flexx align-items-center">
-                                                {{ item.stock }}
-                                                <template is="dom-if" if="[[_isStockBajo(item)]]">
-                                                    <i class="fa fa-exclamation-triangle text-danger ml-2"></i>
-                                                </template>
-                                            </div>
-                                        </td>
-                                        <!-- <td>{{ item.precio_venta }}</td>    -->
-                                        <template is="dom-repeat" items="{{item.tipo_precios}}" as="tipo" index-as="tipoIndex">                                            
-                                            <td>
-                                                <span on-click="mostrarInput" data-tipo-index$="{{tipoIndex}}" data-producto-index$="{{productoIndex}}">{{ tipo.precio }}</span>
-                                                <input type="text" class="hidden w-50 selected-template-1" value="{{tipo.precio::input}}" data-tipo-index$="{{tipoIndex}}"
-                                                    data-producto-index$="{{productoIndex}}" on-blur="ocultarInput" on-change="guardarPrecio">
-                                            </td>
-                                        </template>                                     
-                                        <td>
-                                            <button data-id="[[item.idproducto_stock]]" onclick="xGoDetalleProducto(this)"
-                                                class="btn btn-sm btn-xsm xBoton_flat_2">
-                                                Detalle
-                                            </button>
-                                        </td>
+                        <div class="alm-table-wrap">
+                            <table class="alm-table">
+                                <thead>
+                                    <tr>
+                                        <th width="28%">Producto</th>
+                                        <th width="18%">Familia</th>
+                                        <th width="18%">Almacen</th>
+                                        <th width="120px">Stock</th>
+                                        <template is="dom-repeat" items="{{tipoPrecios}}" as="tipo">
+                                            <th width="90px">P. {{ tipo.titulo }}</th>
+                                        </template>
+                                        <th width="90px">Accion</th>
                                     </tr>
-                                </template>
-                                <tr>
-                                    <td class="fw-600 fs-18">Totales</td>
-                                    <td class="fw-600 fs-18">{{ totalProductos }}</td>
-                                    <td class="fw-600 fs-18">-</td>
-                                    <td class="fw-600 fs-18">{{ totalStockProductos }}</td>
-                                    <td class="fw-600 fs-18">-</td>
-                                    <td class="fw-600 fs-18">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <template is="dom-repeat" items="{{xdt_prodcutos}}" as="item" index-as="productoIndex">
+                                        <tr data-id="[[item.idproducto_stock]]" class="xCursor">
+                                            <td>
+                                                <p class="alm-product-name">{{ item.producto }}</p>
+                                            </td>
+                                            <td><span class="alm-chip">{{ item.familia }}</span></td>
+                                            <td><span class="alm-chip">{{ item.almacen }}</span></td>
+                                            <td>
+                                                <div class$="alm-stock [[_stockClass(item)]]">
+                                                    <span class="alm-stock-main">{{ item.stock }}</span>
+                                                    <template is="dom-if" if="[[_isStockBajo(item)]]">
+                                                        <span class="alm-stock-alert">
+                                                            <i class="fa fa-exclamation-triangle"></i> Bajo minimo
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </td>
+                                            <template is="dom-repeat" items="{{item.tipo_precios}}" as="tipo" index-as="tipoIndex">
+                                                <td class="alm-price-cell">
+                                                    <span class="alm-price-edit" on-click="mostrarInput" data-tipo-index$="{{tipoIndex}}" data-producto-index$="{{productoIndex}}">{{ tipo.precio }}</span>
+                                                    <input type="text" class="hidden w-50 selected-template-1" value="{{tipo.precio::input}}" data-tipo-index$="{{tipoIndex}}"
+                                                        data-producto-index$="{{productoIndex}}" on-blur="ocultarInput" on-change="guardarPrecio">
+                                                </td>
+                                            </template>
+                                            <td>
+                                                <button data-id="[[item.idproducto_stock]]" onclick="xGoDetalleProducto(this)"
+                                                    class="alm-detail-btn">
+                                                    Detalle
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                         <br><br>                        
                         <br>
                     </div>
@@ -300,21 +787,33 @@ var xThisAlmPro;
         // Aplicar filtros combinados
         xAplicarFiltrosCombinados();
     }
+
+    function filtrarStockMinimoAlmacen() {
+        const checkStockMin = document.getElementById('chec_min');
+        if (checkStockMin) checkStockMin.checked = true;
+        xAplicarFiltrosCombinados();
+    }
+
+    function filtrarTodosProductosAlmacen() {
+        const checkStockMin = document.getElementById('chec_min');
+        if (checkStockMin) checkStockMin.checked = false;
+        xAplicarFiltrosCombinados();
+    }
     
     // Ya no necesitamos esta función porque se eliminó el selector de familia
 
     function xAplicarFiltrosCombinados() {
         // Obtener valores de los filtros
-        const textoBusqueda = $("#txt_buscar_producto_almacen").val().toLowerCase();
-        const filtroStockMin = $("#chec_min").prop('checked');
-        const almacenSeleccionado = sel_almacen_pp.getAlmacen();
-        const filtroAlmacen = almacenSeleccionado ? almacenSeleccionado.idalmacen : '';
+            const textoBusqueda = String($("#txt_buscar_producto_almacen").val() || '').toLowerCase();
+            const filtroStockMin = $("#chec_min").prop('checked');
+            const almacenSeleccionado = sel_almacen_pp.getAlmacen();
+            const filtroAlmacen = almacenSeleccionado ? almacenSeleccionado.idalmacen : '';
 
         // Aplicar todos los filtros en conjunto
         xThisAlmPro.xdt_prodcutos = xThisAlmPro.listProductosMaster.filter(x => {
             // Filtro por texto de búsqueda (producto o familia)
-            const pasaTextoProducto = x.producto.toLowerCase().includes(textoBusqueda);
-            const pasaTextoFamilia = x.familia.toLowerCase().includes(textoBusqueda);
+            const pasaTextoProducto = String(x.producto || '').toLowerCase().includes(textoBusqueda);
+            const pasaTextoFamilia = String(x.familia || '').toLowerCase().includes(textoBusqueda);
             const pasaTexto = pasaTextoProducto || pasaTextoFamilia;
             
             // Filtro por stock mínimo
@@ -334,7 +833,15 @@ var xThisAlmPro;
 
     function xSumTotalProductoAlmacen() {
         xThisAlmPro.totalProductos = xThisAlmPro.xdt_prodcutos.length;
-        xThisAlmPro.totalStockProductos = xThisAlmPro.xdt_prodcutos.reduce((sum, producto) => sum + parseInt(producto.stock || 0), 0);
+        xThisAlmPro.totalStockProductos = Number(xThisAlmPro.xdt_prodcutos.reduce((sum, producto) => sum + parseFloat(producto.stock || 0), 0).toFixed(2));
+        xThisAlmPro.totalStockMinimo = xThisAlmPro.xdt_prodcutos.filter(producto => parseFloat(producto.stock || 0) < parseFloat(producto.stock_minimo || 0)).length;
+
+        try {
+            const almacenSeleccionado = sel_almacen_pp && sel_almacen_pp.getAlmacen ? sel_almacen_pp.getAlmacen() : null;
+            xThisAlmPro.almacenResumen = almacenSeleccionado && almacenSeleccionado.descripcion ? almacenSeleccionado.descripcion : 'Todos los almacenes';
+        } catch (e) {
+            xThisAlmPro.almacenResumen = 'Todos los almacenes';
+        }
     }
     
     function exportarProductosExcel() {
@@ -544,6 +1051,8 @@ Polymer({
         isShowMainProducto: Boolean,
         totalProductos: Number,
         totalStockProductos: Number,
+        totalStockMinimo: Number,
+        almacenResumen: String,
         productoSeleted: [],
         listFamilias: [],
         tipoPrecios: []
@@ -556,9 +1065,22 @@ Polymer({
         this.isShowDetalleFamilias = false
         this.totalProductos =0;
         this.totalStockProductos = 0;
+        this.totalStockMinimo = 0;
+        this.almacenResumen = 'Todos los almacenes';
     	xThisAlmPro =this;    
         await loadTiposPrecio();    
     	xIniAlmacenProducto();
+
+		this.subscription$ = onStatusSetUsChangeSede()
+		.subscribe(res => {
+			if ( res == true ) {
+				loadTiposPrecio().then(() => {
+					xLoadProductos_dt();
+					xLoadFamilias();
+					xLoadAlmacenes();
+				});
+			}
+		});
     },
     ready:() => {
         this.isShowMainProducto = true;
@@ -633,7 +1155,10 @@ Polymer({
         // });
     },
     _isStockBajo: function (item) {
-        return item.stock < item.stock_minimo;
+        return parseFloat(item.stock || 0) < parseFloat(item.stock_minimo || 0);
+    },
+    _stockClass: function (item) {
+        return this._isStockBajo(item) ? 'alm-stock-low' : '';
     }
 })
 </script>

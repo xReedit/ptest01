@@ -1,0 +1,245 @@
+<dom-module id="x-comp-prod-find-almacen">
+    <template is="dom-bind">
+        <style>
+            :host {
+                display: block;
+                width: 100%;
+            }
+            .prod-find-wrap {
+                width: 100%;
+            }
+            .prod-find-input {
+                width: 100%;
+                min-height: 38px;
+                padding: 8px 10px;
+                box-sizing: border-box;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                background: #fff;
+                color: #1f2933;
+                font-size: 12px;
+            }
+            .prod-find-input::placeholder {
+                color: #98a2b3;
+            }
+            .prod-find-input:focus {
+                outline: none;
+                border-color: #80bdff;
+                box-shadow: 0 0 0 2px rgba(0, 123, 255, .08);
+            }
+            .prod-find-hint {
+                margin-top: 4px;
+                font-size: 10px;
+                color: #98a2b3;
+            }
+        </style>
+        <div class="prod-find-wrap">
+            <input type="text"
+                autocomplete="off"
+                class="prod-find-input"
+                placeholder$="[[placeholder]]">
+            <p class="prod-find-hint" hidden$="[[ !showAlmacenHint ]]">Seleccione primero el almacén de insumos.</p>
+        </div>
+    </template>
+    <script>
+        (function () {
+            Polymer({
+                is: 'x-comp-prod-find-almacen',
+                properties: {
+                    idalmacenfiltro: { type: Number, observer: '_onAlmacenChange' },
+                    labelMode: { type: String, value: 'familia' },
+                    placeholder: { type: String, value: 'Buscar producto (mín. 3 letras)...' },
+                    requireAlmacen: { type: Boolean, value: false },
+                    showAlmacenHint: { type: Boolean, computed: '_computeShowHint(requireAlmacen, idalmacenfiltro)' },
+                    _productoSelected: { type: Object, value: null }
+                },
+                _computeShowHint: function (requireAlmacen, idalmacenfiltro) {
+                    return requireAlmacen && (!idalmacenfiltro || idalmacenfiltro <= 0);
+                },
+                attached: function () {
+                    var self = this;
+                    self._lastSearch = '';
+                    self._pendingXhr = null;
+                    self._$input = $(self.querySelector('.prod-find-input'));
+                    self._$input.on('input', function () {
+                        self._handleInput(this.value);
+                    });
+                    self._$input.on('change', function () {
+                        if (typeof conMayusculas === 'function') {
+                            conMayusculas(this);
+                        }
+                    });
+                    self._initAutocompleteWidget([]);
+                },
+                detached: function () {
+                    this._destroyAutocomplete();
+                    if (this._$input) {
+                        this._$input.off('input change');
+                    }
+                },
+                _onAlmacenChange: function (newVal, oldVal) {
+                    if (oldVal === undefined || oldVal === null) {
+                        return;
+                    }
+                    if (parseInt(newVal, 10) === parseInt(oldVal, 10)) {
+                        return;
+                    }
+                    this.resetText();
+                },
+                _handleInput: function (rawVal) {
+                    var val = (rawVal || '').trim();
+                    this._productoSelected = null;
+
+                    if (val.length < 3) {
+                        this._lastSearch = val;
+                        this._setAutocompleteSource([]);
+                        return;
+                    }
+
+                    if (val === this._lastSearch) {
+                        return;
+                    }
+                    this._lastSearch = val;
+
+                    if (this.requireAlmacen && (!this.idalmacenfiltro || this.idalmacenfiltro <= 0)) {
+                        return;
+                    }
+
+                    this._buscarProductos(val);
+                },
+                _formatLabel: function (item) {
+                    var parts = (item.label || '').split(' | ');
+                    if (this.labelMode === 'producto' && parts.length >= 3) {
+                        return parts[2];
+                    }
+                    if (this.labelMode === 'almacen' && parts.length >= 3) {
+                        return parts[0] + ' | ' + parts[2];
+                    }
+                    if (parts.length >= 3) {
+                        return parts[1] + ' | ' + parts[2];
+                    }
+                    return item.label;
+                },
+                _formatItems: function (rows) {
+                    var self = this;
+                    return (rows || []).map(function (x) {
+                        var copy = {};
+                        for (var k in x) {
+                            if (Object.prototype.hasOwnProperty.call(x, k)) {
+                                copy[k] = x[k];
+                            }
+                        }
+                        copy.label = self._formatLabel(x);
+                        return copy;
+                    });
+                },
+                _buscarProductos: function (search) {
+                    var self = this;
+                    var idFiltro = self.idalmacenfiltro;
+                    if (!idFiltro || parseInt(idFiltro, 10) <= 0) {
+                        idFiltro = 0;
+                    }
+
+                    if (!$.fn.autocomplete) {
+                        showToastSwal('error', 'Autocomplete no disponible. Recargue la página.');
+                        return;
+                    }
+
+                    if (self._pendingXhr && self._pendingXhr.readyState !== 4) {
+                        self._pendingXhr.abort();
+                    }
+
+                    self._pendingXhr = $.ajax({
+                        type: 'POST',
+                        url: '../../bdphp/log_componentes.php?op=20',
+                        data: { search: search, idfiltro: idFiltro }
+                    }).done(function (res) {
+                        if (self._lastSearch !== search) {
+                            return;
+                        }
+                        var parsed = JSON.parse(res);
+                        if (!parsed.success) {
+                            self._setAutocompleteSource([]);
+                            return;
+                        }
+                        var items = self._formatItems(parsed.datos);
+                        self._setAutocompleteSource(items);
+                        self._$input.autocomplete('search', search);
+                    });
+                },
+                _initAutocompleteWidget: function (source) {
+                    var self = this;
+                    var $input = self._$input;
+                    if (!$input || !$input.length || !$.fn.autocomplete) {
+                        return;
+                    }
+
+                    if ($input.data('ui-autocomplete')) {
+                        $input.autocomplete('option', 'source', source);
+                        return;
+                    }
+
+                    $input.autocomplete({
+                        minLength: 0,
+                        autoFocus: false,
+                        delay: 0,
+                        source: source,
+                        appendTo: 'body',
+                        select: function (event, ui) {
+                            $input.val(ui.item.label);
+                            self._productoSelected = ui.item;
+                            self._lastSearch = ui.item.label;
+                            self.fire('producto-selected', ui.item);
+                            return false;
+                        },
+                        change: function (event, ui) {
+                            if (!ui.item) {
+                                self._productoSelected = null;
+                                self.fire('producto-selected', null);
+                            }
+                            return false;
+                        }
+                    });
+                },
+                _setAutocompleteSource: function (items) {
+                    this._initAutocompleteWidget(items);
+                    if (this._$input.data('ui-autocomplete')) {
+                        this._$input.autocomplete('option', 'source', items);
+                    }
+                },
+                _destroyAutocomplete: function () {
+                    if (this._$input && this._$input.data('ui-autocomplete')) {
+                        this._$input.autocomplete('destroy');
+                    }
+                },
+                getProductoSeletedAlmacen: function () {
+                    return this._productoSelected;
+                },
+                getTextoIngresado: function () {
+                    if (!this._$input) return '';
+                    return (this._$input.val() || '').trim();
+                },
+                setTexto: function (texto) {
+                    this._productoSelected = null;
+                    this._lastSearch = (texto || '').trim();
+                    if (this._$input) {
+                        this._$input.val(this._lastSearch);
+                    }
+                },
+                resetText: function () {
+                    this._productoSelected = null;
+                    this._lastSearch = '';
+                    if (this._$input) {
+                        this._$input.val('');
+                        this._setAutocompleteSource([]);
+                    }
+                },
+                focusText: function () {
+                    if (this._$input) {
+                        this._$input.focus();
+                    }
+                }
+            });
+        })();
+    </script>
+</dom-module>

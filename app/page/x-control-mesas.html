@@ -2109,10 +2109,9 @@ async function xRegistrarClientePagoCP(){
 	
 
 	// para que registr cliente
-	// var xid_cliente_pago = DatosCliente.idcliente === "" ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
-	// var xid_cliente_pago = xRpt_pago[0].is_update_cliente ? await ClienteService_Guardar(DatosCliente) : DatosCliente.idcliente;
-	// 1801222 - guarda cliente en cliente sede
-	var xid_cliente_pago = await ClienteService_Guardar(DatosCliente);
+	var _idClientePago = DatosCliente.idcliente || xRpt_pago[0].idcliente || '';
+	var _needsSaveCliente = !_idClientePago || _idClientePago === '0' || xRpt_pago[0].is_update_cliente;
+	var xid_cliente_pago = _needsSaveCliente ? await ClienteService_Guardar(DatosCliente) : _idClientePago;
 	
 	var xidpedido_seleccionados='';
 	
@@ -2196,7 +2195,7 @@ async function xRegistrarClientePagoCP(){
 			// }
 
 			xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
-			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);	
+			xMandarCocinarImpresionComprobante(xrpt_correlativo || '', xIdRegistroPago);	
 			
 			const _payloadPedidoPagado = {
 				idusuario:  idUsuarioOperador,
@@ -2261,7 +2260,7 @@ async function xRegistrarClientePagoCP(){
 			// }
 
 			xarr_subtotal = darFormatoSubTotalesParaFacturacion(arrSumSubtTotales);
-			xMandarCocinarImpresionComprobante(xrpt_correlativo, xIdRegistroPago);				
+			xMandarCocinarImpresionComprobante(xrpt_correlativo || '', xIdRegistroPago);				
 		
 		// }).fail(enProcesoGuardarPago = false);
 
@@ -2330,26 +2329,20 @@ function xRegistrarPagoCM(xcant_rp){
 
 async function xMandarCocinarImpresionComprobante(correlativo, _idregistro_pago) {	
 
-	if (xRpt_pago.length > 0) {
-		xPopupLoad.xclose();
-		var arr_cliente = xRpt_pago[0].cliente;
-		var arr_comprobante = xRpt_pago[0].comprobante;
-		
-		// correlativo comprobante
-		// arr_comprobante.correlativo = xReturnCorrelativoComprobante(arr_comprobante);
+	if (xRpt_pago.length === 0) return;
 
-		// if ( arr_comprobante ) {
-			// arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
-			// }
+	var arr_cliente = xRpt_pago[0].cliente;
+	var arr_comprobante = xRpt_pago[0].comprobante;
 
+	xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
+
+	if (correlativo !== '') {
 		try {
 			arr_comprobante.correlativo = xCeroIzqNumComprobante(correlativo);
 		} catch (error) {}
-		
-		xArrayItemComprobante = xCargarDatosAEstructuraImpresion(checkItemsSeleccionados.arrayPedidosSeleccionados);
-		xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente, _idregistro_pago,-2);
-		
+		await xCocinarImprimirComprobante(xArrayItemComprobante, arrSumSubtTotales, arr_comprobante, arr_cliente, _idregistro_pago,-2);
 	}
+
 	xRpt_pago=[];
 }
 

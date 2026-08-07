@@ -1,5 +1,90 @@
 <dom-module id="x-producto-familia">
     <template>
+        <style>
+            :host {
+                --fam-bg-header: #f5f9ff;
+                --fam-bg-soft: #f8fafc;
+                --fam-border: #dbe3ea;
+                --fam-border-soft: #e9eef3;
+                --fam-text: #1f2933;
+                --fam-muted: #6c757d;
+            }
+            .fam-panel {
+                background: transparent;
+            }
+            .fam-head {
+                margin-bottom: 14px;
+            }
+            .fam-title {
+                margin: 0;
+                color: var(--fam-text);
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .fam-subtitle {
+                margin: 4px 0 0;
+                color: var(--fam-muted);
+                font-size: 12px;
+            }
+            .fam-body {
+                padding: 0;
+            }
+            .fam-table-wrap {
+                border: 1px solid var(--fam-border);
+                border-radius: 12px;
+                overflow: hidden;
+                background: #fff;
+            }
+            .fam-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .fam-table th {
+                padding: 11px 12px;
+                background: var(--fam-bg-soft);
+                border-bottom: 1px solid var(--fam-border);
+                color: #3f4b57;
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: .5px;
+                text-align: left;
+                text-transform: uppercase;
+            }
+            .fam-table td {
+                padding: 12px;
+                border-bottom: 1px solid var(--fam-border-soft);
+                color: var(--fam-text);
+                vertical-align: middle;
+            }
+            .fam-table tbody tr:hover {
+                background: #f9fbfd;
+            }
+            .fam-index {
+                color: var(--fam-muted);
+                font-weight: 600;
+                width: 52px;
+            }
+            .fam-desc {
+                margin: 0;
+                font-weight: 600;
+            }
+            .fam-count {
+                display: inline-block;
+                min-width: 34px;
+                padding: 2px 8px;
+                border-radius: 999px;
+                background: #eef6ff;
+                color: #1f4e79;
+                font-size: 11px;
+                font-weight: 700;
+                text-align: center;
+            }
+            .fam-edit-input {
+                width: 100%;
+                max-width: 360px;
+                box-sizing: border-box;
+            }
+        </style>
 
         <paper-dialog modal id="dialog_modificar_stock_porcion" class="dialog_redondo" modal
             entry-animation="scale-up-animation" style="max-width: 600px;" exit-animation="fade-out-animation"
@@ -31,42 +116,42 @@
 
 
 
-        <div>
+        <div class="fam-panel">
             <!-- head -->
-            <div class="d-flexx justify-content-between align-items-center">
-                <div class="d-flexx">
-                    <h3>Lista de Familias</h3>
+            <div class="fam-head">
+                <div>
+                    <h3 class="fam-title">Familias</h3>
+                    <p class="fam-subtitle">Organiza los productos por grupos para facilitar busqueda y control.</p>
                 </div>
             </div>
             <!-- historial -->
-            <div>
-                <br><br>
-                <p class="fs-18 text-secondary">Familias</p>
-                <hr>
-                <table class="w-100">
+            <div class="fam-body">
+                <div class="fam-table-wrap">
+                <table class="fam-table">
                     <thead>
                         <th>#</th>
                         <th>Descripcion</th>
-                        <th >Porductos Relacionados</th>
+                        <th>Productos relacionados</th>
                         <th></th>                        
                     </thead>
                     <tbody>
                         <template is="dom-repeat" items="{{listFamilias}}" as="item">
                             <tr>
-                                <td>{{displayIndex(index)}}</td>
+                                <td class="fam-index">{{displayIndex(index)}}</td>
                                 <td data-id="[[item.idproducto_familia]]" class="xCursor" onclick="xgoModificarFamilia(this)">
-                                    <p hidden$=[[item.edit]]>{{item.descripcion}}</p>
-                                    <input data-id="[[item.idproducto_familia]]" hidden$=[[!item.edit]] type="text" class="xMiInput xPasarEnter2" 
+                                    <p class="fam-desc" hidden$=[[item.edit]]>{{item.descripcion}}</p>
+                                    <input data-id="[[item.idproducto_familia]]" hidden$=[[!item.edit]] type="text" class="xMiInput xPasarEnter2 fam-edit-input" 
                                         onChange="conMayusculas(this)" onblur="xSaveModificacionFamilia(this)"
                                     value="{{item.descripcion}}">
                                 </td>
-                                <td>{{item.cantidad_relacionados}}</td>                                
+                                <td><span class="fam-count">{{item.cantidad_relacionados}}</span></td>                                
                                 <td><i data-id="[[item.idproducto_familia]]" 
                                     class="fa fa-trash text-danger xCursor" onclick="xRemoveFamilia(this)"></i></td>
                             </tr>
                         </template>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </template>

@@ -201,11 +201,11 @@
                                                     <p class="m-0 fw-600">[[item.fecha]]</p>
                                                     <div class="d-flexx" style="gap: 6px; flex-wrap: wrap; margin-top: 4px;">
                                                         <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#eef2ff;" class="fs-11">Inicio: [[item.stockInicio]]</span>
-                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#ecfeff;" class="fs-11 text-primary">Aumenta +[[item.aumenta]]</span>
-                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#fef2f2;" class="fs-11 text-danger">Venta -[[item.disminuye]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#fef2f2;" class="fs-11 text-danger">Vendido: -[[item.vendido]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#fff7ed;" class="fs-11 text-warning">Devuelto: +[[item.devuelto]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#ecfeff;" class="fs-11 text-primary">Ajuste: [[item.ajuste]]</span>
+                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#f0fdf4;" class="fs-11 text-success">Salida neta: [[item.netoTxt]]</span>
                                                         <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#f3f4f6;" class="fs-11">Fin: [[item.stockFinal]]</span>
-                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#f0fdf4;" class="fs-11 text-success">Cant. Ventas: [[item.ventas]]</span>
-                                                        <span style="display:inline-block; padding:2px 8px; border-radius: 10px; background:#fff7ed;" class="fs-11 text-warning">Cant. Devol.: [[item.devoluciones]]</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -284,14 +284,12 @@ let cantidadRecetasEnlazadasPorcion = 0
         console.log('elArray', elArray);    
             // Aplicar formato a todos los registros
             const datosFormateados = elArray.map(item => {
+                // El backend devuelve el tipo capitalizado ('Venta devolucion'), normalizamos antes de comparar
+                const tipo = ((item.tipo_movimiento || '') + '').toUpperCase();
+
                 // Determinar el signo según el tipo de movimiento
-                let signo = '';
-                if (item.tipo_movimiento === 'Venta' || item.tipo_movimiento === 'Disminuye') {
-                    signo = '-';
-                } else if (item.tipo_movimiento === 'Aumenta' || item.tipo_movimiento === 'Recuperación') {
-                    signo = '+';
-                }
-                
+                const signo = SIGNO_MOVIMIENTO[tipo] || '';
+
                 return {
                     ...item,
                     // Guardar la cantidad original sin signo
@@ -299,11 +297,12 @@ let cantidadRecetasEnlazadasPorcion = 0
                     // Agregar el signo a la cantidad
                     cantidad: signo + item.cantidad,
                     classCantidad: (signo === '-') ? 'text-danger' : (signo === '+') ? 'text-primary' : '',
-                    classMovimiento: item.tipo_movimiento === 'Venta' ? 'fw-600 text-success' :
-                        item.tipo_movimiento === 'Aumenta' ? 'fw-600 text-primary' :
-                            item.tipo_movimiento === 'Recuperación' ? 'fw-600 text-warning' :
-                                'fw-600 text-danger',
-                    tipo_movimiento: item.tipo_movimiento.toUpperCase()
+                    classMovimiento: tipo === 'VENTA' ? 'fw-600 text-success' :
+                        tipo === 'AUMENTA' ? 'fw-600 text-primary' :
+                            tipo === 'RECUPERACIÓN' ? 'fw-600 text-warning' :
+                                tipo === 'VENTA DEVOLUCION' ? 'fw-600 text-warning' :
+                                    'fw-600 text-danger',
+                    tipo_movimiento: tipo
                 };
             });
 
@@ -394,51 +393,23 @@ let cantidadRecetasEnlazadasPorcion = 0
             const items = byFecha[fecha] || [];
             const colapsado = !!xthisPorcionDetalle.historialCollapsed[fecha];
 
-            let ventas = 0;
-            let devoluciones = 0;
-            let neto = 0;
-            let aumenta = 0;
-            let disminuye = 0;
-
-            items.forEach(it => {
-                const tipo = ((it.tipo_movimiento || '') + '').toUpperCase();
-                if (tipo === 'VENTA') ventas += 1;
-                if (tipo === 'VENTA DEVOLUCION') devoluciones += 1;
-                const n = parseFloat((it.cantidad || '0').toString().replace(',', '.'));
-                if (!isNaN(n)) {
-                    neto += n;
-                    if (tipo === 'AUMENTA' || tipo === 'RECUPERACIÓN') {
-                        if (n > 0) aumenta += n;
-                    }
-                    if (tipo === 'VENTA' || tipo === 'DISMINUYE') {
-                        if (n < 0) disminuye += Math.abs(n);
-                    }
-                }
-            });
-
-            const newest = items[0] || null;
-            const oldest = items.length ? items[items.length - 1] : null;
-            const newestStock = newest ? parseFloat((newest.stock_total || '0').toString().replace(',', '.')) : NaN;
-            const oldestStockAfter = oldest ? parseFloat((oldest.stock_total || '0').toString().replace(',', '.')) : NaN;
-            const oldestQty = oldest ? parseFloat((oldest.cantidad || '0').toString().replace(',', '.')) : NaN;
-
-            const stockFinal = isNaN(newestStock) ? '' : newestStock.toString();
-            const stockInicio = (!isNaN(oldestStockAfter) && !isNaN(oldestQty)) ? (oldestStockAfter - oldestQty).toString() : '';
+            // Suma CANTIDADES por tipo (antes contaba filas, por eso "Cant. Ventas: 6"
+            // se leia como 6 unidades cuando eran 6 movimientos).
+            const r = resumirMovimientosPorcion(items);
 
             const icono = colapsado ? '+' : '-';
-            const aumentaTxt = (isNaN(aumenta) ? '0' : aumenta.toString());
-            const disminuyeTxt = (isNaN(disminuye) ? '0' : disminuye.toString());
+            const conSigno = (n) => (n > 0 ? '+' + n : n.toString());
 
             grouped.push({
                 isGroup: true,
                 fecha,
                 total: items.length,
-                stockInicio,
-                stockFinal,
-                aumenta: aumentaTxt,
-                disminuye: disminuyeTxt,
-                ventas,
-                devoluciones,
+                stockInicio: r.stockInicio,
+                stockFinal: r.stockFinal,
+                vendido: r.vendido.toString(),
+                devuelto: r.devuelto.toString(),
+                ajuste: conSigno(r.ajuste),
+                netoTxt: conSigno(r.neto),
                 icono,
             });
 

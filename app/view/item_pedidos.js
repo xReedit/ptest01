@@ -94,7 +94,21 @@ function handlerFnMiPedido(e) {
 		, xidItem2 = itemPedidos_objItemSelected.iditem === xidItem ? itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem : itemPedidos_objItemSelected.iditem // _xmenu_item_2_dataset.item // _xmenu_item_2.attr('data-item') //iditem verdader
 		, xDesItem = itemPedidos_objItemSelected.des_item // _xmenu_item_2.find('.xtitulo_item').text()
 		, xPrecioItem = precio_producto// itemPedidos_objItemSelected.precio // _xmenu_item_2.find('.xprecio_item').text()
-		, xIndicaciones = itemPedidos_objItemSelected.xindicaciones //_xmenu_item_2.find('#txt_referencia').val()
+		, xIndicaciones = (function () {
+			var elRef = document.getElementById('txt_referencia');
+			var dlgAbierto = (typeof dialog_item_comp !== 'undefined' && dialog_item_comp && dialog_item_comp.opened)
+				|| (typeof dialog_item !== 'undefined' && dialog_item && dialog_item.opened);
+			if (elRef && dlgAbierto) {
+				return (elRef.value || '').trim();
+			}
+			try {
+				var enCarrito = xArrayPedidoObj[xidTipoConsumo][xidItem];
+				if (enCarrito && enCarrito.indicaciones) {
+					return enCarrito.indicaciones;
+				}
+			} catch (err) {}
+			return '';
+		})()
 		, xCantActual = parseInt(objCant_cant) //parseInt(objCant.text())
 		, xCantSeccion=parseInt(xArrayPedidoObj[xidTipoConsumo]['cantidad'])
 		, xCantTotalItem=0
@@ -420,12 +434,31 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 			_nomClassXcant_li = 'xcant_li2';
 
 			//si tiene subtiems lanza el popup opciones // en control de pedidos no lanza subopciones
-			if (isShowOpcionesPrimero && itemPedidos_objItemSelected.subitems) { 
-				if (itemPedidos_objItemSelected.subitems !== '0' ) {
-					// if (itemPedidos_objItemSelected.opciones){
-						xCompSubitems.openDialog(null, _itemIndex);  
-						return; 
-					// }
+			// el dialog es obligatorio si alguna opcion descuenta stock (producto/porcion/subreceta)
+			// o si algun grupo es de seleccion obligatoria, aunque el toggle "opciones primero"
+			// este apagado; solo las opciones libres respetan el toggle
+			if (itemPedidos_objItemSelected.subitems && itemPedidos_objItemSelected.subitems !== '0') {
+				var _abrirDialogSubitems = isShowOpcionesPrimero;
+
+				if (!_abrirDialogSubitems) {
+					// en la carta subitems llega solo como id (ej. "1516"); cargar la estructura
+					// real con el loader del componente (cache-first en ::app3_listSubItem);
+					// getSubtItemsItem deja la estructura en itemPedidos_objItemSelected.subitems
+					if (!xEsEstructuraSubitems(itemPedidos_objItemSelected.subitems) && typeof getSubtItemsItem === 'function') {
+						try {
+							const _idItemSub = itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem;
+							await getSubtItemsItem(_idItemSub);
+						} catch (e) {
+							// si no se pudo cargar, abrir el dialog (nunca arriesgar el descuento de stock)
+							_abrirDialogSubitems = true;
+						}
+					}
+					_abrirDialogSubitems = _abrirDialogSubitems || xSubitemsRequierenDialog(itemPedidos_objItemSelected.subitems);
+				}
+
+				if (_abrirDialogSubitems) {
+					xCompSubitems.openDialog(null, _itemIndex);  
+					return; 
 				}
 			} 
 			
@@ -541,11 +574,12 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 			'idtipo_consumo':xli_tipoconsumo,
 			'stock_actual': xStockActual,
 			'cantidad':xcant,'precio':xli_precio, 'des':xli_des,
+			'des_item': itemPedidos_objItemSelected.des_item || xli_des,
 			'precio_total': xPrecioTotal, 'precio_total_calc': xPrecioTotal,
-			'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref, 
-			'iditem2': xidItem2, 
-			'idimpresora': xli_idimpresora, 
-			'idimpresora_otro': xli_idimpresora_otro, 
+			'precio_print': xPrecioTotal, 'indicaciones': xli_des_ref,
+			'iditem2': xidItem2,
+			'idimpresora': xli_idimpresora,
+			'idimpresora_otro': xli_idimpresora_otro,
 			'idprocede': xli_idprocede, 'procede': xli_Procede, 'procede_index': xli_Procede_index, 'imprimir_comanda': ximprmir_comanda, 'cant_descontar': xcant_descontar, 'idalmacen_items': xli_idalmacen_items, 'visible': 0
 			,'pwa': isSocket ? 1 : 0, isporcion: itemPedidos_objItemSelected.isporcion
 			,'precio_unitario': itemPedidos_objItemSelected.precio_unitario
@@ -558,6 +592,19 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 			,'isporcion': itemPedidos_objItemSelected.isporcion
 			,'venta_x_peso': itemPedidos_objItemSelected.venta_x_peso
 			,'idcarta_lista': itemPedidos_objItemSelected.idcarta_lista
+			// Metadata de promociones (propagada desde la carta para que el cálculo
+			// de descuento NxN funcione al cobrar). Para tipos 'porc' y 'fijo' el
+			// precio ya viene modificado; para tipos NxN sirve xCalcDescuentoPromosLinea.
+			,'is_promo_aplicada': itemPedidos_objItemSelected.is_promo_aplicada || false
+			,'enPromocion': itemPedidos_objItemSelected.enPromocion || false
+			,'tipoPromo': itemPedidos_objItemSelected.tipoPromo || null
+			,'badgePromo': itemPedidos_objItemSelected.badgePromo || null
+			,'tituloPromocion': itemPedidos_objItemSelected.tituloPromocion || null
+			,'descuento': itemPedidos_objItemSelected.descuento || null
+			,'precioOriginal': itemPedidos_objItemSelected.precioOriginal || xli_precio
+			,'promoCantidadN': itemPedidos_objItemSelected.promoCantidadN || null
+			,'promoCantidadX': itemPedidos_objItemSelected.promoCantidadX || null
+			,'idpromocionAplicada': itemPedidos_objItemSelected.idpromocionAplicada || null
 			};
 
 
@@ -723,14 +770,14 @@ function xAddSubItemsView(tpc, id, sumar) {
           newSubItemView.des.push(primeraConMayusculas(x.des.toLowerCase().trim()));
           newSubItemView.cantidad_seleccionada = 1;
           newSubItemView.precio += parseFloat(x.precio);
-          newSubItemView.indicaciones += x.indicaciones === undefined ? '' :  ' (' + x.indicaciones + ')';
+          newSubItemView.indicaciones += x.indicaciones ? ' (' + x.indicaciones + ')' : '';
 		  newSubItemView.indicaciones_item = elItem.indicaciones
           newSubItemView.subitems.push(x);
 		});
 		
 		newSubItemView.des = newSubItemView.des.join(',');
 
-		newSubItemView.des += elItem.indicaciones === undefined ? '' :  ',(' + elItem.indicaciones + ')';
+		newSubItemView.des += elItem.indicaciones ? ',(' + elItem.indicaciones + ')' : '';
 
         // itemCarta para sacar los indicadores
         // itemCarta.indicaciones = '';
@@ -881,12 +928,58 @@ function xBtnSumarRestarKey(xobj,xval){
 
 
 
+// determina si los seleccionables del item obligan a abrir el dialog:
+// alguna opcion enlazada a stock (producto/porcion/subreceta) o grupo de seleccion obligatoria.
+// sin esto el item se agregaba sin subitems_view y pedido_detalle.subitems quedaba 'null'
+// (sin descuento de stock, sin normalizar, sin reporte) — ver backend-pedidos/test/INVESTIGACION-STOCK-ALMACEN-RESERVAS-20260703.md
+// true si subitems ya es la estructura completa (array/objeto de grupos) y no solo un id como "1516"
+function xEsEstructuraSubitems(subitems) {
+	if (Array.isArray(subitems)) { return true; }
+	if (subitems && typeof subitems === 'object') { return true; }
+	if (typeof subitems === 'string') {
+		var s = subitems.trim();
+		return s.charAt(0) === '[' || s.charAt(0) === '{';
+	}
+	return false;
+}
+
+function xSubitemsRequierenDialog(subitems) {
+	try {
+		var grupos = typeof subitems === 'string' ? JSON.parse(subitems) : subitems;
+		if (grupos && !Array.isArray(grupos) && typeof grupos === 'object') { grupos = Object.values(grupos); }
+		if (!Array.isArray(grupos)) { return false; }
+
+		return grupos.some(function (g) {
+			if (!g || typeof g !== 'object') { return false; }
+			if (parseInt(g.subitem_required_select || 0, 10) === 1) { return true; }
+
+			var opciones = g.opciones !== undefined ? g.opciones : g.subitems;
+			if (typeof opciones === 'string') {
+				try { opciones = JSON.parse(opciones); } catch (e2) { opciones = []; }
+			}
+			if (opciones && !Array.isArray(opciones) && typeof opciones === 'object') { opciones = Object.values(opciones); }
+			if (!Array.isArray(opciones)) { return false; }
+
+			return opciones.some(function (o) {
+				return o && (
+					parseInt(o.idporcion || 0, 10) > 0 ||
+					parseInt(o.idproducto || 0, 10) > 0 ||
+					parseInt(o.idsubreceta || 0, 10) > 0
+				);
+			});
+		});
+	} catch (e) {
+		console.warn('xSubitemsRequierenDialog error', e);
+		return false;
+	}
+}
+
 // homologacion papaya express estructura pedido
 // para delivery -> repartidores -> monitor
 
 function xEstructuraExpress(orden, isDelivery, isComercioAppDeliveryMapa) {
-	isDelivery = isDelivery.toString() === '1';
-	isComercioAppDeliveryMapa = isComercioAppDeliveryMapa.toString() === '1';
+	isDelivery = String(isDelivery != null ? isDelivery : 0) === '1';
+	isComercioAppDeliveryMapa = String(isComercioAppDeliveryMapa != null ? isComercioAppDeliveryMapa : 0) === '1';
 
 	var arr_res = [], arr_tpc_master = {'tipoconsumo': []};
 	var arr_tipoc = {
@@ -1045,15 +1138,11 @@ function xChangeTipoConsumoItems(idtipo_consumo) {
 }
 
 $(document.body).on('keyup', '.xMiTextReferencia', function(e) {
-		if ( !xidTipoConsumo ) return;
+		if ( !xidTipoConsumo || !xidItem ) return;
 		const val_ref = e.target.value;
-		itemPedidos_objItemSelected.indicaciones = val_ref;
-		itemPedidos_objItemSelected.xindicaciones = val_ref;
 		try {			
-			xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones = val_ref; // $(this).val();
+			xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones = val_ref;
 		} catch (error) {}
-		// xArrayPedidoObj[xli_tipoconsumo][xli_iditem]['indicaciones'] = val_ref;
-		
 		// Guardar sin nulls
 		setTimeout(() => {
 			const cleanObj = xArrayPedidoToCleanObject(xArrayPedidoObj);
@@ -1533,10 +1622,14 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 	.done( function (dtCarta) {
 		var xdt_rpt=JSON.parse(dtCarta)		
 		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
-		xGeneralDataCarta=xdt_rpt.datos;
+		xGeneralDataCarta=xdt_rpt.datos || [];
 		console.log('xGeneralDataCarta', xGeneralDataCarta);
 		if(x_rpt){return x_rpt(xGeneralDataCarta);}
 	})
+	.fail(function () {
+		xGeneralDataCarta = [];
+		if (x_rpt) { return x_rpt(xGeneralDataCarta); }
+	});
 }
 
 async function xGeneralLoadItemsAddItem(xidCategoria){
@@ -1571,10 +1664,14 @@ function xLimpiarItemSeleccionadosSubItems() {
 }
 
 function xLimpiarItemIndicaciones() {
-	xGeneralDataCarta.filter(x => x.indicaciones).map( x => {
+	if (!xGeneralDataCarta || !xGeneralDataCarta.length) {
+		return;
+	}
+	xGeneralDataCarta.forEach(function (x) {
 		x.indicaciones = '';
 		x.xindicaciones = '';
 	});
+	compResetInputIndicaciones && compResetInputIndicaciones('');
 }
 
 //mi pedido // solo secciones
@@ -2182,7 +2279,7 @@ async function xHandlerShowPromciones() {
 	if (promociones.datos.length > 0) {
 		promociones = JSON.parse(promociones.datos[0].promociones);
 	} else {
-		promociones = [];
+		promociones = { lista_promociones: [] };
 	}
 	
 	console.log('promociones', promociones)
@@ -2193,8 +2290,122 @@ async function xHandlerShowPromciones() {
 	return promociones;
 }
 
+// Devuelve true si la promoción está vigente AHORA (fecha, hora y día de semana).
+// El SP procedure_get_promciones ya filtra en BD, pero la lista vive en
+// localStorage durante la sesión, así que esta guarda evita aplicar promos
+// que expiraron mientras la pantalla estaba abierta.
+function _xPromoEsVigente(promocion, ahora = new Date()) {
+	try {
+		const body = promocion?.parametros?.body;
+		if (!body) return false;
+
+		const pad = n => String(n).padStart(2, '0');
+		const hoy = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
+		const horaActual = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+		const diaActual = String(ahora.getDay()); // 0=domingo ... 6=sábado (estilo getDay)
+
+		// Fechas
+		if (body.f_inicio && hoy < body.f_inicio) return false;
+		if (body.f_fin && hoy > body.f_fin) return false;
+
+		// Horas: si h_inicio == h_fin se trata como "todo el día"
+		if (body.h_inicio && body.h_fin && body.h_inicio !== body.h_fin) {
+			if (horaActual < body.h_inicio || horaActual > body.h_fin) return false;
+		}
+
+		// Días de semana: CSV "0,1,2,..." con coma final
+		if (body.dias_semana) {
+			const dias = String(body.dias_semana).split(',').map(s => s.trim()).filter(Boolean);
+			if (dias.length > 0 && !dias.includes(diaActual)) return false;
+		}
+
+		return true;
+	} catch (e) {
+		console.error('Error en _xPromoEsVigente', e);
+		return false;
+	}
+}
+
+// Determina el "tipo" de promoDetalle en base a sus campos persistidos.
+// Retorna uno de: 'porc' | 'fijo' | 'nxn_puro' | 'nxn_2do_porc' | 'porc_total' | 'combo' | 'bogo' | 'escalonado'
+function _xPromoTipoDetalle(promocion, promoDetalle) {
+	const tipoExplicito = promocion?.parametros?.body?.tipo_descuento;
+	if (tipoExplicito === 'fijo'         ||
+	    tipoExplicito === 'porc_total'   ||
+	    tipoExplicito === 'combo'        ||
+	    tipoExplicito === 'bogo'         ||
+	    tipoExplicito === 'escalonado'   ||
+	    tipoExplicito === 'nxn_puro'     ||
+	    tipoExplicito === 'nxn_2do_porc' ||
+	    tipoExplicito === 'porc') return tipoExplicito;
+
+	const isNxn = String(promoDetalle.is_nxn) === '1' || parseFloat(promoDetalle.cantidad_x || 0) > 0;
+	if (isNxn) {
+		const porc = parseFloat(promoDetalle.porc_descuento || 0);
+		return porc > 0 ? 'nxn_2do_porc' : 'nxn_puro';
+	}
+	return 'porc';
+}
+
+// Texto corto para el badge de la carta. Ejemplos: '-15%', '-S/.5', '2x1', '3x2', '2DO 50%'
+function _xPromoBadgeTexto(tipoDet, promoDetalle) {
+	const N = parseInt(promoDetalle.cantidad || 0, 10);
+	const X = parseInt(promoDetalle.cantidad_x || 0, 10);
+	const porc = parseFloat(promoDetalle.porc_descuento || 0);
+
+	switch (tipoDet) {
+		case 'fijo':        return `-S/.${porc.toFixed(2)}`;
+		case 'nxn_puro':    return `${N}x${X}`;
+		case 'nxn_2do_porc':
+			if (N === 2 && porc === 50) return '2DO 50%';
+			return `${N}º ${porc}%`;
+		case 'porc':
+		default:            return `-${porc}%`;
+	}
+}
+
+// Devuelve true si la promoción está vigente AHORA (fecha, hora y día de semana).
+function _xPromoMatchItem(promoItem, item) {
+	return promoItem.iditem == item.iditem || promoItem.idseccion == item.idseccion;
+}
+
+// Filtros adicionales: solo_app (POS no es app), importe_consumo_min, num_primeros_pedidos.
+// El subtotal y el numPedidoHoy se pasan como contexto opcional.
+function _xPromoCumpleRestricciones(promocion, ctx) {
+	try {
+		const body = promocion?.parametros?.body || {};
+
+		// Solo aplica desde la app de delivery → en POS (venta rápida, mesas) NO aplica.
+		if (parseInt(body.solo_app || 0, 10) === 1) {
+			if (typeof window !== 'undefined' && !window.__APP_DELIVERY_MODE__) return false;
+		}
+
+		// Importe mínimo de consumo
+		if (body.importe_consumo_min !== null && body.importe_consumo_min !== undefined && body.importe_consumo_min !== '') {
+			const minimo = parseFloat(body.importe_consumo_min);
+			const subtotal = parseFloat((ctx && ctx.subtotalPedido) || 0);
+			if (minimo > 0 && subtotal < minimo) return false;
+		}
+
+		// Primeros N pedidos del día (si el contexto lo provee)
+		if (body.num_primeros_pedidos !== null && body.num_primeros_pedidos !== undefined && body.num_primeros_pedidos !== '') {
+			const N = parseInt(body.num_primeros_pedidos, 10);
+			const numHoy = parseInt((ctx && ctx.numPedidoHoy) || 0, 10);
+			if (N > 0 && numHoy > 0 && numHoy > N) return false;
+		}
+
+		return true;
+	} catch (e) {
+		console.error('Error _xPromoCumpleRestricciones', e);
+		return true; // ante duda no bloquear
+	}
+}
+
 // funcion obtiene el item de la carta y revisa en promociones si esta
-// pertence alguna promocion, si es asi entonces cambia el precio
+// pertence alguna promocion, si es asi entonces cambia el precio (solo
+// para tipos 'porc' y 'fijo'). Para tipos NxN deja el precio normal y
+// solo agrega metadata visual; el descuento real se calcula al cobrar
+// vía xCalcDescuentoPromosLinea() en función de la cantidad pedida.
 function xAplicaItemPromo(promocionesData, item) {
 
 	try {
@@ -2205,50 +2416,301 @@ function xAplicaItemPromo(promocionesData, item) {
 			item.is_promo_aplicada = false;
 			item.tituloPromocion = null;
 			item.descuento = null;
-		};	
+			item.tipoPromo = null;
+			item.badgePromo = null;
+			item.promoCantidadN = null;
+			item.promoCantidadX = null;
+			item.idpromocionAplicada = null;
+		};
 
-		if (!promocionesData) return;	
-		if (!promocionesData.lista_promociones && !promocionesData.lista_promociones.length) return;
-		
+		if (!promocionesData) return;
+		const listaPromos = Array.isArray(promocionesData)
+			? promocionesData
+			: (promocionesData.lista_promociones || []);
+		if (!listaPromos.length) return;
 
-		if (promocionesData.lista_promociones && promocionesData.lista_promociones.length > 0) {
-			promocionesData.lista_promociones.forEach(promocion => {
-				
-				
 
-				promocion.lista.forEach(promoItem => {
-					const idItem = promoItem.iditem;
-					const idSeccion = promoItem.idseccion;
-		
-					if (idItem == item.iditem || idSeccion == item.idseccion) {
-										
-						// Guardar el precio original antes de aplicar el descuento
-						const precioOriginal = parseFloat(item.precio);						
-						const porcentajeDescuento = parseFloat(promoItem.porc_descuento);
-						const precioFinal = precioOriginal - (precioOriginal * (porcentajeDescuento / 100));
-						
-						// Formatear el precio final con dos decimales
-						item.precio = precioFinal.toFixed(2);
-						
-						// Agregar propiedades para identificar el item como promoción
-						item.enPromocion = true;
-						item.precioOriginal = precioOriginal;
-						item.descuento = porcentajeDescuento;
-						item.tituloPromocion = promocion.parametros?.header?.titulo || 'PROMO';
-						item.is_promo_aplicada = true;
-						
-						console.log(`Promoción aplicada a ${item.des_item}: ${porcentajeDescuento}% de descuento`);
-					}			
-				})
+		if (listaPromos.length > 0) {
+			listaPromos.forEach(promocion => {
+
+				// Defensa cliente: ignorar promos fuera de su ventana vigente
+				if (!_xPromoEsVigente(promocion)) return;
+				// Restricciones (solo_app obligatorio aquí; consumo_min/primeros_pedidos se evalúan al cobrar)
+				if (!_xPromoCumpleRestricciones(promocion, {})) return;
+
+				const tipoBody = promocion?.parametros?.body?.tipo_descuento;
+				// porc_total no aplica a items individuales (es solo sobre el subtotal)
+				if (tipoBody === 'porc_total') return;
+
+				(promocion.lista || []).forEach(promoItem => {
+					if (!_xPromoMatchItem(promoItem, item)) return;
+
+					const tipoDet = _xPromoTipoDetalle(promocion, promoItem);
+					const precioOriginal = parseFloat(item.precio);
+					const porc = parseFloat(promoItem.porc_descuento || 0);
+
+					// 'porc' y 'fijo': modifican precio mostrado en la carta.
+					// 'nxn_*' / 'combo' / 'bogo' / 'escalonado': solo metadata (badge informativo);
+					//   el descuento real se calcula al cobrar via xCalcDescuentoPromosTotal.
+					if (tipoDet === 'porc') {
+						item.precio = (precioOriginal - (precioOriginal * (porc / 100))).toFixed(2);
+					} else if (tipoDet === 'fijo') {
+						item.precio = Math.max(0, precioOriginal - porc).toFixed(2);
+					}
+
+					// Badge según el tipo
+					let badge;
+					switch (tipoDet) {
+						case 'combo':      badge = 'COMBO';  break;
+						case 'bogo':       badge = String(promoItem.tipo).toUpperCase() === 'BOGO_REGALO' ? '🎁 GRATIS' : 'BOGO'; break;
+						case 'escalonado': badge = 'TIERS';  break;
+						default:           badge = _xPromoBadgeTexto(tipoDet, promoItem);
+					}
+
+					item.enPromocion         = true;
+					item.precioOriginal      = precioOriginal;
+					item.descuento           = porc;
+					item.tipoPromo           = tipoDet;
+					item.badgePromo          = badge;
+					item.promoCantidadN      = parseInt(promoItem.cantidad || 0, 10);
+					item.promoCantidadX      = parseInt(promoItem.cantidad_x || 0, 10);
+					item.tituloPromocion     = promocion.parametros?.header?.titulo || 'PROMO';
+					item.idpromocionAplicada = promocion.idpromocion;
+					item.is_promo_aplicada   = true;
+
+					console.log(`Promo "${item.tituloPromocion}" -> ${item.des_item}: ${item.badgePromo}`);
+				});
 			})
 		}
 	} catch (error) {
 		console.error('Error al procesar promociones:', error);
 	}
+}
 
-	
-	
-	
+// Calcula el descuento total (S/.) que debe restarse a una LÍNEA del pedido
+// (un mismo iditem con cantidad N en el pedido) por aplicación de promos NxN
+// o "Nésimo a porc%". Para 'porc' y 'fijo' devuelve 0 porque ya están
+// reflejados en item.precio.
+//
+// Conteo NxN por producto individual (decisión confirmada): nunca se cruzan
+// productos aunque compartan sección.
+//
+// Retorna { descuento: number, motivo: string }
+function xCalcDescuentoPromosLinea(itemPedido) {
+	const cantidad = parseFloat(itemPedido.cantidad || 0);
+	if (cantidad <= 0 || !itemPedido.is_promo_aplicada) return { descuento: 0, motivo: '' };
+
+	const tipo = itemPedido.tipoPromo;
+	if (tipo !== 'nxn_puro' && tipo !== 'nxn_2do_porc') return { descuento: 0, motivo: '' };
+
+	const N = parseInt(itemPedido.promoCantidadN || 0, 10);
+	const X = parseInt(itemPedido.promoCantidadX || 0, 10);
+	const precio = parseFloat(itemPedido.precioOriginal || itemPedido.precio || 0);
+
+	if (tipo === 'nxn_puro') {
+		// Por cada N unidades, se regalan N-X.
+		if (N <= 0 || X <= 0 || N <= X) return { descuento: 0, motivo: '' };
+		const bloques = Math.floor(cantidad / N);
+		const gratis = bloques * (N - X);
+		return {
+			descuento: +(gratis * precio).toFixed(2),
+			motivo: `${itemPedido.tituloPromocion || 'Promo'} ${N}x${X}: ${gratis} gratis`
+		};
+	}
+
+	if (tipo === 'nxn_2do_porc') {
+		// Por cada N unidades, la N-ésima va al porc% (descuento parcial).
+		if (N <= 1) return { descuento: 0, motivo: '' };
+		const porc = parseFloat(itemPedido.descuento || 0);
+		const bloques = Math.floor(cantidad / N);
+		const dscPorBloque = precio * (porc / 100);
+		return {
+			descuento: +(bloques * dscPorBloque).toFixed(2),
+			motivo: `${itemPedido.tituloPromocion || 'Promo'} ${N}º al ${porc}%`
+		};
+	}
+
+	return { descuento: 0, motivo: '' };
+}
+
+// Aplana xArrayPedidoObj en un array de líneas (objetos planos, descartando "cantidad" del grupo)
+function _xPlanLineasPedido(arrayPedidoObj) {
+	const lineas = [];
+	if (!Array.isArray(arrayPedidoObj)) return lineas;
+	arrayPedidoObj.forEach(grupo => {
+		if (!grupo) return;
+		Object.values(grupo).forEach(linea => {
+			if (typeof linea !== 'object' || linea == null) return;
+			lineas.push(linea);
+		});
+	});
+	return lineas;
+}
+
+// Recorre todas las líneas de un pedido y suma todos los descuentos aplicables.
+// Considera tipos: nxn_*, combo, bogo, escalonado, porc_total + restricciones
+// (solo_app, importe_consumo_min, num_primeros_pedidos).
+// ctx (opcional): { numPedidoHoy }
+// IMPORTANTE: además de calcular el total, MUTA cada línea afectada por NxN
+// para reflejar el descuento en sus campos `precio_total_calc` y `precio_print`
+// (que es el campo que log_001.php usa para persistir el precio_total en
+// pedido_detalle). Los descuentos GLOBALES (combo/bogo/escalonado/porc_total)
+// quedan SOLO en los subtotales del pedido (línea DESC. PROMO).
+// Retorna { total: number, detalle: [{descuento, motivo, ...}] }
+function xCalcDescuentoPromosTotal(arrayPedidoObj, ctx) {
+	const out = { total: 0, detalle: [] };
+	const lineas = _xPlanLineasPedido(arrayPedidoObj);
+	if (lineas.length === 0) return out;
+
+	// Subtotal bruto (sin descuentos NxN/etc) — usado para evaluar consumo_min
+	const subtotal = lineas.reduce((acc, l) => {
+		const cant = parseFloat(l.cantidad || 0);
+		const precio = parseFloat(l.precioOriginal || l.precio || 0);
+		return acc + (cant * precio);
+	}, 0);
+
+	const ctxFull = Object.assign({ subtotalPedido: subtotal }, ctx || {});
+
+	// 1) Descuentos por línea (NxN ya marcados desde la carta)
+	lineas.forEach(linea => {
+		// Limpiar descuento previo si la línea YA fue marcada antes
+		// (evita acumulación en re-renders sucesivos de xSumarTotal).
+		if (linea.descuento_promo_linea) {
+			const cantPrev = parseFloat(linea.cantidad || 0);
+			const precioPrev = parseFloat(linea.precioOriginal || linea.precio || 0);
+			const totalBruto = +(cantPrev * precioPrev).toFixed(2);
+			linea.precio_total      = totalBruto.toFixed(2);
+			linea.precio_total_calc = totalBruto.toFixed(2);
+			linea.precio_print      = totalBruto.toFixed(2);
+			linea.descuento_promo_linea = 0;
+			linea.motivo_promo_linea = '';
+		}
+
+		const r = xCalcDescuentoPromosLinea(linea);
+		if (r.descuento > 0) {
+			out.total += r.descuento;
+			out.detalle.push({
+				iditem: linea.iditem,
+				des_item: linea.des_item,
+				descuento: r.descuento,
+				motivo: r.motivo
+			});
+
+			// Propagación a la línea: el detalle persistido en pedido_detalle
+			// debe reflejar el descuento (log_001.php lee `precio_print`).
+			const cant = parseFloat(linea.cantidad || 0);
+			const precioOrig = parseFloat(linea.precioOriginal || linea.precio || 0);
+			const totalBruto = +(cant * precioOrig).toFixed(2);
+			const totalNeto  = Math.max(0, +(totalBruto - r.descuento).toFixed(2));
+
+			linea.descuento_promo_linea = +r.descuento.toFixed(2);
+			linea.motivo_promo_linea    = r.motivo;
+			linea.precio_total          = totalBruto.toFixed(2);
+			linea.precio_total_calc     = totalNeto.toFixed(2);
+			linea.precio_print          = totalNeto.toFixed(2);
+		}
+	});
+
+	// 2) Promos que viven solo en localStorage (porc_total / combo / bogo / escalonado)
+	let listaPromos = [];
+	try {
+		const raw = localStorage.getItem('::app3_sys_promociones');
+		if (raw) {
+			const parsed = JSON.parse(raw);
+			listaPromos = parsed?.lista_promociones || [];
+		}
+	} catch (e) { /* ignore */ }
+
+	listaPromos.forEach(promo => {
+		if (!_xPromoEsVigente(promo)) return;
+		if (!_xPromoCumpleRestricciones(promo, ctxFull)) return;
+		const tipo = promo?.parametros?.body?.tipo_descuento;
+		const titulo = promo?.parametros?.header?.titulo || 'Promo';
+
+		if (tipo === 'porc_total') {
+			const porc = parseFloat(promo?.parametros?.body?.porc_total_pedido || 0);
+			if (porc <= 0) return;
+			const dsc = +(subtotal * (porc / 100)).toFixed(2);
+			if (dsc > 0) {
+				out.total += dsc;
+				out.detalle.push({ descuento: dsc, motivo: `${titulo}: ${porc}% sobre el total` });
+			}
+		}
+		else if (tipo === 'combo') {
+			const precioCombo = parseFloat(promo?.parametros?.body?.combo_precio_total || 0);
+			const items = (promo.lista || []);
+			if (precioCombo <= 0 || items.length === 0) return;
+
+			// Cuántos "combos completos" entran en el pedido: min de floor(cant_pedido / cant_requerida)
+			let bloques = Infinity;
+			let sumaPreciosNormales = 0;
+			let cumple = true;
+			items.forEach(req => {
+				const reqCant = parseInt(req.cantidad || 1, 10) || 1;
+				const lineaMatch = lineas.find(l => l.iditem == req.iditem);
+				const cantPedido = lineaMatch ? parseFloat(lineaMatch.cantidad || 0) : 0;
+				if (cantPedido < reqCant) cumple = false;
+				bloques = Math.min(bloques, Math.floor(cantPedido / reqCant));
+				const precioUn = parseFloat((lineaMatch && (lineaMatch.precioOriginal || lineaMatch.precio)) || 0);
+				sumaPreciosNormales += reqCant * precioUn;
+			});
+			if (!cumple || bloques === Infinity || bloques <= 0) return;
+			const dscPorBloque = sumaPreciosNormales - precioCombo;
+			if (dscPorBloque <= 0) return;
+			const dsc = +(bloques * dscPorBloque).toFixed(2);
+			out.total += dsc;
+			out.detalle.push({ descuento: dsc, motivo: `${titulo} (combo x${bloques})` });
+		}
+		else if (tipo === 'bogo') {
+			const trigger = (promo.lista || []).find(x => String(x.tipo).toUpperCase() === 'BOGO_TRIGGER');
+			const regalo  = (promo.lista || []).find(x => String(x.tipo).toUpperCase() === 'BOGO_REGALO');
+			if (!trigger || !regalo) return;
+
+			const lTrigger = lineas.find(l => l.iditem == trigger.iditem);
+			const lRegalo  = lineas.find(l => l.iditem == regalo.iditem);
+			if (!lTrigger || !lRegalo) return;
+
+			const cantTrigger = parseFloat(lTrigger.cantidad || 0);
+			const cantRegalo  = parseFloat(lRegalo.cantidad || 0);
+			if (cantTrigger < 1 || cantRegalo < 1) return;
+
+			// Cuántos pares activan: min(cant_trigger, cant_regalo)
+			const pares = Math.min(cantTrigger, cantRegalo);
+			const precioRegalo = parseFloat(lRegalo.precioOriginal || lRegalo.precio || 0);
+			const porc = parseFloat(regalo.porc_descuento || 100);
+			const dsc = +(pares * precioRegalo * (porc / 100)).toFixed(2);
+			if (dsc > 0) {
+				out.total += dsc;
+				out.detalle.push({ descuento: dsc, motivo: `${titulo}: x${pares} ${porc === 100 ? 'gratis' : porc+'%'}` });
+			}
+		}
+		else if (tipo === 'escalonado') {
+			// promo.lista contiene N tiers (cada uno con cantidad mín y precio_final)
+			const tiers = (promo.lista || []).slice().sort((a,b) => parseInt(b.cantidad||0,10) - parseInt(a.cantidad||0,10));
+			if (tiers.length === 0) return;
+			const idItem = tiers[0].iditem;
+			const lineaItem = lineas.find(l => l.iditem == idItem);
+			if (!lineaItem) return;
+
+			const cantPedido = parseFloat(lineaItem.cantidad || 0);
+			const precioOrig = parseFloat(lineaItem.precioOriginal || lineaItem.precio || 0);
+
+			// Buscar el tier MAYOR cuyo cant_min <= cant_pedido
+			const tierAplica = tiers.find(t => cantPedido >= parseInt(t.cantidad || 0, 10));
+			if (!tierAplica) return;
+
+			const precioTier = parseFloat(tierAplica.precio_final || precioOrig);
+			if (precioTier >= precioOrig) return;
+			const dsc = +(cantPedido * (precioOrig - precioTier)).toFixed(2);
+			if (dsc > 0) {
+				out.total += dsc;
+				out.detalle.push({ descuento: dsc, motivo: `${titulo}: ${cantPedido}u a S/.${precioTier.toFixed(2)} c/u` });
+			}
+		}
+	});
+
+	out.total = +out.total.toFixed(2);
+	return out;
 }
 
 	

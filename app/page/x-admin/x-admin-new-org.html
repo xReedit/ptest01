@@ -107,6 +107,9 @@
 										<input type="text" id="speech_disabled" name="speech_disabled">
 										<input type="text" id="h_authorization_api_comprobante" name="authorization_api_comprobante">
 										<input type="text" id="h_id_api_comprobante" name="id_api_comprobante">
+										<input type="text" id="venta_credito_guia" name="venta_credito_guia">
+										<input type="text" id="guia_interna_serie" name="guia_interna_serie">
+										<input type="text" id="guia_interna_correlativo" name="guia_interna_correlativo">
 									</div>
 
 
@@ -457,6 +460,21 @@
 
 								<div class="xLinea2"></div><br>
 
+								<p><strong>Venta al crédito — Guía interna</strong></p>
+								<paper-checkbox id="check_venta_credito_guia"><span>Emitir guía de remisión al finalizar venta al crédito</span></paper-checkbox>
+								<p class="fs-12 text-secondary">Documento interno (solo punto de venta). Impresión/descarga en navegador, no se envía a Sunat.</p>
+								<div class="d-flexx mt-2">
+									<div class="pr-3">
+										<p class="fs-12 mb-1">Serie guía interna</p>
+										<input type="text" class="xMiInput xPasarEnter2" placeholder="001" id="txt_guia_interna_serie" maxlength="10" onChange="conMayusculas(this)">
+									</div>
+									<div>
+										<p class="fs-12 mb-1">Último correlativo emitido</p>
+										<input type="number" min="0" class="xMiInput xPasarEnter2" placeholder="0" id="txt_guia_interna_correlativo">
+									</div>
+								</div>
+								<div class="xLinea2"></div><br>
+
 								<h3>Numeración de comprobantes de pago</h3>
 								<p>Indique los comprobantes de pago que emite esta sede, así como la serie y el último número correlativo emitido.</p>
 								<p>Es a partir del último correlativo emitido que el sistema empezará a enumerar los comprobantes. Ej: último correlativo emitido 100, entonces el sistema emitirá 101.</p>
@@ -664,9 +682,13 @@ function transferenciaCompletaMini(xfile){
 		const _CheckisPrinterSocket = check_isprinter_socket.checked ? 1 : 0;
 		const _check_habilita_facturacion = check_habilita_facturacion.checked ? 1 : 0;
 		const _check_speech_disabled = check_speech_disabled.checked ? 1 : 0;
-		const _check_habilita_verificacion_cpe = check_habilita_verificacion_cpe.checked ? 1 : 0;		
+		const _check_habilita_verificacion_cpe = check_habilita_verificacion_cpe.checked ? 1 : 0;
+		const _check_venta_credito_guia = check_venta_credito_guia.checked ? 1 : 0;
 
 		$("#frm_sede #finicio").val(fecha_inicio.value);
+		$("#frm_sede #venta_credito_guia").val(_check_venta_credito_guia);
+		$("#frm_sede #guia_interna_serie").val(txt_guia_interna_serie.value || '001');
+		$("#frm_sede #guia_interna_correlativo").val(txt_guia_interna_correlativo.value || '0');
 
 		$("#frm_sede #sys_local").val(_printServerCheck);
 		$("#frm_sede #pwa").val(_pwaCheck);
@@ -820,6 +842,9 @@ function transferenciaCompletaMini(xfile){
 		check_isprinter_socket.checked = dataSede.isprinter_socket === "0" ? false : true;
 		check_habilita_facturacion.checked = dataSede.facturacion_e_activo === "0" ? false : true;
 		check_habilita_verificacion_cpe.checked = dataSede.habilita_verificacion_cpe === "0" ? false : true;
+		check_venta_credito_guia.checked = dataSede.venta_credito_guia === "1";
+		txt_guia_interna_serie.value = dataSede.guia_interna_serie || '001';
+		txt_guia_interna_correlativo.value = dataSede.guia_interna_correlativo || '0';
 
 		
 		check_habilita_delivery.checked = dataSede.pwa_habilitar_delivery_app === "0" ? false : true;

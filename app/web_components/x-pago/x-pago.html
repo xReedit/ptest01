@@ -922,7 +922,29 @@
 		
 	}
 
+	function xResolverIdClienteAutocomplete() {
+		if (xIdCliente_pago && xIdCliente_pago !== '' && xIdCliente_pago !== '0') {
+			return;
+		}
+		var nombre = (_inputAutocompleteObj.inputValue || '').trim();
+		if (!nombre || nombre.length < 5) {
+			return;
+		}
+		var lista = _inputAutocomplete.list_cliente;
+		if (!lista || !lista.length) {
+			return;
+		}
+		var nombreUp = nombre.toUpperCase();
+		for (var i = 0; i < lista.length; i++) {
+			if ((lista[i].nombres || '').trim().toUpperCase() === nombreUp && lista[i].idcliente) {
+				xIdCliente_pago = lista[i].idcliente;
+				return;
+			}
+		}
+	}
+
 	function xFireSend(xPase) {
+		xResolverIdClienteAutocomplete();
 		var nom_nota = $("#sel_cliente").val(), xRpts = [];
 		// var clie_direccion=$("#sel_cliente").val();		
 		xThisPago.clienteModel = {
@@ -934,10 +956,12 @@
 		}
 
 		const _clienteRptBD = xThisPago.changeDatosClienteSave;
-		let is_update_cliente = true;
-		if ( _clienteRptBD ) {
-			is_update_cliente = _clienteRptBD?.direccion !== xThisPago.clienteModel.direccion;
-			is_update_cliente = _clienteRptBD.telefono !== xThisPago.clienteModel.telefono;
+		let is_update_cliente = !xIdCliente_pago || xIdCliente_pago === '' || xIdCliente_pago === '0';
+		if ( _clienteRptBD && xIdCliente_pago ) {
+			is_update_cliente = is_update_cliente
+				|| _clienteRptBD.direccion !== xThisPago.clienteModel.direccion
+				|| _clienteRptBD.telefono !== xThisPago.clienteModel.telefono
+				|| (_clienteRptBD.nombres || '') !== (xThisPago.clienteModel.nombres || '');
 		}
 		
 

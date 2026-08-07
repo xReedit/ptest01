@@ -524,12 +524,28 @@ function xm_LogChequea(responde){
       //if(rpt==="1"){xm_LogIni(function(a){if(a){responde(true)}});}else{window.localStorage.setItem("::app3_woDUS",rpt); return responde(false);}
 		})
 }
-function xm_log_get(seccion){	
-	var xdt_log=window.localStorage.getItem("::app3_woDUS"),xdt_rpt;
+function xm_log_get(seccion){
+	// Si la pestaña esta operando en otra sede (POS multi-sede), preferir el
+	// snapshot por-pestaña en sessionStorage. Defensivo: si opSede no existe
+	// o no hay snapshot, cae al localStorage habitual sin cambiar comportamiento.
+	var xdt_log = null, xdt_rpt;
+	var rawSrc = null;
 	try {
-		xdt_log=window.atob(xdt_log);
+		// 'app3_us' es la identidad/pertenencia del usuario: SIEMPRE del storage base.
+		// Ademas, opSede.isOverride() -> getPertenencia() -> _us() -> xm_log_get('app3_us'),
+		// asi que consultar opSede para 'app3_us' causaria recursion infinita (cuelga la pagina).
+		if (seccion !== 'app3_us' &&
+		    typeof opSede !== 'undefined' && opSede.isOverride && opSede.isOverride()) {
+			rawSrc = window.sessionStorage.getItem('::app3_woDUS_op');
+		}
+	} catch (e) { /* opSede no disponible aun */ }
+	if (!rawSrc) {
+		rawSrc = window.localStorage.getItem("::app3_woDUS");
+	}
+	try {
+		xdt_log=window.atob(rawSrc);
 		xdt_log=JSON.parse(xdt_log)
-		
+
 	} catch (error) {
 		console.log(error);
 		return;

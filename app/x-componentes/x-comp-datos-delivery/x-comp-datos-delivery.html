@@ -146,6 +146,20 @@
 	_inputAutocompleteDelObj, compDirSelectCliente, calcCosto, direcionSelected, compDirSearch, dataSede,
 	comercioHabilitadoBusquedaGoogleApi, comercioHabilitadoCalcDistancia, comercioHabilitadoCalcDistanciaSoloApp, comercioHabilitadoLlamarRepartidor, _dirEstablecimineto
 	, client_autocomplete_selected, isSolicitaCubiertos = '0';
+
+	function _xCompDeliveryGetDataSede() {
+		try {
+			var all = xm_log_get('datos_org_all_sede');
+			if (all && all[0]) return all[0];
+			var org = xm_log_get('datos_org_sede');
+			if (org && org[0]) return org[0];
+			var gen = xm_log_get('sede_generales');
+			if (gen && gen[0]) return gen[0];
+		} catch (e) {
+			console.warn('No se pudo cargar datos de sede para delivery', e);
+		}
+		return {};
+	}
 	
 	function xCompDatosDelInit() {
 		calcCosto = new calcCostoEntrega();
@@ -154,9 +168,9 @@
 		xThisComDatosDelivery.showdir = true;
 		xThisComDatosDelivery.showcostoentrega = false;
 
-		dataSede = xm_log_get('datos_org_all_sede')[0];
-		dataSede.latitude = parseFloat(dataSede.latitude);
-		dataSede.longitude = parseFloat(dataSede.longitude);
+		dataSede = _xCompDeliveryGetDataSede();
+		dataSede.latitude = parseFloat(dataSede.latitude || 0);
+		dataSede.longitude = parseFloat(dataSede.longitude || 0);
 		loadLastComisiones();
 
 
@@ -164,6 +178,7 @@
 
 
 		compDirSearch = document.getElementById('compDirSearch');
+		if (compDirSearch) {
 		compDirSearch.addEventListener('getPlaces', function (e) {
 			direcionSelected = {};
 			direcionSelected = e.detail;
@@ -179,9 +194,11 @@
 			// direcionSelected = e.detail.geometry.location;
 			calcularDistancia();
 		});
+		}
 
 
-		compDirSelectCliente = document.getElementById('selectDirCliente');		
+		compDirSelectCliente = document.getElementById('selectDirCliente');
+		if (compDirSelectCliente) {
 		compDirSelectCliente.addEventListener('getDireccionSelected', function (e) {
 			// console.log(e);
 			// txt_delivery_referencia.value = '';
@@ -194,9 +211,11 @@
 				calcularDistancia();
 			}
 		});
+		}
 		
 
 		_inputAutocompleteDel = document.getElementById('txt_delivery_nombre');
+		if (!_inputAutocompleteDel) return;
 		_inputAutocompleteDelObj = _inputAutocompleteDel.$.input_clie_nombres_auto;
 
 		_inputAutocompleteDel.addEventListener('input-autocomplete-selected', (event) => {
@@ -228,11 +247,11 @@
 	function loadLastComisiones() {
 
 		// primero chequeamos si el comercio o sede esta activo para busqueda
-		comercioHabilitadoBusquedaGoogleApi = dataSede.pwa_habilitar_busqueda_mapa === '1'; // comercio afiliado a papaya express		
-		comercioHabilitadoCalcDistancia = dataSede.pwa_delivery_hablitar_calc_costo_servicio === '1';		
-		comercioHabilitadoCalcDistanciaSoloApp = dataSede.pwa_delivery_habilitar_calc_costo_servicio_solo_app === '1';		
-		comercioHabilitadoLlamarRepartidor = dataSede.pwa_delivery_habilitar_llamar_repartidor_papaya === '1';
-		const comercioPropioreparto = dataSede.pwa_delivery_servicio_propio === '1';		
+		comercioHabilitadoBusquedaGoogleApi = (dataSede.pwa_habilitar_busqueda_mapa || '0') === '1'; // comercio afiliado a papaya express		
+		comercioHabilitadoCalcDistancia = (dataSede.pwa_delivery_hablitar_calc_costo_servicio || '0') === '1';		
+		comercioHabilitadoCalcDistanciaSoloApp = (dataSede.pwa_delivery_habilitar_calc_costo_servicio_solo_app || '0') === '1';		
+		comercioHabilitadoLlamarRepartidor = (dataSede.pwa_delivery_habilitar_llamar_repartidor_papaya || '0') === '1';
+		const comercioPropioreparto = (dataSede.pwa_delivery_servicio_propio || '0') === '1';
 
 		xThisComDatosDelivery.showapigoogle = comercioHabilitadoBusquedaGoogleApi;
 

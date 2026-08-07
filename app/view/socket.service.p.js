@@ -319,15 +319,31 @@ function _cpSocketEmitItemAllModificado(listItems) {
 function _cpSocketEmitReservaStock(pbody) {
     // if (!isSocket) { return; }    
     try {
-        const checkReservaStock = xm_log_get('sede_otros_datos')[0].use_reservas_stock;
+        const sedeOtros = xm_log_get('sede_otros_datos');
+        const sedeOtrosRow = (sedeOtros && sedeOtros[0]) ? sedeOtros[0] : null;
+        const checkReservaStock = sedeOtrosRow ? sedeOtrosRow.use_reservas_stock : 0;
         console.log('checkReservaStock', checkReservaStock);
-        if (checkReservaStock == 1) {
-            const dataPedidoReservar = {
-                p_body: pbody,
-                idsede: xm_log_get('datos_org_sede')[0].idsede,
-            }        
-            this.socketCP.emit('restobar-confirmar-pedido-reservar-stock', dataPedidoReservar);
-        }    
+        if (checkReservaStock != 1) { return; }
+
+        const datosOrg = xm_log_get('datos_org_sede');
+        const datosOrgAll = xm_log_get('datos_org_all_sede');
+        const idsede = (datosOrg && datosOrg[0] && datosOrg[0].idsede)
+            ? datosOrg[0].idsede
+            : (datosOrgAll && datosOrgAll[0] && datosOrgAll[0].idsede)
+                ? datosOrgAll[0].idsede
+                : null;
+
+        if (!idsede) {
+            console.warn('_cpSocketEmitReservaStock: idsede no disponible en sesión');
+            return;
+        }
+        if (!this.socketCP) { return; }
+
+        const dataPedidoReservar = {
+            p_body: pbody,
+            idsede: idsede,
+        };
+        this.socketCP.emit('restobar-confirmar-pedido-reservar-stock', dataPedidoReservar);
     } catch (error) {
         console.log('error _cpSocketEmitReservaStock', error);
     }

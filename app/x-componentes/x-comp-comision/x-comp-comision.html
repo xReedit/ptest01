@@ -32,8 +32,13 @@
                 border-radius: 3px;
             }
 
-            .comision-button iron-icon {
+            .comision-button iron-icon,
+            .comision-button i.fa {
                 margin-left: 8px;
+                width: 16px;
+                height: 16px;
+                font-size: 14px;
+                flex-shrink: 0;
             }
             
             .cancel-button {
@@ -149,7 +154,7 @@
         <div hidden$="{{!isShowComponent}}" class="comision-container" on-tap="handleContainerClick">
             <div class="comision-button" on-tap="toggleInput">
                 <span>{{buttonText}}</span>
-                <iron-icon icon="arrow-drop-down"></iron-icon>
+                <i class="fa fa-caret-down"></i>
             </div>
             
             <template is="dom-if" if="{{selectedComision}}">
@@ -224,7 +229,7 @@
                 document.addEventListener('click', function(e) {
                     // No cerrar si el clic fue en el propio input o en el icono de flecha
                     if (e.target === this.$.comisionInput || 
-                        (e.target.tagName === 'IRON-ICON' && e.target.icon === 'arrow-drop-down')) {
+                        (e.target.tagName === 'I' && e.target.classList.contains('fa-caret-down'))) {
                         return;
                     }
                     
@@ -272,7 +277,7 @@
                     url: '../../bdphp/log_componentes.php?op=25',                                        
                     success: function (response) {
                         const data = JSON.parse(response);
-                        self.comisiones = data.datos;
+                        self.comisiones = (data && data.datos) ? data.datos : [];
                         console.log('self.comisiones', self.comisiones);
                         self.isShowComponent = self.comisiones.length > 0;
                     },

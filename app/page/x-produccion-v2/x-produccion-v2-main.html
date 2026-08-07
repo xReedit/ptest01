@@ -1,0 +1,751 @@
+<dom-module id="x-produccion-v2-main">
+    <link rel="import" href="../../web_components/paper-tabs/paper-tabs.html">
+    <link rel="import" href="../../web_components/iron-pages/iron-pages.html">
+    <link rel="import" href="x-comp-prod-find-almacen.html">
+    <script src="../../view/httpFech.js"></script>
+    <script src="../../view/item_pedido_print_comprobante.js"></script>
+    <script rel="prefetch" type="text/javascript" src="../../view/socket.service.p.js"></script>
+
+    <template>
+        <style>
+            :host {
+                display: block;
+                --prod-border: #e5e7eb;
+                --prod-focus: #80bdff;
+                --prod-text: #1f2933;
+                --prod-muted: #6c757d;
+            }
+            .prod-tabs-bar {
+                border-bottom: 1px solid var(--prod-border);
+                margin-bottom: 0;
+            }
+            .prod-tabs-bar paper-tab {
+                min-width: 140px;
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--prod-muted);
+                text-transform: none;
+            }
+            .prod-tabs-bar paper-tab.iron-selected {
+                color: #17a2b8;
+            }
+            .prod-tab-panel {
+                padding-top: 16px;
+            }
+            .prod-btn-remove {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                border: 1px solid #f1b0b7;
+                border-radius: 6px;
+                background: #fff5f5;
+                color: #dc3545;
+                font-size: 16px;
+                font-weight: 700;
+                line-height: 1;
+                cursor: pointer;
+                padding: 0;
+            }
+            .prod-btn-remove:hover {
+                background: #dc3545;
+                color: #fff;
+            }
+            .prod-section-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: var(--prod-text); }
+            .prod-hint { font-size: 12px; color: var(--prod-muted); margin-bottom: 12px; }
+            .prod-form-label {
+                display: block;
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 4px;
+                color: var(--prod-text);
+            }
+            .prod-form-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            .prod-form-group {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+            .prod-form-group .prod-hint {
+                margin-top: 4px;
+                margin-bottom: 0;
+            }
+            .prod-form-field { min-width: 200px; flex: 1; max-width: 320px; }
+            .prod-form-field-wide { min-width: 280px; flex: 2; max-width: 480px; }
+            .prod-form-field-sm { width: 140px; flex: 0 0 140px; max-width: 140px; }
+            .prod-field.prod-form-field-sm { max-width: 140px; }
+            .prod-insumo-row td { vertical-align: middle; }
+            .prod-insumo-row .prod-field { min-width: 90px; }
+            .prod-insumo-qty { width: 110px; }
+            .prod-insumo-stock { width: 90px; }
+            .prod-field {
+                width: 100%;
+                min-height: 38px;
+                padding: 8px 10px;
+                box-sizing: border-box;
+                border: 1px solid var(--prod-border);
+                border-radius: 8px;
+                background: #fff;
+                color: var(--prod-text);
+                font-size: 12px;
+            }
+            .prod-field::placeholder { color: #98a2b3; }
+            .prod-field:focus {
+                outline: none;
+                border-color: var(--prod-focus);
+                box-shadow: 0 0 0 2px rgba(0, 123, 255, .08);
+            }
+            select.prod-field { cursor: pointer; }
+            textarea.prod-field {
+                min-height: 64px;
+                resize: vertical;
+                max-width: 480px;
+            }
+            .prod-table-wrap { overflow-x: auto; }
+            .prod-table-wrap table { margin-top: 8px; }
+            .prod-table-wrap td, .prod-table-wrap th { padding: 6px 8px; vertical-align: middle; }
+            .prod-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+            x-comp-prod-find-almacen { display: block; width: 100%; }
+            .ui-autocomplete {
+                z-index: 10050 !important;
+                max-height: 260px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                font-size: 12px;
+            }
+        </style>
+
+        <!-- Detalle historial -->
+        <paper-dialog modal id="dialog_detalle_orden" style="min-width: 420px" class="dialog_redondo" with-backdrop>
+            <div class="d-flexx justify-content-between">
+                <p class="fw-600 fs-18">Detalle de producción #{{ ordenDetalle.idprod_orden }}</p>
+                <button class="btn btn-sm btn-secondary" dialog-dismiss>x</button>
+            </div>
+            <p><span class="fw-600">Producto:</span> {{ ordenDetalle.producto_salida }}</p>
+            <p><span class="fw-600">Cantidad:</span> {{ ordenDetalle.cantidad_salida }}</p>
+            <p><span class="fw-600">Costo insumos:</span> {{ ordenDetalle.costo_total }}</p>
+            <p><span class="fw-600">Observaciones:</span> {{ ordenDetalle.detalle }}</p>
+            <hr>
+            <table width="100%">
+                <thead><tr><th align="left">Insumo</th><th align="right">Cant.</th></tr></thead>
+                <tbody>
+                    <template is="dom-repeat" items="{{ ordenInsumosDetalle }}" as="ins">
+                        <tr>
+                            <td>{{ ins.nom_producto }}</td>
+                            <td align="right">{{ ins.cantidad }}</td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </paper-dialog>
+
+        <br>
+        <div class="xMiCard xradius" style="width:90%; max-width: 1250px;">
+            <div class="xEncanezadoCard" style="background: lavenderblush; color: #424242;">
+                <div class="div-content-head-op">
+                    <p class="fw-600 fs-18">Producción v2</p>
+                    <p class="text-secondary fs-12">Transformación de insumos en producto terminado (almacén PRODUCCION)</p>
+                </div>
+            </div>
+
+            <div class="p-3 mb-5">
+                <paper-tabs class="prod-tabs-bar" selected="{{ selectedTabIndex }}" id="prod_tabs_main">
+                    <paper-tab>Fórmulas</paper-tab>
+                    <paper-tab>Ejecutar producción</paper-tab>
+                    <paper-tab>Historial</paper-tab>
+                </paper-tabs>
+
+                <iron-pages selected="{{ selectedTabIndex }}">
+                <div class="prod-tab-panel">
+
+                <!-- ========== FÓRMULAS ========== -->
+                <div>
+                    <div hidden$="[[ showEditFormula ]]">
+                        <div class="d-flexx justify-content-between align-items-center">
+                            <p class="prod-section-title">Fórmulas de producción</p>
+                            <button class="btn btn-sm btn-info" onclick="prodNuevaFormula()">+ Nueva fórmula</button>
+                        </div>
+                        <p class="prod-hint">Defina insumos y cuánto producto terminado genera cada lote estándar.</p>
+                        <table width="100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Descripción</th><th>Producto salida</th>
+                                    <th>Cant. estándar</th><th>Insumos</th><th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template is="dom-repeat" items="{{ listFormulas }}" as="f">
+                                    <tr>
+                                        <td>{{ f.idprod_formula }}</td>
+                                        <td>{{ f.descripcion }}</td>
+                                        <td>{{ f.producto_salida }}</td>
+                                        <td align="center">{{ f.cantidad_salida_estandar }}</td>
+                                        <td align="center">{{ f.num_insumos }}</td>
+                                        <td align="right">
+                                            <button class="btn btn-sm btn-success" data-id$="{{ f.idprod_formula }}" onclick="prodEditarFormula(this)">Editar</button>
+                                            <button class="btn btn-sm btn-danger ml-1" data-id$="{{ f.idprod_formula }}" onclick="prodBorrarFormula(this)">Baja</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div hidden$="[[ !showEditFormula ]]">
+                        <p class="prod-section-title">[[ formulaEditTitulo ]]</p>
+                        <div class="prod-form-field-wide mb-3">
+                            <label class="prod-form-label">Nombre fórmula</label>
+                            <input type="text" class="prod-field" id="txt_formula_desc" placeholder="Ej: Helado fresa">
+                        </div>
+                        <div class="prod-form-grid mb-3">
+                            <div class="prod-form-field-wide prod-form-group">
+                                <label class="prod-form-label">Producto terminado (almacén PRODUCCION)</label>
+                                <x-comp-prod-find-almacen
+                                    id="compSalidaFormula"
+                                    label-mode="producto"
+                                    placeholder="Ej: BOTE DE HELADO"
+                                    idalmacenfiltro$="[[ idAlmacenProduccion ]]"></x-comp-prod-find-almacen>
+                                <p class="prod-hint">Escriba el nombre o búsquelo. Si no existe, se crea en almacén PRODUCCION.</p>
+                            </div>
+                            <div class="prod-form-field-sm prod-form-group">
+                                <label class="prod-form-label">Cant. salida estándar</label>
+                                <input type="number" class="prod-field" id="txt_cant_salida_formula" placeholder="Ej: 4" min="0.001" step="any">
+                            </div>
+                        </div>
+                        <p class="prod-section-title">Insumos de la fórmula</p>
+                        <p class="prod-hint">Busque insumo por almacén y producto; el almacén se toma del producto elegido.</p>
+                        <div class="prod-table-wrap">
+                            <table width="100%">
+                                <thead><tr><th align="left">Producto</th><th>Cant. estándar</th><th>Principal</th><th></th></tr></thead>
+                                <tbody>
+                                    <tr class="prod-insumo-row">
+                                        <td width="50%">
+                                            <x-comp-prod-find-almacen
+                                                id="compInsumoFormula"
+                                                label-mode="almacen"
+                                                placeholder="Buscar: almacén | producto..."
+                                                idalmacenfiltro="0"></x-comp-prod-find-almacen>
+                                        </td>
+                                        <td class="prod-insumo-qty"><input type="number" class="prod-field" id="txt_cant_insumo_formula" min="0.001" step="any" placeholder="Cant." onkeyup="prodEnterAddInsumoFormula(event)"></td>
+                                        <td align="center"><input type="checkbox" id="chk_insumo_principal" title="Escalar producción por este insumo"></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="prodAddInsumoFormula()">+</button></td>
+                                    </tr>
+                                    <template is="dom-repeat" items="{{ listInsumosFormulaEdit }}" as="item" index-as="insumoIdx">
+                                        <tr>
+                                            <td>{{ item.descripcion }}</td>
+                                            <td>{{ item.cantidad_estandar }}</td>
+                                            <td align="center">{{ item.es_principal_label }}</td>
+                                            <td align="center">
+                                                <button type="button" class="prod-btn-remove" data-idx$="[[ insumoIdx ]]" onclick="prodRemoveInsumoFormula(this)" title="Quitar insumo">&times;</button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="prod-actions">
+                            <button class="btn btn-info" onclick="prodGuardarFormula()">Guardar fórmula</button>
+                            <button class="btn btn-secondary" onclick="prodCancelarFormula()">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+
+                <div class="prod-tab-panel">
+
+                <!-- ========== EJECUTAR ========== -->
+                <div>
+                    <p class="prod-section-title">Registrar producción</p>
+                    <p class="prod-hint">Los insumos se descuentan del almacén de cada producto elegido; el terminado ingresa a PRODUCCION.</p>
+
+                    <div class="prod-form-field mb-3">
+                        <label class="prod-form-label">Usar fórmula (opcional)</label>
+                        <select id="sel_formula_ejecutar" class="prod-field" onchange="prodCargarFormulaEjecutar()" style="max-width: 420px;">
+                            <option value="">— Producción libre —</option>
+                        </select>
+                    </div>
+
+                    <p class="prod-section-title">Insumos a consumir</p>
+                    <p class="prod-hint">Busque insumo por almacén y producto (mismo criterio que en fórmulas).</p>
+                    <div class="prod-table-wrap mb-3">
+                        <table width="100%">
+                            <thead><tr><th align="left">Producto</th><th>Stock</th><th>Cantidad</th><th></th></tr></thead>
+                            <tbody>
+                                <tr class="prod-insumo-row">
+                                    <td width="50%">
+                                        <x-comp-prod-find-almacen
+                                            id="compInsumoEjecutar"
+                                            label-mode="almacen"
+                                            placeholder="Buscar: almacén | producto..."
+                                            idalmacenfiltro="0"></x-comp-prod-find-almacen>
+                                    </td>
+                                    <td class="prod-insumo-stock"><input type="number" readonly class="prod-field" id="txt_stock_insumo_ej"></td>
+                                    <td class="prod-insumo-qty"><input type="number" class="prod-field" id="txt_cant_insumo_ej" min="0.001" step="any" onkeyup="prodEscalarSalida()"></td>
+                                    <td><button class="btn btn-sm btn-success" onclick="prodAddInsumoEjecutar()">+</button></td>
+                                </tr>
+                            <template is="dom-repeat" items="{{ listInsumosEjecutar }}" as="item" index-as="insumoEjIdx">
+                                <tr>
+                                    <td>{{ item.descripcion }}</td>
+                                    <td></td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td align="center">
+                                        <button type="button" class="prod-btn-remove" data-idx$="[[ insumoEjIdx ]]" onclick="prodRemoveInsumoEjecutar(this)" title="Quitar insumo">&times;</button>
+                                    </td>
+                                </tr>
+                            </template>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p class="prod-section-title">Producto terminado</p>
+                    <div class="prod-form-grid mb-3">
+                        <div class="prod-form-field-wide prod-form-group">
+                            <label class="prod-form-label">Producto (almacén PRODUCCION)</label>
+                            <x-comp-prod-find-almacen
+                                id="compSalidaEjecutar"
+                                label-mode="producto"
+                                placeholder="Ej: BOTE DE HELADO"
+                                idalmacenfiltro$="[[ idAlmacenProduccion ]]"></x-comp-prod-find-almacen>
+                            <p class="prod-hint">Si no existe, se crea automáticamente en almacén PRODUCCION.</p>
+                        </div>
+                        <div class="prod-form-field-sm prod-form-group">
+                            <label class="prod-form-label">Cantidad producida</label>
+                            <input type="number" class="prod-field" id="txt_cant_salida_ej" min="0.001" step="any">
+                        </div>
+                    </div>
+
+                    <label class="prod-form-label">Observaciones</label>
+                    <textarea id="txt_detalle_prod" class="prod-field" cols="30" rows="2" maxlength="150" placeholder="Observaciones"></textarea>
+                    <div class="prod-actions">
+                        <button class="btn btn-info" disabled$="[[ isDisabledEjecutar ]]" onclick="prodEjecutarOrden()">Confirmar producción</button>
+                        <button class="btn btn-success" hidden$="[[ !isGuardadoOrden ]]" onclick="prodImprimirOrden()">Imprimir</button>
+                    </div>
+                </div>
+
+                </div>
+
+                <div class="prod-tab-panel">
+
+                <!-- ========== HISTORIAL ========== -->
+                <div>
+                    <p class="prod-section-title">Historial de producción</p>
+                    <table width="100%">
+                        <thead>
+                            <tr><th>#</th><th>Fecha</th><th>Usuario</th><th>Producto</th><th>Cant.</th><th>Costo</th><th>Fórmula</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            <template is="dom-repeat" items="{{ listOrdenes }}" as="o">
+                                <tr>
+                                    <td>{{ o.idprod_orden }}</td>
+                                    <td>{{ o.fecha }}</td>
+                                    <td>{{ o.usuario }}</td>
+                                    <td>{{ o.producto_salida }}</td>
+                                    <td align="center">{{ o.cantidad_salida }}</td>
+                                    <td align="right">{{ o.costo_total }}</td>
+                                    <td>{{ o.formula }}</td>
+                                    <td align="right">
+                                        <button class="btn btn-sm btn-success" data-id$="{{ o.idprod_orden }}" onclick="prodVerOrden(this)">Ver</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                </div>
+                </iron-pages>
+            </div>
+        </div>
+        <br><br>
+    </template>
+
+    <script>
+        var xThisProdV2, _httpProd, _idAlmacenProduccion, _formulaEditId = 0;
+        var _listInsumosFormulaLocal = [], _listInsumosEjecutarLocal = [];
+        var _formulaSeleccionada = null, _lastIdOrden = 0, _formulaSalidaIdEdit = 0;
+
+        const PROD_API = '../../bdphp/produccion/api.php';
+
+        function prodParseInsumoSeleccion(sel) {
+            if (!sel) return null;
+            const idproducto_stock = parseInt(sel.value, 10);
+            const idproducto = parseInt(sel.idproducto, 10);
+            const idalmacen = parseInt(sel.idalmacen, 10);
+            if (!idproducto_stock || !idproducto || !idalmacen) return null;
+            return {
+                idproducto,
+                idalmacen,
+                idproducto_stock,
+                label: sel.label || '',
+                stock: sel.stock
+            };
+        }
+
+        function prodOnTabChanged(idx) {
+            if (idx === 0) prodLoadFormulas();
+            if (idx === 2) prodLoadOrdenes();
+        }
+
+        async function prodInit() {
+            _httpProd = new httpFecht();
+            const r = await _httpProd.postJson(PROD_API, { op: 1 });
+            if (!r.success) {
+                showToastSwal('error', r.error || 'Configure almacén PRODUCCION');
+                return;
+            }
+            _idAlmacenProduccion = r.idalmacen;
+            xThisProdV2.idAlmacenProduccion = _idAlmacenProduccion;
+
+            const compInsumoEj = document.getElementById('compInsumoEjecutar');
+            if (compInsumoEj) {
+                compInsumoEj.addEventListener('producto-selected', (e) => {
+                    txt_stock_insumo_ej.value = (e.detail && e.detail.stock) ? e.detail.stock : 0;
+                });
+            }
+
+            prodLoadFormulas();
+            xThisProdV2.selectedTabIndex = 1;
+            _cpSocketOpen();
+            $('body').addClass('loaded');
+        }
+
+        async function prodLoadFormulas() {
+            const r = await _httpProd.postJson(PROD_API, { op: 10 });
+            if (r.success) {
+                xThisProdV2.listFormulas = r.datos || [];
+                prodRefreshSelectFormulas();
+            }
+        }
+
+        function prodRefreshSelectFormulas() {
+            let html = '<option value="">— Producción libre —</option>';
+            (xThisProdV2.listFormulas || []).forEach(f => {
+                html += `<option value="${f.idprod_formula}">${f.descripcion} → ${f.producto_salida}</option>`;
+            });
+            $('#sel_formula_ejecutar').html(html);
+        }
+
+        function prodNuevaFormula() {
+            _formulaEditId = 0;
+            _formulaSalidaIdEdit = 0;
+            _listInsumosFormulaLocal = [];
+            xThisProdV2.formulaEditTitulo = 'Nueva fórmula';
+            xThisProdV2.showEditFormula = true;
+            txt_formula_desc.value = '';
+            txt_cant_salida_formula.value = '';
+            document.getElementById('compSalidaFormula').resetText();
+            document.getElementById('compInsumoFormula').resetText();
+            prodSyncInsumosFormulaEdit();
+            setTimeout(function () {
+                document.getElementById('compInsumoFormula').focusText();
+            }, 200);
+        }
+
+        async function prodEditarFormula(btn) {
+            const id = parseInt(btn.getAttribute('data-id'), 10);
+            const r = await _httpProd.postJson(PROD_API, { op: 11, idprod_formula: id });
+            if (!r.success || !r.formula) return;
+            _formulaEditId = id;
+            _formulaSalidaIdEdit = parseInt(r.formula.idproducto_salida, 10);
+            xThisProdV2.formulaEditTitulo = 'Editar fórmula';
+            xThisProdV2.showEditFormula = true;
+            txt_formula_desc.value = r.formula.descripcion;
+            txt_cant_salida_formula.value = r.formula.cantidad_salida_estandar;
+            _listInsumosFormulaLocal = (r.insumos || []).map(i => ({
+                idproducto: i.idproducto,
+                idalmacen_origen: i.idalmacen_origen,
+                cantidad_estandar: i.cantidad_estandar,
+                es_principal: i.es_principal == 1,
+                es_principal_label: i.es_principal == 1 ? 'Sí' : '',
+                descripcion: i.nom_producto
+            }));
+            prodSyncInsumosFormulaEdit();
+            const compSal = document.getElementById('compSalidaFormula');
+            if (compSal && compSal.setTexto && r.formula.producto_salida) {
+                compSal.setTexto(r.formula.producto_salida);
+            }
+        }
+
+        async function prodBorrarFormula(btn) {
+            const result = await showAlertSwalHtmlDecision({
+                title: 'Dar de baja fórmula',
+                text: '¿Dar de baja esta fórmula?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, dar de baja',
+                cancelButtonText: 'Cancelar'
+            }, 1);
+            if (!result.isConfirmed) return;
+            const id = parseInt(btn.getAttribute('data-id'), 10);
+            await _httpProd.postJson(PROD_API, { op: 13, idprod_formula: id });
+            prodLoadFormulas();
+        }
+
+        function prodCancelarFormula() {
+            xThisProdV2.showEditFormula = false;
+        }
+
+        function prodEnterAddInsumoFormula(e) {
+            if (e.key === 'Enter' || e.which === 13) {
+                prodAddInsumoFormula();
+            }
+        }
+
+        function prodAddInsumoFormula() {
+            const comp = document.getElementById('compInsumoFormula');
+            const parsed = prodParseInsumoSeleccion(comp.getProductoSeletedAlmacen());
+            const cant = parseFloat(txt_cant_insumo_formula.value);
+            if (!parsed) { showToastSwal('warning', 'Seleccione un insumo del listado (almacén | producto)'); return; }
+            if (!cant || cant <= 0) { showToastSwal('warning', 'Indique cantidad estándar'); return; }
+            _listInsumosFormulaLocal.push({
+                idproducto: parsed.idproducto,
+                idproducto_stock: parsed.idproducto_stock,
+                idalmacen_origen: parsed.idalmacen,
+                cantidad_estandar: cant,
+                es_principal: chk_insumo_principal.checked,
+                es_principal_label: chk_insumo_principal.checked ? 'Sí' : '',
+                descripcion: parsed.label,
+                stock: parsed.stock
+            });
+            comp.resetText();
+            txt_cant_insumo_formula.value = '';
+            chk_insumo_principal.checked = false;
+            prodSyncInsumosFormulaEdit();
+            comp.focusText();
+        }
+
+        function prodRemoveInsumoFormula(btn) {
+            const idx = parseInt(btn.getAttribute('data-idx'), 10);
+            if (isNaN(idx)) return;
+            _listInsumosFormulaLocal.splice(idx, 1);
+            prodSyncInsumosFormulaEdit();
+        }
+
+        function prodSyncInsumosFormulaEdit() {
+            xThisProdV2.listInsumosFormulaEdit = JSON.parse(JSON.stringify(_listInsumosFormulaLocal));
+        }
+
+        async function prodGuardarFormula() {
+            const compSal = document.getElementById('compSalidaFormula');
+            const selSal = compSal.getProductoSeletedAlmacen();
+            const textoSalida = compSal.getTextoIngresado ? compSal.getTextoIngresado() : '';
+            const idSalida = selSal ? parseInt(selSal.idproducto, 10) : 0;
+            if (!txt_formula_desc.value.trim()) { showToastSwal('warning', 'Indique nombre de la fórmula'); return; }
+            if (!idSalida && !textoSalida) { showToastSwal('warning', 'Indique producto terminado'); return; }
+            const cantSal = parseFloat(txt_cant_salida_formula.value);
+            if (!cantSal || cantSal <= 0) { showToastSwal('warning', 'Cantidad de salida inválida'); return; }
+            if (!_listInsumosFormulaLocal.length) { showToastSwal('warning', 'Agregue al menos un insumo'); return; }
+
+            xPopupLoad.xopen();
+            const payload = {
+                op: 12,
+                idprod_formula: _formulaEditId,
+                descripcion: txt_formula_desc.value.trim(),
+                idproducto_salida: idSalida,
+                producto_salida_text: idSalida ? '' : textoSalida,
+                cantidad_salida_estandar: cantSal,
+                insumos: _listInsumosFormulaLocal.map(i => ({
+                    idproducto: i.idproducto,
+                    idproducto_stock: i.idproducto_stock,
+                    idalmacen_origen: i.idalmacen_origen,
+                    cantidad_estandar: i.cantidad_estandar,
+                    es_principal: i.es_principal ? 1 : 0
+                }))
+            };
+            const r = await _httpProd.postJson(PROD_API, payload);
+            xPopupLoad.xclose();
+            if (!r.success) { showToastSwal('error', r.error || 'Error al guardar'); return; }
+            if (r.producto_creado) {
+                showToastSwal('success', 'Producto creado en almacén PRODUCCION');
+            }
+            xThisProdV2.showEditFormula = false;
+            prodLoadFormulas();
+        }
+
+        async function prodCargarFormulaEjecutar() {
+            const id = parseInt(sel_formula_ejecutar.value, 10);
+            if (!id) {
+                _formulaSeleccionada = null;
+                _listInsumosEjecutarLocal = [];
+                prodSyncInsumosEjecutar();
+                return;
+            }
+            const r = await _httpProd.postJson(PROD_API, { op: 11, idprod_formula: id });
+            if (!r.success) return;
+            _formulaSeleccionada = r.formula;
+            txt_cant_salida_ej.value = r.formula.cantidad_salida_estandar;
+            const compSalEj = document.getElementById('compSalidaEjecutar');
+            if (compSalEj && compSalEj.setTexto && r.formula.producto_salida) {
+                compSalEj.setTexto(r.formula.producto_salida);
+            }
+            _listInsumosEjecutarLocal = (r.insumos || []).map(i => ({
+                idproducto: i.idproducto,
+                idalmacen: i.idalmacen_origen,
+                cantidad: parseFloat(i.cantidad_estandar),
+                descripcion: i.nom_producto,
+                es_principal: i.es_principal == 1,
+                cantidad_estandar: parseFloat(i.cantidad_estandar)
+            }));
+            prodSyncInsumosEjecutar();
+        }
+
+        function prodEscalarSalida() {
+            if (!_formulaSeleccionada || !_listInsumosEjecutarLocal.length) return;
+            const principal = _listInsumosEjecutarLocal.find(x => x.es_principal);
+            if (!principal) return;
+            const cantIngresada = parseFloat(txt_cant_insumo_ej.value);
+            if (!cantIngresada || cantIngresada <= 0) return;
+            const factor = cantIngresada / principal.cantidad_estandar;
+            _listInsumosEjecutarLocal = _listInsumosEjecutarLocal.map(i => ({
+                ...i,
+                cantidad: parseFloat((i.cantidad_estandar * factor).toFixed(4))
+            }));
+            txt_cant_salida_ej.value = parseFloat((_formulaSeleccionada.cantidad_salida_estandar * factor).toFixed(4));
+            prodSyncInsumosEjecutar();
+        }
+
+        function prodAddInsumoEjecutar() {
+            const comp = document.getElementById('compInsumoEjecutar');
+            const parsed = prodParseInsumoSeleccion(comp.getProductoSeletedAlmacen());
+            const cant = parseFloat(txt_cant_insumo_ej.value);
+            if (!parsed) { showToastSwal('warning', 'Seleccione un insumo del listado (almacén | producto)'); return; }
+            if (!cant || cant <= 0) { showToastSwal('warning', 'Indique cantidad'); return; }
+            if (cant > parseFloat(parsed.stock || 0)) { showToastSwal('warning', 'Cantidad mayor al stock disponible'); return; }
+            _listInsumosEjecutarLocal.push({
+                idproducto: parsed.idproducto,
+                idproducto_stock: parsed.idproducto_stock,
+                idalmacen: parsed.idalmacen,
+                cantidad: cant,
+                descripcion: parsed.label,
+                stock: parsed.stock
+            });
+            comp.resetText();
+            txt_cant_insumo_ej.value = '';
+            txt_stock_insumo_ej.value = '';
+            prodSyncInsumosEjecutar();
+            comp.focusText();
+        }
+
+        function prodRemoveInsumoEjecutar(btn) {
+            const idx = parseInt(btn.getAttribute('data-idx'), 10);
+            if (isNaN(idx)) return;
+            _listInsumosEjecutarLocal.splice(idx, 1);
+            prodSyncInsumosEjecutar();
+        }
+
+        function prodSyncInsumosEjecutar() {
+            xThisProdV2.listInsumosEjecutar = JSON.parse(JSON.stringify(_listInsumosEjecutarLocal));
+            xThisProdV2.isDisabledEjecutar = _listInsumosEjecutarLocal.length === 0;
+        }
+
+        async function prodEjecutarOrden() {
+            const compSal = document.getElementById('compSalidaEjecutar');
+            const selSal = compSal.getProductoSeletedAlmacen();
+            const textoSalida = compSal.getTextoIngresado ? compSal.getTextoIngresado() : '';
+            let idproducto_salida = selSal ? parseInt(selSal.idproducto, 10) : 0;
+            if (!idproducto_salida && !textoSalida && _formulaSeleccionada) {
+                idproducto_salida = parseInt(_formulaSeleccionada.idproducto_salida, 10);
+            }
+            const cantidad_salida = parseFloat(txt_cant_salida_ej.value);
+            if (!idproducto_salida && !textoSalida) { showToastSwal('warning', 'Indique producto terminado'); return; }
+            if (!cantidad_salida || cantidad_salida <= 0) { showToastSwal('warning', 'Indique cantidad de salida'); return; }
+            if (!_listInsumosEjecutarLocal.length) { showToastSwal('warning', 'Agregue insumos a consumir'); return; }
+
+            xPopupLoad.xopen();
+            const payload = {
+                op: 30,
+                idprod_formula: _formulaSeleccionada ? _formulaSeleccionada.idprod_formula : 0,
+                idproducto_salida,
+                producto_salida_text: idproducto_salida ? '' : textoSalida,
+                cantidad_salida,
+                detalle: txt_detalle_prod.value,
+                insumos: _listInsumosEjecutarLocal.map(i => ({
+                    idproducto: i.idproducto,
+                    idproducto_stock: i.idproducto_stock,
+                    idalmacen: i.idalmacen,
+                    cantidad: i.cantidad
+                }))
+            };
+            const r = await _httpProd.postJson(PROD_API, payload);
+            xPopupLoad.xclose();
+            if (!r.success) { showToastSwal('error', r.error || 'Error en producción'); return; }
+            _lastIdOrden = r.idprod_orden;
+            xThisProdV2.isGuardadoOrden = true;
+            xThisProdV2.isDisabledEjecutar = true;
+            let msg = 'Producción registrada #' + _lastIdOrden;
+            if (r.producto_creado) msg += ' — producto creado en PRODUCCION';
+            showToastSwal('success', msg);
+            _listInsumosEjecutarLocal = [];
+            prodSyncInsumosEjecutar();
+            compSal.resetText();
+            txt_cant_salida_ej.value = '';
+            txt_detalle_prod.value = '';
+        }
+
+        function prodImprimirOrden() {
+            const printer = xgetImpresora(-6);
+            const lista = (xThisProdV2.listInsumosEjecutar || []).map(x => ({
+                descripcion: x.descripcion,
+                cantidad: x.cantidad
+            }));
+            xImprimirCualquierLista({
+                lista,
+                impresora: printer,
+                subtotales: [],
+                encabezado: {
+                    tipo: 'PRODUCCION',
+                    titulo: 'PRODUCCION V2',
+                    correlativo_lista: _lastIdOrden,
+                    otro: 'ALMACEN PRODUCCION',
+                    observaciones: txt_detalle_prod.value
+                }
+            });
+        }
+
+        async function prodLoadOrdenes() {
+            const r = await _httpProd.postJson(PROD_API, { op: 31 });
+            if (r.success) xThisProdV2.listOrdenes = r.datos || [];
+        }
+
+        async function prodVerOrden(btn) {
+            const id = parseInt(btn.getAttribute('data-id'), 10);
+            const r = await _httpProd.postJson(PROD_API, { op: 32, idprod_orden: id });
+            if (!r.success) return;
+            xThisProdV2.ordenDetalle = r.orden;
+            xThisProdV2.ordenInsumosDetalle = r.insumos || [];
+            dialog_detalle_orden.open();
+        }
+
+        Polymer({
+            is: 'x-produccion-v2-main',
+            properties: {
+                selectedTabIndex: { type: Number, value: 1, observer: '_onTabIndexChanged' },
+                idAlmacenProduccion: Number,
+                listFormulas: { type: Array, value: function () { return []; } },
+                listInsumosFormulaEdit: { type: Array, value: function () { return []; } },
+                listInsumosEjecutar: { type: Array, value: function () { return []; } },
+                listOrdenes: { type: Array, value: function () { return []; } },
+                showEditFormula: { type: Boolean, value: false },
+                formulaEditTitulo: String,
+                isDisabledEjecutar: { type: Boolean, value: true },
+                isGuardadoOrden: { type: Boolean, value: false },
+                ordenDetalle: { type: Object, value: function () { return {}; } },
+                ordenInsumosDetalle: { type: Array, value: function () { return []; } }
+            },
+            _onTabIndexChanged: function (idx) {
+                prodOnTabChanged(idx);
+            },
+            attached: function () {
+                xThisProdV2 = this;
+                prodInit();
+            }
+        });
+    </script>
+</dom-module>

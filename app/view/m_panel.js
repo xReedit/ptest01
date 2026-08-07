@@ -244,7 +244,26 @@ async function xOpenPage(xop, parametro){
 			window.open('m_menu.html', "Carta", "width=400,height="+h);	
 			xLiberarRouter();
 			return;break;
-		case 12:xruta='/compras';break;
+		case 12: { // [erp] compras -> restobar-erp (API Node + SPA React) via SSO op=-4002. Si falla, cae a la ruta legacy /compras.
+			// try {
+			// 	const _erpResp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4002' });
+			// 	const _erpStr = String(_erpResp);
+			// 	const _sep = _erpStr.indexOf('|');
+			// 	// Formato esperado: "<ERP_URL>|<token>". Cualquier otra cosa es error (ej: 'erp_secrets_missing', 'no_session') → fallback legacy.
+			// 	if (_sep > 0 && /^https?:\/\//.test(_erpStr.slice(0, _sep))) {
+			// 		const _erpUrl = _erpStr.slice(0, _sep);
+			// 		const _erpTok = _erpStr.slice(_sep + 1);
+			// 		document.location.href = _erpUrl + '/sso?t=' + encodeURIComponent(_erpTok);
+			// 		xLiberarRouter();
+			// 		return;
+			// 	}
+			// 	console.warn('SSO erp respuesta no esperada → fallback /compras legacy:', _erpStr);
+			// } catch (e) {
+			// 	console.warn('SSO erp fallo (case 12, compras) → fallback /compras legacy', e);
+			// }
+			xruta = '/compras';
+			break;
+		}
 		case 13:xruta='/distribuicion';break;
 		case 14:xruta='/porcionar';break;
 		case 15:xruta='/recetas';break;
@@ -268,10 +287,48 @@ async function xOpenPage(xop, parametro){
 			// console.log(window.innerWidth);
 			break;
 		case 17:xruta='/producto_porcion';break;
-		case 18:xruta='/ie_almacen';break;
+		// case 18:xruta='/ie_almacen';break; // [alm2-v2] ORIGINAL — comentado al migrar a SSO v2
+		case 18: { // [alm2-v2] ie_almacen -> modulo v2/almacen via SSO
+			try {
+				// const _alm2Resp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4000' });
+				// const _sep = String(_alm2Resp).indexOf('|');
+				// if (_sep < 0) { throw new Error('respuesta_sso_invalida: ' + _alm2Resp); }
+				// const _alm2Url = String(_alm2Resp).slice(0, _sep);
+				// const _alm2Tok = String(_alm2Resp).slice(_sep + 1);
+				// document.location.href = _alm2Url + '/sso?t=' + encodeURIComponent(_alm2Tok);
+				// xLiberarRouter();
+
+				xruta='/ie_almacen';break;
+				return;
+			} catch (e) {
+				console.error('SSO alm2 fallo (18)', e);
+				try { xPopupLoad.xclose(); } catch (_) {}
+				alert('No se pudo abrir el modulo de almacen v2. Revisa la sesion.');
+				xLiberarRouter();
+				return;
+			}
+		}
 		case 19:xruta='/monitor_pedidos';break;
 		case 20:xruta='/historial_ventas';break;
-		case 21:xruta='/inventario';break;
+		case 21:xruta='/inventario';break; // [alm2-v2] ORIGINAL — comentado al migrar a SSO v2
+		// case 21: { // [alm2-v2] inventario -> modulo v2/almacen via SSO
+		// 	try {
+		// 		const _alm2Resp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4000' });
+		// 		const _sep = String(_alm2Resp).indexOf('|');
+		// 		if (_sep < 0) { throw new Error('respuesta_sso_invalida: ' + _alm2Resp); }
+		// 		const _alm2Url = String(_alm2Resp).slice(0, _sep);
+		// 		const _alm2Tok = String(_alm2Resp).slice(_sep + 1);
+		// 		document.location.href = _alm2Url + '/sso?t=' + encodeURIComponent(_alm2Tok);
+		// 		xLiberarRouter();
+		// 		return;
+		// 	} catch (e) {
+		// 		console.error('SSO alm2 fallo (21)', e);
+		// 		try { xPopupLoad.xclose(); } catch (_) {}
+		// 		alert('No se pudo abrir el modulo de almacen v2. Revisa la sesion.');
+		// 		xLiberarRouter();
+		// 		return;
+		// 	}
+		// }
 		case 22:xruta='/resumen_caja';break;
 		case 23:xruta='/zona_despacho-theme-2';break;
 		case 2301:xruta='/zona_despacho';break;
@@ -349,8 +406,8 @@ async function xOpenPage(xop, parametro){
 		break;
 		case 45: xruta = '/orden_pedido'; break;
 		case 46: xruta = '/indicadores2'; break;
-		case 47: xruta = '/facturacion'; break;	
-		case 48: xruta = '/produccion_producto'; break;	
+		case 47: xruta = '/facturacion'; break;
+		case 48: xruta = '/produccion_v2'; break;
 		case 49: xruta = '/promociones'; break;
 		case 50: xruta = '/solicitud_remoto'; break;
 		case 51: xruta = '/ticket_rapido'; break;
@@ -372,9 +429,9 @@ async function xOpenPage(xop, parametro){
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _dataUS = btoa(JSON.stringify(getDataUsRRHH()))
 			// dev
-			const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
+			// const _urlChatBot = 'http://localhost:5173/login?us=' + _dataUS;
 			// produccion
-			// const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
+			const _urlChatBot = 'https://chatbot.papaya.com.pe/login?us=' + _dataUS;
 			
 			window.open(_urlChatBot, "Papaya Chat Bot");// produccion
 		break;
@@ -539,10 +596,12 @@ function xPasarAMenuAcc() {
 	xLiberarRouter();
 	if(xUsAc_Ini=='A2,'){window.localStorage.setItem('::app3_woUOn',1); xOpenPage(3);}else{
 		setLocalSotrage('::app3_sys_route', 0);
-		
-		// if (localStorage.getItem('opHandled') !== 'true') {
-			// 	xOpenPage(1);
-			// }
+
+		// Deep link call center: ?op_sede=N → ir directo al POS en esta pestaña.
+		if (xNavigateVentaRapidaOpSede()) {
+			return;
+		}
+
 		if (localStorage.getItem('xOpenPageCalled') !== 'true') {
 			console.log('aca empieza home');
 			xOpenPage(1);
@@ -551,10 +610,8 @@ function xPasarAMenuAcc() {
 
 		setTimeout(() => {
 			const currentUrlPanel = window.location.href;
-
-			// Verifica si la URL termina en 'page/m_panel.html'
-			if (currentUrlPanel.endsWith('page/m_panel.html')) {
-				// Si es así, ejecuta la función xOpenPage(1)
+			// Solo redirigir a home si es m_panel limpio (sin op_sede ni hash de ruta).
+			if (currentUrlPanel.endsWith('page/m_panel.html') && !window.location.hash) {
 				console.log('vamos al home');
 				xOpenPage(1);
 			}
@@ -562,6 +619,34 @@ function xPasarAMenuAcc() {
 
 		// localStorage.setItem('opHandled', 'false');
 	}
+}
+
+/** Si la URL trae ?op_sede=N, abre venta rápida en esta pestaña (no otra ventana). */
+function xNavigateVentaRapidaOpSede() {
+	var idsede = 0;
+	try {
+		if (typeof opSede !== 'undefined' && opSede.readOpSedeFromUrl) {
+			idsede = opSede.readOpSedeFromUrl();
+		} else {
+			idsede = parseInt(new URLSearchParams(window.location.search).get('op_sede'), 10) || 0;
+		}
+	} catch (e) { return false; }
+	if (!idsede) { return false; }
+
+	localStorage.setItem('xOpenPageCalled', 'true');
+	try { document.body.classList.add('loaded'); } catch (e) {}
+
+	var router = document.querySelector('app-router');
+	if (router && typeof router.go === 'function') {
+		router.go('/venta_rapida');
+	} else {
+		window.location.hash = '#/venta_rapida';
+		setTimeout(function () {
+			var r2 = document.querySelector('app-router');
+			if (r2 && typeof r2.go === 'function') { r2.go('/venta_rapida'); }
+		}, 800);
+	}
+	return true;
 }
 
 function showNotificationPago() {

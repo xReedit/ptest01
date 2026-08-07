@@ -1,7 +1,35 @@
 <dom-module id="x-comp-find-producto-almacen">
 	<template is="dom-bind">
+        <style>
+            :host {
+                display: block;
+            }
+
+            .comp-input {
+                width: 100%;
+                min-height: 38px;
+                padding: 8px 10px;
+                box-sizing: border-box;
+                border: 1px solid var(--ui-border, #e5e7eb) !important;
+                border-radius: 8px;
+                background: var(--comp-input-bg, #fff);
+                color: var(--comp-input-color, #1f2933);
+                font-size: 12px;
+            }
+
+            .comp-input::placeholder {
+                color: var(--comp-input-placeholder, #98a2b3);
+                opacity: 1;
+            }
+
+            .comp-input:focus {
+                outline: none;
+                border-color: var(--comp-input-focus, #80bdff) !important;
+                box-shadow: 0 0 0 2px rgba(0, 123, 255, .08);
+            }
+        </style>
 		<div>
-            <input type="text" class="xMiInput xPasarEnter2 fs-12" onChange="conMayusculas(this)" id="des_item_comp" onkeyup="xloadProductoAlmacenComp(this)">						
+            <input type="text" class="xMiInput xPasarEnter2 fs-12 comp-input" onChange="conMayusculas(this)" id="des_item_comp" onkeyup="xloadProductoAlmacenComp(this)" placeholder$="[[placeholder]]">						
 		</div>
 	</template>
 
@@ -80,6 +108,10 @@
                 onlynomalmacen: Boolean,
                 onlynomfamilia: Boolean, //
                 appendtocmp: String,
+                placeholder: {
+                    type: String,
+                    value: ''
+                },
 			},
 			attached: function () {        
                 // this.appendtocmp = 'body'                      
