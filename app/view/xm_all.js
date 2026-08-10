@@ -1023,39 +1023,49 @@ async function xVerificarCodeResponseCPE(response, external_id = '') {
     
     if ( _codeCpe && _codeCpe.success && _codeCpe.data ) {
 		const errorData = _codeCpe.data;
-		
-		// Verificar si es un rechazo (rechazo == 1)
+
+		// Clasificacion segun tabla sunat_errores (migracion 020):
+		//  - rechazo=1 o critico=1 -> popup "comuniquese con soporte" (interrumpe)
+		//  - bloquea_serie=1       -> ademas deshabilita facturacion (SOLO certificado);
+		//                             un rechazo de contenido ya NO tumba las series
+		//  - resto (transitorios ej. 0109, observaciones 4xxx) -> toast discreto
+		// Reclasificar = UPDATE en sunat_errores, sin deploy.
 		const isRechazo = errorData.rechazo == '1';
-		
-		if ( isRechazo ) {
-			// Es un RECHAZO: bloquear facturación y guardar en cpe_error
+		const isCritico = isRechazo || errorData.critico == '1';
+		const isBloqueaSerie = errorData.bloquea_serie == '1';
+		const _mensajeCpe = response.description || response.message;
+
+		// Registrar SIEMPRE en cpe_error (historial para soporte, critico o no)
+		if (external_id !== '') {
+			const fetchData = new httpFecht();
+			const _dataCpeError = {
+				"external_id": external_id,
+				"idsunat_errores": errorData.idsunat_errores,
+				"codigo": response.code,
+				"mensaje": _mensajeCpe
+			}
+			await fetchData.postJson('../../bdphp/log_009.php?op=32', _dataCpeError);
+		}
+
+		// Bloquear facturacion SOLO por errores de infraestructura (certificado digital)
+		if ( isBloqueaSerie ) {
 			const fetchData = new httpFecht();
 			const _dataSend = {
 				"tipo": "error",
-				"mensaje": response.description || response.message,
+				"mensaje": _mensajeCpe,
 				"codigo": response.code,
 			}
-			
-			// Bloquear facturación electrónica
 			await fetchData.postJson('../../bdphp/log_009.php?op=31', _dataSend);
-			
-			// Guardar en tabla cpe_error
-			if (external_id !== '') {
-				const _dataCpeError = {
-					"external_id": external_id,
-					"idsunat_errores": errorData.idsunat_errores,
-					"codigo": response.code,
-					"mensaje": response.description || response.message
-				}
-				await fetchData.postJson('../../bdphp/log_009.php?op=32', _dataCpeError);
-			}
+		}
 
-			// Mostrar alerta de RECHAZO
+		if ( isCritico ) {
+			// Requiere intervencion de soporte: interrumpe con popup
+			const _titulo = isRechazo ? 'Error Crítico - Comprobante RECHAZADO' : 'Error Crítico en Facturación Electrónica';
 			const _swalAlertValues = paramsSwalAlert; 
 			_swalAlertValues.html = `<div class="p-1"> 
-										<p class="fw-600 fs-20 text-danger">Error Crítico - Comprobante RECHAZADO</p>
+										<p class="fw-600 fs-20 text-danger">${_titulo}</p>
 										<p class="fw-100 fs-14">Código: ${response.code}</p>
-										<p class="fw-100 fs-14">${_dataSend.mensaje}</p>
+										<p class="fw-100 fs-14">${_mensajeCpe}</p>
 										<p class="fw-600 fs-14 text-warning">Comuníquese con soporte técnico.</p>
 									</div>`;
 			_swalAlertValues.showCancelButton = false;
@@ -1063,44 +1073,31 @@ async function xVerificarCodeResponseCPE(response, external_id = '') {
 			_swalAlertValues.confirmButtonText = 'Entendido.';
 
 			const rptSwlalCPE = await showAlertSwalHtmlDecision(_swalAlertValues);
-			if ( rptSwlalCPE.isConfirmed ) {
-				// recarga la pagina, para cargar nuevamente los valores
+			if ( rptSwlalCPE.isConfirmed && isBloqueaSerie ) {
+				// recarga solo si se bloqueo la facturacion, para cargar el nuevo estado
 				setTimeout(() => {
 					window.location.reload();
 				}, 1500);
-			}        
-			
-		} else {
-			// Es una OBSERVACIÓN: solo mostrar mensaje sin bloquear
-			
-			// Guardar en tabla cpe_error para registro histórico
-			if (external_id !== '') {
-				const fetchData = new httpFecht();
-				const _dataCpeError = {
-					"external_id": external_id,
-					"idsunat_errores": errorData.idsunat_errores,
-					"codigo": response.code,
-					"mensaje": response.description || response.message
-				}
-				await fetchData.postJson('../../bdphp/log_009.php?op=32', _dataCpeError);
 			}
-			
-			// Mostrar alerta de OBSERVACIÓN (menos crítica)
-			const _swalAlertValues = paramsSwalAlert; 
-			_swalAlertValues.html = `<div class="p-1"> 
-										<p class="fw-600 fs-18 text-warning">Observación en Comprobante</p>
-										<p class="fw-100 fs-14">Código: ${response.code}</p>
-										<p class="fw-100 fs-14">${response.description || response.message}</p>
-										<p class="fw-100 fs-12 text-muted">El comprobante se procesó pero tiene observaciones.</p>
-									</div>`;
-			_swalAlertValues.showCancelButton = false;
-			_swalAlertValues.showConfirmButton = true;
-			_swalAlertValues.confirmButtonText = 'Entendido.';
-			
-			await showAlertSwalHtmlDecision(_swalAlertValues);
-			
+
 			return false;
 		}
+
+		// No critico (transitorio u observacion): aviso discreto sin interrumpir al cajero
+		ToastAlertSwal.fire({
+			icon: 'info',
+			title: `Obs. comprobante ${response.code}`,
+			timer: 4000
+		});
+
+		return false;
+	} else {
+		// Codigo no catalogado en sunat_errores: visible sin interrumpir; queda en logs del facturador
+		ToastAlertSwal.fire({
+			icon: 'info',
+			title: `Obs. comprobante ${response.code}`,
+			timer: 4000
+		});
 	}
 }
 

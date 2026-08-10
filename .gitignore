@@ -4,6 +4,8 @@
 bdphp/ManejoBD.php
 app/view/config.const.js
 config.js
+private/*_secrets.php
+!private/*.example
 file
 dist
 docs

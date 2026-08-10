@@ -613,7 +613,9 @@
             }
             
             // Consultar en la tabla sunat_errores
-            $sql = "SELECT idsunat_errores, codigo, descripcion, excepcion, rechazo, observaciones 
+            // SELECT * para incluir critico/bloquea_serie (migracion 020) y seguir
+            // funcionando aunque la migracion no este aplicada aun
+            $sql = "SELECT *
                     FROM sunat_errores 
                     WHERE codigo = '$codigo' 
                     LIMIT 1";
@@ -1205,6 +1207,24 @@
                     'error' => 'Error al registrar porción: ' . $e->getMessage()
                 ));
             }
+            break;
+
+        case 135: // historial de stock de un item de carta (carta_lista_historial, migracion 021)
+            $postBody = json_decode(file_get_contents('php://input'));
+            $idcarta_lista = preg_replace('/[^0-9]/', '', $postBody->idcarta_lista);
+            $fecha = (isset($postBody->fecha) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $postBody->fecha))
+                ? $postBody->fecha : date('Y-m-d');
+
+            $sql = "SELECT DATE_FORMAT(clh.fecha, '%H:%i:%s') hora, clh.tipo_movimiento,
+                        clh.cantidad_anterior, clh.cantidad_nueva, clh.delta,
+                        clh.idpedido, COALESCE(u.usuario, IF(clh.idusuario = 0, 'SISTEMA', '')) usuario
+                    FROM carta_lista_historial clh
+                    LEFT JOIN usuario u ON u.idusuario = clh.idusuario
+                    WHERE clh.idcarta_lista = '$idcarta_lista'
+                        AND clh.fecha >= '$fecha 00:00:00' AND clh.fecha <= '$fecha 23:59:59'
+                    ORDER BY clh.idcarta_lista_historial DESC
+                    LIMIT 500";
+            $bd->xConsulta($sql);
             break;
     }
 ?>    

@@ -47,7 +47,59 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
         console.log('error xArrayComprobante?.modo', error);
     }
 
-    xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV, isExoneradoIGV);
+    // ================= normalizacion para SUNAT (2026-08) =================
+    // 1. Items con importe NEGATIVO: SUNAT no acepta lineas negativas; se extraen
+    //    de items y se convierten en descuento global (codigo 02). El ticket
+    //    impreso no cambia, solo la representacion fiscal del CPE.
+    // 2. Total en CERO (descuento 100%): se emite como TRANSFERENCIA GRATUITA
+    //    (afectacion de bonificacion, valor referencial, leyenda 1002) que SUNAT
+    //    acepta. Antes iba como venta onerosa en 0 y SUNAT la RECHAZABA.
+    // 3. Total NEGATIVO: no existe tributariamente; se avisa al cajero y NO se
+    //    envia a SUNAT (la venta continua sin CPE, no se bloquea nada).
+    let _montoItemsNegativos = 0;
+    const _itemsNegativos = xitems.filter(x => parseFloat(x.precio_total) < 0);
+    if ( _itemsNegativos.length > 0 ) {
+        _montoItemsNegativos = _itemsNegativos.reduce((s, x) => s + Math.abs(parseFloat(x.precio_total)), 0);
+        xitems = xitems.filter(x => parseFloat(x.precio_total) >= 0);
+    }
+
+    const _totalNetoCPE = parseFloat(xArraySubTotales[xArraySubTotales.length - 1].importe);
+
+    if ( _totalNetoCPE < 0 ) {
+        // CASO 3: total negativo -> validacion local, jamas llega a SUNAT
+        const _swalTotalNegativo = paramsSwalAlert;
+        _swalTotalNegativo.html = `<div class="p-1">
+									<p class="fw-600 fs-18 text-danger">No se puede emitir el comprobante</p>
+									<p class="fw-100 fs-14">El importe total es negativo (S/ ${_totalNetoCPE.toFixed(2)}).</p>
+									<p class="fw-100 fs-14">Los descuentos o items negativos superan el valor de la venta. Corrija el pedido; no se enviará comprobante electrónico.</p>
+								</div>`;
+        _swalTotalNegativo.showCancelButton = false;
+        _swalTotalNegativo.showConfirmButton = true;
+        _swalTotalNegativo.confirmButtonText = 'Entendido.';
+        showAlertSwalHtmlDecision(_swalTotalNegativo);
+
+        // mismo formato que "sin facturacion electronica": la venta continua sin CPE
+        hash.ok = true;
+        hash.qr = '';
+        hash.hash = '';
+        hash.external_id = '';
+        return hash;
+    }
+
+    const _hayItemsConValor = xitems.filter(x => parseFloat(x.precio_total) > 0).length > 0;
+    // CASO 2: total 0 con items valorizados -> transferencia gratuita
+    const esGratuita = _totalNetoCPE === 0 && _hayItemsConValor;
+
+    if ( _totalNetoCPE === 0 && !_hayItemsConValor ) {
+        // todas las lineas en 0: no hay nada que facturar, continua sin CPE
+        hash.ok = true;
+        hash.qr = '';
+        hash.hash = '';
+        hash.external_id = '';
+        return hash;
+    }
+
+    xitems = xJsonSunatCocinarItemDetalle(xitems, valIGV, isExoneradoIGV, esGratuita);
 
     
 
@@ -88,8 +140,9 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     let descuentoEnTotal = 0;
 
     
-    if (  isHayDescuento ) {
-        descuentoEnTotal = parseFloat(itemDescuento.importe) * -1;
+    // los items negativos extraidos se suman al descuento global; en gratuita no va descuento
+    if ( (isHayDescuento || _montoItemsNegativos > 0) && !esGratuita ) {
+        descuentoEnTotal = (isHayDescuento ? parseFloat(itemDescuento.importe) * -1 : 0) + _montoItemsNegativos;
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
         // importe_total_pagar = importe_total_pagar + descuentoEnTotal;
 
@@ -120,7 +173,35 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
     }
 
 
-    if ( isExoneradoIGV ) { // exonerado del igv
+    if ( esGratuita ) {
+        // TRANSFERENCIA GRATUITA: los items van con valor referencial (afectacion 15/21,
+        // codigo_tipo_precio 02) y el total a pagar es 0. SUNAT lo acepta con leyenda 1002.
+        let _valorRefGratuitas = 0, _igvGratuitas = 0;
+        xitems.forEach(x => {
+            _valorRefGratuitas += parseFloat(x.total_valor_item) || 0;
+            _igvGratuitas += parseFloat(x.total_igv) || 0;
+        });
+
+        totales = {
+            "total_descuentos": 0.00,
+            "total_exportacion": 0.00,
+            "total_operaciones_gravadas": 0.00,
+            "total_operaciones_inafectas": 0.00,
+            "total_operaciones_exoneradas": 0.00,
+            "total_operaciones_gratuitas": parseFloat(_valorRefGratuitas.toFixed(2)),
+            "total_igv_operaciones_gratuitas": parseFloat(_igvGratuitas.toFixed(2)),
+            "total_igv": 0.00,
+            "total_impuestos": 0.00,
+            "total_valor": 0.00,
+            "total_venta": 0.00
+        }
+
+        arrLegends.push({
+            "codigo": "1002",
+            "valor": "TRANSFERENCIA GRATUITA DE UN BIEN Y/O SERVICIO PRESTADO GRATUITAMENTE"
+        });
+
+    } else if ( isExoneradoIGV ) { // exonerado del igv
      
         //totales
         // totales = {
@@ -315,7 +396,7 @@ async function xJsonSunatCocinarDatos(xArrayCuerpo, xArraySubTotales, xArrayComp
 }
 
 
-function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
+function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV, esGratuita = false ) {
     var xListItemsRpt =[];
     const procentaje_IGV = parseFloat(parseFloat(ValorIGV)/100);
     
@@ -372,7 +453,21 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
             
         }
 
-        
+        // transferencia gratuita (total del comprobante en 0): el item conserva su
+        // valor como REFERENCIAL -> afectacion catalogo 07 (15 bonificacion gravada,
+        // 21 exonerada gratuita) y codigo_tipo_precio 02 (valor referencial).
+        // Reglas validadas contra SUNAT beta (2026-08-08):
+        //  - 2640: el precio "real" (cac:Price / valor_unitario) debe ir en 0; el
+        //    referencial viaja SOLO en AlternativeConditionPrice (tipo 02).
+        //  - 3111: el IGV referencial de la linea debe ser != 0 en gravadas gratuitas
+        //    (queda el total_igv calculado); en exoneradas (21) va 0.
+        //  - 3271: el referencial tipo 02 es el VALOR unitario (sin IGV): SUNAT valida
+        //    LineExtensionAmount = cantidad x referencial.
+        if ( esGratuita ) {
+            codigo_tipo_afectacion_igv = isExoneradoIGV ? "21" : "15";
+            _precio_unitario = _valor_unitario; // valor referencial unitario (sin IGV)
+            _valor_unitario = 0;                // precio real en 0
+        }
 
         
         //const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
@@ -384,7 +479,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV ) {
             "unidad_de_medida": "NIU",
             "cantidad": x.cantidad,
             "valor_unitario": _valor_unitario,
-            "codigo_tipo_precio": "01",
+            "codigo_tipo_precio": esGratuita ? "02" : "01",
             "precio_unitario": _precio_unitario,
             "codigo_tipo_afectacion_igv": codigo_tipo_afectacion_igv,
             "total_base_igv": total_base_igv,
@@ -649,3 +744,9 @@ function xSendWhatsAppPdfComrpobante(payload) {
 
 
 
+
+// Export para pruebas en Node (test/xjsonsunat.gratuita.test.js);
+// en el navegador las funciones quedan globales como siempre.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { xJsonSunatCocinarItemDetalle };
+}

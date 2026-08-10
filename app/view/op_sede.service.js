@@ -56,19 +56,25 @@ var opSede = (function () {
   }
 
   function isOverride() {
+    if (!tienePermiso()) return false;
     var cur = get();
     var per = getPertenencia();
     return cur.idsede > 0 && per.idsede > 0 && cur.idsede !== per.idsede;
   }
 
+  function _accTieneCodigo(acc, code) {
+    if (!acc || !code) return false;
+    var parts = String(acc).split(',');
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].trim() === code) return true;
+    }
+    return false;
+  }
+
   function tienePermiso() {
     var us = _us();
     if (!us) return false;
-    var acc = us.acc || '';
-    if (parseInt(us.rol, 10) === 1) return true;
-    return acc.indexOf(PERM_CODE + ',') >= 0 ||
-           acc.indexOf(',' + PERM_CODE) >= 0 ||
-           acc === PERM_CODE;
+    return _accTieneCodigo(us.acc, PERM_CODE);
   }
 
   function ajaxParams() {

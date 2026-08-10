@@ -795,6 +795,13 @@ function xIniVentaRapida(){
 	// xm_LogChequea(function(){
 		xm_log_get('ini_us');
 
+		// Sin permiso Call Center (A27): no operar en otra sede.
+		if (typeof opSede !== 'undefined' && !opSede.tienePermiso()) {
+			opSede.clear();
+			try { window.sessionStorage.removeItem('::app3_woDUS_op'); } catch (e) {}
+			if (opSede.clearOpSedeFromUrl) { opSede.clearOpSedeFromUrl(); }
+		}
+
 		// Snapshot override corrupto o sede sin datos: volver a sede de pertenencia.
 		if (typeof opSede !== 'undefined' && opSede.isOverride && opSede.isOverride()) {
 			var opRaw = window.sessionStorage.getItem('::app3_woDUS_op');

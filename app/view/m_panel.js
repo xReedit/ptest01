@@ -633,6 +633,16 @@ function xNavigateVentaRapidaOpSede() {
 	} catch (e) { return false; }
 	if (!idsede) { return false; }
 
+	if (typeof opSede !== 'undefined' && !opSede.tienePermiso()) {
+		try {
+			if (opSede.clearOpSedeFromUrl) { opSede.clearOpSedeFromUrl(); }
+			if (typeof showToastSwal === 'function') {
+				showToastSwal('warning', 'No tiene permiso Call Center para operar otra sede');
+			}
+		} catch (e) { /* ignore */ }
+		return false;
+	}
+
 	localStorage.setItem('xOpenPageCalled', 'true');
 	try { document.body.classList.add('loaded'); } catch (e) {}
 

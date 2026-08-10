@@ -62,6 +62,7 @@
 					<paper-tab>SELECCIONABLES </paper-tab>
 					<paper-tab>FOTO</paper-tab>
 					<paper-tab>ENLAZADOS</paper-tab>
+					<paper-tab>HISTORIAL</paper-tab>
 				</paper-tabs>
 				<div class="xLinea2"></div>
 				<br>
@@ -101,6 +102,30 @@
 						<br><br>
 						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
 						<br><br><br>
+					</div>
+
+					<!-- historial de stock (carta_lista_historial, migracion 021) -->
+					<div>
+						<div>
+							<label class="fs-12 text-secondary">Fecha: </label>
+							<input type="date" id="hist_carta_fecha" onchange="xLoadHistorialCarta();">
+						</div>
+						<br>
+						<div style="max-height:320px; overflow:auto;">
+							<table width="100%" id="tb_hist_carta">
+								<thead>
+									<th>Hora</th>
+									<th>Movimiento</th>
+									<th>Cant.</th>
+									<th>Stock</th>
+									<th>Pedido</th>
+									<th>Usuario</th>
+								</thead>
+								<tbody id="tb_hist_carta_body"></tbody>
+							</table>
+						</div>
+						<br>
+						<div class="xBoton2 xPlomo" dialog-dismiss>Cerrar</div>
 					</div>
 
 				</iron-pages>
@@ -928,11 +953,66 @@ function xItemDetalleOpciones(index, obj, e){
 	
 	const _compItemProductoRelacionado = document.getElementById('compItemProductoRelacionado');
 	_compItemProductoRelacionado.getProductosRelacionadosItem();
-	
+
+	// historial de stock: fecha de hoy (local) y carga inicial
+	const _hoy = new Date();
+	document.getElementById('hist_carta_fecha').value =
+		_hoy.getFullYear() + '-' + String(_hoy.getMonth() + 1).padStart(2, '0') + '-' + String(_hoy.getDate()).padStart(2, '0');
+	xLoadHistorialCarta();
+
 	dialog_detalle.open();
 
 	e.stopPropagation();
 	e.stopImmediatePropagation();
+}
+
+function xLoadHistorialCarta() {
+	if (!itemSelectSubItem || !itemSelectSubItem.idcarta_lista) return;
+
+	const _fecha = document.getElementById('hist_carta_fecha').value;
+	const _body = $('#tb_hist_carta_body');
+	_body.html('<tr><td colspan="6" class="text-secondary">Cargando...</td></tr>');
+
+	$.ajax({
+		type: 'POST',
+		url: '../../bdphp/log_009.php?op=135',
+		data: JSON.stringify({ idcarta_lista: itemSelectSubItem.idcarta_lista, fecha: _fecha }),
+		processData: false
+	})
+	.done((res) => {
+		const _res = $.parseJSON(res);
+		const _datos = (_res && _res.datos) ? _res.datos : [];
+		if (!_datos.length) {
+			_body.html('<tr><td colspan="6" class="text-secondary">Sin movimientos en esta fecha</td></tr>');
+			return;
+		}
+		const _classMov = {
+			'VENTA': 'fw-600 text-success',
+			'DEVOLUCION': 'fw-600 text-warning',
+			'RECUPERA': 'fw-600 text-warning',
+			'MONITOR': 'fw-600 text-primary',
+			'RESET': 'fw-600 text-primary',
+			'CONFIG': 'fw-600 text-secondary'
+		};
+		let _rows = '';
+		for (const m of _datos) {
+			const _delta = m.delta === null || m.delta === undefined || m.delta === ''
+				? (m.cantidad_anterior + ' → ' + m.cantidad_nueva)
+				: (parseFloat(m.delta) > 0 ? '+' : '') + parseFloat(m.delta);
+			_rows += '<tr>' +
+				'<td>' + m.hora + '</td>' +
+				'<td class="' + (_classMov[m.tipo_movimiento] || 'fw-600 text-danger') + '">' + m.tipo_movimiento + '</td>' +
+				'<td align="center">' + _delta + '</td>' +
+				'<td align="center">' + m.cantidad_nueva + '</td>' +
+				'<td align="center">' + (m.idpedido || '') + '</td>' +
+				'<td>' + (m.usuario || '') + '</td>' +
+				'</tr>';
+		}
+		_body.html(_rows);
+	})
+	.fail(() => {
+		_body.html('<tr><td colspan="6" class="text-danger">Error cargando historial (¿migración 021 aplicada?)</td></tr>');
+	});
 }
 
 function xOpenDialogSubItem(index, e) {

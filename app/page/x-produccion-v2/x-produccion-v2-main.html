@@ -373,6 +373,11 @@
 
         const PROD_API = '../../bdphp/produccion/api.php';
 
+        function prodFmt2(val) {
+            const n = parseFloat(val);
+            return isNaN(n) ? '0.00' : n.toFixed(2);
+        }
+
         function prodParseInsumoSeleccion(sel) {
             if (!sel) return null;
             const idproducto_stock = parseInt(sel.value, 10);
@@ -419,7 +424,10 @@
         async function prodLoadFormulas() {
             const r = await _httpProd.postJson(PROD_API, { op: 10 });
             if (r.success) {
-                xThisProdV2.listFormulas = r.datos || [];
+                xThisProdV2.listFormulas = (r.datos || []).map(f => ({
+                    ...f,
+                    cantidad_salida_estandar: prodFmt2(f.cantidad_salida_estandar)
+                }));
                 prodRefreshSelectFormulas();
             }
         }
@@ -457,7 +465,7 @@
             xThisProdV2.formulaEditTitulo = 'Editar fórmula';
             xThisProdV2.showEditFormula = true;
             txt_formula_desc.value = r.formula.descripcion;
-            txt_cant_salida_formula.value = r.formula.cantidad_salida_estandar;
+            txt_cant_salida_formula.value = prodFmt2(r.formula.cantidad_salida_estandar);
             _listInsumosFormulaLocal = (r.insumos || []).map(i => ({
                 idproducto: i.idproducto,
                 idalmacen_origen: i.idalmacen_origen,
@@ -529,7 +537,10 @@
         }
 
         function prodSyncInsumosFormulaEdit() {
-            xThisProdV2.listInsumosFormulaEdit = JSON.parse(JSON.stringify(_listInsumosFormulaLocal));
+            xThisProdV2.listInsumosFormulaEdit = _listInsumosFormulaLocal.map(i => ({
+                ...i,
+                cantidad_estandar: prodFmt2(i.cantidad_estandar)
+            }));
         }
 
         async function prodGuardarFormula() {
@@ -580,7 +591,7 @@
             const r = await _httpProd.postJson(PROD_API, { op: 11, idprod_formula: id });
             if (!r.success) return;
             _formulaSeleccionada = r.formula;
-            txt_cant_salida_ej.value = r.formula.cantidad_salida_estandar;
+            txt_cant_salida_ej.value = prodFmt2(r.formula.cantidad_salida_estandar);
             const compSalEj = document.getElementById('compSalidaEjecutar');
             if (compSalEj && compSalEj.setTexto && r.formula.producto_salida) {
                 compSalEj.setTexto(r.formula.producto_salida);
@@ -605,9 +616,9 @@
             const factor = cantIngresada / principal.cantidad_estandar;
             _listInsumosEjecutarLocal = _listInsumosEjecutarLocal.map(i => ({
                 ...i,
-                cantidad: parseFloat((i.cantidad_estandar * factor).toFixed(4))
+                cantidad: parseFloat((i.cantidad_estandar * factor).toFixed(2))
             }));
-            txt_cant_salida_ej.value = parseFloat((_formulaSeleccionada.cantidad_salida_estandar * factor).toFixed(4));
+            txt_cant_salida_ej.value = prodFmt2(_formulaSeleccionada.cantidad_salida_estandar * factor);
             prodSyncInsumosEjecutar();
         }
 
@@ -641,7 +652,10 @@
         }
 
         function prodSyncInsumosEjecutar() {
-            xThisProdV2.listInsumosEjecutar = JSON.parse(JSON.stringify(_listInsumosEjecutarLocal));
+            xThisProdV2.listInsumosEjecutar = _listInsumosEjecutarLocal.map(i => ({
+                ...i,
+                cantidad: prodFmt2(i.cantidad)
+            }));
             xThisProdV2.isDisabledEjecutar = _listInsumosEjecutarLocal.length === 0;
         }
 
@@ -711,15 +725,29 @@
 
         async function prodLoadOrdenes() {
             const r = await _httpProd.postJson(PROD_API, { op: 31 });
-            if (r.success) xThisProdV2.listOrdenes = r.datos || [];
+            if (r.success) {
+                xThisProdV2.listOrdenes = (r.datos || []).map(o => ({
+                    ...o,
+                    cantidad_salida: prodFmt2(o.cantidad_salida),
+                    costo_total: prodFmt2(o.costo_total)
+                }));
+            }
         }
 
         async function prodVerOrden(btn) {
             const id = parseInt(btn.getAttribute('data-id'), 10);
             const r = await _httpProd.postJson(PROD_API, { op: 32, idprod_orden: id });
             if (!r.success) return;
-            xThisProdV2.ordenDetalle = r.orden;
-            xThisProdV2.ordenInsumosDetalle = r.insumos || [];
+            const orden = r.orden ? {
+                ...r.orden,
+                cantidad_salida: prodFmt2(r.orden.cantidad_salida),
+                costo_total: prodFmt2(r.orden.costo_total)
+            } : {};
+            xThisProdV2.ordenDetalle = orden;
+            xThisProdV2.ordenInsumosDetalle = (r.insumos || []).map(ins => ({
+                ...ins,
+                cantidad: prodFmt2(ins.cantidad)
+            }));
             dialog_detalle_orden.open();
         }
 

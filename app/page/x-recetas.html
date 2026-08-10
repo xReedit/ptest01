@@ -666,6 +666,33 @@
 			overflow-y: auto;
 			overflow-x: hidden;
 		}
+		/* Filas dinámicas de #tb_platos (jQuery): fuera del scope del template */
+		.rec-item-main {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			min-width: 0;
+		}
+		.rec-item-text {
+			min-width: 0;
+			flex: 1 1 auto;
+		}
+		.rec-status-badge {
+			display: inline-flex;
+			align-items: center;
+			flex: 0 0 auto;
+			margin-left: 4px;
+			padding: 2px 8px;
+			border-radius: 999px;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: .2px;
+			white-space: nowrap;
+		}
+		.rec-status-badge.ok {
+			background: #eef9f3;
+			color: #227a46;
+		}
 	</style>
 
 </dom-module>
@@ -1196,7 +1223,9 @@ function xListaDeRecetas(){
 		for (var i = 0; i < xdtRecetas.length; i++) {
 			var tieneReceta = String(xdtRecetas[i].tiene_receta || '0') === '1';
 			var totalIngredientes = parseInt(xdtRecetas[i].total_ingredientes || 0, 10) || 0;
-			var recetaBadge = tieneReceta ? '<span class="rec-status-badge ok">Receta' + (totalIngredientes > 0 ? ' ' + totalIngredientes : '') + '</span>' : '';
+			var recetaBadge = tieneReceta
+				? '<span class="rec-status-badge ok" title="' + totalIngredientes + ' ingrediente(s)">' + totalIngredientes + ' ing.</span>'
+				: '';
 			xcadena_row_receta=String(xcadena_row_receta+'<tr class="row xCursor" data-id="'+xdtRecetas[i].iditem+'" onclick="xAbrirDetalleReceta(this)">'
 				+'<td id="xtr_des"><div class="rec-item-main"><span class="rec-item-text">'+xdtRecetas[i].descripcion+'</span>'+recetaBadge+'</div></td>'
 				+'<td align="right" id="xtr_precio">'+xdtRecetas[i].precio+'</td>'

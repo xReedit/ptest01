@@ -292,6 +292,9 @@ let cantidadRecetasEnlazadasPorcion = 0
 
                 return {
                     ...item,
+                    // Los ajustes de la conciliacion van con idusuario 0 -> sin nombre;
+                    // se muestran como SISTEMA para no confundir con un usuario real
+                    nombres: (tipo === 'AJUSTE CIERRE') ? 'SISTEMA' : item.nombres,
                     // Guardar la cantidad original sin signo
                     cantidadOriginal: item.cantidad,
                     // Agregar el signo a la cantidad

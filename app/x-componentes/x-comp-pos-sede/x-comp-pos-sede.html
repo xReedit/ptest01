@@ -23,6 +23,7 @@
                 max-width: 100%;
             }
             .sede-activa.clickable { cursor: pointer; }
+            .sede-activa.no-perm { cursor: default; pointer-events: none; }
             .sede-activa.clickable:hover { background: rgba(255,255,255,0.07); border-radius: 0 4px 4px 0; }
             .sede-activa.override { border-left-color: #ffb74d; }
             .sede-activa.loading { opacity: 0.65; pointer-events: none; }
@@ -159,12 +160,12 @@
             .dlg-footer { margin-top: 8px; text-align: right; }
         </style>
 
-        <div id="pill" class="sede-activa" on-tap="_onPillTap" title$="[[_pillTitle]]">
+        <div id="pill" class$="[[_pillClass]]" on-tap="_onPillTap" title$="[[_pillTitle]]">
             <div class="sede-activa__nombre">[[_nombreLabel]]</div>
             <div class="sede-activa__meta" hidden$="[[!_metaLabel]]">[[_metaLabel]]</div>
         </div>
 
-        <paper-dialog id="dlgSedes" class="dialog_redondo" with-backdrop
+        <paper-dialog id="dlgSedes" class="dialog_redondo" with-backdrop hidden$="[[!_permCallCenter]]"
                       entry-animation="scale-up-animation" exit-animation="fade-out-animation">
             <div class="dlg-header">
                 <h3>Cambiar sede</h3>
@@ -185,7 +186,7 @@
                 </template>
             </div>
 
-            <div class="btn-nueva-pestana" on-tap="_abrirNuevaPestanaPrompt">
+            <div class="btn-nueva-pestana" hidden$="[[!_permCallCenter]]" on-tap="_abrirNuevaPestanaPrompt">
                 + Abrir nueva pestaña con otra sede
             </div>
             <div class="dlg-footer">
@@ -207,7 +208,7 @@
             </div>
         </paper-dialog>
 
-        <paper-dialog id="dlgNuevaPestana" class="dialog_redondo" modal
+        <paper-dialog id="dlgNuevaPestana" class="dialog_redondo" modal hidden$="[[!_permCallCenter]]"
                       entry-animation="scale-up-animation" exit-animation="fade-out-animation">
             <div class="dlg-header">
                 <h3>Nueva pestaña</h3>
@@ -241,6 +242,8 @@
                     _metaLabel:         { type: String,  value: '' },
                     _activaMetaSuffix:  { type: String,  value: '' },
                     _pillTitle:         { type: String,  value: '' },
+                    _pillClass:         { type: String,  value: 'sede-activa' },
+                    _permCallCenter:    { type: Boolean, value: false },
                     _idsedeActual:      { type: Number,  value: 0, notify: true },
                     _sedeSel:           { type: Object,  value: function () { return null; } }
                 },
@@ -249,6 +252,11 @@
 
                 attached: function () {
                     var self = this;
+                    if (!opSede.tienePermiso()) {
+                        self._permCallCenter = false;
+                        self._refreshLabel();
+                        return;
+                    }
                     $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=1' })
                     .done(function (rpt) {
                         try {
@@ -347,15 +355,43 @@
                     return t.length > 1;
                 },
 
+                _labelNombreSede: function (row) {
+                    if (!row) return '';
+                    // datos_org_sede: nombre = razón social CPE; sedenombre = nombre comercial
+                    return (row.sedenombre || row.nombre || '').trim();
+                },
+
+                _labelCiudadSede: function (row) {
+                    if (!row) return '';
+                    return (row.sedeciudad || row.ciudad || '').trim();
+                },
+
+                _labelDireccionSede: function (row) {
+                    if (!row) return '';
+                    return (row.sededireccion || row.direccion || '').trim();
+                },
+
                 _refreshLabel: function () {
                     var s = opSede.get();
                     var hit = this._sedeFromList(s.idsede);
+                    if (!hit && typeof xm_log_get === 'function') {
+                        try {
+                            var datosOrg = xm_log_get('datos_org_sede') || [];
+                            var idBus = parseInt(s.idsede, 10) || 0;
+                            if (!idBus) {
+                                var us0 = xm_log_get('app3_us');
+                                idBus = us0 ? (parseInt(us0.idsede, 10) || 0) : 0;
+                            }
+                            hit = datosOrg.filter(function (x) {
+                                return parseInt(x.idsede, 10) === idBus;
+                            })[0] || null;
+                        } catch (e) { /* ignore */ }
+                    }
                     var pill = this.$.pill;
 
-                    // La lista de sedes es la fuente de verdad para nombre/ciudad.
-                    var nombre = (hit && hit.nombre) || s.nombre || ('Sede #' + s.idsede);
-                    var ciudad = (hit && hit.ciudad) || s.ciudad || '';
-                    var direccion = (hit && hit.direccion) || s.direccion || '';
+                    var nombre = this._labelNombreSede(hit) || this._labelNombreSede(s) || ('Sede #' + s.idsede);
+                    var ciudad = this._labelCiudadSede(hit) || this._labelCiudadSede(s);
+                    var direccion = this._labelDireccionSede(hit) || this._labelDireccionSede(s);
 
                     this._nombreLabel = nombre;
                     this._idsedeActual = parseInt(s.idsede, 10) || 0;
@@ -366,13 +402,24 @@
                     this._metaLabel = metaParts.join(' · ');
                     this._activaMetaSuffix = ciudad ? (' · ' + ciudad) : '';
 
-                    pill.classList.remove('override', 'clickable', 'loading');
-                    if (opSede.tienePermiso()) { pill.classList.add('clickable'); }
-                    if (opSede.isOverride())   { pill.classList.add('override'); }
+                    pill.classList.remove('override', 'clickable', 'loading', 'no-perm');
+                    this._permCallCenter = opSede.tienePermiso();
+                    if (this._permCallCenter) {
+                        pill.classList.add('clickable');
+                        this._pillClass = 'sede-activa clickable' + (opSede.isOverride() ? ' override' : '');
+                    } else {
+                        pill.classList.add('no-perm');
+                        this._pillClass = 'sede-activa no-perm';
+                    }
+                    if (opSede.isOverride() && this._permCallCenter) {
+                        pill.classList.add('override');
+                    }
 
-                    this._pillTitle = opSede.isOverride()
-                        ? ('Operando en otra sede. Pertenencia: #' + opSede.getPertenencia().idsede)
-                        : (opSede.tienePermiso() ? 'Clic para cambiar sede' : nombre);
+                    this._pillTitle = !this._permCallCenter
+                        ? nombre
+                        : (opSede.isOverride()
+                            ? ('Operando en otra sede. Pertenencia: #' + opSede.getPertenencia().idsede)
+                            : 'Clic para cambiar sede');
                 },
 
                 _onPillTap: function () {
@@ -453,11 +500,13 @@
                 },
 
                 _abrirNuevaPestanaPrompt: function () {
+                    if (!opSede.tienePermiso()) return;
                     this.$.dlgSedes.close();
                     this.$.dlgNuevaPestana.open();
                 },
 
                 _onNuevaPestanaSedeTap: function (ev) {
+                    if (!opSede.tienePermiso()) return;
                     var idx = parseInt(ev.currentTarget.getAttribute('data-idx'), 10);
                     var sede = this.sedes[idx];
                     if (!sede) return;
