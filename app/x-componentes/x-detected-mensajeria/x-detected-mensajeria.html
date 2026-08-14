@@ -47,6 +47,24 @@
                 color: #202020;
             }
             
+            /* Conectado pero con el chatbot pausado: no es un error de conexion,
+               pero los mensajes de los clientes NO se responden solos. */
+            .status-pausado {
+                background: #fff3cdb8;
+                border: 1px solid #ffeaa7;
+                color: #202020;
+            }
+            
+            :host([compact]) .status-pausado {
+                background: rgba(255, 193, 7, 0.2);
+                border: 1px solid rgba(255, 193, 7, 0.45);
+                color: #ffffff;
+            }
+            
+            .icon-pausado {
+                color: #ffc107;
+            }
+            
             .icon-status {
                 font-size: 24px;
                 flex-shrink: 0;
@@ -157,11 +175,11 @@
             }
         </style>
 
-        <div class$="container-status [[_getStatusClass(isConectado, isChecking)]]">
+        <div class$="container-status [[_getStatusClass(isConectado, isChecking, chatbotPausado)]]">
             <template is="dom-if" if="[[!isChecking]]">
                 <iron-icon 
-                    class$="icon-status [[_getIconClass(isConectado)]]" 
-                    icon="[[_getIcon(isConectado)]]">
+                    class$="icon-status [[_getIconClass(isConectado, chatbotPausado)]]" 
+                    icon="[[_getIcon(isConectado, chatbotPausado)]]">
                 </iron-icon>
             </template>
             
@@ -176,8 +194,8 @@
                 </template>
                 
                 <template is="dom-if" if="[[_showConectado(isConectado, isChecking)]]">
-                    <p class="title-status">[[_getTituloConectado(compact)]]</p>
-                    <p class="desc-status">El servicio está activo y funcionando correctamente</p>
+                    <p class="title-status">[[_getTituloConectado(compact, chatbotPausado)]]</p>
+                    <p class="desc-status">[[_getDescConectado(chatbotPausado)]]</p>
                 </template>
                 
                 <template is="dom-if" if="[[_showDesconectado(isConectado, isChecking)]]">
@@ -186,13 +204,13 @@
                 </template>
             </div>
             
-            <template is="dom-if" if="[[_showBotonConectar(isConectado, isChecking)]]">
+            <template is="dom-if" if="[[_showBotonConectar(isConectado, isChecking, chatbotPausado)]]">
                 <button class="btn-conectar" on-click="_irAMensajeria">
-                    Conectar WhastApp Ahora
+                    [[_getLabelBotonConectar(chatbotPausado)]]
                 </button>
             </template>
             
-            <template is="dom-if" if="[[_showBotonReconectar(isConectado, isChecking, compact)]]">
+            <template is="dom-if" if="[[_showBotonReconectar(isConectado, isChecking, compact, chatbotPausado)]]">
                 <button class="btn-reconectar" on-click="_verificarConexion">
                     <iron-icon icon="icons:refresh" style="width: 14px; height: 14px; vertical-align: middle;"></iron-icon>
                     Verificar
@@ -221,6 +239,15 @@
                 isChecking: {
                     type: Boolean,
                     value: true
+                },
+                // El servicio responde y WhatsApp esta vinculado, pero el chatbot
+                // esta apagado (show_chatbot/chatbot_run): los mensajes entrantes
+                // NO se responden solos. Sin esto el badge decia "WhatsApp
+                // Conectado" mientras la app de mensajeria avisaba "chatbot pausado".
+                chatbotPausado: {
+                    type: Boolean,
+                    value: false,
+                    notify: true
                 },
                 autoCheck: {
                     type: Boolean,
@@ -319,17 +346,25 @@
                     _cpSocketPingMensajeria(codigoComercio)
                         .then((resultado) => {
                             console.log('x-detected-mensajeria: Resultado ping =', resultado);
-                            this.isConectado = resultado;
+                            var chatbot = (resultado && resultado.chatbot) || null;
+                            
+                            this.isConectado = !!resultado;
+                            // Solo se marca pausado con un false explicito: si el
+                            // pong no trae el dato, no se inventa una alerta.
+                            this.chatbotPausado = !!(chatbot && chatbot.active === false);
                             this.isChecking = false;
                             
                             // Disparar evento
                             this.fire('mensajeria-status-changed', { 
-                                isConectado: resultado 
+                                isConectado: this.isConectado,
+                                chatbotPausado: this.chatbotPausado,
+                                chatbot: chatbot
                             });
                         })
                         .catch((error) => {
                             console.error('x-detected-mensajeria: Error en ping', error);
                             this.isConectado = false;
+                            this.chatbotPausado = false;
                             this.isChecking = false;
                         });
                 } else {
@@ -364,17 +399,22 @@
                 xOpenPage(60);
             },
             
-            _getStatusClass: function(isConectado, isChecking) {
+            _getStatusClass: function(isConectado, isChecking, chatbotPausado) {
                 if (isChecking) return '';
-                return isConectado ? 'status-conectado' : 'status-desconectado';
+                if (!isConectado) return 'status-desconectado';
+                return chatbotPausado ? 'status-pausado' : 'status-conectado';
             },
             
-            _getIconClass: function(isConectado) {
-                return isConectado ? 'icon-conectado' : 'icon-desconectado';
+            _getIconClass: function(isConectado, chatbotPausado) {
+                if (!isConectado) return 'icon-desconectado';
+                return chatbotPausado ? 'icon-pausado' : 'icon-conectado';
             },
             
-            _getIcon: function(isConectado) {
-                return isConectado ? 'icons:check-circle' : 'icons:warning';
+            _getIcon: function(isConectado, chatbotPausado) {
+                if (!isConectado) return 'icons:warning';
+                // icons:warning y no un icono de "pause" para no tener que importar
+                // el set av-icons por un solo simbolo.
+                return chatbotPausado ? 'icons:warning' : 'icons:check-circle';
             },
             
             _showConectado: function(isConectado, isChecking) {
@@ -385,14 +425,22 @@
                 return !isChecking && !isConectado;
             },
             
-            _showBotonConectar: function(isConectado, isChecking) {
-                return !isChecking && !isConectado;
+            // El boton se ofrece en los dos estados de alerta (amarillo y ambar):
+            // sin conexion, para vincular; con el chatbot pausado, para entrar a
+            // la mensajeria y reactivarlo.
+            _showBotonConectar: function(isConectado, isChecking, chatbotPausado) {
+                return !isChecking && (!isConectado || chatbotPausado);
             },
             
-            _showBotonReconectar: function(isConectado, isChecking, compact) {
+            _getLabelBotonConectar: function(chatbotPausado) {
+                return chatbotPausado ? 'Abrir Mensajería' : 'Conectar WhastApp Ahora';
+            },
+            
+            _showBotonReconectar: function(isConectado, isChecking, compact, chatbotPausado) {
                 // En modo compacto no mostrar el botón verificar
                 if (compact) return false;
-                return !isChecking && isConectado;
+                // Con el chatbot pausado ya se muestra "Abrir Mensajería"
+                return !isChecking && isConectado && !chatbotPausado;
             },
             
             // Método público para verificar desde fuera
@@ -411,8 +459,17 @@
                 }
             },
             
-            _getTituloConectado: function(compact) {
+            _getTituloConectado: function(compact, chatbotPausado) {
+                if (chatbotPausado) {
+                    return compact ? 'Chatbot pausado' : 'WhatsApp conectado - Chatbot pausado';
+                }
                 return compact ? 'WhatsApp Conectado' : 'Mensajería WhatsApp Conectada';
+            },
+            
+            _getDescConectado: function(chatbotPausado) {
+                return chatbotPausado
+                    ? 'WhatsApp está conectado, pero los mensajes de sus clientes NO se responden automáticamente'
+                    : 'El servicio está activo y funcionando correctamente';
             },
             
             _getTituloDesconectado: function(compact) {

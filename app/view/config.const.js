@@ -3,8 +3,8 @@ var HEADERS_COMPROBANTE_ONLY_AUTH = { 'Authorization': '' }
 
 // var URL_IMG_CARTA = 'http://192.168.1.65/restobar/file/';
 // desarrollo
-var URL_SERVER = 'http://192.168.1.47:5819/v3/'; // desarrollo
-var URL_SOCKET = 'http://192.168.1.47:5819';
+var URL_SERVER = 'http://192.168.1.52:5819/v3/'; // desarrollo
+var URL_SOCKET = 'http://192.168.1.52:5819';
 var URL_IMG_CARTA = 'http://192.168.1.65/restobar/file/';
 var URL_IMG_CORREO = 'http://192.168.1.65/restobar/repositorio/img_correo/';
 var URL_IMG_PROMO = 'http://192.168.1.65/restobar/repositorio/img_promo/';

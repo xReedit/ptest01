@@ -244,23 +244,31 @@ async function xOpenPage(xop, parametro){
 			window.open('m_menu.html', "Carta", "width=400,height="+h);	
 			xLiberarRouter();
 			return;break;
-		case 12: { // [erp] compras -> restobar-erp (API Node + SPA React) via SSO op=-4002. Si falla, cae a la ruta legacy /compras.
-			// try {
-			// 	const _erpResp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4002' });
-			// 	const _erpStr = String(_erpResp);
-			// 	const _sep = _erpStr.indexOf('|');
-			// 	// Formato esperado: "<ERP_URL>|<token>". Cualquier otra cosa es error (ej: 'erp_secrets_missing', 'no_session') → fallback legacy.
-			// 	if (_sep > 0 && /^https?:\/\//.test(_erpStr.slice(0, _sep))) {
-			// 		const _erpUrl = _erpStr.slice(0, _sep);
-			// 		const _erpTok = _erpStr.slice(_sep + 1);
-			// 		document.location.href = _erpUrl + '/sso?t=' + encodeURIComponent(_erpTok);
-			// 		xLiberarRouter();
-			// 		return;
-			// 	}
-			// 	console.warn('SSO erp respuesta no esperada → fallback /compras legacy:', _erpStr);
-			// } catch (e) {
-			// 	console.warn('SSO erp fallo (case 12, compras) → fallback /compras legacy', e);
-			// }
+		case 12: { // [erp] compras -> restobar-erp (API Node + SPA React) via SSO op=-4002.
+			// El ERP es opt-in por organizacion (panel Adm Sedes -> Modulos ERP). Si no
+			// esta activo, el op responde 403 'modulo_no_activo' y se abre /compras de
+			// siempre. Cualquier otro fallo cae al mismo lado, nunca deja al usuario sin
+			// pantalla.
+			try {
+				const _erpResp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4002' });
+				const _erpStr = String(_erpResp);
+				const _sep = _erpStr.indexOf('|');
+				// Formato esperado: "<ERP_URL>|<token>". Cualquier otra cosa es error (ej: 'erp_secrets_missing') → fallback legacy.
+				if (_sep > 0 && /^https?:\/\//.test(_erpStr.slice(0, _sep))) {
+					const _erpUrl = _erpStr.slice(0, _sep);
+					const _erpTok = _erpStr.slice(_sep + 1);
+					document.location.href = _erpUrl + '/sso?t=' + encodeURIComponent(_erpTok);
+					xLiberarRouter();
+					return;
+				}
+				console.warn('SSO erp respuesta no esperada → fallback /compras legacy:', _erpStr);
+			} catch (e) {
+				// 'modulo_no_activo' es el caso normal de una org sin ERP contratado: no es error.
+				const _motivo = (e && e.responseText) ? String(e.responseText) : '';
+				if (_motivo.indexOf('modulo_no_activo') === -1) {
+					console.warn('SSO erp fallo (case 12, compras) → fallback /compras legacy', _motivo || e);
+				}
+			}
 			xruta = '/compras';
 			break;
 		}

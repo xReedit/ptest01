@@ -32,7 +32,20 @@
 						<br><br>
 						<div class="xBoton2 xAzul" onclick="xAdmGuardarOrg();">Guardar</div>
 						<br><br><br><br>
-																		
+
+						<p><strong>Módulos ERP (sistema nuevo)</strong></p>
+						<hr>
+						<p class="fs-12 text-secondary">Actívelos solo si el cliente lo pidió. Se guardan solos al hacer clic, no hay que presionar Guardar, y el cambio se aplica de inmediato (el usuario no necesita cerrar sesión).</p>
+
+						<paper-checkbox id="check_mod_erp"><span>Compras y Abastecimiento (ERP)</span></paper-checkbox>
+						<p class="fs-12 text-secondary">Órdenes de compra, recepción de mercadería y kardex. Al activarlo, la opción <strong>Compras</strong> del menú abre el sistema nuevo. Si se desactiva, vuelve al de siempre.</p>
+
+						<paper-checkbox id="check_mod_catalogo_maestro"><span>Catálogo maestro (cadenas)</span></paper-checkbox>
+						<p class="fs-12 text-secondary">Unifica los productos de todas las sedes en una sola lista. Necesita 2 o más sedes y el módulo de arriba activo.</p>
+
+						<p id="lbl_modulos_msg" class="fs-12 fw-600"></p>
+						<br><br>
+
 						<p><strong>Sedes</strong></p>
 						<hr>
 						<table width="100%">
@@ -531,6 +544,7 @@
 
 		xCompPlanSelect = document.getElementById('compPlanSelect');
 
+		xErpIniModulos();
 		xLoadAdmDatosOrg();
 		xLoadTiposComprobante();
 
@@ -796,6 +810,104 @@ function transferenciaCompletaMini(xfile){
 			});			
 		}				
 
+		xErpCargarModulos();
+	}
+
+	// --- Modulos ERP: opt-in por organizacion (tabla org_modulo) ---
+	// Se prenden/apagan a solicitud del cliente. Guardado inmediato: un clic = un
+	// cambio en BD, sin boton Guardar (para que sea obvio quien opera el panel).
+	var ERP_MODULOS = ['erp', 'catalogo_maestro'];
+
+	function xErpCheck(modulo) {
+		return document.getElementById('check_mod_' + modulo);
+	}
+
+	function xErpIniModulos() {
+		ERP_MODULOS.forEach((m) => {
+			const _chk = xErpCheck(m);
+			if (_chk) { _chk.addEventListener('change', () => xErpGuardarModulo(m)); }
+		});
+	}
+
+	function xErpMensaje(msg, esError) {
+		const _lbl = document.getElementById('lbl_modulos_msg');
+		if (!_lbl) return;
+		_lbl.textContent = msg || '';
+		_lbl.className = 'fs-12 fw-600 ' + (esError ? 'text-danger' : 'xColorRow_verde');
+	}
+
+	// Un solo mensaje para todos los fallos, pero diciendo cual fue: si todo se
+	// culpa al permiso, el operador pelea con permisos cuando cayo la red.
+	function xErpMensajeError(xhr, accion) {
+		const _st = (xhr && xhr.status) || 0;
+		if (_st === 403) return 'Se necesita el permiso "Adm Sedes" (C3). Pídalo al administrador de la plataforma.';
+		if (_st === 401) return 'Su sesión venció. Vuelva a entrar al sistema.';
+		if (_st === 0)   return 'Sin conexión con el servidor. Revise la red e intente de nuevo.';
+		return 'No se pudo ' + accion + ' (error ' + _st + '). Intente de nuevo.';
+	}
+
+	// El catalogo maestro no tiene sentido sin el ERP prendido: se bloquea, pero
+	// NO se desmarca solo (el valor mostrado siempre refleja la BD).
+	function xErpRefrescarBloqueo(sinOrg) {
+		xErpCheck('erp').disabled = sinOrg;
+		xErpCheck('catalogo_maestro').disabled = sinOrg || !xErpCheck('erp').checked;
+	}
+
+	function xErpCargarModulos() {
+		ERP_MODULOS.forEach((m) => { xErpCheck(m).checked = false; });
+
+		const _idorg = xThisAdminNew.xIdOrg;
+		if (!_idorg) {
+			xErpRefrescarBloqueo(true);
+			// Guardar el restaurante NO refresca xIdOrg en esta pantalla: hay que
+			// volver a la lista y entrar de nuevo. Se dice, para no dejarlo colgado.
+			xErpMensaje('Guarde el restaurante, vuelva a la lista de sedes y ábralo otra vez para activar módulos.');
+			return;
+		}
+
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=110', data: { idorg: _idorg } })
+		.done((res) => {
+			if (xThisAdminNew.xIdOrg !== _idorg) return; // respuesta de otro restaurante
+			let _lista = [];
+			try { _lista = JSON.parse(res) || []; } catch (e) { _lista = []; }
+			_lista.forEach((row) => {
+				const _chk = xErpCheck(row.modulo);
+				if (_chk) { _chk.checked = String(row.activo) === '1'; }
+			});
+			xErpRefrescarBloqueo(false);
+			xErpMensaje('');
+		})
+		.fail((xhr) => {
+			if (xThisAdminNew.xIdOrg !== _idorg) return;
+			xErpRefrescarBloqueo(true);
+			xErpMensaje(xErpMensajeError(xhr, 'leer los módulos'), true);
+		});
+	}
+
+	function xErpGuardarModulo(modulo) {
+		const _idorg = xThisAdminNew.xIdOrg;
+		const _chk = xErpCheck(modulo);
+		if (!_idorg) { _chk.checked = false; return; }
+
+		const _activo = _chk.checked ? 1 : 0;
+		_chk.disabled = true; // sin doble clic mientras viaja la peticion
+		xErpMensaje('Guardando...');
+
+		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=111', data: { idorg: _idorg, modulo: modulo, activo: _activo } })
+		.done(() => {
+			if (xThisAdminNew.xIdOrg !== _idorg) return;
+			xErpMensaje(_activo
+				? 'Activado. Se aplica de inmediato, la próxima vez que el usuario entre a Compras.'
+				: 'Desactivado. El menú Compras vuelve al sistema de siempre de inmediato.');
+		})
+		.fail((xhr) => {
+			if (xThisAdminNew.xIdOrg !== _idorg) return;
+			_chk.checked = (_activo === 0); // vuelve al valor previo, no al opuesto del actual
+			xErpMensaje(xErpMensajeError(xhr, 'guardar'), true);
+		})
+		.always(() => {
+			if (xThisAdminNew.xIdOrg === _idorg) { xErpRefrescarBloqueo(false); }
+		});
 	}
 
 	function xAdmNewModificarSede(obj) {

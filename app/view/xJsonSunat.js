@@ -643,15 +643,29 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             const _rptCPEResponse = res.response ? res.response : res;
             const _isCPEResponseCode = _rptCPEResponse?.code ? true : false; 
             const _rptCPESuccess = _rptCPEResponse.success
-            if ( _isCPEResponseCode ) { // si tiene code lo analiza
+
+            // 2026-08: 'accepted' del API responde "¿SUNAT lo declaró?".
+            // 'success' solo dice que la llamada SOAP no reventó: un CDR
+            // rechazado (ej. code 2255) llegaba igual con success:true, y por
+            // eso los rechazos pasaban desapercibidos en caja. Si el API es
+            // anterior al cambio no manda 'accepted' y queda null → se
+            // clasifica solo por código, como antes.
+            const _aceptado = typeof _rptCPEResponse?.accepted === 'boolean'
+                ? _rptCPEResponse.accepted
+                : null;
+
+            if ( _isCPEResponseCode || _aceptado === false ) { // hay algo que analizar
             // if (!_rptCPESuccess) {
                 // analizamos el code error
                 // Pasar external_id para guardar en cpe_error
                 const _external_id = res.data?.external_id || '';
-                xVerificarCodeResponseCPE(_rptCPEResponse, _external_id)
+                // sin await a propósito: el popup no debe frenar la impresión
+                xVerificarCodeResponseCPE(_rptCPEResponse, _external_id, _aceptado)
             }
         } catch (error) {
-            
+            // antes se tragaba todo en silencio: un fallo acá dejaba al cajero
+            // sin ningún aviso y sin rastro para soporte
+            console.error('xSendApiSunat: no se pudo analizar la respuesta del CPE', error);
         }
         // if (res.success || !errSoap) { // respuesta ok
             // console.log('xArrayComprobante.correlativo F res api', res.data.number);

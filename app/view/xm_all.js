@@ -1005,9 +1005,13 @@ function getDataUsRRHH() {
 }
 
 
-// verifica el codigo de error de la sunat 
-async function xVerificarCodeResponseCPE(response, external_id = '') {
-	if (!response.code) {
+// verifica el codigo de error de la sunat
+// aceptado: viene del campo 'accepted' del API (2026-08). true/false = el API
+// sabe si SUNAT declaro el comprobante; null = API viejo, se clasifica solo por
+// codigo como antes. Es la autoridad: manda sobre lo que diga sunat_errores.
+async function xVerificarCodeResponseCPE(response, external_id = '', aceptado = null) {
+	// sin codigo solo se sigue si el API afirma que NO fue aceptado
+	if (!response.code && aceptado !== false) {
 		return;
 	}
 
@@ -1030,7 +1034,9 @@ async function xVerificarCodeResponseCPE(response, external_id = '') {
 		//                             un rechazo de contenido ya NO tumba las series
 		//  - resto (transitorios ej. 0109, observaciones 4xxx) -> toast discreto
 		// Reclasificar = UPDATE en sunat_errores, sin deploy.
-		const isRechazo = errorData.rechazo == '1';
+		// aceptado===false gana sobre la tabla: si el API dice que SUNAT no lo
+		// declaro, es rechazo aunque el codigo este catalogado como benigno.
+		const isRechazo = errorData.rechazo == '1' || aceptado === false;
 		const isCritico = isRechazo || errorData.critico == '1';
 		const isBloqueaSerie = errorData.bloquea_serie == '1';
 		const _mensajeCpe = response.description || response.message;
@@ -1092,7 +1098,29 @@ async function xVerificarCodeResponseCPE(response, external_id = '') {
 
 		return false;
 	} else {
-		// Codigo no catalogado en sunat_errores: visible sin interrumpir; queda en logs del facturador
+		// Codigo no catalogado en sunat_errores.
+		if ( aceptado === false ) {
+			// Fail closed: el API afirma que SUNAT NO lo declaro. Un rechazo no
+			// puede quedar en un toast de 4 segundos solo porque el codigo aun
+			// no esta en la tabla (ej. 2255 "falta PaidAmount"). Se avisa igual
+			// y se pide catalogarlo.
+			const _swalAlertValues = paramsSwalAlert;
+			_swalAlertValues.html = `<div class="p-1">
+										<p class="fw-600 fs-20 text-danger">Comprobante RECHAZADO por SUNAT</p>
+										<p class="fw-100 fs-14">Código: ${response.code || 'sin código'}</p>
+										<p class="fw-100 fs-14">${response.description || response.message || 'SUNAT no devolvió detalle.'}</p>
+										<p class="fw-600 fs-14 text-warning">Comuníquese con soporte técnico.</p>
+									</div>`;
+			_swalAlertValues.showCancelButton = false;
+			_swalAlertValues.showConfirmButton = true;
+			_swalAlertValues.confirmButtonText = 'Entendido.';
+
+			await showAlertSwalHtmlDecision(_swalAlertValues);
+			return false;
+		}
+
+		// Codigo desconocido pero sin rechazo confirmado: visible sin
+		// interrumpir; queda en logs del facturador
 		ToastAlertSwal.fire({
 			icon: 'info',
 			title: `Obs. comprobante ${response.code}`,

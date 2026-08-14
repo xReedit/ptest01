@@ -3,6 +3,7 @@
 <link rel="import" href="../x-componentes/x-comp-img-upload/x-comp-img-upload.html">
 <link rel="import" href="../page/x-promociones/x-promociones.html">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../view/carta.diseno.js"></script>
 <dom-module id="x-carta">
 	<template>
 		<!-- <paper-dialog id="dialog_subitem" class="dialog_redondo" style="max-width: 500px; height: auto !important; overflow: auto" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">
@@ -104,15 +105,15 @@
 						<br><br><br>
 					</div>
 
-					<!-- historial de stock (carta_lista_historial, migracion 021) -->
+					<!-- historial de stock (carta_stock_historial, migracion 021 v2) -->
 					<div>
 						<div>
 							<label class="fs-12 text-secondary">Fecha: </label>
-							<input type="date" id="hist_carta_fecha" onchange="xLoadHistorialCarta();">
+							<input class="selected-template-1" type="date" id="hist_carta_fecha" onchange="xLoadHistorialCarta();">
 						</div>
 						<br>
 						<div style="max-height:320px; overflow:auto;">
-							<table width="100%" id="tb_hist_carta">
+							<table width="100%" id="tb_hist_carta" class="xfont11">
 								<thead>
 									<th>Hora</th>
 									<th>Movimiento</th>
@@ -217,7 +218,7 @@
 							<br>							
 							<div id="opPersiste">
 								<div class="xBoton2 xAzul xDerecha" onclick="xOrdenSecciones();" title="Orden en el que se mostraran las secciones en el pedido."><img src="../../images/_ordenar_carta.png"></div>
-								<div class="xBoton2 xAzul xDerecha" onclick="xImprimirCarta();" title="Imprimir"><img src="../../images/_print.png"></div>
+								<div class="xBoton2 xDerecha btn-disenar-carta off" onclick="xAbrirDisenoCarta();" title="Diseñar carta para imprimir o redes sociales"><i class="fa fa-paint-brush"></i> Diseñar Carta</div>
 								<div class="xBoton2 xAzul xDerecha" onclick="xAddNewSeccion();">Agregar Seccion</div>
 								<div class="xBoton2 xVerde xDerecha" onclick="xGuardarCambios()">Guardar Cambios</div>
 							</div>
@@ -336,6 +337,28 @@
 		border-color: green;
 		cursor: pointer;
 		font-size: 11px;
+	}
+
+	.btn-disenar-carta {
+		color: #fff;
+		background: linear-gradient(135deg, #7b2ff7, #f107a3);
+		box-shadow: 0 2px 10px rgba(241, 7, 163, .45);
+		animation: pulso-disenar 2.2s ease-in-out infinite;
+	}
+	.btn-disenar-carta:hover {
+		filter: brightness(1.12);
+		animation: none;
+	}
+	@keyframes pulso-disenar {
+		0%, 100% { box-shadow: 0 2px 10px rgba(241, 7, 163, .45); }
+		50% { box-shadow: 0 2px 18px rgba(123, 47, 247, .8); }
+	}
+	.btn-disenar-carta.off {
+		background: #bdbdbd;
+		box-shadow: none;
+		animation: none;
+		pointer-events: none;
+		opacity: .65;
 	}
 
 	.draggable-cursor {
@@ -738,22 +761,23 @@ function xGuardarCambios(){
 	// const aaa= [xArraySeccionItem[5], xArraySeccionItem[6]];
 	console.log('array_enviar_carta', array_enviar_carta);
 	xPopupLoad.xopen();
-	array_enviar_carta.map(x => {
-		console.log('x ==>', x);
+	// no usa xLoadCarta() porque reconstruye el select y regresa a la primera carta
+	const xPeticionesGuardar = array_enviar_carta.map(x =>
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=204',data:{idc:xidCategoria,f:xFechaInsert,id_carta_anterior:xIdCartaAnterior,sql_array: x}})
-		.done( function (xid) {
-			xIdCartaAnterior = xid;
-			xIdCarta = xid;			
-			xLoadCarta();
-			
-			// historail de carta
-			// $.ajax({ type: 'POST', url:'../../bdphp/log.php?op=204001',data:{id:xIdCartaAnterior}});
-		})
-	});
+	);
 
-	setTimeout(() => {
-		xPopupLoad.xclose();
-	}, 1000);
+	$.when.apply($, xPeticionesGuardar)
+		.done(function () {
+			const xid = xPeticionesGuardar.length === 1 ? arguments[0] : arguments[0][0];
+			xIdCartaAnterior = xid;
+			xIdCarta = xid;
+			xLoadListadoCartaActual(); // recarga solo la carta seleccionada, cierra el popup al terminar
+			ToastAlertSwal.fire({ icon: 'success', title: 'Carta guardada correctamente' });
+		})
+		.fail(function () {
+			xPopupLoad.xclose();
+			showAlertSwalOk('error', 'No se pudo guardar', 'Ocurrió un error al guardar la carta. Intente nuevamente.');
+		});
 	//});
 }
 
@@ -980,8 +1004,25 @@ function xLoadHistorialCarta() {
 		processData: false
 	})
 	.done((res) => {
-		const _res = $.parseJSON(res);
-		const _datos = (_res && _res.datos) ? _res.datos : [];
+		let _res;
+		try {
+			_res = $.parseJSON(res);
+		} catch (e) {
+			_body.html('<tr><td colspan="6" class="text-danger">Respuesta invalida del servidor</td></tr>');
+			return;
+		}
+
+		// El backend responde HTTP 200 con success:false cuando el query falla (p.ej.
+		// migracion 021 no aplicada). Sin este chequeo la UI decia "Sin movimientos",
+		// que en una herramienta de auditoria es peor que un error: afirma en falso
+		// que nadie toco el stock ese dia.
+		if (!_res || _res.success === false) {
+			_body.html('<tr><td colspan="6" class="text-danger">No se pudo cargar el historial (¿migración 021 aplicada?)</td></tr>');
+			console.error('historial carta:', _res && _res.error);
+			return;
+		}
+
+		const _datos = _res.datos ? _res.datos : [];
 		if (!_datos.length) {
 			_body.html('<tr><td colspan="6" class="text-secondary">Sin movimientos en esta fecha</td></tr>');
 			return;
@@ -990,22 +1031,29 @@ function xLoadHistorialCarta() {
 			'VENTA': 'fw-600 text-success',
 			'DEVOLUCION': 'fw-600 text-warning',
 			'RECUPERA': 'fw-600 text-warning',
+			'AJUSTE': 'fw-600 text-primary',
 			'MONITOR': 'fw-600 text-primary',
 			'RESET': 'fw-600 text-primary',
 			'CONFIG': 'fw-600 text-secondary'
 		};
+		// Escapado obligatorio: usuario/tipo_movimiento vienen de la BD y se concatenan
+		// en HTML; un login con <script> se ejecutaria en el panel del administrador.
+		const _esc = (v) => (v === null || v === undefined) ? '' : String(v)
+			.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 		let _rows = '';
 		for (const m of _datos) {
 			const _delta = m.delta === null || m.delta === undefined || m.delta === ''
-				? (m.cantidad_anterior + ' → ' + m.cantidad_nueva)
+				? (_esc(m.cantidad_anterior) + ' → ' + _esc(m.cantidad_nueva))
 				: (parseFloat(m.delta) > 0 ? '+' : '') + parseFloat(m.delta);
 			_rows += '<tr>' +
-				'<td>' + m.hora + '</td>' +
-				'<td class="' + (_classMov[m.tipo_movimiento] || 'fw-600 text-danger') + '">' + m.tipo_movimiento + '</td>' +
+				'<td>' + _esc(m.hora) + '</td>' +
+				'<td class="' + (_classMov[m.tipo_movimiento] || 'fw-600 text-danger') + '">' + _esc(m.tipo_movimiento) + '</td>' +
 				'<td align="center">' + _delta + '</td>' +
-				'<td align="center">' + m.cantidad_nueva + '</td>' +
-				'<td align="center">' + (m.idpedido || '') + '</td>' +
-				'<td>' + (m.usuario || '') + '</td>' +
+				'<td align="center">' + _esc(m.cantidad_nueva) + '</td>' +
+				'<td align="center">' + _esc(m.idpedido) + '</td>' +
+				'<td>' + _esc(m.usuario) + '</td>' +
 				'</tr>';
 		}
 		_body.html(_rows);
@@ -1152,6 +1200,7 @@ function xLoadListadoCartaActual(){
 		
 		xdtCAct=$.parseJSON(dtCAct);
 		xdtCAct=xdtCAct.datos;
+		if (window.xRefrescarBtnDiseno) { xRefrescarBtnDiseno(); }
 
 		
 

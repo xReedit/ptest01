@@ -532,7 +532,11 @@ function _cpSocketPingMensajeria(roomId=null, timeout = 4000) {
                 clearTimeout(timeoutId);
                 console.log('Ping mensajería: Respuesta recibida', data);
                 subscription.unsubscribe(); // Limpiar la suscripción
-                resolve(true);
+                // Se resuelve con el payload (trae whatsappConnected y chatbot) en
+                // vez de un true pelado, para poder distinguir "conectado" de
+                // "conectado pero con el chatbot pausado". Sigue siendo truthy,
+                // asi que los llamadores que solo hacen if(resultado) no cambian.
+                resolve(data && typeof data === 'object' ? data : true);
             }
         });
     });

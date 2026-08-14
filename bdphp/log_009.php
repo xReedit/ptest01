@@ -1209,20 +1209,32 @@
             }
             break;
 
-        case 135: // historial de stock de un item de carta (carta_lista_historial, migracion 021)
+        case 135: // historial de stock de un item de carta (carta_stock_historial, migracion 021 v2)
+            // OJO: la tabla es carta_stock_historial; carta_lista_historial es una
+            // tabla legacy distinta (respaldo de cartas 2020, ver log_005.php:346)
             $postBody = json_decode(file_get_contents('php://input'));
             $idcarta_lista = preg_replace('/[^0-9]/', '', $postBody->idcarta_lista);
             $fecha = (isset($postBody->fecha) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $postBody->fecha))
                 ? $postBody->fecha : date('Y-m-d');
 
-            $sql = "SELECT DATE_FORMAT(clh.fecha, '%H:%i:%s') hora, clh.tipo_movimiento,
-                        clh.cantidad_anterior, clh.cantidad_nueva, clh.delta,
-                        clh.idpedido, COALESCE(u.usuario, IF(clh.idusuario = 0, 'SISTEMA', '')) usuario
-                    FROM carta_lista_historial clh
-                    LEFT JOIN usuario u ON u.idusuario = clh.idusuario
-                    WHERE clh.idcarta_lista = '$idcarta_lista'
-                        AND clh.fecha >= '$fecha 00:00:00' AND clh.fecha <= '$fecha 23:59:59'
-                    ORDER BY clh.idcarta_lista_historial DESC
+            if ($idcarta_lista === '') {
+                echo json_encode(array('success' => false, 'datos' => array(), 'error' => 'idcarta_lista invalido'));
+                break;
+            }
+
+            // Aislamiento por sede OBLIGATORIO: sin el, cualquier usuario autenticado
+            // podia leer el historial de ventas y los logins de OTRO restaurante
+            // enumerando idcarta_lista (los ids legacy son cortos). El JOIN a usuario
+            // tambien va acotado por organizacion para no exponer logins ajenos.
+            $sql = "SELECT DATE_FORMAT(csh.fecha, '%H:%i:%s') hora, csh.tipo_movimiento,
+                        csh.cantidad_anterior, csh.cantidad_nueva, csh.delta,
+                        csh.idpedido, COALESCE(u.usuario, IF(csh.idusuario = 0, 'SISTEMA', '')) usuario
+                    FROM carta_stock_historial csh
+                    LEFT JOIN usuario u ON u.idusuario = csh.idusuario AND u.idorg = $g_ido
+                    WHERE csh.idcarta_lista = '$idcarta_lista'
+                        AND csh.idsede = $g_idsede
+                        AND csh.fecha >= '$fecha 00:00:00' AND csh.fecha <= '$fecha 23:59:59'
+                    ORDER BY csh.idcarta_stock_historial DESC
                     LIMIT 500";
             $bd->xConsulta($sql);
             break;
