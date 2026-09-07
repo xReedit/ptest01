@@ -42,6 +42,18 @@
                         <input class="selected-template-1" type="time" id="horaCierre" name="hora-cierre">
                     </td>
                 </tr>
+                <tr>
+                    <td><p class="fs-15 fw-600">Cantidad de personas por mesa (app mozo):</p>
+                        <span class="text-secondary">Indique si el mozo debe registrar cu&aacute;ntas personas hay en la mesa al enviar el pedido. Se anexa a la referencia del pedido.</span>
+                    </td>
+                    <td>
+                        <select class="selected-template-1" id="mozoNumPersonas" name="mozo-num-personas">
+                            <option value="0">No pedir</option>
+                            <option value="1">Opcional</option>
+                            <option value="2">Obligatorio</option>
+                        </select>
+                    </td>
+                </tr>
             </table>
                   
             <br>
@@ -72,6 +84,7 @@
                 inputs.num_intentos_cierre = numIntentos;
                 inputs.update_stock_after = descuentoStock;
                 inputs.hora_cierre = hora_cierre_dia;
+                inputs.mozo_num_personas = this.$.mozoNumPersonas.value;
 
 
                 console.log('inputs', inputs);
@@ -107,6 +120,7 @@
                             this.$.numIntentos.value = _data.num_intentos_cierre;
                             this.$.allowCierre.checked = _data.switch2 === '1';
                             this.$.descuentoStock.checked = _data.update_stock_after === '1';
+                            this.$.mozoNumPersonas.value = _data.mozo_num_personas || '1';
                             // convertir a formato hora para mostrar en el input time
                             _data.hora_cierre = !_data.hora_cierre_dia || _data.hora_cierre_dia == '0' ? '00:00' : _data.hora_cierre_dia;
                             const _horaCierre = _data.hora_cierre.split(':');
@@ -119,6 +133,7 @@
                             this.$.allowCierre.checked = false;
                             this.$.descuentoStock.checked = false;
                             this.$.horaCierre.value = '00:00';
+                            this.$.mozoNumPersonas.value = '1';
                         }
                     }
                 }).catch((err) => {
