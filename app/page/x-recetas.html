@@ -281,24 +281,17 @@
 				letter-spacing: .4px;
 				text-transform: uppercase;
 			}
-			.rec-entry-field .xMiInput,
+			.rec-entry-field .selected-template-1,
 			.rec-entry-field x-comp-find-producto-almacen {
 				width: 100%;
 				min-height: 36px;
 				box-sizing: border-box;
 			}
-			.rec-entry-field .xMiInput {
-				padding: 8px 10px;
-				border: 1px solid var(--ui-border) !important;
-				border-radius: 8px;
-				background: #fff;
-				color: var(--ui-ink);
-			}
-			.rec-entry-field .xMiInput::placeholder {
+			.rec-entry-field .selected-template-1::placeholder {
 				color: #98a2b3;
 				opacity: 1;
 			}
-			.rec-entry-field .xMiInput[readonly] {
+			.rec-entry-field .selected-template-1[readonly] {
 				background: var(--ui-bg-soft);
 			}
 			.rec-entry-action {
@@ -567,8 +560,8 @@
 						<div class="rec-entry-row">
 							<div class="rec-entry-field product">
 								<p class="rec-entry-label">Ingrediente</p>
-								<input type="text" class="xMiInput xPasarEnter2 xDesItem rec-input" placeholder="Buscar porción" onChange="conMayusculas(this)" required id="des_porcion">
-								<input type="text" class="xMiInput xPasarEnter2 xDesItem rec-input" placeholder="Buscar subreceta" onChange="conMayusculas(this)" id="des_subreceta" style="display:none;">
+								<input type="text" class="selected-template-1 xPasarEnter2 xDesItem rec-input" placeholder="Buscar porción" onChange="conMayusculas(this)" required id="des_porcion">
+								<input type="text" class="selected-template-1 xPasarEnter2 xDesItem rec-input" placeholder="Buscar subreceta" onChange="conMayusculas(this)" id="des_subreceta" style="display:none;">
 								<x-comp-find-producto-almacen 
 									id="compProductoAlmacenReceta"
 									hidden$="[[!isFromRecetaProducto]]"
@@ -579,11 +572,11 @@
 							</div>
 							<div class="rec-entry-field qty">
 								<p class="rec-entry-label">Cant</p>
-								<input type="number" class="xMiInput xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required>
+								<input type="number" class="selected-template-1 xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required>
 							</div>
 							<div class="rec-entry-field cost">
 								<p class="rec-entry-label">Costo</p>
-								<input type="number" class="xMiInput text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required>
+								<input type="number" class="selected-template-1 text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required>
 							</div>
 							<div class="rec-entry-action">
 								<button class="btn btn-sm btn-success" onclick="xAddItemIngrediente()" title="Agregar item">
@@ -641,7 +634,7 @@
 						<div class="xBoton2 xVerde xDerecha" onclick="xGoSubReceta()">Subreceta</div>
 					</div>
 				</div>
-				<input type="text" class="xMiInput rec-search" placeholder="Buscar plato..." style="width:100%;" id="txt_bus">
+				<input type="text" class="selected-template-1 rec-search" placeholder="Buscar plato..." style="width:100%;" id="txt_bus">
 				<br><br>
 				<table class="sortable rec-list-table" width="100%" id="tb_platos">
 					<thead>
@@ -825,7 +818,8 @@ function xAbrirDetalleReceta(obj){
 	xid_item=$(obj).attr('data-id');
 	xes_nuevo_item=0;
 
-	var xdes_tr=$(obj).find('#xtr_des').text();
+	// solo el nombre, sin el badge "N ing." (antes se guardaba el badge en la descripcion)
+	var xdes_tr=$(obj).find('#xtr_des .rec-item-text').text();
 	xdes_tr=xdes_tr.split('|');
 	xdes_tr=xdes_tr[1].trim();
 	$("#tb_item #tr_des").addClass('xInvisible');

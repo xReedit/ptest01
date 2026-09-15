@@ -249,26 +249,26 @@ async function xOpenPage(xop, parametro){
 			// esta activo, el op responde 403 'modulo_no_activo' y se abre /compras de
 			// siempre. Cualquier otro fallo cae al mismo lado, nunca deja al usuario sin
 			// pantalla.
-			try {
-				const _erpResp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4002' });
-				const _erpStr = String(_erpResp);
-				const _sep = _erpStr.indexOf('|');
-				// Formato esperado: "<ERP_URL>|<token>". Cualquier otra cosa es error (ej: 'erp_secrets_missing') → fallback legacy.
-				if (_sep > 0 && /^https?:\/\//.test(_erpStr.slice(0, _sep))) {
-					const _erpUrl = _erpStr.slice(0, _sep);
-					const _erpTok = _erpStr.slice(_sep + 1);
-					document.location.href = _erpUrl + '/sso?t=' + encodeURIComponent(_erpTok);
-					xLiberarRouter();
-					return;
-				}
-				console.warn('SSO erp respuesta no esperada → fallback /compras legacy:', _erpStr);
-			} catch (e) {
-				// 'modulo_no_activo' es el caso normal de una org sin ERP contratado: no es error.
-				const _motivo = (e && e.responseText) ? String(e.responseText) : '';
-				if (_motivo.indexOf('modulo_no_activo') === -1) {
-					console.warn('SSO erp fallo (case 12, compras) → fallback /compras legacy', _motivo || e);
-				}
-			}
+			// try {
+			// 	const _erpResp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4002' });
+			// 	const _erpStr = String(_erpResp);
+			// 	const _sep = _erpStr.indexOf('|');
+			// 	// Formato esperado: "<ERP_URL>|<token>". Cualquier otra cosa es error (ej: 'erp_secrets_missing') → fallback legacy.
+			// 	if (_sep > 0 && /^https?:\/\//.test(_erpStr.slice(0, _sep))) {
+			// 		const _erpUrl = _erpStr.slice(0, _sep);
+			// 		const _erpTok = _erpStr.slice(_sep + 1);
+			// 		document.location.href = _erpUrl + '/sso?t=' + encodeURIComponent(_erpTok);
+			// 		xLiberarRouter();
+			// 		return;
+			// 	}
+			// 	console.warn('SSO erp respuesta no esperada → fallback /compras legacy:', _erpStr);
+			// } catch (e) {
+			// 	// 'modulo_no_activo' es el caso normal de una org sin ERP contratado: no es error.
+			// 	const _motivo = (e && e.responseText) ? String(e.responseText) : '';
+			// 	if (_motivo.indexOf('modulo_no_activo') === -1) {
+			// 		console.warn('SSO erp fallo (case 12, compras) → fallback /compras legacy', _motivo || e);
+			// 	}
+			// }
 			xruta = '/compras';
 			break;
 		}
@@ -318,25 +318,7 @@ async function xOpenPage(xop, parametro){
 		}
 		case 19:xruta='/monitor_pedidos';break;
 		case 20:xruta='/historial_ventas';break;
-		case 21:xruta='/inventario';break; // [alm2-v2] ORIGINAL — comentado al migrar a SSO v2
-		// case 21: { // [alm2-v2] inventario -> modulo v2/almacen via SSO
-		// 	try {
-		// 		const _alm2Resp = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=-4000' });
-		// 		const _sep = String(_alm2Resp).indexOf('|');
-		// 		if (_sep < 0) { throw new Error('respuesta_sso_invalida: ' + _alm2Resp); }
-		// 		const _alm2Url = String(_alm2Resp).slice(0, _sep);
-		// 		const _alm2Tok = String(_alm2Resp).slice(_sep + 1);
-		// 		document.location.href = _alm2Url + '/sso?t=' + encodeURIComponent(_alm2Tok);
-		// 		xLiberarRouter();
-		// 		return;
-		// 	} catch (e) {
-		// 		console.error('SSO alm2 fallo (21)', e);
-		// 		try { xPopupLoad.xclose(); } catch (_) {}
-		// 		alert('No se pudo abrir el modulo de almacen v2. Revisa la sesion.');
-		// 		xLiberarRouter();
-		// 		return;
-		// 	}
-		// }
+		case 21:xruta='/inventario';break;
 		case 22:xruta='/resumen_caja';break;
 		case 23:xruta='/zona_despacho-theme-2';break;
 		case 2301:xruta='/zona_despacho';break;
@@ -449,6 +431,7 @@ async function xOpenPage(xop, parametro){
 		case 59: xruta = '/pedidos_meseros'; break;
 		case 60: xruta = '/mensajeria'; break;	
 		case 61: xruta = '/pedidos_registrados'; break;	
+		case 62: xruta = '/vincular_yape'; break; // WizPay (A28)
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

@@ -256,6 +256,20 @@ async function xSoapSunat_EnviarDocumentApi(json_xml, idce, numDoc = '#') {
 }
 
 
+// 2026-09: ¿SUNAT declaro el comprobante?
+// 'success' del API solo dice que la llamada SOAP no revento. Con 1032/1033
+// ("el comprobante fue registrado previamente con otros datos") el envio falla
+// pero el comprobante YA esta en SUNAT: el API responde success:false +
+// response.accepted:true. Leyendo solo 'success' esas facturas quedaban en
+// "Registrado" para siempre y cada Reenviar mostraba una alerta de un rechazo
+// que no existe. Si el API es anterior al cambio no manda 'accepted' y se
+// decide como antes (success && !error_soap).
+function xSoapSunat_cpeAceptado(res) {
+    const _resp = (res && res.response) || {};
+    if (typeof _resp.accepted === 'boolean') { return _resp.accepted; }
+    return !!(res && res.success) && !_resp.error_soap;
+}
+
 // esto se utiliza al cierre de caja
 // envia al servicio de la api los documentos documentos que no se enviaron por error de conexion u otro
 async function xSoapSunat_SendSunat(external_id, idce) {
@@ -278,98 +292,35 @@ async function xSoapSunat_SendSunat(external_id, idce) {
         return response.json();
     }).then(function (res) {
         console.log(res);
-        const errSoap = res.response ? res.response.error_soap ? res.response.error_soap : false : false;
-        // if ( errSoap ) return;
-        
-        if (res.success && !errSoap) {
+        const _resp = res.response || {};
+
+        if (xSoapSunat_cpeAceptado(res)) {
             rpt.ok = true;
 
             let data = {};
             data.idce = idce;
             data.estado_api = 0; // se registro correctamente
-            data.estado_sunat = 0; // se envio correctamente
-            data.msj = "Aceptada";
+            data.estado_sunat = 0; // aceptado por sunat
+            data.msj = _resp.description || "Aceptada";
             // data.numero = numero_comp;
             data.external_id = external_id;
 
-            if (res.response.length != 0) {
-                // data.estado_sunat = res.response.code;
-                data.msj = res.response.description;
-            }
-
-            data.pdf = res.links.pdf != "" ? 1 : 0;
-            data.cdr = res.links.cdr != "" ? 1 : 0;
-            data.xml = res.links.xml != "" ? 1 : 0;
+            data.pdf = res.links && res.links.pdf ? 1 : 0;
+            data.cdr = res.links && res.links.cdr ? 1 : 0;
+            data.xml = res.links && res.links.xml ? 1 : 0;
 
             CpeInterno_UpdateRegistro(data);
 
-        } 
+        }
         // no elimina, puede que el problema de conexion persista pero los datos estan bien
         // cunado se restablece la conexion lo enviara.
         else {
 
             rpt.ok = false;
             rpt.error = 'Problema de conexion Sunat persistente.';
-            rpt.msj_error = res.message || res.response.description;
+            rpt.msj_error = res.message || _resp.description || 'No se pudo enviar el comprobante a Sunat.';
 
-            // 11092021
-            // si el error es de comprobante registrado con otros datos - erro se produce por sunat no sincroniza bien los datos
-            // entonces le decimos que fue acepta 
-            
-            // lo quitamos 310123
-            
-            // if ( rpt.msj_error.toLowerCase() === 'el comprobante fue registrado previamente con otros datos' ) {
-
-            //     // ok
-            //     rpt.ok = true;
-
-            //     let data = {};
-            //     data.idce = idce;
-            //     data.estado_api = 0; // se registro correctamente
-            //     data.estado_sunat = 0; // se envio correctamente
-            //     data.msj = "Aceptada";
-            //     // data.numero = numero_comp;
-            //     data.external_id = external_id;
-
-            //     if (res.response.length != 0) {
-            //         // data.estado_sunat = res.response.code;
-            //         data.msj = res.response.description;
-            //     }
-
-            //     data.pdf = res.links.pdf != "" ? 1 : 0;
-            //     data.cdr = res.links.cdr != "" ? 1 : 0;
-            //     data.xml = res.links.xml != "" ? 1 : 0;
-
-            //     CpeInterno_UpdateRegistro(data);
-
-            // }
-
-            
-            
         }
-        // else {
-        //     // error de ingreso de datos / anula comprobante
-        //     rpt.ok = false;
-        //     rpt.error = 'Error al ingresar los datos';
-        //     rpt.msj_error = res.message;
-
-        //     const data = {
-        //         idce: idce,
-        //         numero: numero_comp,
-        //         external_id: '',
-        //         estado_api: 0,
-        //         estado_sunat: 1,
-        //         anulado: 1,
-        //         msj: res.message,
-        //         pdf: 0,
-        //         cdr: 0,
-        //         xml: 0,
-        //     }
-
-        //     // el api registra pero la sunat lo devuelve = validacion - datos no cumplen con lo establecido
-        //     CpeInterno_UpdateRegistro(data);
-
-        // }
     }).catch(function (error) { // error de conexion
         rpt.ok = false;
         rpt.msj = "Error de conexion con el servicio Sunat: se intentara enviar nuevamente al proximo cierre.";
@@ -485,4 +436,10 @@ function xSoapSunat_DownloadFile(tipo, id) {
     // const URL_COMPROBANTE_DOWNLOAD_FILE = url_api_fac_sede === '' ?  xm_log_get('app3_sys_const')[1].value : url_api_fac_sede.replace('.pe/api', '.pe/downloads/document');
     const _url = `${URL_COMPROBANTE_DOWNLOAD_FILE}/${tipo}/${id}/${_userId}`;
     window.open(_url, "_blank");
+}
+
+// Export para pruebas en Node (test/xsoapsunat.aceptado.test.js);
+// en el navegador las funciones quedan globales como siempre.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { xSoapSunat_cpeAceptado };
 }

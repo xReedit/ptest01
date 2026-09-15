@@ -1098,6 +1098,15 @@ paper-dialog.xStandar {
     line-height: 15px;
 }
 
+/* funcion nueva en el home: aura que se expande hasta el primer clic (x-home.html, NUEVAS_FUNCIONES) */
+.xMiBoton_icon.xNuevaFn { position: relative; border-radius: 12px; animation: xNuevaFnAura 1.8s ease-out infinite; }
+.xMiBoton_icon.xNuevaFn::after { content: 'NUEVO'; position: absolute; top: -8px; right: -10px; background: #6c3fc5; color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .5px; padding: 2px 6px; border-radius: 10px; }
+@keyframes xNuevaFnAura {
+    0%   { box-shadow: 0 0 0 0 rgba(108, 63, 197, 0.55); }
+    70%  { box-shadow: 0 0 0 14px rgba(108, 63, 197, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(108, 63, 197, 0); }
+}
+
 .xMiBoton_icon:hover {
     border: 1px solid #CCC;
     background: #EEEEEE;
@@ -5758,3 +5767,199 @@ ul.list_add_item2 li.divLi {
 .xoptions-btn-btn:last-child {
     border-right: 0px;
 }
+
+/* ===== modulo inventario (conteos) ===== */
+/* Todo el CSS del modulo vive aqui: Polymer 1.7 usa shady DOM y un <style> dentro de un
+   <template> no alcanza a las filas que jQuery inyecta. Prefijo inv- para no chocar con nada. */
+
+/* --- vistas (el shell muestra una a la vez, sin pestanas flotantes) --- */
+.inv-vista { display:none; }
+.inv-vista.activa { display:block; }
+
+/* --- tarjeta (mismo patron que xMiCard/xEncanezadoCard/xContentCard del resto del sistema) --- */
+.inv-card { width:90%; max-width:1400px; }
+.inv-head { background:lavenderblush; color:#424242; }
+.inv-head h3 { margin:0; font-size:16px; font-weight:600; line-height:1.3; color:#424242; }
+.inv-head p { margin:3px 0 0; font-size:11px; color:#6c757d; }
+.inv-head-acciones { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+/* --- barra de controles (gris suave, sin sombra) --- */
+.inv-toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#f7f8fa; border-radius:8px; padding:8px 10px; margin-bottom:12px; }
+.inv-label { font-size:10px; font-weight:600; color:#6c757d; }
+.inv-ayuda { margin:0; font-size:11px; color:#6c757d; }
+.inv-muted { color:#6c757d; }
+.inv-sep { flex:1; }
+
+/* --- controles: misma altura que .btn.btn-sm de mibootstra (14px * 1.5 + 2*4px + 2*1px = 31px) --- */
+.inv-select,
+.inv-input { height:31px; box-sizing:border-box; border:1px solid #e5e7eb; border-radius:6px; padding:0 8px; font-size:12px; color:#212529; background:#fff; outline:none; }
+.inv-select { width:200px; cursor:pointer; }
+.inv-input { width:220px; }
+.inv-select:focus,
+.inv-input:focus { border-color:#007bff; }
+.inv-w100 { width:100%; }
+
+/* --- tabla plana --- */
+.inv-table-wrap { overflow-x:auto; }
+.inv-table { width:100%; border-collapse:collapse; background:#fff; }
+.inv-table tr { background:#fff; }
+.inv-table tr:hover { background:#fff; }
+.inv-table th { font-size:11px; font-weight:600; color:#495057; text-align:left; padding:8px; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
+.inv-table td { font-size:12px; color:#212529; padding:9px 8px; border-bottom:1px solid #edf0f2; vertical-align:middle; }
+.inv-table tbody tr:hover { background:#f8fafc; }
+.inv-sub { display:block; font-size:11px; color:#6c757d; }
+.inv-empty { padding:28px 8px; text-align:center; font-size:13px; color:#6c757d; }
+.inv-acciones { white-space:nowrap; }
+.inv-link { cursor:pointer; color:#007bff; margin-right:12px; }
+.inv-link:last-child { margin-right:0; }
+.inv-link:hover { text-decoration:underline; }
+.inv-tag { display:inline-block; padding:1px 6px; border-radius:8px; background:#f0f1f3; color:#6c757d; font-size:10px; }
+
+/* --- estados y signos --- */
+.inv-estado { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.inv-estado.borrador { background:#fff3cd; color:#7a5b00; }
+.inv-estado.cerrado { background:#cfe2ff; color:#0b3d91; }
+.inv-estado.aprobado { background:#d1e7dd; color:#0f5132; }
+.inv-estado.anulado { background:#e2e3e5; color:#41464b; }
+.inv-neg { color:#dc3545; font-weight:600; }
+.inv-pos { color:#198754; font-weight:600; }
+.inv-nocosto { color:#b45309; font-size:11px; }
+
+/* --- dialogo "Nuevo conteo" --- */
+#dlg_inv_nuevo { min-width:400px; }
+.inv-form-row { margin-bottom:12px; }
+.inv-form-row .inv-label { display:block; margin-bottom:4px; }
+.inv-check { display:flex; align-items:center; font-size:12px; color:#212529; cursor:pointer; margin:0; }
+.inv-check input { margin:0 8px 0 0; }
+
+/* --- contar --- */
+.inv-progress { width:160px; height:6px; border-radius:3px; background:#e5e7eb; overflow:hidden; }
+.inv-progress-fill { height:6px; width:0; background:#28a745; border-radius:3px; }
+.inv-fam td { background:#f5f6f8; color:#495057; font-size:12px; font-weight:600; padding:6px 8px; }
+.inv-table-conteo input.inv-cant { width:110px; height:34px; box-sizing:border-box; font-size:16px; text-align:right; padding:0 8px; border:1px solid #ced4da; border-radius:6px; color:#212529; background:#fff; outline:none; }
+.inv-table-conteo input.inv-obs { width:100%; min-width:140px; height:31px; box-sizing:border-box; font-size:12px; padding:0 8px; border:1px solid #e5e7eb; border-radius:6px; color:#212529; background:#fff; outline:none; }
+.inv-table-conteo input.inv-cant:focus { border-color:#007bff; }
+.inv-fila.guardada input.inv-cant { border-color:#28a745; }
+.inv-fila.error input.inv-cant { border-color:#dc3545; }
+.inv-sistema { color:#6c757d; }
+.inv-quien { font-size:11px; color:#6c757d; }
+
+/* --- resultado (KPIs pastel, sin bordes fuertes) --- */
+.inv-kpis { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.inv-kpi { min-width:150px; padding:11px 13px; border-radius:8px; background:#f5f6f8; }
+.inv-kpi span { display:block; font-size:10px; color:#6c757d; }
+.inv-kpi b { display:block; margin-top:2px; font-size:19px; font-weight:600; color:#212529; }
+.inv-kpi-azul { background:#edf2ff; }
+.inv-kpi-celeste { background:#eaf5ff; }
+.inv-kpi-verde { background:#eef9f3; }
+.inv-kpi-rojo { background:#fff7f7; }
+.inv-kpi em { display:block; margin-top:2px; font-size:10px; font-style:normal; color:#6c757d; }
+tr.inv-noaplica td { opacity:.5; }
+
+/* --- reportes --- */
+.inv-seg { display:inline-flex; background:#f5f6f8; border-radius:8px; padding:3px; margin-bottom:14px; }
+.inv-seg-item { padding:6px 14px; border-radius:6px; border:1px solid transparent; font-size:12px; font-weight:600; color:#6c757d; cursor:pointer; }
+.inv-seg-item.activa { background:#fff; border-color:#e5e7eb; color:#212529; }
+.inv-rep { display:none; }
+.inv-rep.activa { display:block; }
+.inv-resumen { font-size:12px; color:#212529; margin:0 0 10px; }
+.inv-titulo-sec { font-size:13px; font-weight:600; color:#212529; margin:18px 0 8px; }
+.inv-nota { font-size:11px; color:#6c757d; margin:8px 0 0; }
+.inv-bajo td { background:#fff7f7; }
+.inv-subtotal td { background:#f5f6f8; font-weight:600; }
+
+/* --- tarjeta: mismo acabado que el resto de modulos rediseñados (borde fino, esquinas 12px) --- */
+/* display:block, no el display:table de .xMiCard: una tabla ancha hacia crecer la tarjeta
+   (shrink-to-fit) y los controles del encabezado se salian del contenedor. */
+.inv-card { display:block; margin:0 auto; border:1px solid #edf0f2 !important; border-radius:12px !important; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+.inv-card .xEncanezadoCard { border-bottom:1px solid #edf0f2; padding:14px 16px; }
+.inv-card .xContentCard { padding:14px 16px 18px; }
+
+/* cabecera: texto a la izquierda, botones a la derecha, sin que nada se salga del contenedor */
+.inv-head-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.inv-head-top > div:first-child { min-width:0; flex:1 1 320px; }
+.inv-head-acciones { flex:0 0 auto; }
+.inv-head .inv-estado { vertical-align:middle; margin-left:6px; }
+
+/* un control con su etiqueta encima, para que la barra no mezcle alturas */
+.inv-field { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.inv-field .inv-label { line-height:1; text-transform:uppercase; letter-spacing:.4px; }
+
+/* botones del modulo: misma altura (31px) que .inv-select / .inv-input */
+.inv-card .btn { height:31px; padding:0 12px; font-size:12px; font-weight:600; line-height:29px; border-radius:6px; white-space:nowrap; }
+.inv-card .btn + .btn { margin-left:6px; }
+
+.inv-progress-wrap { display:flex; align-items:center; gap:8px; }
+.inv-progress-txt { font-size:11px; color:#6c757d; white-space:nowrap; }
+
+/* la barra alinea por abajo: cada control trae su etiqueta encima y deben quedar a la misma linea */
+.inv-toolbar { align-items:flex-end; }
+.inv-toolbar .inv-check { padding-bottom:6px; }
+
+/* utilidades de celda: .inv-table td gana por especificidad, hay que calificarlas */
+.inv-table td.inv-num,
+.inv-table th.inv-num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.inv-table td.inv-cen,
+.inv-table th.inv-cen { text-align:center; }
+.inv-table td.inv-neg { color:#dc3545; font-weight:600; }
+.inv-table td.inv-pos { color:#198754; font-weight:600; }
+.inv-table td.inv-empty { padding:32px 8px; text-align:center; font-size:13px; color:#6c757d; }
+
+/* dialogo: los botones no estan dentro de .inv-card */
+#dlg_inv_nuevo .btn { height:31px; padding:0 12px; font-size:12px; font-weight:600; line-height:29px; border-radius:6px; }
+
+/* ===== dialogo estandar (regla para TODOS los dialogos) =====
+   El encabezado va pegado arriba y a los costados, a sangre completa. Hay tres capas de
+   relleno que lo impiden y las tres se anulan aqui: el padding del propio paper-dialog,
+   el "padding:0 24px" que paper-dialog-behavior pone a cada hijo directo (shady DOM ->
+   selector 'paper-dialog > *') y el margen lateral del 2% de .xContent. */
+paper-dialog.xdlg { padding:0; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+paper-dialog.xdlg > * { margin:0; padding:0; }
+.xdlg .xContent { margin:0; padding:0; }
+.xdlg-head { margin:0; padding:14px 18px; background:lavenderblush; border-bottom:1px solid #edf0f2; color:#424242; }
+.xdlg-head h3 { margin:0; font-size:15px; font-weight:600; line-height:1.3; color:#424242; }
+.xdlg-head p { margin:3px 0 0; font-size:11px; color:#6c757d; }
+.xdlg-body { padding:16px 18px; max-height:70vh; overflow-y:auto; }
+.xdlg-foot { display:flex; justify-content:flex-end; gap:8px; padding:12px 18px; background:#fff; border-top:1px solid #edf0f2; }
+
+@media (max-width:900px) {
+	.inv-card { width:100% !important; }
+	.inv-head-acciones { width:100%; }
+	.inv-toolbar { align-items:stretch; }
+	.inv-select, .inv-input { width:100%; }
+}
+
+/* ===== registro de pagos: cierres de caja del turno ===== */
+/* Sirve para detectar el doble cierre: un cajero puede cerrar las primeras ventas, quedarse con
+   ese efectivo y cerrar otra vez con el resto. Cada cierre cuadra solo, asi que el candado de la
+   fila no basta: hay que ver cuantos cierres hubo, de quien y a que hora. */
+.rp-cierres { margin: 10px 0; padding: 12px 14px; background: #f7f8fa; border: 1px solid #edf0f2; border-radius: 12px; }
+.rp-cierres.alerta { background: #fff7f7; border-color: #f3c9c9; }
+.rp-cierres-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.rp-cierres-head > div:first-child { flex: 1 1 260px; min-width: 0; }
+.rp-cierres-titulo { margin: 0; font-size: 13px; font-weight: 700; color: #212529; }
+.rp-cierres.alerta .rp-cierres-titulo { color: #b3261e; }
+.rp-cierres-sub { margin: 2px 0 0; font-size: 11px; line-height: 1.4; color: #6c757d; }
+.rp-cierres-chips { display: flex; gap: 8px; flex-wrap: wrap; flex: 0 0 auto; }
+
+/* el color del chip lo pone el JS (xEstiloCierre): mismo tono que la etiqueta de cada fila */
+.rp-chip { padding: 6px 10px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; min-width: 132px; }
+.rp-chip:hover { filter: brightness(.97); }
+.rp-chip.activo { box-shadow: 0 0 0 2px rgba(0,0,0,.18); }
+.rp-chip p { margin: 0; }
+.rp-chip-id { font-size: 12px; font-weight: 700; }
+.rp-chip-us { font-size: 10px; font-weight: 600; opacity: .85; }
+.rp-chip-det { font-size: 10px; opacity: .75; }
+.rp-chip-reset { align-self: center; padding: 6px 12px; border: 1px solid #ced4da; border-radius: 10px; background: #fff; color: #495057; font-size: 11px; font-weight: 600; cursor: pointer; }
+.rp-chip-reset:hover { background: #f1f3f5; }
+
+/* etiqueta de cierre debajo del cajero, en la columna "Cobrado Por" */
+.rp-cierre-tag { display: inline-block; margin: 2px 0 0; padding: 1px 7px; border: 1px solid transparent; border-radius: 9px; font-size: 9px; font-weight: 700; letter-spacing: .2px; white-space: nowrap; }
+.rp-cierre-tag.sin-id { background: #f0f1f3; color: #6c757d; border-color: #dee2e6; }
+.rp-cierre-hide { display: none !important; }
+
+@media (max-width: 900px) {
+	.rp-cierres-chips { width: 100%; }
+	.rp-chip { flex: 1 1 140px; }
+}
+

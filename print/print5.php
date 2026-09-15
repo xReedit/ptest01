@@ -111,11 +111,7 @@ $printer -> setFont($var_size_font);
 $denominacion_comprobante = "COMPROBANTE";
 $incial_comprobante = "";
 $nomOtroDoc = $xArrayComprobante['descripcion']." ";
-if (!empty($xArrayComprobante['es_guia_remision'])) {
-	$denominacion_comprobante = "GUIA DE REMISION";
-	$incial_comprobante = isset($xArrayComprobante['inicial']) ? $xArrayComprobante['inicial'] : '';
-	$nomOtroDoc = "";
-} elseif ($hash) {
+if ($hash) {
 	$denominacion_comprobante = $nomOtroDoc."DE VENTA ELECTRONICA";
 	$incial_comprobante = $xArrayComprobante['inicial'];
 	$nomOtroDoc="";

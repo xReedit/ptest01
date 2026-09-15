@@ -1,5 +1,6 @@
 <!-- <script src="../../js/isotope.pkgd.min.js"></script> -->
 <link rel="import" href="../x-componentes/x-comp-find-categoria/x-comp-find-categoria.html">
+<link rel="import" href="../x-componentes/x-comp-item-subitems/x-comp-item-subitems.html">
 <link rel="import" href="../x-componentes/x-comp-descuento/x-comp-descuento.html">
 <link rel="import" href="./x-control-delivery/x-control-delivery.html">
 <dom-module id="x-control-mesas">
@@ -367,6 +368,9 @@
 			<div hidden$="[[!showVisibleAreaMesas]]">
 				<x-comp-area-mesa id="comp-area-mesas"></x-comp-area-mesa>
 			</div>
+
+			<!-- dialog de opciones/seleccionables al agregar item desde el panel lateral (mismo componente que venta rapida) -->
+			<x-comp-item-subitems id="comp_subitems"></x-comp-item-subitems>
 			<div class="grid grid-contente-pedidos" id="_gridCM" style="overflow:hidden !important;">
 				<paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner>
 				<!--div class="xMiCardPedido xNeutro" data-tpc="LOCAL">
@@ -551,7 +555,7 @@ var xThisCM,
 	isSocket = false, isPedidoOpenDeliveryCliente = false, arrTotalesDeliveryCliente, xid_pedido_selected, optionDeliveryCliente, xdtDpedido
 	, pasoRedibujado = false, isPedidoPagadoFromApp = false, cuentaEventoLoadIni = 0, cuentaEventoLoadIniPrincipal = 0, xCompDescuentoPedido, arrSubtTotalesDescuento, xPSupervisor, lastIdPedidoPrint = 0;
 
-var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria
+var EstadoLoadMesas=false, firstLoad_mesas=true, lastIdPedidoCobrado = 0, lastDataPedidoInsert = null, xp_sel_idcategoria, xCompSubitems
 	,isComercioServicioDeliveryPropio = false, isDeliveryCalculaCostoEntrega = false, isDeliveryCalculaCostoEntregaSoloApp = false,
 	idUsuarioOperador = 0, isPedidoDelivery = false, isDeliverySolicitoReparto = false, isClienteDeliveryFromApp = false,
 	countIntiCP = 0, isPassAddRowItemList = false, xLocal_xDtSubTotales_cp, isProcessRemoveItemPedido = false;
@@ -920,6 +924,8 @@ function xIniControlMesa(){
 	
 	
 
+
+	xCompSubitems=document.getElementById('comp_subitems'); // dialog de opciones al agregar item (item_pedidos.js lo abre si hay seleccionables)
 
 	xCompDescuentoPedido=document.getElementById('component_descuento_pedido');
 	xCompDescuentoPedido.addEventListener('changeDescuento', function (e) {		

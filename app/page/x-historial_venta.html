@@ -177,6 +177,27 @@
 				</div>
 			</div>
 
+			<!-- cierres de caja del turno: deja ver de un vistazo cuantas veces se cerro caja
+			     y quien lo hizo. Dos o mas cierres en el mismo turno se pintan en alerta. -->
+			<div class$="[[cierresClass]]">
+				<div class="rp-cierres-head">
+					<div>
+						<p class="rp-cierres-titulo">{{ cierresTitulo }}</p>
+						<p class="rp-cierres-sub">{{ cierresSubtitulo }}</p>
+					</div>
+					<div class="rp-cierres-chips">
+						<template is="dom-repeat" items="[[listCierresTurno]]" as="item">
+							<div class$="[[item.chipClass]]" style$="[[item.chipStyle]]" data-id$="[[item.id]]" onclick="xFiltrarPorCierre(this)" title="Ver solo los registros de este cierre">
+								<p class="rp-chip-id">{{ item.etiqueta }}</p>
+								<p class="rp-chip-us">{{ item.usuario }} · {{ item.hora }}</p>
+								<p class="rp-chip-det">{{ item.detalle }}</p>
+							</div>
+						</template>
+						<div class="rp-chip-reset" hidden$="[[!isHayCierreFiltrado]]" onclick="xFiltrarPorCierre(null)">Ver todos</div>
+					</div>
+				</div>
+			</div>
+
 			<!-- filtros -->
 			<div class="div-border div-filter">
 				<div>
@@ -191,6 +212,11 @@
 							<optgroup label="Cobrado Por">
 								<template is="dom-repeat" items="{{listCobradoPorFilter}}" as="item">
 									<option value$="[[item]]">{{item.us_caja}}</option>
+								</template>
+							</optgroup>
+							<optgroup label="Cierre de Caja">
+								<template is="dom-repeat" items="{{listCierreFilter}}" as="item">
+									<option value$="[[item]]">{{item.descripcion}}</option>
 								</template>
 							</optgroup>
 							<optgroup label="Canal de Consumo">
@@ -265,7 +291,8 @@
 								<p class="fs-11">{{ item.hora }}</p>
 							</td>
 							<td align="center">
-								<p class="fs-11 fw-900" style$="[[item.us_caja_class_color]]">{{ item.us_caja }}</p>								
+								<p class="fs-11 fw-900" style$="[[item.us_caja_class_color]]">{{ item.us_caja }}</p>
+								<p class$="[[item.cierre_class]]" style$="[[item.cierre_style]]" title$="[[item.cierre_title]]">{{ item.cierre_label }}</p>
 							</td>
 							<td>
 								<p class$="[[item.class_tpc]]">{{ item.des_consumo }}</p>
@@ -306,8 +333,9 @@
 								</div>
 							</td>
 							<td align="right">
-								<div class="d-flexx justify-content-end">
-									<p class="fw-600 text-info fs-15">S/. {{ item.total }}</p>								
+								<div class="d-flexx justify-content-end align-items-center">
+									<span class="badge badge-warning fs-10 mr-2 xCursor" hidden$="[[!item.isPagoParcial]]" title$="[[item.pago_parcial_title]]">+{{ item.pago_otros }}</span>
+									<p class="fw-600 text-info fs-15">S/. {{ item.importe_show }}</p>
 									<button class="xBoton_flat_2 xCursor ml-2" onclick="xloadDetallePago(this)" data-id="{{index}}">Ver</button>
 								</div>
 							</td>							
@@ -1148,6 +1176,164 @@ async function xAnularPedidoHistorial(){
 	});
 }*/
 
+// ---- cierres de caja del turno -------------------------------------------------------------
+// Un cajero puede cerrar caja mas de una vez en el mismo turno: cierra las primeras ventas, se
+// queda con ese efectivo y vuelve a cerrar con el resto. Cada cierre cuadra por separado, asi que
+// el candado de la fila no alcanza: el dueno necesita ver CUANTOS cierres hubo, de quien y a que hora.
+var xMapaCierres = {};        // idregistro_pago -> { c: idcierre|null, f: 'dd/mm/YYYY HH:ii:ss' }
+var xCierresPorId = {};       // idcierre -> fila del cierre (usuario, hora, totales)
+var xCierreFiltroActivo = 0;  // 0 = sin filtro por cierre
+
+// Un color estable por numero de cierre. El chip de la cabecera y la etiqueta de cada fila usan
+// el MISMO color, asi se emparejan de un vistazo sin tener que leer el numero. Son 8 tonos: los
+// cierres de un turno son consecutivos (310, 311, 312...) y con el modulo nunca se repiten entre si.
+// bd = borde: un tinte suave del mismo tono, no el color del texto. Con el borde oscuro el chip
+// competia con el resto de la interfaz, que usa divisores claros (#edf0f2, #dddddd).
+var xPaletaCierres = [
+	{ bg: '#e3f2fd', fg: '#0d47a1', bd: '#cfe3f7' }, // azul
+	{ bg: '#e8f5e9', fg: '#1b5e20', bd: '#dfede0' }, // verde
+	{ bg: '#fff3e0', fg: '#e65100', bd: '#f6e2c8' }, // naranja
+	{ bg: '#f3e5f5', fg: '#4a148c', bd: '#e6d3ea' }, // morado
+	{ bg: '#e0f7fa', fg: '#006064', bd: '#c9eaef' }, // celeste
+	{ bg: '#fce4ec', fg: '#880e4f', bd: '#f2d2dd' }, // rosa
+	{ bg: '#f9fbe7', fg: '#827717', bd: '#e9eecb' }, // lima
+	{ bg: '#efebe9', fg: '#4e342e', bd: '#ded7d4' }  // marron
+];
+function xColorCierre(id){
+	return xPaletaCierres[(parseInt(id) || 0) % xPaletaCierres.length];
+}
+function xEstiloCierre(id){
+	const c = xColorCierre(id);
+	return 'background:' + c.bg + ';color:' + c.fg + ';border-color:' + c.bd + ';';
+}
+
+function xCargarCierresTurno(fecha){
+	const _api = new httpFecht();
+	return _api.axiosExecuteJSON({ type: 'GET', url: '../../bdphp/api.php?route=get-cierres-turno&fecha=' + encodeURIComponent(fecha) })
+	.then(res => {
+		if ( !res || !res.success ) { return; }
+		xMapaCierres = res.mapa || {};
+		xPintarCierresTurno(res);
+		// La lista puede haber llegado antes o despues que esto; se aplica en ambos puntos.
+		xAplicarEtiquetasCierre();
+	})
+	.catch(() => { xMapaCierres = {}; });
+}
+
+function xFmtHoraTurno(s){
+	// 'YYYY-MM-DD HH:ii:ss' -> 'DD/MM HH:ii'
+	if ( !s || s.length < 16 ) { return ''; }
+	return s.substr(8,2) + '/' + s.substr(5,2) + ' ' + s.substr(11,5);
+}
+
+function xPintarCierresTurno(res){
+	const _todos = res.data || [];
+	const _cerrados = _todos.filter(c => String(c.cierre) === '1');
+	const _abandonados = _todos.filter(c => String(c.cierre) !== '1');
+
+	xThisHistVenta.listCierresTurno = _cerrados.map(c => {
+		const _registros = parseInt(c.registros) || 0;
+		const _importe = parseFloat(c.importe) || 0;
+		// registros/importe solo existen para cierres posteriores a la migracion 030; en los
+		// anteriores no se guardo el vinculo y se muestra el efectivo declarado en el cierre.
+		let _det = _registros > 0
+			? _registros + ' registros · S/ ' + numeroConComas(_importe.toFixed(2))
+			: 'Efectivo S/ ' + numeroConComas((parseFloat(c.total_efectivo) || 0).toFixed(2));
+		if ( parseInt(c.numintentos) > 1 ) { _det += ' · ' + c.numintentos + ' intentos'; }
+		if ( c.supervisor ) { _det += ' · superv. ' + c.supervisor; }
+		return {
+			id: c.id,
+			usuario: c.usuario,
+			hora: c.hora,
+			etiqueta: 'Cierre #' + c.id,
+			detalle: _det,
+			chipClass: 'rp-chip' + (parseInt(c.id) === xCierreFiltroActivo ? ' activo' : ''),
+			chipStyle: xEstiloCierre(c.id)
+		};
+	});
+
+	// opciones del combo de filtro: "Cierre #312 - JUAN 12:34". Se filtra por el texto que
+	// xEtiquetarCierre deja en cada fila (cierre_filtro), que es el mismo string.
+	xThisHistVenta.listCierreFilter = _cerrados.map(function (c) {
+		const _txt = 'Cierre #' + c.id + ' - ' + c.usuario;
+		return { descripcion: _txt + ' (' + c.hora + ')', key: 'cierre_filtro', value: _txt };
+	});
+
+	xCierresPorId = {};
+	_cerrados.forEach(function (c) { xCierresPorId[String(c.id)] = c; });
+
+	const n = _cerrados.length;
+	xThisHistVenta.cierresTitulo = n === 0 ? 'Turno sin cerrar'
+		: n === 1 ? '1 cierre de caja en este turno'
+		: n + ' cierres de caja en este turno';
+
+	let _sub = 'Turno ' + xFmtHoraTurno(res.desde) + ' a ' + xFmtHoraTurno(res.hasta) + ' (hora de cierre ' + res.hora_cierre + ')';
+	if ( n > 1 ) { _sub += ' · revisa que cada cierre corresponda a un relevo real de caja'; }
+	// sin la migracion 030 no existe el vinculo registro -> cierre: se ven los cierres, pero no
+	// que registro entro en cual. Se dice, para no dejar pensando que la pantalla esta fallando.
+	if ( res.hay_vinculo === false ) { _sub += ' · falta aplicar la migracion 030: aun no se puede saber que registro entro en cada cierre'; }
+	if ( _abandonados.length > 0 ) {
+		_sub += ' · ' + _abandonados.length + ' cuadre(s) iniciado(s) y no terminado(s): '
+			+ _abandonados.map(c => c.usuario + ' ' + c.hora).join(', ');
+	}
+	xThisHistVenta.cierresSubtitulo = _sub;
+	xThisHistVenta.cierresClass = 'rp-cierres' + (n > 1 ? ' alerta' : '');
+}
+
+function xEtiquetarCierre(x){
+	const _m = xMapaCierres[String(x.idregistro_pago)];
+	const _cerrado = String(x.cierre) === '1';
+	// cierre_filtro alimenta el combo de filtro; siempre string, xRegistroPagoFilterByCodes hace .includes()
+	x.cierre_filtro = '';
+	x.cierre_style = '';
+	if ( !_cerrado ) { x.cierre_label = ''; x.cierre_class = 'rp-cierre-hide'; x.cierre_title = ''; return; }
+	if ( _m && _m.c ) {
+		const _c = xCierresPorId[String(_m.c)];
+		x.cierre_label = 'Cierre #' + _m.c;
+		x.cierre_class = 'rp-cierre-tag';
+		x.cierre_style = xEstiloCierre(_m.c);
+		x.cierre_title = 'Cerrado el ' + (_m.f || '') + (_c ? ' por ' + _c.usuario : '');
+		x.cierre_filtro = 'Cierre #' + _m.c + (_c ? ' - ' + _c.usuario : '');
+	} else {
+		// cerrado antes de la migracion 030: no hay numero, pero si la fecha del cierre
+		x.cierre_label = 'Cerrado';
+		x.cierre_class = 'rp-cierre-tag sin-id';
+		x.cierre_title = (_m && _m.f) ? 'Cierre del ' + _m.f + ' (anterior al registro del numero de cierre)' : 'Cerrado';
+	}
+}
+
+function xAplicarEtiquetasCierre(){
+	[listRegistroMaster, xThisHistVenta.listRegistroPagoMaster].forEach(function (arr) {
+		if ( Array.isArray(arr) ) { arr.forEach(xEtiquetarCierre); }
+	});
+	if ( Array.isArray(xThisHistVenta.listRegistroPagoMaster) ) {
+		// dom-repeat solo repinta si cambia la referencia del array
+		xThisHistVenta.listRegistroPagoFilter = xThisHistVenta.listRegistroPagoMaster.slice();
+		xThisHistVenta.listRegistroPagoFilterTmp = xThisHistVenta.listRegistroPagoFilter;
+	}
+}
+
+// Clic en un chip: deja solo los registros de ese cierre. Volver a clicarlo quita el filtro.
+function xFiltrarPorCierre(el){
+	const _id = el ? (parseInt(el.getAttribute('data-id')) || 0) : 0;
+	xCierreFiltroActivo = (xCierreFiltroActivo === _id) ? 0 : _id;
+	xThisHistVenta.isHayCierreFiltrado = xCierreFiltroActivo > 0;
+
+	const _base = xThisHistVenta.listRegistroPagoMaster || [];
+	xThisHistVenta.listRegistroPagoFilter = xCierreFiltroActivo === 0
+		? _base.slice()
+		: _base.filter(function (x) {
+			const m = xMapaCierres[String(x.idregistro_pago)];
+			return m && m.c === xCierreFiltroActivo;
+		});
+	xThisHistVenta.listRegistroPagoFilterTmp = xThisHistVenta.listRegistroPagoFilter;
+	xThisHistVenta.cantRegistroPagos = xThisHistVenta.listRegistroPagoFilter.length;
+
+	xThisHistVenta.listCierresTurno = xThisHistVenta.listCierresTurno.map(function (c) {
+		return Object.assign({}, c, { chipClass: 'rp-chip' + (parseInt(c.id) === xCierreFiltroActivo ? ' activo' : '') });
+	});
+}
+
 function xloadHistorial(){
 	xPopupLoad.titulo='Cargando...';
 	xPopupLoad.xopen();
@@ -1169,6 +1355,12 @@ function xloadHistorial(){
     data_pagination.pageFecha = p_fecha !== '' ? p_fecha : xDevolverFecha();
 	let xDataRes = [];
 	//
+
+	// cierres de caja del turno; corre en paralelo con la lista y ambos llaman a
+	// xAplicarEtiquetasCierre() al terminar, asi que no importa cual llegue primero
+	xCierreFiltroActivo = 0;
+	xThisHistVenta.isHayCierreFiltrado = false;
+	xCargarCierresTurno(data_pagination.pageFecha);
 
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=20', data:{f:xfecha_historial}})
 	
@@ -1211,6 +1403,14 @@ function xloadHistorial(){
 
 			x.listIconsPago = _listIconsPago;
 			x.listDesPago = _listDesPago;
+
+			// Metodos DISTINTOS de esta venta. des_pago puede traer dos lineas del MISMO metodo
+			// (el SP agrupa por descripcion+importe, y hay pagos con dos cobros de TARJETA), asi
+			// que contar listDesPago marcaria como mixta una venta que no lo es.
+			const _metodosUnicos = [...new Set(_listDesPago.map(p => (p.descripcion || '').toUpperCase().trim()))].filter(m => m !== '');
+			x.listMetodosUnicos = _metodosUnicos;
+			// sin filtro de metodo se muestra el total del pago; xProyectarImporteMetodo() lo cambia
+			xResetImporteMostrado(x);
 			x.referencia_pedido = x.referencia_pedido === x.nom_cliente ? '' : x.referencia_pedido;
 			x.fecha_des = _fecha[0];
 			x.hora = _fecha[1];
@@ -1310,6 +1510,7 @@ function xloadHistorial(){
 				}
 			});
 
+
 			// filtro atendido por -nom_usuario-
 			const _itemAtendidoPor = xThisHistVenta.listAtendidoPorFilter.find(i => i.nom_usuario === x.nom_usuario)	
 
@@ -1349,6 +1550,9 @@ function xloadHistorial(){
 		xThisHistVenta.importeTotalRegistrado = numeroConComas(importeTotalRegistrado.toFixed(2));
 		xThisHistVenta.numComprobantesEmitidos = xCeroIzq(numTotalComprobantes, 2);
 		xThisHistVenta.cantRegistroPagos = xThisHistVenta.listRegistroPagoFilter.length;
+
+		// si el resumen de cierres llego primero, aqui se pintan las etiquetas de cada fila
+		xAplicarEtiquetasCierre();
 
 		// console.log('¿res', xThisHistVenta.listRegistroPagoFilter);
 		xPopupLoad.xclose();
@@ -1427,6 +1631,49 @@ function xloadHistorial(){
 	})*/
 }
 
+// ---- importe segun el metodo de pago filtrado ---------------------------------------------
+// Una venta puede pagarse con dos metodos (efectivo 10 + yape 20). Al filtrar por EFECTIVO la
+// fila debe aparecer -ese pago SI entro a la caja de efectivo- pero mostrando S/ 10, no S/ 30,
+// y el Importe Total de la cabecera tiene que sumar solo esa parte. Sin esto el total mezclaba
+// dinero que nunca estuvo en la caja del metodo consultado.
+function xResetImporteMostrado(x) {
+	x.importe_show = x.total;
+	x.importe_valor = parseFloat(x.total) || 0;
+	x.isPagoParcial = false;
+	x.pago_otros = '';
+	x.pago_parcial_title = '';
+}
+
+function xProyectarImporteMetodo(lista, metodos) {
+	lista.forEach(function (x) {
+		if ( !metodos.length ) { xResetImporteMostrado(x); return; }
+		const _sel = [], _otros = [];
+		(x.listDesPago || []).forEach(function (p) {
+			const _des = (p.descripcion || '').toUpperCase().trim();
+			// se suman TODAS las lineas del metodo: un mismo pago puede traer dos cobros con tarjeta
+			if ( metodos.indexOf(_des) > -1 ) { _sel.push(parseFloat(p.importe) || 0); }
+			else if ( _des !== '' && _otros.indexOf(_des) === -1 ) { _otros.push(_des); }
+		});
+		if ( !_sel.length ) { xResetImporteMostrado(x); return; }
+		const _monto = _sel.reduce(function (a, b) { return a + b; }, 0);
+		x.importe_valor = x.anulado ? 0 : _monto;
+		x.importe_show = _monto.toFixed(2);
+		x.isPagoParcial = _otros.length > 0;
+		x.pago_otros = _otros.join(' / ');
+		x.pago_parcial_title = _otros.length
+			? 'Pago combinado: ademas se cobro con ' + _otros.join(', ') + '. El total del pago fue S/ ' + x.total
+			: '';
+	});
+}
+
+// metodos de pago seleccionados en el combo (optgroup "Tipo de Pago")
+function xMetodosPagoSeleccionados(_listFilter) {
+	return (_listFilter || [])
+		.filter(function (i) { return i && i.key === 'des_pago'; })
+		.map(function (i) { return (i.value || '').toUpperCase().trim(); })
+		.filter(function (m) { return m !== ''; });
+}
+
 function xRegistroPagoListFilter(_listFilter) {
 	var _list = xThisHistVenta.listRegistroPagoMaster;
 	_listFilter.map(i => {
@@ -1436,12 +1683,15 @@ function xRegistroPagoListFilter(_listFilter) {
 	// console.log('¿_list filter', _list);
 	xThisHistVenta.listRegistroPagoFilter = JSON.parse(JSON.stringify(_list));
 	xThisHistVenta.listRegistroPagoFilterTmp = xThisHistVenta.listRegistroPagoFilter;
+	// se proyecta sobre la copia ya filtrada; el master conserva siempre el importe completo
+	xProyectarImporteMetodo(xThisHistVenta.listRegistroPagoFilter, xMetodosPagoSeleccionados(_listFilter));
 	xResumenRegistroPagoTotales();
 	// xCDInfoResumen();
 }
 
 function xRegistroPagoFilterByCodes(array, key, value) {	
-	return array.filter((o) => o[key].includes(value) );
+	// (o[key] || ''): las filas sin cierre no traen el campo y un undefined.includes() rompia el filtro
+	return array.filter((o) => (o[key] || '').includes(value) );
 }
 
 function xResumenRegistroPagoTotales() {
@@ -1463,7 +1713,8 @@ function xResumenRegistroPagoTotales() {
 
 
 		// importeTotalRegistrado = importeTotalRegistrado + parseFloat(x.total);
-		const _importeTotalRegistro = x.anulado ? 0 : parseFloat(x.total);
+		// importe_valor = el total del pago, o solo la parte del metodo filtrado si hay filtro
+		const _importeTotalRegistro = x.anulado ? 0 : (x.importe_valor !== undefined ? x.importe_valor : parseFloat(x.total));
 		importeTotalRegistrado = importeTotalRegistrado + _importeTotalRegistro;
 		numTotalComprobantes += x.comprobante !== '' ? 1 : 0;
 	})
@@ -2264,6 +2515,12 @@ Polymer({
 		listRegistroPagoFilterTmp: [], //en busqueda texto
 		listRegistroPagoExportDetallado: [],
 		listRegistroPagoExportDetalladoRowsDynamic: String,
+		listCierresTurno: [],
+		listCierreFilter: [],
+		cierresTitulo: String,
+		cierresSubtitulo: String,
+		cierresClass: String,
+		isHayCierreFiltrado: Boolean,
 		opPermisoPass: Number,		
 		idTpSelected: {},
 		objChangeTp: {
@@ -2290,6 +2547,12 @@ Polymer({
 		this.xYaPedidoCerrado = true;
 		this.isCierreCaja = false;
 		this.horaCierre = '00:00';
+		this.listCierresTurno = [];
+		this.listCierreFilter = [];
+		this.cierresTitulo = 'Cierres de caja del turno';
+		this.cierresSubtitulo = '';
+		this.cierresClass = 'rp-cierres';
+		this.isHayCierreFiltrado = false;
 		this.isHiddenOptionsPinPad = true;
 		this.isHiddenOptionsPinPadBtnRemove = true;
     	xThisHistVenta=this;

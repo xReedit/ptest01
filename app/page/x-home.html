@@ -121,6 +121,7 @@ function xIniHome(){
 
 	$(document).on('click','.xMiBoton_icon',function(e){
 		var xop=$(this).attr('data-op');
+		if ($(this).hasClass('xNuevaFn')) { xMarcarFuncionVista($(this).attr('data-id')); $(this).removeClass('xNuevaFn'); }
 		xOpenPage(xop);
 		
 		e.stopPropagation();
@@ -133,6 +134,15 @@ function xIniHome(){
 		console.log('Comision seleccionada:', e.detail.comision);
 	});
 }
+// funciones nuevas (estandar): us_home_opciones.nuevo = 1 => aura en el home hasta el primer clic de cada usuario.
+// Cookie (no localStorage) porque el logout hace localStorage.clear(). Ver migracion 025.
+function xEsFuncionNueva(codigo, opcion){
+	return String(opcion && opcion.nuevo) === '1' && document.cookie.indexOf('app3_fn_vista_' + codigo + '=1') === -1;
+}
+function xMarcarFuncionVista(codigo){
+	document.cookie = 'app3_fn_vista_' + codigo + '=1; max-age=31536000; path=/';
+}
+
 function xLoadAcc(){
 		/*
 	xArray_us_home=$.parseJSON(window.localStorage.getItem('::app3_Us_home'));
@@ -218,7 +228,7 @@ async function xVerificarAcc(){
 						}
 						xOpView[xidGrupoBd]={'titulo':xTituloSeccion};
 					}
-					xOpView[xidGrupoBd][i]={op:'<div class="xMiBoton_icon" data-id="'+xCharFind+'" data-op="'+xArray_us_home[z].num_opcion+'"><img src="../../images/'+xArray_us_home[z].img+'"><p>'+xArray_us_home[z].titulo+'</p></div>'};
+					xOpView[xidGrupoBd][i]={op:'<div class="xMiBoton_icon'+(xEsFuncionNueva(xCharFind, xArray_us_home[z]) ? ' xNuevaFn' : '')+'" data-id="'+xCharFind+'" data-op="'+xArray_us_home[z].num_opcion+'"><img src="../../images/'+xArray_us_home[z].img+'"><p>'+xArray_us_home[z].titulo+'</p></div>'};
 				}
 			};
 		};

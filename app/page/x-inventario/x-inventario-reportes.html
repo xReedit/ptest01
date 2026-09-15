@@ -1,0 +1,294 @@
+<dom-module id="x-inventario-reportes">
+	<template>
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Reportes de inventario</h3>
+						<p>Stock valorizado, kardex por producto y tendencia de mermas entre conteos aprobados.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')">Volver a conteos</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-seg">
+					<div class="inv-seg-item activa" onclick="xInvRep('valorizado', this)">Stock valorizado</div>
+					<div class="inv-seg-item" onclick="xInvRep('kardex', this)">Kardex por producto</div>
+					<div class="inv-seg-item" onclick="xInvRep('tendencia', this)">Tendencia de mermas</div>
+				</div>
+
+				<div class="inv-rep activa" id="inv_rep_valorizado">
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Alcance</span>
+							<select class="inv-select" id="inv_val_almacen"></select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">&nbsp;</span>
+							<div>
+								<button class="btn btn-sm btn-primary" onclick="xInvValorizadoCargar()">Ver</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_valorizado', 'Stock valorizado')">Excel</button>
+							</div>
+						</div>
+						<span class="inv-sep"></span>
+					</div>
+					<p class="inv-resumen" id="inv_val_resumen"></p>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_inv_valorizado">
+							<thead><tr>
+								<th>Familia</th><th>Producto</th><th>Und.</th>
+								<th class="inv-num">Stock</th><th class="inv-num">Minimo</th><th class="inv-num">Costo</th>
+								<th>Origen costo</th><th class="inv-num">Valorizado</th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+
+				<div class="inv-rep" id="inv_rep_kardex">
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Producto o porcion</span>
+							<input type="text" class="inv-input" id="inv_kx_item" placeholder="Escribe para buscar..." style="width:280px">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Almacen</span>
+							<select class="inv-select" id="inv_kx_almacen"></select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Desde</span>
+							<input type="date" class="inv-input" id="inv_kx_desde" style="width:145px">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Hasta</span>
+							<input type="date" class="inv-input" id="inv_kx_hasta" style="width:145px">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">&nbsp;</span>
+							<div>
+								<button class="btn btn-sm btn-primary" onclick="xInvKardexCargar()">Ver</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_kardex', 'Kardex')">Excel</button>
+							</div>
+						</div>
+						<span class="inv-sep"></span>
+					</div>
+					<p class="inv-resumen" id="inv_kx_resumen"></p>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_inv_kardex">
+							<thead><tr>
+								<th>Fecha</th><th>Hora</th><th>Movimiento</th>
+								<th class="inv-num">Entrada</th><th class="inv-num">Salida</th><th class="inv-num">Saldo</th>
+								<th>Usuario</th><th>Referencia</th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<p class="inv-nota">Saldo calculado hacia atras desde el stock actual. A partir de un movimiento sin signo conocido (AJUSTE CIERRE, MODIFICACION MONITOR) el saldo anterior no es calculable y se muestra ?</p>
+				</div>
+
+				<div class="inv-rep" id="inv_rep_tendencia">
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Alcance</span>
+							<select class="inv-select" id="inv_td_almacen"></select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Conteos</span>
+							<select class="inv-select" id="inv_td_n" style="width:140px"><option value="3">Ultimos 3</option><option value="6" selected>Ultimos 6</option><option value="12">Ultimos 12</option></select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">&nbsp;</span>
+							<div>
+								<button class="btn btn-sm btn-primary" onclick="xInvTendenciaCargar()">Ver</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_td_ranking', 'Tendencia mermas')">Excel ranking</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_td_conteos', 'Evolucion conteos')">Excel evolucion</button>
+							</div>
+						</div>
+						<span class="inv-sep"></span>
+					</div>
+					<p class="inv-titulo-sec">Evolucion por conteo</p>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_inv_td_conteos">
+							<thead><tr>
+								<th>Conteo</th><th>Aprobado</th>
+								<th class="inv-num">Contados</th><th class="inv-num">Con dif.</th><th class="inv-num">Exactitud</th>
+								<th class="inv-num">Faltante S/</th><th class="inv-num">Sobrante S/</th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<p class="inv-titulo-sec">Ranking de mermas <span class="inv-muted">(faltante acumulado; negativo = sobrante)</span></p>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_inv_td_ranking">
+							<thead><tr>
+								<th>#</th><th>Familia</th><th>Producto</th>
+								<th class="inv-num">Conteos</th><th class="inv-num">Veces falto</th><th class="inv-num">Veces sobro</th>
+								<th class="inv-num">Merma unid.</th><th class="inv-num">Prom./conteo</th><th class="inv-num">Merma S/</th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xInvKxSel = { idp: 0, procede: 0 };
+
+// 'YYYY-MM-DD' en hora LOCAL: toISOString() usa UTC y en Lima (UTC-5) adelanta un dia desde las 19:00.
+function xInvFechaLocal(d) {
+	var m = d.getMonth() + 1, dd = d.getDate();
+	return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (dd < 10 ? '0' : '') + dd;
+}
+function xInvReportesCargar() {
+	// solo la primera vez: al volver a la pestana se conservan el almacen, el item y las fechas elegidos
+	if ($('#inv_val_almacen option').length > 0) { return; }
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=1604' }).done(function (txt) {
+		var alm = $.parseJSON(txt).datos || [], html = '<option value="0">PORCIONES</option>';
+		alm.forEach(function (a) { html += '<option value="' + a.idalmacen + '">' + xInvEsc(a.descripcion) + '</option>'; });
+		$('#inv_val_almacen').html(html); $('#inv_kx_almacen').html(html.replace('<option value="0">PORCIONES</option>', ''));
+	});
+	// rep-items (no log.php op=1805): cada opcion es producto+almacen y trae su idalmacen, porque el
+	// mismo articulo tiene una fila de 'producto' por almacen y los nombres se repiten.
+	xInvApi('rep-items', {}).then(function (r) {
+		if (!r.success) { return; }
+		$('#inv_kx_item').autocomplete({ autoFocus: true, source: r.datos,
+			select: function (ev, ui) {
+				$('#inv_kx_item').val(ui.item.label);
+				xInvKxSel = { idp: parseInt(ui.item.value), procede: parseInt(ui.item.procede) };
+				// el almacen lo decide el item elegido: elegir el equivocado devolvia un kardex vacio
+				if (parseInt(ui.item.procede) === 0) { $('#inv_kx_almacen').val(String(ui.item.idalmacen)); }
+				return false;
+			},
+			focus: function () { return false; },
+			// si el usuario edita el texto despues de elegir, la seleccion deja de ser valida
+			change: function (event, ui) { if (ui.item === null) { xInvKxSel = { idp: 0, procede: 0 }; } return false; } });
+	});
+	$('#inv_kx_hasta').val(xInvFechaLocal(new Date())); $('#inv_kx_desde').val(xInvFechaLocal(new Date(Date.now() - 30 * 86400000)));
+}
+function xInvRep(nombre, tab) {
+	$('.inv-seg-item').removeClass('activa'); $(tab).addClass('activa');
+	$('.inv-rep').removeClass('activa'); $('#inv_rep_' + nombre).addClass('activa');
+	if (nombre === 'tendencia' && typeof xInvTendenciaInit === 'function') { xInvTendenciaInit(); }
+}
+function xInvValorizadoCargar() {
+	// limpiar antes de pedir: si la carga falla no deben quedar las filas ni el resumen del almacen anterior
+	$('#tb_inv_valorizado tbody').empty();
+	$('#inv_val_resumen').empty();
+	xPopupLoad.titulo = 'Calculando...'; xPopupLoad.xopen();
+	xInvApi('rep-stock-valorizado', { idalmacen: parseInt($('#inv_val_almacen').val()) || 0 }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		var html = '', bajo = 0, famAct = false; // false = centinela: ninguna familia puede valer false
+		var subtotales = {};
+		(r.datos.familias || []).forEach(function (g) { subtotales[g.familia] = g; });
+		r.datos.filas.forEach(function (f) {
+			// las filas vienen ordenadas por familia: al cambiar de grupo se cierra el anterior
+			var fam = (f.familia === null || f.familia === undefined) ? '' : String(f.familia);
+			if (famAct !== false && fam !== famAct) { html += xInvValSubtotal(subtotales, famAct); }
+			famAct = fam;
+			if (parseInt(f.bajo_minimo) === 1) { bajo++; }
+			html += '<tr class="' + (parseInt(f.bajo_minimo) === 1 ? 'inv-bajo' : '') + '"><td>' + xInvEsc(f.familia || '') + '</td><td>' + xInvEsc(f.descripcion) + '</td><td>' + xInvEsc(f.unidad || '') + '</td>' +
+				'<td class="inv-num">' + xInvNumRaw(f.stock) + '</td><td class="inv-num">' + xInvNumRaw(f.stock_minimo) + '</td>' +
+				'<td class="inv-num">' + xInvFmtNum(f.costo_unit) + '</td><td>' + (f.costo_origen === 'ninguno' ? '<span class="inv-nocosto">sin costo</span>' : xInvEsc(f.costo_origen)) + '</td>' +
+				'<td class="inv-num">' + xInvFmtSoles(f.valorizado) + '</td></tr>';
+		});
+		if (famAct !== false) { html += xInvValSubtotal(subtotales, famAct); }
+		$('#tb_inv_valorizado tbody').html(html || '<tr><td colspan="8" class="inv-empty">Sin items</td></tr>');
+		$('#inv_val_resumen').html('<b>Total ' + xInvFmtSoles(r.datos.total) + '</b> · ' + r.datos.filas.length + ' items · ' + bajo + ' bajo minimo' +
+			(r.datos.sin_costo > 0 ? ' · <span class="inv-nocosto">' + parseInt(r.datos.sin_costo) + ' sin costo</span>' : ''));
+	});
+}
+// fila de subtotal por familia (spec 8.2); los totales los calcula el backend, aqui solo se pintan
+function xInvValSubtotal(subtotales, fam) {
+	var g = subtotales[fam];
+	if (!g) { return ''; }
+	return '<tr class="inv-subtotal"><td colspan="7">Subtotal ' + xInvEsc(fam || 'SIN FAMILIA') + ' (' + parseInt(g.items) + ' items)</td>' +
+		'<td class="inv-num">' + xInvFmtSoles(g.valorizado) + '</td></tr>';
+}
+function xInvKardexCargar() {
+	if (!xInvKxSel.idp) { xInvAviso('Selecciona un producto o porcion de la lista'); return; }
+	// limpiar antes de pedir: si la carga falla no deben quedar los movimientos del item anterior
+	$('#tb_inv_kardex tbody').empty();
+	$('#inv_kx_resumen').empty();
+	xPopupLoad.titulo = 'Cargando kardex...'; xPopupLoad.xopen();
+	xInvApi('rep-kardex', { idp: xInvKxSel.idp, procede: xInvKxSel.procede, idalmacen: parseInt($('#inv_kx_almacen').val()) || 0,
+		desde: $('#inv_kx_desde').val(), hasta: $('#inv_kx_hasta').val() }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		var saldo = parseFloat(r.datos.stock_actual) || 0, html = '', incierto = false;
+		r.datos.movimientos.forEach(function (m) {
+			var cant = parseFloat(m.cantidad) || 0, signo = parseInt(m.signo), celda;
+			// un movimiento sin signo (AJUSTE CIERRE, MODIFICACION MONITOR) SI mueve el stock, pero no se
+			// sabe cuanto: desde ahi hacia atras el saldo no es calculable y se marca ?
+			if (incierto) {
+				celda = '<td class="inv-num" title="saldo no calculable: hay un movimiento sin signo mas reciente">?</td>';
+			} else if (signo === 0) {
+				celda = '<td class="inv-num"><b>' + (m.stock_total === null || m.stock_total === undefined || m.stock_total === '' ? xInvNumRaw(saldo) : xInvNumRaw(m.stock_total)) + '</b></td>';
+			} else {
+				celda = '<td class="inv-num"><b>' + xInvNumRaw(saldo) + '</b></td>';
+			}
+			html += '<tr><td>' + xInvEsc(m.fecha) + '</td><td>' + xInvEsc(m.hora || '') + '</td><td>' + xInvEsc(m.tipo) + (signo === 0 ? ' <span class="inv-tag">?</span>' : '') + '</td>' +
+				'<td class="inv-num inv-pos">' + (signo === 1 ? xInvNumRaw(cant) : '') + '</td>' +
+				'<td class="inv-num inv-neg">' + (signo === -1 ? xInvNumRaw(cant) : '') + '</td>' +
+				celda + '<td>' + xInvEsc(m.usuario || '') + '</td><td><span class="inv-sub">' + xInvEsc(m.referencia || '') + '</span></td></tr>';
+			if (signo === 0) {
+				incierto = true;
+			} else if (!incierto) {
+				// saldo ANTES de este movimiento (lista descendente). Se redondea a 5 decimales, la precision
+				// de producto_stock.stock, para que la resta repetida no arrastre ruido binario (0.1+0.2).
+				saldo = Math.round((saldo - signo * cant) * 100000) / 100000;
+			}
+		});
+		$('#tb_inv_kardex tbody').html(html || '<tr><td colspan="8" class="inv-empty">Sin movimientos en el periodo</td></tr>');
+		$('#inv_kx_resumen').html('<b>Stock actual ' + xInvNumRaw(r.datos.stock_actual) + '</b> · ' + r.datos.movimientos.length + ' movimientos · saldo inicial del periodo ' + (incierto ? '?' : xInvNumRaw(saldo)) +
+			($('#inv_kx_hasta').val() !== '' && $('#inv_kx_hasta').val() < xInvFechaLocal(new Date()) ? '<span class="inv-nocosto"> · el saldo parte del stock de HOY; para rangos pasados es referencial</span>' : ''));
+	});
+}
+function xInvTendenciaInit() {
+	// el combo de almacenes se copia del filtro de valorizado, que xInvReportesCargar llena una sola vez;
+	// si todavia no llegaron las opciones no se hace nada: xInvRep vuelve a llamar al entrar a la sub-pestana
+	if ($('#inv_td_almacen option').length) { return; }
+	var opciones = $('#inv_val_almacen').html();
+	if (!opciones) { return; }
+	$('#inv_td_almacen').html(opciones);
+}
+function xInvTendenciaCargar() {
+	// si el combo aun esta vacio (op=1604 no volvio) un val() vacio se leeria como 0 = PORCIONES
+	// y se mostrarian datos de otro alcance bajo un selector en blanco
+	xInvTendenciaInit();
+	if (!$('#inv_td_almacen option').length) { xInvAviso('Espera a que carguen los almacenes e intenta de nuevo'); return; }
+	// limpiar antes de pedir: si la carga falla no deben quedar las filas del almacen anterior
+	$('#tb_inv_td_conteos tbody').empty();
+	$('#tb_inv_td_ranking tbody').empty();
+	xPopupLoad.titulo = 'Calculando tendencia...'; xPopupLoad.xopen();
+	xInvApi('rep-tendencia', { idalmacen: parseInt($('#inv_td_almacen').val()) || 0, n: parseInt($('#inv_td_n').val()) || 6 }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		var h1 = '';
+		r.datos.conteos.forEach(function (c) {
+			h1 += '<tr><td>#' + c.idinventario_conteo + '</td><td>' + xInvEsc(c.fecha_aprob) + '</td><td class="inv-num">' + c.items + '</td><td class="inv-num">' + c.con_dif + '</td>' +
+				'<td class="inv-num">' + (c.exactitud_pct === null ? '-' : c.exactitud_pct + '%') + '</td>' +
+				'<td class="inv-num inv-neg">' + xInvFmtSoles(c.faltante_soles) + '</td><td class="inv-num inv-pos">' + xInvFmtSoles(c.sobrante_soles) + '</td></tr>';
+		});
+		$('#tb_inv_td_conteos tbody').html(h1 || '<tr><td colspan="7" class="inv-empty">Sin conteos aprobados para este alcance</td></tr>');
+		var h2 = '';
+		r.datos.ranking.forEach(function (f, i) {
+			// merma_soles > 0 es faltante (perdida): rojo. Negativo es sobrante: verde. Cero: neutro.
+			var v = parseFloat(f.merma_soles);
+			var cls = v > 0 ? 'inv-neg' : (v < 0 ? 'inv-pos' : '');
+			h2 += '<tr><td>' + (i + 1) + '</td><td>' + xInvEsc(f.familia || '') + '</td><td>' + xInvEsc(f.descripcion) + '</td><td class="inv-num">' + f.conteos + '</td>' +
+				'<td class="inv-num">' + f.veces_faltante + '</td><td class="inv-num">' + f.veces_sobrante + '</td>' +
+				'<td class="inv-num">' + xInvNumRaw(f.merma_unid) + '</td><td class="inv-num">' + xInvNumRaw(f.promedio_unid) + '</td>' +
+				'<td class="inv-num ' + cls + '">' + xInvFmtSoles(f.merma_soles) + '</td></tr>';
+		});
+		$('#tb_inv_td_ranking tbody').html(h2 || '<tr><td colspan="9" class="inv-empty">Sin diferencias registradas</td></tr>');
+	});
+}
+Polymer({ is: 'x-inventario-reportes' });
+</script>
+</dom-module>

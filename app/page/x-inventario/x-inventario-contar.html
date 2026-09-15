@@ -1,0 +1,200 @@
+<dom-module id="x-inventario-contar">
+	<template>
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3 id="inv_contar_titulo">Conteo</h3>
+						<p>Escribe la cantidad fisica y pasa a la siguiente fila con <b>Enter</b>. Cada fila se guarda sola. Deja vacio lo que no cuentes.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')">Volver</button>
+						<button class="btn btn-sm btn-success" onclick="xInvCerrarConteo()">Cerrar conteo</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-toolbar">
+					<div class="inv-field">
+						<span class="inv-label">Seccion</span>
+						<select class="inv-select" id="inv_contar_familia" onchange="xInvContarFiltrar()">
+							<option value="">Todas las secciones</option>
+						</select>
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Buscar</span>
+						<input type="text" class="inv-input" id="inv_contar_buscar" placeholder="Buscar producto..." onkeyup="xInvContarFiltrar()">
+					</div>
+					<span class="inv-sep"></span>
+					<div class="inv-progress-wrap">
+						<div class="inv-progress"><div class="inv-progress-fill" id="inv_contar_fill"></div></div>
+						<span class="inv-progress-txt" id="inv_contar_avance"></span>
+					</div>
+				</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table inv-table-conteo" id="tb_inv_contar">
+						<thead><tr>
+							<th>Producto</th><th>Und.</th>
+							<th class="inv-num" id="inv_th_sistema" style="display:none">Sistema</th>
+							<th class="inv-num">Contado</th><th>Obs.</th><th>Conto</th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xInvContarId = 0, xInvContarPend = {}, xInvContarTimer = null;
+var xInvContarEnviando = 0, xInvContarUltimo = null;
+// tope de 'contado', el mismo que valida el backend: depende de donde acaba el stock
+// (producto_stock.stock DECIMAL(10,5) -> 99999; porcion.stock DECIMAL(10,2) -> 99999999)
+var xInvContarTope = 99999;
+
+function xInvContarCargar(id) {
+	xInvContarId = id; xInvContarPend = {};
+	// limpiar la vista antes de pedir: si 'obtener' falla no deben quedar las filas del conteo anterior
+	clearTimeout(xInvContarTimer);
+	$('#tb_inv_contar tbody').empty();
+	$('#inv_contar_titulo').text('Conteo');
+	$('#inv_contar_avance').text('');
+	$('#inv_contar_fill').css('width', '0%');
+	$('#inv_contar_buscar').val('');
+	xPopupLoad.titulo = 'Cargando conteo...'; xPopupLoad.xopen();
+	xInvApi('obtener', { id: id }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { xInvIr('conteos'); return; }
+		var c = r.datos.cabecera, det = r.datos.detalle;
+		if (c.estado !== 'borrador') { xInvAviso('Este conteo ya esta ' + c.estado + '.', 'info'); xInvIr('conteos'); return; }
+		xInvContarTope = (c.tipo === 'porcion') ? 99999999 : 99999;
+		var mostrarSistema = det.length > 0 && det[0].hasOwnProperty('stock_sistema');
+		$('#inv_th_sistema').toggle(mostrarSistema);
+		$('#inv_contar_titulo').html('Conteo #' + c.idinventario_conteo + ' · ' + xInvEsc(c.almacen) +
+			(c.familia !== 'TODAS' ? ' / ' + xInvEsc(c.familia) : '') + '<span class="inv-estado borrador">BORRADOR</span>');
+		var html = '', famAct = false, secciones = []; // false = centinela: no puede coincidir con ninguna familia (ni con NULL)
+		det.forEach(function (d) {
+			var fam = d.familia || 'SIN FAMILIA';
+			if (d.familia !== famAct) { famAct = d.familia; secciones.push(fam); html += '<tr class="inv-fam" data-fam="' + xInvAttr(fam) + '"><td colspan="' + (mostrarSistema ? 6 : 5) + '">' + xInvEsc(fam) + '</td></tr>'; }
+			html += '<tr class="inv-fila" data-iddet="' + d.idinventario_conteo_detalle + '" data-fam="' + xInvAttr(fam) + '" data-txt="' + xInvAttr((d.descripcion || '').toLowerCase()) + '">' +
+				'<td>' + xInvEsc(d.descripcion) + '</td><td>' + xInvEsc(d.unidad || '') + '</td>' +
+				(mostrarSistema ? '<td class="inv-sistema inv-num">' + xInvNumRaw(d.stock_sistema) + '</td>' : '') +
+				'<td class="inv-num"><input type="number" min="0" step="any" class="inv-cant" value="' + (d.contado === null ? '' : xInvNumRaw(d.contado)) + '" onchange="xInvContarCambio(this)" onkeydown="xInvContarEnter(event,this)"></td>' +
+				'<td><input type="text" class="inv-obs" maxlength="250" placeholder="Observacion" value="' + xInvAttr(d.obs) + '" onchange="xInvContarCambio(this)"></td>' +
+				'<td><span class="inv-quien">' + xInvEsc(d.cuenta || '') + '</span></td></tr>';
+		});
+		$('#tb_inv_contar tbody').html(html || '<tr><td colspan="6" class="inv-empty">Este conteo no tiene items.</td></tr>');
+		// el combo de secciones sale del propio detalle: asi cada encargado cuenta solo lo suyo
+		var op = '<option value="">Todas las secciones (' + det.length + ')</option>';
+		secciones.forEach(function (s) {
+			op += '<option value="' + xInvAttr(s) + '">' + xInvEsc(s) + ' (' + xInvContarFilas(s).length + ')</option>';
+		});
+		$('#inv_contar_familia').html(op);
+		xInvContarAvance();
+	});
+}
+// Filas de una seccion. Se filtra por callback y no con [data-fam="..."]: una familia con
+// comillas o & rompe el selector de atributo.
+function xInvContarFilas(fam) {
+	var todas = $('#tb_inv_contar .inv-fila');
+	return fam === '' ? todas : todas.filter(function () { return $(this).attr('data-fam') === fam; });
+}
+// El avance se mide sobre la seccion elegida; si no hay ninguna, sobre todo el conteo.
+function xInvContarAvance() {
+	var fam = $('#inv_contar_familia').val() || '';
+	var filas = xInvContarFilas(fam);
+	var total = filas.length, hechos = filas.find('.inv-cant').filter(function () { return this.value !== ''; }).length;
+	$('#inv_contar_avance').text((fam === '' ? 'Contados ' : fam + ': ') + hechos + ' / ' + total);
+	$('#inv_contar_fill').css('width', (total ? Math.round(hechos * 100 / total) : 0) + '%');
+}
+function xInvContarFiltrar() {
+	var q = ($('#inv_contar_buscar').val() || '').toLowerCase();
+	var fam = $('#inv_contar_familia').val() || '';
+	$('#tb_inv_contar .inv-fila').each(function () {
+		var f = $(this);
+		var okTxt = q === '' || (f.attr('data-txt') || '').indexOf(q) >= 0;
+		var okFam = fam === '' || f.attr('data-fam') === fam;
+		f.toggle(okTxt && okFam);
+	});
+	// el separador de familia solo estorba cuando se busca por texto o ya se aisló una seccion
+	$('#tb_inv_contar .inv-fam').each(function () {
+		$(this).toggle(q === '' && fam === '');
+	});
+	xInvContarAvance();
+}
+function xInvContarEnter(e, input) {
+	if (e.key !== 'Enter') { return; }
+	e.preventDefault();
+	var visibles = $('#tb_inv_contar .inv-fila:visible .inv-cant'), i = visibles.index(input);
+	if (i >= 0 && i + 1 < visibles.length) { visibles[i + 1].focus(); visibles[i + 1].select(); }
+}
+function xInvContarInvalida(fila, iddet, msj) {
+	// dato invalido: sale de la cola para no mandar basura ni pisar lo ya guardado
+	delete xInvContarPend[iddet];
+	fila.addClass('error');
+	xInvAviso(msj, 'error', 'Cantidad invalida');
+	xInvContarAvance();
+}
+function xInvContarCambio(input) {
+	var fila = $(input).closest('.inv-fila'), iddet = parseInt(fila.data('iddet'));
+	var inp = fila.find('.inv-cant')[0];
+	// badInput: el navegador tiene texto que no es numero ('1,5', letras) y value sale ''; no es un borrado real
+	if (inp.validity && inp.validity.badInput) { xInvContarInvalida(fila, iddet, 'Usa el punto como separador decimal.'); return; }
+	var cant = inp.value;
+	if (cant !== '' && (isNaN(parseFloat(cant)) || parseFloat(cant) < 0 || parseFloat(cant) > xInvContarTope)) {
+		xInvContarInvalida(fila, iddet, 'Debe ser un numero entre 0 y ' + xInvContarTope + '.');
+		return;
+	}
+	xInvContarPend[iddet] = { iddet: iddet, contado: cant === '' ? null : parseFloat(cant), obs: fila.find('.inv-obs').val() };
+	fila.removeClass('guardada error');
+	xInvContarAvance();
+	clearTimeout(xInvContarTimer);
+	xInvContarTimer = setTimeout(xInvContarEnviar, 600); // ponytail: debounce simple; el lote sale al dejar de escribir
+}
+function xInvContarEnviar() {
+	var filas = Object.keys(xInvContarPend).map(function (k) { return xInvContarPend[k]; });
+	if (!filas.length) { return $.Deferred().resolve().promise(); }
+	xInvContarPend = {};
+	xInvContarEnviando++;
+	xInvContarUltimo = xInvApi('guardar-detalle', { id: xInvContarId, filas: filas });
+	return xInvContarUltimo.then(function (r) {
+		xInvContarEnviando--;
+		if (xInvContarEnviando === 0) { xInvContarUltimo = $.Deferred().resolve().promise(); }
+		filas.forEach(function (f) {
+			var fila = $('#tb_inv_contar .inv-fila[data-iddet="' + f.iddet + '"]');
+			fila.addClass(r.success ? 'guardada' : 'error');
+			if (r.success) { fila.find('.inv-quien').text('tú'); }
+		});
+		// reencolar solo lo que nadie volvio a editar mientras el POST estaba en vuelo
+		if (!r.success) { filas.forEach(function (f) { if (!xInvContarPend[f.iddet]) { xInvContarPend[f.iddet] = f; } }); }
+	});
+}
+function xInvCerrarConteo() {
+	var sinContar = $('#tb_inv_contar .inv-fila .inv-cant').filter(function () { return this.value === ''; }).length;
+	var msj = 'Luego ya no se puede editar.';
+	if (sinContar > 0) { msj += '<br><br><b>Hay ' + sinContar + ' items sin contar</b>: no generaran ajuste.'; }
+	xInvConfirmar(msj, 'Cerrar el conteo #' + xInvContarId + '?', 'Si, cerrar').then(function (ok) {
+		if (!ok) { return; }
+		clearTimeout(xInvContarTimer);
+		xPopupLoad.titulo = 'Cerrando...'; xPopupLoad.xopen();
+		// esperar el POST en vuelo -> vaciar la cola -> solo si no quedo nada pendiente, cerrar
+		$.when(xInvContarUltimo).then(function () {
+			return xInvContarEnviar();
+		}).then(function () {
+			var pendientes = Object.keys(xInvContarPend).length;
+			if (pendientes > 0 || xInvContarEnviando > 0) {
+				xPopupLoad.xclose();
+				xInvAviso('No se pudieron guardar ' + (pendientes || xInvContarEnviando) + ' fila(s). Revisa la conexion y vuelve a intentar antes de cerrar.', 'error');
+				return;
+			}
+			xInvApi('cerrar', { id: xInvContarId }).then(function (r) {
+				xPopupLoad.xclose();
+				if (r.success) { xInvIr('resultado', xInvContarId); }
+			});
+		});
+	});
+}
+Polymer({ is: 'x-inventario-contar' });
+</script>
+</dom-module>

@@ -1,1 +1,99 @@
-<div></div>
+<dom-module id="x-inventario">
+	<link rel="import" href="./x-inventario/x-inventario-conteos.html">
+	<link rel="import" href="./x-inventario/x-inventario-contar.html">
+	<link rel="import" href="./x-inventario/x-inventario-resultado.html">
+	<link rel="import" href="./x-inventario/x-inventario-reportes.html">
+	<script type="text/javascript" src="../view/export.excel.js"></script>
+	<template>
+		<div class="inv-vista activa" id="inv_vista_conteos"><x-inventario-conteos></x-inventario-conteos></div>
+		<div class="inv-vista" id="inv_vista_contar"><x-inventario-contar></x-inventario-contar></div>
+		<div class="inv-vista" id="inv_vista_resultado"><x-inventario-resultado></x-inventario-resultado></div>
+		<div class="inv-vista" id="inv_vista_reportes"><x-inventario-reportes></x-inventario-reportes></div>
+	</template>
+<script>
+// Avisos del modulo: SweetAlert en lugar de alert()/confirm() nativos, que muestran la IP del
+// servidor, bloquean el hilo y no respetan el diseno. Helpers de js/mi.sweet.alert.js.
+// Tema 1 (el del sistema): fondo azul pizarra rgba(54,70,93,.99), texto blanco, boton #4285F4.
+function xInvAviso(texto, icono, titulo) {
+	showAlertSwalOk(icono || 'warning', titulo || '', texto, 'Entendido', 1);
+}
+// Devuelve una promesa que resuelve true si el usuario confirmo. NO es bloqueante: todo lo que
+// dependa de la respuesta va dentro del .then().
+function xInvConfirmar(texto, titulo, textoBoton) {
+	return showAlertSwalHtmlDecision({
+		title: titulo || 'Confirmar',
+		html: texto,
+		icon: 'question',
+		showCancelButton: true,
+		confirmButtonText: textoBoton || 'Si, continuar',
+		cancelButtonText: 'Cancelar'
+	}, 1).then(function (r) { return !!(r && r.isConfirmed); });
+}
+// Llamada al backend del modulo. Siempre resuelve con {success, datos, error}; si success=false ya mostro el error.
+function xInvApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_inventario.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		if (!r || !r.success) { xInvAviso((r && r.error) || 'Error de comunicacion con el servidor', 'error'); }
+		d.resolve(r || { success: false, datos: null, error: 'sin respuesta' });
+	})
+	.fail(function (jqXHR) {
+		try { xPopupLoad.xclose(); } catch (e) {}
+		// 401 = SecurityGuard rechazo la sesion; decir "no se pudo conectar" manda a revisar la red
+		xInvAviso(jqXHR && jqXHR.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		d.resolve({ success: false, datos: null, error: 'red' });
+	});
+	return d.promise();
+}
+// Una sola tarjeta visible a la vez: no hay pestanas flotantes, la navegacion sale de los
+// botones del encabezado de cada tarjeta (Reportes / Volver / Conteos).
+function xInvIr(vista, id) {
+	$('.inv-vista').removeClass('activa');
+	$('#inv_vista_' + vista).addClass('activa');
+	if (vista === 'conteos') { xInvConteosCargar(); }
+	if (vista === 'contar') { xInvContarCargar(id); }
+	if (vista === 'resultado') { xInvResultadoCargar(id); }
+	if (vista === 'reportes') { xInvReportesCargar(); }
+}
+// Exporta una tabla del modulo a Excel. tableToExcel copia el innerHTML tal cual, asi que sin
+// limpiar salen las filas ocultas por los filtros, la fila "Sin diferencias" y los checkboxes
+// como celdas vacias. Se exporta una copia depurada, que se inserta y se quita al vuelo.
+function xInvExcel(idTabla, nombre) {
+	var orig = $('#' + idTabla);
+	if (!orig.length) { return; }
+	// :hidden hay que medirlo en la tabla REAL: un clon suelto no tiene layout y todo saldria oculto
+	var quitar = [];
+	orig.find('tr').each(function (i) {
+		if ($(this).is(':hidden') || $(this).hasClass('inv-vacio')) { quitar.push(i); }
+	});
+	var marcados = orig.find('input[type=checkbox]');
+	var copia = orig.clone();
+	// primero los checkbox (los indices aun coinciden con los de la tabla original), luego las filas
+	copia.find('input[type=checkbox]').each(function (i) {
+		$(this).replaceWith(marcados.eq(i).is(':checked') ? 'Si' : 'No');
+	});
+	var filas = copia.find('tr');
+	for (var k = quitar.length - 1; k >= 0; k--) { filas.eq(quitar[k]).remove(); }
+	copia.attr('id', idTabla + '_xls').css('display', 'none');
+	$('body').append(copia);
+	try { tableToExcel(idTabla + '_xls', nombre); } finally { copia.remove(); }
+}
+function xInvEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+function xInvAttr(s) { return xInvEsc(s).replace(/"/g, '&quot;'); }
+function xInvFmtNum(n) { var v = parseFloat(n); return isNaN(v) ? '' : (Math.round(v * 100) / 100).toString(); }
+function xInvNumRaw(n) { var v = parseFloat(n); return isNaN(v) ? '' : String(v); }
+function xInvFmtSoles(n) { var v = parseFloat(n); return isNaN(v) ? '' : 'S/ ' + v.toFixed(2); }
+
+Polymer({
+	is: 'x-inventario',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		// xInvIr('conteos') va DENTRO del callback: pide 'listar' al backend y fuera del callback
+		// se dispara antes de que xm_LogChequea confirme la sesion (401 en la primera carga).
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xInvIr('conteos'); });
+		$("#Titulo_page").text("Inventario");
+	}
+});
+</script>
+</dom-module>

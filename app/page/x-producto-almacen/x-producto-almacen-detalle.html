@@ -361,16 +361,29 @@ const productoService = new ProductoService();
             idalmacen: xthisProductoDetalle.objproducto.idalmacen
         }
 
+        // claves en MAYUSCULAS: el SP devuelve 'Venta' (resumen por dia) y backend-pedidos 'VENTA' / 'VENTA DEVOLUCION'
         const _classTipoMovimiento = {
-            'Venta': 'fw-600 text-success',
-            'Aumenta': 'fw-600 text-primary',
-            'Disminuye': 'fw-600 text-danger',
-            'Compra': 'fw-600 text-info',
-            'Ingreso x Distribucion': 'fw-600 text-warning',
-            'Salida x Distribucion': 'fw-600 text-danger',
-            'Salida de Almacen': 'fw-600 text-danger',
-            'Entrada a Almacen': 'fw-600 text-warning',
-            
+            'VENTA': 'fw-600 text-success',
+            'VENTA DEVOLUCION': 'fw-600 text-primary',
+            'AJUSTE CIERRE': 'fw-600 text-warning',
+            'AUMENTA': 'fw-600 text-primary',
+            'DISMINUYE': 'fw-600 text-danger',
+            'COMPRA': 'fw-600 text-info',
+            'INGRESO X DISTRIBUCION': 'fw-600 text-warning',
+            'SALIDA X DISTRIBUCION': 'fw-600 text-danger',
+            'SALIDA DE ALMACEN': 'fw-600 text-danger',
+            'ENTRADA A ALMACEN': 'fw-600 text-warning',
+            'PROD_ENTRADA': 'fw-600 text-warning',
+            'PROD_SALIDA': 'fw-600 text-danger',
+            'AJUSTE INVENTARIO +': 'fw-600 text-primary',
+            'AJUSTE INVENTARIO -': 'fw-600 text-danger',
+        }
+        const _signoMovimiento = (tipo) => {
+            if (tipo === 'AJUSTE CIERRE') { return '±'; }
+            // 'AJUSTE INVENTARIO -' / 'AJUSTE INVENTARIO +': el signo esta al final del propio tipo.
+            // Sin esto no matcheaba ninguna regla y una merma se pintaba como ingreso (+23995).
+            if (/^AJUSTE INVENTARIO/.test(tipo)) { return tipo.trim().slice(-1) === '-' ? '-' : '+'; }
+            return /^(VENTA$|DISMINUYE|SALIDA|PROD_SALIDA)/.test(tipo) ? '-' : '+';
         }
 
         const _httpFecht = new httpFecht();
@@ -379,8 +392,10 @@ const productoService = new ProductoService();
             xthisProductoDetalle.listProductoHistorial = rpt.datos;
             xthisProductoDetalle.listProductoHistorial.map(x => {
                 // x.classMovimiento = x.tipo_movimiento == 'Venta' ? 'fw-600 text-success' : x.tipo_movimiento == 'Aumenta' ? 'fw-600 text-primary' : x.tipo_movimiento == 'Compra'? 'fw-600 text-info' : 'fw-600 text-danger';
-                x.classMovimiento = _classTipoMovimiento[x.tipo_movimiento]
-                x.tipo_movimiento = x.tipo_movimiento.toUpperCase();
+                x.tipo_movimiento = (x.tipo_movimiento || '').toUpperCase();
+                x.classMovimiento = _classTipoMovimiento[x.tipo_movimiento] || 'fw-600 text-danger';
+                // signo segun el tipo: salidas '-', entradas '+'; AJUSTE CIERRE guarda la magnitud sin signo
+                x.cantidad = _signoMovimiento(x.tipo_movimiento) + String(x.cantidad).replace(/^[+-]/, '');
                 x.showDetalle = x.detalle !== '';
                 return x;
             })

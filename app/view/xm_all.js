@@ -1010,8 +1010,14 @@ function getDataUsRRHH() {
 // sabe si SUNAT declaro el comprobante; null = API viejo, se clasifica solo por
 // codigo como antes. Es la autoridad: manda sobre lo que diga sunat_errores.
 async function xVerificarCodeResponseCPE(response, external_id = '', aceptado = null) {
-	// sin codigo solo se sigue si el API afirma que NO fue aceptado
-	if (!response.code && aceptado !== false) {
+	// Sin codigo solo se sigue si el API afirma que NO fue aceptado.
+	// FIX: el API devuelve el codigo como STRING, y "0" es truthy: el guard no lo atrapaba y
+	// terminaba en el toast "Obs. comprobante 0" despues de cada comprobante correcto (0 = CDR
+	// aceptado sin observaciones, y no esta catalogado en sunat_errores).
+	// parseInt base 10 para no confundir '0109' (transitorio real) con cero: parseInt('0109',10)=109.
+	const _codigoCpe = (response.code === undefined || response.code === null) ? '' : String(response.code).trim();
+	const _sinObservacion = _codigoCpe === '' || parseInt(_codigoCpe, 10) === 0;
+	if (_sinObservacion && aceptado !== false) {
 		return;
 	}
 

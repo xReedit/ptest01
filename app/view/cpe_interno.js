@@ -48,8 +48,15 @@ function CpeInterno_Registrar(data) {
         if ( data.response.length != 0 ) {
             //cuando es boleta debe ir 1 de todas maneras porque boleta se envia despues
             // si es factura debemos ver si hay error entonces 1 = se envia luego, de lo contrario 0 = envio a sunat ok
-            const _estado_sunat = data.response.error_soap && dataSave.numero.indexOf('F') > -1 ? 1 : data.response.code ? data.response.code : 0;
-            
+            // 2026-09: misma regla que el reenvio (xSoapSunat_cpeAceptado). Si el API
+            // manda 'accepted' esa es la respuesta a "¿SUNAT lo declaro?": con 1032/1033
+            // el envio falla pero el comprobante YA esta en SUNAT y debe quedar en 0,
+            // no en 1 ("Registrado") de por vida. API viejo sin 'accepted' -> regla anterior.
+            const _resp = data.response;
+            const _estado_sunat = typeof _resp.accepted === 'boolean'
+                ? (_resp.accepted ? 0 : (parseInt(_resp.code, 10) || 1))
+                : (_resp.error_soap && dataSave.numero.indexOf('F') > -1 ? 1 : _resp.code ? _resp.code : 0);
+
             // dataSave.estado_sunat = data.response.error_soap ? data.response.code : 0; // si no hay error quiere decir que si registro
             dataSave.estado_sunat = _estado_sunat;
             dataSave.msj = data.response.description; 

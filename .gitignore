@@ -13,5 +13,6 @@ minify.sh
 
 plan/
 migraciones/
+test/
 
 DESIGN.md

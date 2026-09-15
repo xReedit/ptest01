@@ -172,13 +172,14 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 					const esImpuesto = c.es_impuesto;
 					const valorImpuesto = c.activo === "0" ? c.monto : 0; // se marca 0=activo o 1=desactivado para obtener el % del impuesto requerido por comprobante electronico			
 					const visible_cpe = esImpuesto === "1" ? true : false; // indica si se muestra en la facturacion electronica
-					let porcentaje = parseFloat(parseFloat(valorImpuesto)/100).toFixed(2);		
+					let porcentaje = parseFloat(parseFloat(valorImpuesto)/100); // sin toFixed(2): redondeaba 0.105 (10.5%) a 0.10
 					// porcentaje = parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
 					porcentaje = c.descripcion === 'I.G.V' ? porcentaje : parseFloat(parseFloat(importeTotal)*parseFloat(porcentaje)).toFixed(2);
 
 					// const esVisible = porcentaje > 0 ? true : false; // ver que implica
 					
-					arrSuma.push({ 'id': id, 'descripcion': c.descripcion, 'importe': xMoneda(porcentaje), 'esImpuesto': esImpuesto, 'visible': true, 'quitar': false, 'tachado': false, 'visible_cpe': visible_cpe}); 
+					// I.G.V guarda la fraccion (0.105) hasta recalcular abajo; xMoneda la redondearia a 0.10
+					arrSuma.push({ 'id': id, 'descripcion': c.descripcion, 'importe': c.descripcion === 'I.G.V' ? porcentaje : xMoneda(porcentaje), 'esImpuesto': esImpuesto, 'visible': true, 'quitar': false, 'tachado': false, 'visible_cpe': visible_cpe}); 
 					break;
 			}	
 		});

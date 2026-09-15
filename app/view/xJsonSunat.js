@@ -404,7 +404,19 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV, esGratuit
 
     items.map( (x, index) => {
         index++;
-        
+
+        // 2026-08: un item sin nombre generaba <cbc:Description></cbc:Description>
+        // y SUNAT rechazaba el comprobante ENTERO (codigo 2026), no solo la linea.
+        // Paso el codigo interno para que el item siga siendo identificable en el
+        // PDF y en la consulta; el API ademas rechaza en la puerta si queda vacio.
+        const _descripcion = String(x.des == null ? '' : x.des).trim()
+            || (x.id ? `PRODUCTO ${x.id}` : 'PRODUCTO');
+
+        if ( _descripcion !== x.des ) {
+            // no bloquea la venta (el fallback ya hace valido el CPE), pero
+            // alguien tiene que enterarse para corregir el producto en la carta
+            showToastSwal('warning', `Producto sin nombre (cod. ${x.id || 's/c'}): se emitio como "${_descripcion}". Corregir en la carta.`);
+        }
 
         let codigo_tipo_afectacion_igv = "20";
         let total_base_igv = 0.01;
@@ -473,7 +485,7 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV, esGratuit
         //const montoIGVItem =  parseFloat(parseFloat(x.precio_total) * procentaje_IGV).toFixed(2);
         var jsonItem = {
             "codigo_interno": x.id,
-            "descripcion": x.des,
+            "descripcion": _descripcion,
             "codigo_producto_sunat": "90101500",
             "codigo_producto_gsl": "90101500",
             "unidad_de_medida": "NIU",

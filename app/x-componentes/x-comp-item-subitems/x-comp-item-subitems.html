@@ -643,7 +643,7 @@
 
     function xListoDlgVR_comp() {
         compResetInputIndicaciones('');
-        xVerMipedidoVR();
+        if (typeof xVerMipedidoVR === 'function') { xVerMipedidoVR(); } // solo existe en venta rapida
         dialog_item_comp.close();
         resetCmpCtrlAddFact();
 
@@ -880,7 +880,9 @@
         '<div class="xdetalle_item">' +
         xCadenaItem_des_foto +
         // '<div class="xreferencia_item"><input type="text" autocomplete="on" placeholder="Escribe aqui las especificaciones..." class="xMiTextReferencia" id="txt_referencia"></div>' +
-        xCadenaTC +
+        // venta rapida arma xCadenaTC (todos los tipos de consumo); control de mesas no la tiene:
+        // se arma aqui solo con el tipo de consumo elegido en el select del panel lateral
+        ((typeof xCadenaTC !== 'undefined' && xCadenaTC) ? xCadenaTC : xArmarTipoConsumo(1, typeof xidTipoConsumo !== 'undefined' ? xidTipoConsumo : null)) +
         "</div></div>";
 
       //xCadenaItem=String(xCadenaItem+'<div class="xmenu_item_2 xitem_seleccionado_pedido" data-id="'+xdtItem.idcarta_lista+'" data-item="'+xdtItem.iditem+'" data-idseccion="'+xdtItem.idseccion+'" '+

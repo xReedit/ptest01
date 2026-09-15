@@ -148,18 +148,19 @@
         },
         showDialogChangeSys: async function() {
             const _swalAlertValues = paramsSwalAlert;	
+            const _tieneBlog = !!this.route; // sin route: solo anuncia la novedad, no manda al blog
             _swalAlertValues.html = `<div class="p-1" style="overflow: hidden;"><i class="fa fa-flag fa-2x text-primary" aria-hidden="true"></i>
-                                <p class="mt-1 fs-20 text-warning">Actualizaciones</p>
+                                <p class="mt-1 fs-20 text-warning">${_tieneBlog ? 'Actualizaciones' : 'Nueva función'}</p>
                                 <p class="mt-1 fs-18">${this.titulo}</p>
-                                <p class="fs-15">${this.descripcion}</p
+                                <p class="fs-15">${this.descripcion}</p>
                                 </div>`;
             
-            _swalAlertValues.confirmButtonText = "Ver Cambios";
+            _swalAlertValues.confirmButtonText = _tieneBlog ? "Ver Cambios" : "Entendido";
             _swalAlertValues.cancelButtonText = "Cerrar";
-            _swalAlertValues.showCancelButton = true;
+            _swalAlertValues.showCancelButton = _tieneBlog;
 
             const rptDialogChange = await showAlertSwalHtmlDecision(_swalAlertValues);
-            if (rptDialogChange.value) {
+            if (rptDialogChange.value && _tieneBlog) {
                 // abrir en una nueva pestaña
                 this.showRegister();
             }

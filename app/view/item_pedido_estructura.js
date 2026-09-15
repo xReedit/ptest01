@@ -91,7 +91,7 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false,
                 rv[grupo] = {
                     id: x.iditem,
                     cantidad: parseFloat(_cantidad),
-                    des: isPrecuenta ? x.des : x.des.split('(')[0],
+                    des: isPrecuenta ? x.des : xDesSinParentesis(x.des),
                     punitario: x.precio,
                     precio_total: _total,
                     precio_print: parseInt(x.precio_print) != 0 ? _total : x.precio_print,
@@ -269,4 +269,22 @@ function xEstructuraItemsGroupFormatoImpresion( xs , key) {
     let rpt = {}
     rpt[0] = arr_rpt_json;    
     return rpt;
+}
+
+// El nombre del item viene con el detalle entre parentesis, ej. "PIZZA (XL)";
+// para agrupar e imprimir se corta esa parte. Pero si el nombre EMPIEZA con
+// parentesis — "(XL) HAWAIANA", que existe en la carta — el corte dejaba la
+// descripcion VACIA, y SUNAT rechaza el comprobante ENTERO (codigo 2026) por
+// un <cbc:Description> vacio. Se corta solo cuando queda algo.
+function xDesSinParentesis(des) {
+    const _des = String(des == null ? '' : des).trim();
+    const _corte = _des.split('(')[0].trim();
+
+    return _corte || _des;
+}
+
+// Export para pruebas en Node (test/item_pedido_estructura.des.test.js);
+// en el navegador la funcion queda global como el resto del archivo.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { xDesSinParentesis };
 }

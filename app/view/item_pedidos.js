@@ -253,6 +253,12 @@ function handlerFnMiPedido(e) {
 		const sumar  =  xsigno === '+' ? true : false;
 		xAddSubItemsView(xidTipoConsumo, xidItem, sumar);
 
+		// control de mesas: reflejar la cantidad en el li de la lista lateral (id li{idcarta_lista})
+		try {
+			const _liCM = $('#li' + xidItem + ' .xcant_li');
+			if (_liCM.length) { _liCM.text(xCantActual); _liCM.toggleClass('cant_fixed_li', xCantActual > 0); }
+		} catch (error) {}
+
 		if(xCantActual<=0){delete xArrayPedidoObj[xidTipoConsumo][xidItem]}
 
 		// Guardar sin nulls = JSON.stringify 100x más rápido
@@ -316,7 +322,7 @@ function handlerFnMiPedido(e) {
 			xVistaMiPedido._outLoadPedido();
 		}
 
-		if (_viene_venta_rapida == 1) { //viene de venta rapida
+		if (_viene_venta_rapida == 1 && typeof xVerMipedidoVR === 'function') { //viene de venta rapida
 			xVerMipedidoVR();
 		}
 
@@ -432,13 +438,18 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 		
 		if (_viene_venta_rapida == 1) { //viene de venta rapida seleccionados obj
 			_nomClassXcant_li = 'xcant_li2';
+		}
 
-			//si tiene subtiems lanza el popup opciones // en control de pedidos no lanza subopciones
-			// el dialog es obligatorio si alguna opcion descuenta stock (producto/porcion/subreceta)
-			// o si algun grupo es de seleccion obligatoria, aunque el toggle "opciones primero"
-			// este apagado; solo las opciones libres respetan el toggle
-			if (itemPedidos_objItemSelected.subitems && itemPedidos_objItemSelected.subitems !== '0') {
-				var _abrirDialogSubitems = isShowOpcionesPrimero;
+		// si tiene subitems lanza el popup opciones (venta rapida Y control de mesas)
+		// el dialog es obligatorio si alguna opcion descuenta stock (producto/porcion/subreceta)
+		// o si algun grupo es de seleccion obligatoria, aunque el toggle "opciones primero"
+		// este apagado; solo las opciones libres respetan el toggle.
+		// Antes solo venta rapida lo abria: desde control de mesas el item entraba sin bebida
+		// (subitems_view null) y el stock de bodega no se descontaba.
+		{
+			const _hayCompSubitems = typeof xCompSubitems !== 'undefined' && xCompSubitems;
+			if (_hayCompSubitems && itemPedidos_objItemSelected.subitems && itemPedidos_objItemSelected.subitems !== '0') {
+				var _abrirDialogSubitems = typeof isShowOpcionesPrimero !== 'undefined' && isShowOpcionesPrimero;
 
 				if (!_abrirDialogSubitems) {
 					// en la carta subitems llega solo como id (ej. "1516"); cargar la estructura
@@ -615,7 +626,7 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 
 		element_cant_li_sel.text(xcant);
 
-		if (_viene_venta_rapida == 1) { //viene de venta rapida
+		if (_viene_venta_rapida == 1 && typeof xVerMipedidoVR === 'function') { //viene de venta rapida
 			xVerMipedidoVR();
 		}
 
@@ -1935,7 +1946,7 @@ function xGeneralSumarTotales(xArraySum){
 	for (var i = 0; i < xDtPrint.length; i++) {
 		xdes_sb=xDtPrint[i].des_detalle;
 	 	if(xdes_sb!=''){
-			xporcentaje_sb=parseFloat(parseFloat(xDtPrint[i].porcentaje)/100).toFixed(2);
+			xporcentaje_sb=parseFloat(parseFloat(xDtPrint[i].porcentaje)/100); // sin toFixed(2): redondeaba 0.105 (10.5%) a 0.10
 	 		xporcentaje_sb=parseFloat(parseFloat(xGeSumTotal)*parseFloat(xporcentaje_sb)).toFixed(2);
 			xCadenta_tt=String(xCadenta_tt+'<tr class="row"><td data-ColumName="descripcion" class="xPedidoSubTotal">'+xdes_sb+'</td><td data-ColumName="importe" align="right">'+xporcentaje_sb+'</td><td class="xInvisible" data-ColumName="estado">0</td><td class="xInvisible" data-ColumName="idpedido">?p</td></tr>');
 
@@ -2095,7 +2106,7 @@ function xArmarArrayDescontarStock(obj_row,op){
 }
 
 //el detalle de los item en mipedido
-function xArmarTipoConsumo(isVentaRapida = 0){	
+function xArmarTipoConsumo(isVentaRapida = 0, soloIdTpc = null){	
 	var xcadenaTC='';
 	// xArrayDesTipoConsumo=JSON.parse(window.localStorage.getItem("::app3_sys_dta_pe"));
 	setTimeout(() => {
@@ -2104,6 +2115,7 @@ function xArmarTipoConsumo(isVentaRapida = 0){
 	}, 0);
 	for(a in xArrayDesTipoConsumo){
 		if(xArrayDesTipoConsumo[a]==null){continue;}
+		if(soloIdTpc !== null && String(xArrayDesTipoConsumo[a].id) !== String(soloIdTpc)){continue;}
 		xcadenaTC=String(xcadenaTC+'<div class="xpedir_row" data-ventarapida="'+ isVentaRapida +'" data-id="'+xArrayDesTipoConsumo[a].id+'">'+
 							'<p>'+xArrayDesTipoConsumo[a].des+'</p>'+
 							'<p class="xCant_item"></p>'+

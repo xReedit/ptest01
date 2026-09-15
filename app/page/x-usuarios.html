@@ -110,6 +110,7 @@
 							<paper-checkbox class="checkA" data-id='A19,'> Solicitud Remota</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='A20,'> Ticket Entrada</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='A21,'> Chat Bot</paper-checkbox><br>
+							<paper-checkbox class="checkA" data-id='A28,'> Vincular Yape (WizPay)</paper-checkbox><br>
 							<br>
 							<h4>LOGISTICA</h4>
 							<paper-checkbox class="checkA" data-id='B1,'> Compras</paper-checkbox><br>
@@ -493,7 +494,8 @@ function tipoUsuario($event) {
 						element.dataset.id === 'A8,' || // Zona de Despacho
 						element.dataset.id === 'A10,' || // Facturador CPE
 						element.dataset.id === 'A11,' || // CPE Emitidos
-						element.dataset.id === 'A12,' // Servidor de Impresion
+						element.dataset.id === 'A12,' || // Servidor de Impresion
+						element.dataset.id === 'A28,' // Vincular Yape (WizPay)
 					) {
 						element.checked = true;
 					}
