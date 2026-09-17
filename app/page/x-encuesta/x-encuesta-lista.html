@@ -1,0 +1,142 @@
+<dom-module id="x-encuesta-lista">
+	<template>
+		<paper-dialog modal id="dlg_enc_nueva" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Nueva encuesta</h3>
+					<p>Elige una plantilla y ajustala a tu negocio, o empieza desde cero. Todo se puede editar despues.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="enc-tpl-grid" id="enc_tpl_grid"></div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i> Cancelar</button>
+				</div>
+			</div>
+		</paper-dialog>
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Encuestas de satisfaccion</h3>
+						<p>Crea encuestas para saber que piensan tus clientes y publicalas donde las veran: tablet, QR en el local, comprobante o WhatsApp.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-success" onclick="xEncAbrirNueva()"><i class="fa fa-plus"></i> Nueva encuesta</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-toolbar">
+					<div class="inv-field">
+						<span class="inv-label">Mostrar</span>
+						<select class="inv-select" id="enc_filtro" onchange="xEncListaCargar()">
+							<option value="0">Publicadas y borradores</option>
+							<option value="1">Archivadas</option>
+						</select>
+					</div>
+					<span class="inv-sep"></span>
+					<p class="inv-ayuda" id="enc_lista_resumen"></p>
+				</div>
+				<p class="enc-indicadores"><i class="fa fa-bar-chart"></i> Ve el detalle de las respuestas, los comentarios y las malas experiencias en <b>indicadores.papaya.com.pe</b>, seccion <b>Encuestas</b>.</p>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_enc_lista">
+						<thead><tr>
+							<th>Encuesta</th><th>Estado</th><th>Corre en</th>
+							<th class="inv-num">Respuestas</th><th class="inv-num">Satisfaccion</th><th>Creada</th><th>Acciones</th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xEncPlantillasCache = null;
+
+function xEncListaCargar() {
+	var archivadas = $('#enc_filtro').val() === '1';
+	xPopupLoad.titulo = 'Cargando...'; xPopupLoad.xopen();
+	xEncApi('listar', { archivadas: archivadas ? 1 : 0 }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		var html = '';
+		r.datos.forEach(function (e) {
+			var id = parseInt(e.idenc_encuesta);
+			var canales = e.canales ? e.canales.split(',').map(function (c) { return '<span class="inv-tag">' + xEncEsc(xEncCanalNombre(c)) + '</span>'; }).join(' ') : '';
+			var sedes = parseInt(e.n_sedes) > 0 ? '<span class="inv-sub">en ' + e.n_sedes + ' sede(s)</span>' : '';
+			var acc = e.estado === 'archivada'
+				? '<span class="inv-link" onclick="xEncDuplicar(' + id + ')"><i class="fa fa-clone"></i> Duplicar</span>'
+				: '<span class="inv-link" onclick="xEncIr(\'editor\',' + id + ')"><i class="fa fa-pencil"></i> Editar</span>' +
+				  '<span class="inv-link" onclick="xEncIr(\'editor\',' + id + ',\'publicacion\')"><i class="fa fa-bullhorn"></i> ' + (e.canales ? 'Publicacion' : 'Publicar') + '</span>' +
+				  '<span class="inv-link" onclick="xEncDuplicar(' + id + ')"><i class="fa fa-clone"></i> Duplicar</span>' +
+				  '<span class="inv-link" onclick="xEncArchivar(' + id + ')"><i class="fa fa-archive"></i> Archivar</span>';
+			html += '<tr>' +
+				'<td><b class="enc-nombre">' + xEncEsc(e.nombre) + '</b><span class="inv-sub">v' + e.version + ' · ' + e.n_preguntas + ' pregunta(s)</span></td>' +
+				'<td>' + xEncEstado(e.estado) + '</td>' +
+				'<td>' + (canales ? canales + sedes : '<span class="inv-muted">Sin publicar</span>') + '</td>' +
+				'<td class="inv-num">' + e.n_respuestas + '</td>' +
+				'<td class="inv-num">' + xEncSatisfaccionHtml(e.csat_prom, e.nps_prom) + '</td>' +
+				'<td>' + xEncFecha(e.creado_en) + '<span class="inv-sub">' + xEncEsc(e.crea || '') + '</span></td>' +
+				'<td class="inv-acciones"><div class="enc-acciones">' + acc + '</div></td></tr>';
+		});
+		var vacio = archivadas
+			? 'No hay encuestas archivadas.'
+			: 'Todavia no tienes encuestas. Empieza con <b>+ Nueva encuesta</b>: hay plantillas listas para usar.';
+		$('#tb_enc_lista tbody').html(html || '<tr><td colspan="7" class="inv-empty">' + vacio + '</td></tr>');
+		$('#enc_lista_resumen').text(r.datos.length ? r.datos.length + ' encuesta(s)' : '');
+	});
+}
+
+function xEncAbrirNueva() {
+	var pintar = function (tpls) {
+		var html = '';
+		tpls.forEach(function (t) {
+			var ps = t.preguntas.map(function (p) {
+				return '<li><span class="enc-tipo enc-tipo-' + p.tipo + '">' + ENC_TIPOS[p.tipo].corto + '</span>' + xEncEsc(p.texto) + '</li>';
+			}).join('');
+			html += '<div class="enc-tpl" onclick="xEncCrear(\'' + xEncAttr(t.clave) + '\')">' +
+				'<h4>' + xEncEsc(t.nombre) + '</h4><p>Ideal para: ' + xEncEsc(t.para) + '</p><ul>' + ps + '</ul></div>';
+		});
+		html += '<div class="enc-tpl enc-tpl-blanco" onclick="xEncCrear(\'\')"><h4>Empezar desde cero</h4><p>Una encuesta en blanco para armar a tu medida.</p></div>';
+		$('#enc_tpl_grid').html(html);
+		dlg_enc_nueva.open();
+	};
+	if (xEncPlantillasCache) { pintar(xEncPlantillasCache); return; }
+	xPopupLoad.titulo = 'Cargando plantillas...'; xPopupLoad.xopen();
+	xEncApi('plantillas').then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		xEncPlantillasCache = r.datos;
+		pintar(r.datos);
+	});
+}
+function xEncCrear(plantilla) {
+	xPopupLoad.titulo = 'Creando encuesta...'; xPopupLoad.xopen();
+	xEncApi('crear', { plantilla: plantilla }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		dlg_enc_nueva.close();
+		xEncIr('editor', r.datos.id);
+	});
+}
+function xEncDuplicar(id) {
+	xPopupLoad.titulo = 'Duplicando...'; xPopupLoad.xopen();
+	xEncApi('duplicar', { id: id }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		showToastSwal('success', 'Copia creada');
+		xEncIr('editor', r.datos.id);
+	});
+}
+function xEncArchivar(id) {
+	xEncConfirmar('Deja de correr en todos los canales donde este publicada. Sus respuestas se conservan.', 'Archivar la encuesta?', 'Si, archivar').then(function (ok) {
+		if (!ok) { return; }
+		xEncApi('archivar', { id: id }).then(function (r) { if (r.success) { xEncListaCargar(); } });
+	});
+}
+Polymer({ is: 'x-encuesta-lista' });
+</script>
+</dom-module>

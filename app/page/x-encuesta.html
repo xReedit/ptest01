@@ -1,0 +1,183 @@
+<dom-module id="x-encuesta">
+	<link rel="import" href="./x-encuesta/x-encuesta-lista.html">
+	<link rel="import" href="./x-encuesta/x-encuesta-editor.html">
+	<link rel="import" href="./x-encuesta/x-encuesta-publicacion.html">
+	<template>
+		<div class="inv-vista activa" id="enc_vista_lista"><x-encuesta-lista></x-encuesta-lista></div>
+		<div class="inv-vista" id="enc_vista_editor"><x-encuesta-editor></x-encuesta-editor></div>
+	</template>
+<script>
+// Modulo Encuestas de satisfaccion (migracion 031, backend bdphp/log_encuesta.php).
+// Mismo shell que Inventario: una tarjeta visible a la vez, clases inv-* de css/micss.css y
+// solo lo propio del modulo (editor, vista previa, plantillas, publicacion) en el bloque enc-*.
+
+var ENC_TIPOS = {
+	csat: { nombre: 'Satisfaccion (caritas 1-5)', corto: 'CSAT' },
+	nps: { nombre: 'Recomendacion (NPS 0-10)', corto: 'NPS' },
+	ces: { nombre: 'Esfuerzo (CES 1-7)', corto: 'CES' },
+	opcion: { nombre: 'Opcion multiple', corto: 'Opcion' },
+	texto: { nombre: 'Comentario libre', corto: 'Texto' }
+};
+// Guia de cada canal: se muestra en la pestana Publicacion para que el dueno sepa que es, cuando
+// conviene y que tiene que hacer para ponerlo a funcionar.
+var ENC_CANALES = [
+	{ clave: 'kiosko', nombre: 'Tablet en el local', icono: 'fa-tablet',
+	  ayuda: 'Pantalla fija en la entrada o la salida del local.',
+	  que: 'Una tablet (o un celular) fija en el local donde el cliente responde antes de irse.',
+	  ideal: 'Locales con mucho movimiento: mide la experiencia en caliente, sin depender del celular del cliente.',
+	  pasos: ['Consigue una tablet o celular con internet y dejalo conectado al cargador.',
+		'Abre el link del canal en esa tablet (o escanea su QR con la camara).',
+		'Pon el navegador en pantalla completa y desactiva el bloqueo automatico de pantalla.',
+		'Ubicala a la salida o junto a caja, con un letrero tipo "Cuentanos como te fue".'],
+	  nota: 'Despues de cada respuesta vuelve sola al inicio: nadie tiene que atenderla.' },
+	{ clave: 'qr_local', nombre: 'QR impreso en el local', icono: 'fa-qrcode',
+	  ayuda: 'Cartel en caja, en las mesas o en la puerta.',
+	  que: 'Un cartel con un codigo QR; el cliente responde desde su propio celular.',
+	  ideal: 'Empezar sin invertir en equipos: funciona en mesas, en la espera y en la puerta.',
+	  pasos: ['Descarga el cartel en PNG desde el material de este canal.',
+		'Imprimelo (A5 o A6 va bien) y ponlo en caja, en las mesas o en la puerta.',
+		'El cliente lo escanea con la camara del celular: no instala nada.'],
+	  nota: 'Si luego cambias la encuesta de este canal, el cartel impreso sigue funcionando.' },
+	{ clave: 'ticket', nombre: 'QR en el comprobante', icono: 'fa-file-text-o',
+	  ayuda: 'Al pie de la boleta, factura o ticket impreso.',
+	  que: 'El QR sale impreso al pie de cada boleta, factura o ticket.',
+	  ideal: 'Saber quien atendio: cada respuesta queda ligada a la venta, la mesa, el mozo y el monto.',
+	  pasos: ['Marca este canal en las sedes que quieras.',
+		'No hay que hacer nada mas: el QR se imprime solo en cada comprobante.',
+		'Pide al mozo o al cajero que lo mencione al entregar la cuenta: sube mucho la tasa de respuesta.'],
+	  nota: 'Cada comprobante lleva su propio QR y solo se puede responder una vez.' },
+	{ clave: 'whatsapp', nombre: 'Link en WhatsApp', icono: 'fa-whatsapp',
+	  ayuda: 'Junto al comprobante que se envia al cliente.',
+	  que: 'El link viaja en el mensaje de WhatsApp que el cliente ya recibe con su comprobante.',
+	  ideal: 'Delivery y clientes que dejan su numero: responden tranquilos desde casa.',
+	  pasos: ['Ten vinculado WhatsApp (Operatividad > "Vincular Whatsapp").',
+		'Al cobrar, registra el telefono WhatsApp del cliente.',
+		'El link de la encuesta se agrega solo al mensaje del comprobante.'],
+	  nota: 'Solo llega a los clientes a los que se les envia el comprobante por WhatsApp.' }
+];
+function xEncCanalNombre(clave) {
+	for (var i = 0; i < ENC_CANALES.length; i++) { if (ENC_CANALES[i].clave === clave) { return ENC_CANALES[i].nombre; } }
+	return clave;
+}
+
+// Avisos: SweetAlert tema 1, nunca alert()/confirm() nativos (docs/design.md §7).
+function xEncAviso(texto, icono, titulo) {
+	showAlertSwalOk(icono || 'warning', titulo || '', texto, 'Entendido', 1);
+}
+// Promesa que resuelve true si el usuario confirmo. NO bloquea: lo dependiente va en el .then().
+function xEncConfirmar(texto, titulo, textoBoton) {
+	return showAlertSwalHtmlDecision({
+		title: titulo || 'Confirmar',
+		html: texto,
+		icon: 'question',
+		showCancelButton: true,
+		confirmButtonText: textoBoton || 'Si, continuar',
+		cancelButtonText: 'Cancelar'
+	}, 1).then(function (r) { return !!(r && r.isConfirmed); });
+}
+// Siempre resuelve con {success, datos, error}; si success=false ya mostro el error.
+function xEncApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_encuesta.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		if (!r || !r.success) { xEncAviso((r && r.error) || 'Error de comunicacion con el servidor', 'error'); }
+		d.resolve(r || { success: false, datos: null, error: 'sin respuesta' });
+	})
+	.fail(function (jqXHR) {
+		try { xPopupLoad.xclose(); } catch (e) {}
+		xEncAviso(jqXHR && jqXHR.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		d.resolve({ success: false, datos: null, error: 'red' });
+	});
+	return d.promise();
+}
+function xEncIr(vista, id, tab) {
+	$('#enc_vista_lista, #enc_vista_editor').removeClass('activa');
+	$('#enc_vista_' + vista).addClass('activa');
+	if (vista === 'lista') { xEncListaCargar(); }
+	if (vista === 'editor') { xEncEditorCargar(id, tab); }
+	window.scrollTo(0, 0);
+}
+function xEncEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+function xEncAttr(s) { return xEncEsc(s).replace(/"/g, '&quot;'); }
+function xEncFecha(s) { return s ? String(s).substring(0, 10).split('-').reverse().join('/') : ''; }
+function xEncEstado(estado) {
+	var txt = { borrador: 'BORRADOR', activa: 'PUBLICADA', archivada: 'ARCHIVADA' }[estado] || estado;
+	return '<span class="inv-estado enc-' + xEncAttr(estado) + '">' + txt + '</span>';
+}
+
+// Satisfaccion de una encuesta en % (0-100): la nota promedio dentro de su escala. Usa las caritas si
+// las hay y, si la encuesta solo pregunta recomendacion, la nota NPS. Mismo calculo que indicadores.
+function xEncSatisfaccion(csat, nps) {
+	var valor = csat === null || csat === undefined || csat === '' ? null : parseFloat(csat);
+	var pct = null, det = '';
+	if (valor !== null && !isNaN(valor)) {
+		pct = ((valor - 1) / 4) * 100;
+		det = 'Satisfaccion ' + valor.toFixed(1) + ' de 5';
+	} else {
+		valor = nps === null || nps === undefined || nps === '' ? null : parseFloat(nps);
+		if (valor !== null && !isNaN(valor)) { pct = (valor / 10) * 100; det = 'Recomendacion ' + valor.toFixed(1) + ' de 10'; }
+	}
+	if (pct === null) { return null; }
+	var clase = pct < 40 ? 'enc-sat-mal' : (pct < 75 ? 'enc-sat-medio' : 'enc-sat-bien');
+	return { pct: Math.round(pct), clase: clase, detalle: det };
+}
+
+// Barra + porcentaje de satisfaccion, para la lista y el editor
+function xEncSatisfaccionHtml(csat, nps) {
+	var s = xEncSatisfaccion(csat, nps);
+	if (!s) { return '<span class="inv-muted">Sin respuestas</span>'; }
+	return '<span class="enc-sat ' + s.clase + '" title="' + xEncAttr(s.detalle) + '">' +
+		'<span class="enc-sat-barra"><i style="width:' + s.pct + '%"></i></span>' +
+		'<b>' + s.pct + '%</b></span>';
+}
+
+// Carita SVG de la escala CSAT (1 = muy mal ... 5 = excelente). Dibujada aqui y no como imagen:
+// se ve igual en cualquier pantalla y la misma funcion sirve para la vista previa y la fase 2.
+function xEncCarita(n) {
+	var color = ['#e5484d', '#f76b15', '#f5b400', '#46a758', '#12a594'][n - 1];
+	var boca = ['M11 25 Q18 18 25 25', 'M11 24 Q18 20 25 24', 'M11 22 L25 22', 'M11 20 Q18 25 25 20', 'M10 19 Q18 28 26 19'][n - 1];
+	return '<svg viewBox="0 0 36 36" width="100%" height="100%" aria-hidden="true">' +
+		'<circle cx="18" cy="18" r="16" fill="' + color + '" opacity=".16"/>' +
+		'<circle cx="18" cy="18" r="16" fill="none" stroke="' + color + '" stroke-width="2"/>' +
+		'<circle cx="13" cy="14" r="1.8" fill="' + color + '"/><circle cx="23" cy="14" r="1.8" fill="' + color + '"/>' +
+		'<path d="' + boca + '" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"/></svg>';
+}
+// Control de una pregunta tal como lo vera el cliente. Solo lectura: es la vista previa.
+function xEncControlPreview(p) {
+	var h = '';
+	if (p.tipo === 'csat') {
+		var etiquetas = ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'];
+		h = '<div class="enc-pv-caras">';
+		for (var i = 1; i <= 5; i++) { h += '<div class="enc-pv-cara"><i>' + xEncCarita(i) + '</i><span>' + etiquetas[i - 1] + '</span></div>'; }
+		return h + '</div>';
+	}
+	if (p.tipo === 'nps') {
+		h = '<div class="enc-pv-escala enc-pv-nps">';
+		for (var n = 0; n <= 10; n++) { h += '<span class="' + (n <= 6 ? 'det' : (n <= 8 ? 'pas' : 'pro')) + '">' + n + '</span>'; }
+		return h + '</div><div class="enc-pv-extremos"><span>Nada probable</span><span>Muy probable</span></div>';
+	}
+	if (p.tipo === 'ces') {
+		h = '<div class="enc-pv-escala enc-pv-ces">';
+		for (var c = 1; c <= 7; c++) { h += '<span>' + c + '</span>'; }
+		return h + '</div><div class="enc-pv-extremos"><span>Muy dificil</span><span>Muy facil</span></div>';
+	}
+	if (p.tipo === 'opcion') {
+		h = '<div class="enc-pv-opciones">';
+		(p.opciones || []).forEach(function (o) { if (String(o).trim() !== '') { h += '<span>' + xEncEsc(o) + '</span>'; } });
+		return h + '</div>';
+	}
+	return '<div class="enc-pv-texto">Escribe aqui tu comentario...</div>';
+}
+
+Polymer({
+	is: 'x-encuesta',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		// la primera carga va DENTRO del callback: fuera se dispara antes de que xm_LogChequea confirme la sesion
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xEncIr('lista'); });
+		$("#Titulo_page").text("Encuestas");
+	}
+});
+</script>
+</dom-module>

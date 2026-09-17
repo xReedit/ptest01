@@ -5806,7 +5806,7 @@ ul.list_add_item2 li.divLi {
 .inv-table tr:hover { background:#fff; }
 .inv-table th { font-size:11px; font-weight:600; color:#495057; text-align:left; padding:8px; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
 .inv-table td { font-size:12px; color:#212529; padding:9px 8px; border-bottom:1px solid #edf0f2; vertical-align:middle; }
-.inv-table tbody tr:hover { background:#f8fafc; }
+.inv-table tbody tr:hover { background:#f1f8ff; }
 .inv-sub { display:block; font-size:11px; color:#6c757d; }
 .inv-empty { padding:28px 8px; text-align:center; font-size:13px; color:#6c757d; }
 .inv-acciones { white-space:nowrap; }
@@ -5871,7 +5871,7 @@ tr.inv-noaplica td { opacity:.5; }
 /* --- tarjeta: mismo acabado que el resto de modulos rediseñados (borde fino, esquinas 12px) --- */
 /* display:block, no el display:table de .xMiCard: una tabla ancha hacia crecer la tarjeta
    (shrink-to-fit) y los controles del encabezado se salian del contenedor. */
-.inv-card { display:block; margin:0 auto; border:1px solid #edf0f2 !important; border-radius:12px !important; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+.inv-card { display:block; margin:0 auto; border:1px solid #bfbfbf !important; border-radius:12px !important; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04); }
 .inv-card .xEncanezadoCard { border-bottom:1px solid #edf0f2; padding:14px 16px; }
 .inv-card .xContentCard { padding:14px 16px 18px; }
 
@@ -5927,6 +5927,193 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	.inv-head-acciones { width:100%; }
 	.inv-toolbar { align-items:stretch; }
 	.inv-select, .inv-input { width:100%; }
+}
+
+/* ===== modulo encuestas (migracion 031) ===== */
+/* Reusa el esqueleto de Inventario (inv-card, inv-head, inv-toolbar, inv-table, inv-link, inv-kpi,
+   xdlg-*). Aqui solo va lo propio: plantillas, editor de preguntas y vista previa. Prefijo enc-. */
+
+.inv-estado.enc-borrador { background:#fff3cd; color:#7a5b00; }
+.inv-estado.enc-activa { background:#d1e7dd; color:#0f5132; }
+.inv-estado.enc-archivada { background:#e2e3e5; color:#41464b; }
+.inv-head .inv-tag { vertical-align:middle; }
+.enc-nombre { font-weight:600; }
+
+/* acciones de fila con icono: en linea en pantallas anchas, en columna en las demas */
+.enc-acciones { display:flex; flex-wrap:wrap; gap:6px 14px; }
+.enc-acciones .inv-link { margin-right:0; white-space:nowrap; }
+.enc-acciones .inv-link .fa { width:14px; text-align:center; }
+@media (max-width:1400px) {
+	.enc-acciones { flex-direction:column; align-items:flex-start; gap:7px; }
+}
+.enc-icon-btn .fa { font-size:12px; }
+#enc_ed_seg .fa { margin-right:2px; opacity:.75; }
+.enc-mb0 { margin-bottom:0 !important; }
+.enc-mt0 { margin-top:0 !important; }
+
+.enc-aviso { margin:0 0 12px; padding:8px 12px; border:1px solid #f3e2b3; border-radius:8px; background:#fff8e6; color:#5c4400; font-size:12px; line-height:1.45; }
+.enc-aviso-info { border-color:#d6e2fb; background:#eef4ff; color:#0b3d91; }
+
+/* satisfaccion: barra + porcentaje (lista y editor). El detalle se ve en indicadores. */
+.enc-sat { display:inline-flex; align-items:center; gap:6px; justify-content:flex-end; }
+.enc-sat-barra { width:56px; height:6px; border-radius:3px; background:#e9ecef; overflow:hidden; }
+.enc-sat-barra i { display:block; height:100%; border-radius:3px; background:currentColor; }
+.enc-sat b { font-size:12px; font-weight:700; min-width:34px; text-align:right; }
+.enc-sat-mal { color:#e5484d; }
+.enc-sat-medio { color:#d98c00; }
+.enc-sat-bien { color:#12a594; }
+
+.enc-indicadores { margin:0 0 10px; padding:8px 12px; border:1px solid #d6e2fb; border-radius:8px; background:#eef4ff; color:#0b3d91; font-size:12px; line-height:1.45; }
+.enc-indicadores i { margin-right:6px; }
+
+.enc-resultado { display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px; margin:0 0 12px; padding:8px 12px; border:1px solid #e3e6ea; border-radius:8px; background:#f7f8fa; font-size:12px; color:#41464b; }
+.enc-resultado-dato { display:inline-flex; align-items:center; gap:6px; }
+.enc-resultado-link { color:#0b3d91; margin-left:auto; }
+.enc-resultado-link i { margin-right:6px; }
+@media (max-width:900px) { .enc-resultado-link { margin-left:0; } }
+
+/* dialogos: los botones no estan dentro de .inv-card */
+#dlg_enc_nueva { width:760px; max-width:94vw; }
+#dlg_enc_nueva .btn { height:31px; padding:0 12px; font-size:12px; font-weight:600; line-height:29px; border-radius:6px; }
+
+/* --- plantillas --- */
+.enc-tpl-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+.enc-tpl { padding:12px 14px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; cursor:pointer; transition:border-color .15s, background .15s; }
+.enc-tpl:hover { border-color:#007bff; background:#f8fbff; }
+.enc-tpl h4 { margin:0; font-size:13px; font-weight:600; color:#212529; }
+.enc-tpl p { margin:2px 0 8px; font-size:11px; color:#6c757d; }
+.enc-tpl ul { margin:0; padding:0; list-style:none; }
+.enc-tpl li { display:flex; align-items:baseline; gap:6px; margin-bottom:4px; font-size:12px; color:#495057; }
+.enc-tpl-blanco { display:flex; flex-direction:column; justify-content:center; border-style:dashed; text-align:center; }
+
+/* etiqueta del tipo de pregunta */
+.enc-tipo { flex:0 0 auto; padding:1px 6px; border-radius:6px; font-size:9px; font-weight:700; letter-spacing:.3px; }
+.enc-tipo-csat { background:#eef9f3; color:#0f5132; }
+.enc-tipo-nps { background:#edf2ff; color:#0b3d91; }
+.enc-tipo-ces { background:#eaf5ff; color:#055160; }
+.enc-tipo-opcion { background:#fff3cd; color:#7a5b00; }
+.enc-tipo-texto { background:#f0f1f3; color:#495057; }
+
+/* --- editor: formulario a la izquierda, vista previa a la derecha --- */
+.enc-edit-grid { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
+.enc-bloque { padding:12px; border-radius:8px; background:#f7f8fa; }
+.enc-preg-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 8px; }
+.enc-preg-head .inv-titulo-sec { margin:0; }
+.enc-exceso { color:#b45309 !important; font-weight:600; }
+.enc-preg { margin-bottom:10px; padding:10px 12px; border:1px solid #edf0f2; border-radius:10px; background:#fff; }
+.enc-preg-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.enc-preg-top .inv-select { width:220px; }
+.enc-preg-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:#f0f1f3; color:#495057; font-size:11px; font-weight:600; }
+.enc-oblig { font-size:12px; }
+.enc-icon-btn { width:28px; height:28px; padding:0; border:1px solid #e5e7eb; border-radius:6px; background:#fff; color:#495057; font-size:15px; line-height:1; cursor:pointer; }
+.enc-icon-btn:hover { background:#f1f3f5; }
+.enc-icon-btn:disabled { opacity:.35; cursor:default; background:#fff; }
+.enc-icon-del:hover { color:#dc3545; }
+.enc-opciones { margin-top:8px; padding-left:32px; }
+.enc-opcion { display:flex; gap:6px; margin-bottom:6px; }
+.enc-opcion .enc-icon-btn { flex:0 0 31px; height:31px; }
+
+/* --- vista previa: el celular del cliente --- */
+.enc-prev { position:sticky; top:70px; }
+.enc-prev-label { margin:0 0 6px; letter-spacing:.4px; }
+.enc-prev-cel { max-height:75vh; overflow-y:auto; padding:18px 16px; border:1px solid #e5e7eb; border-radius:18px; background:#fff; box-shadow:0 8px 24px rgba(16,24,40,.08); }
+.enc-pv-inicio { margin:0 0 14px; font-size:13px; color:#495057; text-align:center; }
+.enc-pv-q { margin-bottom:18px; }
+.enc-pv-t { margin:0 0 8px; font-size:13px; font-weight:600; color:#212529; }
+.enc-pv-req { color:#dc3545; }
+.enc-pv-caras { display:flex; justify-content:space-between; gap:4px; }
+.enc-pv-cara { display:flex; flex:1; flex-direction:column; align-items:center; }
+.enc-pv-cara i { display:block; width:38px; height:38px; }
+.enc-pv-cara span { margin-top:3px; font-size:9px; color:#6c757d; text-align:center; }
+.enc-pv-escala { display:grid; gap:3px; }
+.enc-pv-nps { grid-template-columns:repeat(11, 1fr); }
+.enc-pv-ces { grid-template-columns:repeat(7, 1fr); }
+.enc-pv-escala span { display:flex; align-items:center; justify-content:center; height:30px; border:1px solid #e5e7eb; border-radius:6px; background:#f8fafc; color:#212529; font-size:12px; font-weight:600; }
+.enc-pv-nps span.det { border-color:#f5c2c2; background:#fdecec; color:#b3261e; }
+.enc-pv-nps span.pas { border-color:#f3dca8; background:#fff5e0; color:#7a5b00; }
+.enc-pv-nps span.pro { border-color:#bfe3cd; background:#e8f6ee; color:#0f5132; }
+.enc-pv-extremos { display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#6c757d; }
+.enc-pv-opciones { display:flex; flex-direction:column; gap:6px; }
+.enc-pv-opciones span { padding:8px 10px; border:1px solid #e5e7eb; border-radius:8px; font-size:12px; color:#212529; }
+.enc-pv-texto { min-height:54px; padding:10px; border:1px dashed #ced4da; border-radius:8px; color:#adb5bd; font-size:12px; }
+.enc-pv-enviar { margin-top:6px; padding:10px; border-radius:10px; background:#212529; color:#fff; font-size:13px; font-weight:600; text-align:center; }
+.enc-pv-fin { margin:10px 0 0; font-size:11px; color:#6c757d; text-align:center; }
+
+/* --- editor: pestanas Preguntas / Publicacion --- */
+.enc-tab { display:none; }
+.enc-tab.activa { display:block; }
+.enc-mb8 { margin:0 0 8px !important; }
+.enc-mt6 { margin-top:6px; }
+
+/* --- publicacion: guia de canales --- */
+.enc-guia { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px; align-items:start; }
+.enc-guia-card { padding:10px 12px; border:1px solid #edf0f2; border-radius:10px; background:#fff; }
+.enc-guia-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.enc-guia-top i { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:#eef4ff; color:#0b3d91; font-size:15px; }
+.enc-guia-top b { font-size:13px; color:#212529; }
+.enc-guia-card p { margin:0 0 4px; font-size:12px; line-height:1.45; color:#495057; }
+.enc-guia-card p.enc-guia-ideal { color:#6c757d; }
+.enc-guia-ideal span { font-weight:600; color:#495057; }
+.enc-guia-card details { margin-top:6px; }
+.enc-guia-card summary { cursor:pointer; font-size:12px; font-weight:600; color:#007bff; outline:none; }
+.enc-guia-card summary:hover { text-decoration:underline; }
+.enc-guia-card ol { margin:6px 0 4px; padding-left:18px; font-size:12px; line-height:1.45; color:#212529; }
+.enc-guia-card ol li { margin-bottom:3px; }
+.enc-guia-card p.enc-guia-nota { margin:6px 0 0; padding:6px 8px; border-radius:6px; background:#f7f8fa; font-size:11px; color:#495057; }
+.enc-ico { color:#6c757d; }
+.enc-mat-head .enc-ico { margin-right:2px; }
+.enc-sin-guardar { padding:2px 8px; border-radius:10px; background:#fff3cd; color:#7a5b00; font-size:11px; font-weight:600; }
+
+/* --- publicacion: matriz sede x canal --- */
+.enc-matriz td.inv-cen input { width:16px; height:16px; cursor:pointer; }
+.enc-matriz .inv-sub { font-weight:400; }
+.enc-ocupa { max-width:140px; margin:2px auto 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#b45309; }
+.enc-pub-acciones { display:flex; align-items:center; justify-content:flex-end; gap:12px; flex-wrap:wrap; margin:10px 0 4px; }
+
+/* --- publicacion: material por canal --- */
+.enc-mat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(480px, 1fr)); gap:16px; }
+.enc-mat { border:1px solid #edf0f2; border-radius:10px; background:#fff; overflow:hidden; }
+.enc-mat-head { padding:12px 16px; border-bottom:1px solid #edf0f2; background:#f7f8fa; }
+.enc-mat-head b { display:block; font-size:14px; color:#212529; }
+.enc-mat-body { padding:16px; }
+.enc-mat-fila { display:flex; gap:18px; align-items:flex-start; }
+.enc-mat-texto { flex:1; min-width:0; }
+.enc-mat-texto p { margin:0 0 10px; font-size:13px; line-height:1.5; color:#495057; }
+.enc-link { display:flex; gap:6px; margin-top:8px; }
+.enc-link .inv-input { flex:1; min-width:0; width:auto; font-size:12px; color:#495057; background:#f8fafc; }
+.enc-descargas { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.enc-descargas .btn + .btn, .enc-mat .enc-link .btn { margin-left:0; }
+.enc-mat canvas { display:block; }
+
+/* cartel para imprimir */
+.enc-cartel { display:flex; flex-direction:column; align-items:center; padding:24px 16px 18px; border:1px dashed #ced4da; border-radius:10px; text-align:center; }
+.enc-cartel-sede { font-size:10px; font-weight:600; letter-spacing:.6px; color:#6c757d; text-transform:uppercase; }
+.enc-cartel b { margin-top:6px; font-size:24px; color:#212529; }
+.enc-cartel em { margin:2px 0 14px; font-size:13px; font-style:normal; color:#6c757d; }
+.enc-cartel-pie { margin-top:8px; font-size:11px; color:#495057; }
+
+/* pie del comprobante termico */
+.enc-ticket { width:300px; margin:0 auto; padding:14px 14px 18px; background:#fff; border:1px solid #e5e7eb; border-radius:2px; box-shadow:0 2px 8px rgba(16,24,40,.08); font-family:"Courier New", monospace; font-size:11px; color:#111; }
+.enc-ticket p { display:flex; justify-content:space-between; gap:8px; margin:0 0 3px; }
+.enc-ticket p.enc-t-cen { justify-content:center; text-align:center; }
+.enc-ticket hr { margin:6px 0; border:0; border-top:1px dashed #999; }
+.enc-ticket canvas { margin:4px auto 6px; }
+
+/* mensaje de WhatsApp */
+.enc-wsp { width:340px; max-width:100%; margin:0 auto; border-radius:10px; overflow:hidden; border:1px solid #e5e7eb; }
+.enc-wsp-head { padding:9px 12px; background:#075e54; color:#fff; font-size:12px; font-weight:600; }
+.enc-wsp-chat { padding:12px 10px; background:#ece5dd; }
+.enc-wsp-msg { position:relative; padding:8px 10px 18px; border-radius:0 8px 8px 8px; background:#fff; font-size:12px; line-height:1.4; color:#111; overflow-wrap:anywhere; }
+.enc-wsp-msg u { color:#027eb5; text-decoration:none; }
+.enc-wsp-hora { position:absolute; right:8px; bottom:3px; font-size:9px; color:#8696a0; }
+
+@media (max-width:900px) {
+	.enc-edit-grid { grid-template-columns:1fr; }
+	.enc-prev { position:static; }
+	.enc-tpl-grid { grid-template-columns:1fr; }
+	.enc-preg-top .inv-select { width:100%; }
+	.enc-mat-grid { grid-template-columns:1fr; }
+	.enc-mat-fila { flex-direction:column; align-items:center; }
 }
 
 /* ===== registro de pagos: cierres de caja del turno ===== */

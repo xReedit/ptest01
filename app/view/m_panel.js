@@ -349,19 +349,10 @@ async function xOpenPage(xop, parametro){
 			break;
 		case 38: xruta = '/promociones'; break;
 		case 39: xruta = '/encuesta'; break;
-		case 40: // lanzar encuesta 			
-			const dataE = {
-				o: xIdOrg,
-                s: xIdSede,
-                r: true // repeat
-			}
-			// const _urlEncuesta = 'http://192.168.1.64/restobar-encuesta/?o=' + btoa(JSON.stringify(dataE));
-			const _urlEncuesta = 'http://appx.papaya.com.pe/encuesta/?o=' + btoa(JSON.stringify(dataE));
-			// window.open(_urlEncuesta, "_self");// produccion
-			window.location.replace(_urlEncuesta);// produccion			
-			return;			
-
-			break;
+		// lanzar encuesta (A13): mismo modulo que C6. Ruta propia porque el guard log.php op=-108
+		// resuelve UN codigo por url_pas; /lanzar_encuesta -> A13, /encuesta -> C6.
+		// Antes redirigia a appx.papaya.com.pe/encuesta (caida) con location.replace y sacaba del panel.
+		case 40: xruta = '/lanzar_encuesta'; break;
 		case 27:			
 			const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
 			const _xdataOrg = {o: xIdOrg, s: xIdSede, d:demo}

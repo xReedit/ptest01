@@ -1,0 +1,259 @@
+<dom-module id="x-encuesta-editor">
+	<template>
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3><span id="enc_ed_titulo">Editar encuesta</span> <span id="enc_ed_estado"></span></h3>
+						<p id="enc_ed_sub">Arma las preguntas y publicala en los canales donde la veran tus clientes.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xEncEditorVolver()"><i class="fa fa-arrow-left"></i> Volver</button>
+						<button class="btn btn-sm btn-success" id="enc_ed_btn_guardar" onclick="xEncEditorGuardar()"><i class="fa fa-floppy-o"></i> Guardar</button>
+						<button class="btn btn-sm btn-primary" id="enc_ed_btn_publicar" onclick="xEncEdTab('publicacion')"><i class="fa fa-bullhorn"></i> Publicar</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-seg" id="enc_ed_seg">
+					<div class="inv-seg-item activa" data-tab="preguntas" onclick="xEncEdTab('preguntas')"><i class="fa fa-list-ul"></i> Preguntas</div>
+					<div class="inv-seg-item" data-tab="publicacion" onclick="xEncEdTab('publicacion')"><i class="fa fa-bullhorn"></i> Publicacion</div>
+				</div>
+				<div class="enc-resultado" id="enc_ed_resultado" style="display:none"></div>
+				<div class="enc-aviso" id="enc_ed_aviso" style="display:none"></div>
+				<div class="enc-tab activa" id="enc_ed_tab_preguntas">
+				<div class="enc-edit-grid">
+					<div class="enc-edit-col">
+						<div class="enc-bloque">
+							<div class="inv-form-row">
+								<span class="inv-label">Nombre de la encuesta (solo lo ves tu)</span>
+								<input type="text" class="inv-input inv-w100" id="enc_ed_nombre" maxlength="120" oninput="xEncEdCab()">
+							</div>
+							<div class="inv-form-row">
+								<span class="inv-label">Mensaje de bienvenida (opcional)</span>
+								<input type="text" class="inv-input inv-w100" id="enc_ed_inicio" maxlength="300" placeholder="Ej: Tu opinion nos ayuda a mejorar" oninput="xEncEdCab()">
+							</div>
+							<div class="inv-form-row enc-mb0">
+								<span class="inv-label">Mensaje de agradecimiento</span>
+								<input type="text" class="inv-input inv-w100" id="enc_ed_fin" maxlength="300" placeholder="Ej: Gracias por tu tiempo" oninput="xEncEdCab()">
+							</div>
+						</div>
+
+						<div class="enc-preg-head">
+							<p class="inv-titulo-sec">Preguntas <span class="inv-muted" id="enc_ed_contador"></span></p>
+							<button class="btn btn-sm btn-light" onclick="xEncEdAgregar()"><i class="fa fa-plus"></i> Agregar pregunta</button>
+						</div>
+						<div id="enc_ed_preguntas"></div>
+					</div>
+
+					<div class="enc-prev">
+						<p class="inv-label enc-prev-label">VISTA PREVIA</p>
+						<div class="enc-prev-cel" id="enc_ed_preview"></div>
+					</div>
+				</div>
+				</div>
+				<div class="enc-tab" id="enc_ed_tab_publicacion"><x-encuesta-publicacion></x-encuesta-publicacion></div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+// Estado del editor. Las preguntas viven aqui y el DOM se redibuja desde este objeto en los
+// cambios de estructura (agregar, mover, borrar, cambiar tipo). Al escribir solo se actualiza el
+// estado y la vista previa: redibujar la lista haria perder el foco del input.
+var xEncEd = { id: 0, estado: '', n_respuestas: 0, preguntas: [], sucio: false };
+
+function xEncEditorCargar(id, tab) {
+	xPopupLoad.titulo = 'Cargando encuesta...'; xPopupLoad.xopen();
+	xEncApi('obtener', { id: id }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { xEncIr('lista'); return; }
+		var e = r.datos;
+		xEncEd = {
+			id: parseInt(e.idenc_encuesta), estado: e.estado, version: parseInt(e.version),
+			n_respuestas: parseInt(e.n_respuestas), n_publicaciones: parseInt(e.n_publicaciones), sucio: false,
+			preguntas: e.preguntas.map(function (p) {
+				return { tipo: p.tipo, texto: p.texto, obligatorio: parseInt(p.obligatorio) === 1 ? 1 : 0, opciones: p.opciones || [] };
+			})
+		};
+		$('#enc_ed_nombre').val(e.nombre);
+		$('#enc_ed_inicio').val(e.texto_inicio || '');
+		$('#enc_ed_fin').val(e.texto_fin || '');
+		$('#enc_ed_titulo').text(e.nombre);
+		$('#enc_ed_estado').html(xEncEstado(e.estado) + ' <span class="inv-tag">v' + e.version + '</span>');
+		var aviso = '';
+		if (xEncEd.n_respuestas > 0) {
+			aviso = 'Esta encuesta ya tiene <b>' + xEncEd.n_respuestas + ' respuesta(s)</b>. Al guardar se creara la <b>version ' + (xEncEd.version + 1) +
+				'</b> y la version ' + xEncEd.version + ' queda congelada, para que los reportes no mezclen preguntas distintas.';
+		} else if (xEncEd.n_publicaciones > 0) {
+			aviso = 'Esta encuesta esta publicada: los cambios se veran en todos los canales donde corre.';
+		}
+		xEncEd.aviso = aviso;
+		// resultado global de la encuesta (todas sus versiones); el detalle vive en indicadores
+		var total = parseInt(e.n_respuestas_total || 0);
+		if (total > 0) {
+			$('#enc_ed_resultado').html(
+				'<span class="enc-resultado-dato">Satisfaccion ' + xEncSatisfaccionHtml(e.csat_prom, e.nps_prom) + '</span>' +
+				'<span class="enc-resultado-dato"><b>' + total + '</b> respuesta(s) en total</span>' +
+				'<span class="enc-resultado-link"><i class="fa fa-bar-chart"></i> Detalle, comentarios y malas experiencias en <b>indicadores.papaya.com.pe</b> &rsaquo; Encuestas</span>'
+			).show();
+		} else {
+			$('#enc_ed_resultado').hide().empty();
+		}
+		xEncEdPintar();
+		xEncEdTab(tab || 'preguntas');
+	});
+}
+
+// Pestanas Preguntas / Publicacion. Publicar con cambios sin guardar publicaria la version vieja:
+// primero se guarda (y si versiona, la publicacion ya apunta a la version nueva).
+function xEncEdTab(nombre) {
+	if (nombre === 'publicacion' && xEncEd.sucio) {
+		xEncConfirmar('Tienes cambios sin guardar en las preguntas. Se guardan antes de publicar.', 'Guardar y continuar?', 'Si, guardar').then(function (ok) {
+			if (ok) { xEncEditorGuardar('publicacion'); }
+		});
+		return;
+	}
+	$('#enc_ed_seg .inv-seg-item').removeClass('activa');
+	$('#enc_ed_seg .inv-seg-item[data-tab="' + nombre + '"]').addClass('activa');
+	$('#enc_ed_tab_preguntas, #enc_ed_tab_publicacion').removeClass('activa');
+	$('#enc_ed_tab_' + nombre).addClass('activa');
+	var enPreguntas = nombre === 'preguntas';
+	$('#enc_ed_btn_guardar').toggle(enPreguntas);
+	$('#enc_ed_btn_publicar').toggle(enPreguntas && xEncEd.estado !== 'activa');
+	$('#enc_ed_aviso').html(xEncEd.aviso || '').toggle(enPreguntas && !!xEncEd.aviso);
+	if (!enPreguntas) { xEncPubCargar(); }
+}
+
+function xEncEdCab() {
+	xEncEd.sucio = true;
+	xEncEdPreview();
+}
+function xEncEdMarcar() { xEncEd.sucio = true; xEncEdPintar(); }
+
+function xEncEdPintar() {
+	var total = xEncEd.preguntas.length;
+	var html = '';
+	xEncEd.preguntas.forEach(function (p, i) {
+		var tipos = Object.keys(ENC_TIPOS).map(function (k) {
+			return '<option value="' + k + '"' + (k === p.tipo ? ' selected' : '') + '>' + ENC_TIPOS[k].nombre + '</option>';
+		}).join('');
+		var opciones = '';
+		if (p.tipo === 'opcion') {
+			opciones = '<div class="enc-opciones">' + p.opciones.map(function (o, j) {
+				return '<div class="enc-opcion"><input type="text" class="inv-input inv-w100" maxlength="60" value="' + xEncAttr(o) + '" placeholder="Opcion ' + (j + 1) + '" oninput="xEncEdOpcion(' + i + ',' + j + ',this.value)">' +
+					'<button class="enc-icon-btn" title="Quitar opcion" onclick="xEncEdQuitarOpcion(' + i + ',' + j + ')"><i class="fa fa-times"></i></button></div>';
+			}).join('') +
+				(p.opciones.length < 10 ? '<span class="inv-link" onclick="xEncEdAgregarOpcion(' + i + ')"><i class="fa fa-plus"></i> Agregar opcion</span>' : '') + '</div>';
+		}
+		html += '<div class="enc-preg">' +
+			'<div class="enc-preg-top">' +
+				'<span class="enc-preg-num">' + (i + 1) + '</span>' +
+				'<select class="inv-select" onchange="xEncEdTipo(' + i + ',this.value)">' + tipos + '</select>' +
+				'<label class="inv-check enc-oblig"><input type="checkbox"' + (p.obligatorio ? ' checked' : '') + ' onchange="xEncEdOblig(' + i + ',this.checked)"> Obligatoria</label>' +
+				'<span class="inv-sep"></span>' +
+				'<button class="enc-icon-btn" title="Subir"' + (i === 0 ? ' disabled' : '') + ' onclick="xEncEdMover(' + i + ',-1)"><i class="fa fa-chevron-up"></i></button>' +
+				'<button class="enc-icon-btn" title="Bajar"' + (i === total - 1 ? ' disabled' : '') + ' onclick="xEncEdMover(' + i + ',1)"><i class="fa fa-chevron-down"></i></button>' +
+				'<button class="enc-icon-btn enc-icon-del" title="Eliminar pregunta" onclick="xEncEdQuitar(' + i + ')"><i class="fa fa-trash-o"></i></button>' +
+			'</div>' +
+			'<input type="text" class="inv-input inv-w100 enc-preg-texto" maxlength="200" placeholder="Escribe la pregunta" value="' + xEncAttr(p.texto) + '" oninput="xEncEdTexto(' + i + ',this.value)">' +
+			opciones +
+		'</div>';
+	});
+	$('#enc_ed_preguntas').html(html || '<p class="inv-empty">Sin preguntas. Agrega al menos una.</p>');
+	var cont = total + ' de 4 recomendadas';
+	$('#enc_ed_contador').text('· ' + cont).toggleClass('enc-exceso', total > 4);
+	xEncEdPreview();
+}
+
+function xEncEdPreview() {
+	var inicio = $('#enc_ed_inicio').val();
+	var fin = $('#enc_ed_fin').val();
+	var html = inicio ? '<p class="enc-pv-inicio">' + xEncEsc(inicio) + '</p>' : '';
+	xEncEd.preguntas.forEach(function (p, i) {
+		html += '<div class="enc-pv-q"><p class="enc-pv-t">' + (i + 1) + '. ' + (xEncEsc(p.texto) || '<span class="inv-muted">(sin texto)</span>') +
+			(p.obligatorio ? ' <b class="enc-pv-req">*</b>' : '') + '</p>' + xEncControlPreview(p) + '</div>';
+	});
+	html += '<div class="enc-pv-enviar">Enviar</div>';
+	if (fin) { html += '<p class="enc-pv-fin">Al terminar: "' + xEncEsc(fin) + '"</p>'; }
+	$('#enc_ed_preview').html(html);
+}
+
+function xEncEdAgregar() {
+	if (xEncEd.preguntas.length >= 20) { xEncAviso('Maximo 20 preguntas por encuesta.'); return; }
+	xEncEd.preguntas.push({ tipo: 'csat', texto: '', obligatorio: 1, opciones: [] });
+	xEncEdMarcar();
+	$('#enc_ed_preguntas .enc-preg-texto').last().focus();
+}
+function xEncEdQuitar(i) {
+	xEncEd.preguntas.splice(i, 1);
+	xEncEdMarcar();
+}
+function xEncEdMover(i, delta) {
+	var j = i + delta;
+	if (j < 0 || j >= xEncEd.preguntas.length) { return; }
+	var tmp = xEncEd.preguntas[i]; xEncEd.preguntas[i] = xEncEd.preguntas[j]; xEncEd.preguntas[j] = tmp;
+	xEncEdMarcar();
+}
+function xEncEdTipo(i, tipo) {
+	var p = xEncEd.preguntas[i];
+	p.tipo = tipo;
+	// la opcion multiple arranca con dos casilleros para que se entienda que hay que llenarlos
+	if (tipo === 'opcion' && p.opciones.length < 2) { p.opciones = ['', '']; }
+	xEncEdMarcar();
+}
+function xEncEdTexto(i, v) { xEncEd.preguntas[i].texto = v; xEncEdCab(); }
+function xEncEdOblig(i, v) { xEncEd.preguntas[i].obligatorio = v ? 1 : 0; xEncEdCab(); }
+function xEncEdOpcion(i, j, v) { xEncEd.preguntas[i].opciones[j] = v; xEncEdCab(); }
+function xEncEdAgregarOpcion(i) { xEncEd.preguntas[i].opciones.push(''); xEncEdMarcar(); }
+function xEncEdQuitarOpcion(i, j) { xEncEd.preguntas[i].opciones.splice(j, 1); xEncEdMarcar(); }
+
+// Validacion previa en el navegador (el backend valida igual): marca la primera pregunta con problema
+function xEncEdValidar() {
+	if (!$('#enc_ed_nombre').val().trim()) { return 'Ponle un nombre a la encuesta.'; }
+	if (!xEncEd.preguntas.length) { return 'Agrega al menos una pregunta.'; }
+	for (var i = 0; i < xEncEd.preguntas.length; i++) {
+		var p = xEncEd.preguntas[i];
+		if (!String(p.texto).trim()) { return 'La pregunta ' + (i + 1) + ' no tiene texto.'; }
+		if (p.tipo === 'opcion' && p.opciones.filter(function (o) { return String(o).trim() !== ''; }).length < 2) {
+			return 'La pregunta ' + (i + 1) + ' necesita al menos 2 opciones.';
+		}
+	}
+	return '';
+}
+function xEncEditorGuardar(tabDespues) {
+	var error = xEncEdValidar();
+	if (error) { xEncAviso(error); return; }
+	var body = {
+		id: xEncEd.id,
+		nombre: $('#enc_ed_nombre').val(),
+		texto_inicio: $('#enc_ed_inicio').val(),
+		texto_fin: $('#enc_ed_fin').val(),
+		preguntas: xEncEd.preguntas.map(function (p) {
+			return { tipo: p.tipo, texto: p.texto, obligatorio: p.obligatorio,
+				opciones: p.tipo === 'opcion' ? p.opciones.filter(function (o) { return String(o).trim() !== ''; }) : [] };
+		})
+	};
+	xPopupLoad.titulo = 'Guardando...'; xPopupLoad.xopen();
+	xEncApi('guardar', body).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		xEncEd.sucio = false;
+		if (r.datos.versiono) {
+			xEncAviso('Se creo la version ' + r.datos.version + '. Las respuestas anteriores quedan con la version que respondieron y los canales ya sirven la nueva.', 'success', 'Nueva version guardada');
+		} else {
+			showToastSwal('success', 'Encuesta guardada');
+		}
+		xEncEditorCargar(r.datos.id, tabDespues);
+	});
+}
+function xEncEditorVolver() {
+	if (!xEncEd.sucio) { xEncIr('lista'); return; }
+	xEncConfirmar('Los cambios que no guardaste se pierden.', 'Salir sin guardar?', 'Si, salir').then(function (ok) {
+		if (ok) { xEncIr('lista'); }
+	});
+}
+Polymer({ is: 'x-encuesta-editor' });
+</script>
+</dom-module>

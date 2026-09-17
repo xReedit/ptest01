@@ -1,0 +1,273 @@
+<dom-module id="x-encuesta-publicacion">
+	<script src="../../../js/qrious.js"></script>
+	<template>
+		<p class="inv-titulo-sec enc-mt0">Canales disponibles</p>
+		<p class="inv-ayuda enc-mb8">Puedes usar uno o varios a la vez, incluso con encuestas distintas. Abre "Como usarlo" para ver los pasos de cada uno.</p>
+		<div class="enc-guia" id="enc_pub_guia"></div>
+
+		<p class="inv-titulo-sec">Donde corre esta encuesta</p>
+		<p class="inv-ayuda enc-mb8">Marca en que canales y sedes la ven tus clientes y pulsa <b>Guardar publicacion</b>. Si una sede ya tenia otra encuesta en ese canal, se reemplaza por esta.</p>
+		<div class="inv-table-wrap">
+			<table class="inv-table enc-matriz" id="enc_pub_matriz"><thead></thead><tbody></tbody></table>
+		</div>
+		<div class="enc-pub-acciones">
+			<span class="enc-sin-guardar" id="enc_pub_sin_guardar" style="display:none">Cambios sin guardar</span>
+			<span class="inv-ayuda" id="enc_pub_resumen"></span>
+			<button class="btn btn-sm btn-success" onclick="xEncPubGuardar()"><i class="fa fa-floppy-o"></i> Guardar publicacion</button>
+		</div>
+
+		<p class="inv-titulo-sec">Material para cada canal</p>
+		<div id="enc_pub_material"></div>
+	</template>
+<script>
+// Pestana "Publicacion" del editor. Guarda el estado deseado completo (sede x canal) y muestra, por
+// cada canal donde corre, el material listo: QR, link, cartel imprimible y como se vera en el
+// comprobante y en WhatsApp. Los links son fijos por sede + canal (tabla enc_canal_sede).
+var xEncPub = { data: null, sedeMaterial: 0, guardado: '' };
+
+function xEncPubCargar() {
+	xEncPub.data = null;
+	$('#enc_pub_matriz thead, #enc_pub_matriz tbody, #enc_pub_material').empty();
+	xPopupLoad.titulo = 'Cargando publicacion...'; xPopupLoad.xopen();
+	xEncApi('publicacion', { id: xEncEd.id }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		xEncPub.data = r.datos;
+		$('#enc_ed_estado').html(xEncEstado(r.datos.estado) + ' <span class="inv-tag">v' + xEncEsc(xEncEd.version) + '</span>');
+		xEncPubGuia();
+		xEncPubMatriz();
+		xEncPub.guardado = xEncPubMarcados();
+		xEncPubResumen();
+		xEncPubMaterial();
+	});
+}
+
+// Encuesta que ocupa hoy el par (sede, canal), o undefined
+function xEncPubOcupante(idsede, canal) {
+	return xEncPub.data.ocupados.filter(function (o) { return parseInt(o.idsede) === idsede && o.canal === canal; })[0];
+}
+function xEncPubEsEsta(o) { return o && parseInt(o.idenc_encuesta) === xEncEd.id; }
+
+function xEncPubGuia() {
+	$('#enc_pub_guia').html(ENC_CANALES.map(function (c) {
+		return '<div class="enc-guia-card">' +
+			'<div class="enc-guia-top"><i class="fa ' + c.icono + '"></i><b>' + c.nombre + '</b></div>' +
+			'<p>' + c.que + '</p>' +
+			'<p class="enc-guia-ideal"><span>Ideal para:</span> ' + c.ideal + '</p>' +
+			'<details><summary>Como usarlo</summary><ol>' + c.pasos.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ol>' +
+			'<p class="enc-guia-nota">' + c.nota + '</p></details></div>';
+	}).join(''));
+}
+// "sede|canal" marcados, ordenados: sirve para saber si hay cambios sin guardar
+function xEncPubMarcados() {
+	return $('.enc-pub-chk:checked').map(function () { return this.dataset.sede + '|' + this.dataset.canal; }).get().sort().join(',');
+}
+
+function xEncPubMatriz() {
+	var d = xEncPub.data;
+	var varias = d.sedes.length > 1;
+	var head = '<tr><th>Sede</th>' + ENC_CANALES.map(function (c) {
+		return '<th class="inv-cen"><i class="fa ' + c.icono + ' enc-ico"></i> ' + c.nombre +
+			(varias ? '<span class="inv-sub"><span class="inv-link" onclick="xEncPubColumna(\'' + c.clave + '\')">todas</span></span>' : '') + '</th>';
+	}).join('') + '</tr>';
+	var body = d.sedes.map(function (s) {
+		var idsede = parseInt(s.idsede);
+		return '<tr><td>' + xEncEsc(s.nombre) + '</td>' + ENC_CANALES.map(function (c) {
+			var o = xEncPubOcupante(idsede, c.clave);
+			var otra = o && !xEncPubEsEsta(o) ? '<span class="inv-sub enc-ocupa">hoy: ' + xEncEsc(o.nombre) + '</span>' : '';
+			return '<td class="inv-cen"><input type="checkbox" class="enc-pub-chk" data-sede="' + idsede + '" data-canal="' + c.clave + '"' +
+				(xEncPubEsEsta(o) ? ' checked' : '') + ' onchange="xEncPubResumen()">' + otra + '</td>';
+		}).join('') + '</tr>';
+	}).join('');
+	$('#enc_pub_matriz thead').html(head);
+	$('#enc_pub_matriz tbody').html(body || '<tr><td colspan="5" class="inv-empty">No hay sedes disponibles.</td></tr>');
+}
+function xEncPubColumna(canal) {
+	var chks = $('.enc-pub-chk[data-canal="' + canal + '"]');
+	chks.prop('checked', chks.filter(':checked').length < chks.length);
+	xEncPubResumen();
+}
+function xEncPubResumen() {
+	var n = $('.enc-pub-chk:checked').length;
+	var reemplaza = $('.enc-pub-chk:checked').filter(function () {
+		var o = xEncPubOcupante(parseInt(this.dataset.sede), this.dataset.canal);
+		return o && !xEncPubEsEsta(o);
+	}).length;
+	var sucio = xEncPub.data && xEncPubMarcados() !== xEncPub.guardado;
+	$('#enc_pub_sin_guardar').toggle(!!sucio);
+	$('#enc_pub_material_aviso').toggle(!!sucio);
+	$('#enc_pub_resumen').text(n ? n + ' canal(es) marcados' + (reemplaza ? ' · reemplaza ' + reemplaza + ' encuesta(s) que corren hoy' : '') : 'Sin publicar');
+}
+
+function xEncPubGuardar() {
+	var asignaciones = $('.enc-pub-chk:checked').map(function () {
+		return { idsede: parseInt(this.dataset.sede), canal: this.dataset.canal };
+	}).get();
+	var guardar = function () {
+		xPopupLoad.titulo = 'Publicando...'; xPopupLoad.xopen();
+		xEncApi('publicacion-guardar', { id: xEncEd.id, asignaciones: asignaciones }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			showToastSwal('success', asignaciones.length ? 'Publicacion guardada' : 'La encuesta ya no corre en ningun canal');
+			xEncPubCargar();
+		});
+	};
+	if (asignaciones.length) { guardar(); return; }
+	xEncConfirmar('La encuesta deja de correr en todos los canales. Sus respuestas se conservan.', 'Quitar la publicacion?', 'Si, quitar').then(function (ok) {
+		if (ok) { guardar(); }
+	});
+}
+
+function xEncPubUrl(idsede, canal) {
+	var l = xEncPub.data.links.filter(function (x) { return parseInt(x.idsede) === idsede && x.canal === canal; })[0];
+	return l ? l.url : '';
+}
+function xEncPubMaterial() {
+	var d = xEncPub.data;
+	var sedes = d.sedes.filter(function (s) {
+		return d.ocupados.some(function (o) { return parseInt(o.idsede) === parseInt(s.idsede) && xEncPubEsEsta(o); });
+	});
+	if (!sedes.length) {
+		$('#enc_pub_material').html('<p class="inv-empty">Publica la encuesta en al menos un canal para ver su QR, su link y como se vera en el comprobante y en WhatsApp.</p>');
+		return;
+	}
+	if (!sedes.some(function (s) { return parseInt(s.idsede) === xEncPub.sedeMaterial; })) { xEncPub.sedeMaterial = parseInt(sedes[0].idsede); }
+	var idsede = xEncPub.sedeMaterial;
+	var sede = sedes.filter(function (s) { return parseInt(s.idsede) === idsede; })[0];
+	var selector = sedes.length > 1
+		? '<div class="inv-toolbar"><div class="inv-field"><span class="inv-label">Ver material de</span><select class="inv-select" onchange="xEncPub.sedeMaterial=parseInt(this.value);xEncPubMaterial()">' +
+			sedes.map(function (s) { return '<option value="' + parseInt(s.idsede) + '"' + (parseInt(s.idsede) === idsede ? ' selected' : '') + '>' + xEncEsc(s.nombre) + '</option>'; }).join('') +
+			'</select></div></div>'
+		: '';
+	var html = '';
+	ENC_CANALES.forEach(function (c) {
+		var o = xEncPubOcupante(idsede, c.clave);
+		if (!xEncPubEsEsta(o)) { return; }
+		var url = xEncPubUrl(idsede, c.clave);
+		html += '<div class="enc-mat"><div class="enc-mat-head"><b><i class="fa ' + c.icono + ' enc-ico"></i> ' + c.nombre + '</b><span class="inv-ayuda">' + c.ayuda + '</span></div>' +
+			xEncPubMaterialCanal(c.clave, url, sede.nombre) + '</div>';
+	});
+	$('#enc_pub_material').html('<p class="enc-aviso" id="enc_pub_material_aviso" style="display:none">Este material muestra lo que ya esta guardado. Pulsa <b>Guardar publicacion</b> para ver los canales que acabas de marcar.</p>' +
+		selector + '<div class="enc-mat-grid">' + html + '</div>');
+	$('#enc_pub_material_aviso').toggle(xEncPubMarcados() !== xEncPub.guardado);
+	$('#enc_pub_material canvas[data-qr]').each(function () {
+		new QRious({ element: this, value: this.dataset.qr, size: parseInt(this.dataset.size) || 160, level: 'M' });
+	});
+}
+
+function xEncPubLinkFila(url) {
+	return '<div class="enc-link"><input type="text" class="inv-input" readonly value="' + xEncAttr(url) + '" onclick="this.select()">' +
+		'<button class="btn btn-sm btn-light" onclick="xEncPubCopiar(this)" data-url="' + xEncAttr(url) + '"><i class="fa fa-clipboard"></i> Copiar</button></div>';
+}
+function xEncPubMaterialCanal(canal, url, sedeNombre) {
+	var qr = function (size) { return '<canvas data-qr="' + xEncAttr(url) + '" data-size="' + size + '"></canvas>'; };
+	var datos = ' data-canal="' + canal + '" data-url="' + xEncAttr(url) + '" data-sede="' + xEncAttr(sedeNombre) + '"';
+	var descargas = '<div class="enc-descargas">' +
+		'<button class="btn btn-sm btn-success"' + datos + ' onclick="xEncPubDescargar(this,\'pdf\')"><i class="fa fa-file-pdf-o"></i> Descargar PDF para imprimir</button>' +
+		'<button class="btn btn-sm btn-light"' + datos + ' onclick="xEncPubDescargar(this,\'png\')"><i class="fa fa-file-image-o"></i> Imagen PNG</button></div>';
+	if (canal === 'kiosko') {
+		return '<div class="enc-mat-body enc-mat-fila">' + qr(220) +
+			'<div class="enc-mat-texto"><p>Abre este link en la tablet o escanea el QR con su camara. El PDF es un cartel para tus clientes: ponlo junto a la tablet para que tambien puedan responder desde su celular.</p>' +
+			xEncPubLinkFila(url) + '<button class="btn btn-sm btn-light enc-mt6" onclick="window.open(\'' + xEncAttr(url) + '\',\'_blank\')"><i class="fa fa-external-link"></i> Abrir en esta computadora</button>' +
+			descargas + '</div></div>';
+	}
+	if (canal === 'qr_local') {
+		return '<div class="enc-mat-body"><div class="enc-cartel">' +
+			'<span class="enc-cartel-sede">' + xEncEsc(sedeNombre) + '</span><b>¿Cómo te atendimos?</b><em>Tu opinión nos ayuda a mejorar</em>' +
+			qr(240) + '<span class="enc-cartel-pie">Escanea con la cámara de tu celular</span></div>' +
+			xEncPubLinkFila(url) + descargas + '</div>';
+	}
+	if (canal === 'ticket') {
+		return '<div class="enc-mat-body"><div class="enc-ticket">' +
+			'<p class="enc-t-cen"><b>' + xEncEsc(sedeNombre) + '</b></p><p class="enc-t-cen">BOLETA ELECTRONICA B001-000123</p><hr>' +
+			'<p><span>2 LOMO SALTADO</span><span>64.00</span></p><p><span>1 CHICHA MORADA 1L</span><span>12.00</span></p><hr>' +
+			'<p><b>TOTAL</b><b>S/ 76.00</b></p><hr>' +
+			'<p class="enc-t-cen">Califica tu experiencia:</p>' + qr(130) +
+			'<p class="enc-t-cen">Atendido por: MOZO 1</p><p class="enc-t-cen">www.papaya.com.pe</p></div>' +
+			'<p class="inv-nota">Asi se imprimira al pie de boletas, facturas y tickets. Cada comprobante llevara su propio QR para ligar la respuesta a la venta, la mesa y el mozo.</p></div>';
+	}
+	return '<div class="enc-mat-body"><div class="enc-wsp"><div class="enc-wsp-head">' + xEncEsc(xEncPub.data.org || sedeNombre) + '</div>' +
+		'<div class="enc-wsp-chat"><div class="enc-wsp-msg">Hola, gracias por tu compra en <b>' + xEncEsc(sedeNombre) + '</b>. Aqui tienes tu comprobante B001-000123:<br><u>ver comprobante (PDF)</u>' +
+		'<br><br>¿Como te fue? Cuentanos en 30 segundos:<br><u>' + xEncEsc(url) + '</u><span class="enc-wsp-hora">12:45</span></div></div></div>' +
+		'<p class="inv-nota">El link de la encuesta va en la descripcion del mensaje que ya recibe el cliente con su comprobante. Cada envio lleva su propio link, ligado a la venta.</p></div>';
+}
+
+function xEncPubCopiar(btn) {
+	var url = btn.dataset.url;
+	var ok = function () { showToastSwal('success', 'Link copiado'); };
+	if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(url).then(ok); return; }
+	// el POS corre por http en la red local: sin contexto seguro no hay clipboard API
+	var input = $(btn).siblings('input')[0];
+	input.select(); document.execCommand('copy'); ok();
+}
+
+// Cartel imprimible para el CLIENTE (A5 vertical, ~150 dpi): lo invita a escanear y responder.
+// Lo usan el PDF y el PNG. En el canal Tablet el QR abre la misma encuesta de la tablet, asi que el
+// cliente puede responder en la tablet o desde su celular.
+function xEncPubLienzo(canal, url, sede) {
+	var W = 874, H = 1240, c = document.createElement('canvas');
+	c.width = W; c.height = H;
+	var g = c.getContext('2d');
+	var redondo = function (x, y, w, h, r) {
+		g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+		g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+	};
+	var texto = function (t, x, y, font, color, align) { g.font = font; g.fillStyle = color; g.textAlign = align || 'center'; g.fillText(t, x, y); };
+	g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+
+	// franja superior con el nombre del local
+	g.fillStyle = '#1f2937'; g.fillRect(0, 0, W, 110);
+	texto(String(sede).toUpperCase(), W / 2, 70, 'bold 34px Arial', '#ffffff');
+
+	texto('¿Cómo te atendimos?', W / 2, 225, 'bold 70px Arial', '#111827');
+	texto(canal === 'kiosko' ? 'Responde en nuestra tablet o escanea el código' : 'Tu opinión nos ayuda a mejorar',
+		W / 2, 290, '34px Arial', '#4b5563');
+
+	// QR dentro de una tarjeta con borde
+	var tam = 500, cx = (W - tam) / 2, cy = 350;
+	redondo(cx - 30, cy - 30, tam + 60, tam + 60, 28);
+	g.fillStyle = '#ffffff'; g.fill(); g.lineWidth = 6; g.strokeStyle = '#1f2937'; g.stroke();
+	var q = document.createElement('canvas');
+	new QRious({ element: q, value: url, size: tam, level: 'M' });
+	g.drawImage(q, cx, cy);
+
+	texto('Escanea con la cámara de tu celular', W / 2, 950, 'bold 36px Arial', '#111827');
+
+	// tres pasos
+	var pasos = [['1', 'Escanea', 'el código'], ['2', 'Responde', 'en 1 minuto'], ['3', '¡Listo!', 'Gracias']];
+	pasos.forEach(function (p, i) {
+		var x = 175 + i * 262, y = 1040;
+		g.beginPath(); g.arc(x, y, 34, 0, Math.PI * 2); g.fillStyle = '#16a34a'; g.fill();
+		texto(p[0], x, y + 13, 'bold 36px Arial', '#ffffff');
+		texto(p[1], x, y + 82, 'bold 28px Arial', '#111827');
+		texto(p[2], x, y + 118, '26px Arial', '#4b5563');
+	});
+	return c;
+}
+function xEncPubArchivo(canal, sede, ext) {
+	return (canal === 'qr_local' ? 'cartel-encuesta-' : 'cartel-tablet-encuesta-') + String(sede).toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.' + ext;
+}
+function xEncPubDescargar(btn, formato) {
+	var canal = btn.dataset.canal, url = btn.dataset.url, sede = btn.dataset.sede;
+	var lienzo = xEncPubLienzo(canal, url, sede);
+	if (formato === 'pdf') {
+		// jsPDF lo carga m_panel.html desde cdnjs (lo usan Caja y Carta virtual); sin internet no esta
+		if (typeof jsPDF === 'undefined') {
+			xEncAviso('No se pudo cargar el generador de PDF (revisa la conexion a internet). Descarga la imagen PNG e imprimela.', 'warning');
+			return;
+		}
+		// A5 vertical (148 x 210 mm): el lienzo ya tiene esa proporcion
+		var pdf = new jsPDF('p', 'mm', 'a5');
+		// JPEG y no PNG: jsPDF guarda el PNG sin comprimir (~4 MB); a calidad .95 el QR sigue nitido al imprimir
+		pdf.addImage(lienzo.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 148, 210);
+		pdf.save(xEncPubArchivo(canal, sede, 'pdf'));
+		return;
+	}
+	var a = document.createElement('a');
+	a.download = xEncPubArchivo(canal, sede, 'png');
+	a.href = lienzo.toDataURL('image/png');
+	document.body.appendChild(a); a.click(); a.remove();
+}
+Polymer({ is: 'x-encuesta-publicacion' });
+</script>
+</dom-module>

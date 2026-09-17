@@ -122,6 +122,8 @@ async function xCocinarImprimirComprobante(xArrayCuerpo, xArraySubTotales, xArra
 	// console.log(rptPrint);
 	xArrayEncabezado[0].hash = rptPrint.hash; // que es realidad el qr
 	xArrayEncabezado[0].external_id = rptPrint.external_id;
+	// encuesta de satisfaccion: QR al pie (si la sede publico la encuesta en "QR en el comprobante")
+	if (!_viene_facturador) { await xEncAgregarQrPie(xArrayEncabezado[0], idregistro_pago); }
 	// correlativo comprobante;	
 	xArrayComprobante.correlativo = rptPrint.correlativo_comprobante || xArrayComprobante.correlativo;
 	xArrayComprobante.facturacion_correlativo_api = rptPrint.facturacion_correlativo_api || xArrayComprobante.facturacion_correlativo_api;
@@ -1414,6 +1416,7 @@ async function reimpresionDocumento(idregistro_pago) {
 	
 	rpt.Array_enca.nom_us = xm_log_get('app3_us').nomus
 	rpt.Array_enca = [rpt.Array_enca]
+	await xEncAgregarQrPie(rpt.Array_enca[0], idregistro_pago);
 
 	// obtener impresora
 	let printer;
@@ -1432,4 +1435,134 @@ async function reimpresionDocumento(idregistro_pago) {
 		}, 1000);
 		return;
 	}
+}
+
+
+// ===== Encuesta de satisfaccion: QR al pie del comprobante =====
+// El link lo firma el servidor (log_encuesta.php op=url-venta, secreto HMAC compartido con restobar-api).
+// La fila de QR se dibuja AQUI como una imagen PNG y viaja en Array_enca[0].qr_pie64: ESC/POS no puede poner
+// dos QR nativos lado a lado, y asi los servidores de impresion (Laragon, Node, Android) solo imprimen una
+// imagen, como el logo, sin librerias de QR propias. Cualquier falla deja el comprobante como antes (sin QR).
+async function xEncAgregarQrPie(enca, idregistro_pago) {
+	try {
+		if (!enca) { return; }
+		const url = await xEncUrlVenta(idregistro_pago);
+		if (!url) { return; }
+		enca.url_encuesta = url;
+		enca.qr_pie64 = await xEncImagenQrPie(enca.hash || '', url);
+	} catch (e) {
+		console.warn('encuesta: sin QR en el comprobante', e);
+	}
+}
+
+// canal: 'ticket' para el QR impreso, 'whatsapp' para el link del mensaje. Cada canal tiene su token.
+async function xEncUrlVenta(idregistro_pago, canal) {
+	const id = parseInt(idregistro_pago, 10);
+	if (!id) { return ''; }
+	try {
+		const r = await $.ajax({
+			type: 'POST', url: '../../bdphp/log_encuesta.php?op=url-venta', timeout: 4000,
+			data: JSON.stringify({ idregistro_pago: id, canal: canal || 'ticket' }), contentType: 'application/json', dataType: 'json'
+		});
+		return (r && r.success && r.datos && r.datos.url) || '';
+	} catch (e) {
+		return '';
+	}
+}
+
+function xEncCargarQrious() {
+	if (window.QRious) { return Promise.resolve(true); }
+	return new Promise(function (resolver) {
+		$.getScript('../../js/qrious.js').done(function () { resolver(!!window.QRious); }).fail(function () { resolver(false); });
+	});
+}
+
+// Imagen de 384 px de ancho (entra en papel de 58 y de 80 mm sin reescalar, asi el QR queda nitido).
+// Con hash de SUNAT: dos columnas, el QR del comprobante mas chico a la izquierda y el de la encuesta mas
+// grande a la derecha, para destacarla. Sin hash (ticket): solo el de la encuesta, centrado.
+async function xEncImagenQrPie(hash, url) {
+	if (!(await xEncCargarQrious())) { return ''; }
+	const ANCHO = 384;
+	const lienzo = document.createElement('canvas');
+	const g = lienzo.getContext('2d');
+	const escribir = function (t, x, y, fuente) { g.font = fuente; g.fillText(t, x, y); };
+
+	if (hash) {
+		// modulos de 4 y 5 puntos (QR de ~37 modulos): chico legible, grande destacado y con ~8 modulos de separacion
+		const chico = xEncQr(hash, 160, 'L');   // SUNAT admite nivel L: menos modulos, modulos mas grandes
+		const grande = xEncQr(url, 200, 'Q');   // nivel Q: sobra correccion para tapar el centro con la carita
+		xEncCaritaEnQr(grande);
+		const alto = Math.max(chico.height, grande.height);
+		const xGrande = ANCHO - grande.width - 6;
+		lienzo.width = ANCHO; lienzo.height = alto + 54;
+		xEncFondo(g, lienzo);
+		g.drawImage(chico, 6, Math.round((alto - chico.height) / 2));
+		g.drawImage(grande, xGrande, 0);
+		escribir('Comprobante', 6 + chico.width / 2, Math.round((alto + chico.height) / 2) + 6, '15px Arial');
+		escribir('Califica nuestra', xGrande + grande.width / 2, alto + 6, 'bold 18px Arial');
+		escribir('atencion', xGrande + grande.width / 2, alto + 28, 'bold 18px Arial');
+	} else {
+		const qr = xEncQr(url, 240, 'Q');
+		xEncCaritaEnQr(qr);
+		lienzo.width = ANCHO; lienzo.height = qr.height + 56;
+		xEncFondo(g, lienzo);
+		g.drawImage(qr, Math.round((ANCHO - qr.width) / 2), 0);
+		escribir('Califica nuestra atencion', ANCHO / 2, qr.height + 6, 'bold 18px Arial');
+		escribir('Escanea con tu celular', ANCHO / 2, qr.height + 30, '15px Arial');
+	}
+	return lienzo.toDataURL('image/png').split(',')[1];
+}
+
+function xEncFondo(g, lienzo) {
+	g.fillStyle = '#ffffff'; g.fillRect(0, 0, lienzo.width, lienzo.height);
+	g.imageSmoothingEnabled = false;
+	g.fillStyle = '#000000'; g.textAlign = 'center'; g.textBaseline = 'top';
+}
+
+// Carita al centro del QR de la encuesta: el ojo del cliente la ve antes que al codigo y entiende de que va.
+// Tapa ~11% del area; con nivel Q (25% de correccion) el QR se sigue leyendo de sobra. Trazos gruesos porque
+// la impresora termica es de un solo bit: las lineas finas se pierden.
+function xEncCaritaEnQr(qr) {
+	const g = qr.getContext('2d');
+	const lado = Math.min(qr.width, qr.height);
+	const cx = qr.width / 2, cy = qr.height / 2;
+	const r = Math.round(lado * 0.19);
+	const grosor = Math.max(3, Math.round(lado / 60));
+
+	g.fillStyle = '#ffffff';
+	g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill();   // claro alrededor: separa la carita del codigo
+
+	g.strokeStyle = '#000000'; g.fillStyle = '#000000';
+	g.lineWidth = grosor; g.lineCap = 'round';
+	g.beginPath(); g.arc(cx, cy, r - grosor, 0, Math.PI * 2); g.stroke();
+
+	const ojo = Math.max(2, Math.round(lado * 0.018));
+	const dx = r * 0.36, dy = r * 0.28;
+	g.beginPath(); g.arc(cx - dx, cy - dy, ojo, 0, Math.PI * 2); g.fill();
+	g.beginPath(); g.arc(cx + dx, cy - dy, ojo, 0, Math.PI * 2); g.fill();
+
+	g.beginPath(); g.arc(cx, cy + r * 0.02, r * 0.46, 0.22 * Math.PI, 0.78 * Math.PI); g.stroke();
+	return qr;
+}
+
+// QR sin margen y recortado a su contorno real: QRious centra los modulos (de tamano entero) dentro del
+// tamano pedido y deja bordes blancos desparejos. Recortar no reescala, asi los modulos siguen nitidos.
+function xEncQr(valor, tam, nivel) {
+	const c = document.createElement('canvas');
+	new QRious({ element: c, value: valor, size: tam, level: nivel, padding: 0, background: '#ffffff', foreground: '#000000' });
+	const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+	let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+	for (let y = 0; y < c.height; y++) {
+		for (let x = 0; x < c.width; x++) {
+			if (px[(y * c.width + x) * 4] < 128) {
+				if (x < x0) { x0 = x; } if (x > x1) { x1 = x; }
+				if (y < y0) { y0 = y; } if (y > y1) { y1 = y; }
+			}
+		}
+	}
+	if (x1 < 0) { return c; }
+	const r = document.createElement('canvas');
+	r.width = x1 - x0 + 1; r.height = y1 - y0 + 1;
+	r.getContext('2d').drawImage(c, x0, y0, r.width, r.height, 0, 0, r.width, r.height);
+	return r;
 }

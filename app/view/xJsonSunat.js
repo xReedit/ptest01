@@ -716,7 +716,17 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
                     user_id: _userId,
                     comercio_telefono: dtSede.telefono
                 };
-                xSendWhatsAppPdfComrpobante(_payloadPdf);
+                // link de la encuesta: se firma aqui (el secreto vive en el POS) y viaja como un campo mas.
+                // Si no hay canal whatsapp publicado o falla, vuelve '' y el mensaje sale como siempre.
+                if (typeof xEncUrlVenta === 'function') {
+                    const _enviarWsp = function (urlEncuesta) {
+                        if (urlEncuesta) { _payloadPdf.url_encuesta = urlEncuesta; }
+                        xSendWhatsAppPdfComrpobante(_payloadPdf);
+                    };
+                    xEncUrlVenta(_idregistro_p, 'whatsapp').then(_enviarWsp, function () { _enviarWsp(''); });
+                } else {
+                    xSendWhatsAppPdfComrpobante(_payloadPdf);
+                }
             }
 
 
