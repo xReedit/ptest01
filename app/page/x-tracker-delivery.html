@@ -1,0 +1,1048 @@
+<dom-module id="x-tracker-delivery">
+	<!-- fuera del <template>: Polymer 1 no ejecuta los <script> que estan dentro, y los QR salian vacios -->
+	<script src="../../js/qrious.js"></script>
+	<template>
+
+		<paper-dialog modal id="dlg_trk_ayuda" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Como activar el seguimiento</h3>
+					<p>Para que esta pantalla funcione hacen falta tres cosas: que el repartidor reporte su ubicacion desde la aplicacion, que la direccion del pedido tenga coordenadas, y que tu local este bien ubicado en el mapa.</p>
+				</div>
+				<div class="xdlg-body">
+
+					<div class="inv-titulo-sec">El repartidor</div>
+					<div class="trk-pasos">
+						<div class="trk-paso">
+							<span class="trk-paso-num">1</span>
+							<div>
+								<b>Creale un usuario con perfil de repartidor</b>
+								<p>Entra como administrador al modulo <b>Usuarios</b>, crea el usuario de la persona y elige el <b>perfil Repartidor</b>. Ese usuario y su contrasena son los que va a usar para entrar a la aplicacion.</p>
+							</div>
+						</div>
+						<div class="trk-paso">
+							<span class="trk-paso-num">2</span>
+							<div>
+								<b>Que instale Papaya Repartidor en su celular</b>
+								<p>Que apunte la camara al codigo que le corresponda. Si prefiere no instalar nada, tambien puede entrar desde el navegador a <b>reparto.papaya.com.pe</b>.</p>
+								<div class="trk-descarga">
+									<div class="trk-tienda">
+										<canvas id="trk_qr_play" class="trk-qr"></canvas>
+										<a class="btn btn-sm btn-success" href="https://play.google.com/store/apps/details?id=papaya.com.pe.repartidor" target="_blank" rel="noopener"><i class="fa fa-android"></i>Android</a>
+									</div>
+									<div class="trk-tienda">
+										<canvas id="trk_qr_ios" class="trk-qr"></canvas>
+										<a class="btn btn-sm btn-light" href="https://apps.apple.com/pe/app/papaya-repartidor/id1661062301" target="_blank" rel="noopener"><i class="fa fa-apple"></i>iPhone</a>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="trk-paso">
+							<span class="trk-paso-num">3</span>
+							<div>
+								<b>Que inicie sesion y se ponga en linea</b>
+								<p>Con el usuario del paso 1. La primera vez el celular le pedira permiso de ubicacion: tiene que aceptarlo, y conviene elegir <b>Mientras se usa la aplicacion</b>. Despues tiene que activar el interruptor de <b>En linea</b>.</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="inv-titulo-sec">Los pedidos</div>
+					<div class="trk-bloque">
+						<label class="inv-check">
+							<input type="checkbox" id="trk_chk_mapa" onchange="xTrkGuardarBusquedaMapa(this.checked)">
+							Buscar la direccion en un mapa al tomar un pedido de delivery
+						</label>
+						<p class="inv-ayuda">Un pedido solo aparece en el mapa si su direccion tiene coordenadas. Con esta opcion activada, al tomar el pedido se elige la direccion sobre un mapa y queda ubicada. Si esta desactivada, la direccion es solo un texto y el pedido se vera en las listas pero no en el mapa.</p>
+					</div>
+
+					<div class="inv-titulo-sec">Tu local</div>
+					<div class="trk-bloque">
+						<p class="inv-resumen">El punto naranja del mapa es tu local, y desde ahi se miden todas las distancias y los tiempos. Si no esta donde corresponde, <b>arrastra el marcador</b> o toca el punto exacto.</p>
+						<div class="trk-mapa-sede" id="trk_mapa_sede"></div>
+						<div class="trk-sede-pie">
+							<span class="trk-coords" id="trk_coords">—</span>
+							<span class="inv-sep"></span>
+							<button class="btn btn-sm btn-light" id="trk_btn_deshacer" onclick="xTrkResetUbicacion()" disabled><i class="fa fa-undo"></i>Deshacer</button>
+							<button class="btn btn-sm btn-success" id="trk_btn_ubicacion" onclick="xTrkGuardarUbicacion()" disabled><i class="fa fa-map-marker"></i>Guardar ubicacion</button>
+						</div>
+					</div>
+
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_trk_asignar" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="trk_asig_titulo">Asignar repartidor</h3>
+					<p id="trk_asig_sub"></p>
+				</div>
+				<div class="xdlg-body">
+					<p class="inv-ayuda">Ordenados por quien llega antes, contando los pedidos que ya lleva encima.</p>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_trk_candidatos">
+							<thead>
+								<tr>
+									<th>Repartidor</th>
+									<th>Tipo</th>
+									<th class="inv-num">Lleva</th>
+									<th>Estado</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_trk_pedidos" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="trk_dlg_titulo">Pedidos</h3>
+					<p id="trk_dlg_sub"></p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_trk_pedidos">
+							<thead></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<div id="trk_dlg_pagos"></div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Tracker Delivery</h3>
+						<p>Donde estan tus repartidores ahora mismo, cuantos pedidos llevan y cuanto estan tardando. Se actualiza solo cada 20 segundos.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<span class="trk-alerta" id="trk_alerta"></span>
+						<span class="trk-actualizado" id="trk_actualizado"></span>
+						<button class="btn btn-sm btn-light" onclick="xTrkComoActivar()"><i class="fa fa-question-circle"></i>Como activar el seguimiento</button>
+						<button class="btn btn-sm btn-light" onclick="xTrkCargar()"><i class="fa fa-refresh"></i>Actualizar</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+
+				<div class="trk-aviso" id="trk_aviso_app"></div>
+
+				<div class="inv-kpis" id="trk_kpis"></div>
+
+				<div class="trk-mapa" id="trk_mapa"></div>
+
+				<div class="inv-titulo-sec">Repartidores</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_trk_repartidores">
+						<thead>
+							<tr>
+								<th>Repartidor</th>
+								<th>Tipo</th>
+								<th>Estado</th>
+								<th class="inv-num">Por entregar</th>
+								<th class="inv-num">Entregados</th>
+								<th class="inv-num">Tiempo prom.</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+
+				<div class="inv-titulo-sec">Pedidos sin repartidor</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_trk_sin_asignar">
+						<thead>
+							<tr>
+								<th>Pedido</th>
+								<th>Cliente</th>
+								<th>Direccion</th>
+								<th class="inv-num">Esperando</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+
+			</div>
+		</div>
+		<br><br>
+
+	</template>
+
+	<script>
+		var TRK_INTERVALO_MS = 20000;
+		var TRK_SIN_SENAL_MS = 5 * 60 * 1000;
+		var TRK_PEDIDO_TARDE_MIN = 45;
+		var TRK_FALLOS_MAX = 3;
+		var TRK_FACTOR_CALLE = 1.3;   // por calles, no en linea recta
+		var TRK_VEL_KMH = 18;         // moto en ciudad chica, con paradas
+		// La estimacion se infla a proposito. Si prometemos 3 min y el repartidor llega en 5, el cliente
+		// reclama; si prometemos 9 y llega en 5, siente que lo atendieron rapido. El colchon cubre ademas
+		// lo que el calculo no ve: estacionar, encontrar la puerta, cobrar.
+		var TRK_ETA_HOLGURA = 1.7;
+		// En una ciudad chica casi todo queda a menos de 1 km, asi que un piso alto aplastaba la
+		// estimacion y todos los pedidos decian lo mismo. Con 2 min solo se evita prometer "1 min".
+		var TRK_ETA_PISO_MIN = 2;
+
+		// Un color por repartidor, no por tipo: el tipo ya esta en su columna y en el globo, y lo que
+		// hace falta en el mapa es saber de un vistazo cual marcador es cual. El color sale del id,
+		// asi que no cambia cuando se reordena la tabla ni entre un refresco y el siguiente.
+		var TRK_PALETA = ['#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#008080',
+			'#f032e6', '#9a6324', '#046307', '#000075', '#b15928', '#00838f'];
+		var TRK_PESO_CARGA = 1.2;     // cada pedido encima pesa como 1.2 km al sugerir repartidor
+		var TRK_ALERTA_SIN_ASIGNAR_MIN = 10;   // un pedido sin repartidor pasado esto ya es un problema
+
+		var xTrkMapa = null;
+		var xTrkCapas = null;
+		var xTrkTimer = null;
+		var xTrkMarcadores = {};
+		var xTrkCentrado = false;
+		var xTrkVivo = false;
+		var xTrkEnVuelo = false;
+		var xTrkFallos = 0;
+		var xTrkUltimo = null;   // ultimo agrupado pintado, para el historial sin consultar de nuevo
+		var xTrkDemorados = 0;   // para avisar solo cuando el numero sube, no en cada refresco
+		var xTrkSede = null;     // datos de la sede del ultimo refresco, para el dialogo de ayuda
+		var xTrkMapaS = null;    // mapa chico del dialogo, para mover la ubicacion del local
+		var xTrkMarcadorS = null;
+		var xTrkUbicacionNueva = null;
+
+		/**
+		 * Siempre resuelve con {success, datos, error}.
+		 * `silencioso` existe porque esta pantalla se refresca sola cada 20 s: si el modal saltara en
+		 * cada fallo, una sesion caida le abriria al usuario un dialogo que se reabre solo, para siempre.
+		 * El refresco automatico informa en la cabecera; el boton "Actualizar" si avisa con modal.
+		 */
+		function xTrkApi(op, body, silencioso) {
+			var d = $.Deferred();
+			$.ajax({ type: 'POST', url: '../../bdphp/log_tracker.php?op=' + op,
+				data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+			.done(function (r) {
+				if ((!r || !r.success) && !silencioso) { xTrkAviso((r && r.error) || 'Error de comunicacion con el servidor', 'error'); }
+				d.resolve(r || { success: false, datos: null, error: 'sin respuesta' });
+			})
+			.fail(function (jqXHR) {
+				if (!silencioso) {
+					xTrkAviso(jqXHR && jqXHR.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+				}
+				d.resolve({ success: false, datos: null, error: 'red' });
+			});
+			return d.promise();
+		}
+
+		// Avisos: SweetAlert tema 1, nunca alert()/confirm() nativos (docs/design.md seccion 7).
+		function xTrkAviso(texto, icono, titulo) {
+			showAlertSwalOk(icono || 'warning', titulo || '', texto, 'Entendido', 1);
+		}
+
+		function xTrkEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+
+		/** El color identifica a la persona, no al tipo. Mismo color en el pin, el chip, el destino y la linea. */
+		function xTrkColor(r) { return r.color || TRK_PALETA[0]; }
+
+		/** El circulito con la inicial, igual en el mapa y en las tablas. */
+		function xTrkChip(r) {
+			return '<span class="trk-chip' + (r.sinSenal ? ' sinsenal' : '') + '" style="background:' + xTrkColor(r) + '">' +
+				xTrkEsc(r.etiqueta) + '</span>';
+		}
+
+		/** Distancia en linea recta, en km. */
+		function xTrkDistanciaKm(lat1, lng1, lat2, lng2) {
+			var R = 6371;
+			var dLat = (lat2 - lat1) * Math.PI / 180;
+			var dLng = (lng2 - lng1) * Math.PI / 180;
+			var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+				Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+				Math.sin(dLng / 2) * Math.sin(dLng / 2);
+			return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+		}
+
+		/**
+		 * Llamar y WhatsApp. El numero se limpia de espacios y guiones, y si viene de 9 digitos se le
+		 * antepone el 51: asi estan guardados los telefonos peruanos en la base.
+		 */
+		function xTrkContacto(telefono) {
+			var limpio = String(telefono || '').replace(/[^0-9]/g, '');
+			if (limpio.length < 6) { return ''; }
+			return ' <a class="trk-contacto" href="tel:' + limpio + '" title="Llamar"><i class="fa fa-phone"></i></a>' +
+				' <a class="trk-contacto wa" href="javascript:void(0)" onclick="xTrkWhatsapp(\'' + limpio + '\')"' +
+				' title="WhatsApp"><i class="fa fa-whatsapp"></i></a>';
+		}
+
+		/**
+		 * Abre el chat de WhatsApp sin acumular pestanas.
+		 *
+		 * Dos decisiones, las dos por un motivo concreto:
+		 * - Ventana con nombre en vez de _blank: el segundo clic reutiliza la misma pestana. Con _blank
+		 *   cada repartidor abria una nueva y quedaban diez a la media hora.
+		 * - web.whatsapp.com/send en vez de wa.me: wa.me muestra una pagina intermedia que pregunta si
+		 *   abrir la aplicacion o la web, y al elegir la web arranca una sesion nueva que desconecta la
+		 *   que ya estaba abierta. Yendo directo se entra al chat en la sesion que ya existe.
+		 *
+		 * No lleva rel="noopener": eso obliga a un contexto nuevo y anularia la reutilizacion.
+		 */
+		function xTrkWhatsapp(telefono) {
+			var limpio = String(telefono || '').replace(/[^0-9]/g, '');
+			if (limpio.length < 6) { return; }
+			var numero = limpio.length === 9 ? '51' + limpio : limpio;   // celular peruano sin prefijo
+			var w = window.open('https://web.whatsapp.com/send?phone=' + numero, 'papaya_whatsapp');
+			if (w) { w.focus(); }
+		}
+
+		function xTrkFmtDistancia(km) {
+			return km < 1 ? Math.round(km * 1000) + ' m' : km.toFixed(1) + ' km';
+		}
+
+		/**
+		 * Estimacion honesta, no una ruta real: nadie viaja en linea recta, asi que la distancia se
+		 * corrige por TRK_FACTOR_CALLE antes de dividirla por la velocidad. Calcularlo con el servicio
+		 * de rutas de Google daria el tiempo exacto, pero serian dos llamadas pagas por pedido cada 20 s
+		 * en cada terminal de cada comercio. Por eso dice "aprox" en pantalla.
+		 */
+		function xTrkTramo(r, p) {
+			if (!isFinite(r.lat) || !isFinite(r.lng) || !isFinite(p.lat) || !isFinite(p.lng)) { return null; }
+			var km = xTrkDistanciaKm(r.lat, r.lng, p.lat, p.lng) * TRK_FACTOR_CALLE;
+			var crudo = km / TRK_VEL_KMH * 60;
+			return { km: km, min: Math.max(TRK_ETA_PISO_MIN, Math.round(crudo * TRK_ETA_HOLGURA)) };
+		}
+
+		function xTrkTramoTexto(r, p) {
+			var t = xTrkTramo(r, p);
+			return t ? xTrkFmtDistancia(t.km) + ' · ~' + t.min + ' min' : '';
+		}
+
+		function xTrkFmtMin(n) {
+			if (n === null || n === undefined || isNaN(n)) { return '—'; }
+			if (n < 60) { return n + ' min'; }
+			return Math.floor(n / 60) + ' h ' + (n % 60) + ' min';
+		}
+
+		// MySQL devuelve "2026-09-17 13:22:41"; sin la T, Safari y iOS lo leen como fecha invalida.
+		function xTrkFecha(txt) {
+			if (!txt) { return null; }
+			var d = new Date(String(txt).replace(' ', 'T'));
+			return isNaN(d.getTime()) ? null : d;
+		}
+
+		function xTrkMinutos(desde, hasta) {
+			if (!desde || !hasta) { return null; }
+			return Math.round((hasta.getTime() - desde.getTime()) / 60000);
+		}
+
+		/**
+		 * Lo que el repartidor declaro al entregar: con que le pagaron y cuanto. Viene del JSON
+		 * `operacion`, que la app del repartidor llena al marcar la entrega. Puede no estar: las
+		 * entregas anteriores a esa funcion, y las que el repartidor cerro sin especificar, vienen vacias.
+		 */
+		function xTrkPago(operacion, importeDefecto) {
+			var o = {};
+			try { o = operacion ? (typeof operacion === 'string' ? JSON.parse(operacion) : operacion) : {}; }
+			catch (e) { o = {}; }
+			if (!o || !o.descripcion) { return null; }
+			var imp = parseFloat(o.importe);
+			return {
+				descripcion: String(o.descripcion),
+				importe: isFinite(imp) ? imp : importeDefecto,
+				alLocal: !!o.pago_al_local
+			};
+		}
+
+		/** Una fila de pedido y una de repartidor propio traen los mismos campos: un solo constructor. */
+		function xTrkRepartidorDesde(f, idr, ahora) {
+			var pos = {};
+			try { pos = f.position_now ? (typeof f.position_now === 'string' ? JSON.parse(f.position_now) : f.position_now) : {}; }
+			catch (e) { pos = {}; }
+			var sello = xTrkFecha(f.position_now_fecha);
+
+			return {
+				idrepartidor: idr,
+				nombre: ((f.nombre || '') + ' ' + (f.apellido || '')).trim() || ('Repartidor ' + idr),
+				telefono: f.telefono || '',
+				// propio es "suscrito A ESTA sede", no "suscrito a alguna": un repartidor de otra
+				// sede que toma un pedido tuyo es global para vos. Lo resuelve el SQL (es_propio).
+				esPropio: parseInt(f.es_propio, 10) === 1,
+				conectado: parseInt(f.online, 10) === 1 && !!f.socketid,
+				// nunca entro a la app: sin esto no hay seguimiento posible, por mas que este trabajando
+				sinApp: parseInt(f.tiene_app, 10) !== 1,
+				sinSenal: !sello || (ahora.getTime() - sello.getTime()) > TRK_SIN_SENAL_MS,
+				lat: parseFloat(pos.latitude),
+				lng: parseFloat(pos.longitude),
+				porEntregar: [],
+				entregados: []
+			};
+		}
+
+		function xTrkAgrupar(filas, propios) {
+			var ahora = new Date();
+			var porId = {};
+			var sinAsignar = [];
+
+			(filas || []).forEach(function (f) {
+				// un pedido cancelado por el repartidor no cuenta ni como pendiente ni como entrega
+				if (f.pwa_delivery_status === '5') { return; }
+
+				var creado = xTrkFecha(f.fecha_hora);
+				var entrega = xTrkFecha(f.fecha_entrega);
+				var entregado = f.pwa_delivery_status === '4';
+
+				var pedido = {
+					idpedido: f.idpedido,
+					numero: f.correlativo_dia || f.numpedido,
+					cliente: f.cliente || 'Sin nombre',
+					direccion: f.dest_direccion || '',
+					referencia: f.dest_referencia || '',
+					importe: parseFloat(f.total_r) || 0,
+					lat: parseFloat(f.dest_lat),
+					lng: parseFloat(f.dest_lng),
+					entregado: entregado,
+					minutos: entregado ? xTrkMinutos(creado, entrega) : xTrkMinutos(creado, ahora),
+					horaEntrega: entrega ? entrega.toTimeString().slice(0, 5) : '',
+					horaPedido: creado ? creado.toTimeString().slice(0, 5) : '',
+					pago: xTrkPago(f.operacion, parseFloat(f.total_r) || 0)
+				};
+
+				var idr = parseInt(f.idrepartidor, 10) || 0;
+				if (!idr) { sinAsignar.push(pedido); return; }
+
+				if (!porId[idr]) { porId[idr] = xTrkRepartidorDesde(f, idr, ahora); }
+				porId[idr][entregado ? 'entregados' : 'porEntregar'].push(pedido);
+			});
+
+			// los propios sin pedidos hoy no salen de la consulta de pedidos, y son justo los que estan
+			// libres para recibir uno: se agregan aqui para que el encargado los vea y pueda asignarles
+			(propios || []).forEach(function (f) {
+				var idr = parseInt(f.idrepartidor, 10) || 0;
+				if (idr && !porId[idr]) { porId[idr] = xTrkRepartidorDesde(f, idr, ahora); }
+			});
+
+			var repartidores = Object.keys(porId).map(function (k) {
+				var r = porId[k];
+				var conTiempo = r.entregados.filter(function (p) { return p.minutos !== null; });
+				r.minutosPromedio = conTiempo.length
+					? Math.round(conTiempo.reduce(function (a, p) { return a + p.minutos; }, 0) / conTiempo.length)
+					: null;
+				return r;
+			});
+
+			// los que todavia tienen trabajo, primero
+			repartidores.sort(function (a, b) { return b.porEntregar.length - a.porEntregar.length; });
+
+			// el mismo identificador va en el pin del mapa y en la fila de la tabla, para poder
+			// relacionarlos de un vistazo. Si dos comparten inicial se numeran, o serian el mismo.
+			var usadas = {};
+			repartidores.forEach(function (r) {
+				var base = (r.nombre.charAt(0) || '?').toUpperCase();
+				usadas[base] = (usadas[base] || 0) + 1;
+				r.etiqueta = usadas[base] > 1 ? base + usadas[base] : base;
+			});
+
+			// El color se reparte por posicion en la lista ordenada por id, no por (id % paleta): con el
+			// modulo, dos repartidores separados por el tamano de la paleta caian en el mismo color.
+			// Ordenar por id lo mantiene estable entre refrescos aunque la tabla se reordene por carga.
+			repartidores.slice().sort(function (a, b) { return a.idrepartidor - b.idrepartidor; })
+				.forEach(function (r, i) { r.color = TRK_PALETA[i % TRK_PALETA.length]; });
+
+			return { repartidores: repartidores, sinAsignar: sinAsignar };
+		}
+
+		function xTrkCrearMapa() {
+			xTrkMapa = L.map('trk_mapa').setView([-6.0331, -76.9747], 14);
+			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				maxZoom: 19,
+				attribution: '&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+			}).addTo(xTrkMapa);
+			xTrkCapas = L.layerGroup().addTo(xTrkMapa);
+		}
+
+		/** `auto` = lo disparo el temporizador, no el usuario: falla en silencio y avisa en la cabecera. */
+		function xTrkCargar(auto) {
+			if (xTrkEnVuelo) { return; }
+			xTrkEnVuelo = true;
+			xTrkApi('estado', {}, !!auto).then(function (r) {
+				xTrkEnVuelo = false;
+				// si salieron de la pantalla con la consulta en vuelo, detached ya destruyo las capas
+				if (!xTrkVivo || !xTrkCapas) { return; }
+				if (!r.success || !r.datos) {
+					xTrkFallos++;
+					$('#trk_actualizado').text('Sin conexion, reintentando...');
+					// tres fallos seguidos: algo esta roto de verdad, dejar de golpear al servidor
+					if (xTrkFallos >= TRK_FALLOS_MAX && xTrkTimer) {
+						clearInterval(xTrkTimer); xTrkTimer = null;
+						$('#trk_actualizado').text('Sin conexion. Pulsa Actualizar para reintentar.');
+					}
+					return;
+				}
+				xTrkFallos = 0;
+				if (!xTrkTimer && xTrkVivo) { xTrkTimer = setInterval(function () { xTrkCargar(true); }, TRK_INTERVALO_MS); }
+				xTrkPintar(r.datos);
+				$('#trk_actualizado').text('Actualizado ' + new Date().toLocaleTimeString('es-PE'));
+			});
+		}
+
+		function xTrkPintar(datos) {
+			xTrkCapas.clearLayers();
+			xTrkMarcadores = {};
+
+			var sede = datos.sede || {};
+			xTrkSede = sede;
+			var sedeLat = parseFloat(sede.latitude);
+			var sedeLng = parseFloat(sede.longitude);
+
+			if (isFinite(sedeLat) && isFinite(sedeLng)) {
+				L.marker([sedeLat, sedeLng], {
+					icon: L.divIcon({ className: '', html: '<div class="trk-local"><i class="fa fa-home"></i>' + xTrkEsc(sede.nombre || 'Local') + '</div>' })
+				}).addTo(xTrkCapas);
+				if (!xTrkCentrado) { xTrkMapa.setView([sedeLat, sedeLng], 14); xTrkCentrado = true; }
+			}
+
+			var agrupado = xTrkAgrupar(datos.filas, datos.propios);
+			xTrkUltimo = agrupado;
+
+			agrupado.repartidores.forEach(function (r) {
+				// cada destino lleva el color de su repartidor: en gris uniforme no se sabia de quien era
+				var color = xTrkColor(r);
+
+				r.porEntregar.forEach(function (p) {
+					if (!isFinite(p.lat) || !isFinite(p.lng)) { return; }
+					L.marker([p.lat, p.lng], {
+						icon: L.divIcon({ className: '', iconSize: [16, 16], iconAnchor: [8, 8],
+							html: '<div class="trk-destino" style="background:' + color + '"></div>' })
+					}).addTo(xTrkCapas).bindPopup(
+						'<div class="trk-popup"><b>#' + xTrkEsc(p.numero) + ' · ' + xTrkEsc(p.cliente) + '</b>' +
+						'<span>' + xTrkEsc(p.direccion) + '</span>' +
+						'<span>Lleva ' + xTrkEsc(r.nombre) + '</span>' +
+						(xTrkTramoTexto(r, p) ? '<span class="trk-eta">A ' + xTrkTramoTexto(r, p) + ' de distancia</span>' : '') +
+						'</div>');
+				});
+
+				if (!isFinite(r.lat) || !isFinite(r.lng)) { return; }
+
+				// un repartidor global que ya entrego todo lo tuyo deja de ser tuyo: su fila se queda en
+				// la tabla como resumen del dia, pero seguir viendo donde esta seria rastrear a alguien
+				// que en este momento no trabaja para esta sede
+				if (!r.esPropio && r.porEntregar.length === 0) { return; }
+
+				var marcador = L.marker([r.lat, r.lng], {
+					icon: L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+						html: '<div class="trk-pin' + (r.sinSenal ? ' sinsenal' : '') +
+							'" style="background:' + color + '">' + xTrkEsc(r.etiqueta) + '</div>' })
+				}).addTo(xTrkCapas);
+
+				// linea hacia la proxima entrega
+				var siguiente = r.porEntregar.filter(function (p) { return isFinite(p.lat) && isFinite(p.lng); })[0];
+
+				marcador.bindPopup(
+					'<div class="trk-popup"><b>' + xTrkEsc(r.nombre) + '</b>' +
+					'<span>' + (r.esPropio ? 'Propio del local' : 'Repartidor global') + (r.sinSenal ? ' · sin senal' : '') + '</span>' +
+					'<span>Por entregar: ' + r.porEntregar.length + ' · Entregados hoy: ' + r.entregados.length + '</span>' +
+					(siguiente
+						? '<span class="trk-eta">Proxima: #' + xTrkEsc(siguiente.numero) + ' a ' + xTrkTramoTexto(r, siguiente) + '</span>'
+						: '<span class="trk-eta"><i class="fa fa-check"></i> Libre, volviendo al local</span>') +
+					(r.telefono ? '<span>' + xTrkEsc(r.telefono) + '</span>' : '') + '</div>');
+
+				xTrkMarcadores[r.idrepartidor] = marcador;
+
+				// sin pedidos pendientes la linea apunta al local: es como se ve que va de vuelta
+				var hacia = siguiente
+					? { lat: siguiente.lat, lng: siguiente.lng }
+					: (isFinite(sedeLat) && isFinite(sedeLng) ? { lat: sedeLat, lng: sedeLng } : null);
+
+				if (hacia) {
+					// halo blanco debajo: sobre las calles claras de OSM un trazo fino se pierde
+					L.polyline([[r.lat, r.lng], [hacia.lat, hacia.lng]], {
+						color: '#fff', weight: 7, opacity: .9
+					}).addTo(xTrkCapas);
+					L.polyline([[r.lat, r.lng], [hacia.lat, hacia.lng]], {
+						color: siguiente ? color : '#adb5bd', weight: 3,
+						dashArray: siguiente ? '9,6' : '3,7', opacity: 1
+					}).addTo(xTrkCapas);
+				}
+			});
+
+			// los pedidos que nadie tomo: son los que exigen una decision, asi que van en el mapa
+			agrupado.sinAsignar.forEach(function (p) {
+				if (!isFinite(p.lat) || !isFinite(p.lng)) { return; }
+				var tarde = p.minutos !== null && p.minutos > TRK_ALERTA_SIN_ASIGNAR_MIN;
+				L.marker([p.lat, p.lng], {
+					icon: L.divIcon({ className: '', iconSize: [24, 24], iconAnchor: [12, 12],
+						html: '<div class="trk-libre' + (tarde ? ' tarde' : '') + '">!</div>' })
+				}).addTo(xTrkCapas).bindPopup(
+					'<div class="trk-popup"><b>#' + xTrkEsc(p.numero) + ' · ' + xTrkEsc(p.cliente) + '</b>' +
+					'<span>' + xTrkEsc(p.direccion) + '</span>' +
+					'<span>Esperando ' + xTrkFmtMin(p.minutos) + ' sin repartidor</span>' +
+					'<span class="trk-eta"><a href="javascript:void(0)" onclick="xTrkAbrirAsignar(' + p.idpedido + ')">' +
+					'<i class="fa fa-user-plus"></i> Asignar repartidor</a></span></div>');
+			});
+
+			xTrkPintarTablas(agrupado);
+		}
+
+		function xTrkPintarTablas(agrupado) {
+			var reps = agrupado.repartidores;
+			var sin = agrupado.sinAsignar;
+
+			var enRuta = reps.filter(function (r) { return r.porEntregar.length > 0; }).length;
+			var porEntregar = reps.reduce(function (a, r) { return a + r.porEntregar.length; }, 0) + sin.length;
+			var entregados = reps.reduce(function (a, r) { return a + r.entregados.length; }, 0);
+			var tiempos = reps.filter(function (r) { return r.minutosPromedio !== null; });
+			var promedio = tiempos.length
+				? Math.round(tiempos.reduce(function (a, r) { return a + r.minutosPromedio; }, 0) / tiempos.length)
+				: null;
+
+			// Nadie mira la pantalla todo el rato: los pedidos que se pasaron de tiempo se cuentan aparte
+			// y avisan solos. El toast salta solo cuando el numero sube, no en cada refresco.
+			var demorados = reps.reduce(function (a, r) {
+				return a + r.porEntregar.filter(function (p) { return p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN; }).length;
+			}, 0) + sin.filter(function (p) { return p.minutos !== null && p.minutos > TRK_ALERTA_SIN_ASIGNAR_MIN; }).length;
+
+			if (demorados > xTrkDemorados) {
+				showToastSwal('warning', demorados === 1 ? 'Hay 1 pedido demorado' : 'Hay ' + demorados + ' pedidos demorados');
+			}
+			xTrkDemorados = demorados;
+			$('#trk_alerta').html(demorados
+				? '<i class="fa fa-exclamation-triangle"></i>' + demorados + (demorados === 1 ? ' pedido demorado' : ' pedidos demorados')
+				: '').toggleClass('activa', demorados > 0);
+
+			// Solo molesta cuando hay algo que hacer: si todos tienen la app, el aviso no existe.
+			var sinApp = reps.filter(function (r) { return r.esPropio && r.sinApp; });
+			$('#trk_aviso_app').html(sinApp.length
+				? '<i class="fa fa-mobile"></i> <b>' + (sinApp.length === 1
+						? xTrkEsc(sinApp[0].nombre) + ' no aparece en el mapa</b> porque todavia no inicio sesion en la aplicacion.'
+						: sinApp.length + ' repartidores no aparecen en el mapa</b> porque todavia no iniciaron sesion en la aplicacion: ' +
+						  xTrkEsc(sinApp.map(function (r) { return r.nombre; }).join(', ')) + '.') +
+					' <a href="javascript:void(0)" onclick="xTrkComoActivar()">Ver como activarlos</a>'
+				: '').toggleClass('activo', sinApp.length > 0);
+
+			$('#trk_kpis').html(
+				'<div class="inv-kpi inv-kpi-azul"><span>Repartidores en ruta</span><b>' + enRuta + '</b></div>' +
+				'<div class="inv-kpi inv-kpi-celeste"><span>Pedidos por entregar</span><b>' + porEntregar + '</b></div>' +
+				'<div class="inv-kpi inv-kpi-verde"><span>Entregados hoy</span><b>' + entregados + '</b></div>' +
+				'<div class="inv-kpi"><span>Tiempo promedio</span><b>' + xTrkFmtMin(promedio) + '</b></div>');
+
+			var html = '';
+			reps.forEach(function (r) {
+				var demoradosDe = r.porEntregar.filter(function (p) {
+					return p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
+				}).length;
+
+				// Dos cosas distintas que antes competian por el mismo lugar: lo que esta haciendo y si
+				// la app lo esta reportando. Un repartidor puede estar LIBRE y ademas desconectado, y el
+				// encargado necesita ver las dos, porque a un desconectado no le puede asignar nada.
+				var trabajo = r.porEntregar.length
+					? '<span class="inv-estado aprobado"><i class="fa fa-motorcycle"></i>EN RUTA</span>'
+					: '<span class="inv-estado cerrado"><i class="fa fa-check"></i>LIBRE</span>';
+
+				var conexion;
+				if (r.sinApp) {
+					conexion = '<span class="trk-conexion sinapp"><i class="fa fa-mobile"></i>Sin la app instalada</span>';
+				} else if (!r.conectado) {
+					conexion = '<span class="trk-conexion off"><i class="fa fa-circle"></i>Desconectado</span>';
+				} else if (r.sinSenal) {
+					conexion = '<span class="trk-conexion alerta"><i class="fa fa-exclamation-triangle"></i>Sin senal</span>';
+				} else {
+					conexion = '<span class="trk-conexion on"><i class="fa fa-circle"></i>Conectado</span>';
+				}
+				var estado = trabajo + conexion;
+
+				var verEnMapa = (isFinite(r.lat) && isFinite(r.lng))
+					? '<span class="inv-link" onclick="xTrkVerRepartidor(' + r.idrepartidor + ')"><i class="fa fa-map-marker"></i>Ver en el mapa</span>'
+					: '<span class="inv-muted">Sin ubicacion</span>';
+
+				html += '<tr>' +
+					'<td><div class="trk-rep">' +
+						xTrkChip(r) +
+						'<div class="trk-rep-datos"><b>' + xTrkEsc(r.nombre) + '</b>' +
+						(r.telefono ? '<span class="inv-sub">' + xTrkEsc(r.telefono) + xTrkContacto(r.telefono) + '</span>' : '') + '</div>' +
+						'</div></td>' +
+					'<td><span class="inv-tag">' + (r.esPropio ? 'PROPIO' : 'GLOBAL') + '</span></td>' +
+					'<td>' + estado + '</td>' +
+					'<td class="inv-num">' + (r.porEntregar.length
+						? '<span class="inv-link trk-cuenta" onclick="xTrkVerPedidos(' + r.idrepartidor + ',\'pendientes\')">' +
+							r.porEntregar.length + '</span>' +
+							(demoradosDe ? '<span class="inv-sub trk-tarde">' + demoradosDe + ' demorado' + (demoradosDe > 1 ? 's' : '') + '</span>' : '')
+						: '0') + '</td>' +
+					'<td class="inv-num">' + (r.entregados.length
+						? '<span class="inv-link trk-cuenta" onclick="xTrkVerPedidos(' + r.idrepartidor + ',\'entregados\')">' + r.entregados.length + '</span>'
+						: '0') + '</td>' +
+					'<td class="inv-num">' + xTrkFmtMin(r.minutosPromedio) + '</td>' +
+					'<td class="inv-acciones">' + verEnMapa + '</td>' +
+					'</tr>';
+			});
+			$('#tb_trk_repartidores tbody').html(html ||
+				'<tr><td colspan="7" class="inv-empty">Esta sede no tiene repartidores propios registrados y ninguno de la red lleva pedidos tuyos. Puedes registrar los tuyos en <b>Control de delivery</b>.</td></tr>');
+
+			var htmlSin = '';
+			sin.forEach(function (p) {
+				var tarde = p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
+				htmlSin += '<tr>' +
+					'<td><b>#' + xTrkEsc(p.numero) + '</b></td>' +
+					'<td>' + xTrkEsc(p.cliente) + '</td>' +
+					'<td>' + xTrkEsc(p.direccion) + (p.referencia ? '<span class="inv-sub">' + xTrkEsc(p.referencia) + '</span>' : '') + '</td>' +
+					'<td class="inv-num' + (tarde ? ' trk-tarde' : '') + '">' + xTrkFmtMin(p.minutos) + '</td>' +
+					'<td class="inv-acciones"><span class="inv-link" onclick="xTrkAbrirAsignar(' + p.idpedido + ')">' +
+						'<i class="fa fa-user-plus"></i>Asignar</span></td>' +
+					'</tr>';
+			});
+			$('#tb_trk_sin_asignar tbody').html(htmlSin ||
+				'<tr><td colspan="5" class="inv-empty">Todos los pedidos de delivery de hoy tienen repartidor.</td></tr>');
+		}
+
+		/**
+		 * Ordena los repartidores para un pedido: primero el que llega antes y lleva menos encima.
+		 * La carga pesa TRK_PESO_CARGA km por pedido pendiente, asi que uno a 500 m con tres entregas
+		 * encima queda detras de otro a 2 km con las manos libres. Sin posicion, al final.
+		 */
+		function xTrkCandidatos(pedido) {
+			if (!xTrkUltimo) { return []; }
+			return xTrkUltimo.repartidores.map(function (r) {
+				var t = xTrkTramo(r, pedido);
+				return {
+					r: r,
+					km: t ? t.km : null,
+					min: t ? t.min : null,
+					puntaje: (t ? t.km : 999) + r.porEntregar.length * TRK_PESO_CARGA + (r.sinSenal ? 50 : 0)
+				};
+			}).sort(function (a, b) { return a.puntaje - b.puntaje; });
+		}
+
+		var TRK_URL_PLAY = 'https://play.google.com/store/apps/details?id=papaya.com.pe.repartidor';
+		var TRK_URL_IOS = 'https://apps.apple.com/pe/app/papaya-repartidor/id1661062301';
+
+		function xTrkComoActivar() {
+			// los QR se dibujan al abrir, no al cargar la pagina: en un canvas oculto salen de 0 px
+			try {
+				new QRious({ element: document.getElementById('trk_qr_play'), value: TRK_URL_PLAY, size: 120, level: 'M' });
+				new QRious({ element: document.getElementById('trk_qr_ios'), value: TRK_URL_IOS, size: 120, level: 'M' });
+			} catch (e) { }
+
+			var s = xTrkSede || {};
+			$('#trk_chk_mapa').prop('checked', parseInt(s.pwa_habilitar_busqueda_mapa, 10) === 1);
+
+			dlg_trk_ayuda.open();
+			// Leaflet mide el contenedor al crearlo y dentro de un dialogo cerrado mide 0: hay que
+			// esperar a que la animacion de apertura termine, y despues avisarle que ya tiene tamano.
+			setTimeout(xTrkMapaSede, 350);
+		}
+
+		/** Mapa chico del dialogo: el marcador del local se arrastra o se coloca tocando el mapa. */
+		function xTrkMapaSede() {
+			var s = xTrkSede || {};
+			var lat = parseFloat(s.latitude), lng = parseFloat(s.longitude);
+			var hayCoords = isFinite(lat) && isFinite(lng);
+			// sin coordenadas propias arranca donde este mirando el mapa grande, que es mejor que el mar
+			var centro = hayCoords ? [lat, lng] : (xTrkMapa ? xTrkMapa.getCenter() : [-6.0331, -76.9747]);
+
+			if (!xTrkMapaS) {
+				xTrkMapaS = L.map('trk_mapa_sede', { attributionControl: false }).setView(centro, 16);
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(xTrkMapaS);
+
+				xTrkMarcadorS = L.marker(centro, {
+					draggable: true,
+					icon: L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+						html: '<div class="trk-local-pin"><i class="fa fa-home"></i></div>' })
+				}).addTo(xTrkMapaS);
+
+				xTrkMarcadorS.on('dragend', function () { xTrkUbicacionMovida(xTrkMarcadorS.getLatLng()); });
+				xTrkMapaS.on('click', function (e) { xTrkMarcadorS.setLatLng(e.latlng); xTrkUbicacionMovida(e.latlng); });
+			} else {
+				xTrkMapaS.setView(centro, 16);
+				xTrkMarcadorS.setLatLng(centro);
+			}
+
+			xTrkMapaS.invalidateSize();
+			xTrkUbicacionNueva = null;
+			$('#trk_btn_ubicacion, #trk_btn_deshacer').prop('disabled', true);
+			$('#trk_coords').removeClass('movida').text(hayCoords
+				? lat.toFixed(6) + ', ' + lng.toFixed(6)
+				: 'Sin coordenadas: coloca el marcador donde esta tu local.');
+		}
+
+		function xTrkUbicacionMovida(latlng) {
+			xTrkUbicacionNueva = latlng;
+			$('#trk_btn_ubicacion, #trk_btn_deshacer').prop('disabled', false);
+			$('#trk_coords').addClass('movida')
+				.text(latlng.lat.toFixed(6) + ', ' + latlng.lng.toFixed(6) + ' — sin guardar');
+		}
+
+		function xTrkResetUbicacion() { xTrkMapaSede(); }
+
+		function xTrkGuardarUbicacion() {
+			if (!xTrkUbicacionNueva) { return; }
+			var lat = xTrkUbicacionNueva.lat, lng = xTrkUbicacionNueva.lng;
+			xPopupLoad.titulo = 'Guardando ubicacion...'; xPopupLoad.xopen();
+			xTrkApi('set-ubicacion-sede', { latitude: lat, longitude: lng }).then(function (r) {
+				xPopupLoad.xclose();
+				if (!r.success) { return; }
+				if (xTrkSede) { xTrkSede.latitude = lat; xTrkSede.longitude = lng; }
+				xTrkUbicacionNueva = null;
+				$('#trk_btn_ubicacion, #trk_btn_deshacer').prop('disabled', true);
+				$('#trk_coords').removeClass('movida').text(lat.toFixed(6) + ', ' + lng.toFixed(6));
+				showToastSwal('success', 'Ubicacion del local actualizada');
+				// el mapa grande tiene que recentrar en el sitio nuevo, no en el viejo
+				xTrkCentrado = false;
+				xTrkCargar(false);
+			});
+		}
+
+		/**
+		 * La primera vez que alguien abre el tracker en esta sede, se le explica que hace falta para que
+		 * funcione. Si no, ve un mapa vacio y no tiene forma de saber por que. Se espera al primer
+		 * refresco para poder mostrar las coordenadas reales del local y el estado del ajuste.
+		 * La marca es por sede y por navegador: cambiar de sede vuelve a mostrarlo una vez.
+		 */
+		function xTrkAyudaPrimeraVez() {
+			var clave = 'trk_ayuda_vista_' + (xIdSede || 0);
+			try { if (localStorage.getItem(clave)) { return; } } catch (e) { return; }
+			setTimeout(function () {
+				if (!xTrkVivo || !xTrkSede) { return; }
+				try { localStorage.setItem(clave, '1'); } catch (e) { }
+				xTrkComoActivar();
+			}, 1200);
+		}
+
+		function xTrkGuardarBusquedaMapa(habilitar) {
+			xTrkApi('set-busqueda-mapa', { habilitar: habilitar ? 1 : 0 }).then(function (r) {
+				if (!r.success) {
+					// el servidor no lo acepto: la casilla vuelve a donde estaba para no mentir
+					$('#trk_chk_mapa').prop('checked', !habilitar);
+					return;
+				}
+				if (xTrkSede) { xTrkSede.pwa_habilitar_busqueda_mapa = habilitar ? 1 : 0; }
+				showToastSwal('success', habilitar
+					? 'Activado. Los pedidos nuevos podran ubicarse en el mapa.'
+					: 'Desactivado. Los pedidos nuevos no apareceran en el mapa.');
+			});
+		}
+
+		/**
+		 * Avisa al repartidor por el mismo evento que usa Control de delivery: el servidor lo reenvia a
+		 * su socket y le manda la notificacion push. Se usa el singleton de socket directamente en vez
+		 * de _cpSocketOpen(), porque ese registra los oyentes de Control de pedidos, que en esta
+		 * pantalla llamarian a funciones que no existen.
+		 * Si el aviso no llega, la app del repartidor relee su estado sola cada 60 s: el pedido aparece
+		 * igual, solo que mas tarde. Por eso esto no bloquea ni revierte la asignacion.
+		 */
+		function xTrkAvisarRepartidor(idpedido, idrepartidor) {
+			try {
+				var skt = socketService.getInstance();
+				if (!skt._socket) { skt.connectSocket(); }
+				skt.emit('set-repartidor-pedido-asigna-comercio', { idpedido: idpedido, idrepartidor: idrepartidor });
+			} catch (e) {
+				$('#trk_actualizado').text('Asignado. El repartidor lo vera en menos de un minuto.');
+			}
+		}
+
+		function xTrkAbrirAsignar(idpedido) {
+			if (!xTrkUltimo) { return; }
+			var p = xTrkUltimo.sinAsignar.filter(function (x) { return x.idpedido === idpedido; })[0];
+			if (!p) { xTrkAviso('Ese pedido ya no esta sin asignar. Actualiza la pantalla.', 'info'); return; }
+
+			var candidatos = xTrkCandidatos(p);
+			var html = '';
+			candidatos.forEach(function (c, i) {
+				var r = c.r;
+				var motivo = c.km === null
+					? '<span class="inv-muted">Sin ubicacion conocida</span>'
+					: xTrkFmtDistancia(c.km) + ' · llega en ~' + c.min + ' min';
+				html += '<tr>' +
+					'<td><div class="trk-rep">' +
+						xTrkChip(r) +
+						'<div class="trk-rep-datos"><b>' + xTrkEsc(r.nombre) + '</b>' +
+						'<span class="inv-sub">' + motivo + '</span></div></div></td>' +
+					'<td><span class="inv-tag">' + (r.esPropio ? 'PROPIO' : 'GLOBAL') + '</span></td>' +
+					'<td class="inv-num">' + r.porEntregar.length + '</td>' +
+					'<td>' + (r.sinSenal ? '<span class="inv-estado anulado">SIN SENAL</span>'
+						: (r.porEntregar.length === 0 ? '<span class="inv-estado cerrado">LIBRE</span>'
+							: '<span class="inv-estado aprobado">EN RUTA</span>')) + '</td>' +
+					'<td class="inv-acciones">' +
+						(i === 0 ? '<span class="inv-tag trk-sugerido">SUGERIDO</span> ' : '') +
+						'<button class="btn btn-sm btn-success" onclick="xTrkAsignar(' + idpedido + ',' + r.idrepartidor + ')">' +
+						'<i class="fa fa-check"></i>Asignar</button></td>' +
+					'</tr>';
+			});
+
+			$('#trk_asig_titulo').text('Asignar el pedido #' + p.numero);
+			$('#trk_asig_sub').text(p.cliente + ' · ' + p.direccion + ' · esperando ' + xTrkFmtMin(p.minutos));
+			$('#tb_trk_candidatos tbody').html(html ||
+				'<tr><td colspan="5" class="inv-empty">No hay repartidores disponibles para esta sede. Registra uno en <b>Control de delivery</b> o solicita uno de la red.</td></tr>');
+			dlg_trk_asignar.open();
+		}
+
+		function xTrkAsignar(idpedido, idrepartidor) {
+			xPopupLoad.titulo = 'Asignando...'; xPopupLoad.xopen();
+			xTrkApi('asignar', { idpedido: idpedido, idrepartidor: idrepartidor }).then(function (r) {
+				xPopupLoad.xclose();
+				if (!r.success) { return; }   // xTrkApi ya mostro el motivo
+				dlg_trk_asignar.close();
+				showToastSwal('success', 'Pedido #' + idpedido + ' asignado a ' + r.datos.nombre);
+				xTrkAvisarRepartidor(idpedido, idrepartidor);
+				xTrkCargar(false);
+			});
+		}
+
+		/**
+		 * Lista los pedidos de un repartidor, pendientes o entregados. Con muchos pedidos la celda de la
+		 * tabla no alcanzaba, asi que el detalle vive aqui. Se arma con lo que ya esta en pantalla, en
+		 * xTrkUltimo: no hay una consulta nueva, abre al instante y no le agrega carga al servidor.
+		 */
+		function xTrkVerPedidos(idrepartidor, modo) {
+			if (!xTrkUltimo) { return; }
+			var r = xTrkUltimo.repartidores.filter(function (x) { return x.idrepartidor === idrepartidor; })[0];
+			if (!r) { return; }
+
+			var pendientes = modo === 'pendientes';
+			var lista = pendientes ? r.porEntregar : r.entregados;
+			if (!lista.length) { return; }
+
+			var cabecera, html = '', total = 0, demoras = [], porPago = {}, resumenPago = '';
+
+			if (pendientes) {
+				cabecera = '<tr><th>Pedido</th><th>Cliente</th><th>Direccion</th>' +
+					'<th class="inv-cen">Hora</th><th class="inv-num">Esperando</th>' +
+					'<th class="inv-num">Distancia</th><th class="inv-num">Llega en</th><th class="inv-num">Importe</th></tr>';
+				// del mas antiguo al mas nuevo: el que mas espero es el que hay que mirar primero
+				lista.slice().sort(function (a, b) { return (b.minutos || 0) - (a.minutos || 0); }).forEach(function (p) {
+					total += p.importe || 0;
+					var tarde = p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
+					var t = xTrkTramo(r, p);
+					html += '<tr>' +
+						'<td><b>#' + xTrkEsc(p.numero) + '</b></td>' +
+						'<td>' + xTrkEsc(p.cliente) + '</td>' +
+						'<td>' + xTrkEsc(p.direccion) +
+							(p.referencia ? '<span class="inv-sub">' + xTrkEsc(p.referencia) + '</span>' : '') + '</td>' +
+						'<td class="inv-cen">' + xTrkEsc(p.horaPedido) + '</td>' +
+						'<td class="inv-num' + (tarde ? ' trk-tarde' : '') + '">' + xTrkFmtMin(p.minutos) + '</td>' +
+						'<td class="inv-num">' + (t ? xTrkFmtDistancia(t.km) : '—') + '</td>' +
+						'<td class="inv-num">' + (t ? '~' + t.min + ' min' : '<span class="inv-muted">sin ubicacion</span>') + '</td>' +
+						'<td class="inv-num">S/ ' + (p.importe || 0).toFixed(2) + '</td>' +
+						'</tr>';
+				});
+				$('#trk_dlg_titulo').text('Por entregar · ' + r.nombre);
+				$('#trk_dlg_sub').text(lista.length + ' pedido(s) pendiente(s) · S/ ' + total.toFixed(2) + ' por cobrar');
+			} else {
+				cabecera = '<tr><th>Pedido</th><th>Cliente</th><th>Direccion</th>' +
+					'<th class="inv-cen">Pedido</th><th class="inv-cen">Entregado</th>' +
+					'<th class="inv-num">Demora</th><th>Pago</th><th class="inv-num">Importe</th></tr>';
+				lista.slice().sort(function (a, b) { return (a.horaEntrega || '').localeCompare(b.horaEntrega || ''); })
+					.forEach(function (p) {
+						total += p.importe || 0;
+						if (p.minutos !== null) { demoras.push(p.minutos); }
+						var clave = p.pago ? (p.pago.alLocal ? 'Pago al local' : p.pago.descripcion) : 'Sin especificar';
+						porPago[clave] = (porPago[clave] || 0) + (p.pago ? p.pago.importe : (p.importe || 0));
+						var lento = p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
+						html += '<tr>' +
+							'<td><b>#' + xTrkEsc(p.numero) + '</b></td>' +
+							'<td>' + xTrkEsc(p.cliente) + '</td>' +
+							'<td>' + xTrkEsc(p.direccion) +
+								(p.referencia ? '<span class="inv-sub">' + xTrkEsc(p.referencia) + '</span>' : '') + '</td>' +
+							'<td class="inv-cen">' + xTrkEsc(p.horaPedido) + '</td>' +
+							'<td class="inv-cen">' + xTrkEsc(p.horaEntrega) + '</td>' +
+							'<td class="inv-num' + (lento ? ' trk-tarde' : '') + '">' + xTrkFmtMin(p.minutos) + '</td>' +
+							'<td>' + (p.pago
+								? '<span class="inv-tag trk-pago">' + xTrkEsc(p.pago.descripcion) + '</span>' +
+								  (p.pago.alLocal ? '<span class="inv-sub">Pago al local</span>' : '')
+								: '<span class="inv-muted">sin especificar</span>') + '</td>' +
+							'<td class="inv-num">S/ ' + (p.importe || 0).toFixed(2) + '</td>' +
+							'</tr>';
+					});
+				var prom = demoras.length
+					? Math.round(demoras.reduce(function (a, b) { return a + b; }, 0) / demoras.length) : null;
+				$('#trk_dlg_titulo').text('Entregas de ' + r.nombre);
+				$('#trk_dlg_sub').text(lista.length + ' entrega(s) hoy · ' +
+					(prom !== null ? 'demora promedio ' + xTrkFmtMin(prom) + ' · ' : '') +
+					'S/ ' + total.toFixed(2) + ' cobrados');
+
+				// El desglose es lo que el repartidor rinde en caja. Se ordena de mayor a menor porque lo
+				// primero que se quiere saber es cuanto efectivo trae encima.
+				var chips = Object.keys(porPago).sort(function (a, b) { return porPago[b] - porPago[a]; })
+					.map(function (k) {
+						return '<span class="trk-total-pago' + (k === 'Sin especificar' ? ' vacio' : '') + '">' +
+							'<em>' + xTrkEsc(k) + '</em><b>S/ ' + porPago[k].toFixed(2) + '</b></span>';
+					}).join('');
+				resumenPago = '<div class="trk-pagos"><div class="inv-titulo-sec">Como le pagaron</div>' +
+					'<div class="trk-pagos-chips">' + chips + '</div>' +
+					'<p class="inv-nota">Es lo que el repartidor declaro al marcar cada entrega, para dar cuenta en caja. No reemplaza al registro de pagos.</p></div>';
+			}
+
+			$('#tb_trk_pedidos thead').html(cabecera);
+			$('#tb_trk_pedidos tbody').html(html);
+			$('#trk_dlg_pagos').html(resumenPago);
+			dlg_trk_pedidos.open();
+		}
+
+		function xTrkVerRepartidor(idrepartidor) {
+			// al volver a entrar, las tablas siguen mostrando las filas de la visita anterior hasta
+			// el primer refresco, y sus marcadores apuntan a un mapa que detached ya destruyo
+			if (!xTrkVivo || !xTrkMapa) { return; }
+			var marcador = xTrkMarcadores[idrepartidor];
+			if (!marcador) { return; }
+			xTrkMapa.setView(marcador.getLatLng(), 16);
+			marcador.openPopup();
+			$('#trk_mapa')[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+
+		Polymer({
+			is: 'x-tracker-delivery',
+
+			attached: function () {
+				xPopupLoad = document.getElementById('xLoad');
+				xTrkVivo = true;
+				// la primera carga va DENTRO del callback: fuera se dispara antes de que xm_LogChequea confirme la sesion
+				xm_LogChequea(function () {
+					// si salieron de la pantalla mientras se verificaba la sesion, detached ya limpio:
+					// crear el mapa y el intervalo aqui dejaria un intervalo que nadie va a limpiar nunca
+					if (!xTrkVivo) { return; }
+					// entrar, salir y volver a entrar rapido deja dos callbacks en vuelo y los dos ven
+					// xTrkVivo en true: sin esto, el segundo crea un mapa sobre un contenedor ya inicializado
+					if (xTrkMapa) { return; }
+					xm_log_get('ini_us');
+					$('body').addClass('loaded');
+					xTrkCentrado = false;
+					xTrkMarcadores = {};
+					xTrkFallos = 0;
+					xTrkEnVuelo = false;
+					xTrkCrearMapa();
+					xTrkCargar(false);
+					xTrkAyudaPrimeraVez();
+					if (xTrkTimer) { clearInterval(xTrkTimer); }
+					xTrkTimer = setInterval(function () { xTrkCargar(true); }, TRK_INTERVALO_MS);
+				});
+				$("#Titulo_page").text("Tracker Delivery");
+			},
+
+			detached: function () {
+				xTrkVivo = false;
+				// sin esto queda un intervalo vivo por cada vez que se entro a la pantalla
+				if (xTrkTimer) { clearInterval(xTrkTimer); xTrkTimer = null; }
+				if (xTrkMapa) { xTrkMapa.remove(); xTrkMapa = null; }
+				// el mapa del dialogo vive en el mismo template: al salir se va el contenedor, y si
+				// quedara la referencia, al volver a entrar se operaria sobre un mapa muerto
+				if (xTrkMapaS) { xTrkMapaS.remove(); xTrkMapaS = null; }
+				xTrkMarcadorS = null;
+				xTrkUbicacionNueva = null;
+				xTrkCapas = null;
+				// si queda el registro, una fila vieja puede abrir el globo de un marcador muerto
+				xTrkMarcadores = {};
+			}
+		});
+	</script>
+</dom-module>

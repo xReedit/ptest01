@@ -23,6 +23,10 @@
 	<script async src="../web_components/webcomponentsjs/webcomponents-lite.min.js"></script>
 
 	<script async type="text/javascript" src="../../js/socket.io.js"></script>
+	<link rel="stylesheet" href="../../js/leaflet/leaflet.css">
+	<!-- defer: este shell lo carga TODO el POS, incluidos los comercios que nunca abren el tracker.
+	     Mantiene el orden garantizado y no bloquea el render. -->
+	<script defer src="../../js/leaflet/leaflet.js"></script>
 	<script async type="text/javascript" src="../../js/rxjs.umd.js"></script>	
 	<script async type="text/javascript" src="../view/socket.master.service.js"></script>
 	<script async src="../../js/axios.min.js"></script>

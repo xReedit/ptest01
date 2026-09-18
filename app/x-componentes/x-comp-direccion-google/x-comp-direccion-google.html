@@ -11,32 +11,61 @@
 
         },
         attached: function () {
-            this.xCompDatosDelInitDir();
+            // Red de seguridad: una excepcion aqui aborta el bucle de attach de webcomponents-lite
+            // y los componentes que siguen en el DOM no se inicializan nunca. En x-venta-rapida eso
+            // dejaba el POS sin canal de consumo (linea 394) ni comision (423), o sea sin poder pedir.
+            try {
+                this.xCompDatosDelInitDir();
+            } catch (e) {
+                console.warn('[direccion-google] no se pudo inicializar:', e && e.message);
+            }
         },
         xCompDatosDelInitDir: function () {
             this.onBusquedaApi();
         },
+        // Google Maps entra en dos pasos async (m_panel.html -> bdphp/maps_config.php inyecta el
+        // script de la API, ~1.3 MB), asi que en attached casi nunca esta listo y en un terminal sin
+        // salida a internet no llega nunca. Por eso no se toca google.* sin comprobarlo antes.
         onBusquedaApi: function () {
             const autocomplete = this.$.autocomplete;
+
+            // Las coordenadas pegadas a mano no dependen de la API: se conecta una sola vez y siempre,
+            // aunque Maps no cargue.
+            if (!this._inputConectado) {
+                this._inputConectado = true;
+                autocomplete.addEventListener('input', () => {
+                    if (this.isCoordinates(autocomplete.value)) {
+                        this.searchCoordinates(autocomplete.value);
+                    }
+                });
+            }
+
+            if (!this.isMapsListo()) {
+                // Reintenta ~20s. Si la API no llega, el campo queda como texto libre y el resto de
+                // la pantalla funciona igual.
+                this._esperasMaps = (this._esperasMaps || 0) + 1;
+                if (this._esperasMaps <= 40) {
+                    setTimeout(() => this.onBusquedaApi(), 500);
+                }
+                return;
+            }
+
             const search = new google.maps.places.Autocomplete(autocomplete);
             search.addListener('place_changed', () => {
                 const place = search.getPlace();
                 this.fire('getPlaces', place);
             });
-
-            autocomplete.addEventListener('input', () => {
-                const input = autocomplete.value;
-                const isCordenada = this.isCoordinates(input)
-                if (this.isCoordinates(input)) {
-                    this.searchCoordinates(input);
-                }
-            });
+        },
+        isMapsListo: function () {
+            return !!(window.google && window.google.maps && window.google.maps.places);
         },
         isCoordinates: function (input) {
             const regex = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
             return regex.test(input.trim());
         },
         searchCoordinates: function (input) {
+            // sin la API no hay geocodificacion: se deja el texto tal cual lo escribio el usuario
+            if (!this.isMapsListo()) { return; }
             const coords = input.split(',').map(coord => parseFloat(coord.trim()));
             const latlng = new google.maps.LatLng(coords[0], coords[1]);
             const geocoder = new google.maps.Geocoder();

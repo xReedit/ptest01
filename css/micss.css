@@ -6163,3 +6163,155 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	.rp-chip { flex: 1 1 140px; }
 }
 
+/* ===== modulo tracker delivery ===== */
+/* Reusa el esqueleto de Inventario (inv-card, inv-head, inv-kpi, inv-table, inv-link, inv-estado).
+   Aqui solo va lo propio del mapa. Prefijo trk-. */
+
+/* z-index e isolation: Leaflet usa z-index de hasta 1000 en sus paneles y controles, y sin encerrarlo
+   en su propio contexto de apilado el mapa se monta encima de la barra superior y de los dialogos */
+.trk-mapa { width: 100%; height: 420px; border-radius: 8px; border: 1px solid #e5e7eb;
+	margin-bottom: 14px; background: #eef0f2; position: relative; z-index: 0; isolation: isolate; }
+
+/* Leaflet pone la clase en el MISMO elemento, no en un hijo: .trk-mapa .leaflet-container no aplica */
+.trk-mapa.leaflet-container { border-radius: 8px; font: 12px 'Open Sans'; }
+
+.trk-pin { border-radius: 50%; width: 30px; height: 30px; line-height: 30px; text-align: center;
+	color: #fff; font-weight: 600; font-size: 12px; border: 2px solid #fff;
+	box-shadow: 0 1px 4px rgba(16,24,40,.35); }
+/* el color lo pone el JS: uno distinto por repartidor, para distinguirlos en el mapa */
+.trk-pin.sinsenal { opacity: .4; }
+
+.trk-local { background: #ef6c00; color: #fff; padding: 3px 8px; border-radius: 6px;
+	font-size: 11px; font-weight: 600; white-space: nowrap; border: 2px solid #fff;
+	box-shadow: 0 1px 4px rgba(16,24,40,.35); }
+/* la separacion icono-texto la pone el CSS, nunca un espacio suelto en el HTML */
+.trk-local > .fa { margin-right: 4px; }
+
+/* el color lo pone el JS: cada destino lleva el de su repartidor */
+.trk-destino { width: 16px; height: 16px; border-radius: 50%; background: #6c757d;
+	border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px rgba(16,24,40,.45); }
+
+/* mismo identificador que el pin del mapa, para poder relacionar fila y marcador de un vistazo */
+.trk-chip { display: flex; align-items: center; justify-content: center;
+	width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10px;
+	font-weight: 700; line-height: 1; flex: 0 0 auto; background: #6c757d; }
+.trk-chip.sinsenal { opacity: .45; }
+
+/* el identificador va centrado contra el bloque entero (nombre + telefono), no contra la primera linea */
+.trk-rep { display: flex; align-items: center; gap: 8px; }
+.trk-rep-datos { min-width: 0; }
+
+.trk-popup b { font-size: 12px; color: #212529; }
+.trk-popup span { display: block; font-size: 11px; color: #6c757d; margin-top: 2px; }
+/* la distancia y el tiempo son estimados, no una ruta real: se marcan para que no se lean como exactos */
+.trk-popup span.trk-eta { margin-top: 5px; padding-top: 5px; border-top: 1px solid #edf0f2;
+	color: #0b3d91; font-weight: 600; }
+.inv-table .trk-eta-tag { font-style: normal; color: #0b3d91; font-weight: 600; }
+
+/* los botones del dialogo no caen bajo .inv-card, hay que repetir la altura de 31px */
+/* paper-dialog se ajusta al contenido, asi que una linea larga en la cabecera lo estira hasta el
+   borde de la pantalla y deja el cuerpo, mas angosto, con medio dialogo en blanco al costado.
+   El ancho se fija en el dialogo, nunca en el cuerpo. */
+#dlg_trk_pedidos { width: 860px; max-width: 94vw; }
+#dlg_trk_asignar { width: 720px; max-width: 94vw; }
+#dlg_trk_ayuda { width: 680px; max-width: 94vw; }
+
+#dlg_trk_pedidos .btn, #dlg_trk_asignar .btn { height: 31px; padding: 0 12px; font-size: 12px;
+	font-weight: 600; line-height: 29px; border-radius: 6px; }
+#dlg_trk_pedidos .btn > .fa, #dlg_trk_asignar .btn > .fa { margin-right: 6px; }
+.trk-sugerido { background: #d1e7dd; color: #0f5132; font-weight: 600; }
+
+/* pedido que nadie tomo: es el que exige una decision, por eso grita mas que un destino normal */
+.trk-libre { width: 24px; height: 24px; border-radius: 50%; background: #ef6c00; color: #fff;
+	border: 3px solid #fff; box-sizing: border-box; font-size: 13px; font-weight: 700;
+	line-height: 18px; text-align: center; box-shadow: 0 1px 5px rgba(16,24,40,.5); }
+.trk-libre.tarde { background: #dc3545; }
+
+.trk-alerta { display: none; font-size: 11px; font-weight: 600; color: #842029;
+	background: #f8d7da; border-radius: 10px; padding: 3px 9px; align-self: center; }
+.trk-alerta.activa { display: inline-block; }
+.trk-alerta > .fa { margin-right: 5px; }
+
+/* trabajo y conexion son dos cosas distintas: la segunda va debajo, chica, sin competir con la primera */
+.trk-conexion { display: block; font-size: 10px; font-weight: 600; margin-top: 3px; }
+.trk-conexion > .fa { margin-right: 4px; font-size: 8px; }
+.trk-conexion.on { color: #198754; }
+.trk-conexion.off { color: #6c757d; }
+.trk-conexion.alerta { color: #b45309; }
+.trk-conexion.sinapp { color: #dc3545; }
+.trk-conexion.sinapp > .fa { font-size: 11px; }
+
+/* aviso en linea: solo se muestra cuando hay repartidores sin la app */
+.trk-aviso { display: none; margin: 0 0 12px; padding: 9px 12px; border: 1px solid #f3e2b3;
+	border-radius: 8px; background: #fff8e6; color: #5c4400; font-size: 12px; line-height: 1.45; }
+.trk-aviso.activo { display: block; }
+.trk-aviso > .fa { margin-right: 5px; }
+.trk-aviso a { color: #00843f; font-weight: 600; }
+
+/* pasos de la ayuda */
+.trk-pasos { display: flex; flex-direction: column; gap: 14px; }
+.trk-paso { display: flex; gap: 10px; align-items: flex-start; }
+.trk-paso b { font-size: 13px; color: #212529; }
+.trk-paso p { margin: 3px 0 0; font-size: 12px; color: #6c757d; line-height: 1.5; }
+.trk-paso-num { flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+	width: 24px; height: 24px; border-radius: 50%; background: #007bff; color: #fff;
+	font-size: 12px; font-weight: 700; line-height: 1; }
+.trk-descarga { display: flex; gap: 16px; align-items: flex-start; margin-top: 10px;
+	padding: 12px; background: #f7f8fa; border-radius: 8px; flex-wrap: wrap; }
+.trk-tienda { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.trk-qr { width: 120px; height: 120px; background: #fff; border-radius: 6px; padding: 4px; }
+.trk-tienda .btn { width: 120px; text-align: center; }
+
+.trk-bloque { padding: 12px; border-radius: 8px; background: #f7f8fa; margin-bottom: 4px; }
+.trk-bloque .inv-ayuda { margin-top: 6px; }
+.trk-coords { font-size: 13px; font-weight: 600; color: #212529; font-variant-numeric: tabular-nums; }
+.trk-coords.movida { color: #b45309; }
+
+/* mismo encierro que el mapa grande: Leaflet no puede treparse por encima del dialogo */
+.trk-mapa-sede { width: 100%; height: 260px; margin: 10px 0; border-radius: 8px;
+	border: 1px solid #e5e7eb; background: #eef0f2; position: relative; z-index: 0; isolation: isolate; }
+.trk-mapa-sede.leaflet-container { font: 12px 'Open Sans'; cursor: crosshair; }
+
+.trk-local-pin { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; background: #ef6c00;
+	color: #fff; border: 3px solid #fff; box-sizing: border-box; text-align: center;
+	line-height: 24px; font-size: 13px; transform: rotate(-45deg);
+	box-shadow: 0 2px 6px rgba(16,24,40,.5); cursor: grab; }
+.trk-local-pin > .fa { transform: rotate(45deg); }
+
+.trk-sede-pie { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* lo que el repartidor declaro al entregar: referencia para dar cuenta en caja */
+.inv-table td .inv-tag.trk-pago { background: #eef4ff; color: #0b3d91; font-weight: 600; }
+.trk-pagos { margin-top: 4px; }
+.trk-pagos .inv-titulo-sec { margin-top: 14px; }
+.trk-pagos-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.trk-total-pago { display: flex; flex-direction: column; gap: 2px; min-width: 120px;
+	padding: 8px 12px; border-radius: 8px; background: #eef4ff; }
+.trk-total-pago em { font-style: normal; font-size: 10px; font-weight: 600;
+	text-transform: uppercase; letter-spacing: .4px; color: #0b3d91; }
+.trk-total-pago b { font-size: 16px; font-weight: 600; color: #212529;
+	font-variant-numeric: tabular-nums; }
+.trk-total-pago.vacio { background: #f5f6f8; }
+.trk-total-pago.vacio em { color: #6c757d; }
+#dlg_trk_ayuda .btn { height: 31px; padding: 0 12px; font-size: 12px; font-weight: 600;
+	line-height: 29px; border-radius: 6px; }
+#dlg_trk_ayuda .btn > .fa { margin-right: 6px; }
+
+/* el conteo es el boton: con muchos pedidos la celda no alcanzaba y el detalle se fue al dialogo */
+.inv-table td .trk-cuenta { font-size: 15px; font-weight: 700; }
+.inv-table td .inv-sub.trk-tarde { font-weight: 600; }
+
+.trk-contacto { margin-left: 6px; color: #007bff; }
+.trk-contacto.wa { color: #25D366; }
+.trk-contacto:hover { opacity: .75; }
+
+/* la hora del ultimo refresco, a la derecha de la cabecera */
+.trk-actualizado { font-size: 11px; color: #6c757d; align-self: center; }
+
+/* .inv-table td (0,0,1,1) le gana a .trk-tarde (0,0,1,0): hay que calificarla */
+.inv-table td.trk-tarde { color: #dc3545; font-weight: 600; }
+
+@media (max-width: 900px) {
+	.trk-mapa { height: 320px; }
+}
+

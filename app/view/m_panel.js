@@ -381,10 +381,7 @@ async function xOpenPage(xop, parametro){
 		case 41: xruta = '/indicadores'; break;
 		case 42: xruta = '/mozo_virtual'; break;
 		case 43: xruta = '/pago_desde_app'; break;
-		case 44: 
-			const url_s = 'https://comercio.papaya.com.pe/'; 
-			window.open(url_s, "Seguimiento de Delivery");// produccion
-		break;
+		case 44: xruta = '/seguimiento_delivery'; break; // Tracker Delivery (A17)
 		case 45: xruta = '/orden_pedido'; break;
 		case 46: xruta = '/indicadores2'; break;
 		case 47: xruta = '/facturacion'; break;
