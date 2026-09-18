@@ -5815,6 +5815,19 @@ ul.list_add_item2 li.divLi {
 .inv-link:hover { text-decoration:underline; }
 .inv-tag { display:inline-block; padding:1px 6px; border-radius:8px; background:#f0f1f3; color:#6c757d; font-size:10px; }
 
+/* --- iconos (font-awesome 4.7, cargado en m_panel.html) --- */
+/* El icono va pegado al texto en el HTML y la separacion la pone el CSS: asi no quedan
+   espacios sueltos que se arrastren al Excel ni al recortar el texto de un boton. */
+.inv-card .btn > .fa,
+#dlg_inv_nuevo .btn > .fa,
+.inv-seg-item > .fa,
+.inv-empty > .fa,
+.inv-empty b > .fa { margin-right:6px; }
+.inv-link > .fa { margin-right:5px; font-size:11px; }
+.inv-estado > .fa { margin-right:4px; font-size:10px; }
+/* accion destructiva de fila (Anular): el icono solo no alcanza para leerla como riesgo */
+.inv-link-rojo { color:#dc3545; }
+
 /* --- estados y signos --- */
 .inv-estado { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
 .inv-estado.borrador { background:#fff3cd; color:#7a5b00; }

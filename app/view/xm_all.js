@@ -492,6 +492,15 @@ function xm_LogChequea(responde){
   var callback = typeof responde === 'function' ? responde : function () { };
   var xdt_log=window.localStorage.getItem("::app3_woDUS");
   var _xdt_log= xdt_log
+	// Datos del sistema: si la pagina de configuraciones marco el snapshot como vencido,
+	// mandamos "undefined" para que op=-1112 responda "0" y el cliente lo regenere desde
+	// la BD con op=-1111. No borramos ::app3_woDUS: sigue disponible hasta que llegue el nuevo.
+	try {
+		if (window.localStorage.getItem('::app3_woDUS_stale')) {
+			window.localStorage.removeItem('::app3_woDUS_stale');
+			_xdt_log = 'undefined';
+		}
+	} catch (e) { /* storage no disponible: sigue el flujo normal */ }
   if (_xdt_log === null){
 	_xdt_log="undefined";
 	} else {
@@ -507,7 +516,9 @@ function xm_LogChequea(responde){
 			// console.log('-1112 ==> xm_LogChequea == rpt ', rpt);
       switch (rpt) {
         case "0":
-          xm_LogIni(function(a){if(a){responde(true)}});
+          // callback y no responde: hay paginas que llaman xm_LogChequea() sin argumento
+          // (x-venta-rapida) y esta rama ahora tambien se usa para refrescar el snapshot.
+          xm_LogIni(function(a){if(a){callback(true)}});
           break;
         case "1":
         //   responde(true)

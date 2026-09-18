@@ -9,8 +9,8 @@
 						<p>Escribe la cantidad fisica y pasa a la siguiente fila con <b>Enter</b>. Cada fila se guarda sola. Deja vacio lo que no cuentes.</p>
 					</div>
 					<div class="inv-head-acciones">
-						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')">Volver</button>
-						<button class="btn btn-sm btn-success" onclick="xInvCerrarConteo()">Cerrar conteo</button>
+						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')"><i class="fa fa-arrow-left"></i>Volver</button>
+						<button class="btn btn-sm btn-success" onclick="xInvCerrarConteo()"><i class="fa fa-lock"></i>Cerrar conteo</button>
 					</div>
 				</div>
 			</div>
@@ -72,7 +72,7 @@ function xInvContarCargar(id) {
 		var mostrarSistema = det.length > 0 && det[0].hasOwnProperty('stock_sistema');
 		$('#inv_th_sistema').toggle(mostrarSistema);
 		$('#inv_contar_titulo').html('Conteo #' + c.idinventario_conteo + ' · ' + xInvEsc(c.almacen) +
-			(c.familia !== 'TODAS' ? ' / ' + xInvEsc(c.familia) : '') + '<span class="inv-estado borrador">BORRADOR</span>');
+			(c.familia !== 'TODAS' ? ' / ' + xInvEsc(c.familia) : '') + '<span class="inv-estado borrador">' + xInvIconoEstado('borrador') + 'BORRADOR</span>');
 		var html = '', famAct = false, secciones = []; // false = centinela: no puede coincidir con ninguna familia (ni con NULL)
 		det.forEach(function (d) {
 			var fam = d.familia || 'SIN FAMILIA';

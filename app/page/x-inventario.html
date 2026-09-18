@@ -79,6 +79,12 @@ function xInvExcel(idTabla, nombre) {
 	$('body').append(copia);
 	try { tableToExcel(idTabla + '_xls', nombre); } finally { copia.remove(); }
 }
+// Icono del estado de un conteo (font-awesome 4.7, ya cargado en m_panel.html). El icono
+// acompana al texto del estado, nunca lo reemplaza: el estado se sigue leyendo sin ver el icono.
+function xInvIconoEstado(estado) {
+	var iconos = { borrador: 'fa-pencil', cerrado: 'fa-lock', aprobado: 'fa-check', anulado: 'fa-ban' };
+	return '<i class="fa ' + (iconos[estado] || 'fa-circle-o') + '"></i>';
+}
 function xInvEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
 function xInvAttr(s) { return xInvEsc(s).replace(/"/g, '&quot;'); }
 function xInvFmtNum(n) { var v = parseFloat(n); return isNaN(v) ? '' : (Math.round(v * 100) / 100).toString(); }

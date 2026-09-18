@@ -9,9 +9,9 @@
 						<p id="inv_res_nota">Revisa las diferencias, desmarca lo que no quieras ajustar y aprueba.</p>
 					</div>
 					<div class="inv-head-acciones">
-						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')">Volver</button>
-						<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_resultado', 'Resultado conteo')">Excel</button>
-						<button class="btn btn-sm btn-success" id="inv_res_btn_aprobar" onclick="xInvAprobar()" style="display:none">Aprobar y aplicar ajustes</button>
+						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')"><i class="fa fa-arrow-left"></i>Volver</button>
+						<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_resultado', 'Resultado conteo')"><i class="fa fa-file-excel-o"></i>Excel</button>
+						<button class="btn btn-sm btn-success" id="inv_res_btn_aprobar" onclick="xInvAprobar()" style="display:none"><i class="fa fa-check-circle"></i>Aprobar y aplicar ajustes</button>
 					</div>
 				</div>
 			</div>
@@ -54,7 +54,7 @@ function xInvResultadoCargar(id) {
 		if (!ro.success || !rr.success) { xInvIr('conteos'); return; }
 		var c = ro.datos.cabecera, k = rr.datos.kpi;
 		$('#inv_res_titulo').html('Conteo #' + c.idinventario_conteo + ' · ' + xInvEsc(c.almacen) +
-			'<span class="inv-estado ' + c.estado + '">' + c.estado.toUpperCase() + '</span>');
+			'<span class="inv-estado ' + c.estado + '">' + xInvIconoEstado(c.estado) + c.estado.toUpperCase() + '</span>');
 		$('#inv_res_nota').text(c.fecha_cierre ? 'Cerrado el ' + c.fecha_cierre + ' por ' + (c.cierre || '') : 'Revisa las diferencias, desmarca lo que no quieras ajustar y aprueba.');
 		$('#inv_res_btn_aprobar').toggle(c.estado === 'cerrado' && parseInt(c.es_admin) === 1);
 		$('#inv_res_ayuda').text(c.estado === 'cerrado' && parseInt(c.es_admin) !== 1 ? 'Solo un administrador puede aprobar.' :

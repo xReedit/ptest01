@@ -9,15 +9,15 @@
 						<p>Stock valorizado, kardex por producto y tendencia de mermas entre conteos aprobados.</p>
 					</div>
 					<div class="inv-head-acciones">
-						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')">Volver a conteos</button>
+						<button class="btn btn-sm btn-light" onclick="xInvIr('conteos')"><i class="fa fa-arrow-left"></i>Volver a conteos</button>
 					</div>
 				</div>
 			</div>
 			<div class="xContentCard">
 				<div class="inv-seg">
-					<div class="inv-seg-item activa" onclick="xInvRep('valorizado', this)">Stock valorizado</div>
-					<div class="inv-seg-item" onclick="xInvRep('kardex', this)">Kardex por producto</div>
-					<div class="inv-seg-item" onclick="xInvRep('tendencia', this)">Tendencia de mermas</div>
+					<div class="inv-seg-item activa" onclick="xInvRep('valorizado', this)"><i class="fa fa-cubes"></i>Stock valorizado</div>
+					<div class="inv-seg-item" onclick="xInvRep('kardex', this)"><i class="fa fa-list-alt"></i>Kardex por producto</div>
+					<div class="inv-seg-item" onclick="xInvRep('tendencia', this)"><i class="fa fa-line-chart"></i>Tendencia de mermas</div>
 				</div>
 
 				<div class="inv-rep activa" id="inv_rep_valorizado">
@@ -29,8 +29,8 @@
 						<div class="inv-field">
 							<span class="inv-label">&nbsp;</span>
 							<div>
-								<button class="btn btn-sm btn-primary" onclick="xInvValorizadoCargar()">Ver</button>
-								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_valorizado', 'Stock valorizado')">Excel</button>
+								<button class="btn btn-sm btn-primary" onclick="xInvValorizadoCargar()"><i class="fa fa-search"></i>Ver</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_valorizado', 'Stock valorizado')"><i class="fa fa-file-excel-o"></i>Excel</button>
 							</div>
 						</div>
 						<span class="inv-sep"></span>
@@ -69,8 +69,8 @@
 						<div class="inv-field">
 							<span class="inv-label">&nbsp;</span>
 							<div>
-								<button class="btn btn-sm btn-primary" onclick="xInvKardexCargar()">Ver</button>
-								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_kardex', 'Kardex')">Excel</button>
+								<button class="btn btn-sm btn-primary" onclick="xInvKardexCargar()"><i class="fa fa-search"></i>Ver</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_kardex', 'Kardex')"><i class="fa fa-file-excel-o"></i>Excel</button>
 							</div>
 						</div>
 						<span class="inv-sep"></span>
@@ -102,9 +102,9 @@
 						<div class="inv-field">
 							<span class="inv-label">&nbsp;</span>
 							<div>
-								<button class="btn btn-sm btn-primary" onclick="xInvTendenciaCargar()">Ver</button>
-								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_td_ranking', 'Tendencia mermas')">Excel ranking</button>
-								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_td_conteos', 'Evolucion conteos')">Excel evolucion</button>
+								<button class="btn btn-sm btn-primary" onclick="xInvTendenciaCargar()"><i class="fa fa-search"></i>Ver</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_td_ranking', 'Tendencia mermas')"><i class="fa fa-file-excel-o"></i>Excel ranking</button>
+								<button class="btn btn-sm btn-light" onclick="xInvExcel('tb_inv_td_conteos', 'Evolucion conteos')"><i class="fa fa-file-excel-o"></i>Excel evolucion</button>
 							</div>
 						</div>
 						<span class="inv-sep"></span>

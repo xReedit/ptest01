@@ -24,8 +24,8 @@
 					</div>
 				</div>
 				<div class="xdlg-foot">
-					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
-					<button class="btn btn-sm btn-success" onclick="xInvCrearConteo()">Crear conteo</button>
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xInvCrearConteo()"><i class="fa fa-check"></i>Crear conteo</button>
 				</div>
 			</div>
 		</paper-dialog>
@@ -38,8 +38,8 @@
 						<p>Crea un conteo por almacen (o de porciones), cuenta, cierra y un administrador aprueba. Al aprobar, las diferencias se registran como AJUSTE INVENTARIO en el kardex.</p>
 					</div>
 					<div class="inv-head-acciones">
-						<button class="btn btn-sm btn-light" onclick="xInvIr('reportes')">Reportes</button>
-						<button class="btn btn-sm btn-success" onclick="xInvAbrirNuevo()">+ Nuevo conteo</button>
+						<button class="btn btn-sm btn-light" onclick="xInvIr('reportes')"><i class="fa fa-bar-chart"></i>Reportes</button>
+						<button class="btn btn-sm btn-success" onclick="xInvAbrirNuevo()"><i class="fa fa-plus"></i>Nuevo conteo</button>
 					</div>
 				</div>
 			</div>
@@ -81,14 +81,14 @@ function xInvConteosCargar() {
 		var html = '';
 		r.datos.forEach(function (c) {
 			var acc = '';
-			if (c.estado === 'borrador') { acc += '<span class="inv-link" onclick="xInvIr(\'contar\',' + c.idinventario_conteo + ')">Contar</span><span class="inv-link" onclick="xInvAnular(' + c.idinventario_conteo + ')">Anular</span>'; }
-			if (c.estado === 'cerrado') { acc += '<span class="inv-link" onclick="xInvIr(\'resultado\',' + c.idinventario_conteo + ')">Revisar / Aprobar</span><span class="inv-link" onclick="xInvAnular(' + c.idinventario_conteo + ')">Anular</span>'; }
-			if (c.estado === 'aprobado') { acc += '<span class="inv-link" onclick="xInvIr(\'resultado\',' + c.idinventario_conteo + ')">Ver resultado</span>'; }
+			if (c.estado === 'borrador') { acc += '<span class="inv-link" onclick="xInvIr(\'contar\',' + c.idinventario_conteo + ')"><i class="fa fa-pencil-square-o"></i>Contar</span><span class="inv-link inv-link-rojo" onclick="xInvAnular(' + c.idinventario_conteo + ')"><i class="fa fa-ban"></i>Anular</span>'; }
+			if (c.estado === 'cerrado') { acc += '<span class="inv-link" onclick="xInvIr(\'resultado\',' + c.idinventario_conteo + ')"><i class="fa fa-check-square-o"></i>Revisar / Aprobar</span><span class="inv-link inv-link-rojo" onclick="xInvAnular(' + c.idinventario_conteo + ')"><i class="fa fa-ban"></i>Anular</span>'; }
+			if (c.estado === 'aprobado') { acc += '<span class="inv-link" onclick="xInvIr(\'resultado\',' + c.idinventario_conteo + ')"><i class="fa fa-eye"></i>Ver resultado</span>'; }
 			html += '<tr>' +
 				'<td>' + c.idinventario_conteo + '</td>' +
 				'<td>' + xInvEsc(c.almacen) + (parseInt(c.ciego) === 1 ? ' <span class="inv-tag">ciego</span>' : '') + '</td>' +
 				'<td>' + xInvEsc(c.familia) + '</td>' +
-				'<td><span class="inv-estado ' + c.estado + '">' + c.estado.toUpperCase() + '</span></td>' +
+				'<td><span class="inv-estado ' + c.estado + '">' + xInvIconoEstado(c.estado) + c.estado.toUpperCase() + '</span></td>' +
 				'<td>' + xInvEsc(c.fecha_crea || '') + '<span class="inv-sub">' + xInvEsc(c.crea || '') + '</span></td>' +
 				'<td class="inv-num">' + c.n_items + '</td>' +
 				'<td class="inv-num">' + c.n_contados + '</td>' +
@@ -96,7 +96,7 @@ function xInvConteosCargar() {
 				'<td>' + (c.fecha_aprob ? xInvEsc(c.fecha_aprob) + '<span class="inv-sub">' + xInvEsc(c.aprob || '') + '</span>' : '<span class="inv-muted">-</span>') + '</td>' +
 				'<td class="inv-acciones">' + acc + '</td></tr>';
 		});
-		$('#tb_inv_conteos tbody').html(html || '<tr><td colspan="10" class="inv-empty">No hay conteos con este filtro. Crea uno con <b>+ Nuevo conteo</b>.</td></tr>');
+		$('#tb_inv_conteos tbody').html(html || '<tr><td colspan="10" class="inv-empty">No hay conteos con este filtro. Crea uno con <b><i class="fa fa-plus"></i>Nuevo conteo</b>.</td></tr>');
 		$('#inv_conteos_resumen').text(r.datos.length ? r.datos.length + ' conteo(s)' : '');
 	});
 }

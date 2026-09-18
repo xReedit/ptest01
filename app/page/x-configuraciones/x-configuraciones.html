@@ -1136,6 +1136,30 @@
 	var xObjBorrar = 0; // object contiene informacion de la fila a borrar + tabla e id
 	function _getCategoria(val) { console.log(val); }
 
+	// ---- Datos del sistema: aplicar cambios sin cerrar sesion -------------------
+	// El snapshot ::app3_woDUS se arma una sola vez al login (log.php op=-1111) y
+	// op=-1112 lo compara contra la copia de la sesion PHP, no contra la BD. Por eso
+	// un cambio guardado aqui no se veia hasta cerrar y volver a entrar.
+	// Al guardar marcamos el snapshot como vencido: xm_LogChequea lo regenera desde
+	// la BD en la proxima carga de pagina. Solo afecta a este terminal.
+	function _cpMarcarSnapshotVencido() {
+		try { window.localStorage.setItem('::app3_woDUS_stale', '1'); } catch (e) { /* storage lleno o bloqueado */ }
+	}
+
+	function _cpOnAjaxSuccess(e, xhr, opciones) {
+		var _url = (opciones && opciones.url) || '';
+		if (_url.indexOf('bdphp/') === -1) { return; }   // solo peticiones al backend
+		if (_url.indexOf('op=-1111') > -1) { return; }   // el refresco mismo
+		if (_url.indexOf('op=-1112') > -1) { return; }   // chequeo de sesion
+		_cpMarcarSnapshotVencido();
+	}
+
+	// activar/desactivar el marcado mientras la pagina de configuraciones esta abierta
+	function _cpMarcarSnapshotAlGuardar(activar) {
+		$(document).off('ajaxSuccess', _cpOnAjaxSuccess);
+		if (activar) { $(document).on('ajaxSuccess', _cpOnAjaxSuccess); }
+	}
+
 
 
 
@@ -2533,9 +2557,16 @@
 			xIniConf();
 			_cpSocketOpen();
 			// _cpSocketIsConnect();
+
+			_cpMarcarSnapshotAlGuardar(true);
 		},
 		detached: function () {
 			_cpSocketClose();
+
+			_cpMarcarSnapshotAlGuardar(false);
+			// los sub-componentes (opciones de sede, holding, carta virtual) guardan con
+			// httpFecht/axios, que no pasa por ajaxSuccess: al salir marcamos igual.
+			_cpMarcarSnapshotVencido();
 		}
 	})
 </script>
