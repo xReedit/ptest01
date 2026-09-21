@@ -41,27 +41,42 @@
                 </div>
             </paper-dialog-scrollable>
         </paper-dialog>
-        <paper-dialog id="dialog_marcar" class="dialog_redondo dialog_color" entry-animation="scale-up-animation"
-            exit-animation="fade-out-animation">
-            <div class="xContent">
-                <div class="xIndicadorPedido morado xCursor noselect" onclick="xRefreshMarcador(this);"
-                    data-color="xMorado">
-                    <div>
-                        <p></p><span>__________</span>
-                    </div>
-                </div><br>
-                <div class="xIndicadorPedido naranja xCursor noselect" onclick="xRefreshMarcador(this);"
-                    data-color="xNaranja">
-                    <div>
-                        <p></p><span>__________</span>
-                    </div>
-                </div><br>
-                <div class="xIndicadorPedido rojo xCursor noselect" onclick="xRefreshMarcador(this);"
-                    data-color="xRojo">
-                    <div>
-                        <p></p><span>__________</span>
-                    </div>
+        <!-- color con el que se pintan los platos; el verde ademas avisa por push al mozo -->
+        <paper-dialog id="dialog_marcar" class="zd-dlg-color" entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation" with-backdrop>
+            <div class="zd-dlg-color-head">
+                <i class="fa fa-paint-brush" aria-hidden="true"></i>
+                <div>
+                    <p class="zd-dlg-color-titulo">Color para marcar platos</p>
+                    <p class="zd-dlg-color-sub">Elige un color y luego toca los platos de cada pedido para pintarlos.
+                        Sirve para llevar el control de lo que ya está avanzado.</p>
                 </div>
+            </div>
+            <div class="zd-colores">
+                <div class="zd-color xCursor noselect" onclick="xRefreshMarcador(this);" data-color="xVerde">
+                    <span class="zd-color-muestra" style="background:#43a047;"><i class="fa fa-bell" aria-hidden="true"></i></span>
+                    <p>Plato listo</p>
+                </div>
+                <div class="zd-color xCursor noselect" onclick="xRefreshMarcador(this);" data-color="xMorado">
+                    <span class="zd-color-muestra" style="background:#673ab7;"></span>
+                    <p>Morado</p>
+                </div>
+                <div class="zd-color xCursor noselect" onclick="xRefreshMarcador(this);" data-color="xNaranja">
+                    <span class="zd-color-muestra" style="background:#ff9800;"></span>
+                    <p>Naranja</p>
+                </div>
+                <div class="zd-color xCursor noselect" onclick="xRefreshMarcador(this);" data-color="xRojo">
+                    <span class="zd-color-muestra" style="background:#f50057;"></span>
+                    <p>Rojo</p>
+                </div>
+            </div>
+            <div class="zd-dlg-color-nota">
+                <i class="fa fa-mobile" aria-hidden="true"></i>
+                <span>Marca en <b>verde</b> para indicar al mozo que el plato está listo: le llega una notificación
+                    en su celular con la mesa y el plato. Los otros colores solo pintan, no avisan.</span>
+            </div>
+            <div class="buttons">
+                <button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
             </div>
         </paper-dialog>
         <div class="xHeaderPersiste xcolor1">
@@ -103,7 +118,7 @@
                         </div>
                     </div>
 
-                    <div class="xIndicadorPedido dark xCursor noselect" onclick="dialog_marcar.open();">
+                    <div class="xIndicadorPedido dark xCursor noselect" onclick="xMarcarColorActivo(); dialog_marcar.open();">
                         <div><img src="../../images/_marcar.png"></div>
                     </div>
                     <div class="xIndicadorPedido dark xCursor noselect" onclick="xOpenLateralDe();">
@@ -327,6 +342,110 @@
             right: 10px;
         }
 
+        /* dialogo "color para marcar platos" */
+        .zd-dlg-color {
+            border-radius: 12px;
+            max-width: 460px;
+            padding: 8px 12px;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .zd-dlg-color-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin: 12px 0 4px 0;
+        }
+
+        .zd-dlg-color-head>i {
+            font-size: 22px;
+            color: #303f9f;
+            background: #e8eaf6;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            line-height: 44px;
+            text-align: center;
+            flex: none;
+        }
+
+        .zd-dlg-color-titulo {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .zd-dlg-color-sub {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: #757575;
+            line-height: 1.4;
+        }
+
+        .zd-colores {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 18px 0 10px 0;
+        }
+
+        .zd-color {
+            text-align: center;
+            transition: transform .15s ease-in-out;
+        }
+
+        .zd-color:hover {
+            transform: scale(1.08);
+        }
+
+        .zd-color p {
+            margin: 6px 0 0 0;
+            font-size: 11px;
+            color: #616161;
+        }
+
+        .zd-color-muestra {
+            display: inline-block;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            box-sizing: border-box;
+            border: 3px solid transparent;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+            color: white;
+            font-size: 20px;
+            line-height: 50px;
+        }
+
+        .zd-color.activo .zd-color-muestra {
+            border-color: #212121;
+            box-shadow: 0 0 0 3px white, 0 0 0 5px #212121;
+        }
+
+        .zd-color.activo p {
+            font-weight: 600;
+            color: #212121;
+        }
+
+        .zd-dlg-color-nota {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 0 0 4px 0;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .zd-dlg-color-nota>i {
+            font-size: 22px;
+            flex: none;
+        }
+
         .xdiv_promedio {
             padding: 20px;
             text-align: center;
@@ -356,7 +475,7 @@
 </dom-module>
 <script>
     var xThisZonaDespacho, xdes_mesa_pedido = '';
-    var xdata_zona = [], xIdZonaSeccion = '', xIdTp = '', des_despacho = '', xValCountPedidosDespacho = 0, xUltimoIdPedidoEnZona = 0, xColorMarcado = 'xNaranja', xObjPedido, xRefresh_tiempo, xelem_tt_p_cola, xhora_actual_serv;
+    var xdata_zona = [], xIdZonaSeccion = '', xIdTp = '', des_despacho = '', xValCountPedidosDespacho = 0, xUltimoIdPedidoEnZona = 0, xColorMarcado = 'xVerde', xObjPedido, xRefresh_tiempo, xelem_tt_p_cola, xhora_actual_serv;
     var xtiempo_maximo = 0, tiempo_medio = 0, xNumReservas = 0, element_sonido, isSocket, $grid, itemPedidoEntregar;
 
     function pruebaAddPedido() {
@@ -398,6 +517,10 @@
                 $(this).removeClass();
             } else {
                 $(this).addClass(xColorMarcado + ' xmarcado');
+                // solo el verde ("Plato listo") avisa al mozo; los otros colores son marcas internas de cocina
+                if (xColorMarcado === 'xVerde') {
+                    xNotificarPlatoListo($(this).closest('.row_item').attr('data-id'), $(this).parents('.xmarco_zd_pedido').attr('data-id'));
+                }
             }
             e.stopPropagation(); e.stopImmediatePropagation();
         })
@@ -780,6 +903,13 @@
     }
 
     //op 0=depachado 1= retirado
+    // plato marcado (pintado) en la zona: avisa por push al mozo que hizo el pedido (bdphp/push_mozo.php).
+    // ponytail: no se guarda en BD, igual que la marca de color; solo se notifica al marcar, no al desmarcar
+    function xNotificarPlatoListo(idpd, idp) {
+        if (!idpd || !idp) { return; }
+        $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2111', data: { 'idp': idp, 'idpd': idpd } });
+    }
+
     function xDespachado_retirado(obj, op) {
         var xid_pd = '', xid_p = $(obj).attr('data-id'), xtimepo_despacho = $(obj).find('#val_minutos').text();
         xPopupLoad.xopen();
@@ -1489,7 +1619,13 @@
     }
     function xRefreshMarcador(obj) {
         xColorMarcado = $(obj).attr('data-color');
+        xMarcarColorActivo();
         dialog_marcar.close();
+    }
+
+    // resalta en el dialogo el color que esta en uso
+    function xMarcarColorActivo() {
+        $('.zd-color').removeClass('activo').filter('[data-color="' + xColorMarcado + '"]').addClass('activo');
     }
 
     function xDespacharTodos() {

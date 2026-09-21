@@ -667,6 +667,23 @@ function getVariableSede(variable) {
 }
 
 //3
+// El servicio de RUC responde con CUERPO VACIO y http 200 cuando el documento no existe.
+// JSON.parse('') lanza, y si eso pasa dentro de un .done de jQuery el callback nunca se ejecuta:
+// la barra de progreso se quedaba girando sin decir nada (reporte 18/09/2026).
+// Devuelve el objeto, o null si no hay respuesta util.
+function xParseRptDocumento(dt) {
+	if (dt === null || dt === undefined || String(dt).trim() === '') { return null; }
+	try { return JSON.parse(dt); } catch (e) { return null; }
+}
+// Respuesta uniforme para "no existe": success:false hace que quien llama muestre el mensaje.
+function xRptDocumentoNoExiste(num_doc) {
+	return {
+		success: false, idcliente: '', nombres: '', direccion: '', f_nac: '',
+		num_doc: num_doc, telefono: '', buscarSunat: false,
+		msg: 'No se encontro el documento. Verifique el numero.'
+	};
+}
+
 async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 	var esFacturacionElectronica=false;
 	var rpt = [];
@@ -685,9 +702,19 @@ async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 
 				
 		//primero busca en local
-		var dt = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=602', data:{doc: valor}});
-		// .done( function (dt) {
-			dt = JSON.parse(dt);			
+		// el await sin try lanzaba si la peticion fallaba, y como quien llama no espera la promesa
+		// el error se perdia y el callback nunca corria: otra via de quedarse cargando
+		var dt;
+		try {
+			dt = await $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=602', data:{doc: valor}});
+		} catch (e) {
+			callback({ success: false, idcliente: '', nombres: '', direccion: '', f_nac: '',
+				num_doc: valor, telefono: '', buscarSunat: false,
+				msg: 'Problemas de conexion. intente nuevamente en un momento.' });
+			return;
+		}
+			dt = xParseRptDocumento(dt);
+			if (!dt || !dt.datos) { dt = { datos: [] }; } // respuesta rara: se sigue por la via de la API
 			if (dt.datos.length > 0) { // si tiene los datos en el local
 				dt = dt.datos[0];
 
@@ -745,9 +772,10 @@ async function xGetFindCliente(valor, servicio, buscarSoloSunat, callback) {
 								
 					$.ajax({ type: 'POST', url: _url_servicio})
 					.done( function (dt) {
-						// responde (JSON.parse(dt));
-						dt = JSON.parse(dt);
-						// console.log(dt);
+						// cuerpo vacio = el documento no existe: se responde y se corta aca,
+						// sino JSON.parse revienta y el callback nunca llega
+						dt = xParseRptDocumento(dt);
+						if (!dt) { callback(xRptDocumentoNoExiste(valor)); return; }
 						var nombres='', direccion='', telefono='';
 						var num_doc = valor;
 						var fnacimiento = '';
@@ -803,9 +831,9 @@ function xVerificarRucChangeSunat(valor, callback) {
 						
 					$.ajax({ type: 'POST', url: _url_servicio})
 					.done( function (dt) {
-						// responde (JSON.parse(dt));
-						dt = JSON.parse(dt);
-						// console.log(dt);
+						// cuerpo vacio = el RUC no existe (ver xParseRptDocumento)
+						dt = xParseRptDocumento(dt);
+						if (!dt) { callback(xRptDocumentoNoExiste(valor)); return; }
 						var nombres='', direccion='', telefono='';
 						var num_doc = valor;
 						var fnacimiento = '';
@@ -838,6 +866,12 @@ function xVerificarRucChangeSunat(valor, callback) {
 
 						// responde(rpt);
 						callback(rpt);
+					})
+					.fail(function () {
+						// sin .fail el progreso quedaba girando ante cualquier corte de red
+						callback({ success: false, idcliente: '', nombres: '', direccion: '', f_nac: '',
+							num_doc: valor, telefono: '', buscarSunat: false,
+							msg: 'Problemas de conexion. intente nuevamente en un momento.' });
 					});
 	});	
 }
@@ -1020,7 +1054,45 @@ function getDataUsRRHH() {
 // aceptado: viene del campo 'accepted' del API (2026-08). true/false = el API
 // sabe si SUNAT declaro el comprobante; null = API viejo, se clasifica solo por
 // codigo como antes. Es la autoridad: manda sobre lo que diga sunat_errores.
-async function xVerificarCodeResponseCPE(response, external_id = '', aceptado = null) {
+// Codigo centinela (migracion 037) para errores de transporte: sunat_errores.codigo
+// es int(11), asi que un code no numerico como 'HTTP' jamas puede catalogarse ahi.
+const CPE_COD_ERROR_TRANSPORTE = -1;
+
+// Registra el error en cpe_error (historial para soporte). Acepta 'codigo' y el
+// backend (log_009 op=32) resuelve el idsunat_errores; asi tambien quedan los
+// casos sin codigo catalogado, que antes no dejaban ningun rastro.
+async function xRegistrarCpeError(external_id, datos) {
+	if ( !external_id ) { return; }
+	try {
+		const fetchData = new httpFecht();
+		await fetchData.postJson('../../bdphp/log_009.php?op=32', Object.assign({ external_id }, datos));
+	} catch (error) {
+		// el registro es telemetria: nunca debe tumbar el flujo de caja
+		console.error('xRegistrarCpeError', error);
+	}
+}
+
+// errSoap: el API marca error_soap en TODO fallo de envio (Facturalo.php:217-224),
+// incluidos los rechazos reales con codigo numerico (2255, 2335). Por eso no basta
+// por si solo para distinguir un problema de red - ver xEsErrorTransporteCPE.
+async function xVerificarCodeResponseCPE(response, external_id = '', aceptado = null, errSoap = false) {
+	// Error de TRANSPORTE: SoapFault sin ningun digito en el codigo ('HTTP' con
+	// 'Bad Gateway' / 'Error Fetching http headers'). El lado del API extrae los
+	// digitos del faultcode, asi que un codigo sin digitos significa que nadie en
+	// SUNAT llego a evaluar el documento: no lo rechazo, no lo recibio.
+	// El comprobante queda emitido en estado 01 y el cron sunat:retry-send lo
+	// reenvia, por eso se avisa sin alarmar y sin mandar a soporte.
+	const _codigoCpeRaw = String(response.code === undefined || response.code === null ? '' : response.code);
+	if ( errSoap === true && !/\d/.test(_codigoCpeRaw) ) {
+		await xRegistrarCpeError(external_id, { codigo: CPE_COD_ERROR_TRANSPORTE });
+		ToastAlertSwal.fire({
+			icon: 'warning',
+			title: 'SUNAT no responde. Comprobante emitido, pendiente de envío.',
+			timer: 6000
+		});
+		return false;
+	}
+
 	// Sin codigo solo se sigue si el API afirma que NO fue aceptado.
 	// FIX: el API devuelve el codigo como STRING, y "0" es truthy: el guard no lo atrapaba y
 	// terminaba en el toast "Obs. comprobante 0" despues de cada comprobante correcto (0 = CDR
@@ -1059,16 +1131,11 @@ async function xVerificarCodeResponseCPE(response, external_id = '', aceptado = 
 		const _mensajeCpe = response.description || response.message;
 
 		// Registrar SIEMPRE en cpe_error (historial para soporte, critico o no)
-		if (external_id !== '') {
-			const fetchData = new httpFecht();
-			const _dataCpeError = {
-				"external_id": external_id,
-				"idsunat_errores": errorData.idsunat_errores,
-				"codigo": response.code,
-				"mensaje": _mensajeCpe
-			}
-			await fetchData.postJson('../../bdphp/log_009.php?op=32', _dataCpeError);
-		}
+		await xRegistrarCpeError(external_id, {
+			"idsunat_errores": errorData.idsunat_errores,
+			"codigo": response.code,
+			"mensaje": _mensajeCpe
+		});
 
 		// Bloquear facturacion SOLO por errores de infraestructura (certificado digital)
 		if ( isBloqueaSerie ) {
@@ -1115,7 +1182,14 @@ async function xVerificarCodeResponseCPE(response, external_id = '', aceptado = 
 
 		return false;
 	} else {
-		// Codigo no catalogado en sunat_errores.
+		// Codigo no catalogado en sunat_errores. Se registra igual contra el
+		// centinela: antes estos casos no dejaban ningun rastro en cpe_error y
+		// no habia forma de medirlos ni de saber que faltaba catalogarlos.
+		await xRegistrarCpeError(external_id, {
+			"codigo": CPE_COD_ERROR_TRANSPORTE,
+			"mensaje": `${response.code}: ${response.description || response.message || ''}`
+		});
+
 		if ( aceptado === false ) {
 			// Fail closed: el API afirma que SUNAT NO lo declaro. Un rechazo no
 			// puede quedar en un toast de 4 segundos solo porque el codigo aun

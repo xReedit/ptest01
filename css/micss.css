@@ -1818,6 +1818,11 @@ table tr .xMargin10 {
     background: #f8bbd0;
 }
 
+/* verde = "plato listo": avisa por push al mozo (zona de despacho) */
+.xtabla_pedido_despacho tr td.xVerde {
+    background: #c8e6c9;
+}
+
 tr.xrow_anulado>td {
     color: red;
     text-decoration: line-through;
@@ -4027,6 +4032,11 @@ input:checked~.xMenuPopup {
     background: #ff9800;
 }
 
+.xIndicadorPedido.verde {
+    color: white;
+    background: #43a047;
+}
+
 .xIndicadorPedido.default {
     color: white;
     background: #303f9f;
@@ -5739,6 +5749,10 @@ ul.list_add_item2 li.divLi {
     background: #f8bbd0;
 }
 
+.xtabla_pedido_despacho-t1 tr td.xVerde {
+    background: #c8e6c9;
+}
+
 /* el ultimo td row row_item de la tabla xtabla_pedido_despacho-t1 no deberia tener border-bootom */
 .xtabla_pedido_despacho-t1 tr td:last-child {
     border-bottom: none;
@@ -6280,6 +6294,43 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 
 .trk-sede-pie { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* ── Recorrido del pedido ─────────────────────────────────────────────── */
+#dlg_trk_recorrido { width: 720px; max-width: 94vw; }
+#dlg_trk_recorrido .xdlg-body { overflow-x: hidden; }
+.trk-rec-btn { font-size: 14px; }
+.trk-rec-btn > .fa { margin: 0; }
+
+/* mismo encierro que los otros mapas: Leaflet no puede treparse por encima del dialogo */
+.trk-mapa-rec { width: 100%; box-sizing: border-box; height: 340px; margin: 10px 0; border-radius: 8px;
+	border: 1px solid #e5e7eb; background: #eef0f2; position: relative; z-index: 0; isolation: isolate; }
+.trk-mapa-rec.leaflet-container { font: 12px 'Open Sans'; }
+
+/* la conclusion va arriba del mapa: es lo unico que hace falta para responderle al cliente */
+.trk-rec-veredicto { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
+	border-radius: 8px; background: #f5f6f8; }
+.trk-rec-veredicto > .fa { font-size: 18px; line-height: 20px; color: #9aa0a6; }
+.trk-rec-veredicto b { display: block; font-size: 13px; font-weight: 600; color: #212529; }
+.trk-rec-veredicto span { display: block; margin-top: 2px; font-size: 12px; color: #5f6368; }
+.trk-rec-veredicto.ok { background: #edf7ee; }
+.trk-rec-veredicto.ok > .fa { color: #2e7d32; }
+.trk-rec-veredicto.duda { background: #fdf6ec; }
+.trk-rec-veredicto.duda > .fa { color: #b45309; }
+.trk-rec-veredicto.mal { background: #fdeded; }
+.trk-rec-veredicto.mal > .fa { color: #c62828; }
+
+.trk-rec-leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #5f6368; }
+.trk-rec-leyenda > span { display: inline-flex; align-items: center; gap: 5px; }
+.trk-rec-leyenda .fa { color: #9aa0a6; }
+.trk-rec-leyenda .trk-rec-ini { color: #2f7ed8; font-size: 9px; }
+
+.trk-rec-pin-ini, .trk-rec-pin-fin, .trk-rec-pin-dest { width: 30px; height: 30px;
+	color: #fff; border: 3px solid #fff; box-sizing: border-box; text-align: center;
+	line-height: 24px; font-size: 13px; box-shadow: 0 2px 6px rgba(16,24,40,.5); }
+.trk-rec-pin-ini { border-radius: 50%; background: #2f7ed8; font-size: 9px; }
+.trk-rec-pin-fin { border-radius: 50%; background: #0b3d91; }
+.trk-rec-pin-dest { border-radius: 50% 50% 50% 0; background: #c62828; transform: rotate(-45deg); }
+.trk-rec-pin-dest > .fa { transform: rotate(45deg); }
+
 /* lo que el repartidor declaro al entregar: referencia para dar cuenta en caja */
 .inv-table td .inv-tag.trk-pago { background: #eef4ff; color: #0b3d91; font-weight: 600; }
 .trk-pagos { margin-top: 4px; }
@@ -6301,6 +6352,62 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 .inv-table td .trk-cuenta { font-size: 15px; font-weight: 700; }
 .inv-table td .inv-sub.trk-tarde { font-weight: 600; }
 
+/* rendicion del repartidor a caja */
+#dlg_trk_rendir { width: 780px; max-width: 94vw; }
+#dlg_trk_rendir .btn { height: 31px; padding: 0 12px; font-size: 12px; font-weight: 600;
+	line-height: 29px; border-radius: 6px; }
+#dlg_trk_rendir .btn > .fa { margin-right: 6px; }
+/* Rendir va debajo de Ver en el mapa, no al lado: son dos acciones de peso muy distinto y en la
+   misma linea la de dinero se lee como un enlace mas. */
+.inv-table td.inv-acciones .inv-link { display: block; margin-right: 0; }
+.inv-table td .inv-link.trk-rendir { color: #198754; font-weight: 600; margin-top: 4px; }
+/* dos modos: el resumen por pedido va en fila, el reparto manual en columna */
+.trk-montos { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.trk-montos.modo-mano { flex-direction: column; flex-wrap: nowrap; gap: 8px; }
+#trk_rend_seg { margin-bottom: 8px; }
+#trk_rend_seg .inv-seg-item > .fa { margin-right: 5px; }
+/* el pie solo tiene sentido con lineas manuales */
+.trk-rend-pie { display: none; }
+.trk-rend-pie.activo { display: flex; }
+.trk-linea { display: flex; gap: 8px; align-items: center; }
+.trk-linea .trk-linea-tp { width: 170px; }
+.trk-linea .trk-linea-imp { width: 130px; font-size: 14px; font-weight: 600;
+	font-variant-numeric: tabular-nums; text-align: right; }
+.trk-linea-quitar { width: 31px; height: 31px; padding: 0; border: 1px solid #e5e7eb;
+	border-radius: 6px; background: #fff; color: #dc3545; cursor: pointer; }
+.trk-linea-quitar:hover { background: #fff7f7; }
+.trk-linea-hueco { width: 31px; }
+.trk-rend-pie { align-items: center; gap: 10px; margin-bottom: 12px; }
+.trk-rend-dif { display: none; font-size: 12px; font-weight: 600; color: #842029;
+	background: #f8d7da; border-radius: 8px; padding: 5px 10px; }
+.trk-rend-dif.activo { display: inline-block; }
+#tb_trk_rendicion .trk-metodo { width: 150px; }
+#tb_trk_rendicion .trk-chk { width: 17px; height: 17px; cursor: pointer; }
+/* el efectivo es el unico que el cajero cuenta y guarda: se distingue del resto */
+/* acordeon: lo que se lee una vez y despues solo ocupa alto va plegado */
+.trk-acordeon { margin-top: 10px; border-top: 1px solid #edf0f2; padding-top: 8px; }
+.trk-acordeon-cab { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px 0;
+	background: none; border: 0; cursor: pointer; font-size: 11px; font-weight: 600;
+	color: #6c757d; text-align: left; }
+.trk-acordeon-cab .trk-acordeon-flecha { margin-left: auto; transition: transform .15s; }
+.trk-acordeon.abierto .trk-acordeon-flecha { transform: rotate(180deg); }
+.trk-acordeon-cuerpo { display: none; padding-top: 4px; }
+.trk-acordeon.abierto .trk-acordeon-cuerpo { display: block; }
+.trk-acordeon-cuerpo .inv-nota { margin-top: 6px; }
+
+/* dato de apoyo para el cajero, no es dinero aparte: es una parte del total que ya recibio */
+.trk-rend-entregas { display: none; margin: 8px 0 0; padding: 8px 12px; border-radius: 8px;
+	background: #eef4ff; color: #0b3d91; font-size: 12px; line-height: 1.45; }
+.trk-rend-entregas.activo { display: block; }
+
+.trk-total-pago.efectivo { background: #eef9f3; }
+.trk-total-pago.efectivo em { color: #0f5132; }
+.trk-rend-total { display: flex; align-items: center; justify-content: space-between;
+	padding: 10px 14px; border-radius: 8px; background: #eef9f3; }
+.trk-rend-total span { font-size: 12px; font-weight: 600; color: #0f5132; }
+.trk-rend-total b { font-size: 20px; font-weight: 600; color: #0f5132;
+	font-variant-numeric: tabular-nums; }
+
 .trk-contacto { margin-left: 6px; color: #007bff; }
 .trk-contacto.wa { color: #25D366; }
 .trk-contacto:hover { opacity: .75; }
@@ -6315,3 +6422,95 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	.trk-mapa { height: 320px; }
 }
 
+
+/* ===== aviso de nueva version del sistema ===== */
+/* Tarjeta flotante, NO modal: el POS puede estar a mitad de una venta y un dialogo con backdrop
+   bloquearia la caja. Se queda abajo a la derecha hasta que el usuario decida. */
+.xver-card {
+	position: fixed;
+	right: 18px;
+	bottom: 18px;
+	z-index: 10600;
+	width: 340px;
+	max-width: calc(100vw - 36px);
+	box-sizing: border-box;
+	padding: 16px 16px 14px;
+	background: #fff;
+	border: 1px solid #e9ecef;
+	border-radius: 14px;
+	box-shadow: 0 12px 34px rgba(16, 24, 40, .18);
+	animation: xverEntra .32s cubic-bezier(.16, .84, .44, 1);
+}
+
+@keyframes xverEntra {
+	from { opacity: 0; transform: translateY(22px) scale(.97); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.xver-card.xver-saliendo { animation: xverSale .22s ease forwards; }
+
+@keyframes xverSale {
+	to { opacity: 0; transform: translateY(14px) scale(.97); }
+}
+
+.xver-top { display: flex; align-items: flex-start; gap: 12px; }
+
+.xver-icon {
+	flex: 0 0 auto;
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	background: #eaf5ff;
+	color: #007bff;
+	font-size: 17px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* late suave para que el aviso se note sin ser molesto */
+.xver-icon .fa { animation: xverLatido 2.4s ease-in-out infinite; }
+
+@keyframes xverLatido {
+	0%, 100% { transform: translateY(0); }
+	50%      { transform: translateY(-3px); }
+}
+
+.xver-txt { min-width: 0; }
+.xver-txt b { display: block; font-size: 14px; font-weight: 600; color: #212529; line-height: 1.3; }
+.xver-txt span { display: block; margin-top: 3px; font-size: 12px; color: #6c757d; line-height: 1.45; }
+
+.xver-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+/* --- barra de progreso --- */
+.xver-prog { margin-top: 14px; }
+
+.xver-prog-riel {
+	height: 7px;
+	border-radius: 4px;
+	background: #edf0f2;
+	overflow: hidden;
+}
+
+.xver-prog-fill {
+	width: 0;
+	height: 100%;
+	border-radius: 4px;
+	background: linear-gradient(90deg, #007bff, #4aa3ff);
+	background-size: 200% 100%;
+	transition: width .45s cubic-bezier(.4, 0, .2, 1);
+	animation: xverBrillo 1.1s linear infinite;
+}
+
+@keyframes xverBrillo {
+	from { background-position: 100% 0; }
+	to   { background-position: -100% 0; }
+}
+
+.xver-prog-pie { display: flex; justify-content: space-between; margin-top: 7px; }
+.xver-prog-txt { font-size: 11px; color: #6c757d; }
+.xver-prog-pct { font-size: 11px; font-weight: 600; color: #007bff; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 600px) {
+	.xver-card { right: 10px; bottom: 10px; width: auto; left: 10px; }
+}

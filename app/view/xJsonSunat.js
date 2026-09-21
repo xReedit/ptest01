@@ -672,7 +672,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
                 // Pasar external_id para guardar en cpe_error
                 const _external_id = res.data?.external_id || '';
                 // sin await a propósito: el popup no debe frenar la impresión
-                xVerificarCodeResponseCPE(_rptCPEResponse, _external_id, _aceptado)
+                xVerificarCodeResponseCPE(_rptCPEResponse, _external_id, _aceptado, errSoap)
             }
         } catch (error) {
             // antes se tragaba todo en silencio: un fallo acá dejaba al cajero

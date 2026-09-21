@@ -2623,7 +2623,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 			
 			if (datosDelivery) {				
 				$('#content-info-delivery').removeClass('xInvisible');
-				datosDelivery.paga_con = datosDelivery.paga_con.replace('undefined', '');
+				datosDelivery.paga_con = (datosDelivery.paga_con || '').replace('undefined', '');
 				const infoDelivery =  datosDelivery.num_doc || '' + ' | ' + datosDelivery.nombre + ' | '+  datosDelivery.direccion + ' | '+  datosDelivery.telefono + ' | '+  datosDelivery.paga_con;
 				$('#txt-info-delivery').text('DELIVERY: ' + infoDelivery + infoFacturacion);				
 								

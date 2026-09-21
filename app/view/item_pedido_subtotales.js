@@ -264,11 +264,11 @@ var groupBy = function(xs, key) {
 
 // quitamos servicio delivery y propina del subtotal
 function darFormatoSubTotalesDelivery(arrTotales = null) {
-	if (!arrTotales) { return; }
+	if (!arrTotales || !arrTotales.length) { return arrTotales || []; }
     // console.log(arrTotales);
     var rowTotal = arrTotales[arrTotales.length - 1];
     // -2 = servicio deliver -3 = propina
-    rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && x.descripcion.toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
+    rowTotal.importe = arrTotales.filter(x => x.id !== -2 && x.id !== -3 && (x.descripcion || '').toUpperCase() !== 'TOTAL').map(x => parseFloat(x.importe)).reduce((a, b) => a + b, 0);
 	xLocal_xDtSubTotales =  arrTotales.filter(x => x.id !== -2 && x.id !== -3);
 	return xLocal_xDtSubTotales;
   }

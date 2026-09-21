@@ -74,6 +74,55 @@
 			</div>
 		</paper-dialog>
 
+		<paper-dialog modal id="dlg_trk_rendir" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="trk_rend_titulo">Rendicion</h3>
+					<p id="trk_rend_sub"></p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_trk_rendicion">
+							<thead></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+
+					<div class="inv-titulo-sec">Como te lo paga</div>
+					<div class="inv-seg" id="trk_rend_seg">
+						<div class="inv-seg-item activa" data-modo="pedido" onclick="xTrkSetModo('pedido')"><i class="fa fa-list-ul"></i>Segun cada pedido</div>
+						<div class="inv-seg-item" data-modo="mano" onclick="xTrkSetModo('mano')"><i class="fa fa-random"></i>Repartir a mano</div>
+					</div>
+					<p class="inv-ayuda" id="trk_rend_ayuda"></p>
+					<div class="trk-montos" id="trk_rend_montos"></div>
+					<div class="trk-rend-pie" id="trk_rend_pie">
+						<button type="button" class="btn btn-sm btn-light" onclick="xTrkAgregarLineaPago()"><i class="fa fa-plus"></i>Otro metodo</button>
+						<span class="trk-rend-dif" id="trk_rend_dif"></span>
+					</div>
+
+					<div class="trk-rend-total">
+						<span>Total a tu caja</span>
+						<b id="trk_rend_total">S/ 0.00</b>
+					</div>
+					<p class="trk-rend-entregas" id="trk_rend_entregas"></p>
+					<div class="trk-acordeon" id="trk_rend_info">
+						<button type="button" class="trk-acordeon-cab" onclick="xTrkToggleInfo()">
+							<i class="fa fa-info-circle"></i>Informacion util
+							<i class="fa fa-chevron-down trk-acordeon-flecha"></i>
+						</button>
+						<div class="trk-acordeon-cuerpo">
+							<p class="inv-nota">El efectivo entra a la caja de <b id="trk_rend_caja">—</b> y aparece en su cierre. Lo cobrado por otros medios queda registrado pero no suma al efectivo esperado.</p>
+							<p class="inv-nota">Al confirmar, estos pedidos <b>quedan pagados</b> y dejan de figurar como pendientes, para que nadie los vuelva a cobrar por caja. Revisa la lista antes de aceptar.</p>
+						</div>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" id="trk_btn_rendir" onclick="xTrkConfirmarRendicion()"><i class="fa fa-check"></i>Confirmar rendicion</button>
+				</div>
+			</div>
+		</paper-dialog>
+
 		<paper-dialog modal id="dlg_trk_asignar" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 			<div class="xContent">
 				<div class="xdlg-head">
@@ -117,6 +166,29 @@
 						</table>
 					</div>
 					<div id="trk_dlg_pagos"></div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_trk_recorrido" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="trk_rec_titulo">Recorrido</h3>
+					<p id="trk_rec_sub"></p>
+				</div>
+				<div class="xdlg-body">
+					<div id="trk_rec_veredicto"></div>
+					<div class="trk-mapa-rec" id="trk_mapa_rec"></div>
+					<div class="trk-rec-leyenda">
+						<span><i class="fa fa-home"></i>Local</span>
+						<span><i class="fa fa-circle trk-rec-ini"></i>Inicio del recorrido</span>
+						<span><i class="fa fa-motorcycle"></i>Ultimo punto</span>
+						<span><i class="fa fa-map-marker"></i>Direccion del pedido</span>
+					</div>
+					<p class="inv-nota">La posicion se guarda cada 30 segundos mientras el pedido esta asignado y sin entregar, y deja de guardarse al marcar la entrega.</p>
 				</div>
 				<div class="xdlg-foot">
 					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
@@ -220,11 +292,20 @@
 		var xTrkEnVuelo = false;
 		var xTrkFallos = 0;
 		var xTrkUltimo = null;   // ultimo agrupado pintado, para el historial sin consultar de nuevo
+		var xTrkRendicion = null;   // repartidor cuya rendicion se esta armando
+		var xTrkMetodos = [];       // metodos de pago que acepta la sede
+		var xTrkRendTotal = 0;      // lo que el repartidor debe entregar por lo marcado
+		var xTrkModo = 'pedido';    // 'pedido' = metodo por pedido | 'mano' = reparto manual del total
 		var xTrkDemorados = 0;   // para avisar solo cuando el numero sube, no en cada refresco
 		var xTrkSede = null;     // datos de la sede del ultimo refresco, para el dialogo de ayuda
 		var xTrkMapaS = null;    // mapa chico del dialogo, para mover la ubicacion del local
 		var xTrkMarcadorS = null;
 		var xTrkUbicacionNueva = null;
+		var xTrkMapaR = null;    // mapa del dialogo de recorrido
+		var xTrkCapaR = null;
+		var TRK_REC_CERCA_M = 150;   // dentro de esto se considera que llego a la direccion
+		var TRK_REC_LEJOS_M = 500;   // pasado esto el recorrido contradice la entrega
+		var TRK_REC_CORTE_MIN = 3;   // si el ultimo punto es mas viejo que esto, el trazo no sirve
 
 		/**
 		 * Siempre resuelve con {success, datos, error}.
@@ -360,10 +441,22 @@
 			if (!o || !o.descripcion) { return null; }
 			var imp = parseFloat(o.importe);
 			return {
+				idtipo_pago: parseInt(o.idtipo_pago, 10) || 1,
 				descripcion: String(o.descripcion),
 				importe: isFinite(imp) ? imp : importeDefecto,
 				alLocal: !!o.pago_al_local
 			};
+		}
+
+		/**
+		 * Costo de delivery del pedido. El campo del JSON manda; si falta, la diferencia entre lo que
+		 * paga el cliente y el total del pedido. No siempre coinciden: puede haber propina de por medio.
+		 */
+		function xTrkCostoDelivery(f) {
+			var c = parseFloat(f.costo_delivery);
+			if (isFinite(c)) { return c; }
+			var tr = parseFloat(f.total_r), t = parseFloat(f.total);
+			return (isFinite(tr) && isFinite(t)) ? Math.max(0, tr - t) : 0;
 		}
 
 		/** Una fila de pedido y una de repartidor propio traen los mismos campos: un solo constructor. */
@@ -417,7 +510,9 @@
 					minutos: entregado ? xTrkMinutos(creado, entrega) : xTrkMinutos(creado, ahora),
 					horaEntrega: entrega ? entrega.toTimeString().slice(0, 5) : '',
 					horaPedido: creado ? creado.toTimeString().slice(0, 5) : '',
-					pago: xTrkPago(f.operacion, parseFloat(f.total_r) || 0)
+					pago: xTrkPago(f.operacion, parseFloat(f.total_r) || 0),
+					rendido: parseInt(f.rendido, 10) === 1,
+					costoDelivery: xTrkCostoDelivery(f)
 				};
 
 				var idr = parseInt(f.idrepartidor, 10) || 0;
@@ -432,6 +527,10 @@
 			(propios || []).forEach(function (f) {
 				var idr = parseInt(f.idrepartidor, 10) || 0;
 				if (idr && !porId[idr]) { porId[idr] = xTrkRepartidorDesde(f, idr, ahora); }
+			});
+
+			Object.keys(porId).forEach(function (k) {
+				porId[k].porRendir = porId[k].entregados.filter(function (p) { return !p.rendido; });
 			});
 
 			var repartidores = Object.keys(porId).map(function (k) {
@@ -504,6 +603,7 @@
 
 			var sede = datos.sede || {};
 			xTrkSede = sede;
+			if (datos.metodos && datos.metodos.length) { xTrkMetodos = datos.metodos; }
 			var sedeLat = parseFloat(sede.latitude);
 			var sedeLng = parseFloat(sede.longitude);
 
@@ -684,7 +784,11 @@
 						? '<span class="inv-link trk-cuenta" onclick="xTrkVerPedidos(' + r.idrepartidor + ',\'entregados\')">' + r.entregados.length + '</span>'
 						: '0') + '</td>' +
 					'<td class="inv-num">' + xTrkFmtMin(r.minutosPromedio) + '</td>' +
-					'<td class="inv-acciones">' + verEnMapa + '</td>' +
+					'<td class="inv-acciones">' + verEnMapa +
+						(r.porRendir && r.porRendir.length
+							? '<span class="inv-link trk-rendir" onclick="xTrkAbrirRendicion(' + r.idrepartidor + ')">' +
+								'<i class="fa fa-money"></i>Rendir (' + r.porRendir.length + ')</span>'
+							: '') + '</td>' +
 					'</tr>';
 			});
 			$('#tb_trk_repartidores tbody').html(html ||
@@ -900,6 +1004,142 @@
 		}
 
 		/**
+		 * El recorrido guardado de un pedido. Es la respuesta a "nunca llego": en vez de la palabra del
+		 * repartidor contra la del cliente, el trazo real y a cuantos metros de la puerta termino.
+		 *
+		 * A diferencia del dialogo de pedidos, este si consulta: el recorrido son cientos de puntos y
+		 * traerlos en el refresco de cada 20 segundos, para todos los pedidos, no tendria sentido.
+		 */
+		function xTrkVerRecorrido(idpedido) {
+			xPopupLoad.titulo = 'Cargando recorrido...'; xPopupLoad.xopen();
+			xTrkApi('recorrido', { idpedido: idpedido }).then(function (r) {
+				xPopupLoad.xclose();
+				if (!xTrkVivo || !r || !r.success || !r.datos) { return; }
+				var d = r.datos;
+
+				$('#trk_rec_titulo').text('Recorrido del pedido #' + (d.correlativo || d.numpedido || idpedido));
+				$('#trk_rec_sub').text([d.repartidor, d.dest_direccion].filter(Boolean).join(' · '));
+				$('#trk_rec_veredicto').html(xTrkVeredicto(d));
+
+				dlg_trk_recorrido.open();
+				// Leaflet mide el contenedor al crearlo y dentro de un dialogo cerrado mide 0:
+				// hay que esperar a que la animacion de apertura termine.
+				setTimeout(function () { if (xTrkVivo) { xTrkPintarRecorrido(d); } }, 350);
+			});
+		}
+
+		/** '2026-09-19 13:35:02' -> Date. El navegador no parsea ese formato con espacio. */
+		function xTrkFechaSql(t) {
+			if (!t) { return null; }
+			var d = new Date(String(t).replace(' ', 'T'));
+			return isNaN(d.getTime()) ? null : d;
+		}
+
+		/**
+		 * La conclusion en una linea, arriba del mapa, porque es lo unico que el encargado necesita
+		 * para responderle al cliente. El mapa esta abajo para el que quiera verlo con sus ojos.
+		 *
+		 * Esta pantalla decide si a alguien se le descuenta un pedido, asi que cuando el dato no
+		 * alcanza tiene que decir "no se puede saber" y no acusar. El caso peligroso es el trazo que
+		 * se corto antes de la entrega: Android mata la app en segundo plano, se acaban los datos o
+		 * apagan la ubicacion, y entonces el ultimo punto no es donde estaba al entregar.
+		 */
+		function xTrkVeredicto(d) {
+			var caja = function (clase, icono, titulo, detalle) {
+				return '<div class="trk-rec-veredicto ' + clase + '"><i class="fa ' + icono + '"></i>' +
+					'<div><b>' + xTrkEsc(titulo) + '</b><span>' + xTrkEsc(detalle) + '</span></div></div>';
+			};
+
+			if (!d.puntos || !d.puntos.length) {
+				return caja('vacio', 'fa-info-circle', 'No hay recorrido guardado para este pedido.',
+					'Se guarda solo si el repartidor llevaba la app abierta con la ubicacion activada. ' +
+					'Los pedidos anteriores a esta funcion tampoco lo tienen.');
+			}
+			if (d.metros_final === null || d.metros_final === undefined) {
+				return caja('vacio', 'fa-info-circle', d.puntos.length + ' puntos guardados.',
+					'La direccion del pedido no tiene coordenadas, asi que no se puede medir que tan cerca llego. ' +
+					'Se arregla activando la busqueda por mapa en "Como activar el seguimiento".');
+			}
+
+			// El ultimo punto solo vale si es de cuando marco la entrega, asi que hay que poder
+			// compararlo con esa hora. Sin ella no hay veredicto posible: la hora de entrega sale de
+			// repartidor_pedido_entregado, pero el boton se pinta con pwa_delivery_status = '4', y hay
+			// pedidos con el estado puesto y sin la fila. Para esos, callarse es la unica respuesta
+			// honesta: es justo donde menos dato hay y donde mas firme sonaria la pantalla.
+			var fin = xTrkFechaSql(d.fin), entrega = xTrkFechaSql(d.fecha_entrega);
+			if (!entrega || !fin) {
+				return caja('vacio', 'fa-info-circle', 'No se puede saber si llego.',
+					'Este pedido no tiene registrada la hora de entrega, asi que el ultimo punto del ' +
+					'recorrido no se puede comparar con nada. Mira el trazo en el mapa.');
+			}
+			// TRK_REC_CORTE_MIN da aire para el pulso de 30 s y para el reloj del telefono;
+			// mas que eso es un trazo que se corto antes de que el repartidor llegara.
+			var desfase = Math.round((entrega - fin) / 60000);
+			if (desfase > TRK_REC_CORTE_MIN) {
+				return caja('vacio', 'fa-info-circle', 'El recorrido se corto antes de la entrega.',
+					'El ultimo punto guardado es de ' + xTrkFmtMin(desfase) +
+					' antes de que marcara entregado, asi que no sirve para saber si llego. ' +
+					'Suele pasar cuando el repartidor se queda sin señal o cierra la app.');
+			}
+
+			var m = d.metros_final;
+			var hora = d.fin ? ', a las ' + String(d.fin).slice(11, 16) : '';
+			var detalle = 'El recorrido termino a ' + xTrkFmtDistancia(m / 1000) + ' de la direccion del pedido' + hora + '.';
+			var aviso = d.reasignado
+				? ' Ojo: este pedido cambio de repartidor, asi que el trazo puede tener tramos de dos personas.' : '';
+			if (m <= TRK_REC_CERCA_M) { return caja('ok', 'fa-check-circle', 'El repartidor llego a la direccion.', detalle + aviso); }
+			if (m <= TRK_REC_LEJOS_M) { return caja('duda', 'fa-exclamation-circle', 'Termino cerca, pero no en la puerta.', detalle + aviso); }
+			return caja('mal', 'fa-times-circle', 'Termino lejos de la direccion.', detalle + aviso);
+		}
+
+		/** Local, trazo, ultimo punto y direccion, todo en un mapa que se ajusta a lo que haya. */
+		function xTrkPintarRecorrido(d) {
+			var puntos = (d.puntos || []).map(function (p) { return [p[0], p[1]]; });
+
+			if (!xTrkMapaR) {
+				xTrkMapaR = L.map('trk_mapa_rec', { attributionControl: false });
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(xTrkMapaR);
+				xTrkCapaR = L.layerGroup().addTo(xTrkMapaR);
+			}
+			xTrkCapaR.clearLayers();
+			xTrkMapaR.invalidateSize();
+
+			var pin = function (latlng, clase, icono) {
+				return L.marker(latlng, { icon: L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+					html: '<div class="' + clase + '"><i class="fa ' + icono + '"></i></div>' }) });
+			};
+			var vistas = [];
+
+			var s = d.sede || {};
+			var sLat = parseFloat(s.latitude), sLng = parseFloat(s.longitude);
+			if (isFinite(sLat) && isFinite(sLng)) {
+				pin([sLat, sLng], 'trk-local-pin', 'fa-home').addTo(xTrkCapaR);
+				vistas.push([sLat, sLng]);
+			}
+
+			if (puntos.length) {
+				L.polyline(puntos, { color: '#2f7ed8', weight: 4, opacity: 0.85 }).addTo(xTrkCapaR);
+				pin(puntos[0], 'trk-rec-pin-ini', 'fa-circle').addTo(xTrkCapaR);
+				pin(puntos[puntos.length - 1], 'trk-rec-pin-fin', 'fa-motorcycle').addTo(xTrkCapaR);
+				vistas = vistas.concat(puntos);
+			}
+
+			// parseFloat y no isFinite a secas: isFinite(null) es true y pintaria un destino en el mar
+			var dLat = parseFloat(d.dest_lat), dLng = parseFloat(d.dest_lng);
+			if (isFinite(dLat) && isFinite(dLng)) {
+				pin([dLat, dLng], 'trk-rec-pin-dest', 'fa-map-marker').addTo(xTrkCapaR);
+				// el circulo es el mismo radio con el que el veredicto dice "llego a la direccion"
+				L.circle([dLat, dLng], { radius: TRK_REC_CERCA_M, color: '#2e7d32', weight: 1, fillOpacity: 0.07 })
+					.addTo(xTrkCapaR);
+				vistas.push([dLat, dLng]);
+			}
+
+			if (vistas.length > 1) { xTrkMapaR.fitBounds(L.latLngBounds(vistas).pad(0.15)); }
+			else if (vistas.length === 1) { xTrkMapaR.setView(vistas[0], 16); }
+			else { xTrkMapaR.setView([-6.0331, -76.9747], 13); }
+		}
+
+		/**
 		 * Lista los pedidos de un repartidor, pendientes o entregados. Con muchos pedidos la celda de la
 		 * tabla no alcanzaba, asi que el detalle vive aqui. Se arma con lo que ya esta en pantalla, en
 		 * xTrkUltimo: no hay una consulta nueva, abre al instante y no le agrega carga al servidor.
@@ -941,7 +1181,8 @@
 			} else {
 				cabecera = '<tr><th>Pedido</th><th>Cliente</th><th>Direccion</th>' +
 					'<th class="inv-cen">Pedido</th><th class="inv-cen">Entregado</th>' +
-					'<th class="inv-num">Demora</th><th>Pago</th><th class="inv-num">Importe</th></tr>';
+					'<th class="inv-num">Demora</th><th>Pago</th><th class="inv-num">Importe</th>' +
+					'<th class="inv-cen">Recorrido</th></tr>';
 				lista.slice().sort(function (a, b) { return (a.horaEntrega || '').localeCompare(b.horaEntrega || ''); })
 					.forEach(function (p) {
 						total += p.importe || 0;
@@ -962,6 +1203,8 @@
 								  (p.pago.alLocal ? '<span class="inv-sub">Pago al local</span>' : '')
 								: '<span class="inv-muted">sin especificar</span>') + '</td>' +
 							'<td class="inv-num">S/ ' + (p.importe || 0).toFixed(2) + '</td>' +
+							'<td class="inv-cen"><span class="inv-link trk-rec-btn" title="Ver por donde paso" ' +
+								'onclick="xTrkVerRecorrido(' + (parseInt(p.idpedido, 10) || 0) + ')"><i class="fa fa-map-o"></i></span></td>' +
 							'</tr>';
 					});
 				var prom = demoras.length
@@ -987,6 +1230,257 @@
 			$('#tb_trk_pedidos tbody').html(html);
 			$('#trk_dlg_pagos').html(resumenPago);
 			dlg_trk_pedidos.open();
+		}
+
+		/**
+		 * Lo que el repartidor entrega por un pedido.
+		 * Propio: todo, incluido el costo de envio, porque el local se lo queda y a el le paga sueldo.
+		 * Global: el pedido y sus extras, pero no el envio, que es su ganancia.
+		 */
+		function xTrkARendir(r, p) {
+			var cobro = p.importe || 0;
+			return r.esPropio ? cobro : Math.max(0, cobro - (p.costoDelivery || 0));
+		}
+
+		function xTrkAbrirRendicion(idrepartidor) {
+			if (!xTrkUltimo) { return; }
+			var r = xTrkUltimo.repartidores.filter(function (x) { return x.idrepartidor === idrepartidor; })[0];
+			if (!r || !r.porRendir || !r.porRendir.length) {
+				xTrkAviso('Este repartidor no tiene entregas pendientes de rendir.', 'info');
+				return;
+			}
+			xTrkRendicion = r;
+			xTrkModo = 'pedido';
+
+			var opciones = (xTrkMetodos || []).map(function (m) {
+				return '<option value="' + m.idtipo_pago + '">' + xTrkEsc(m.descripcion) + '</option>';
+			}).join('');
+
+			var html = r.porRendir.map(function (p) {
+				var aRendir = xTrkARendir(r, p);
+				return '<tr>' +
+					'<td class="inv-cen"><input type="checkbox" class="trk-chk" checked ' +
+						'data-idpedido="' + p.idpedido + '" data-monto="' + aRendir.toFixed(2) + '" ' +
+						'data-envio="' + (p.costoDelivery || 0).toFixed(2) + '" ' +
+						'onchange="xTrkRendicionCambio(true)"></td>' +
+					'<td><b>#' + xTrkEsc(p.numero) + '</b><span class="inv-sub">' + xTrkEsc(p.cliente) + '</span></td>' +
+					'<td><select class="inv-select trk-metodo" data-idpedido="' + p.idpedido + '" ' +
+						'onchange="xTrkRendicionCambio(true)">' + opciones + '</select>' +
+						(p.pago && p.pago.alLocal ? '<span class="inv-sub">Declarado: pago al local</span>' : '') + '</td>' +
+					'<td class="inv-num">S/ ' + (p.importe || 0).toFixed(2) + '</td>' +
+					(r.esPropio ? '' : '<td class="inv-num">S/ ' + (p.costoDelivery || 0).toFixed(2) + '</td>') +
+					'<td class="inv-num"><b>S/ ' + aRendir.toFixed(2) + '</b></td>' +
+					'</tr>';
+			}).join('');
+
+			$('#tb_trk_rendicion thead').html('<tr><th class="inv-cen">Ok</th><th>Pedido</th>' +
+				'<th>Metodo de pago</th><th class="inv-num">Cobro</th>' +
+				(r.esPropio ? '' : '<th class="inv-num">Su envio</th>') +
+				'<th class="inv-num">Entrega</th></tr>');
+			$('#tb_trk_rendicion tbody').html(html);
+
+			// cada fila arranca con lo que declaro el repartidor; el cajero corrige el que no fue asi
+			r.porRendir.forEach(function (p) {
+				$('#tb_trk_rendicion .trk-metodo[data-idpedido="' + p.idpedido + '"]')
+					.val(String(p.pago ? p.pago.idtipo_pago : 1));
+			});
+
+			$('#trk_rend_titulo').text('Rendicion de ' + r.nombre);
+			$('#trk_rend_sub').text(r.porRendir.length + ' entrega(s) sin rendir - ' +
+				(r.esPropio ? 'propio: entrega todo, envio incluido' : 'global: se queda con su costo de envio'));
+			$('#trk_rend_caja').text(xNomU || 'el usuario actual');
+
+			xTrkPintarModo();
+			xTrkRendicionCambio(true);
+			dlg_trk_rendir.open();
+		}
+
+		/**
+		 * Dos formas de decir como te pagan, porque son dos situaciones distintas:
+		 * - "Segun cada pedido": el metodo sale de la fila de cada pedido. Cuadra siempre por
+		 *   construccion y ademas refleja como pago cada cliente.
+		 * - "Repartir a mano": el repartidor junta todo y te entrega, por ejemplo, 100 en efectivo y 32
+		 *   por Yape, sin que eso siga la linea de los pedidos.
+		 */
+		function xTrkSetModo(modo) {
+			if (xTrkModo === modo) { return; }
+			xTrkModo = modo;
+			xTrkPintarModo();
+			// al pasar a mano se arranca con el reparto que salia de los pedidos, para no empezar de cero
+			xTrkRendicionCambio(true);
+		}
+
+		function xTrkPintarModo() {
+			$('#trk_rend_seg .inv-seg-item').each(function () {
+				$(this).toggleClass('activa', $(this).data('modo') === xTrkModo);
+			});
+			$('#trk_rend_pie').toggleClass('activo', xTrkModo === 'mano');
+			$('#trk_rend_ayuda').text(xTrkModo === 'pedido'
+				? 'El metodo sale de cada pedido. Corrigelo arriba si el repartidor cobro de otra forma.'
+				: 'Reparte el total como te lo entrega; tiene que sumar exacto. Cada pedido se cobra por '
+				  + 'separado igual: el reparto se reparte entre ellos, y a alguno le puede quedar pago mixto.');
+		}
+
+		function xTrkRendicionCambio(rearmar) {
+			var total = 0, n = 0, entregas = 0, porMetodo = {};
+			$('#tb_trk_rendicion .trk-chk').each(function () {
+				if (!this.checked) { return; }
+				var idp = $(this).data('idpedido');
+				var monto = parseFloat($(this).data('monto')) || 0;
+				var tp = parseInt($('#tb_trk_rendicion .trk-metodo[data-idpedido="' + idp + '"]').val(), 10) || 1;
+				entregas += parseFloat($(this).data('envio')) || 0;
+				porMetodo[tp] = (porMetodo[tp] || 0) + monto;
+				total += monto;
+				n++;
+			});
+			total = Math.round(total * 100) / 100;
+			xTrkRendTotal = total;
+
+			var lineas = Object.keys(porMetodo).map(function (tp) {
+				return { idtipo_pago: parseInt(tp, 10), importe: Math.round(porMetodo[tp] * 100) / 100 };
+			}).sort(function (a, b) { return b.importe - a.importe; });
+
+			if (xTrkModo === 'pedido') {
+				xTrkPintarChips(lineas);
+			} else if (rearmar) {
+				xTrkPintarLineasPago(lineas.length ? lineas : [{ idtipo_pago: 1, importe: total }]);
+			}
+
+			$('#trk_rend_total').text('S/ ' + total.toFixed(2));
+			$('#trk_rend_entregas').html(xTrkRendicion && xTrkRendicion.esPropio && entregas > 0
+				? 'De ese total, <b>S/ ' + entregas.toFixed(2) + '</b> son costos de entrega de ' + n +
+				  ' pedido(s), por si le pagas por entrega a ' + xTrkEsc(xTrkRendicion.nombre) + '.'
+				: '').toggleClass('activo', !!(xTrkRendicion && xTrkRendicion.esPropio && entregas > 0));
+
+			xTrkValidarReparto();
+		}
+
+		/** Resumen de solo lectura: en este modo el reparto ya cuadra porque sale de los pedidos. */
+		function xTrkPintarChips(lineas) {
+			var html = lineas.map(function (l) {
+				var m = (xTrkMetodos || []).filter(function (x) { return x.idtipo_pago === l.idtipo_pago; })[0];
+				return '<span class="trk-total-pago' + (l.idtipo_pago === 1 ? ' efectivo' : '') + '">' +
+					'<em>' + xTrkEsc(m ? m.descripcion : ('#' + l.idtipo_pago)) + '</em>' +
+					'<b>S/ ' + l.importe.toFixed(2) + '</b></span>';
+			}).join('');
+			$('#trk_rend_montos').removeClass('modo-mano')
+				.html(html || '<p class="inv-ayuda">No hay pedidos marcados.</p>');
+		}
+
+		function xTrkPintarLineasPago(lineas) {
+			var opciones = (xTrkMetodos || []).map(function (m) {
+				return '<option value="' + m.idtipo_pago + '">' + xTrkEsc(m.descripcion) + '</option>';
+			}).join('');
+
+			var html = lineas.map(function (l, i) {
+				return '<div class="trk-linea">' +
+					'<select class="inv-select trk-linea-tp" onchange="xTrkValidarReparto()">' + opciones + '</select>' +
+					'<input type="number" step="0.10" min="0" class="inv-input trk-linea-imp" ' +
+						'value="' + l.importe.toFixed(2) + '" oninput="xTrkValidarReparto()">' +
+					(i === 0 ? '<span class="trk-linea-hueco"></span>'
+						: '<button type="button" class="trk-linea-quitar" onclick="xTrkQuitarLineaPago(this)" ' +
+						  'title="Quitar"><i class="fa fa-times"></i></button>') +
+					'</div>';
+			}).join('');
+
+			$('#trk_rend_montos').addClass('modo-mano').html(html);
+			$('#trk_rend_montos .trk-linea').each(function (i) {
+				$(this).find('.trk-linea-tp').val(String(lineas[i].idtipo_pago));
+			});
+		}
+
+		function xTrkAgregarLineaPago() {
+			var actuales = [];
+			$('#trk_rend_montos .trk-linea').each(function () {
+				actuales.push({
+					idtipo_pago: parseInt($(this).find('.trk-linea-tp').val(), 10) || 1,
+					importe: parseFloat($(this).find('.trk-linea-imp').val()) || 0
+				});
+			});
+			// la linea nueva arranca con lo que falta: es lo que se va a poner casi siempre
+			var asignado = actuales.reduce(function (a, l) { return a + l.importe; }, 0);
+			var falta = Math.round((xTrkRendTotal - asignado) * 100) / 100;
+			actuales.push({ idtipo_pago: 1, importe: Math.max(0, falta) });
+			xTrkPintarLineasPago(actuales);
+			xTrkValidarReparto();
+		}
+
+		function xTrkQuitarLineaPago(btn) {
+			$(btn).closest('.trk-linea').remove();
+			xTrkValidarReparto();
+		}
+
+		/** Solo hace falta validar en modo manual: por pedido el reparto cuadra por construccion. */
+		function xTrkValidarReparto() {
+			if (xTrkModo === 'pedido') {
+				$('#trk_rend_dif').removeClass('activo').html('');
+				$('#trk_btn_rendir').prop('disabled', xTrkRendTotal <= 0);
+				return;
+			}
+
+			var suma = 0;
+			$('#trk_rend_montos .trk-linea-imp').each(function () {
+				var v = parseFloat(this.value);
+				if (isFinite(v) && v > 0) { suma += v; }
+			});
+			suma = Math.round(suma * 100) / 100;
+			var dif = Math.round((xTrkRendTotal - suma) * 100) / 100;
+			var ok = Math.abs(dif) < 0.01 && xTrkRendTotal > 0;
+
+			$('#trk_rend_dif').html(ok ? ''
+				: (dif > 0 ? 'Falta asignar <b>S/ ' + dif.toFixed(2) + '</b>'
+						   : 'Te pasaste por <b>S/ ' + Math.abs(dif).toFixed(2) + '</b>'))
+				.toggleClass('activo', !ok);
+			$('#trk_btn_rendir').prop('disabled', !ok);
+		}
+
+		/** El detalle de como funciona la caja se lee una vez; despues solo ocupa alto. Por eso va plegado. */
+		function xTrkToggleInfo() { $('#trk_rend_info').toggleClass('abierto'); }
+
+		function xTrkConfirmarRendicion() {
+			if (!xTrkRendicion) { return; }
+			var idpedidos = [], items = [], pagos = [];
+
+			// en modo pedido viaja el metodo de CADA pedido: el servidor hace un cobro por cada uno,
+			// con su propio cliente. Mandar el resumen agrupado producia un unico cobro mixto.
+			$('#tb_trk_rendicion .trk-chk').each(function () {
+				if (!this.checked) { return; }
+				var idp = $(this).data('idpedido');
+				idpedidos.push(idp);
+				items.push({
+					idpedido: idp,
+					idtipo_pago: parseInt($('#tb_trk_rendicion .trk-metodo[data-idpedido="' + idp + '"]').val(), 10) || 1
+				});
+			});
+
+			if (xTrkModo === 'mano') {
+				$('#trk_rend_montos .trk-linea').each(function () {
+					var imp = parseFloat($(this).find('.trk-linea-imp').val());
+					if (isFinite(imp) && imp > 0) {
+						pagos.push({ idtipo_pago: parseInt($(this).find('.trk-linea-tp').val(), 10) || 1,
+									 importe: Math.round(imp * 100) / 100 });
+					}
+				});
+			}
+			if (!idpedidos.length) { return; }
+			if (xTrkModo === 'pedido' ? !items.length : !pagos.length) { return; }
+
+			xPopupLoad.titulo = 'Registrando rendicion...'; xPopupLoad.xopen();
+			xTrkApi('rendir', {
+				idrepartidor: xTrkRendicion.idrepartidor,
+				repartidor: xTrkRendicion.nombre,
+				modo: xTrkModo,
+				idpedidos: idpedidos,
+				items: items,
+				pagos: pagos
+			}).then(function (res) {
+				xPopupLoad.xclose();
+				if (!res.success) { return; }
+				dlg_trk_rendir.close();
+				showToastSwal('success', res.datos.cobros + ' pedido(s) cobrado(s) - S/ ' + res.datos.total.toFixed(2));
+				xTrkRendicion = null;
+				xTrkCargar(false);
+			});
 		}
 
 		function xTrkVerRepartidor(idrepartidor) {
@@ -1037,6 +1531,7 @@
 				// el mapa del dialogo vive en el mismo template: al salir se va el contenedor, y si
 				// quedara la referencia, al volver a entrar se operaria sobre un mapa muerto
 				if (xTrkMapaS) { xTrkMapaS.remove(); xTrkMapaS = null; }
+				if (xTrkMapaR) { xTrkMapaR.remove(); xTrkMapaR = null; xTrkCapaR = null; }
 				xTrkMarcadorS = null;
 				xTrkUbicacionNueva = null;
 				xTrkCapas = null;

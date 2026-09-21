@@ -287,6 +287,28 @@
 	  <!-- dialog notifica actualizaciones del sistema -->
 	  <x-comp-show-updates-sytem></x-comp-show-updates-sytem>
 
+	  <!-- aviso de nueva version desplegada (ver bloque xVersion* al final del archivo) -->
+	  <div class="xver-card" id="xver_aviso" data-build="@@BUILD_VERSION@@" style="display:none">
+		  <div class="xver-top" id="xver_top">
+			  <div class="xver-icon"><i class="fa fa-arrow-circle-o-up"></i></div>
+			  <div class="xver-txt">
+				  <b>Nueva version disponible</b>
+				  <span>Se actualizo el sistema. Actualiza para tener los ultimos cambios.</span>
+			  </div>
+		  </div>
+		  <div class="xver-prog" id="xver_prog" style="display:none">
+			  <div class="xver-prog-riel"><div class="xver-prog-fill" id="xver_fill"></div></div>
+			  <div class="xver-prog-pie">
+				  <span class="xver-prog-txt" id="xver_prog_txt">Descargando actualizacion...</span>
+				  <span class="xver-prog-pct" id="xver_prog_pct">0%</span>
+			  </div>
+		  </div>
+		  <div class="xver-foot" id="xver_foot">
+			  <button class="btn btn-sm btn-light" onclick="xVersionDespues()">Despues</button>
+			  <button class="btn btn-sm btn-primary" onclick="xVersionActualizar()"><i class="fa fa-refresh"></i> Actualizar</button>
+		  </div>
+	  </div>
+
 	<paper-dialog id="dialog_us" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
 		<div class="xContent">
 			<div id="datosGeneralesUs">			
@@ -457,4 +479,146 @@
 	<link rel="preload" href=".../view/config.const-d4c9262c.js" as="script"> -->
 
 	<!-- <script rel="preload" src="../view/m_panel-1f233ce8.js"></script>	 -->
+
+	<!-- ===== aviso de nueva version del sistema =====
+	     minify.sh escribe version.txt (un timestamp) en cada deploy. Se lee con cache:'no-store',
+	     asi que nunca sale de la cache.
+	     El aviso INSISTE hasta que un usuario pulse Actualizar: la version aceptada queda en
+	     localStorage, asi que recargar la pagina no lo hace desaparecer. Solo el clic lo cierra,
+	     y el usuario sabe si actualizo o no.
+	     Depende del Cache-Control: no-cache de nginx para que el reload traiga todo fresco. -->
+	<script>
+	(function () {
+		var URL_VERSION = '../../version.txt';
+		var CADA_MS = 180000;     // revisa cada 3 min
+		var POSPONER_MS = 300000; // "Despues" lo calla 5 min, pero solo en esta pestana
+		var K_ACEPTADA = '::app3_version_ok';     // ultima version que el usuario acepto actualizar
+		var K_RECIEN = '::app3_version_recien';   // marca para confirmar el exito tras el reload
+
+		// La version del build viaja en el atributo data-build del aviso, no en una constante JS:
+		// uglify pliega constantes al minificar y dejaria el valor congelado antes de que minify.sh
+		// alcance a reemplazar el marcador. Un atributo HTML no lo toca nadie.
+		// Sirve de base de comparacion: es la version del codigo que REALMENTE se esta ejecutando,
+		// asi que si el navegador entrega un m_panel.html viejo desde cache, el aviso vuelve a salir.
+		// En dev el marcador no se reemplaza (empieza con @) y se usa la primera lectura como base.
+		function versionDelBuild() {
+			var v = ($id('xver_aviso').getAttribute('data-build') || '').trim();
+			return v.charAt(0) === '@' ? null : v;
+		}
+		var PASOS = [
+			{ pct: 38, txt: 'Descargando actualizacion...' },
+			{ pct: 66, txt: 'Verificando archivos...' },
+			{ pct: 90, txt: 'Aplicando cambios...' },
+			{ pct: 100, txt: 'Listo, reiniciando...' }
+		];
+
+		var versionPendiente = null, pospuestoHasta = 0, visible = false, timer = null;
+		function $id(id) { return document.getElementById(id); }
+
+		// localStorage puede tirar excepcion (modo privado, cuota): nunca debe romper el POS
+		function leerAceptada() {
+			try { return localStorage.getItem(K_ACEPTADA); } catch (e) { return null; }
+		}
+		function guardarAceptada(v) {
+			try { localStorage.setItem(K_ACEPTADA, v); } catch (e) { }
+		}
+
+		function leerVersion() {
+			return fetch(URL_VERSION, { cache: 'no-store' })
+				.then(function (r) { return r.ok ? r.text() : null; })
+				.then(function (t) { return t ? t.trim() : null; })
+				// sin version.txt (o sin red) el aviso simplemente no aparece: nunca estorba
+				.catch(function () { return null; });
+		}
+
+		function chequear() {
+			if (visible || Date.now() < pospuestoHasta) { return; }
+			leerVersion().then(function (v) {
+				if (!v) { return; }
+				versionPendiente = v;
+				var build = versionDelBuild();
+				// el codigo que corre es de otro build: paso con un reload que trajo archivos
+				// viejos de cache, hay que avisar aunque el usuario ya hubiera aceptado
+				var codigoViejo = (build !== null && build !== v);
+				var aceptada = leerAceptada();
+				// primera vez en este navegador: se da por al dia y no se molesta
+				if (aceptada === null) { guardarAceptada(v); aceptada = v; }
+				if (aceptada !== v || codigoViejo) { mostrar(); }
+			});
+		}
+
+		function mostrar() { visible = true; $id('xver_aviso').style.display = 'block'; }
+
+		function ocultar() {
+			var card = $id('xver_aviso');
+			card.classList.add('xver-saliendo');
+			setTimeout(function () {
+				card.style.display = 'none';
+				card.classList.remove('xver-saliendo');
+				visible = false;
+			}, 220);
+		}
+
+		// expuesto para probar sin esperar los 3 min: xVersionChequear() desde la consola
+		window.xVersionChequear = chequear;
+
+		window.xVersionDespues = function () {
+			pospuestoHasta = Date.now() + POSPONER_MS;
+			ocultar();
+		};
+
+		window.xVersionActualizar = function () {
+			clearInterval(timer);
+			// queda registrado que ESTE usuario acepto esta version: recien aqui el aviso deja de
+			// insistir. Si solo recarga sin pulsar, vuelve a salir.
+			if (versionPendiente) {
+				guardarAceptada(versionPendiente);
+				try { sessionStorage.setItem(K_RECIEN, versionPendiente); } catch (e) { }
+			}
+			$id('xver_top').style.display = 'none';
+			$id('xver_foot').style.display = 'none';
+			$id('xver_prog').style.display = 'block';
+
+			// descarga real del documento saltando la cache: la barra no es solo decorado
+			try { fetch(location.href, { cache: 'reload' }).catch(function () { }); } catch (e) { }
+
+			var fill = $id('xver_fill'), txt = $id('xver_prog_txt'), pct = $id('xver_prog_pct'), i = 0;
+			function paso() {
+				var p = PASOS[i++];
+				fill.style.width = p.pct + '%';
+				txt.textContent = p.txt;
+				pct.textContent = p.pct + '%';
+				if (i < PASOS.length) { setTimeout(paso, 620); }
+				else { setTimeout(function () { location.reload(); }, 700); }
+			}
+			// el primer paso va diferido: si va junto con el display:block el navegador agrupa
+			// ambos cambios y la barra salta al 38% sin animar
+			setTimeout(paso, 60);
+		};
+
+		// cierra el circulo: despues del reload el usuario ve que su clic surtio efecto
+		function confirmarSiRecienActualizo() {
+			var v = null;
+			try {
+				v = sessionStorage.getItem(K_RECIEN);
+				if (v) { sessionStorage.removeItem(K_RECIEN); }
+			} catch (e) { return; }
+			if (v && typeof showToastSwal === 'function') {
+				showToastSwal('success', 'Sistema actualizado a la ultima version');
+			}
+		}
+
+		function iniciar() {
+			confirmarSiRecienActualizo();
+			chequear();
+			timer = setInterval(chequear, CADA_MS);
+			// al volver a la pestana se revisa sin esperar los 3 min del ciclo
+			document.addEventListener('visibilitychange', function () {
+				if (!document.hidden) { chequear(); }
+			});
+		}
+		if (document.readyState === 'complete') { iniciar(); }
+		else { window.addEventListener('load', iniciar); }
+	})();
+	</script>
 </body>

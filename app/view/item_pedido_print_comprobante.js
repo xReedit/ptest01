@@ -492,6 +492,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	// colocar en encabezado si va a imprimir la copia en formato corto
 	xArrayEnca.isprint_copy_short = xImpresoraPrint[0].isprint_copy_short;	
 	xArrayEnca.isprint_all_short = xImpresoraPrint[0].isprint_all_short;
+	// cada seleccionable/subitem en su propia linea en vez de separados por comas
+	xArrayEnca.isprint_subitems_vertical = xImpresoraPrint[0].isprint_subitems_vertical || 0;
 	
 	xArrayCuerpo = xArrayCuerpo.filter(x => x);
 	//si existe impresora local // saca una copia de todo el pedido

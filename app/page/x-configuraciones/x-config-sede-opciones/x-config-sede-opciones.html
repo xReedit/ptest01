@@ -54,6 +54,14 @@
                         </select>
                     </td>
                 </tr>
+                <tr>
+                    <td><p class="fs-15 fw-600">Avisar al mozo cuando su pedido est&aacute; listo (app mozo):</p>
+                        <span class="text-secondary">Cuando en la zona de despacho marcan un plato en verde o el pedido como "Listo", el mozo que tom&oacute; el pedido recibe una notificaci&oacute;n en su celular. Desmarque si no desea enviar estos avisos.</span>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="mozoAvisoPlatoListo" name="mozo-aviso-plato-listo" checked>
+                    </td>
+                </tr>
             </table>
                   
             <br>
@@ -85,6 +93,7 @@
                 inputs.update_stock_after = descuentoStock;
                 inputs.hora_cierre = hora_cierre_dia;
                 inputs.mozo_num_personas = this.$.mozoNumPersonas.value;
+                inputs.mozo_aviso_plato_listo = this.$.mozoAvisoPlatoListo.checked ? 1 : 0;
 
 
                 console.log('inputs', inputs);
@@ -121,6 +130,7 @@
                             this.$.allowCierre.checked = _data.switch2 === '1';
                             this.$.descuentoStock.checked = _data.update_stock_after === '1';
                             this.$.mozoNumPersonas.value = _data.mozo_num_personas || '1';
+                            this.$.mozoAvisoPlatoListo.checked = _data.mozo_aviso_plato_listo !== '0'; // sin dato = avisar
                             // convertir a formato hora para mostrar en el input time
                             _data.hora_cierre = !_data.hora_cierre_dia || _data.hora_cierre_dia == '0' ? '00:00' : _data.hora_cierre_dia;
                             const _horaCierre = _data.hora_cierre.split(':');
@@ -134,6 +144,7 @@
                             this.$.descuentoStock.checked = false;
                             this.$.horaCierre.value = '00:00';
                             this.$.mozoNumPersonas.value = '1';
+                            this.$.mozoAvisoPlatoListo.checked = true;
                         }
                     }
                 }).catch((err) => {

@@ -35,14 +35,11 @@
 		<paper-dialog id="dialog_add_sede" class="dialog_redondo" style="max-width: 550px; overflow: auto;"
 			entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
-				<paper-tabs id="tab_sede" selected="{{selectedTabSede}}">
-					<paper-tab>DATOS DE SEDE</paper-tab>
-					<paper-tab>VARIABLES</paper-tab>
-				</paper-tabs>
-				<!-- <h4>DATOS DE SEDEA</h4> -->
+				<!-- las opciones (antes pestaña VARIABLES) estan en Configuraciones > CONFIGURACIONES DEL LOCAL -->
+				<h4>DATOS DE SEDE</h4>
 				<div class="xLinea2"></div>
 				<br>
-				<iron-pages selected="{{selectedTabSede}}">
+				<div>
 					<div>
 						<form id="frm_sede">
 							<input type="text" class="xMiInput xPasarEnter2" placeholder="DESCRIPCION"
@@ -115,12 +112,7 @@
 						<!-- <div class="xBoton2 xAzul" onclick="xGuardarSede();">Guardar</div>
 						<div class="xBoton2 xPlomo" onclick="dialog_add_sede.close();">Cancelar</div> -->
 					</div>
-
-					<!-- configuraciones -->
-					<div>
-						<x-config-sede-opciones id="compOpcionesSede"></x-config-sede-opciones>
-					</div>
-				</iron-pages>
+				</div>
 			</div>
 		</paper-dialog>
 		<paper-dialog id="dialog_add_cat" class="dialog_redondo" style="max-width: 450px;"
@@ -222,6 +214,7 @@
 		<div>
 			<paper-tabs selected="{{selected_conf}}" id="tab_cnf" scrollable>
 				<paper-tab>DATOS DEL ESTABLECIMINETO</paper-tab>
+				<paper-tab>CONFIGURACIONES DEL LOCAL</paper-tab>
 				<paper-tab>CATEGORIAS (CARTA)</paper-tab>
 				<paper-tab>TIPOS DE CONSUMO</paper-tab>
 				<paper-tab>REGLAS DE LA CARTA</paper-tab>
@@ -272,6 +265,14 @@
 
 					<br><br>
 
+				</div>
+
+				<!-- CONFIGURACIONES DEL LOCAL: opciones de la sede actual (sede_opciones) -->
+				<div id="div_config_local" class="xContent">
+					<h3>Configuraciones del local</h3>
+					<p class="text-secondary">Opciones de funcionamiento de esta sede: cierre de caja, stock, hora de cierre del día y app mozo.</p>
+					<br>
+					<x-config-sede-opciones id="compOpcionesLocal"></x-config-sede-opciones>
 				</div>
 
 				<div id="div_categoria">
@@ -525,6 +526,16 @@
 									<paper-checkbox id="check_isprint_all_delivery"></paper-checkbox> Si<br>
 								</td>
 							</tr>
+							<tr>
+								<td>
+									<h3>Imprimir seleccionables en vertical?</h3>
+									<span>Cada opcion del producto (seleccionables/subitems) se imprime<br>en su
+										propia linea en vez de separadas por comas.</span>
+								</td>
+								<td>
+									<paper-checkbox id="check_isprint_subitems_vertical"></paper-checkbox> Si<br>
+								</td>
+							</tr>
 
 						</table>
 						<br><br>
@@ -547,6 +558,7 @@
 								<input type="text" id="isprint_all_short" name="isprint_all_short">
 								<input type="text" id="isprint_cpe_short" name="isprint_cpe_short">
 								<input type="text" id="isprint_all_delivery" name="isprint_all_delivery">
+								<input type="text" id="isprint_subitems_vertical" name="isprint_subitems_vertical">
 
 								<!-- <input type="text" id="papel_size" name="papel_size"> -->
 								<!-- <input type="text" id="img64" name="img64"> -->
@@ -1264,20 +1276,14 @@
 		$("#tab_cnf").on('iron-select', function () {
 			switch (xThisConfig.selected_conf) {
 				//case 0:;break;
-				case 1: xLoadCategoriaCarta(); break;
-				case 2: xloadTPC(); break;
-				case 3: xIniRegla(); break;
-				case 4: xIniDatoPrint(); break;
-				case 5: xLoadImpresorasConf(); break;
-				case 6: xLoadAlmacenes(); break;
-				case 7: config_comprobante_getall(); break;
-			}
-		})
-
-		$('#tab_sede').on('iron-select', function () {
-			if (xThisConfig.selectedTabSede === 1) {
-				const compOpcionesSede = document.getElementById('compOpcionesSede');
-				compOpcionesSede.loadData(xThisConfig.idsede_selected);
+				case 1: xLoadConfigLocal(); break;
+				case 2: xLoadCategoriaCarta(); break;
+				case 3: xloadTPC(); break;
+				case 4: xIniRegla(); break;
+				case 5: xIniDatoPrint(); break;
+				case 6: xLoadImpresorasConf(); break;
+				case 7: xLoadAlmacenes(); break;
+				case 8: config_comprobante_getall(); break;
 			}
 		})
 
@@ -1370,10 +1376,15 @@
 			return false;
 		})
 
-		const compOpcionesSede = document.getElementById('compOpcionesSede');
-		compOpcionesSede.addEventListener('close', function (e) {
-			dialog_add_sede.close();
+		// pestaña "Configuraciones del local": Cancelar vuelve a cargar lo guardado
+		document.getElementById('compOpcionesLocal').addEventListener('close', function () {
+			xLoadConfigLocal();
 		});
+	}
+
+	// opciones de la sede actual (sede_opciones); log_componentes op 2205 guarda sobre la sede de la sesion
+	function xLoadConfigLocal() {
+		document.getElementById('compOpcionesLocal').loadData(xThisConfig.xt_idsede);
 	}
 
 	function loadIconSeccion() {
@@ -1972,6 +1983,7 @@
 				check_isprint_all_short.checked = xdtPrint[0].isprint_all_short.toString() === "0" ? false : true;
 				check_isprint_cpe_short.checked = xdtPrint[0].isprint_cpe_short.toString() === "0" ? false : true;
 				check_isprint_all_delivery.checked = xdtPrint[0].isprint_all_delivery.toString() === "0" ? false : true;
+				check_isprint_subitems_vertical.checked = (xdtPrint[0].isprint_subitems_vertical || '0').toString() === "0" ? false : true;
 
 
 
@@ -1988,6 +2000,7 @@
 		const _check_isprint_all_short = check_isprint_all_short.checked ? 1 : 0;
 		const _check_isprint_cpe_short = check_isprint_cpe_short.checked ? 1 : 0;
 		const _check_isprint_all_delivery = check_isprint_all_delivery.checked ? 1 : 0;
+		const _check_isprint_subitems_vertical = check_isprint_subitems_vertical.checked ? 1 : 0;
 
 		$("#frm_conf_print #idconf_print").val(xIdConf);
 		$("#frm_conf_print #ip_print").val($("#td_ip").val());
@@ -2005,6 +2018,7 @@
 		$("#frm_conf_print #isprint_all_short").val(_check_isprint_all_short);
 		$("#frm_conf_print #isprint_cpe_short").val(_check_isprint_cpe_short);
 		$("#frm_conf_print #isprint_all_delivery").val(_check_isprint_all_delivery);
+		$("#frm_conf_print #isprint_subitems_vertical").val(_check_isprint_subitems_vertical);
 
 
 		// $("#frm_conf_print #papel_size").val($("#select_papel_caja").val());

@@ -557,6 +557,11 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
                 _datosDelivery = isDataJson && x.json_datos_delivery.p_header && x.json_datos_delivery.p_header.arrDatosDelivery ? 
                                 x.json_datos_delivery.p_header.arrDatosDelivery : [];
 
+                // ponytail: pedidos sin metodoPago en el json (tracker/pos nuevo) rompian el map
+                if ( !_datosDelivery.metodoPago ) {
+                    _datosDelivery.metodoPago = { descripcion: '--', idtipo_pago: 1 };
+                }
+
                 // if ( !!_datosDelivery.direccion ) {
                 //     return;
                 // }
@@ -609,12 +614,12 @@ function xCDCocinarDataItemPedido(rowData, indexList = false) {
                 }
 
                 // cocinar sub totales
-                if ( isDataJson ) {
+                if ( isDataJson && Array.isArray(x.json_datos_delivery.p_subtotales) ) {
                     var _subTotales = x.json_datos_delivery.p_subtotales;
                     _subTotales = _isRepartoPropio ? _subTotales : darFormatoSubTotalesDelivery(_subTotales);
                     x.json_datos_delivery.p_subtotales = _subTotales;
-                    x.total = _subTotales.filter(x => x.descripcion.toUpperCase() === 'TOTAL')[0].importe;
-                    x.total = parseFloat(x.total).toFixed(2);
+                    const _rowTotal = _subTotales.filter(s => (s.descripcion || '').toUpperCase() === 'TOTAL')[0];
+                    x.total = parseFloat(_rowTotal ? _rowTotal.importe : x.total || 0).toFixed(2);
                 }
 
                 // // repartidor
