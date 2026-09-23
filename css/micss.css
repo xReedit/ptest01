@@ -6514,3 +6514,332 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 @media (max-width: 600px) {
 	.xver-card { right: 10px; bottom: 10px; width: auto; left: 10px; }
 }
+
+/* ===== modulo asistencia (control de personal) ===== */
+/* Reusa todo el bloque .inv-* de arriba (tarjeta, toolbar, tabla, KPIs, dialogos).
+   Aqui solo va lo que no existia: la grilla del horario semanal. */
+
+.asis-horario { display:flex; flex-direction:column; gap:6px; }
+
+/* Una fila por dia. Anchos fijos para que los 7 dias queden en columna perfecta:
+   si el checkbox creciera con el texto, las horas saldrian escalonadas. */
+.asis-dia {
+	display:grid;
+	grid-template-columns:92px 1fr 18px 1fr;
+	gap:8px;
+	align-items:center;
+	padding:5px 8px;
+	border:1px solid #edf0f2;
+	border-radius:6px;
+	background:#fff;
+}
+.asis-dia:hover { background:#f8fafc; }
+
+/* Misma altura que .btn.btn-sm (31px) que usa el resto de controles del modulo. */
+.asis-dia .asis-hora { height:31px; font-variant-numeric:tabular-nums; }
+.asis-dia .asis-hora:disabled { background:#f5f6f8; color:#adb5bd; }
+.asis-dia .inv-check { margin:0; font-size:12px; font-weight:600; }
+.asis-dia .inv-muted { text-align:center; font-size:11px; }
+
+@media (max-width: 600px) {
+	.asis-dia { grid-template-columns:72px 1fr 14px 1fr; gap:5px; padding:5px; }
+}
+
+/* ===== marcadores de asistencia (seleccion de pantalla) ===== */
+/* Lista pensada para tocarse con el dedo en una tablet de cocina: filas altas,
+   nombre grande y una sola accion por fila. Nada de tablas ni menus. */
+
+.mar-lista { display: flex; flex-direction: column; gap: 10px; }
+
+.mar-item {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 16px 18px;
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 10px;
+	cursor: pointer;
+}
+.mar-item:hover { background: #f8fafc; border-color: #cbd5e1; }
+.mar-item:active { background: #eef2ff; }
+
+.mar-icono { font-size: 22px; color: #6c757d; width: 26px; text-align: center; }
+
+.mar-texto { flex: 1 1 auto; min-width: 0; }
+.mar-texto b { display: block; font-size: 16px; font-weight: 600; color: #212529; }
+.mar-texto span { display: block; margin-top: 2px; font-size: 12px; color: #6c757d; }
+
+.mar-qr {
+	flex: 0 0 auto;
+	padding: 6px 10px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #6c757d;
+	white-space: nowrap;
+}
+.mar-qr:hover { background: #fff; border-color: #cbd5e1; color: #212529; }
+.mar-qr .fa { margin-right: 4px; }
+
+.mar-ir { flex: 0 0 auto; font-size: 13px; font-weight: 600; color: #007bff; white-space: nowrap; }
+.mar-ir .fa { margin-left: 6px; }
+
+@media (max-width: 600px) {
+	.mar-item { padding: 14px; gap: 10px; }
+	.mar-qr { padding: 6px 8px; }
+	.mar-ir { font-size: 12px; }
+}
+
+/* ===== asistencia: ubicacion del local (GPS) ===== */
+/* Pasos numerados: la pantalla la usa gente que no configura sistemas, y un
+   formulario plano de mapa + select + checkbox no dice en que orden se hace. */
+
+.gps-paso { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid #edf0f2; }
+.gps-paso:last-of-type { border-bottom: 0; }
+
+.gps-num {
+	flex: 0 0 28px;
+	width: 28px; height: 28px; line-height: 28px;
+	border-radius: 50%;
+	background: #0d6efd; color: #fff;
+	font-size: 14px; font-weight: 700; text-align: center;
+}
+.gps-cuerpo { flex: 1 1 auto; min-width: 0; }
+.gps-cuerpo h4 { margin: 3px 0 4px; font-size: 14px; font-weight: 600; color: #212529; }
+.gps-ayuda { margin: 0 0 10px; font-size: 12px; color: #6c757d; }
+
+.gps-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.gps-coords { font-size: 12px; color: #6c757d; font-variant-numeric: tabular-nums; }
+
+.gps-mapa {
+	height: 320px;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	/* Leaflet dibuja sus tiles con position:absolute; sin esto se salen del radio */
+	overflow: hidden;
+}
+
+/* Pin del local: mismo lenguaje visual que el de Tracker */
+.gps-pin {
+	width: 34px; height: 34px; line-height: 34px;
+	border-radius: 50%;
+	background: #dc3545; color: #fff;
+	font-size: 15px; text-align: center;
+	box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+
+.gps-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.gps-switch input { width: 18px; height: 18px; }
+
+.gps-guardar {
+	display: flex; gap: 12px; align-items: center;
+	padding-top: 16px; border-top: 1px solid #edf0f2;
+}
+.gps-guardar .inv-muted { font-size: 12px; }
+
+@media (max-width: 600px) {
+	.gps-paso { gap: 10px; }
+	.gps-mapa { height: 260px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Calendario de asistencia
+   --------------------------------------------------------------------------- */
+.cal-mes { font-size: 14px; font-weight: 600; color: #212529; min-width: 150px; text-align: center; }
+.cal-leyenda { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #6c757d; margin-left: 12px; }
+.cal-p { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.cal-p-cerrado { background: #e9ecef; }
+.cal-p-feriado { background: #ffe1c2; }
+.cal-p-exc { background: #cfe8ff; }
+
+.cal-grilla-cab,
+.cal-grilla { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-grilla-cab { margin: 10px 0 6px; font-size: 11px; font-weight: 600; color: #6c757d; text-align: center; }
+
+.cal-celda {
+	min-height: 76px; border: 1px solid #e9ecef; border-radius: 6px; background: #fff;
+	padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 3px;
+	transition: border-color .12s, box-shadow .12s;
+}
+.cal-celda:hover { border-color: #adb5bd; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.cal-celda b { font-size: 13px; color: #212529; }
+.cal-vacia { border: 0; background: transparent; cursor: default; box-shadow: none; }
+.cal-vacia:hover { border: 0; box-shadow: none; }
+.cal-cerrado { background: #f4f5f7; }
+.cal-cerrado b { color: #868e96; }
+.cal-feriado { background: #fff6ec; border-color: #ffd7ae; }
+.cal-excepcion { border-color: #7fb8f0; }
+
+.cal-nota { font-size: 10px; line-height: 1.25; color: #6c757d; word-break: break-word; }
+.cal-nota-exc { color: #1b6ec2; font-weight: 600; }
+.cal-badge {
+	margin-top: auto; align-self: flex-start; font-size: 10px; font-weight: 600;
+	color: #1b6ec2; background: #e7f1fb; border-radius: 10px; padding: 1px 7px;
+}
+
+.cal-bloque { padding: 12px 0; border-bottom: 1px solid #edf0f2; }
+.cal-bloque:last-of-type { border-bottom: 0; }
+.cal-bloque h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #212529; }
+.cal-bloque .inv-check { padding: 4px 0; }
+
+.cal-personas { max-height: 280px; overflow-y: auto; }
+.cal-persona {
+	display: flex; align-items: center; gap: 8px; padding: 6px 4px;
+	border-bottom: 1px solid #f1f3f5; font-size: 12px; cursor: pointer; margin: 0;
+}
+.cal-persona:last-child { border-bottom: 0; }
+.cal-persona input { margin: 0; }
+.cal-nombre { flex: 1 1 auto; min-width: 0; color: #212529; }
+.cal-motivo { font-size: 11px; color: #6c757d; }
+.cal-comp { font-size: 11px; font-weight: 600; color: #1b6ec2; }
+.cal-comp-doble { color: #b8860b; }
+.cal-comp-falta { color: #d9534f; }
+
+.cal-semana { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
+
+.cal-hist { max-height: 60vh; overflow-y: auto; text-align: left; }
+.cal-hist-fila { display: flex; gap: 10px; padding: 7px 2px; border-bottom: 1px solid #f1f3f5; font-size: 12px; }
+.cal-hist-fila:last-child { border-bottom: 0; }
+.cal-hist-fecha { flex: 0 0 82px; color: #6c757d; font-variant-numeric: tabular-nums; }
+.cal-hist-det { flex: 1 1 auto; min-width: 0; color: #212529; }
+.cal-hist-quien { display: block; font-size: 11px; color: #868e96; margin-top: 2px; }
+
+@media (max-width: 720px) {
+	.cal-celda { min-height: 58px; padding: 4px; }
+	.cal-nota { display: none; }
+	.cal-semana { grid-template-columns: 1fr; }
+	.cal-hist-fecha { flex-basis: 70px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Asistencia: menu, asistente inicial y configuracion
+   --------------------------------------------------------------------------- */
+
+/* Menu del modulo. Tarjetas grandes: se usa poco y de memoria no queda nada,
+   asi que cada opcion tiene que explicarse sola. */
+.asis-menu {
+	display: grid; gap: 14px;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	padding: 6px 0 4px;
+}
+.asis-op {
+	display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+	padding: 20px 18px; border: 1px solid #e9ecef; border-radius: 10px; background: #fff;
+	cursor: pointer; transition: border-color .12s, box-shadow .12s, transform .12s;
+}
+.asis-op:hover { border-color: #7fb8f0; box-shadow: 0 2px 10px rgba(16,24,40,.08); transform: translateY(-1px); }
+.asis-op > .fa { font-size: 30px; color: #1b6ec2; margin-bottom: 8px; }
+.asis-op b { font-size: 15px; font-weight: 600; color: #212529; }
+.asis-op span { font-size: 12px; line-height: 1.4; color: #6c757d; }
+
+/* Pendientes de configuracion */
+.asis-pendientes {
+	margin: 4px 0 18px; padding: 14px 16px;
+	background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+}
+.asis-pendientes h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #92400e; }
+.asis-pendientes h4 > .fa { margin-right: 6px; }
+.asis-pend {
+	display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+	padding: 6px 0; font-size: 13px; color: #78350f;
+}
+.asis-pend span { flex: 1 1 220px; }
+
+/* Asistente inicial */
+.asis-guia {
+	position: sticky; top: 0; z-index: 20;
+	display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+	margin-bottom: -6px; padding: 12px 18px;
+	background: #e7f1fb; border: 1px solid #bcd9f5; border-radius: 10px;
+}
+.asis-guia-pasos { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; }
+.asis-guia-paso {
+	display: inline-flex; align-items: center; gap: 7px;
+	padding: 5px 12px 5px 6px; border-radius: 16px;
+	font-size: 12px; color: #6c757d; background: rgba(255,255,255,.6);
+}
+.asis-guia-paso b {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 20px; height: 20px; border-radius: 50%;
+	background: #ced4da; color: #fff; font-size: 11px; font-weight: 600;
+}
+.asis-guia-paso.actual { background: #fff; color: #212529; font-weight: 600; }
+.asis-guia-paso.actual b { background: #1b6ec2; }
+.asis-guia-paso.hecho b { background: #28a745; }
+.asis-guia-acciones { display: flex; gap: 8px; flex: 0 0 auto; }
+
+/* Configuracion por pasos */
+.cfg-paso { display: flex; gap: 14px; padding: 18px 0; border-bottom: 1px solid #edf0f2; }
+.cfg-paso:last-of-type { border-bottom: 0; }
+.cfg-num {
+	flex: 0 0 auto; width: 26px; height: 26px; margin-top: 2px;
+	display: flex; align-items: center; justify-content: center; border-radius: 50%;
+	background: #1b6ec2; color: #fff; font-size: 13px; font-weight: 600;
+}
+.cfg-cuerpo { flex: 1 1 auto; min-width: 0; }
+.cfg-cuerpo h4 { margin: 2px 0 4px; font-size: 14px; font-weight: 600; color: #212529; }
+.cfg-ayuda { margin: 0 0 12px; font-size: 12px; line-height: 1.45; color: #6c757d; }
+.cfg-cuerpo .inv-check { padding: 5px 0; }
+
+/* Los siete dias como pastillas: se ve de un golpe cuales estan cerrados */
+.cfg-semana { display: flex; gap: 8px; flex-wrap: wrap; }
+.cfg-dia {
+	display: inline-flex; align-items: center; gap: 7px; margin: 0;
+	padding: 8px 14px; border: 1px solid #e9ecef; border-radius: 20px;
+	background: #fff; font-size: 13px; color: #212529; cursor: pointer;
+}
+.cfg-dia input { margin: 0; }
+.cfg-dia.cerrado { background: #f4f5f7; border-color: #ced4da; color: #6c757d; }
+
+.cfg-barra { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.cfg-anio { font-size: 13px; font-weight: 600; color: #212529; }
+
+.cfg-feriados {
+	display: grid; gap: 2px 18px; max-height: 300px; overflow-y: auto;
+	grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+	padding: 4px 2px; border: 1px solid #edf0f2; border-radius: 8px;
+}
+.cfg-fer {
+	display: flex; align-items: center; gap: 9px; margin: 0;
+	padding: 7px 8px; font-size: 13px; color: #212529; cursor: pointer; border-radius: 6px;
+}
+.cfg-fer:hover { background: #f8f9fa; }
+.cfg-fer input { margin: 0; flex: 0 0 auto; }
+.cfg-fer-fecha { flex: 0 0 52px; font-size: 12px; color: #6c757d; font-variant-numeric: tabular-nums; }
+.cfg-fer-nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cfg-fer em { font-style: normal; font-size: 10px; color: #1b6ec2; }
+.cfg-extra { margin-top: 12px; }
+
+.cfg-pie { padding: 18px 0 4px; }
+
+@media (max-width: 720px) {
+	.asis-menu { grid-template-columns: 1fr; }
+	.asis-op { padding: 16px 14px; }
+	.asis-guia { position: static; }
+	.asis-guia-acciones { width: 100%; }
+	.asis-guia-acciones .btn { flex: 1 1 0; }
+	.cfg-feriados { grid-template-columns: 1fr; max-height: 260px; }
+	.cfg-pie .btn { width: 100%; }
+}
+
+/* Ausencias: quien no esta marcando */
+.aus-fila {
+	display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+	padding: 14px 16px; margin-bottom: 8px;
+	border: 1px solid #fde68a; border-left: 3px solid #f59e0b; border-radius: 8px;
+	background: #fffbeb;
+}
+.aus-quien { flex: 1 1 200px; min-width: 0; }
+.aus-quien b { display: block; font-size: 14px; font-weight: 600; color: #212529; }
+.aus-quien span { font-size: 11px; color: #92400e; }
+.aus-dato { flex: 0 0 auto; text-align: center; }
+.aus-dato b { display: block; font-size: 16px; font-weight: 600; color: #92400e; }
+.aus-dato span { font-size: 10px; text-transform: uppercase; color: #a16207; }
+
+@media (max-width: 720px) {
+	.aus-fila { gap: 10px; }
+	.aus-dato { flex: 1 1 0; }
+	.aus-fila .btn { width: 100%; }
+}

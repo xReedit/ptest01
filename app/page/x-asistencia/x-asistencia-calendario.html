@@ -1,0 +1,381 @@
+<dom-module id="x-asistencia-calendario">
+	<template>
+
+		<!-- Que pasa un dia: abre o no, y quienes vienen -->
+		<paper-dialog modal id="dlg_asis_cal" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_cal_titulo">Dia</h3>
+					<p id="asis_cal_sub"></p>
+				</div>
+				<div class="xdlg-body">
+
+					<!-- Paso 1: el local -->
+					<div class="cal-bloque">
+						<h4>El local</h4>
+						<label class="inv-check"><input type="radio" name="cal_local" value="normal" onchange="xAsisCalLocal()"> <span id="asis_cal_txt_normal">Como siempre</span></label>
+						<label class="inv-check"><input type="radio" name="cal_local" value="abre" onchange="xAsisCalLocal()"> Abrir este dia</label>
+						<label class="inv-check"><input type="radio" name="cal_local" value="cierra" onchange="xAsisCalLocal()"> Cerrar este dia</label>
+						<div class="inv-form-row" id="asis_cal_motivo_box" hidden>
+							<span class="inv-label">Motivo</span>
+							<input type="text" class="inv-input inv-w100" id="asis_cal_motivo" maxlength="200"
+								placeholder="Ej: Fiestas Patrias, Dia del Pollo a la Brasa, fumigacion">
+						</div>
+					</div>
+
+					<!-- Paso 2: la gente -->
+					<div class="cal-bloque">
+						<h4>El personal</h4>
+						<p class="inv-nota" style="margin-top:0">
+							Tilda a quien venga en su dia libre. A los que ya les toca trabajar no hace falta tocarlos.
+						</p>
+						<div class="cal-personas" id="asis_cal_personas"></div>
+					</div>
+
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisCalGuardar()"><i class="fa fa-check"></i>Guardar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- Como compensar a quien viene en su dia libre -->
+		<paper-dialog modal id="dlg_asis_comp" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_comp_titulo">Viene en su dia libre</h3>
+					<p>La ley pide elegir una de las dos. Si descansa otro dia no hay recargo; si no, el dia se paga doble.</p>
+				</div>
+				<div class="xdlg-body">
+					<label class="inv-check"><input type="radio" name="cal_comp" value="SUSTITUTORIO" onchange="xAsisCompCambio()"> Descansa otro dia</label>
+					<div class="inv-form-row" id="asis_comp_fecha_box" hidden style="margin-left:26px">
+						<span class="inv-label">Que dia descansa</span>
+						<input type="date" class="inv-input" id="asis_comp_fecha">
+					</div>
+					<label class="inv-check"><input type="radio" name="cal_comp" value="RECARGO" onchange="xAsisCompCambio()"> Se le paga doble</label>
+					<p class="inv-nota" id="asis_comp_nota"></p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss onclick="xAsisCompCancelar()"><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisCompOk()"><i class="fa fa-check"></i>Listo</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Calendario</h3>
+						<p>El dia a dia lo resuelve la configuracion: aca solo se tocan las excepciones. Todo lo que cambies afecta las faltas y lo que se paga, asi que queda registrado.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('inicio')"><i class="fa fa-arrow-left"></i>Volver</button>
+						<button class="btn btn-sm btn-light" onclick="xAsisCalHistorial()"><i class="fa fa-history"></i>Historial</button>
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('configuracion')"><i class="fa fa-cog"></i>Configuracion</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-toolbar">
+					<button class="btn btn-sm btn-light" onclick="xAsisCalMover(-1)"><i class="fa fa-angle-left"></i></button>
+					<span class="cal-mes" id="asis_cal_mes"></span>
+					<button class="btn btn-sm btn-light" onclick="xAsisCalMover(1)"><i class="fa fa-angle-right"></i></button>
+					<span class="inv-sep"></span>
+					<span class="cal-leyenda"><i class="cal-p cal-p-cerrado"></i> cerrado</span>
+					<span class="cal-leyenda"><i class="cal-p cal-p-feriado"></i> feriado</span>
+					<span class="cal-leyenda"><i class="cal-p cal-p-exc"></i> con excepcion</span>
+				</div>
+
+				<div class="cal-grilla-cab">
+					<span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
+				</div>
+				<div class="cal-grilla" id="asis_cal_grilla"></div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xAsisCal = null;        // el mes cargado
+var xAsisCalMes = '';       // 'YYYY-MM'
+var xAsisCalDia = null;     // el dia abierto en el dialogo
+var xAsisCompPend = null;   // a quien se le esta eligiendo la compensacion
+
+var XCAL_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var XCAL_DIAS = ['lun','mar','mie','jue','vie','sab','dom'];
+var XCAL_DIAS_TXT = { lun:'Lunes', mar:'Martes', mie:'Miercoles', jue:'Jueves', vie:'Viernes', sab:'Sabado', dom:'Domingo' };
+
+function xAsisCalCargar() {
+	if (!xAsisCalMes) { xAsisCalMes = new Date().toISOString().slice(0, 7); }
+
+	xPopupLoad.titulo = 'Cargando calendario...'; xPopupLoad.xopen();
+	xAsisApi('cal-mes', { mes: xAsisCalMes }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		xAsisCal = r.datos;
+		xAsisCalPintar();
+	});
+}
+
+function xAsisCalMover(n) {
+	var p = xAsisCalMes.split('-');
+	var d = new Date(Date.UTC(parseInt(p[0]), parseInt(p[1]) - 1 + n, 1));
+	xAsisCalMes = d.toISOString().slice(0, 7);
+	xAsisCalCargar();
+}
+
+function xAsisCalPintar() {
+	var p = xAsisCalMes.split('-');
+	$('#asis_cal_mes').text(XCAL_MESES[parseInt(p[1]) - 1] + ' ' + p[0]);
+
+	// Huecos hasta el primer dia, para que las columnas caigan bajo su dia
+	var primero = xAsisCal.dias[0];
+	var hueco = XCAL_DIAS.indexOf(primero.dia_semana);
+	var html = '';
+	for (var i = 0; i < hueco; i++) { html += '<div class="cal-celda cal-vacia"></div>'; }
+
+	xAsisCal.dias.forEach(function (d) {
+		var clases = 'cal-celda';
+		if (!d.abre) { clases += ' cal-cerrado'; }
+		if (d.feriado) { clases += ' cal-feriado'; }
+		if (d.excepcion) { clases += ' cal-excepcion'; }
+
+		var notas = '';
+		if (d.feriado) { notas += '<span class="cal-nota">' + xAsisEsc(d.feriado) + '</span>'; }
+		if (d.excepcion) { notas += '<span class="cal-nota cal-nota-exc">' + xAsisEsc(d.excepcion.motivo) + '</span>'; }
+		if (d.personas_con_excepcion) {
+			notas += '<span class="cal-badge">' + d.personas_con_excepcion + ' persona(s)</span>';
+		}
+
+		html += '<div class="' + clases + '" onclick="xAsisCalAbrir(\'' + d.fecha + '\')">' +
+			'<b>' + parseInt(d.fecha.slice(8)) + '</b>' + notas + '</div>';
+	});
+
+	$('#asis_cal_grilla').html(html);
+}
+
+// --------------------------------------------------------------------------
+// El dia
+// --------------------------------------------------------------------------
+
+function xAsisCalAbrir(fecha) {
+	xPopupLoad.titulo = 'Cargando el dia...'; xPopupLoad.xopen();
+	xAsisApi('cal-dia', { fecha: fecha }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		xAsisCalDia = r.datos;
+		xAsisCalDia.cambios = {};   // idcolaborador -> {tipo, compensacion, fecha_sustituto}
+
+		var delMes = xAsisCal.dias.filter(function (x) { return x.fecha === fecha; })[0] || {};
+		$('#asis_cal_titulo').text(XCAL_DIAS_TXT[delMes.dia_semana] + ' ' + parseInt(fecha.slice(8)) + ' de ' +
+			XCAL_MESES[parseInt(fecha.slice(5, 7)) - 1]);
+		$('#asis_cal_sub').text(r.datos.feriado ? 'Feriado: ' + r.datos.feriado
+			: (delMes.abre ? 'El local abre este dia' : 'El local no abre este dia'));
+
+		// El radio "como siempre" describe que pasaria sin excepcion
+		$('#asis_cal_txt_normal').text(delMes.feriado ? 'Como siempre (cerrado por feriado)'
+			: (xAsisCal.dias_cierre.indexOf(delMes.dia_semana) >= 0 ? 'Como siempre (cerrado)' : 'Como siempre (abierto)'));
+
+		var exc = r.datos.excepcion_sede;
+		$('input[name=cal_local]').prop('checked', false);
+		$('input[name=cal_local][value=' + (exc ? (exc.tipo === 'LABORABLE' ? 'abre' : 'cierra') : 'normal') + ']').prop('checked', true);
+		$('#asis_cal_motivo').val(exc ? exc.motivo : '');
+		xAsisCalLocal();
+
+		xAsisCalPersonas();
+		dlg_asis_cal.open();
+	});
+}
+
+function xAsisCalLocal() {
+	var v = $('input[name=cal_local]:checked').val();
+	$('#asis_cal_motivo_box').prop('hidden', v === 'normal');
+}
+
+function xAsisCalPersonas() {
+	var html = '';
+	xAsisCalDia.personal.forEach(function (c) {
+		var cam = xAsisCalDia.cambios[c.idcolaborador];
+		var viene = cam ? cam.tipo === 'LABORABLE' : c.labora;
+		var esExtra = cam ? !!cam.compensacion : c.es_descanso_trabajado;
+		var comp = cam ? cam.compensacion : c.compensacion;
+		var sus = cam ? cam.fecha_sustituto : c.fecha_sustituto;
+
+		var nota = '';
+		if (esExtra) {
+			nota = comp === 'RECARGO' ? '<span class="cal-comp cal-comp-doble">se paga doble</span>'
+				: comp === 'SUSTITUTORIO' ? '<span class="cal-comp">descansa el ' + xAsisEsc(sus || '') + '</span>'
+				: '<span class="cal-comp cal-comp-falta">falta elegir como se paga</span>';
+		} else if (!viene) {
+			nota = '<span class="cal-motivo">' + xAsisEsc(c.motivo || 'No trabaja') + '</span>';
+		} else if (c.hora_esperada) {
+			nota = '<span class="cal-motivo">entra ' + xAsisEsc(c.hora_esperada.slice(0, 5)) + '</span>';
+		}
+
+		html += '<label class="cal-persona">' +
+			'<input type="checkbox" data-id="' + c.idcolaborador + '"' + (viene ? ' checked' : '') +
+				' onchange="xAsisCalPersona(this)">' +
+			'<span class="cal-nombre">' + xAsisEsc(c.nombres) + '</span>' + nota +
+			'</label>';
+	});
+	$('#asis_cal_personas').html(html);
+}
+
+/**
+ * Tildar a alguien que NO trabajaba ese dia abre la pregunta de como se le
+ * paga: es lo unico que la ley obliga a decidir y lo unico que el admin tiene
+ * que pensar. Destildar o tildar a quien ya trabajaba no pregunta nada.
+ */
+function xAsisCalPersona(chk) {
+	var id = parseInt($(chk).attr('data-id'));
+	var c = xAsisCalDia.personal.filter(function (x) { return x.idcolaborador === id; })[0];
+	if (!c) { return; }
+
+	if (!chk.checked) {
+		xAsisCalDia.cambios[id] = { tipo: 'NO_LABORABLE', compensacion: null, fecha_sustituto: null };
+		xAsisCalPersonas();
+		return;
+	}
+
+	// Tildado. Si por la regla ya trabajaba, no hay nada que compensar.
+	if (c.labora && !c.es_descanso_trabajado) {
+		delete xAsisCalDia.cambios[id];
+		xAsisCalPersonas();
+		return;
+	}
+
+	xAsisCompPend = { id: id, nombre: c.nombres };
+	$('#asis_comp_titulo').text(c.nombres + ' viene en su dia libre');
+	$('input[name=cal_comp]').prop('checked', false);
+	$('#asis_comp_fecha').val('');
+	$('#asis_comp_nota').text('');
+	xAsisCompCambio();
+	dlg_asis_comp.open();
+}
+
+function xAsisCompCambio() {
+	var v = $('input[name=cal_comp]:checked').val();
+	$('#asis_comp_fecha_box').prop('hidden', v !== 'SUSTITUTORIO');
+	$('#asis_comp_nota').text(
+		v === 'RECARGO' ? 'Se le paga el dia con 100% de recargo. Entra solo a la boleta.'
+		: v === 'SUSTITUTORIO' ? 'Ese dia le queda libre y no se paga recargo.'
+		: ''
+	);
+}
+
+function xAsisCompCancelar() {
+	// Se destilda: no se puede dejar a alguien convocado sin decidir como cobra
+	if (xAsisCompPend) { $('.cal-persona input[data-id=' + xAsisCompPend.id + ']').prop('checked', false); }
+	xAsisCompPend = null;
+	xAsisCalPersonas();
+}
+
+function xAsisCompOk() {
+	if (!xAsisCompPend) { return; }
+	var v = $('input[name=cal_comp]:checked').val();
+	if (!v) { xAsisAviso('Elige como se le compensa el dia.', 'warning'); return; }
+
+	var sus = $('#asis_comp_fecha').val();
+	if (v === 'SUSTITUTORIO' && !sus) { xAsisAviso('Elige que dia descansa a cambio.', 'warning'); return; }
+	if (v === 'SUSTITUTORIO' && sus === xAsisCalDia.fecha) { xAsisAviso('No puede descansar el mismo dia que trabaja.', 'warning'); return; }
+
+	xAsisCalDia.cambios[xAsisCompPend.id] = { tipo: 'LABORABLE', compensacion: v, fecha_sustituto: v === 'SUSTITUTORIO' ? sus : null };
+	xAsisCompPend = null;
+	dlg_asis_comp.close();
+	xAsisCalPersonas();
+}
+
+function xAsisCalGuardar() {
+	var fecha = xAsisCalDia.fecha;
+	var local = $('input[name=cal_local]:checked').val();
+	var motivo = ($('#asis_cal_motivo').val() || '').trim();
+
+	if (local !== 'normal' && !motivo) { xAsisAviso('Escribe el motivo del cambio.', 'warning'); return; }
+
+	// Las llamadas van en cadena, no en paralelo: el backend hace upsert por
+	// (sede, persona, fecha) y dispararlas juntas puede dejar filas a medias.
+	var tareas = [];
+
+	if (local === 'normal' && xAsisCalDia.idexcepcion_sede) {
+		tareas.push({ op: 'cal-excepcion-eliminar', body: { idexcepcion: xAsisCalDia.idexcepcion_sede } });
+	} else if (local !== 'normal') {
+		tareas.push({ op: 'cal-excepcion', body: {
+			fecha: fecha, idcolaborador: 0,
+			tipo: local === 'abre' ? 'LABORABLE' : 'NO_LABORABLE', motivo: motivo
+		}});
+	}
+
+	Object.keys(xAsisCalDia.cambios).forEach(function (id) {
+		var c = xAsisCalDia.cambios[id];
+		var orig = xAsisCalDia.personal.filter(function (x) { return x.idcolaborador === parseInt(id); })[0];
+
+		// Volver al estado original = borrar la excepcion, no guardar una igual
+		var vuelveANormal = (c.tipo === 'LABORABLE') === orig.labora && !c.compensacion;
+		if (vuelveANormal && orig.idexcepcion) {
+			tareas.push({ op: 'cal-excepcion-eliminar', body: { idexcepcion: orig.idexcepcion } });
+			return;
+		}
+		tareas.push({ op: 'cal-excepcion', body: {
+			fecha: fecha, idcolaborador: parseInt(id), tipo: c.tipo,
+			motivo: motivo || (c.tipo === 'LABORABLE' ? 'Viene en su dia libre' : 'No viene'),
+			compensacion: c.compensacion || '', fecha_sustituto: c.fecha_sustituto || ''
+		}});
+	});
+
+	if (!tareas.length) { dlg_asis_cal.close(); return; }
+
+	xPopupLoad.titulo = 'Guardando...'; xPopupLoad.xopen();
+	var i = 0;
+	(function siguiente() {
+		if (i >= tareas.length) {
+			xPopupLoad.xclose();
+			dlg_asis_cal.close();
+			showToastSwal('success', 'Calendario actualizado');
+			xAsisCalCargar();
+			return;
+		}
+		var t = tareas[i++];
+		xAsisApi(t.op, t.body).then(function (r) {
+			if (!r.success) { xPopupLoad.xclose(); return; }   // el error ya se mostro
+			siguiente();
+		});
+	})();
+}
+
+// --------------------------------------------------------------------------
+// Historial
+// --------------------------------------------------------------------------
+
+function xAsisCalHistorial() {
+	xPopupLoad.titulo = 'Cargando historial...'; xPopupLoad.xopen();
+	xAsisApi('bitacora', { limite: 40 }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		var c = r.datos.cambios;
+		var html = c.length ? '<div class="cal-hist">' : '';
+		c.forEach(function (x) {
+			html += '<div class="cal-hist-fila">' +
+				'<span class="cal-hist-fecha">' + xAsisEsc((x.fecha || '').slice(5, 16)) + '</span>' +
+				'<span class="cal-hist-det">' + xAsisEsc(x.detalle) +
+					'<span class="cal-hist-quien">' + xAsisEsc(x.usuario || 'sistema') +
+					(x.autorizado_por ? ' · autorizado por ' + xAsisEsc(x.autorizado_por) : '') +
+					' · ' + xAsisEsc(x.origen) + '</span></span></div>';
+		});
+		html += c.length ? '</div>' : '<p class="inv-empty">Todavia no hay cambios registrados.</p>';
+
+		showAlertSwalHtml({
+			title: 'Historial de cambios',
+			html: html,
+			width: '46rem',
+			confirmButtonText: 'Cerrar'
+		}, 1);
+	});
+}
+
+Polymer({ is: 'x-asistencia-calendario' });
+</script>
+</dom-module>

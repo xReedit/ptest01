@@ -1,0 +1,215 @@
+<dom-module id="x-marcador-asistencia">
+	<!-- QRious ya viene con el sistema: cero dependencias nuevas -->
+	<script src="../../js/qrious.js"></script>
+	<template>
+
+		<!-- Enlace para encender el marcador en OTRO equipo -->
+		<paper-dialog modal id="dlg_mar_qr" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="mar_qr_titulo">Enlace del marcador</h3>
+					<p>Escanea el codigo desde la tablet o PC que va a quedar en ese punto, o copia el enlace y abrelo ahi.</p>
+				</div>
+				<div class="xdlg-body" style="text-align:center">
+					<canvas id="mar_qr_canvas" style="max-width:100%"></canvas>
+					<div class="inv-form-row" style="margin-top:12px">
+						<span class="inv-label">Enlace</span>
+						<input type="text" class="inv-input inv-w100" id="mar_qr_url" readonly onclick="this.select()">
+					</div>
+					<button class="btn btn-sm btn-light" onclick="xMarCopiar()"><i class="fa fa-clipboard"></i>Copiar enlace</button>
+					<p class="inv-nota">
+						Este enlace enciende el marcador en el equipo donde se abra, y apaga el que lo tuviera antes:
+						un marcador vive en una pantalla a la vez.
+					</p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss onclick="xMarCargar()"><i class="fa fa-check"></i>Listo</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Marcadores de Asistencia</h3>
+						<p>Elige que marcador va a quedar encendido en ESTE equipo. La pantalla mostrara el codigo QR para que el personal fiche su entrada y salida.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xMarCargar()"><i class="fa fa-refresh"></i>Actualizar</button>
+						<button class="btn btn-sm btn-success" onclick="xMarCrear()"><i class="fa fa-plus"></i>Nuevo marcador</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="mar-lista" id="mar_lista"></div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+// Pagina pensada para el que llega primero y prende la tablet de cocina: entra
+// al sistema, toca su marcador y la pantalla queda lista. Sin guardar enlaces,
+// sin favoritos y sin volver a escanear ningun QR.
+//
+// Es autocontenida a proposito: no depende de x-asistencia.html, porque quien
+// la usa normalmente NO tiene permiso para el modulo de configuracion.
+
+function xMarAviso(texto, icono, titulo) {
+	showAlertSwalOk(icono || 'warning', titulo || '', texto, 'Entendido', 1);
+}
+function xMarApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_asistencia.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		if (!r || !r.success) { xMarAviso((r && r.error) || 'Error de comunicacion con el servidor', 'error'); }
+		d.resolve(r || { success: false, datos: null, error: 'sin respuesta' });
+	})
+	.fail(function (jqXHR) {
+		try { xPopupLoad.xclose(); } catch (e) {}
+		xMarAviso(jqXHR && jqXHR.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		d.resolve({ success: false, datos: null, error: 'red' });
+	});
+	return d.promise();
+}
+function xMarEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+function xMarAttr(s) { return xMarEsc(s).replace(/"/g, '&quot;'); }
+
+function xMarCargar() {
+	xPopupLoad.titulo = 'Cargando marcadores...'; xPopupLoad.xopen();
+	xMarApi('kiosko-listar').then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		var lista = (r.datos && r.datos.marcadores) || [];
+		var html = '';
+		lista.forEach(function (k) {
+			// No se puede saber si el equipo encendido es ESTE o es otro: el
+			// marcador solo reporta que alguien esta mostrando su codigo. Mejor
+			// decir eso que afirmar algo que puede ser falso.
+			var estado = k.encendido
+				? 'Encendido · ultima senal ' + xMarHace(k.minutos_sin_senal)
+				: (k.ultimo_visto_at ? 'Apagado · ultima senal ' + xMarHace(k.minutos_sin_senal) : 'Nunca se encendio');
+
+			html += '<div class="mar-item" onclick="xMarEncender(' + k.idkiosko + ',\'' + xMarAttr(k.nombre) + '\',' + (k.encendido ? 'true' : 'false') + ')">' +
+				'<i class="fa fa-desktop mar-icono"></i>' +
+				'<div class="mar-texto">' +
+					'<b>' + xMarEsc(k.nombre) + '</b>' +
+					'<span>' + estado + '</span>' +
+				'</div>' +
+				// stopPropagation: si no, tocar "Enlace" dispararia tambien el
+				// "usar aqui" de la fila y se encenderia en el equipo equivocado.
+				'<span class="mar-qr" onclick="event.stopPropagation();xMarQr(' + k.idkiosko + ',\'' + xMarAttr(k.nombre) + '\')" title="Ver codigo QR y enlace">' +
+					'<i class="fa fa-qrcode"></i> Enlace</span>' +
+				'<span class="mar-ir">Usar aqui <i class="fa fa-angle-right"></i></span>' +
+				'</div>';
+		});
+
+		$('#mar_lista').html(html ||
+			'<p class="inv-empty" style="padding:24px 8px">Todavia no hay marcadores en esta sede. Crea uno con <b><i class="fa fa-plus"></i>Nuevo marcador</b>.</p>');
+	});
+}
+
+function xMarHace(min) {
+	if (min === null || min === undefined) { return ''; }
+	if (min < 1) { return 'hace instantes'; }
+	if (min < 60) { return 'hace ' + min + ' min'; }
+	var h = Math.floor(min / 60);
+	if (h < 24) { return 'hace ' + h + ' h'; }
+	return 'hace ' + Math.floor(h / 24) + ' dia(s)';
+}
+
+// QR + enlace, para encender el marcador en un equipo distinto a este.
+// Pide un token nuevo (rota), igual que "Usar aqui": es el mismo acto de
+// encender, solo que la pantalla destino es otra.
+function xMarQr(id, nombre) {
+	xPopupLoad.titulo = 'Generando enlace...'; xPopupLoad.xopen();
+	xMarApi('kiosko-activar', { idkiosko: id }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		$('#mar_qr_titulo').text('Encender "' + nombre + '" en otro equipo');
+		$('#mar_qr_url').val(r.datos.url);
+		new QRious({ element: document.getElementById('mar_qr_canvas'), value: r.datos.url, size: 240, level: 'M' });
+		dlg_mar_qr.open();
+	});
+}
+
+function xMarCopiar() {
+	var campo = document.getElementById('mar_qr_url');
+	campo.select();
+	campo.setSelectionRange(0, 99999);   // iOS ignora select() a secas
+	try {
+		document.execCommand('copy');
+		showToastSwal('success', 'Enlace copiado');
+	} catch (e) {
+		// Sin permiso de portapapeles queda seleccionado para copiar a mano
+		xMarAviso('Copialo con Ctrl+C, ya quedo seleccionado.', 'info');
+	}
+}
+
+function xMarEncender(id, nombre, yaEncendido) {
+	var ir = function () {
+		xPopupLoad.titulo = 'Encendiendo ' + nombre + '...'; xPopupLoad.xopen();
+		xMarApi('kiosko-activar', { idkiosko: id }).then(function (r) {
+			if (!r.success) { xPopupLoad.xclose(); return; }
+			// Se sale del POS hacia la pantalla de marcacion, a pantalla completa
+			window.location.href = r.datos.url;
+		});
+	};
+
+	// Un marcador vive en una sola pantalla: si esta encendido en otro equipo,
+	// usarlo aqui lo apaga alla. Mejor avisarlo que sorprender al de cocina.
+	if (yaEncendido) {
+		showAlertSwalHtmlDecision({
+			title: 'Mover "' + nombre + '" a este equipo?',
+			html: 'Ese marcador esta encendido en alguna pantalla. Si continuas, ahi dejara de mostrar el codigo y habra que volver a encenderlo.',
+			icon: 'question',
+			showCancelButton: true,
+			confirmButtonText: 'Si, usar aqui',
+			cancelButtonText: 'Cancelar'
+		}, 1).then(function (res) { if (res && res.isConfirmed) { ir(); } });
+		return;
+	}
+	ir();
+}
+
+function xMarCrear() {
+	showAlertSwalHtmlDecision({
+		title: 'Nuevo marcador',
+		html: 'Un nombre para reconocerlo: donde va a estar la pantalla.',
+		input: 'text',
+		inputPlaceholder: 'Ej: Cocina, Caja, Puerta principal',
+		confirmButtonText: 'Crear',
+		cancelButtonText: 'Cancelar',
+		showCancelButton: true
+	}, 1).then(function (res) {
+		if (!res || !res.isConfirmed) { return; }
+		var nombre = (res.value || '').trim();
+		if (!nombre) { xMarAviso('Ponle un nombre para reconocerlo despues.', 'warning'); return; }
+
+		xPopupLoad.titulo = 'Creando...'; xPopupLoad.xopen();
+		xMarApi('kiosko-crear', { nombre: nombre }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			// Mantener el snapshot local al dia: el menu del home lo usa para
+			// decidir si muestra esta misma opcion.
+			try { xm_log_set_sede('asistencia_activa', '1'); } catch (e) {}
+			xMarCargar();
+			showToastSwal('success', 'Marcador creado. Tocalo para encenderlo aqui.');
+		});
+	});
+}
+
+Polymer({
+	is: 'x-marcador-asistencia',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xMarCargar(); });
+		$("#Titulo_page").text("Marcadores de Asistencia");
+	}
+});
+</script>
+</dom-module>

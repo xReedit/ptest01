@@ -1,0 +1,123 @@
+<dom-module id="x-asistencia-inicio">
+	<template>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Control de Asistencia</h3>
+						<p id="asis_ini_sub">El personal marca con su celular. Aca se configura y se revisa.</p>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+
+				<!-- Lo que hay que atender AHORA. Solo aparece si hay algo que
+				     falta: un aviso permanente deja de leerse a la semana. -->
+				<div class="asis-pendientes" id="asis_ini_pendientes" hidden></div>
+
+				<div class="asis-menu" id="asis_ini_menu"></div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+/**
+ * Menu del modulo.
+ *
+ * Existe porque las opciones no caben como botones en la cabecera de Personal:
+ * eran siete y ninguna se leia. Aca cada una tiene su icono, su nombre y una
+ * linea que dice para que sirve, que es lo que hace falta la primera vez.
+ */
+var XASIS_MENU = [
+	{ v: 'personal',     ic: 'fa-users',       t: 'Personal y horarios', d: 'Quien trabaja, a que hora entra y sale, y que dias descansa.' },
+	{ v: 'kioskos',      ic: 'fa-desktop',     t: 'Marcadores',          d: 'Las pantallas con el QR que el personal escanea para marcar.' },
+	{ v: 'calendario',   ic: 'fa-calendar',    t: 'Calendario',          d: 'Feriados y dias en que se abre o se cierra fuera de lo normal.' },
+	{ v: 'ausencias',    ic: 'fa-user-times',  t: 'Ausencias',           d: 'Quien no esta marcando: vacaciones, permisos o ya no trabaja.' },
+	{ v: 'configuracion',ic: 'fa-cog',         t: 'Configuracion',       d: 'Que dias atiende el local, los feriados y el pago del descanso.' },
+	{ v: 'gps',          ic: 'fa-map-marker',  t: 'Ubicacion',           d: 'Exigir que el celular este en el local al momento de marcar.' }
+];
+
+function xAsisIniCargar() {
+	var html = '';
+	XASIS_MENU.forEach(function (o) {
+		html += '<div class="asis-op" onclick="xAsisIr(\'' + o.v + '\')">' +
+			'<i class="fa ' + o.ic + '"></i>' +
+			'<b>' + o.t + '</b>' +
+			'<span>' + o.d + '</span>' +
+			'</div>';
+	});
+	$('#asis_ini_menu').html(html);
+
+	xAsisIniPendientes();
+}
+
+/**
+ * Avisa de lo que quedo a medias. Se calcula en cada entrada y no se guarda:
+ * un pendiente resuelto tiene que desaparecer solo, sin que nadie lo marque.
+ */
+function xAsisIniPendientes() {
+	$.when(
+		xAsisApi('listar', {}, true),
+		xAsisApi('kiosko-listar', {}, true),
+		xAsisApi('ausencias-alertas', {}, true)
+	).then(function (rp, rk, ra) {
+		var faltas = [];
+
+		// Primero lo que cuesta plata: un dia sin resolver se descuenta como
+		// falta aunque la persona este de vacaciones.
+		var alertas = (ra && ra.success && ra.datos && ra.datos.alertas) ? ra.datos.alertas : [];
+		if (alertas.length) {
+			faltas.push({
+				v: 'ausencias',
+				t: alertas.length + ' persona(s) llevan dias sin marcar. Si estan de vacaciones o ya no trabajan, ' +
+					'hay que decirlo antes de cerrar la planilla.',
+				a: 'Revisar'
+			});
+		}
+
+		var personal = (rp && rp.success && rp.datos && rp.datos.personal) ? rp.datos.personal : [];
+		var kioskos = (rk && rk.success && rk.datos && rk.datos.marcadores) ? rk.datos.marcadores : [];
+
+		if (!personal.length) {
+			faltas.push({ v: 'personal', t: 'Todavia no hay personal cargado.', a: 'Cargar personal' });
+		} else {
+			var sinHorario = personal.filter(function (p) {
+				return !p.horario_semanal || !Object.keys(p.horario_semanal).length;
+			});
+			if (sinHorario.length) {
+				faltas.push({
+					v: 'personal',
+					t: sinHorario.length + ' persona(s) sin horario. Hasta que lo tengan no pueden marcar.',
+					a: 'Poner horarios'
+				});
+			}
+			var sinCelular = personal.filter(function (p) { return !p.tiene_dispositivo; });
+			if (sinCelular.length) {
+				faltas.push({
+					v: 'personal',
+					t: sinCelular.length + ' persona(s) sin celular activado.',
+					a: 'Activar celulares'
+				});
+			}
+		}
+
+		if (!kioskos.length) {
+			faltas.push({ v: 'kioskos', t: 'No hay ningun marcador. Sin pantalla no hay QR que escanear.', a: 'Crear marcador' });
+		}
+
+		if (!faltas.length) { $('#asis_ini_pendientes').prop('hidden', true).html(''); return; }
+
+		var html = '<h4><i class="fa fa-exclamation-circle"></i>Para terminar de configurar</h4>';
+		faltas.forEach(function (f) {
+			html += '<div class="asis-pend"><span>' + xAsisEsc(f.t) + '</span>' +
+				'<button class="btn btn-sm btn-light" onclick="xAsisIr(\'' + f.v + '\')">' + xAsisEsc(f.a) + '</button></div>';
+		});
+		$('#asis_ini_pendientes').prop('hidden', false).html(html);
+	});
+}
+
+Polymer({ is: 'x-asistencia-inicio' });
+</script>
+</dom-module>

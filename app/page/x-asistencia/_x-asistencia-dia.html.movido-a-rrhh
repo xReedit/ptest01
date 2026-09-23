@@ -1,0 +1,178 @@
+<dom-module id="x-asistencia-dia">
+	<template>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Asistencia del dia</h3>
+						<p id="asis_dia_bajada">Quien llego, quien llego tarde y quien falta. El dia operativo empieza a la hora de corte, asi que un turno que termina pasada la medianoche sigue contando en el dia anterior.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('personal')"><i class="fa fa-users"></i>Personal</button>
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('kioskos')"><i class="fa fa-desktop"></i>Marcadores</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-kpis" id="asis_dia_kpis"></div>
+				<div class="inv-toolbar">
+					<div class="inv-field">
+						<span class="inv-label">Dia</span>
+						<input type="date" class="inv-input" id="asis_dia_fecha" onchange="xAsisDiaCargar()">
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">&nbsp;</span>
+						<button class="btn btn-sm btn-light" onclick="xAsisDiaMover(-1)"><i class="fa fa-angle-left"></i> Anterior</button>
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">&nbsp;</span>
+						<button class="btn btn-sm btn-light" onclick="xAsisDiaMover(1)">Siguiente <i class="fa fa-angle-right"></i></button>
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">&nbsp;</span>
+						<button class="btn btn-sm btn-light" onclick="xAsisDiaHoy()"><i class="fa fa-calendar"></i> Hoy</button>
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Ver</span>
+						<select class="inv-select" id="asis_dia_filtro" onchange="xAsisDiaPintar()">
+							<option value="">Todos</option>
+							<option value="falta">Solo faltas</option>
+							<option value="tarde">Solo tardanzas</option>
+							<option value="incompleto">Sin salida</option>
+						</select>
+					</div>
+					<span class="inv-sep"></span>
+					<p class="inv-ayuda" id="asis_dia_estado"></p>
+				</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_asis_dia">
+						<thead><tr>
+							<th>Colaborador</th><th>Area</th><th>Horario</th>
+							<th>Entrada</th><th>Salida</th><th class="inv-num">Horas</th><th>Estado</th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xAsisDia = null;        // ultima respuesta del servidor
+var xAsisDiaTimer = null;
+
+function xAsisDiaCargar(silencioso) {
+	if (!silencioso) { xPopupLoad.titulo = 'Cargando el dia...'; xPopupLoad.xopen(); }
+
+	return xAsisApi('dia', { fecha: $('#asis_dia_fecha').val() || '' }, silencioso).then(function (r) {
+		if (!silencioso) { xPopupLoad.xclose(); }
+		if (!r.success) { return r; }
+
+		xAsisDia = r.datos;
+		$('#asis_dia_fecha').val(xAsisDia.fecha);
+		xAsisDiaPintar();
+
+		// Solo tiene sentido refrescar solo el dia en curso: los pasados no cambian
+		xAsisDiaVigilar(xAsisDia.en_curso);
+		return r;
+	});
+}
+
+// El dia en curso cambia mientras el local trabaja: la gente va llegando.
+// 60 s alcanza; nadie mira esta pantalla esperando el segundo exacto.
+function xAsisDiaVigilar(encender) {
+	if (xAsisDiaTimer) { clearInterval(xAsisDiaTimer); xAsisDiaTimer = null; }
+	if (!encender) { return; }
+	xAsisDiaTimer = setInterval(function () { xAsisDiaCargar(true); }, 60000);
+}
+
+function xAsisDiaMover(dias) {
+	var f = $('#asis_dia_fecha').val() || (xAsisDia && xAsisDia.fecha);
+	if (!f) { return; }
+	// Se opera en UTC para que el salto de dia no dependa del huso del navegador
+	var d = new Date(f + 'T00:00:00Z');
+	d.setUTCDate(d.getUTCDate() + dias);
+	$('#asis_dia_fecha').val(d.toISOString().slice(0, 10));
+	xAsisDiaCargar();
+}
+
+function xAsisDiaHoy() {
+	$('#asis_dia_fecha').val(xAsisDia ? xAsisDia.hoy : '');
+	xAsisDiaCargar();
+}
+
+var XASIS_ESTADOS = {
+	COMPLETO:   { txt: 'Completo',    clase: 'inv-pos' },
+	PRESENTE:   { txt: 'Presente',    clase: 'inv-pos' },
+	INCOMPLETO: { txt: 'Sin salida',  clase: 'inv-neg' },
+	FALTA:      { txt: 'Falta',       clase: 'inv-neg' },
+	PENDIENTE:  { txt: 'No llego aun',clase: 'inv-muted' },
+	LIBRE:      { txt: 'Dia libre',   clase: 'inv-muted' },
+	SIN_HORARIO:{ txt: 'Sin horario', clase: 'inv-muted' }
+};
+
+function xAsisDiaPintar() {
+	if (!xAsisDia) { return; }
+	var d = xAsisDia, filtro = $('#asis_dia_filtro').val() || '';
+
+	$('#asis_dia_kpis').html(
+		'<div class="inv-kpi inv-kpi-azul"><span>PERSONAL</span><b>' + d.resumen.personal + '</b></div>' +
+		'<div class="inv-kpi inv-kpi-verde"><span>PRESENTES</span><b>' + d.resumen.presentes + '</b></div>' +
+		'<div class="inv-kpi inv-kpi-celeste"><span>TARDANZAS</span><b>' + d.resumen.tardanzas + '</b></div>' +
+		'<div class="inv-kpi inv-kpi-rojo"><span>' + (d.en_curso ? 'NO LLEGARON AUN' : 'FALTAS') + '</span><b>' +
+			(d.en_curso ? d.resumen.pendientes : d.resumen.faltas) + '</b></div>'
+	);
+
+	$('#asis_dia_estado').text(d.en_curso
+		? 'Dia en curso · las faltas se confirman cuando cierre (corte ' + d.hora_corte.slice(0, 5) + ')'
+		: 'Dia cerrado');
+
+	var html = '';
+	d.filas.forEach(function (f) {
+		var tarde = f.entrada && f.entrada.tardanza_min > 0;
+
+		if (filtro === 'falta' && f.estado !== 'FALTA') { return; }
+		if (filtro === 'tarde' && !tarde) { return; }
+		if (filtro === 'incompleto' && f.estado !== 'INCOMPLETO') { return; }
+
+		var e = XASIS_ESTADOS[f.estado] || { txt: f.estado, clase: '' };
+
+		html += '<tr>' +
+			'<td>' + xAsisEsc(f.nombres) + '</td>' +
+			'<td>' + (f.area ? '<span class="inv-tag">' + xAsisEsc(f.area) + '</span>' : '<span class="inv-muted">-</span>') + '</td>' +
+			'<td>' + (f.hora_esperada
+				? xAsisEsc(f.hora_esperada.slice(0, 5)) + '<span class="inv-sub">tol. ' + (f.tolerancia_min === null ? 10 : f.tolerancia_min) + ' min</span>'
+				: '<span class="inv-muted">-</span>') + '</td>' +
+			'<td>' + xAsisDiaCelda(f, 'entrada', tarde) + '</td>' +
+			'<td>' + xAsisDiaCelda(f, 'salida', false) + '</td>' +
+			'<td class="inv-num">' + (f.horas !== null ? f.horas : '<span class="inv-muted">-</span>') + '</td>' +
+			'<td><span class="' + e.clase + '">' + e.txt + '</span></td>' +
+			'</tr>';
+	});
+
+	$('#tb_asis_dia tbody').html(html ||
+		'<tr><td colspan="7" class="inv-empty">' +
+		(d.filas.length ? 'Nadie coincide con el filtro.' : 'Esta sede todavia no tiene personal. Cargalo en <b>Personal</b>.') +
+		'</td></tr>');
+}
+
+// Esta vista es de consulta: muestra lo que paso, no lo edita. Marcar a mano se
+// hace en el marcador (asistencia/manual.php), que es donde esta el trabajador
+// y donde se pide usuario y clave. Poner ese poder tambien aca duplicaria el
+// camino y dejaria una via sin esa compuerta.
+function xAsisDiaCelda(f, tipo, tarde) {
+	var m = f[tipo];
+	if (!m) { return '<span class="inv-muted">-</span>'; }
+
+	var extra = '';
+	if (tipo === 'entrada' && tarde) { extra = '<span class="inv-sub inv-neg">' + m.tardanza_min + ' min tarde</span>'; }
+	if (m.metodo === 'MANUAL') { extra += '<span class="inv-sub">manual' + (m.motivo ? ': ' + xAsisEsc(m.motivo) : '') + '</span>'; }
+
+	return xAsisEsc(m.hora) + extra;
+}
+
+Polymer({ is: 'x-asistencia-dia' });
+</script>
+</dom-module>

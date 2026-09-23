@@ -1,0 +1,260 @@
+<dom-module id="x-asistencia">
+	<link rel="import" href="./x-asistencia/x-asistencia-personal.html">
+	<link rel="import" href="./x-asistencia/x-asistencia-kioskos.html">
+	<link rel="import" href="./x-asistencia/x-asistencia-gps.html">
+	<link rel="import" href="./x-asistencia/x-asistencia-calendario.html">
+	<link rel="import" href="./x-asistencia/x-asistencia-inicio.html">
+	<link rel="import" href="./x-asistencia/x-asistencia-configuracion.html">
+	<link rel="import" href="./x-asistencia/x-asistencia-ausencias.html">
+	<template>
+
+		<!-- Autorizacion de administrador. Vive aca y no en cada vista porque
+		     la piden todas las operaciones que cambian horarios o calendario. -->
+		<paper-dialog modal id="dlg_asis_auth" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Hace falta un administrador</h3>
+					<p id="asis_auth_que">Este cambio afecta lo que se le paga al personal, asi que tiene que autorizarlo un administrador.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Usuario administrador</span>
+						<input type="text" class="inv-input inv-w100" id="asis_auth_us" autocomplete="off" autocapitalize="none">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">Clave</span>
+						<input type="password" class="inv-input inv-w100" id="asis_auth_cl" autocomplete="off"
+							onkeydown="if(event.key==='Enter'){xAsisAuthOk();}">
+					</div>
+					<p class="inv-nota">Queda registrado quien hizo el cambio y quien lo autorizo.</p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss onclick="xAsisAuthCancelar()"><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisAuthOk()"><i class="fa fa-unlock-alt"></i>Autorizar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- Asistente inicial. Solo la primera vez: despues de terminarlo, la
+		     sede queda marcada y no vuelve a aparecer. -->
+		<div class="asis-guia" id="asis_guia" hidden>
+			<div class="asis-guia-pasos" id="asis_guia_pasos"></div>
+			<div class="asis-guia-acciones">
+				<button class="btn btn-sm btn-light" onclick="xAsisGuiaSaltar()">Configurar despues</button>
+				<button class="btn btn-sm btn-success" onclick="xAsisGuiaSiguiente()">
+					<span id="asis_guia_btn">Continuar</span><i class="fa fa-arrow-right"></i>
+				</button>
+			</div>
+		</div>
+
+		<div class="inv-vista" id="asis_vista_inicio"><x-asistencia-inicio></x-asistencia-inicio></div>
+		<div class="inv-vista" id="asis_vista_configuracion"><x-asistencia-configuracion></x-asistencia-configuracion></div>
+		<div class="inv-vista" id="asis_vista_ausencias"><x-asistencia-ausencias></x-asistencia-ausencias></div>
+		<div class="inv-vista activa" id="asis_vista_personal"><x-asistencia-personal></x-asistencia-personal></div>
+		<div class="inv-vista" id="asis_vista_kioskos"><x-asistencia-kioskos></x-asistencia-kioskos></div>
+		<div class="inv-vista" id="asis_vista_gps"><x-asistencia-gps></x-asistencia-gps></div>
+		<div class="inv-vista" id="asis_vista_calendario"><x-asistencia-calendario></x-asistencia-calendario></div>
+	</template>
+<script>
+// Control de Asistencia. Reusa el CSS del modulo Inventario (.inv-*) tal cual: es la
+// plantilla canonica de micss.css y duplicarla solo traeria dos estilos que se desfasan.
+// Lo unico propio es el bloque .asis-* del horario semanal.
+//
+// A diferencia del resto de modulos, el backend de aqui NO toca la BD: bdphp/log_asistencia.php
+// es un proxy firmado hacia la API central de RRHH (30 de 45 sedes corren servidor local y no
+// tienen acceso al MySQL de rrhh). Por eso los errores de red son un caso normal, no una rareza.
+
+function xAsisAviso(texto, icono, titulo) {
+	showAlertSwalOk(icono || 'warning', titulo || '', texto, 'Entendido', 1);
+}
+// No bloqueante: lo que dependa de la respuesta va dentro del .then().
+function xAsisConfirmar(texto, titulo, textoBoton) {
+	return showAlertSwalHtmlDecision({
+		title: titulo || 'Confirmar',
+		html: texto,
+		icon: 'question',
+		showCancelButton: true,
+		confirmButtonText: textoBoton || 'Si, continuar',
+		cancelButtonText: 'Cancelar'
+	}, 1).then(function (r) { return !!(r && r.isConfirmed); });
+}
+// Siempre resuelve con {success, datos, error}; si success=false ya mostro el error.
+//
+// silencioso = no avisar nada al usuario. Lo usa el sondeo del QR: corre cada 3
+// segundos, y si se cae la red mostraria una alerta encima de otra sin parar.
+// El sondeo simplemente reintenta en el siguiente ciclo.
+// Cuando el backend responde REQUIERE_AUTORIZACION, la llamada queda esperando
+// aqui: se pide la clave de un administrador y se reintenta UNA vez con esos
+// datos. Asi ninguna vista tiene que acordarse de manejar el caso.
+var xAsisAuthPend = null;
+
+function xAsisAuthCancelar() {
+	if (xAsisAuthPend) { xAsisAuthPend.resolve({ success: false, datos: null, error: 'cancelado' }); xAsisAuthPend = null; }
+}
+function xAsisAuthOk() {
+	var u = ($('#asis_auth_us').val() || '').trim();
+	var c = $('#asis_auth_cl').val() || '';
+	if (!u || !c) { xAsisAviso('Escribe usuario y clave de un administrador.', 'warning'); return; }
+
+	var p = xAsisAuthPend; xAsisAuthPend = null;
+	dlg_asis_auth.close();
+	if (!p) { return; }
+
+	// El reintento lleva las credenciales; el backend valida que sea admin
+	var cuerpo = $.extend({}, p.body, { auth_usuario: u, auth_clave: c });
+	xAsisApi(p.op, cuerpo, p.silencioso, true).then(function (r) { p.resolve(r); });
+}
+
+function xAsisApi(op, body, silencioso, yaReintento) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_asistencia.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		// Compuerta de administrador: no es un error que mostrar, es un paso mas
+		if (r && !r.success && r.error === 'REQUIERE_AUTORIZACION' && !yaReintento) {
+			xAsisAuthPend = { op: op, body: body, silencioso: silencioso, resolve: d.resolve };
+			$('#asis_auth_us').val(''); $('#asis_auth_cl').val('');
+			dlg_asis_auth.open();
+			return;
+		}
+		if ((!r || !r.success) && !silencioso) { xAsisAviso((r && r.error) || 'Error de comunicacion con el servidor', 'error'); }
+		d.resolve(r || { success: false, datos: null, error: 'sin respuesta' });
+	})
+	.fail(function (jqXHR) {
+		if (!silencioso) {
+			try { xPopupLoad.xclose(); } catch (e) {}
+			xAsisAviso(jqXHR && jqXHR.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		}
+		d.resolve({ success: false, datos: null, error: 'red' });
+	});
+	return d.promise();
+}
+function xAsisIr(vista, id) {
+	$('.inv-vista').removeClass('activa');
+	$('#asis_vista_' + vista).addClass('activa');
+	// Los refrescos automaticos solo corren mientras su vista se esta viendo
+	xAsisKioVigilar(vista === 'kioskos');
+
+	if (vista === 'personal') { xAsisPersonalCargar(); }
+	if (vista === 'kioskos') { xAsisKioCargar(); }
+	if (vista === 'gps') { xAsisGpsCargar(); }
+	if (vista === 'calendario') { xAsisCalCargar(); }
+	if (vista === 'inicio') { xAsisIniCargar(); }
+	if (vista === 'configuracion') { xAsisCfgCargar(); }
+	if (vista === 'ausencias') { xAsisAusCargar(); }
+}
+// ---------------------------------------------------------------------------
+// Asistente inicial
+// ---------------------------------------------------------------------------
+//
+// El orden importa y no es obvio: si alguien carga el personal antes de decir
+// que dias abre el local, los horarios le quedan mal y despues no entiende por
+// que el marcador rechaza a todo el mundo. El asistente fuerza el orden una
+// sola vez; despues el modulo se navega libre desde el menu.
+
+var XASIS_GUIA = [
+	{ v: 'configuracion', t: 'Dias que atiende' },
+	{ v: 'personal',      t: 'Personal y horarios' },
+	{ v: 'kioskos',       t: 'Marcadores' }
+];
+var xAsisPaso = 0;      // 0 = sin asistente
+
+function xAsisArrancar() {
+	// Silencioso: si la API no responde, se entra igual al modulo en vez de
+	// dejar al usuario mirando un error por una consulta que es solo de guia.
+	xAsisApi('cal-configuracion', {}, true).then(function (r) {
+		if (r && r.success && r.datos && !r.datos.configurado) {
+			xAsisGuiaIr(1);
+			return;
+		}
+		xAsisIr('inicio');
+	});
+}
+
+function xAsisGuiaIr(paso) {
+	xAsisPaso = paso;
+	var html = '';
+	XASIS_GUIA.forEach(function (g, i) {
+		var n = i + 1;
+		var clase = n < paso ? 'hecho' : (n === paso ? 'actual' : '');
+		html += '<span class="asis-guia-paso ' + clase + '">' +
+			'<b>' + (n < paso ? '&#10004;' : n) + '</b>' + g.t + '</span>';
+	});
+	$('#asis_guia_pasos').html(html);
+	$('#asis_guia_btn').text(paso >= XASIS_GUIA.length ? 'Terminar' : 'Continuar');
+	$('#asis_guia').prop('hidden', false);
+	xAsisIr(XASIS_GUIA[paso - 1].v);
+}
+
+function xAsisGuiaSiguiente() {
+	// El paso 1 guarda antes de avanzar: es un formulario, y perderlo al pasar
+	// de pantalla es la forma mas rapida de que nadie complete el asistente.
+	if (xAsisPaso === 1) {
+		xAsisCfgGuardar(function () { xAsisGuiaIr(2); });
+		return;
+	}
+	if (xAsisPaso < XASIS_GUIA.length) { xAsisGuiaIr(xAsisPaso + 1); return; }
+	xAsisGuiaTerminar();
+}
+
+function xAsisGuiaSaltar() {
+	// Saltarlo tambien lo da por hecho: volver a mostrarlo cada vez seria
+	// insistir con algo que ya dijeron que no quieren ahora.
+	xAsisGuiaTerminar();
+}
+
+function xAsisGuiaTerminar() {
+	xAsisApi('cal-configuracion-listo', {}, true).then(function () {
+		xAsisPaso = 0;
+		$('#asis_guia').prop('hidden', true);
+		xAsisIr('inicio');
+	});
+}
+
+function xAsisEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+function xAsisAttr(s) { return xAsisEsc(s).replace(/"/g, '&quot;'); }
+
+// Horario semanal -> texto corto para la tabla. Agrupa dias consecutivos con el mismo
+// tramo ("Lun-Vie 08:00-17:00") en vez de imprimir siete lineas.
+var XASIS_DIAS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+var XASIS_DIAS_TXT = { lun: 'Lun', mar: 'Mar', mie: 'Mie', jue: 'Jue', vie: 'Vie', sab: 'Sab', dom: 'Dom' };
+
+function xAsisHorarioTexto(h) {
+	if (!h || typeof h !== 'object' || !Object.keys(h).length) { return ''; }
+	var partes = [], i = 0;
+	while (i < XASIS_DIAS.length) {
+		var d = XASIS_DIAS[i], t = h[d];
+		if (!t) { i++; continue; }
+		var j = i;
+		// avanza mientras el dia siguiente tenga exactamente el mismo tramo
+		while (j + 1 < XASIS_DIAS.length) {
+			var sig = h[XASIS_DIAS[j + 1]];
+			if (!sig || sig.e !== t.e || sig.s !== t.s) { break; }
+			j++;
+		}
+		var etiqueta = (j > i) ? (XASIS_DIAS_TXT[d] + '-' + XASIS_DIAS_TXT[XASIS_DIAS[j]]) : XASIS_DIAS_TXT[d];
+		partes.push(etiqueta + ' ' + t.e + '-' + t.s);
+		i = j + 1;
+	}
+	return partes.join(' · ');
+}
+// true si algun tramo cruza medianoche (salida <= entrada). Se avisa en la tabla porque
+// cambia como se cuentan las horas y a que dia operativo pertenece la salida.
+function xAsisCruzaMedianoche(h) {
+	if (!h) { return false; }
+	for (var d in h) { if (h[d] && h[d].s <= h[d].e) { return true; } }
+	return false;
+}
+
+Polymer({
+	is: 'x-asistencia',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		// La carga va DENTRO del callback: fuera, se dispara antes de que xm_LogChequea
+		// confirme la sesion y el primer pedido sale 401.
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xAsisArrancar(); });
+		$("#Titulo_page").text("Control de Asistencia");
+	}
+});
+</script>
+</dom-module>

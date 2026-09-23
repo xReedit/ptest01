@@ -204,6 +204,12 @@ async function xVerificarAcc(){
 		if(typeof xper_bd === 'string'){
 			xper_bd=xper_bd.split(',')
 		}
+
+		// Un permiso repetido en acc (ej. "...,D7,D7,") dibujaba el mismo boton
+		// dos veces. Pasa: acc es una cadena que se fue armando a mano durante
+		// anos y nada impide que un codigo entre dos veces. Filtrar aca lo
+		// resuelve para todos los codigos y para siempre, venga de donde venga.
+		xper_bd = xper_bd.filter(function (v, i, a) { return a.indexOf(v) === i; });
 		
 		for (var i = 0; i < xper_bd.length; i++) {
 			xCharFind=xper_bd[i];
@@ -214,6 +220,16 @@ async function xVerificarAcc(){
 				const _codOne = xArray_us_home.filter(x => x.codigo === xCharFind).map( x => x.num_opcion)[0];
 				xOneOptionPage(_codOne);
 				return; 
+			}
+
+			// "Marcadores de Asistencia" (D9) es de uso diario y no sirve de nada
+			// mientras la sede no tenga ni un marcador configurado: llevaria a una
+			// lista vacia. Se crea el primero desde Control de Asistencia (D8),
+			// que por eso NO se esconde: si no, no habria por donde empezar.
+			if (xCharFind === 'D9') {
+				var _asisActiva = false;
+				try { _asisActiva = String(dataSede[0].asistencia_activa) === '1'; } catch (e) {}
+				if (!_asisActiva) { continue; }
 			}
 
 			for (var z = 0; z < xArray_us_home.length; z++) {

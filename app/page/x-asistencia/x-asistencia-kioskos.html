@@ -1,0 +1,204 @@
+<dom-module id="x-asistencia-kioskos">
+	<script src="../../../js/qrious.js"></script>
+	<template>
+
+		<!-- Enlace de vinculacion -->
+		<paper-dialog modal id="dlg_asis_kio" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_kio_titulo">Encender el marcador</h3>
+					<p>Escanea el codigo desde la tablet o PC que va a quedar en ese punto, o copia el enlace y abrelo ahi.</p>
+				</div>
+				<div class="xdlg-body" style="text-align:center">
+					<canvas id="asis_kio_canvas" style="max-width:100%"></canvas>
+					<div class="inv-form-row" style="margin-top:12px">
+						<span class="inv-label">O copia el enlace</span>
+						<input type="text" class="inv-input inv-w100" id="asis_kio_url" readonly onclick="this.select()">
+					</div>
+					<p class="inv-nota">
+						Si no quieres guardar el enlace, no hace falta: desde cualquier equipo se puede entrar al
+						sistema y abrir <b>Marcadores de Asistencia</b> para encender este mismo marcador.
+					</p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss onclick="xAsisKioCargar()"><i class="fa fa-check"></i>Listo</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Marcadores</h3>
+						<p>Cada marcador es un punto donde se ficha: la tablet de la puerta, la PC de cocina, la de caja. Muestra un codigo QR que cambia cada 15 segundos, y eso es lo que prueba que el trabajador esta en el local: una foto del codigo vence antes de que a otro le llegue por WhatsApp.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('inicio')"><i class="fa fa-users"></i>Personal</button>
+						<button class="btn btn-sm btn-success" onclick="xAsisKioCrear()"><i class="fa fa-plus"></i>Nuevo marcador</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_asis_kioskos">
+						<thead><tr>
+							<th>Marcador</th><th>Creado</th><th>Ultima senal</th><th>Estado</th><th>Marca manual</th><th>Acciones</th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+				<p class="inv-nota" id="asis_kio_pie"></p>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+// El estado de un marcador cambia solo (se enciende, se apaga, se queda sin
+// internet) y nadie va a estar recargando la pagina para enterarse. Mientras
+// esta vista se ve, la tabla se refresca sola.
+var xAsisKioTimer = null;
+
+function xAsisKioCargar(silencioso) {
+	if (!silencioso) { xPopupLoad.titulo = 'Cargando marcadores...'; xPopupLoad.xopen(); }
+
+	return xAsisApi('kiosko-listar', null, silencioso).then(function (r) {
+		if (!silencioso) { xPopupLoad.xclose(); }
+		if (!r.success) { return r; }
+
+		var html = '';
+		((r.datos && r.datos.marcadores) || []).forEach(function (k) {
+			html += '<tr>' +
+				'<td>' + xAsisEsc(k.nombre) + '</td>' +
+				'<td>' + xAsisFechaCorta(k.creado_at) + '</td>' +
+				'<td>' + (k.ultimo_visto_at
+					? xAsisFechaCorta(k.ultimo_visto_at) + '<span class="inv-sub">' + xAsisHace(k.minutos_sin_senal) + '</span>'
+					: '<span class="inv-muted">nunca se encendio</span>') + '</td>' +
+				'<td>' + (k.encendido
+					? '<span class="inv-pos"><i class="fa fa-circle"></i> encendido</span>'
+					: '<span class="inv-muted">apagado</span>') + '</td>' +
+				'<td><label class="inv-check"><input type="checkbox"' + (k.permite_manual ? ' checked' : '') +
+					' onchange="xAsisKioManual(' + k.idkiosko + ', this.checked)"> ' +
+					(k.permite_manual ? 'habilitada' : 'no') + '</label></td>' +
+				'<td class="inv-acciones">' +
+					'<span class="inv-link" onclick="xAsisKioEnlace(' + k.idkiosko + ',\'' + xAsisAttr(k.nombre) + '\')"><i class="fa fa-qrcode"></i>Enlace</span>' +
+					'<span class="inv-link inv-link-rojo" onclick="xAsisKioRevocar(' + k.idkiosko + ',\'' + xAsisAttr(k.nombre) + '\')"><i class="fa fa-ban"></i>Revocar</span>' +
+				'</td></tr>';
+		});
+
+		$('#tb_asis_kioskos tbody').html(html ||
+			'<tr><td colspan="6" class="inv-empty">Todavia no hay marcadores. Crea uno con <b><i class="fa fa-plus"></i>Nuevo marcador</b> y encendelo en la tablet de ese punto.</td></tr>');
+		$('#asis_kio_pie').text('Un marcador encendido avisa cada 15 segundos. Esta lista se actualiza sola.');
+
+		// El backend ya actualizo sede.asistencia_activa, pero el menu del home
+		// se dibuja con el snapshot local que se armo al entrar. Sin esto, la
+		// opcion "Marcadores de Asistencia" recien aparecia al reingresar.
+		xm_log_set_sede('asistencia_activa', ((r.datos && r.datos.marcadores) || []).length ? '1' : '0');
+		return r;
+	});
+}
+
+// Arranca/detiene el refresco. Se llama desde xAsisIr al entrar y salir.
+function xAsisKioVigilar(encender) {
+	if (xAsisKioTimer) { clearInterval(xAsisKioTimer); xAsisKioTimer = null; }
+	if (!encender) { return; }
+	// 20 s: mas corto que los 3 minutos que tarda en darse por apagado, y lo
+	// bastante espaciado para no castigar la conexion de la sede.
+	xAsisKioTimer = setInterval(function () { xAsisKioCargar(true); }, 20000);
+}
+
+function xAsisHace(min) {
+	if (min === null || min === undefined) { return ''; }
+	if (min < 1) { return 'hace instantes'; }
+	if (min < 60) { return 'hace ' + min + ' min'; }
+	var h = Math.floor(min / 60);
+	if (h < 24) { return 'hace ' + h + ' h'; }
+	return 'hace ' + Math.floor(h / 24) + ' dia(s)';
+}
+
+// Las fechas llegan como 'YYYY-MM-DD HH:mm:ss' ya en hora de Lima. Se parten
+// como texto a proposito: pasarlas por new Date() las correria segun el huso
+// que tenga puesto la tablet, que no siempre es el correcto.
+function xAsisFechaCorta(txt) {
+	if (!txt) { return '<span class="inv-muted">-</span>'; }
+	var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(txt);
+	if (!m) { return xAsisEsc(txt); }
+	return m[3] + '/' + m[2] + '/' + m[1] + '<span class="inv-sub">' + m[4] + ':' + m[5] + '</span>';
+}
+
+function xAsisKioCrear() {
+	// showAlertSwalHtmlDecision pasa los valores tal cual a SweetAlert, asi que
+	// el input sale gratis sin agregar otro wrapper ni otro dialogo.
+	showAlertSwalHtmlDecision({
+		title: 'Nuevo marcador',
+		html: 'Un nombre para reconocerlo: donde va a estar la pantalla.',
+		input: 'text',
+		inputPlaceholder: 'Ej: Puerta principal, Cocina, Caja',
+		confirmButtonText: 'Crear',
+		cancelButtonText: 'Cancelar',
+		showCancelButton: true
+	}, 1).then(function (res) {
+		if (!res || !res.isConfirmed) { return; }
+		var nombre = (res.value || '').trim();
+		if (!nombre) { xAsisAviso('Ponle un nombre para reconocerlo despues.', 'warning'); return; }
+
+		xPopupLoad.titulo = 'Creando...'; xPopupLoad.xopen();
+		xAsisApi('kiosko-crear', { nombre: nombre }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			// Con el primero, la sede queda activa: que el menu lo refleje ya
+			xm_log_set_sede('asistencia_activa', '1');
+			xAsisKioMostrarEnlace(nombre, r.datos.url);
+		});
+	});
+}
+
+// Pide un enlace nuevo para ese marcador. Rota el token, asi que la pantalla
+// que lo tuviera abierto deja de servir: un marcador, una pantalla.
+function xAsisKioEnlace(id, nombre) {
+	xPopupLoad.titulo = 'Generando enlace...'; xPopupLoad.xopen();
+	xAsisApi('kiosko-activar', { idkiosko: id }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		xAsisKioMostrarEnlace(nombre, r.datos.url);
+	});
+}
+
+function xAsisKioMostrarEnlace(nombre, url) {
+	$('#asis_kio_titulo').text('Encender "' + nombre + '"');
+	$('#asis_kio_url').val(url);
+	new QRious({ element: document.getElementById('asis_kio_canvas'), value: url, size: 240, level: 'M' });
+	dlg_asis_kio.open();
+}
+
+// Habilita el boton "Marcar a mano" en ese marcador. El marcador lo relee en
+// su proximo ciclo (15 s), asi que no hay que tocar la tablet.
+//
+// Habilitarlo NO autoriza a nadie: la pagina de marca manual sigue pidiendo
+// usuario y clave de alguien con permiso de Control de Asistencia.
+function xAsisKioManual(id, permite) {
+	xAsisApi('kiosko-manual', { idkiosko: id, permite_manual: permite ? 1 : 0 }).then(function (r) {
+		if (!r.success) { xAsisKioCargar(); return; }   // revertir el switch
+		showToastSwal('success', permite ? 'Marca manual habilitada' : 'Marca manual desactivada');
+		xAsisKioCargar(true);
+	});
+}
+
+function xAsisKioRevocar(id, nombre) {
+	xAsisConfirmar('Ese marcador dejara de mostrar codigos y nadie podra fichar ahi.',
+		'Revocar "' + nombre + '"?', 'Si, revocar').then(function (ok) {
+		if (!ok) { return; }
+		xPopupLoad.titulo = 'Revocando...'; xPopupLoad.xopen();
+		xAsisApi('kiosko-revocar', { idkiosko: id }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			showToastSwal('success', 'Marcador revocado');
+			xAsisKioCargar();
+		});
+	});
+}
+
+Polymer({ is: 'x-asistencia-kioskos' });
+</script>
+</dom-module>

@@ -488,6 +488,40 @@ function xm_LogIni(responde){
       }
 	})
 }
+/**
+ * Cambia un campo de datos_org_sede dentro del snapshot local, sin reingresar.
+ *
+ * El snapshot ::app3_woDUS se arma UNA vez al entrar, y el menu del home se
+ * dibuja a partir de el. Sin esto, un cambio en la sede (por ejemplo activar el
+ * control de asistencia) recien se ve cuando el usuario cierra sesion y vuelve
+ * a entrar, que es exactamente lo que nadie hace.
+ *
+ * Devuelve true si pudo escribir. Nunca lanza: si el snapshot no esta o tiene
+ * otra forma, se ignora y el valor se corrige solo en el proximo ingreso.
+ */
+function xm_log_set_sede(campo, valor) {
+  try {
+    var raw = window.localStorage.getItem("::app3_woDUS");
+    if (!raw) { return false; }
+
+    var d = JSON.parse(window.atob(raw));
+    if (!d || !d.sede || !d.sede.datos_org_sede || !d.sede.datos_org_sede[0]) { return false; }
+    if (String(d.sede.datos_org_sede[0][campo]) === String(valor)) { return true; }
+
+    d.sede.datos_org_sede[0][campo] = valor;
+
+    // btoa solo acepta Latin1 y el snapshot trae tildes (nombres de sede, etc).
+    // Se escapan igual que lo hace json_encode de PHP, que fue quien lo genero.
+    var txt = JSON.stringify(d).replace(/[-￿]/g, function (c) {
+      return '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4);
+    });
+    window.localStorage.setItem("::app3_woDUS", window.btoa(txt));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function xm_LogChequea(responde){
   var callback = typeof responde === 'function' ? responde : function () { };
   var xdt_log=window.localStorage.getItem("::app3_woDUS");

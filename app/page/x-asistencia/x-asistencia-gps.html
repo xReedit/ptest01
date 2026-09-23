@@ -1,0 +1,276 @@
+<dom-module id="x-asistencia-gps">
+	<template>
+
+		<!-- Apagar la exigencia pide un administrador -->
+		<paper-dialog modal id="dlg_asis_gps_off" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Desactivar la verificacion por GPS</h3>
+					<p>Si la apagas, cualquiera podra marcar desde donde sea con solo tener el codigo. Por eso hace falta un administrador.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Usuario administrador</span>
+						<input type="text" class="inv-input inv-w100" id="asis_gps_us" autocomplete="off" autocapitalize="none">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">Clave</span>
+						<input type="password" class="inv-input inv-w100" id="asis_gps_cl" autocomplete="off">
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss onclick="xAsisGpsCargar()"><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-danger" onclick="xAsisGpsDesactivar()"><i class="fa fa-unlock"></i>Desactivar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Ubicacion del local</h3>
+						<p>Marca donde queda tu local. Sirve para exigir que el personal este realmente aqui al fichar, y tambien lo usa Tracker Delivery para calcular los repartos.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('inicio')"><i class="fa fa-arrow-left"></i>Volver</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+
+				<!-- PASO 1 -->
+				<div class="gps-paso">
+					<div class="gps-num">1</div>
+					<div class="gps-cuerpo">
+						<h4>Donde esta tu local</h4>
+						<p class="gps-ayuda">Arrastra el pin hasta la puerta de tu local, o toca el mapa en el sitio correcto.</p>
+
+						<div class="gps-acciones">
+							<button class="btn btn-sm btn-light" onclick="xAsisGpsAqui()"><i class="fa fa-crosshairs"></i>Estoy en el local ahora</button>
+							<span class="gps-coords" id="asis_gps_coords"></span>
+						</div>
+
+						<div class="gps-mapa" id="asis_gps_mapa"></div>
+					</div>
+				</div>
+
+				<!-- PASO 2 -->
+				<div class="gps-paso">
+					<div class="gps-num">2</div>
+					<div class="gps-cuerpo">
+						<h4>Cuanto se puede alejar</h4>
+						<p class="gps-ayuda">El circulo azul del mapa muestra la zona permitida. Si tu local es grande o tiene patio, subelo.</p>
+						<div class="gps-acciones">
+							<select class="inv-select" id="asis_gps_radio" onchange="xAsisGpsRadioCambio()">
+								<option value="50">50 metros · local chico</option>
+								<option value="100">100 metros</option>
+								<option value="150">150 metros · lo normal</option>
+								<option value="300">300 metros · local grande o con patio</option>
+								<option value="500">500 metros</option>
+								<option value="1000">1 kilometro · muy permisivo</option>
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<!-- PASO 3 -->
+				<div class="gps-paso">
+					<div class="gps-num">3</div>
+					<div class="gps-cuerpo">
+						<h4>Exigir estar en el local para fichar</h4>
+						<p class="gps-ayuda">
+							Con esto encendido, el celular pide permiso de ubicacion al marcar y solo acepta si esta dentro del circulo.
+							Es lo que evita que alguien mande una foto del codigo QR por WhatsApp a un companero que todavia va en camino.
+						</p>
+						<label class="gps-switch">
+							<input type="checkbox" id="asis_gps_chk" onchange="xAsisGpsSwitch(this)">
+							<span id="asis_gps_txt">Desactivado</span>
+						</label>
+						<p class="inv-nota" id="asis_gps_aviso"></p>
+					</div>
+				</div>
+
+				<div class="gps-guardar">
+					<button class="btn btn-sm btn-success" id="asis_gps_btn" onclick="xAsisGpsGuardar()" disabled>
+						<i class="fa fa-check"></i>Guardar cambios
+					</button>
+					<span class="inv-muted" id="asis_gps_estado"></span>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xAsisGps = null;         // lo guardado en el servidor
+var xAsisGpsMapa = null, xAsisGpsPin = null, xAsisGpsCirculo = null;
+var xAsisGpsPunto = null;    // lo que hay ahora en el mapa (puede no estar guardado)
+var xAsisGpsSucio = false;
+
+function xAsisGpsCargar() {
+	xPopupLoad.titulo = 'Cargando ubicacion...'; xPopupLoad.xopen();
+	xAsisApi('gps-estado').then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		xAsisGps = r.datos;
+		// Si Tracker ya tenia el local ubicado, se ofrece ese punto en vez de
+		// hacer que el usuario lo marque otra vez.
+		var lat = xAsisGps.lat !== null ? xAsisGps.lat : (xAsisGps.sugerido_lat || null);
+		var lng = xAsisGps.lng !== null ? xAsisGps.lng : (xAsisGps.sugerido_lng || null);
+		xAsisGpsPunto = (lat !== null && lng !== null) ? { lat: lat, lng: lng } : null;
+
+		$('#asis_gps_radio').val(String(xAsisGps.radio_m || 150));
+		$('#asis_gps_chk').prop('checked', !!xAsisGps.activo);
+		xAsisGpsPintarSwitch(!!xAsisGps.activo);
+		xAsisGpsSucio = (xAsisGps.lat === null && xAsisGpsPunto !== null);   // el sugerido hay que guardarlo
+		xAsisGpsBoton();
+
+		// Leaflet mide el contenedor al crearlo: dentro de una vista oculta mide
+		// 0 y el mapa sale gris. Se crea cuando la vista ya es visible.
+		setTimeout(xAsisGpsMapaDibujar, 250);
+	});
+}
+
+function xAsisGpsMapaDibujar() {
+	var centro = xAsisGpsPunto ? [xAsisGpsPunto.lat, xAsisGpsPunto.lng] : [-6.0331, -76.9747];
+
+	if (!xAsisGpsMapa) {
+		xAsisGpsMapa = L.map('asis_gps_mapa', { attributionControl: false }).setView(centro, xAsisGpsPunto ? 17 : 13);
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(xAsisGpsMapa);
+
+		xAsisGpsPin = L.marker(centro, {
+			draggable: true,
+			icon: L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+				html: '<div class="gps-pin"><i class="fa fa-home"></i></div>' })
+		}).addTo(xAsisGpsMapa);
+
+		xAsisGpsCirculo = L.circle(centro, {
+			radius: parseInt($('#asis_gps_radio').val()) || 150,
+			color: '#0d6efd', weight: 2, fillColor: '#0d6efd', fillOpacity: 0.12
+		}).addTo(xAsisGpsMapa);
+
+		xAsisGpsPin.on('dragend', function () { xAsisGpsMover(xAsisGpsPin.getLatLng()); });
+		xAsisGpsMapa.on('click', function (e) { xAsisGpsPin.setLatLng(e.latlng); xAsisGpsMover(e.latlng); });
+	} else {
+		xAsisGpsMapa.setView(centro, 17);
+		xAsisGpsPin.setLatLng(centro);
+		xAsisGpsCirculo.setLatLng(centro);
+	}
+
+	xAsisGpsMapa.invalidateSize();
+	xAsisGpsCoords();
+}
+
+function xAsisGpsMover(latlng) {
+	xAsisGpsPunto = { lat: latlng.lat, lng: latlng.lng };
+	xAsisGpsCirculo.setLatLng(latlng);
+	xAsisGpsSucio = true;
+	xAsisGpsCoords();
+	xAsisGpsBoton();
+}
+
+function xAsisGpsCoords() {
+	$('#asis_gps_coords').text(xAsisGpsPunto
+		? xAsisGpsPunto.lat.toFixed(6) + ', ' + xAsisGpsPunto.lng.toFixed(6)
+		: 'Todavia sin ubicar');
+}
+
+function xAsisGpsRadioCambio() {
+	if (xAsisGpsCirculo) { xAsisGpsCirculo.setRadius(parseInt($('#asis_gps_radio').val()) || 150); }
+	xAsisGpsSucio = true;
+	xAsisGpsBoton();
+}
+
+// Atajo para el caso comun: el administrador esta parado en el local.
+function xAsisGpsAqui() {
+	if (!navigator.geolocation) { xAsisAviso('Este navegador no puede dar tu ubicacion. Marca el punto en el mapa.', 'warning'); return; }
+
+	xPopupLoad.titulo = 'Buscando tu ubicacion...'; xPopupLoad.xopen();
+	navigator.geolocation.getCurrentPosition(function (pos) {
+		xPopupLoad.xclose();
+		var p = L.latLng(pos.coords.latitude, pos.coords.longitude);
+		if (xAsisGpsPin) { xAsisGpsPin.setLatLng(p); }
+		if (xAsisGpsMapa) { xAsisGpsMapa.setView(p, 18); }
+		xAsisGpsMover(p);
+		showToastSwal('success', 'Punto colocado donde estas. Revisalo y guarda.');
+	}, function (err) {
+		xPopupLoad.xclose();
+		xAsisAviso(err && err.code === 1
+			? 'No diste permiso para usar tu ubicacion. Puedes marcar el punto a mano en el mapa.'
+			: 'No se pudo obtener tu ubicacion. Marca el punto a mano en el mapa.', 'warning');
+	}, { enableHighAccuracy: true, timeout: 12000 });
+}
+
+function xAsisGpsPintarSwitch(activo) {
+	$('#asis_gps_txt').text(activo ? 'Activado · se exige estar en el local' : 'Desactivado');
+	$('#asis_gps_aviso').html(activo
+		? 'Quien no tenga GPS o no de permiso <b>no podra fichar</b>. Para esos casos usa la marca a mano del marcador.'
+		: 'Cualquiera con el codigo QR puede fichar desde donde sea.');
+}
+
+// Encender es libre; apagar pide administrador. Encender protege, apagar
+// desprotege: no son la misma accion aunque sea el mismo checkbox.
+function xAsisGpsSwitch(chk) {
+	if (chk.checked) {
+		if (!xAsisGpsPunto) {
+			chk.checked = false;
+			xAsisAviso('Primero marca en el mapa donde esta tu local (paso 1).', 'warning');
+			return;
+		}
+		xAsisGpsPintarSwitch(true);
+		xAsisGpsSucio = true;
+		xAsisGpsBoton();
+		return;
+	}
+
+	// Se vuelve a marcar mientras tanto: el cambio no es real hasta que un
+	// administrador lo confirme.
+	chk.checked = true;
+	$('#asis_gps_us').val('');
+	$('#asis_gps_cl').val('');
+	dlg_asis_gps_off.open();
+}
+
+function xAsisGpsDesactivar() {
+	var u = ($('#asis_gps_us').val() || '').trim();
+	var c = $('#asis_gps_cl').val() || '';
+	if (!u || !c) { xAsisAviso('Escribe usuario y clave de un administrador.', 'warning'); return; }
+
+	xPopupLoad.titulo = 'Verificando...'; xPopupLoad.xopen();
+	xAsisApi('gps-desactivar', { usuario: u, clave: c }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		dlg_asis_gps_off.close();
+		showToastSwal('success', 'Verificacion por GPS desactivada');
+		xAsisGpsCargar();
+	});
+}
+
+function xAsisGpsBoton() {
+	$('#asis_gps_btn').prop('disabled', !xAsisGpsSucio);
+	$('#asis_gps_estado').text(xAsisGpsSucio ? 'Hay cambios sin guardar' : 'Todo guardado');
+}
+
+function xAsisGpsGuardar() {
+	if (!xAsisGpsPunto) { xAsisAviso('Marca en el mapa donde esta tu local.', 'warning'); return; }
+
+	xPopupLoad.titulo = 'Guardando...'; xPopupLoad.xopen();
+	xAsisApi('gps-guardar', {
+		activo: $('#asis_gps_chk').is(':checked') ? 1 : 0,
+		lat: xAsisGpsPunto.lat,
+		lng: xAsisGpsPunto.lng,
+		radio_m: parseInt($('#asis_gps_radio').val()) || 150
+	}).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		xAsisGpsSucio = false;
+		xAsisGpsBoton();
+		showToastSwal('success', 'Ubicacion guardada');
+	});
+}
+
+Polymer({ is: 'x-asistencia-gps' });
+</script>
+</dom-module>

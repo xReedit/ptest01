@@ -1,0 +1,198 @@
+<dom-module id="x-asistencia-ausencias">
+	<template>
+
+		<!-- Resolver una ausencia: o esta justificada, o ya no trabaja aqui -->
+		<paper-dialog modal id="dlg_asis_aus" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_aus_titulo">Ausencia</h3>
+					<p id="asis_aus_sub"></p>
+				</div>
+				<div class="xdlg-body">
+
+					<label class="inv-check"><input type="radio" name="aus_que" value="JUSTIFICADA" onchange="xAsisAusQue()"> Esta de vacaciones o con permiso</label>
+					<label class="inv-check"><input type="radio" name="aus_que" value="BAJA" onchange="xAsisAusQue()"> Ya no trabaja aca</label>
+					<label class="inv-check"><input type="radio" name="aus_que" value="FALTO" onchange="xAsisAusQue()"> Falto nomas: dejarlo como esta</label>
+
+					<!-- Justificada -->
+					<div id="asis_aus_just" hidden style="margin-top:12px">
+						<div class="inv-form-row">
+							<span class="inv-label">Motivo</span>
+							<select class="inv-input inv-w100" id="asis_aus_cat" onchange="xAsisAusCat()">
+								<option value="VACACIONES">Vacaciones</option>
+								<option value="DESCANSO_MEDICO">Descanso medico</option>
+								<option value="LICENCIA">Licencia con goce</option>
+								<option value="PERMISO_SIN_GOCE">Permiso sin goce de haber</option>
+							</select>
+						</div>
+						<div class="inv-form-row">
+							<span class="inv-label">Desde</span>
+							<input type="date" class="inv-input" id="asis_aus_desde">
+							<span class="inv-label">Hasta</span>
+							<input type="date" class="inv-input" id="asis_aus_hasta">
+						</div>
+						<p class="inv-nota" id="asis_aus_nota"></p>
+					</div>
+
+					<!-- Baja -->
+					<div id="asis_aus_baja" hidden style="margin-top:12px">
+						<div class="inv-form-row">
+							<span class="inv-label">Ultimo dia</span>
+							<input type="date" class="inv-input" id="asis_aus_fbaja">
+						</div>
+						<div class="inv-form-row">
+							<span class="inv-label">Motivo</span>
+							<input type="text" class="inv-input inv-w100" id="asis_aus_mbaja" maxlength="150"
+								placeholder="Renuncia, fin de contrato, despido...">
+						</div>
+						<p class="inv-nota">
+							No se borra nada: sus marcas y boletas quedan guardadas (la ley pide conservarlas 5 anos).
+							Deja de aparecer en el dia y en la planilla, y su celular se desactiva.
+						</p>
+					</div>
+
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisAusGuardar()"><i class="fa fa-check"></i>Guardar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Quien no esta marcando</h3>
+						<p>
+							Si alguien lleva varios dias sin marcar, hay que decir por que antes de cerrar la planilla:
+							unas vacaciones se pagan, una falta se descuenta, y el que ya no trabaja no deberia seguir apareciendo.
+						</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('inicio')"><i class="fa fa-arrow-left"></i>Volver</button>
+						<button class="btn btn-sm btn-light" onclick="xAsisAusCargar()"><i class="fa fa-refresh"></i>Actualizar</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div id="asis_aus_lista"></div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xAsisAusSel = null;
+
+function xAsisAusCargar() {
+	xPopupLoad.titulo = 'Buscando ausencias...'; xPopupLoad.xopen();
+	xAsisApi('ausencias-alertas').then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		var a = r.datos.alertas;
+		if (!a.length) {
+			$('#asis_aus_lista').html(
+				'<p class="inv-empty"><i class="fa fa-check-circle"></i> ' +
+				'Todo el personal esta marcando con normalidad.</p>');
+			return;
+		}
+
+		var html = '';
+		a.forEach(function (x) {
+			html += '<div class="aus-fila">' +
+				'<div class="aus-quien">' +
+					'<b>' + xAsisEsc(x.nombres) + '</b>' +
+					'<span>' + xAsisEsc(x.dni || '') + '</span>' +
+				'</div>' +
+				'<div class="aus-dato">' +
+					'<b>' + x.dias + '</b><span>dia(s) sin marcar</span>' +
+				'</div>' +
+				'<div class="aus-dato">' +
+					'<b>' + xAsisEsc(x.ultima_marca || 'nunca') + '</b><span>ultima marca</span>' +
+				'</div>' +
+				'<button class="btn btn-sm btn-primary" onclick="xAsisAusAbrir(' + x.idcolaborador + ')">Resolver</button>' +
+				'</div>';
+		});
+		$('#asis_aus_lista').html(html);
+		xAsisAusDatos = a;
+	});
+}
+
+var xAsisAusDatos = [];
+
+function xAsisAusAbrir(id) {
+	var a = xAsisAusDatos.filter(function (x) { return x.idcolaborador === id; })[0];
+	if (!a) { return; }
+	xAsisAusSel = a;
+
+	$('#asis_aus_titulo').text(a.nombres);
+	$('#asis_aus_sub').text('Lleva ' + a.dias + ' dia(s) sin marcar, desde el ' + a.desde + '.');
+
+	$('input[name=aus_que]').prop('checked', false);
+	// Se propone el rango que el sistema ya detecto: es lo que casi siempre es,
+	// y escribir dos fechas a mano cada vez invita a dejarlo para despues.
+	$('#asis_aus_desde').val(a.desde);
+	$('#asis_aus_hasta').val(a.hasta);
+	$('#asis_aus_fbaja').val(a.desde);
+	$('#asis_aus_mbaja').val('');
+	$('#asis_aus_cat').val('VACACIONES');
+	xAsisAusQue();
+	xAsisAusCat();
+
+	dlg_asis_aus.open();
+}
+
+function xAsisAusQue() {
+	var v = $('input[name=aus_que]:checked').val();
+	$('#asis_aus_just').prop('hidden', v !== 'JUSTIFICADA');
+	$('#asis_aus_baja').prop('hidden', v !== 'BAJA');
+}
+
+function xAsisAusCat() {
+	// Lo que importa es si se paga o no: es lo unico que cambia la boleta.
+	var v = $('#asis_aus_cat').val();
+	$('#asis_aus_nota').text(v === 'PERMISO_SIN_GOCE'
+		? 'Estos dias NO se pagan: se descuentan igual que una falta.'
+		: 'Estos dias se pagan normal: no se le descuenta nada por ellos.');
+}
+
+function xAsisAusGuardar() {
+	var v = $('input[name=aus_que]:checked').val();
+	if (!v) { xAsisAviso('Elige que paso con esta persona.', 'warning'); return; }
+
+	if (v === 'FALTO') { dlg_asis_aus.close(); return; }
+
+	var op, cuerpo;
+	if (v === 'JUSTIFICADA') {
+		var desde = $('#asis_aus_desde').val(), hasta = $('#asis_aus_hasta').val();
+		if (!desde || !hasta) { xAsisAviso('Pon desde y hasta que dia.', 'warning'); return; }
+		op = 'ausencias-registrar';
+		cuerpo = {
+			idcolaborador: xAsisAusSel.idcolaborador,
+			desde: desde, hasta: hasta, categoria: $('#asis_aus_cat').val()
+		};
+	} else {
+		var mot = ($('#asis_aus_mbaja').val() || '').trim();
+		if (!mot) { xAsisAviso('Escribe por que deja de trabajar.', 'warning'); return; }
+		op = 'ausencias-baja';
+		cuerpo = {
+			idcolaborador: xAsisAusSel.idcolaborador,
+			fecha: $('#asis_aus_fbaja').val(), motivo: mot
+		};
+	}
+
+	xPopupLoad.titulo = 'Guardando...'; xPopupLoad.xopen();
+	xAsisApi(op, cuerpo).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		dlg_asis_aus.close();
+		showToastSwal('success', v === 'BAJA' ? 'Dado de baja' : 'Ausencia registrada');
+		xAsisAusCargar();
+	});
+}
+
+Polymer({ is: 'x-asistencia-ausencias' });
+</script>
+</dom-module>

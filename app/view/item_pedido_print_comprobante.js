@@ -739,6 +739,27 @@ function xImprimirCualquierLista(dataToPrinter, idestructura = 5, nomfile = 'lis
 	// }
 }
 
+// "Imprimir Precuentas y comprobantes en formato corto" (isprint_cpe_short): el ticket sale todo junto,
+// sin titulos de seccion. Los servidores de impresion ponen el titulo cuando el item trae "seccion",
+// asi que se manda vacia (copia: el arreglo original sigue sirviendo a SUNAT y demas).
+// La comanda de cocina no se afecta: usa "des_seccion".
+function xItemsSinTituloSeccion(arrayItem) {
+	let _corto = false;
+	try { _corto = xm_log_get('sede_generales')[0].isprint_cpe_short == '1'; } catch (e) { return arrayItem; }
+	if (!_corto || !arrayItem || typeof arrayItem !== 'object') { return arrayItem; }
+
+	const _sinSeccion = grupo => {
+		if (!grupo || typeof grupo !== 'object') { return grupo; }
+		const _copia = Array.isArray(grupo) ? [] : {};
+		Object.keys(grupo).forEach(k => {
+			const it = grupo[k];
+			_copia[k] = it && typeof it === 'object' && 'seccion' in it ? Object.assign({}, it, { seccion: '' }) : it;
+		});
+		return _copia;
+	};
+	return Array.isArray(arrayItem) ? arrayItem.map(_sinSeccion) : Object.keys(arrayItem).reduce((o, k) => { o[k] = _sinSeccion(arrayItem[k]); return o; }, {});
+}
+
 /// enviar a print server
 function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	// _data = JSON.stringify(JSON.stringify(_data)); si no es prueba
@@ -761,6 +782,7 @@ function xSendDataPrintServer(_data, _idprint_server_estructura, _tipo){
 	}
 	
 	const _idpedido = _data.idpedido;
+	if (_tipo === 'comprobante' || _tipo === 'pre cuenta') { _data.ArrayItem = xItemsSinTituloSeccion(_data.ArrayItem); }
 	_data = JSON.stringify(_data);	
 	_tipo = _tipo === 'pre cuenta' ? 'comanda' : _tipo;
 

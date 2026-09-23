@@ -1,0 +1,746 @@
+<dom-module id="x-asistencia-personal">
+	<!-- QRious ya viene con el sistema (lo usan carta virtual, encuestas y tracker): cero dependencias nuevas -->
+	<script src="../../../js/qrious.js"></script>
+	<template>
+
+		<!-- Importar el padron desde el POS -->
+		<paper-dialog modal id="dlg_asis_importar" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Importar personal del POS</h3>
+					<p>Estos son los usuarios activos de esta sede. Destilda a quien no marque asistencia. Re-importar no duplica a nadie.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-toolbar" style="margin-bottom:10px">
+						<label class="inv-check"><input type="checkbox" id="asis_chk_todos" onclick="xAsisImpTildarTodos(this.checked)"> Seleccionar todos</label>
+						<span class="inv-sep"></span>
+						<p class="inv-ayuda" id="asis_imp_resumen"></p>
+					</div>
+					<div class="inv-table-wrap" style="max-height:46vh">
+						<table class="inv-table" id="tb_asis_importar">
+							<thead><tr><th style="width:34px"></th><th>Usuario del POS</th><th>Cargo</th><th>Estado</th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisImpConfirmar()"><i class="fa fa-download"></i>Importar seleccionados</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- Alta manual -->
+		<paper-dialog modal id="dlg_asis_nuevo" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Nuevo colaborador</h3>
+					<p>Para quien trabaja en la sede pero no tiene usuario en el POS. Los demas datos se completan despues en Recursos Humanos.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Nombres y apellidos</span>
+						<input type="text" class="inv-input inv-w100" id="asis_txt_nombres" placeholder="Ej: MARIA LOPEZ TORRES" maxlength="200">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">DNI (opcional)</span>
+						<input type="text" class="inv-input inv-w100" id="asis_txt_dni" placeholder="8 digitos" maxlength="20">
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisCrear()"><i class="fa fa-check"></i>Crear</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- Horario semanal -->
+		<paper-dialog modal id="dlg_asis_horario" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_hor_titulo">Horario</h3>
+					<p>Destilda los dias que no trabaja. Si la salida es menor que la entrada, el turno cruza medianoche (ej. 18:00 a 02:00) y se cuenta en el mismo dia.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="asis-horario" id="asis_horario_grid"></div>
+					<div class="inv-form-row" style="margin-top:12px">
+						<span class="inv-label">Tolerancia de tardanza (minutos)</span>
+						<input type="number" class="inv-input" id="asis_num_tolerancia" min="0" max="240" step="1" value="10" style="width:120px">
+						<span class="inv-muted" style="margin-left:8px">Llegar dentro de este margen no cuenta como tardanza.</span>
+					</div>
+					<p class="inv-nota" id="asis_hor_nota"></p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisHorarioGuardar()"><i class="fa fa-check"></i>Guardar horario</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- Horario para un grupo entero -->
+		<paper-dialog modal id="dlg_asis_masivo" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Horario para varios</h3>
+					<p>El mismo horario para todo un grupo de una sola vez. Pisa el horario que cada uno tenga ahora.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Aplicar a</span>
+						<select class="inv-select inv-w100" id="asis_mas_alcance" onchange="xAsisMasAlcance()"></select>
+					</div>
+					<div class="asis-horario" id="asis_mas_grid"></div>
+					<div class="inv-form-row" style="margin-top:12px">
+						<span class="inv-label">Tolerancia de tardanza (minutos)</span>
+						<input type="number" class="inv-input" id="asis_mas_tolerancia" min="0" max="240" step="1" value="10" style="width:120px">
+					</div>
+					<p class="inv-nota" id="asis_mas_nota"></p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisMasGuardar()"><i class="fa fa-check"></i>Aplicar a todos</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- Area para uno o varios -->
+		<paper-dialog modal id="dlg_asis_area" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_area_titulo">Area de trabajo</h3>
+					<p>Agrupar por area es lo que permite despues poner el horario de toda la cocina de una sola vez.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Area</span>
+						<select class="inv-select inv-w100" id="asis_area_sel"></select>
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">O crea una nueva</span>
+						<input type="text" class="inv-input inv-w100" id="asis_area_nueva" placeholder="Ej: COCINA, BARRA, DELIVERY" maxlength="50">
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xAsisAreaGuardar()"><i class="fa fa-check"></i>Asignar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- QR para enrolar el celular del trabajador -->
+		<paper-dialog modal id="dlg_asis_qr" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="asis_qr_titulo">Activar celular</h3>
+					<p>Que el trabajador escanee este codigo con la camara de su celular, aqui mismo, delante tuyo.</p>
+				</div>
+				<div class="xdlg-body" style="text-align:center">
+					<canvas id="asis_qr_canvas" style="max-width:100%"></canvas>
+					<p class="inv-nota" id="asis_qr_estado"></p>
+					<p class="inv-nota" id="asis_qr_vence"></p>
+					<div class="inv-form-row" style="margin-top:10px">
+						<span class="inv-label">Si la camara no lee, copia el enlace</span>
+						<input type="text" class="inv-input inv-w100" id="asis_qr_url" readonly onclick="this.select()">
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<!-- el dialogo es modal: este boton es la UNICA salida, asi que aqui se corta el sondeo -->
+					<button class="btn btn-sm btn-light" dialog-dismiss onclick="xAsisQrDejarDeVigilar()"><i class="fa fa-times"></i>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Personal y horarios</h3>
+						<p>El padron vive en Recursos Humanos. Aqui defines quien marca asistencia en esta sede y en que horario, para poder calcular tardanzas y faltas.</p>
+					</div>
+					<!-- Solo lo que se hace DESDE esta pantalla. Navegar al resto
+					     del modulo se hace desde el menu: siete botones en una
+					     fila no se leian y ninguno destacaba. -->
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xAsisIr('inicio')"><i class="fa fa-arrow-left"></i>Volver</button>
+						<button class="btn btn-sm btn-light" onclick="xAsisImpAbrir()"><i class="fa fa-download"></i>Importar del POS</button>
+						<button class="btn btn-sm btn-primary" onclick="xAsisMasAbrir()"><i class="fa fa-clock-o"></i>Horario para varios</button>
+						<button class="btn btn-sm btn-success" onclick="xAsisNuevoAbrir()"><i class="fa fa-plus"></i>Nuevo colaborador</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-kpis" id="asis_kpis"></div>
+				<div class="inv-toolbar">
+					<div class="inv-field">
+						<span class="inv-label">Buscar</span>
+						<input type="text" class="inv-input" id="asis_filtro_txt" placeholder="Nombre o DNI" oninput="xAsisPersonalPintar()" style="width:240px">
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Area</span>
+						<select class="inv-select" id="asis_filtro_area" onchange="xAsisPersonalPintar()">
+							<option value="">Todas</option>
+						</select>
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Horario</span>
+						<select class="inv-select" id="asis_filtro_horario" onchange="xAsisPersonalPintar()">
+							<option value="">Todos</option>
+							<option value="con">Con horario</option>
+							<option value="sin">Sin horario</option>
+						</select>
+					</div>
+					<span class="inv-sep"></span>
+					<p class="inv-ayuda" id="asis_personal_resumen"></p>
+					<button class="btn btn-sm btn-light" id="asis_btn_sel_area" onclick="xAsisAreaAbrir(0)" hidden><i class="fa fa-sitemap"></i>Area de los <span></span></button>
+				</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_asis_personal">
+						<thead><tr>
+							<th style="width:34px"><input type="checkbox" id="asis_chk_all" onclick="xAsisTildarTodos(this.checked)"></th>
+							<th>Colaborador</th><th>Area</th><th>DNI</th><th>Origen</th>
+							<th>Horario semanal</th><th class="inv-num">Tolerancia</th><th>Celular</th><th>Acciones</th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+var xAsisPersonal = [];   // ultimo padron traido del servidor
+var xAsisImpFilas = [];   // filas del dialogo de importacion
+
+// --------------------------------------------------------------------------
+// Padron
+// --------------------------------------------------------------------------
+
+// silencioso = sin el popup de carga. Lo usa el sondeo del QR, que corre cada
+// pocos segundos y no debe parpadear encima de la pantalla del administrador.
+function xAsisPersonalCargar(silencioso) {
+	if (!silencioso) { xPopupLoad.titulo = 'Cargando personal...'; xPopupLoad.xopen(); }
+	// Las areas van en el mismo ciclo: el filtro y los dialogos las necesitan
+	// antes de que el usuario pueda tocar nada.
+	if (!silencioso) { xAsisAreasCargar(); }
+
+	return xAsisApi('listar', null, silencioso).then(function (r) {
+		if (!silencioso) { xPopupLoad.xclose(); }
+		if (!r.success) {
+			if (silencioso) { return r; }
+			// Estado vacio que dice que hacer, en vez de una tabla en blanco
+			$('#tb_asis_personal tbody').html('<tr><td colspan="9" class="inv-empty">No se pudo cargar el personal. Revisa la conexion y vuelve a intentar.</td></tr>');
+			$('#asis_kpis').html('');
+			return;
+		}
+		xAsisPersonal = (r.datos && r.datos.personal) || [];
+		xAsisPersonalPintar();
+		return r;
+	});
+}
+
+function xAsisPersonalPintar() {
+	var txt = ($('#asis_filtro_txt').val() || '').toUpperCase().trim();
+	var filtroH = $('#asis_filtro_horario').val() || '';
+	var filtroA = $('#asis_filtro_area').val() || '';
+
+	var conHorario = 0, sinHorario = 0, sinArea = 0;
+	xAsisPersonal.forEach(function (c) {
+		if (c.horario_semanal && Object.keys(c.horario_semanal).length) { conHorario++; } else { sinHorario++; }
+		if (!c.idarea) { sinArea++; }
+	});
+
+	$('#asis_kpis').html(
+		'<div class="inv-kpi inv-kpi-azul"><span>EN EL PADRON</span><b>' + xAsisPersonal.length + '</b></div>' +
+		'<div class="inv-kpi inv-kpi-verde"><span>CON HORARIO</span><b>' + conHorario + '</b></div>' +
+		'<div class="inv-kpi inv-kpi-rojo"><span>SIN HORARIO</span><b>' + sinHorario + '</b></div>' +
+		'<div class="inv-kpi inv-kpi-celeste"><span>SIN AREA</span><b>' + sinArea + '</b></div>'
+	);
+
+	var html = '';
+	xAsisPersonal.forEach(function (c) {
+		var nombre = ((c.nombres || '') + ' ' + (c.apellidos || '')).trim();
+		var tiene = !!(c.horario_semanal && Object.keys(c.horario_semanal).length);
+
+		if (txt && (nombre.toUpperCase().indexOf(txt) < 0) && ((c.dni || '').toUpperCase().indexOf(txt) < 0)) { return; }
+		if (filtroH === 'con' && !tiene) { return; }
+		if (filtroH === 'sin' && tiene) { return; }
+		if (filtroA === '0' && c.idarea) { return; }
+		if (filtroA && filtroA !== '0' && String(c.idarea) !== filtroA) { return; }
+
+		var horario = tiene
+			? xAsisEsc(xAsisHorarioTexto(c.horario_semanal)) +
+			  (xAsisCruzaMedianoche(c.horario_semanal) ? ' <span class="inv-tag">cruza medianoche</span>' : '')
+			: '<span class="inv-muted">Sin horario · no genera tardanzas ni faltas</span>';
+
+		html += '<tr>' +
+			'<td><input type="checkbox" class="asis-sel" data-id="' + c.idcolaborador + '" onclick="xAsisSelCambio()"></td>' +
+			'<td>' + xAsisEsc(nombre) + '</td>' +
+			'<td>' + (c.area
+				? '<span class="inv-tag">' + xAsisEsc(c.area) + '</span>'
+				: '<span class="inv-link" onclick="xAsisAreaAbrir(' + c.idcolaborador + ')">+ asignar</span>') + '</td>' +
+			'<td>' + (c.dni ? xAsisEsc(c.dni) : '<span class="inv-muted">-</span>') + '</td>' +
+			'<td>' + (c.idusuario_restobar ? '<span class="inv-tag">POS</span>' : '<span class="inv-muted">manual</span>') + '</td>' +
+			'<td>' + horario + '</td>' +
+			'<td class="inv-num">' + (c.tolerancia_min === null || c.tolerancia_min === undefined ? 10 : c.tolerancia_min) + ' min</td>' +
+			'<td>' + (c.tiene_dispositivo
+				? '<span class="inv-pos"><i class="fa fa-mobile"></i> activado</span>'
+				: '<span class="inv-muted">sin activar</span>') + '</td>' +
+			'<td class="inv-acciones">' +
+				'<span class="inv-link" onclick="xAsisHorarioAbrir(' + c.idcolaborador + ')"><i class="fa fa-clock-o"></i>' + (tiene ? 'Editar horario' : 'Poner horario') + '</span>' +
+				'<span class="inv-link" onclick="xAsisQrAbrir(' + c.idcolaborador + ')"><i class="fa fa-qrcode"></i>' + (c.tiene_dispositivo ? 'Cambiar celular' : 'Activar celular') + '</span>' +
+				(c.tiene_dispositivo ? '<span class="inv-link inv-link-rojo" onclick="xAsisRevocar(' + c.idcolaborador + ')"><i class="fa fa-ban"></i>Desactivar</span>' : '') +
+			'</td></tr>';
+	});
+
+	$('#tb_asis_personal tbody').html(html ||
+		'<tr><td colspan="9" class="inv-empty">' +
+		(xAsisPersonal.length
+			? 'Ningun colaborador coincide con el filtro.'
+			: 'Todavia no hay personal en esta sede. Empieza con <b><i class="fa fa-download"></i>Importar del POS</b>.') +
+		'</td></tr>');
+
+	$('#asis_personal_resumen').text(xAsisPersonal.length ? xAsisPersonal.length + ' colaborador(es)' : '');
+	// Repintar borra los checkbox: la seleccion no sobrevive, y el boton de
+	// accion en lote tiene que esconderse con ella.
+	$('#asis_chk_all').prop('checked', false);
+	xAsisSelCambio();
+}
+
+// --------------------------------------------------------------------------
+// Seleccion multiple
+// --------------------------------------------------------------------------
+
+function xAsisTildarTodos(marcar) { $('.asis-sel').prop('checked', !!marcar); xAsisSelCambio(); }
+
+function xAsisSelIds() {
+	var ids = [];
+	$('.asis-sel:checked').each(function () { ids.push(parseInt($(this).attr('data-id'))); });
+	return ids;
+}
+
+function xAsisSelCambio() {
+	var n = $('.asis-sel:checked').length;
+	var btn = $('#asis_btn_sel_area');
+	btn.prop('hidden', n === 0);
+	btn.find('span').text(n + ' seleccionado(s)');
+}
+
+// --------------------------------------------------------------------------
+// Areas
+// --------------------------------------------------------------------------
+
+var xAsisAreas = [];
+var xAsisAreaIds = [];   // a quienes se les va a asignar
+
+function xAsisAreasCargar() {
+	return xAsisApi('area-listar', null, true).then(function (r) {
+		if (!r.success) { return r; }
+		xAsisAreas = (r.datos && r.datos.areas) || [];
+
+		// El filtro conserva lo elegido: recargar no debe saltar a "Todas"
+		var previo = $('#asis_filtro_area').val();
+		var opciones = '<option value="">Todas las areas</option><option value="0">Sin area</option>';
+		xAsisAreas.forEach(function (a) {
+			opciones += '<option value="' + a.idarea + '">' + xAsisEsc(a.descripcion) + ' (' + a.personal + ')</option>';
+		});
+		$('#asis_filtro_area').html(opciones).val(previo || '');
+		return r;
+	});
+}
+
+// id = 0 -> a los seleccionados en la tabla; id > 0 -> solo a ese
+function xAsisAreaAbrir(id) {
+	xAsisAreaIds = id ? [id] : xAsisSelIds();
+	if (!xAsisAreaIds.length) { xAsisAviso('Primero tilda a quienes quieres asignar.', 'info'); return; }
+
+	$('#asis_area_titulo').text(xAsisAreaIds.length === 1 ? 'Area de trabajo' : 'Area para ' + xAsisAreaIds.length + ' personas');
+	var opciones = '<option value="">Sin area</option>';
+	xAsisAreas.forEach(function (a) {
+		opciones += '<option value="' + a.idarea + '">' + xAsisEsc(a.descripcion) + '</option>';
+	});
+	$('#asis_area_sel').html(opciones);
+	$('#asis_area_nueva').val('');
+	dlg_asis_area.open();
+}
+
+function xAsisAreaGuardar() {
+	var nueva = ($('#asis_area_nueva').val() || '').trim();
+
+	// Crear y asignar en un paso: escribir el nombre nuevo gana sobre el select
+	if (nueva) {
+		xPopupLoad.titulo = 'Creando area...'; xPopupLoad.xopen();
+		xAsisApi('area-crear', { descripcion: nueva }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			xAsisAreaAplicar(r.datos.idarea);
+		});
+		return;
+	}
+	xAsisAreaAplicar(parseInt($('#asis_area_sel').val()) || null);
+}
+
+function xAsisAreaAplicar(idarea) {
+	xPopupLoad.titulo = 'Asignando...'; xPopupLoad.xopen();
+	xAsisApi('personal-area', { ids: xAsisAreaIds, idarea: idarea }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		dlg_asis_area.close();
+		showToastSwal('success', r.datos.actualizados + ' actualizado(s)');
+		xAsisAreasCargar().then(function () { xAsisPersonalCargar(); });
+	});
+}
+
+// --------------------------------------------------------------------------
+// Horario para varios
+// --------------------------------------------------------------------------
+
+function xAsisMasAbrir() {
+	var sel = xAsisSelIds();
+
+	var opciones = '<option value="todos">Todo el personal de la sede (' + xAsisPersonal.length + ')</option>';
+	if (sel.length) { opciones += '<option value="seleccion">Los ' + sel.length + ' seleccionados</option>'; }
+	xAsisAreas.forEach(function (a) {
+		if (a.personal > 0) { opciones += '<option value="area:' + a.idarea + '">Area ' + xAsisEsc(a.descripcion) + ' (' + a.personal + ')</option>'; }
+	});
+	var sinArea = xAsisPersonal.filter(function (c) { return !c.idarea; }).length;
+	if (sinArea) { opciones += '<option value="area:0">Los que no tienen area (' + sinArea + ')</option>'; }
+
+	// Si hay seleccion, se asume que eso es lo que quiere aplicar
+	$('#asis_mas_alcance').html(opciones).val(sel.length ? 'seleccion' : 'todos');
+	$('#asis_mas_tolerancia').val(10);
+	$('#asis_mas_grid').html(xAsisHorarioGridHtml(null));
+	xAsisMasAlcance();
+	dlg_asis_masivo.open();
+}
+
+function xAsisMasAlcance() {
+	var v = $('#asis_mas_alcance').val() || '';
+	var n = 0;
+	if (v === 'todos') { n = xAsisPersonal.length; }
+	else if (v === 'seleccion') { n = xAsisSelIds().length; }
+	else if (v.indexOf('area:') === 0) {
+		var ida = parseInt(v.split(':')[1]);
+		n = xAsisPersonal.filter(function (c) { return ida ? c.idarea === ida : !c.idarea; }).length;
+	}
+	$('#asis_mas_nota').html('Se va a aplicar a <b>' + n + '</b> persona(s). Se reemplaza el horario que tengan ahora.');
+}
+
+function xAsisMasGuardar() {
+	var h = xAsisHorarioLeer('#asis_mas_grid');
+	if (h.error) { xAsisAviso(h.error, 'warning'); return; }
+
+	var tol = parseInt($('#asis_mas_tolerancia').val());
+	if (isNaN(tol) || tol < 0 || tol > 240) { xAsisAviso('La tolerancia debe estar entre 0 y 240 minutos.', 'warning'); return; }
+
+	var v = $('#asis_mas_alcance').val() || '';
+	var cuerpo = { horario_semanal: h.vacio ? null : h.horario, tolerancia_min: tol };
+	if (v.indexOf('area:') === 0) {
+		cuerpo.alcance = 'area';
+		cuerpo.idarea = parseInt(v.split(':')[1]) || null;
+	} else {
+		cuerpo.alcance = v;
+		if (v === 'seleccion') { cuerpo.ids = xAsisSelIds(); }
+	}
+
+	var texto = h.vacio
+		? 'Van a quedar SIN horario: podran marcar, pero no se les contaran tardanzas ni faltas.'
+		: 'Se reemplaza el horario que cada uno tenga ahora. No se puede deshacer.';
+
+	xAsisConfirmar(texto, 'Aplicar este horario al grupo?', 'Si, aplicar').then(function (ok) {
+		if (!ok) { return; }
+		xPopupLoad.titulo = 'Aplicando...'; xPopupLoad.xopen();
+		xAsisApi('horario-masivo', cuerpo).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			dlg_asis_masivo.close();
+			showToastSwal('success', 'Horario aplicado a ' + r.datos.actualizados + ' persona(s)');
+			xAsisPersonalCargar();
+		});
+	});
+}
+
+// --------------------------------------------------------------------------
+// Importar del POS
+// --------------------------------------------------------------------------
+
+function xAsisImpAbrir() {
+	xPopupLoad.titulo = 'Leyendo usuarios del POS...'; xPopupLoad.xopen();
+	xAsisApi('importar-preview').then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+
+		xAsisImpFilas = (r.datos && r.datos.filas) || [];
+		var html = '';
+		xAsisImpFilas.forEach(function (f, i) {
+			var estado = f.existe
+				? (f.enlazar
+					? '<span class="inv-tag">ya existe · se enlazara al POS</span>'
+					: '<span class="inv-muted">ya importado</span>')
+				: '<span class="inv-pos">nuevo</span>';
+			html += '<tr>' +
+				'<td><input type="checkbox" class="asis-imp-chk" data-i="' + i + '"' +
+					(f.existe ? ' disabled' : ' checked') + '></td>' +
+				'<td>' + xAsisEsc(f.nombres) + '</td>' +
+				'<td>' + xAsisEsc(f.cargo || '') + '</td>' +
+				'<td>' + estado + '</td>' +
+				'</tr>';
+		});
+		$('#tb_asis_importar tbody').html(html ||
+			'<tr><td colspan="4" class="inv-empty">Esta sede no tiene usuarios activos en el POS.</td></tr>');
+
+		var nuevos = (r.datos && r.datos.nuevos) || 0;
+		$('#asis_imp_resumen').text(nuevos ? nuevos + ' por importar de ' + xAsisImpFilas.length : 'Todos ya estan importados');
+		$('#asis_chk_todos').prop('checked', nuevos > 0);
+		dlg_asis_importar.open();
+	});
+}
+
+function xAsisImpTildarTodos(marcar) {
+	$('.asis-imp-chk:not(:disabled)').prop('checked', !!marcar);
+}
+
+function xAsisImpConfirmar() {
+	var sel = [];
+	$('.asis-imp-chk:checked:not(:disabled)').each(function () {
+		var f = xAsisImpFilas[parseInt($(this).attr('data-i'))];
+		if (f) { sel.push({ idusuario: f.idusuario }); }   // solo el id: el servidor re-lee el nombre
+	});
+	if (!sel.length) { xAsisAviso('No hay nadie seleccionado para importar.', 'info'); return; }
+
+	xPopupLoad.titulo = 'Importando...'; xPopupLoad.xopen();
+	xAsisApi('importar-confirmar', { usuarios: sel }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		dlg_asis_importar.close();
+		var d = r.datos || {};
+		showToastSwal('success', (d.creados || 0) + ' importado(s)' + (d.enlazados ? ', ' + d.enlazados + ' enlazado(s)' : ''));
+		xAsisPersonalCargar();
+	});
+}
+
+// --------------------------------------------------------------------------
+// Alta manual
+// --------------------------------------------------------------------------
+
+function xAsisNuevoAbrir() {
+	$('#asis_txt_nombres').val('');
+	$('#asis_txt_dni').val('');
+	dlg_asis_nuevo.open();
+}
+
+function xAsisCrear() {
+	var nombres = ($('#asis_txt_nombres').val() || '').trim();
+	if (!nombres) { xAsisAviso('Escribe el nombre del colaborador.', 'warning'); return; }
+
+	xPopupLoad.titulo = 'Creando...'; xPopupLoad.xopen();
+	xAsisApi('crear', { nombres: nombres, dni: ($('#asis_txt_dni').val() || '').trim() }).then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		dlg_asis_nuevo.close();
+		showToastSwal('success', 'Colaborador creado');
+		xAsisPersonalCargar();
+	});
+}
+
+// --------------------------------------------------------------------------
+// Horario semanal
+// --------------------------------------------------------------------------
+
+function xAsisHorarioAbrir(id) {
+	var c = null;
+	xAsisPersonal.forEach(function (x) { if (x.idcolaborador === id) { c = x; } });
+	if (!c) { return; }
+
+	$('#dlg_asis_horario').attr('data-id', id);
+	$('#asis_hor_titulo').text('Horario de ' + ((c.nombres || '') + ' ' + (c.apellidos || '')).trim());
+	$('#asis_num_tolerancia').val(c.tolerancia_min === null || c.tolerancia_min === undefined ? 10 : c.tolerancia_min);
+
+	$('#asis_horario_grid').html(xAsisHorarioGridHtml(c.horario_semanal));
+	$('#asis_hor_nota').html('Dejar todos los dias sin marcar equivale a <b>sin horario</b>: esa persona podra marcar, pero no generara tardanzas ni faltas.');
+	dlg_asis_horario.open();
+}
+
+// El mismo grid lo usan el horario individual y el masivo. Escrito dos veces,
+// los selectores de clase de un dialogo terminarian leyendo los inputs del otro.
+function xAsisHorarioGridHtml(h) {
+	h = h || {};
+	var html = '';
+	XASIS_DIAS.forEach(function (d) {
+		var t = h[d];
+		html += '<div class="asis-dia">' +
+			'<label class="inv-check"><input type="checkbox" class="asis-dia-chk" data-d="' + d + '"' + (t ? ' checked' : '') +
+				' onchange="xAsisHorarioToggle(this)"> ' + XASIS_DIAS_TXT[d] + '</label>' +
+			'<input type="time" class="inv-input asis-hora" data-d="' + d + '" data-k="e" value="' + (t ? t.e : '08:00') + '"' + (t ? '' : ' disabled') + '>' +
+			'<span class="inv-muted">a</span>' +
+			'<input type="time" class="inv-input asis-hora" data-d="' + d + '" data-k="s" value="' + (t ? t.s : '17:00') + '"' + (t ? '' : ' disabled') + '>' +
+			'</div>';
+	});
+	return html;
+}
+
+// Solo toca las horas de SU fila: sin el closest, tildar el lunes de un dialogo
+// habilitaria tambien el lunes del otro.
+function xAsisHorarioToggle(chk) {
+	$(chk).closest('.asis-dia').find('.asis-hora').prop('disabled', !chk.checked);
+}
+
+/** Lee un grid y devuelve {horario, vacio, error}. */
+function xAsisHorarioLeer(contenedor) {
+	var horario = {};
+	var error = '';
+	$(contenedor).find('.asis-dia-chk:checked').each(function () {
+		var fila = $(this).closest('.asis-dia');
+		var d = $(this).attr('data-d');
+		var e = fila.find('.asis-hora[data-k="e"]').val();
+		var s = fila.find('.asis-hora[data-k="s"]').val();
+		if (!e || !s) { error = error || ('Falta una hora en ' + XASIS_DIAS_TXT[d] + '.'); return; }
+		if (e === s) { error = error || ('En ' + XASIS_DIAS_TXT[d] + ' la entrada y la salida son iguales.'); return; }
+		horario[d] = { e: e, s: s };
+	});
+	return { horario: horario, vacio: !Object.keys(horario).length, error: error };
+}
+
+function xAsisHorarioGuardar() {
+	var id = parseInt($('#dlg_asis_horario').attr('data-id'));
+	if (!id) { return; }
+
+	var leido = xAsisHorarioLeer('#asis_horario_grid');
+	if (leido.error) { xAsisAviso(leido.error, 'warning'); return; }
+	var horario = leido.horario;
+
+	var tolerancia = parseInt($('#asis_num_tolerancia').val());
+	if (isNaN(tolerancia) || tolerancia < 0 || tolerancia > 240) { xAsisAviso('La tolerancia debe estar entre 0 y 240 minutos.', 'warning'); return; }
+
+
+	var vacio = !Object.keys(horario).length;
+	var guardar = function () {
+		xPopupLoad.titulo = 'Guardando...'; xPopupLoad.xopen();
+		xAsisApi('horario', {
+			idcolaborador: id,
+			horario_semanal: vacio ? null : horario,
+			tolerancia_min: tolerancia
+		}).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			dlg_asis_horario.close();
+			showToastSwal('success', 'Horario guardado');
+			xAsisPersonalCargar();
+		});
+	};
+
+	if (vacio) {
+		xAsisConfirmar('Podra marcar entrada y salida, pero no se le contaran tardanzas ni faltas.',
+			'Dejar a esta persona sin horario?', 'Si, sin horario').then(function (ok) { if (ok) { guardar(); } });
+		return;
+	}
+	guardar();
+}
+
+// --------------------------------------------------------------------------
+// Enrolar el celular
+// --------------------------------------------------------------------------
+//
+// El QR lleva un enlace de un solo uso que vence en 15 minutos. Se escanea aqui
+// mismo, delante del administrador: eso es lo que ata ese celular a esa persona.
+
+function xAsisQrAbrir(id) {
+	var c = null;
+	xAsisPersonal.forEach(function (x) { if (x.idcolaborador === id) { c = x; } });
+	if (!c) { return; }
+
+	var abrir = function () {
+		xPopupLoad.titulo = 'Generando codigo...'; xPopupLoad.xopen();
+		xAsisApi('invitacion', { idcolaborador: id }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+
+			$('#asis_qr_titulo').text('Activar el celular de ' + ((c.nombres || '') + ' ' + (c.apellidos || '')).trim());
+			$('#asis_qr_url').val(r.datos.url);
+			$('#asis_qr_vence').text('El codigo vence en ' + r.datos.minutos + ' minutos y sirve una sola vez.');
+			$('#asis_qr_estado').html('<i class="fa fa-circle-o-notch fa-spin"></i> Esperando a que escanee...');
+			new QRious({ element: document.getElementById('asis_qr_canvas'), value: r.datos.url, size: 240, level: 'M' });
+			dlg_asis_qr.open();
+			// Se pasa el dispositivo que tenia ANTES: al cambiar de celular,
+			// tiene_dispositivo ya venia en true y por si solo no prueba nada.
+			xAsisQrVigilar(id, r.datos.minutos, c.dispositivo_desde || null);
+		});
+	};
+
+	// Generar una invitacion nueva invalida la anterior; si ya hay un celular
+	// activo, ademas lo va a reemplazar cuando el trabajador confirme.
+	if (c.tiene_dispositivo) {
+		xAsisConfirmar('Al escanear el nuevo codigo, el celular que tiene ahora dejara de servir para marcar.',
+			'Cambiar el celular de esta persona?', 'Si, generar codigo').then(function (ok) { if (ok) { abrir(); } });
+		return;
+	}
+	abrir();
+}
+
+// El celular escanea y confirma contra la API central; este panel no se entera
+// de nada. Mientras el QR esta en pantalla se relee el padron cada pocos
+// segundos y, en cuanto esa persona aparece con celular, se cierra solo.
+//
+// Se sondea el mismo 'listar' que ya existe en vez de agregar un endpoint: son
+// decenas de filas y el dialogo vive un minuto, no vale la pena mas maquinaria.
+var xAsisQrTimer = null;
+var xAsisQrEnVuelo = false;
+
+function xAsisQrVigilar(id, minutos, dispositivoPrevio) {
+	xAsisQrDejarDeVigilar();
+
+	var limite = Date.now() + (minutos || 15) * 60000;   // no sondear despues de que venza
+
+	xAsisQrTimer = setInterval(function () {
+		if (Date.now() > limite) {
+			xAsisQrDejarDeVigilar();
+			$('#asis_qr_estado').html('<span class="inv-muted">El codigo vencio. Cierra y genera uno nuevo.</span>');
+			return;
+		}
+		if (xAsisQrEnVuelo) { return; }   // la red esta lenta: no encimar pedidos
+		xAsisQrEnVuelo = true;
+
+		xAsisPersonalCargar(true).then(function () {
+			xAsisQrEnVuelo = false;
+			var c = null;
+			xAsisPersonal.forEach(function (x) { if (x.idcolaborador === id) { c = x; } });
+			if (!c || !c.tiene_dispositivo) { return; }
+
+			// Enrolamiento nuevo: antes no tenia. Cambio de celular: el de ahora
+			// es otro, y se nota porque la fecha de alta cambio.
+			var esNuevo = !dispositivoPrevio || (String(c.dispositivo_desde) !== String(dispositivoPrevio));
+			if (!esNuevo) { return; }
+
+			xAsisQrDejarDeVigilar();
+			dlg_asis_qr.close();
+			showToastSwal('success', 'Celular activado para ' + (c.nombres || '').trim());
+		});
+	}, 3000);
+}
+
+function xAsisQrDejarDeVigilar() {
+	if (xAsisQrTimer) { clearInterval(xAsisQrTimer); xAsisQrTimer = null; }
+	xAsisQrEnVuelo = false;
+}
+
+function xAsisRevocar(id) {
+	var c = null;
+	xAsisPersonal.forEach(function (x) { if (x.idcolaborador === id) { c = x; } });
+	if (!c) { return; }
+
+	xAsisConfirmar('No podra marcar entrada ni salida hasta que active un celular otra vez.',
+		'Desactivar el celular de ' + xAsisEsc((c.nombres || '').trim()) + '?', 'Si, desactivar').then(function (ok) {
+		if (!ok) { return; }
+		xPopupLoad.titulo = 'Desactivando...'; xPopupLoad.xopen();
+		xAsisApi('revocar-dispositivo', { idcolaborador: id }).then(function (r) {
+			xPopupLoad.xclose();
+			if (!r.success) { return; }
+			showToastSwal('success', 'Celular desactivado');
+			xAsisPersonalCargar();
+		});
+	});
+}
+
+Polymer({ is: 'x-asistencia-personal' });
+</script>
+</dom-module>
