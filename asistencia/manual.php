@@ -68,13 +68,17 @@
 	$usuario = isset($_POST['u']) ? trim($_POST['u']) : '';
 	$clave = isset($_POST['p']) ? $_POST['p'] : '';
 	$us = null;
+	$ticket = '';
 
 	date_default_timezone_set('America/Lima');
 	$horaAhora = date('H:i');
 
 	try {
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$us = autenticar($bd, $usuario, $clave);
+			// Si viene un ticket del paso anterior, se usa ese. La clave solo
+			// viaja en el PRIMER envio, nunca entre pasos.
+			$tk = asisTicketLeer(isset($_POST['t']) ? $_POST['t'] : '', 'marca_manual');
+			$us = $tk ? $tk : autenticar($bd, $usuario, $clave);
 
 			if ($us === null) {
 				$error = 'Usuario o clave incorrectos.';
@@ -83,6 +87,8 @@
 				$us = null;
 			} else {
 				$paso = 'elegir';
+				$ticket = $tk ? $_POST['t'] : asisTicketCrear($us, 'marca_manual');
+
 
 				// Ficha local, que la API no puede leer
 				$o = filasL($bd, "SELECT nombre, direccion, ruc, telefono FROM org WHERE idorg = ?", array((int)$us['idorg']));
@@ -233,8 +239,9 @@
 	<form method="post">
 		<!-- La sesion no persiste entre pasos a proposito: cada marca se
 		     autentica por separado, asi nadie queda "logueado" en la tablet -->
-		<input type="hidden" name="u" value="<?php echo asisEsc($usuario); ?>">
-		<input type="hidden" name="p" value="<?php echo asisEsc($clave); ?>">
+		<!-- El ticket reemplaza a usuario y clave: vence en minutos y solo
+		     sirve para terminar este tramite. -->
+		<input type="hidden" name="t" value="<?php echo asisEsc($ticket); ?>">
 		<input type="hidden" name="fecha" value="<?php echo asisEsc($dia['fecha']); ?>">
 
 		<label for="c">Persona</label>

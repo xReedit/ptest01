@@ -35,15 +35,17 @@
 		/* pantalla siempre encendida en un local: nada de seleccionar ni hacer zoom sin querer */
 		user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
 	}
-	.pantalla { width: 100%; max-width: 860px; display: flex; gap: 40px; align-items: center; justify-content: center; flex-wrap: wrap; }
+	.pantalla { width: 100%; max-width: 1100px; display: flex; gap: 40px; align-items: center; justify-content: center; flex-wrap: wrap; }
 
 	.reloj { text-align: center; }
+	.marcador { margin-bottom: 14px; font-size: clamp(18px, 3vw, 28px); font-weight: 600; color: #f8fafc; }
 	.hora { font-size: clamp(64px, 14vw, 132px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 	.fecha { margin-top: 10px; font-size: clamp(15px, 2.4vw, 21px); color: #94a3b8; text-transform: capitalize; }
 	.titulo { margin-top: 22px; font-size: clamp(15px, 2.2vw, 19px); color: #cbd5e1; }
 
 	.qr-caja { background: #fff; padding: 18px; border-radius: 16px; }
-	#qr { display: block; width: clamp(200px, 44vw, 280px); height: auto; }
+	/* Grande y con bordes nitidos: la camara lee mal un QR chico o suavizado en pantalla */
+	#qr { display: block; width: clamp(220px, min(50vh, 36vw), 380px); height: auto; image-rendering: pixelated; }
 
 	/* Barra que se vacia: se ve de lejos cuanto le queda al codigo */
 	.barra { margin-top: 12px; height: 6px; border-radius: 3px; background: #334155; overflow: hidden; }
@@ -78,12 +80,20 @@
 	}
 	.alerta { max-width: 520px; text-align: center; background: #7f1d1d; color: #fee2e2; padding: 20px 24px; border-radius: 12px; font-size: 16px; }
 	[hidden] { display: none !important; }
+	/* Solo en celulares: casi siempre es un trabajador que escaneo el QR de
+	   "encender marcador" pensando que era para marcar. */
+	.aviso-celular { display: none; flex-basis: 100%; margin: 0 auto 18px; max-width: 420px; background: #7c2d12; color: #ffedd5; padding: 12px 14px; border-radius: 10px; font-size: 14px; line-height: 1.45; text-align: center; }
+	@media (max-width: 600px) { .aviso-celular { display: block; } }
+	.potenciado { position: fixed; left: 0; right: 0; bottom: max(10px, env(safe-area-inset-bottom)); text-align: center; font-size: 12px; color: #64748b; }
+	.potenciado b { color: #94a3b8; font-weight: 600; }
 </style>
 </head>
 <body>
 
 <div class="pantalla" id="pantalla" hidden>
+	<div class="aviso-celular"><b>Eres trabajador?</b> Aqui no se marca. Esta pagina es la pantalla del local. Cierra esta pagina y escanea el codigo que aparece en la tablet o PC del local.</div>
 	<div class="reloj">
+		<div class="marcador" id="marcador"></div>
 		<div class="hora" id="hora">--:--</div>
 		<div class="fecha" id="fecha"></div>
 		<div class="titulo">Escanea el codigo con tu celular<br>para marcar entrada o salida</div>
@@ -109,6 +119,8 @@
 </div>
 
 <div class="alerta" id="alerta" hidden></div>
+
+<div class="potenciado">potenciado por <b>papaya.com.pe</b></div>
 
 <script>
 (function () {
@@ -171,10 +183,11 @@
 
 			document.getElementById('pantalla').hidden = false;
 			document.getElementById('alerta').hidden = true;
+			document.getElementById('marcador').textContent = r.datos.nombre || '';
 
 			var url = window.location.href.split('?')[0].replace(/kiosko\.html$/, '') +
 				'marcar.php?k=' + r.datos.idkiosko + '&c=' + r.datos.codigo;
-			new QRious({ element: document.getElementById('qr'), value: url, size: 320, level: 'M' });
+			new QRious({ element: document.getElementById('qr'), value: url, size: 640, level: 'L' }); // L: menos modulos, mas grandes (en pantalla no hay dano que corregir)
 
 			ventana = r.datos.ventana || 15;
 			restantes = r.datos.segundos || ventana;

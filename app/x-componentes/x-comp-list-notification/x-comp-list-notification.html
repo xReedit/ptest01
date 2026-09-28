@@ -52,6 +52,7 @@
         if ( _localCountNotification !== null ) {
             resCountNotification = JSON.parse(_localCountNotification);
             verifyShowNotification();
+            costeoAgregarNotificacion();
             return;
         }
 
@@ -72,8 +73,24 @@
                     verifyShowNotification();                                    
 
                 });
+        costeoAgregarNotificacion();
         
         
+    }
+
+    // Costeo de recetas: platos que dejaron de ser rentables (bdphp/log_costeo.php). Es asincrono y
+    // aparte del SP de notificaciones; si el usuario no tiene permiso B4 el endpoint responde success=false y no se muestra.
+    function costeoAgregarNotificacion() {
+        $.ajax({ type: 'POST', url: '../../bdphp/log_costeo.php?op=alertas-count', data: '{}',
+            contentType: 'application/json', dataType: 'json' })
+        .done(function (r) {
+            if (!r || !r.success || !r.datos || !(r.datos.n > 0) || !resCountNotification) { return; }
+            var yaVisible = parseFloat(resCountNotification.suma) > 0;
+            resCountNotification.costeo_alertas = r.datos.n;
+            if (yaVisible) { createListNotifications(); return; }
+            resCountNotification.suma = r.datos.n;
+            verifyShowNotification();
+        });
     }
 
     function createListNotifications() {
@@ -158,6 +175,22 @@
         }
 
         
+        // rentabilidad de carta (costeo de recetas)
+        if ( resCountNotification.costeo_alertas > 0 ) {
+            const n = resCountNotification.costeo_alertas;
+            _iteAdd = {
+                key: 'costeo_alertas',
+                fecha: '', descripcion: 'Rentabilidad de carta',
+                detalle: `${n} plato${n > 1 ? 's' : ''} dej${n > 1 ? 'aron' : 'ó'} de ser rentable${n > 1 ? 's' : ''} por el costo de sus insumos.`,
+                idpage: 0,
+                ruta: '#/rentabilidad_carta',
+                parametro: '',
+                icon: 'fa fa-line-chart text-danger'
+            }
+            listAddNotification.push(_iteAdd);
+            countNoticaciones++;
+        }
+
         xThisListNotificacion.lisNotificaciones = JSON.parse(JSON.stringify(listAddNotification));
         
         // control en el panel
@@ -203,6 +236,8 @@
         const opSelected = xThisListNotificacion.lisNotificaciones[i];
 
         setLocalSotrage('::app3_sys_route', 0);
+        // rutas sin opcion propia en el home (ej. rentabilidad de carta)
+        if (opSelected.ruta) { window.location.hash = opSelected.ruta; dialog_notificaciones.close(); return; }
         xOpenPage(opSelected.idpage, opSelected.parametro);
         dialog_notificaciones.close();
 

@@ -314,6 +314,8 @@
 		}
 	</style>
 </dom-module>
+<!-- aviso de limite de credito al vender (plan/CUENTAS-PAGAR-COBRAR-PLAN.md) -->
+<script type="text/javascript" src="../../shared/credito.limite.js"></script>
 <script>
 	var xThisPago
 	, xdialoag_pago
@@ -879,6 +881,20 @@
 	function xListoRegistraPago() {
 		if (!xThisPago.change_monto_pago_valid) {return}		
 		if (registrando) return;
+
+		// limite de credito: si la venta a credito pasa el limite del cliente pregunta "¿vender igual?" (nunca bloquea)
+		if (!xThisPago._limiteOk && typeof xCreditoLimiteVerificar === 'function') {
+			if (xThisPago._limiteVerificando) return;
+			xThisPago._limiteVerificando = true;
+			try { xResolverIdClienteAutocomplete(); } catch (e) {}
+			xCreditoLimiteVerificar(xIdCliente_pago, xCompTableFP.getListPagoSeleted(), function (ok) {
+				xThisPago._limiteVerificando = false;
+				if (!ok) { return; }
+				xThisPago._limiteOk = true;
+				try { xListoRegistraPago(); } finally { xThisPago._limiteOk = false; }
+			});
+			return;
+		}
 
 		// Si hay teléfono de un cliente registrado pero no está verificado, vaciar el campo de teléfono
 		if ($("#clie_telefono").val() && $("#clie_telefono").val().trim() !== '' && !xThisPago.telefonoVerificado && xIdCliente_pago && xIdCliente_pago !== '') {

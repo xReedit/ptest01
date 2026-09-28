@@ -64,13 +64,17 @@
 	$usuario = isset($_POST['u']) ? trim($_POST['u']) : '';
 	$clave = isset($_POST['p']) ? $_POST['p'] : '';
 	$dia = null;
+	$ticket = '';
 	$hechos = 0;
 
 	date_default_timezone_set('America/Lima');
 
 	try {
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$us = autenticarH($bd, $usuario, $clave);
+			// Si viene un ticket del paso anterior, se usa ese. La clave solo
+			// viaja en el PRIMER envio, nunca entre pasos.
+			$tk = asisTicketLeer(isset($_POST['t']) ? $_POST['t'] : '', 'habilitar_dia');
+			$us = $tk ? $tk : autenticarH($bd, $usuario, $clave);
 
 			if ($us === null) {
 				$error = 'Usuario o clave incorrectos.';
@@ -78,6 +82,8 @@
 				$error = 'Ese usuario no tiene acceso al Control de Asistencia.';
 			} else {
 				$paso = 'elegir';
+				$ticket = $tk ? $_POST['t'] : asisTicketCrear($us, 'habilitar_dia');
+
 
 				// Ficha local, que la API no puede leer
 				$o = filasH($bd, "SELECT nombre, direccion, ruc, telefono FROM org WHERE idorg = ?", array((int)$us['idorg']));
@@ -288,8 +294,9 @@
 	<?php } ?>
 
 	<form method="post">
-		<input type="hidden" name="u" value="<?php echo asisEsc($usuario); ?>">
-		<input type="hidden" name="p" value="<?php echo asisEsc($clave); ?>">
+		<!-- El ticket reemplaza a usuario y clave: vence en minutos y solo
+		     sirve para terminar este tramite. -->
+		<input type="hidden" name="t" value="<?php echo asisEsc($ticket); ?>">
 		<input type="hidden" name="confirmar" value="1">
 
 		<label for="motivo">Por que se abre hoy</label>

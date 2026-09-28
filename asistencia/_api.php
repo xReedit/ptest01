@@ -68,6 +68,61 @@
 		return array('ok' => true, 'datos' => isset($json['datos']) ? $json['datos'] : null, 'error' => '');
 	}
 
+
+	/**
+	 * Ticket de tramite: reemplaza a la clave entre pasos de un formulario.
+	 *
+	 * Las pantallas que exigen credenciales trabajan en dos pasos. Reenviar la
+	 * clave en un campo oculto la deja en el HTML de una pantalla que esta en
+	 * la puerta del local, en el historial y en cualquier cache del camino.
+	 *
+	 * El ticket dice QUIEN es y PARA QUE sirve, y vence en minutos. Si se
+	 * filtra no sirve para entrar a ningun lado: solo para terminar ese tramite.
+	 */
+	function asisTicketCrear($us, $proposito, $minutos = 10) {
+		$ahora = time();
+		return \Firebase\JWT\JWT::encode(array(
+			'tkt'       => 1,
+			'prop'      => $proposito,
+			'idusuario' => (int)$us['idusuario'],
+			'idorg'     => (int)$us['idorg'],
+			'idsede'    => (int)$us['idsede'],
+			'nombres'   => $us['nombres'],
+			'iat'       => $ahora,
+			'exp'       => $ahora + ($minutos * 60)
+		), ASISTENCIA_API_SECRET, 'HS256');
+	}
+
+	/**
+	 * Devuelve los datos del ticket, o null si no sirve.
+	 *
+	 * Se comprueba tambien el PROPOSITO: un ticket para marcar a mano no puede
+	 * usarse para habilitar un dia. Sin eso, el permiso mas facil de conseguir
+	 * abriria la puerta del mas dificil.
+	 */
+	function asisTicketLeer($ticket, $proposito) {
+		if (!is_string($ticket) || $ticket === '') { return null; }
+		try {
+			// Firma vieja de la libreria: esta version no tiene la clase Key.
+			// El tercer parametro con el algoritmo NO es opcional: sin el,
+			// la libreria aceptaria un token que diga alg:none.
+			$d = \Firebase\JWT\JWT::decode(
+				$ticket, ASISTENCIA_API_SECRET, array('HS256'));
+		} catch (Exception $e) {
+			// Vencido, alterado o firmado con otra llave: los tres casos se
+			// tratan igual, y el detalle no se le dice al cliente.
+			return null;
+		}
+		if (empty($d->tkt) || !isset($d->prop) || $d->prop !== $proposito) { return null; }
+
+		return array(
+			'idusuario' => (int)$d->idusuario,
+			'idorg'     => (int)$d->idorg,
+			'idsede'    => (int)$d->idsede,
+			'nombres'   => isset($d->nombres) ? $d->nombres : ''
+		);
+	}
+
 	/** true si la pagina se esta sirviendo por HTTPS (mirando tambien el proxy). */
 	function asisEsHttps() {
 		if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') { return true; }

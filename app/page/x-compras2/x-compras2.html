@@ -1,0 +1,1115 @@
+<dom-module id="x-compras2">
+	<script type="text/javascript" src="../../view/export.excel.js"></script>
+	<template>
+		<!-- proveedor nuevo -->
+		<paper-dialog modal id="dlg_cmp_proveedor" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Nuevo proveedor</h3>
+					<p>Solo el nombre es obligatorio. Si ya existe (mismo nombre o RUC), se usa el que ya está.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Nombre o razón social</span>
+						<input type="text" class="inv-input inv-w100" id="cmp_prov_nombre" maxlength="150" placeholder="Ej: DISTRIBUIDORA EL POLLITO">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">RUC / DNI (opcional)</span>
+						<input type="text" class="inv-input" id="cmp_prov_dni" maxlength="20">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">Teléfono (opcional)</span>
+						<input type="text" class="inv-input" id="cmp_prov_tel" maxlength="50">
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xCmpGuardarProveedor()">Guardar proveedor</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- producto nuevo -->
+		<paper-dialog modal id="dlg_cmp_producto" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Nuevo producto</h3>
+					<p>Solo lo necesario para la compra. El precio de venta y lo demás lo completas luego en Productos.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">Nombre del producto</span>
+						<input type="text" class="inv-input inv-w100" id="cmp_prod_nombre" maxlength="150" placeholder="Ej: PECHUGA DE POLLO">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">Familia</span>
+						<input type="text" class="inv-input inv-w100" id="cmp_prod_familia" maxlength="80" placeholder="Escribe para buscar. Ej: CARNES" autocomplete="off">
+						<span class="cmp-ayuda-fam" id="cmp_prod_familia_ayuda">Si no existe, se crea como familia nueva.</span>
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">¿En qué unidad lo compras y lo cuentas?</span>
+						<select class="inv-select inv-w100" id="cmp_prod_und"></select>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xCmpGuardarProducto()">Crear producto</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- detalle de compra -->
+		<paper-dialog modal id="dlg_cmp_detalle" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="cmp_det_titulo">Compra</h3>
+					<p id="cmp_det_bajada"></p>
+				</div>
+				<div class="xdlg-body">
+					<div class="cmp-anulada" id="cmp_det_anulada" style="display:none"></div>
+					<div class="cmp-det-datos" id="cmp_det_datos"></div>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_cmp_det_items">
+							<thead><tr><th>Producto</th><th class="inv-num">Cantidad</th><th class="inv-num">Precio x unidad</th><th class="inv-num">Total</th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-danger cmp-btn-anular" id="cmp_det_btn_anular" onclick="xCmpAnular()"><i class="fa fa-ban"></i>Anular compra</button>
+					<span class="inv-sep"></span>
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- ===== vista: listado ===== -->
+		<div class="inv-vista activa" id="cmp_vista_lista">
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Compras</h3>
+						<p>Todo lo que compraste en el mes. Toca <b>Ver</b> para revisar una compra o anularla si hubo un error.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xCmpExcel()"><i class="fa fa-file-excel-o"></i>Exportar a Excel</button>
+						<button class="btn btn-sm btn-success" onclick="xCmpIr('nueva')"><i class="fa fa-plus"></i>Nueva compra</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-kpis" id="cmp_kpis"></div>
+				<div class="inv-toolbar">
+					<div class="inv-field">
+						<span class="inv-label">Mes</span>
+						<input type="month" class="inv-input" id="cmp_f_mes" style="width:170px" onchange="xCmpListar()">
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Proveedor</span>
+						<select class="inv-select" id="cmp_f_prov" style="width:230px" onchange="xCmpListar()"></select>
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Buscar</span>
+						<input type="text" class="inv-input" id="cmp_f_buscar" placeholder="Comprobante, almacén, N°..." oninput="xCmpPintarLista()">
+					</div>
+					<span class="inv-sep"></span>
+					<label class="inv-check"><input type="checkbox" id="cmp_f_anuladas" onchange="xCmpPintarLista()"> Mostrar anuladas</label>
+				</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_cmp_lista">
+						<thead><tr>
+							<th>#</th><th>Fecha</th><th>Proveedor</th><th>Comprobante</th><th>Almacén</th><th>Pago</th>
+							<th class="inv-num">Total</th><th></th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br><br>
+		</div>
+
+		<!-- ===== vista: nueva compra ===== -->
+		<div class="inv-vista" id="cmp_vista_nueva">
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Nueva compra</h3>
+						<p>Registra lo que compraste. El stock del almacén se actualiza al guardar y el costo de tus platos también.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xCmpIr('lista')"><i class="fa fa-arrow-left"></i>Volver a compras</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+
+				<!-- 1 -->
+				<div class="cmp-paso">
+					<div class="cmp-paso-tit"><span class="cmp-num">1</span>¿A quién le compraste?</div>
+					<div class="cmp-factura" id="cmp_factura_box">
+						<div class="cmp-factura-sube">
+							<i class="fa fa-camera cmp-factura-ico"></i>
+							<div class="cmp-factura-txt">
+								<b>¿Tienes la factura o boleta?</b>
+								<span>Súbela (foto o PDF) y llenamos los datos por ti. Después revisas y registras.</span>
+							</div>
+							<label class="btn btn-sm btn-primary cmp-factura-btn">
+								<i class="fa fa-upload"></i>Subir foto o PDF
+								<input type="file" id="cmp_factura_file" accept="image/*,application/pdf" style="display:none" onchange="xCmpFacturaElegida(this)">
+							</label>
+						</div>
+						<div id="cmp_factura_estado"></div>
+					</div>
+					<div class="cmp-grid cmp-grid-4">
+						<div class="inv-field">
+							<span class="inv-label">Proveedor</span>
+							<div class="cmp-fila">
+								<select class="inv-select" id="cmp_proveedor"></select>
+								<button class="btn btn-sm btn-light" onclick="xCmpAbrirProveedor()"><i class="fa fa-plus"></i>Nuevo</button>
+							</div>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Fecha de compra</span>
+							<input type="date" class="inv-input" id="cmp_fecha">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Comprobante (opcional)</span>
+							<div class="cmp-fila">
+								<select class="inv-select cmp-comp-tipo" id="cmp_comp_tipo">
+									<option value="">Ninguno</option>
+									<option value="FACTURA">Factura</option>
+									<option value="BOLETA">Boleta</option>
+									<option value="NOTA DE VENTA">Nota de venta</option>
+									<option value="GUIA">Guía</option>
+								</select>
+								<input type="text" class="inv-input" id="cmp_comp_num" maxlength="24" placeholder="N° Ej: F001-123">
+							</div>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Ingresa al almacén</span>
+							<select class="inv-select" id="cmp_almacen"></select>
+						</div>
+					</div>
+				</div>
+
+				<!-- 2 -->
+				<div class="cmp-paso">
+					<div class="cmp-paso-tit"><span class="cmp-num">2</span>¿Qué compraste?</div>
+					<div class="cmp-entrada">
+						<div class="inv-field cmp-f-prod">
+							<span class="inv-label">Producto</span>
+							<input type="text" class="inv-input inv-w100" id="cmp_prod" placeholder="Escribe para buscar. Ej: POLLO">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Cantidad <span id="cmp_und_cant"></span></span>
+							<input type="number" class="inv-input cmp-num-in" id="cmp_cant" min="0" step="any">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Precio por <span id="cmp_und_precio">unidad</span></span>
+							<input type="number" class="inv-input cmp-num-in" id="cmp_precio" min="0" step="any">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Total</span>
+							<input type="number" class="inv-input cmp-num-in" id="cmp_total_linea" min="0" step="any">
+						</div>
+						<button class="btn btn-sm btn-primary cmp-btn-add" onclick="xCmpAgregar()"><i class="fa fa-plus"></i>Agregar</button>
+					</div>
+					<p class="cmp-aviso-precio" id="cmp_aviso_precio"></p>
+					<div class="cmp-pend" id="cmp_pend" style="display:none"></div>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_cmp_lineas">
+							<thead><tr>
+								<th>Producto</th><th class="inv-num">Cantidad</th><th class="inv-num">Precio x unidad</th>
+								<th class="inv-num">Total</th><th></th><th></th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<p class="cmp-nuevo-prod">¿No encuentras el producto? <span class="inv-link" onclick="xCmpAbrirProducto()"><i class="fa fa-plus"></i>Crear producto nuevo</span></p>
+				</div>
+
+				<!-- 3 -->
+				<div class="cmp-paso">
+					<div class="cmp-paso-tit"><span class="cmp-num">3</span>¿Cómo pagaste?</div>
+					<div class="cmp-pago">
+						<div class="cmp-grid cmp-grid-pago">
+							<div class="inv-field">
+								<span class="inv-label">Forma de pago</span>
+								<select class="inv-select" id="cmp_tipo_pago" onchange="xCmpCambioPago()"></select>
+							</div>
+							<div class="inv-field" id="cmp_div_fpago" style="display:none">
+								<span class="inv-label">¿Cuándo vas a pagar?</span>
+								<input type="date" class="inv-input" id="cmp_fecha_pago">
+							</div>
+							<div class="inv-field">
+								<span class="inv-label">Nota (opcional)</span>
+								<input type="text" class="inv-input" id="cmp_nota" maxlength="150" placeholder="Ej: entrega del lunes">
+							</div>
+						</div>
+						<div class="cmp-cierre">
+							<div class="cmp-total"><span>Total de la compra</span><b id="cmp_total">S/ 0.00</b></div>
+							<button class="btn btn-success cmp-btn-registrar" id="cmp_btn_registrar" onclick="xCmpRegistrar()"><i class="fa fa-check"></i>Registrar compra</button>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<br><br>
+		</div>
+	</template>
+<script>
+// Pantalla "Nueva compra" (rediseño). Backend: bdphp/log_compras.php. Plan: plan/COMPRAS-REDISENO-PLAN.md
+var xCmpData = null;       // init: almacenes, tipos_pago, proveedores, familias, unidades, credito
+var xCmpProductos = [];    // productos de la sede (autocomplete)
+var xCmpSel = null;        // producto elegido en la fila de entrada
+var xCmpLineas = [];       // [{idproducto, descripcion, familia, und, cantidad, precio, ultimo_precio}]
+var xCmpToken = '';
+var xCmpEnviando = false;
+var CMP_LS_ALMACEN = '::app3_compras_almacen';
+var xCmpCompras = [];      // listado del mes
+var xCmpFac = null;        // factura leida: {iddocumento, lineas, resumen, emisor, comprobante, ...}
+var xCmpPend = [];         // lineas de la factura que falta unir con un producto
+var xCmpRecuperaIgv = 0;   // opcion de la sede
+var xCmpTc = 1;            // tipo de cambio si la factura es en dolares
+var xCmpDet = null;        // compra abierta en el detalle
+
+function xCmpAviso(texto, icono) { showAlertSwalOk(icono || 'warning', '', texto, 'Entendido', 1); }
+function xCmpApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_compras.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		if (!r || !r.success) { xCmpAviso((r && r.error) || 'Error de comunicación con el servidor', 'error'); }
+		d.resolve(r || { success: false });
+	})
+	.fail(function (x) {
+		try { xPopupLoad.xclose(); } catch (e) {}
+		xCmpAviso(x && x.status === 401 ? 'Tu sesión expiró, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		d.resolve({ success: false });
+	});
+	return d.promise();
+}
+function xCmpEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+function xCmpSoles(n) { var v = parseFloat(n); return isNaN(v) ? '' : 'S/ ' + v.toFixed(2); }
+function xCmpNum(n) { var v = parseFloat(n); return isNaN(v) ? 0 : v; }
+function xCmpRedondeo(n, d) { var f = Math.pow(10, d); return Math.round(n * f) / f; }
+function xCmpHoy() {
+	var d = new Date();
+	return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function xCmpNuevoToken() { xCmpToken = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+function xCmpLsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+function xCmpLsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+
+// ---------- carga ----------
+function xCmpIniciar() {
+	xPopupLoad.titulo = 'Cargando...'; xPopupLoad.xopen();
+	xCmpApi('init').then(function (r) {
+		if (!r.success) { xPopupLoad.xclose(); return; }
+		xCmpData = r.datos;
+		var h = '';
+		xCmpData.almacenes.forEach(function (a) { h += '<option value="' + a.idalmacen + '">' + xCmpEsc(a.descripcion) + '</option>'; });
+		$('#cmp_almacen').html(h);
+		var ult = xCmpLsGet(CMP_LS_ALMACEN);
+		if (ult && $('#cmp_almacen option[value="' + ult + '"]').length) { $('#cmp_almacen').val(ult); }
+		h = '';
+		xCmpData.tipos_pago.forEach(function (t) { h += '<option value="' + t.idtipo_pago + '">' + xCmpEsc(t.descripcion) + '</option>'; });
+		$('#cmp_tipo_pago').html(h);
+		xCmpPintarProveedores(0);
+		xCmpFamiliasAutocomplete();
+		h = '<option value="0">UNIDADES (se cuenta por pieza)</option>';
+		xCmpData.unidades.forEach(function (u) { h += '<option value="' + u.idunidad_medida + '">' + xCmpEsc(u.unidad) + ' (' + xCmpEsc(u.abreviatura) + ')</option>'; });
+		$('#cmp_prod_und').html(h);
+		$('#cmp_f_mes').val(xCmpHoy().slice(0, 7));
+		xCmpPintarFiltroProveedores();
+		xCmpApi('config').then(function (c) { if (c.success) { xCmpRecuperaIgv = parseInt(c.datos.recupera_igv) || 0; } });
+		xCmpCargarProductos().then(function () { xPopupLoad.xclose(); xCmpNueva(); xCmpListar(); });
+	});
+}
+function xCmpPintarProveedores(sel) {
+	var h = '<option value="0">Sin proveedor</option>';
+	xCmpData.proveedores.forEach(function (p) {
+		h += '<option value="' + p.idproveedor + '">' + xCmpEsc(p.descripcion) + (p.dni ? ' · ' + xCmpEsc(p.dni) : '') + '</option>';
+	});
+	$('#cmp_proveedor').html(h).val(String(sel || 0));
+}
+function xCmpCargarProductos() {
+	return xCmpApi('productos').then(function (r) {
+		if (!r.success) { return; }
+		xCmpProductos = r.datos.map(function (p) {
+			return $.extend({}, p, {
+				label: p.descripcion + (p.familia ? '  ·  ' + p.familia : '') + (p.und ? '  ·  ' + p.und : ''),
+				value: p.descripcion
+			});
+		});
+		$('#cmp_prod').autocomplete({
+			source: xCmpProductos, minLength: 1, autoFocus: true,
+			select: function (e, ui) { $('#cmp_prod').val(ui.item.descripcion); xCmpElegir(ui.item); return false; },
+			change: function (e, ui) {
+				var t = $('#cmp_prod').val();
+				if (!ui.item && (!xCmpSel || xCmpSel.descripcion !== t)) {
+					xCmpElegir(xCmpProductos.filter(function (p) { return p.descripcion === t; })[0] || null);
+				}
+			}
+		});
+	});
+}
+
+// ---------- fila de entrada ----------
+function xCmpUnd(p) { return p && p.und ? p.und : 'unidad'; }
+function xCmpUltimoPrecio(p) {
+	var u = parseFloat(p.ultimo_precio);
+	if (u > 0) { return u; }
+	var m = parseFloat(p.precio_unitario);
+	return m > 0 ? m : 0;
+}
+function xCmpElegir(p) {
+	xCmpSel = p;
+	$('#cmp_und_cant').text(p ? '(' + xCmpUnd(p) + ')' : '');
+	$('#cmp_und_precio').text(p ? xCmpUnd(p) : 'unidad');
+	if (!p) { $('#cmp_aviso_precio').html(''); return; }
+	var up = xCmpUltimoPrecio(p);
+	$('#cmp_precio').val(up > 0 ? xCmpRedondeo(up, 4) : '');
+	xCmpCalcular('precio');
+	$('#cmp_cant').focus().select();
+}
+// Precio y total se calculan entre si: el que se escribe manda
+function xCmpCalcular(origen) {
+	var c = xCmpNum($('#cmp_cant').val()), p = xCmpNum($('#cmp_precio').val()), t = xCmpNum($('#cmp_total_linea').val());
+	if (origen === 'total') {
+		if (c > 0) { $('#cmp_precio').val(xCmpRedondeo(t / c, 4)); }
+	} else if (c > 0 && p > 0) {
+		$('#cmp_total_linea').val(xCmpRedondeo(c * p, 2));
+	}
+	xCmpAvisoPrecio();
+}
+function xCmpAvisoPrecio() {
+	var p = xCmpSel, pr = xCmpNum($('#cmp_precio').val());
+	if (!p || !(pr > 0)) { $('#cmp_aviso_precio').html(''); return; }
+	$('#cmp_aviso_precio').html(xCmpTextoVariacion(p, pr, true));
+}
+// "▲ 15 % más caro que tu última compra (S/ 16.00 · 08/08/2023)"
+function xCmpTextoVariacion(p, precio, largo) {
+	var u = parseFloat(p.ultimo_precio);
+	if (!(u > 0) || !(precio > 0)) { return largo && !(u > 0) ? '<span class="inv-muted">Primera compra registrada de este producto.</span>' : ''; }
+	var v = (precio - u) * 100 / u;
+	if (Math.abs(v) < 5) { return largo ? '<span class="inv-muted">Mismo precio que tu última compra (' + xCmpSoles(u) + ').</span>' : ''; }
+	var sube = v > 0;
+	return '<span class="' + (sube ? 'cmp-sube' : 'cmp-baja') + '">' + (sube ? '▲ ' : '▼ ') + Math.abs(v).toFixed(0) + ' % ' +
+		(sube ? 'más caro' : 'más barato') + (largo ? ' que tu última compra (' + xCmpSoles(u) + (p.ultima_fecha ? ' · ' + xCmpEsc(p.ultima_fecha) : '') + ')' : '') + '</span>';
+}
+function xCmpAgregar() {
+	var p = xCmpSel, c = xCmpNum($('#cmp_cant').val()), pr = xCmpNum($('#cmp_precio').val());
+	if (!p) { xCmpAviso('Elige el producto de la lista. Si no existe, créalo con "Crear producto nuevo".'); $('#cmp_prod').focus(); return; }
+	if (!(c > 0)) { xCmpAviso('Escribe la cantidad que compraste.'); $('#cmp_cant').focus(); return; }
+	if (!(pr > 0)) { xCmpAviso('Escribe el precio por ' + xCmpUnd(p) + ' o el total.'); $('#cmp_precio').focus(); return; }
+	var ya = xCmpLineas.filter(function (l) { return l.idproducto == p.idproducto; })[0];
+	if (ya) {
+		// mismo producto: se suma la cantidad y queda el ultimo precio escrito
+		xCmpLineas = xCmpLineas.map(function (l) {
+			return l.idproducto == p.idproducto ? $.extend({}, l, { cantidad: xCmpRedondeo(l.cantidad + c, 4), precio: pr }) : l;
+		});
+		showToastSwal('info', p.descripcion + ' ya estaba: se sumó la cantidad');
+	} else {
+		xCmpLineas = xCmpLineas.concat([{ idproducto: p.idproducto, descripcion: p.descripcion, familia: p.familia, und: p.und,
+			ultimo_precio: p.ultimo_precio, ultima_fecha: p.ultima_fecha, cantidad: c, precio: pr }]);
+	}
+	xCmpLimpiarEntrada();
+	xCmpPintarLineas();
+	$('#cmp_prod').focus();
+}
+function xCmpLimpiarEntrada() {
+	xCmpSel = null;
+	$('#cmp_prod, #cmp_cant, #cmp_precio, #cmp_total_linea').val('');
+	$('#cmp_und_cant').text(''); $('#cmp_und_precio').text('unidad');
+	$('#cmp_aviso_precio').html('');
+}
+
+// ---------- lineas ----------
+function xCmpTotal() {
+	return xCmpRedondeo(xCmpLineas.reduce(function (s, l) { return s + xCmpRedondeo(l.cantidad * l.precio, 2); }, 0), 2);
+}
+function xCmpPintarLineas() {
+	var h = '';
+	xCmpLineas.forEach(function (l, i) {
+		h += '<tr>' +
+			'<td>' + xCmpEsc(l.descripcion) + '<span class="inv-sub">' + xCmpEsc(l.familia || '') +
+				(l.fac ? ' · <span class="cmp-de-fac" title="' + xCmpEsc(l.fac.descripcion) + '"><i class="fa fa-file-text-o"></i> factura: ' + xCmpEsc(l.fac.cant + ' ' + l.fac.unidad) +
+					(l.fac.factor !== 1 ? ' × ' + l.fac.factor : '') + '</span>' : '') + '</span></td>' +
+			'<td class="inv-num"><input type="number" class="cmp-in-linea" min="0" step="any" value="' + l.cantidad + '" onchange="xCmpEditar(' + i + ', \'cantidad\', this.value)"> <span class="inv-muted">' + xCmpEsc(xCmpUnd(l)) + '</span></td>' +
+			'<td class="inv-num">S/ <input type="number" class="cmp-in-linea" min="0" step="any" value="' + l.precio + '" onchange="xCmpEditar(' + i + ', \'precio\', this.value)"></td>' +
+			'<td class="inv-num"><b>' + xCmpSoles(l.cantidad * l.precio) + '</b></td>' +
+			'<td>' + xCmpTextoVariacion(l, l.precio, false) + '</td>' +
+			'<td class="inv-acciones"><span class="inv-link inv-link-rojo" onclick="xCmpQuitar(' + i + ')" title="Quitar de la compra"><i class="fa fa-trash"></i>Quitar</span></td></tr>';
+	});
+	$('#tb_cmp_lineas tbody').html(h || '<tr><td colspan="6" class="inv-empty">Todavía no agregaste productos. Búscalo arriba, escribe cantidad y precio, y pulsa <b>Agregar</b>.</td></tr>');
+	$('#cmp_total').text(xCmpSoles(xCmpTotal()));
+}
+function xCmpEditar(i, campo, valor) {
+	var v = xCmpNum(valor);
+	if (!(v > 0)) { xCmpAviso('El valor debe ser mayor a 0. Si no va, usa "Quitar".'); xCmpPintarLineas(); return; }
+	xCmpLineas = xCmpLineas.map(function (l, k) { return k === i ? $.extend({}, l, (function () { var o = {}; o[campo] = v; return o; })()) : l; });
+	xCmpPintarLineas();
+}
+function xCmpQuitar(i) {
+	xCmpLineas = xCmpLineas.filter(function (l, k) { return k !== i; });
+	xCmpPintarLineas();
+}
+
+// ---------- pago y registro ----------
+function xCmpCambioPago() {
+	var credito = parseInt($('#cmp_tipo_pago').val()) === parseInt(xCmpData.credito);
+	$('#cmp_div_fpago').toggle(credito);
+	if (credito && !$('#cmp_fecha_pago').val()) { $('#cmp_fecha_pago').focus(); }
+}
+function xCmpRegistrar() {
+	if (xCmpEnviando) { return; }
+	if (xCmpPend.length) { xCmpAviso('Te falta revisar ' + xCmpPend.length + ' producto' + (xCmpPend.length > 1 ? 's' : '') + ' de la factura (paso 2): elige cuál es o marca "No va".'); return; }
+	if (xCmpFac && xCmpFac.comprobante.moneda === 'USD' && !(xCmpTc > 0)) { xCmpAviso('La factura está en dólares: escribe el tipo de cambio.'); return; }
+	if (!xCmpLineas.length) { xCmpAviso('Agrega al menos un producto a la compra.'); $('#cmp_prod').focus(); return; }
+	if (xCmpSel || $('#cmp_prod').val()) {
+		xCmpAviso('Tienes un producto escrito arriba sin agregar. Pulsa "Agregar" o bórralo antes de registrar.'); return;
+	}
+	var credito = parseInt($('#cmp_tipo_pago').val()) === parseInt(xCmpData.credito);
+	if (credito && !(parseInt($('#cmp_proveedor').val()) > 0)) { xCmpAviso('Es una compra a crédito: elige el proveedor (a quién le debes). Si no existe, créalo con "Nuevo".'); $('#cmp_proveedor').focus(); return; }
+	if (credito && !$('#cmp_fecha_pago').val()) { xCmpAviso('Es una compra a crédito: indica cuándo vas a pagar.'); $('#cmp_fecha_pago').focus(); return; }
+	var tipoC = $('#cmp_comp_tipo').val(), numC = $.trim($('#cmp_comp_num').val());
+	var body = {
+		token: xCmpToken,
+		idproveedor: parseInt($('#cmp_proveedor').val()) || 0,
+		fecha: $('#cmp_fecha').val(),
+		comprobante: tipoC ? (tipoC + (numC ? ' ' + numC : '')) : numC,
+		idalmacen: parseInt($('#cmp_almacen').val()) || 0,
+		idtipo_pago: parseInt($('#cmp_tipo_pago').val()) || 0,
+		fecha_pago: credito ? $('#cmp_fecha_pago').val() : '',
+		nota: $('#cmp_nota').val(),
+		items: xCmpLineas.map(function (l) { return { idproducto: l.idproducto, cantidad: l.cantidad, precio_unitario: l.precio }; }),
+		iddocumento: xCmpFac ? xCmpFac.iddocumento : 0,
+		// "texto de la factura -> mi producto" para reconocerlo solo la proxima vez
+		alias: xCmpLineas.filter(function (l) { return l.fac && l.fac.texto; }).map(function (l) { return { texto: l.fac.texto, idproducto: l.idproducto, factor: l.fac.factor }; })
+	};
+	xCmpEnviando = true;
+	$('#cmp_btn_registrar').prop('disabled', true);
+	xPopupLoad.titulo = 'Registrando compra...'; xPopupLoad.xopen();
+	xCmpApi('guardar', body).then(function (r) {
+		xPopupLoad.xclose();
+		xCmpEnviando = false;
+		$('#cmp_btn_registrar').prop('disabled', false);
+		if (!r.success) { return; }
+		xCmpLsSet(CMP_LS_ALMACEN, String(body.idalmacen));
+		var d = r.datos;
+		var html = 'Total <b>' + xCmpSoles(d.total !== undefined ? d.total : xCmpTotal()) + '</b>. Stock actualizado en <b>' + xCmpEsc(d.almacen || $('#cmp_almacen option:selected').text()) + '</b>.';
+		if (d.platos_afectados > 0) {
+			html += '<br><br>' + d.platos_afectados + ' plato' + (d.platos_afectados > 1 ? 's usan' : ' usa') + ' estos productos: su costo ya se actualizó.' +
+				(d.alertas > 0 ? '<br><b>' + d.alertas + ' dej' + (d.alertas > 1 ? 'aron' : 'ó') + ' de ser rentable' + (d.alertas > 1 ? 's' : '') + '.</b>' : '');
+		}
+		showAlertSwalHtmlDecision({
+			title: 'Compra #' + d.idcompra + ' registrada', html: html, icon: 'success',
+			showCancelButton: d.platos_afectados > 0, confirmButtonText: 'Registrar otra compra', cancelButtonText: 'Ver rentabilidad'
+		}, 1).then(function (res) {
+			if (res && res.dismiss === 'cancel') { window.location.href = '#/rentabilidad_carta'; }
+		});
+		xCmpNueva();
+		xCmpCargarProductos(); // el ultimo precio de compra cambio
+		xCmpListar();
+	});
+}
+// Deja la pantalla lista para otra compra (conserva almacen)
+function xCmpNueva() {
+	xCmpNuevoToken();
+	xCmpLineas = [];
+	xCmpFac = null; xCmpPend = []; xCmpTc = 1; xCmpPendCreando = -1;
+	$('#cmp_factura_estado').html(''); $('#cmp_pend').hide().html('');
+	xCmpLimpiarEntrada();
+	$('#cmp_fecha').val(xCmpHoy()).attr('max', xCmpHoy());
+	$('#cmp_proveedor').val('0');
+	$('#cmp_comp_tipo').val(''); $('#cmp_comp_num, #cmp_nota, #cmp_fecha_pago').val('');
+	$('#cmp_tipo_pago').val(String((xCmpData.tipos_pago[0] || {}).idtipo_pago || ''));
+	xCmpCambioPago();
+	xCmpPintarLineas();
+}
+
+// ---------- proveedor / producto nuevos ----------
+function xCmpAbrirProveedor() {
+	$('#cmp_prov_nombre, #cmp_prov_dni, #cmp_prov_tel').val('');
+	dlg_cmp_proveedor.open();
+	setTimeout(function () { $('#cmp_prov_nombre').focus(); }, 300);
+}
+function xCmpGuardarProveedor() {
+	var n = $.trim($('#cmp_prov_nombre').val());
+	if (!n) { xCmpAviso('Escribe el nombre del proveedor.'); return; }
+	xCmpApi('proveedor-crear', { descripcion: n, dni: $('#cmp_prov_dni').val(), telefono: $('#cmp_prov_tel').val() }).then(function (r) {
+		if (!r.success) { return; }
+		var p = r.datos;
+		if (!xCmpData.proveedores.filter(function (x) { return x.idproveedor == p.idproveedor; }).length) {
+			xCmpData.proveedores = xCmpData.proveedores.concat([p]).sort(function (a, b) { return a.descripcion < b.descripcion ? -1 : 1; });
+		}
+		xCmpPintarProveedores(p.idproveedor);
+		xCmpPintarFiltroProveedores();
+		dlg_cmp_proveedor.close();
+		showToastSwal('success', p.existente ? 'Ya existía: se eligió ' + p.descripcion : 'Proveedor creado');
+	});
+}
+// Familia: autocompletado con lista de altura fija dentro del dialogo; si lo escrito no existe, sera familia nueva
+function xCmpFamiliasAutocomplete() {
+	var fuente = xCmpData.familias.map(function (f) { return { label: f.descripcion, value: f.descripcion }; });
+	// se agrega al body (no al dialogo) para que el dialogo no recorte la lista
+	$('#cmp_prod_familia').autocomplete({ source: fuente, minLength: 0, appendTo: 'body', autoFocus: false, classes: { 'ui-autocomplete': 'cmp-ac-familia' },
+		select: function (e, ui) { $('#cmp_prod_familia').val(ui.item.value); xCmpAyudaFamilia(); return false; }
+	}).off('click.cmp').on('click.cmp', function () { $(this).autocomplete('search', $(this).val()); })
+	  .off('input.cmp').on('input.cmp', xCmpAyudaFamilia);
+}
+function xCmpFamiliaExiste(nombre) {
+	var n = $.trim(nombre).toUpperCase();
+	return xCmpData.familias.some(function (f) { return String(f.descripcion).toUpperCase() === n; });
+}
+function xCmpAyudaFamilia() {
+	var v = $.trim($('#cmp_prod_familia').val());
+	$('#cmp_prod_familia_ayuda').html(!v ? 'Si no existe, se crea como familia nueva.'
+		: (xCmpFamiliaExiste(v) ? '<i class="fa fa-check cmp-baja"></i> Familia existente'
+			: '<i class="fa fa-plus-circle"></i> Se creará la familia nueva <b>' + xCmpEsc(v.toUpperCase()) + '</b>'));
+}
+function xCmpAbrirProducto() {
+	xCmpPendCreando = -1; // el enlace normal no viene de "por revisar"
+	$('#cmp_prod_nombre').val($.trim($('#cmp_prod').val()));
+	$('#cmp_prod_familia').val(''); $('#cmp_prod_und').val('0');
+	xCmpAyudaFamilia();
+	dlg_cmp_producto.open();
+	setTimeout(function () { $('#cmp_prod_nombre').focus(); }, 300);
+}
+function xCmpGuardarProducto() {
+	var n = $.trim($('#cmp_prod_nombre').val());
+	if (!n) { xCmpAviso('Escribe el nombre del producto.'); return; }
+	var fam = $.trim($('#cmp_prod_familia').val());
+	if (!fam) { xCmpAviso('Escribe la familia del producto.'); $('#cmp_prod_familia').focus(); return; }
+	xCmpApi('producto-crear', { descripcion: n, familia: fam, idunidad_kardex: parseInt($('#cmp_prod_und').val()) || 0 })
+	.then(function (r) {
+		if (!r.success) { return; }
+		dlg_cmp_producto.close();
+		if (r.datos.familia_nueva) {
+			xCmpData.familias = xCmpData.familias.concat([{ idproducto_familia: r.datos.idproducto_familia, descripcion: r.datos.familia }])
+				.sort(function (a, b) { return a.descripcion < b.descripcion ? -1 : 1; });
+			xCmpFamiliasAutocomplete();
+		}
+		showToastSwal('success', r.datos.familia_nueva ? 'Producto y familia ' + r.datos.familia + ' creados' : 'Producto creado');
+		xCmpCargarProductos().then(function () {
+			var p = xCmpProductos.filter(function (x) { return x.idproducto == r.datos.idproducto; })[0];
+			if (!p) { return; }
+			if (xCmpPendCreando >= 0 && xCmpPend[xCmpPendCreando]) { xCmpPendElegir(xCmpPendCreando, p); xCmpPendCreando = -1; return; }
+			$('#cmp_prod').val(p.descripcion); xCmpElegir(p);
+		});
+	});
+}
+
+// ---------- leer factura (foto o PDF) ----------
+// Las fotos grandes se reducen en el navegador antes de subir: menos espera y menos costo de lectura.
+function xCmpReducirImagen(file) {
+	var d = $.Deferred();
+	if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size < 1200000) { d.resolve(file); return d.promise(); }
+	var img = new Image(), url = URL.createObjectURL(file);
+	img.onload = function () {
+		var max = 2200, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+		var cv = document.createElement('canvas'); cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+		cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+		URL.revokeObjectURL(url);
+		cv.toBlob(function (bl) { d.resolve(bl || file); }, 'image/jpeg', 0.85);
+	};
+	img.onerror = function () { URL.revokeObjectURL(url); d.resolve(file); };
+	img.src = url;
+	return d.promise();
+}
+function xCmpFacturaElegida(inp) {
+	var file = inp.files && inp.files[0];
+	inp.value = '';
+	if (!file) { return; }
+	if (!/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(file.type)) { xCmpAviso('Solo se pueden leer fotos (JPG o PNG) o PDF.'); return; }
+	if (file.size > 10 * 1024 * 1024) { xCmpAviso('El archivo pesa más de 10 MB. Toma una foto más liviana.'); return; }
+	if (xCmpLineas.length || xCmpPend.length) {
+		showAlertSwalHtmlDecision({ title: '¿Leer esta factura?', html: 'Se reemplazarán los productos que ya agregaste en esta compra.', icon: 'question',
+			showCancelButton: true, confirmButtonText: 'Sí, leer', cancelButtonText: 'Cancelar' }, 1).then(function (r) { if (r && r.isConfirmed) { xCmpFacturaSubir(file); } });
+		return;
+	}
+	xCmpFacturaSubir(file);
+}
+function xCmpFacturaSubir(file) {
+	$('#cmp_factura_estado').html('<div class="cmp-leyendo"><i class="fa fa-spinner fa-spin"></i><b>Leyendo la factura…</b> puede tardar hasta un minuto. No cierres esta pantalla.</div>');
+	$('.cmp-factura-btn').addClass('disabled');
+	xCmpReducirImagen(file).then(function (bl) {
+		var fd = new FormData();
+		fd.append('archivo', bl, file.name || 'factura');
+		$.ajax({ type: 'POST', url: '../../bdphp/log_compras.php?op=factura-leer', data: fd, processData: false, contentType: false, dataType: 'json', timeout: 90000 })
+		.done(function (r) {
+			$('.cmp-factura-btn').removeClass('disabled');
+			if (!r || !r.success) {
+				$('#cmp_factura_estado').html('<div class="cmp-fac-error"><i class="fa fa-exclamation-circle"></i>' + xCmpEsc((r && r.error) || 'No se pudo leer la factura.') + ' Puedes registrar la compra a mano.</div>');
+				return;
+			}
+			xCmpFacturaAplicar(r.datos);
+		})
+		.fail(function (x) {
+			$('.cmp-factura-btn').removeClass('disabled');
+			$('#cmp_factura_estado').html('<div class="cmp-fac-error"><i class="fa fa-exclamation-circle"></i>' +
+				(x && x.status === 401 ? 'Tu sesión expiró, vuelve a entrar.' : 'No se pudo leer la factura (sin respuesta del servidor).') + ' Puedes registrar la compra a mano.</div>');
+		});
+	});
+}
+// Llena la compra con lo leido. Nada se registra hasta que el usuario pulse "Registrar compra".
+function xCmpFacturaAplicar(d) {
+	xCmpFac = d;
+	xCmpRecuperaIgv = parseInt(d.recupera_igv) || 0;
+	xCmpTc = d.comprobante.moneda === 'USD' ? (parseFloat(d.comprobante.tipo_cambio) || 0) : 1;
+	// cabecera
+	if (d.comprobante.fecha && d.comprobante.fecha <= xCmpHoy()) { $('#cmp_fecha').val(d.comprobante.fecha); }
+	var tipos = { 'FACTURA': 'FACTURA', 'BOLETA': 'BOLETA', 'NOTA DE VENTA': 'NOTA DE VENTA', 'GUIA': 'GUIA' };
+	$('#cmp_comp_tipo').val(tipos[d.comprobante.tipo] || '');
+	$('#cmp_comp_num').val([d.comprobante.serie, d.comprobante.numero].filter(function (x) { return x; }).join('-'));
+	if (d.proveedor) { $('#cmp_proveedor').val(String(d.proveedor.idproveedor)); }
+	// lineas: reconocidas -> a la compra; el resto -> por revisar
+	xCmpLineas = []; xCmpPend = [];
+	d.lineas.forEach(function (l, i) {
+		var p = l.match ? (xCmpProductos.filter(function (x) { return x.idproducto == l.match.idproducto; })[0] || l.match) : null;
+		if (p && (l.match.tipo === 'aprendido' || xCmpMismaUnidad(l.unidad, p.und))) {
+			xCmpLineas.push(xCmpLineaDeFactura(l, p, parseFloat(l.match.factor) || 1, l.match.tipo));
+		} else if (p) {
+			// mismo nombre pero otra unidad (ej. factura en NIU, producto en LT): que el usuario confirme la equivalencia
+			xCmpPend.push({ i: i, l: l, sel: p, factor: 1 });
+		} else {
+			xCmpPend.push({ i: i, l: l, sel: null, factor: 1 });
+		}
+	});
+	xCmpFacturaPintar();
+	xCmpPintarPend();
+	xCmpPintarLineas();
+}
+// NIU / UND / UNIDAD son lo mismo; KGM = KG; LTR = LT... (codigos SUNAT y abreviaturas comunes)
+function xCmpUndNorm(u) {
+	var x = String(u || '').toUpperCase().replace(/[^A-Z]/g, '');
+	var m = { '': 'UND', NIU: 'UND', UND: 'UND', UNID: 'UND', UNIDAD: 'UND', UNIDADES: 'UND', U: 'UND', ZZ: 'UND', PZA: 'UND',
+		KG: 'KG', KGM: 'KG', KILO: 'KG', KILOS: 'KG', KGS: 'KG', LT: 'LT', LTR: 'LT', L: 'LT', LTS: 'LT', LITRO: 'LT', LITROS: 'LT',
+		GR: 'GR', GRM: 'GR', G: 'GR', GRS: 'GR', ML: 'ML', MLT: 'ML', OZ: 'OZ' };
+	return m.hasOwnProperty(x) ? m[x] : x;
+}
+function xCmpMismaUnidad(a, b) { return xCmpUndNorm(a) === xCmpUndNorm(b); }
+function xCmpCostoFactura(l) { return (xCmpRecuperaIgv ? parseFloat(l.costo_sin) : parseFloat(l.costo_con)) * (xCmpTc || 0); }
+function xCmpLineaDeFactura(l, p, factor, tipo) {
+	var cantF = parseFloat(l.cantidad) || 1;
+	return { idproducto: p.idproducto, descripcion: p.descripcion, familia: p.familia || '', und: p.und || '',
+		ultimo_precio: p.ultimo_precio, ultima_fecha: p.ultima_fecha,
+		cantidad: xCmpRedondeo(cantF * factor, 4), precio: xCmpRedondeo(xCmpCostoFactura(l) / factor, 4),
+		fac: { texto: l.texto, descripcion: l.descripcion, unidad: l.unidad || '', cant: cantF, factor: factor, costo_con: l.costo_con, costo_sin: l.costo_sin, tipo: tipo } };
+}
+// La opcion IGV o el tipo de cambio cambian el precio de todo lo que vino de la factura
+function xCmpFacturaRecalcular() {
+	xCmpLineas = xCmpLineas.map(function (x) {
+		if (!x.fac) { return x; }
+		return $.extend({}, x, { precio: xCmpRedondeo(xCmpCostoFactura({ costo_con: x.fac.costo_con, costo_sin: x.fac.costo_sin }) / x.fac.factor, 4) });
+	});
+	xCmpPintarPend(); xCmpPintarLineas(); xCmpFacturaPintar();
+}
+function xCmpCambioIgv(v) {
+	xCmpRecuperaIgv = parseInt(v) ? 1 : 0;
+	xCmpApi('config', { recupera_igv: xCmpRecuperaIgv });
+	xCmpFacturaRecalcular();
+}
+function xCmpCambioTc(v) { xCmpTc = parseFloat(v) || 0; xCmpFacturaRecalcular(); }
+function xCmpFacturaQuitar() {
+	xCmpFac = null; xCmpPend = []; xCmpTc = 1;
+	xCmpLineas = xCmpLineas.filter(function (x) { return !x.fac; });
+	$('#cmp_factura_estado').html('');
+	xCmpPintarPend(); xCmpPintarLineas();
+}
+function xCmpFacturaPintar() {
+	var d = xCmpFac;
+	if (!d) { $('#cmp_factura_estado').html(''); return; }
+	var r = d.resumen, cp = d.comprobante, usd = cp.moneda === 'USD';
+	var mon = function (n) { var v = parseFloat(n); return isNaN(v) ? '–' : (usd ? 'US$ ' : 'S/ ') + v.toFixed(2); };
+	var h = '<div class="cmp-fac-ok">';
+	h += '<div class="cmp-fac-cab"><i class="fa fa-check-circle cmp-baja"></i><div><b>' + xCmpEsc((cp.tipo || 'Comprobante') + ' ' + [cp.serie, cp.numero].filter(function (x) { return x; }).join('-')) + '</b>' +
+		' · ' + xCmpEsc(d.emisor.razon_social || 'Proveedor sin nombre') + (d.emisor.ruc ? ' · RUC ' + xCmpEsc(d.emisor.ruc) : '') +
+		(cp.fecha ? ' · ' + xCmpEsc(cp.fecha.split('-').reverse().join('/')) : '') +
+		'<span class="inv-sub">' + d.lineas.length + ' producto' + (d.lineas.length === 1 ? '' : 's') + ' leído' + (d.lineas.length === 1 ? '' : 's') +
+		(xCmpPend.length ? ' · <b class="cmp-sube">' + xCmpPend.length + ' por revisar</b> (abajo, en el paso 2)' : ' · todos reconocidos') + '</span></div>' +
+		'<span class="inv-link inv-link-rojo" onclick="xCmpFacturaQuitar()"><i class="fa fa-times"></i>Quitar factura</span></div>';
+	// proveedor nuevo
+	if (!d.proveedor && (d.emisor.razon_social || d.emisor.ruc)) {
+		h += '<div class="cmp-fac-prov"><i class="fa fa-user-plus"></i>Proveedor nuevo: <b>' + xCmpEsc(d.emisor.razon_social || '') + '</b>' + (d.emisor.ruc ? ' (RUC ' + xCmpEsc(d.emisor.ruc) + ')' : '') +
+			' <button class="btn btn-sm btn-success" onclick="xCmpFacturaCrearProveedor()">Crear proveedor</button></div>';
+	}
+	// avisos
+	(d.avisos || []).forEach(function (a) {
+		h += '<div class="' + (a.tipo === 'error' ? 'cmp-fac-err' : 'cmp-fac-av') + '"><i class="fa fa-exclamation-triangle"></i>' + xCmpEsc(a.texto) + '</div>';
+	});
+	// resumen de impuestos
+	var fila = function (et, v, fuerte) { return v === null || v === undefined || (parseFloat(v) === 0 && !fuerte) ? '' : '<div class="' + (fuerte ? 'cmp-fac-tot' : '') + '"><span>' + et + '</span><b>' + mon(v) + '</b></div>'; };
+	h += '<div class="cmp-fac-resumen">' +
+		fila('Op. gravadas', r.op_gravadas) + fila('Op. exoneradas', r.op_exoneradas) + fila('Op. inafectas', r.op_inafectas) +
+		fila('Descuentos', r.descuentos) + fila('Otros cargos', r.otros_cargos) +
+		fila('IGV', r.igv) + fila('ISC', r.isc) + fila('ICBPER (bolsas)', r.icbper) + fila('Total', r.total, true) +
+		fila('Percepción', r.percepcion) + (parseFloat(r.percepcion) > 0 ? fila('Total a pagar', r.total_a_pagar, true) : '') + '</div>';
+	// opciones: IGV y tipo de cambio
+	h += '<div class="cmp-fac-opc">' +
+		'<label>¿Tu negocio recupera el IGV (crédito fiscal)? <select class="inv-select" onchange="xCmpCambioIgv(this.value)" style="width:auto">' +
+		'<option value="0"' + (xCmpRecuperaIgv ? '' : ' selected') + '>No: el costo incluye todo lo pagado</option>' +
+		'<option value="1"' + (xCmpRecuperaIgv ? ' selected' : '') + '>Sí: el costo va sin IGV ni percepción</option></select></label>' +
+		(usd ? '<label>Tipo de cambio (S/ por US$) <input type="number" class="inv-input" step="0.001" min="0" value="' + (xCmpTc || '') + '" onchange="xCmpCambioTc(this.value)" style="width:100px"></label>' : '') +
+		'</div>';
+	if (d.observaciones) { h += '<div class="inv-sub">Nota de la lectura: ' + xCmpEsc(d.observaciones) + '</div>'; }
+	h += '</div>';
+	$('#cmp_factura_estado').html(h);
+}
+function xCmpFacturaCrearProveedor() {
+	var e = xCmpFac.emisor;
+	xCmpApi('proveedor-crear', { descripcion: e.razon_social || ('RUC ' + e.ruc), dni: e.ruc || '' }).then(function (r) {
+		if (!r.success) { return; }
+		var p = r.datos;
+		if (!xCmpData.proveedores.filter(function (x) { return x.idproveedor == p.idproveedor; }).length) {
+			xCmpData.proveedores = xCmpData.proveedores.concat([p]).sort(function (a, b) { return a.descripcion < b.descripcion ? -1 : 1; });
+		}
+		xCmpPintarProveedores(p.idproveedor);
+		xCmpPintarFiltroProveedores();
+		xCmpFac.proveedor = { idproveedor: p.idproveedor, descripcion: p.descripcion, dni: p.dni };
+		xCmpFacturaPintar();
+		showToastSwal('success', p.existente ? 'Ya existía: se eligió ' + p.descripcion : 'Proveedor creado');
+	});
+}
+
+// ---------- productos de la factura por revisar ----------
+function xCmpPintarPend() {
+	if (!xCmpPend.length) { $('#cmp_pend').hide().html(''); if (xCmpFac) { xCmpFacturaPintar(); } return; }
+	var h = '<div class="cmp-pend-tit"><i class="fa fa-hand-o-right"></i>Une cada producto de la factura con uno tuyo (' + xCmpPend.length + ' por revisar). ' +
+		'<span class="inv-muted">La próxima factura de este proveedor se reconocerá sola.</span></div>';
+	xCmpPend.forEach(function (pd, k) {
+		var l = pd.l, pr = xCmpCostoFactura(l);
+		var und = pd.sel ? (pd.sel.und || 'unidad') : '';
+		h += '<div class="cmp-pend-fila">' +
+			'<div class="cmp-pend-fac"><b>' + xCmpEsc(l.descripcion) + '</b><span class="inv-sub">' + (parseFloat(l.cantidad) || 0) + ' ' + xCmpEsc(l.unidad || '') + ' · ' + xCmpSoles(pr) + ' c/u</span></div>' +
+			'<div class="cmp-pend-prod">' +
+				'<input type="text" class="inv-input inv-w100 cmp-pend-in" data-k="' + k + '" placeholder="¿Cuál de tus productos es?" value="' + (pd.sel ? xCmpEsc(pd.sel.descripcion) : '') + '">' +
+				'<div class="cmp-pend-sug">' + (l.sugerencias || []).map(function (s) {
+					return '<span class="cmp-chip" onclick="xCmpPendElegirId(' + k + ',' + s.idproducto + ')">' + xCmpEsc(s.descripcion) + '</span>';
+				}).join('') + '<span class="inv-link" onclick="xCmpPendCrear(' + k + ')"><i class="fa fa-plus"></i>Crear producto</span></div>' +
+			'</div>' +
+			'<div class="cmp-pend-fac-u">' + (pd.sel && !xCmpMismaUnidad(l.unidad, pd.sel.und)
+				? '<span class="inv-label">1 ' + xCmpEsc(l.unidad || 'unidad') + ' = ¿cuántos ' + xCmpEsc(und) + '?</span><input type="number" class="inv-input" min="0" step="any" value="' + pd.factor + '" onchange="xCmpPendFactor(' + k + ', this.value)" style="width:90px">'
+				: '') + '</div>' +
+			'<div class="cmp-pend-acc">' +
+				'<button class="btn btn-sm btn-success" ' + (pd.sel ? '' : 'disabled') + ' onclick="xCmpPendConfirmar(' + k + ')"><i class="fa fa-check"></i>Confirmar</button>' +
+				'<span class="inv-link inv-link-rojo" onclick="xCmpPendIgnorar(' + k + ')" title="Ej: flete o un producto que no controlas">No va</span>' +
+			'</div></div>';
+	});
+	$('#cmp_pend').html(h).show();
+	$('#cmp_pend .cmp-pend-in').each(function () {
+		var k = parseInt($(this).data('k'));
+		$(this).autocomplete({
+			source: xCmpProductos, minLength: 1, autoFocus: true,
+			select: function (e, ui) { xCmpPendElegir(k, ui.item); return false; }
+		});
+	});
+	if (xCmpFac) { xCmpFacturaPintar(); }
+}
+function xCmpPendElegirId(k, id) {
+	var p = xCmpProductos.filter(function (x) { return x.idproducto == id; })[0];
+	if (p) { xCmpPendElegir(k, p); }
+}
+function xCmpPendElegir(k, p) {
+	xCmpPend = xCmpPend.map(function (pd, j) { return j === k ? $.extend({}, pd, { sel: p, factor: 1 }) : pd; });
+	xCmpPintarPend();
+}
+function xCmpPendFactor(k, v) {
+	var f = parseFloat(v);
+	if (!(f > 0)) { xCmpAviso('Escribe cuántas unidades trae (mayor a 0).'); xCmpPintarPend(); return; }
+	xCmpPend = xCmpPend.map(function (pd, j) { return j === k ? $.extend({}, pd, { factor: f }) : pd; });
+}
+function xCmpPendConfirmar(k) {
+	var pd = xCmpPend[k];
+	if (!pd || !pd.sel) { return; }
+	var nueva = xCmpLineaDeFactura(pd.l, pd.sel, pd.factor, 'confirmado');
+	var ya = xCmpLineas.filter(function (x) { return x.idproducto == nueva.idproducto; })[0];
+	if (ya) {
+		xCmpLineas = xCmpLineas.map(function (x) { return x.idproducto == nueva.idproducto ? $.extend({}, x, { cantidad: xCmpRedondeo(x.cantidad + nueva.cantidad, 4) }) : x; });
+		showToastSwal('info', nueva.descripcion + ' ya estaba: se sumó la cantidad');
+	} else {
+		xCmpLineas = xCmpLineas.concat([nueva]);
+	}
+	xCmpPend = xCmpPend.filter(function (x, j) { return j !== k; });
+	xCmpPintarPend(); xCmpPintarLineas();
+}
+function xCmpPendIgnorar(k) {
+	xCmpPend = xCmpPend.filter(function (x, j) { return j !== k; });
+	xCmpPintarPend();
+}
+function xCmpPendCrear(k) {
+	var pd = xCmpPend[k];
+	xCmpAbrirProducto();
+	xCmpPendCreando = k; // al crear, queda elegido en esta linea de la factura
+	$('#cmp_prod_nombre').val(pd.l.descripcion);
+}
+var xCmpPendCreando = -1;
+
+// ---------- vistas ----------
+function xCmpIr(vista) {
+	$('#cmp_vista_lista, #cmp_vista_nueva').removeClass('activa');
+	$('#cmp_vista_' + vista).addClass('activa');
+	$('#Titulo_page').text(vista === 'nueva' ? 'Nueva compra' : 'Compras');
+	if (vista === 'nueva') { setTimeout(function () { $('#cmp_prod').focus(); }, 50); }
+	window.scrollTo(0, 0);
+}
+
+// ---------- listado ----------
+function xCmpPintarFiltroProveedores() {
+	var v = $('#cmp_f_prov').val() || '0';
+	var h = '<option value="0">Todos los proveedores</option>';
+	xCmpData.proveedores.forEach(function (p) { h += '<option value="' + p.idproveedor + '">' + xCmpEsc(p.descripcion) + '</option>'; });
+	$('#cmp_f_prov').html(h).val(v);
+}
+function xCmpListar() {
+	return xCmpApi('listar', { mes: $('#cmp_f_mes').val(), idproveedor: parseInt($('#cmp_f_prov').val()) || 0 }).then(function (r) {
+		if (!r.success) { return; }
+		xCmpCompras = r.datos.compras;
+		xCmpPintarLista();
+	});
+}
+function xCmpEsCreditoPendiente(c) {
+	return parseInt(c.estado) === 0 && parseInt(c.idtipo_pago) === parseInt(xCmpData.credito) && parseInt(c.pagado) === 0;
+}
+function xCmpPintarLista() {
+	var validas = xCmpCompras.filter(function (c) { return parseInt(c.estado) === 0; });
+	var total = validas.reduce(function (s, c) { return s + (parseFloat(c.total) || 0); }, 0);
+	var pend = validas.filter(xCmpEsCreditoPendiente);
+	var totalPend = pend.reduce(function (s, c) { return s + (parseFloat(c.total) || 0); }, 0);
+	var anuladas = xCmpCompras.length - validas.length;
+	$('#cmp_kpis').html(
+		'<div class="inv-kpi inv-kpi-azul"><span>Total comprado en el mes</span><b>' + xCmpSoles(total) + '</b><em>' + validas.length + ' compra' + (validas.length === 1 ? '' : 's') + '</em></div>' +
+		'<div class="inv-kpi ' + (pend.length ? 'inv-kpi-rojo' : 'inv-kpi-verde') + '"><span>Por pagar (crédito)</span><b>' + xCmpSoles(totalPend) + '</b><em>' + pend.length + ' compra' + (pend.length === 1 ? '' : 's') + ' pendiente' + (pend.length === 1 ? '' : 's') + '</em></div>' +
+		'<div class="inv-kpi"><span>Anuladas</span><b>' + anuladas + '</b><em>no suman al total</em></div>'
+	);
+	var txt = ($('#cmp_f_buscar').val() || '').toLowerCase();
+	var verAnuladas = $('#cmp_f_anuladas').is(':checked');
+	var h = '';
+	xCmpCompras.forEach(function (c) {
+		var anulada = parseInt(c.estado) !== 0;
+		if (anulada && !verAnuladas) { return; }
+		if (txt && ([c.idcompra, c.proveedor, c.comprobante, c.almacen, c.tipo_pago, c.f_compra].join(' ').toLowerCase().indexOf(txt) < 0)) { return; }
+		var pago = xCmpEsc(c.tipo_pago);
+		if (xCmpEsCreditoPendiente(c)) { pago += '<span class="inv-sub cmp-sube">Por pagar' + (c.f_pago ? ' · vence ' + xCmpEsc(c.f_pago) : '') + '</span>'; }
+		h += '<tr class="' + (anulada ? 'cmp-fila-anulada' : '') + '">' +
+			'<td>' + c.idcompra + '</td>' +
+			'<td>' + xCmpEsc(c.f_compra) + '</td>' +
+			'<td>' + (c.proveedor ? xCmpEsc(c.proveedor) : '<span class="inv-muted">Sin proveedor</span>') + '<span class="inv-sub">' + c.n_items + ' producto' + (parseInt(c.n_items) === 1 ? '' : 's') + '</span></td>' +
+			'<td>' + (c.comprobante ? xCmpEsc(c.comprobante) : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td>' + xCmpEsc(c.almacen) + '</td>' +
+			'<td>' + pago + '</td>' +
+			'<td class="inv-num"><b>' + xCmpSoles(c.total) + '</b>' + (anulada ? '<span class="inv-sub"><span class="inv-estado anulado">ANULADA</span></span>' : '') + '</td>' +
+			'<td class="inv-acciones"><span class="inv-link" onclick="xCmpVer(' + c.idcompra + ')"><i class="fa fa-search"></i>Ver</span></td></tr>';
+	});
+	$('#tb_cmp_lista tbody').html(h || '<tr><td colspan="8" class="inv-empty">' +
+		(xCmpCompras.length ? 'Ninguna compra coincide con el filtro.' : 'No hay compras en este mes. Registra una con <b><i class="fa fa-plus"></i> Nueva compra</b>.') + '</td></tr>');
+}
+function xCmpExcel() {
+	var t = $('#tb_cmp_lista').clone();
+	t.find('th:last-child, td:last-child').remove();
+	t.attr('id', 'tb_cmp_lista_xls').css('display', 'none');
+	$('body').append(t);
+	try { tableToExcel('tb_cmp_lista_xls', 'compras_' + ($('#cmp_f_mes').val() || '')); } finally { t.remove(); }
+}
+
+// ---------- detalle y anular ----------
+function xCmpVer(id) {
+	xCmpApi('detalle', { idcompra: id }).then(function (r) {
+		if (!r.success) { return; }
+		var c = r.datos.compra;
+		xCmpDet = c;
+		var anulada = parseInt(c.estado) !== 0;
+		$('#cmp_det_titulo').text('Compra #' + c.idcompra + ' · ' + c.f_compra);
+		$('#cmp_det_bajada').html('Total <b>' + xCmpSoles(c.total) + '</b> · ingresó a ' + xCmpEsc(c.almacen));
+		$('#cmp_det_anulada').toggle(anulada).html(anulada ? '<i class="fa fa-ban"></i> Compra <b>ANULADA</b>' +
+			(c.fecha_anula ? ' el ' + xCmpEsc(c.fecha_anula) : '') + (c.usuario_anula ? ' por ' + xCmpEsc(c.usuario_anula) : '') + '. El stock ya fue devuelto.' : '');
+		var dato = function (et, v) { return '<div><span>' + et + '</span><b>' + (v ? xCmpEsc(v) : '–') + '</b></div>'; };
+		var pago = c.tipo_pago + (xCmpEsCreditoPendiente(c) ? ' · por pagar' + (c.f_pago ? ' (vence ' + c.f_pago + ')' : '') : '');
+		$('#cmp_det_datos').html(
+			dato('Proveedor', c.proveedor ? c.proveedor + (c.proveedor_dni ? ' · ' + c.proveedor_dni : '') : 'Sin proveedor') +
+			dato('Comprobante', c.comprobante) + dato('Forma de pago', pago) +
+			dato('Registró', c.usuario + (c.f_registro ? ' · ' + c.f_registro : '')) +
+			(c.nota_de_compra ? dato('Nota', c.nota_de_compra) : '')
+		);
+		if (r.datos.factura) {
+			var fr = r.datos.factura.resumen, usd = r.datos.factura.moneda === 'USD';
+			var mm = function (n) { var v = parseFloat(n); return isNaN(v) ? '–' : (usd ? 'US$ ' : 'S/ ') + v.toFixed(2); };
+			var partes = [['Gravadas', fr.op_gravadas], ['Exoneradas', fr.op_exoneradas], ['IGV', fr.igv], ['ISC', fr.isc], ['ICBPER', fr.icbper], ['Percepción', fr.percepcion], ['Total', fr.total]]
+				.filter(function (x) { return parseFloat(x[1]) > 0; }).map(function (x) { return x[0] + ' ' + mm(x[1]); });
+			$('#cmp_det_datos').append('<div class="cmp-det-fac"><span>Factura leída</span><b>' + xCmpEsc(partes.join(' · ')) + '</b></div>');
+		}
+		var h = '';
+		r.datos.items.forEach(function (i) {
+			h += '<tr><td>' + xCmpEsc(i.descripcion) + '</td>' +
+				'<td class="inv-num">' + xCmpEsc(i.cantidad) + ' <span class="inv-muted">' + xCmpEsc(i.und || 'und') + '</span></td>' +
+				'<td class="inv-num">' + xCmpSoles(i.punitario) + '</td>' +
+				'<td class="inv-num">' + xCmpSoles(i.ptotal) + '</td></tr>';
+		});
+		$('#tb_cmp_det_items tbody').html(h + '<tr class="inv-subtotal"><td colspan="3" class="inv-num">Total</td><td class="inv-num">' + xCmpSoles(c.total) + '</td></tr>');
+		$('#cmp_det_btn_anular').toggle(!anulada);
+		dlg_cmp_detalle.open();
+	});
+}
+function xCmpAnular() {
+	if (!xCmpDet) { return; }
+	var id = xCmpDet.idcompra;
+	xCmpApi('anular-preview', { idcompra: id }).then(function (r) {
+		if (!r.success) { return; }
+		var negativos = r.datos.items.filter(function (i) { return parseFloat(i.stock_final) < 0; });
+		var html = 'Se restará del stock de <b>' + xCmpEsc(r.datos.compra.almacen) + '</b>:<ul class="cmp-swal-lista">';
+		r.datos.items.forEach(function (i) {
+			html += '<li>' + xCmpEsc(i.descripcion) + ': <b>−' + parseFloat(i.cantidad) + ' ' + xCmpEsc(i.und || 'und') + '</b>' +
+				' (queda ' + (Math.round(parseFloat(i.stock_final) * 100) / 100) + ')</li>';
+		});
+		html += '</ul>';
+		if (negativos.length) {
+			html += '<p class="cmp-swal-alerta">⚠ ' + negativos.length + ' producto' + (negativos.length > 1 ? 's quedarán' : ' quedará') +
+				' en negativo: ya se usó parte de lo comprado.</p>';
+		}
+		html += 'Los precios vuelven a la compra anterior. No se puede deshacer.';
+		showAlertSwalHtmlDecision({ title: '¿Anular la compra #' + id + '?', html: html, icon: 'warning', showCancelButton: true,
+			confirmButtonText: 'Sí, anular', cancelButtonText: 'Cancelar' }, 1).then(function (res) {
+			if (!(res && res.isConfirmed)) { return; }
+			xPopupLoad.titulo = 'Anulando...'; xPopupLoad.xopen();
+			xCmpApi('anular', { idcompra: id }).then(function (r2) {
+				xPopupLoad.xclose();
+				if (!r2.success) { return; }
+				dlg_cmp_detalle.close();
+				showToastSwal('success', 'Compra #' + id + ' anulada. Stock devuelto.');
+				xCmpListar();
+				xCmpCargarProductos();
+			});
+		});
+	});
+}
+
+Polymer({
+	is: 'x-compras2',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		$('#Titulo_page').text('Compras');
+		$('#cmp_vista_lista').addClass('activa'); $('#cmp_vista_nueva').removeClass('activa');
+		// Enter avanza: cantidad -> precio -> agregar
+		$('#cmp_cant').off('keydown.cmp').on('keydown.cmp', function (e) { if (e.which === 13) { $('#cmp_precio').focus().select(); } });
+		$('#cmp_precio, #cmp_total_linea').off('keydown.cmp').on('keydown.cmp', function (e) { if (e.which === 13) { xCmpAgregar(); } });
+		$('#cmp_cant, #cmp_precio').off('input.cmp').on('input.cmp', function () { xCmpCalcular('precio'); });
+		$('#cmp_total_linea').off('input.cmp').on('input.cmp', function () { xCmpCalcular('total'); });
+		$('#cmp_prod').off('input.cmp').on('input.cmp', function () { if (xCmpSel && $(this).val() !== xCmpSel.descripcion) { xCmpElegir(null); } });
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xCmpIniciar(); });
+	}
+});
+</script>
+</dom-module>
+
+<!-- fuera del dom-module: el <style> dentro del template queda scoped y no alcanza lo insertado con jQuery -->
+<style>
+	.cmp-paso { border:1px solid #edf0f2; border-radius:10px; padding:12px 14px; margin-bottom:14px; background:#fff; }
+	.cmp-paso-tit { font-size:14px; font-weight:600; color:#212529; margin-bottom:10px; display:flex; align-items:center; }
+	.cmp-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%;
+		background:#007bff; color:#fff; font-size:12px; font-weight:700; margin-right:8px; }
+	/* grillas: las columnas quedan alineadas aunque el ancho cambie */
+	.cmp-grid { display:grid; gap:12px 16px; align-items:end; }
+	.cmp-grid .inv-select, .cmp-grid .inv-input { width:100%; min-width:0; }
+	.cmp-grid-4 { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.1fr); }
+	.cmp-grid-pago { grid-template-columns: minmax(180px, 220px) minmax(150px, 180px) minmax(200px, 1fr); flex:1 1 560px; }
+	.cmp-fila { display:flex; gap:6px; align-items:center; min-width:0; }
+	.cmp-fila > .inv-select, .cmp-fila > .inv-input { flex:1 1 auto; min-width:0; }
+	.cmp-fila > .btn { flex:0 0 auto; }
+	.cmp-fila > .cmp-comp-tipo { flex:0 0 45%; }
+	.cmp-entrada { display:grid; grid-template-columns: minmax(0, 1fr) 110px 130px 130px auto; gap:10px; align-items:end;
+		background:#f7f8fa; border-radius:8px; padding:10px; }
+	.cmp-entrada .inv-input { width:100%; }
+	.cmp-num-in { text-align:right; }
+	.cmp-btn-add { height:31px; }
+	.cmp-aviso-precio { font-size:12px; margin:6px 2px 10px; min-height:16px; }
+	.cmp-sube { color:#b42318; font-weight:600; }
+	.cmp-baja { color:#198754; font-weight:600; }
+	.cmp-in-linea { width:90px; height:28px; box-sizing:border-box; border:1px solid #e5e7eb; border-radius:6px; padding:0 6px; text-align:right; font-size:12px; }
+	.cmp-in-linea:focus { border-color:#007bff; outline:none; }
+	.cmp-nuevo-prod { font-size:12px; color:#6c757d; margin:10px 2px 0; }
+	.cmp-pago { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px; }
+	.cmp-cierre { display:flex; align-items:center; gap:16px; margin-left:auto; }
+	.cmp-total span { display:block; font-size:11px; color:#6c757d; text-align:right; }
+	.cmp-total b { display:block; font-size:24px; font-weight:700; color:#212529; font-variant-numeric:tabular-nums; }
+	.cmp-btn-registrar { height:42px; padding:0 22px; font-size:15px; font-weight:600; border-radius:8px; }
+	.inv-card .btn.cmp-btn-registrar { height:42px; line-height:40px; font-size:15px; }
+	.cmp-btn-registrar > .fa, .cmp-btn-add > .fa, #dlg_cmp_proveedor .btn > .fa { margin-right:6px; }
+	#dlg_cmp_proveedor, #dlg_cmp_producto { width:440px; max-width:96vw; }
+	#dlg_cmp_detalle { width:760px; max-width:96vw; }
+	#dlg_cmp_detalle .xdlg-foot { display:flex; align-items:center; }
+	.cmp-det-datos { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px 16px; margin-bottom:12px; }
+	.cmp-det-datos span { display:block; font-size:10px; font-weight:600; color:#6c757d; text-transform:uppercase; letter-spacing:.4px; }
+	.cmp-det-datos b { display:block; font-size:13px; font-weight:600; color:#212529; }
+	.cmp-anulada { background:#fff7f7; border:1px solid #f5c2c7; color:#842029; border-radius:8px; padding:8px 10px; font-size:12px; margin-bottom:12px; }
+	.cmp-btn-anular > .fa, .inv-card .btn > .fa { margin-right:6px; }
+	tr.cmp-fila-anulada td { opacity:.55; }
+	.cmp-swal-lista { text-align:left; margin:8px 0; padding-left:18px; }
+	.cmp-swal-alerta { color:#ffd166; font-weight:600; margin:6px 0; }
+	.ui-autocomplete { max-height:300px; overflow-y:auto; overflow-x:hidden; z-index:200; }
+	.ui-autocomplete.cmp-ac-familia { max-height:220px; z-index:20000 !important; }
+	.cmp-ayuda-fam { display:block; margin-top:4px; font-size:11px; color:#6c757d; }
+	/* leer factura */
+	.cmp-factura { border:1px dashed #9ec5fe; background:#f5f9ff; border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+	.cmp-factura-sube { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+	.cmp-factura-ico { font-size:22px; color:#0d6efd; }
+	.cmp-factura-txt { flex:1 1 260px; }
+	.cmp-factura-txt b { display:block; font-size:13px; color:#212529; }
+	.cmp-factura-txt span { font-size:12px; color:#6c757d; }
+	.cmp-factura-btn { margin:0; cursor:pointer; }
+	.cmp-factura-btn.disabled { pointer-events:none; opacity:.6; }
+	.cmp-factura-btn > .fa { margin-right:6px; }
+	.cmp-leyendo { margin-top:10px; font-size:13px; color:#0b3d91; }
+	.cmp-leyendo .fa { margin-right:8px; }
+	.cmp-fac-error { margin-top:10px; font-size:12px; color:#842029; background:#fff7f7; border-radius:6px; padding:6px 8px; }
+	.cmp-fac-error .fa, .cmp-fac-err .fa, .cmp-fac-av .fa, .cmp-fac-prov .fa { margin-right:6px; }
+	.cmp-fac-ok { margin-top:10px; border-top:1px solid #dbe7fb; padding-top:10px; }
+	.cmp-fac-cab { display:flex; align-items:flex-start; gap:8px; font-size:13px; }
+	.cmp-fac-cab > div { flex:1; }
+	.cmp-fac-cab .fa-check-circle { font-size:18px; margin-top:1px; }
+	.cmp-fac-prov { margin-top:8px; font-size:12px; background:#eef9f3; border-radius:6px; padding:6px 8px; }
+	.cmp-fac-prov .btn { margin-left:8px; height:26px; line-height:24px; padding:0 10px; font-size:12px; }
+	.cmp-fac-err { margin-top:6px; font-size:12px; color:#842029; background:#fff7f7; border-radius:6px; padding:6px 8px; }
+	.cmp-fac-av { margin-top:6px; font-size:12px; color:#7a5b00; background:#fff8e1; border-radius:6px; padding:6px 8px; }
+	.cmp-fac-resumen { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:10px; font-size:12px; }
+	.cmp-fac-resumen span { color:#6c757d; margin-right:6px; }
+	.cmp-fac-resumen .cmp-fac-tot b { font-size:14px; }
+	.cmp-fac-opc { display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:10px; font-size:12px; color:#495057; }
+	.cmp-fac-opc label { display:flex; align-items:center; gap:8px; margin:0; }
+	.cmp-pend { border:1px solid #ffe08a; background:#fffbeb; border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+	.cmp-pend-tit { font-size:13px; font-weight:600; color:#7a5b00; margin-bottom:6px; }
+	.cmp-pend-tit .fa { margin-right:6px; }
+	.cmp-pend-tit .inv-muted { font-weight:400; }
+	.cmp-pend-fila { display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) auto auto; gap:10px; align-items:start;
+		padding:8px 0; border-top:1px solid #f5e3a3; }
+	.cmp-pend-fac b { font-size:12px; }
+	.cmp-pend-sug { margin-top:4px; display:flex; flex-wrap:wrap; gap:4px; align-items:center; font-size:11px; }
+	.cmp-chip { display:inline-block; padding:1px 8px; border-radius:10px; background:#fff; border:1px solid #d0d7e2; cursor:pointer; font-size:11px; }
+	.cmp-chip:hover { border-color:#0d6efd; color:#0d6efd; }
+	.cmp-pend-fac-u .inv-label { display:block; margin-bottom:3px; }
+	.cmp-pend-acc { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+	.cmp-pend-acc .btn > .fa { margin-right:4px; }
+	.cmp-de-fac { color:#0b3d91; }
+	.cmp-det-fac { grid-column: 1 / -1; }
+	@media (max-width: 900px) { .cmp-pend-fila { grid-template-columns: minmax(0, 1fr); } }
+	.cmp-ayuda-fam .fa { margin-right:4px; }
+	@media (max-width: 1100px) {
+		.cmp-grid-4 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+	}
+	@media (max-width: 900px) {
+		.cmp-entrada { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
+		.cmp-entrada .cmp-f-prod { grid-column: 1 / -1; }
+		.cmp-entrada .cmp-btn-add { grid-column: 1 / -1; }
+		.cmp-grid-pago { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+		.cmp-cierre { width:100%; justify-content:space-between; }
+	}
+	@media (max-width: 600px) {
+		.cmp-grid-4, .cmp-grid-pago { grid-template-columns: minmax(0, 1fr); }
+	}
+</style>

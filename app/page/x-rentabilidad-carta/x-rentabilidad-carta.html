@@ -1,0 +1,687 @@
+<dom-module id="x-rentabilidad-carta">
+	<script type="text/javascript" src="../../view/export.excel.js"></script>
+	<template>
+		<paper-dialog modal id="dlg_cos_detalle" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="cos_det_titulo">Plato</h3>
+					<p id="cos_det_bajada"></p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_cos_detalle">
+							<thead><tr>
+								<th>Ingrediente</th><th class="inv-num">Cant.</th>
+								<th class="inv-num">Costo hoy</th><th class="inv-num">Al crear receta</th>
+								<th>Origen del costo</th><th></th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<p class="inv-nota">Las porciones con <b>costo fijo</b> no cambian cuando sube el insumo. Vincúlalas a su insumo para que el costo se actualice solo.</p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_cos_porciones" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Porciones: ¿de qué insumo salen?</h3>
+					<p>Vincula cada porción a su insumo (ej: 1/8 de pollo = 0.125 de POLLO). Así, cuando cambie el precio del insumo, el costo de todos los platos que la usan se actualiza solo.</p>
+				</div>
+				<div class="xdlg-body">
+					<p class="cos-porc-avance" id="cos_porc_avance"></p>
+					<div class="inv-table-wrap cos-porc-wrap">
+						<table class="inv-table" id="tb_cos_porciones">
+							<thead><tr>
+								<th>Porción</th><th class="inv-num">Platos</th><th>Sale de</th>
+								<th class="inv-num">Costo por porción</th><th></th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_cos_vincular" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="cos_vin_titulo">Vincular porción a insumo</h3>
+					<p>Dinos de qué producto comprado sale esta porción y cuánto pesa. El sistema calcula su costo con el precio de compra.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">1. ¿De qué producto sale? (tal como lo compras)</span>
+						<input type="text" class="inv-input inv-w100" id="cos_vin_insumo" placeholder="Escribe para buscar. Ej: PECHUGA">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">2. ¿Cuánto pesa la porción? <span id="cos_vin_und"></span></span>
+						<input type="number" class="inv-input" id="cos_vin_cant" min="0" step="any" placeholder="Ej: 100">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">3. ¿Cuánto se pierde al limpiar o cortar este producto? (%)</span>
+						<input type="number" class="inv-input" id="cos_vin_merma" min="0" max="90" step="1" value="0" style="width:90px">
+						<span class="cos-vin-ayuda">Ej: si de 1 kg entero quedan 800 g limpios, pon <b>20</b>. Si no se pierde nada, deja <b>0</b>.
+						Se guarda para el producto y sirve para todos sus cortes (filete de 100 g, de 150 g...).</span>
+					</div>
+					<p class="inv-resumen" id="cos_vin_preview"></p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xCosGuardarVinculo()">Guardar vínculo</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_cos_umbrales" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Umbrales de food cost</h3>
+					<p>Porcentaje del precio de venta que se va en insumos. Se aplica a todos los platos de esta sede.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-form-row">
+						<span class="inv-label">En observación desde (%)</span>
+						<input type="number" class="inv-input" id="cos_um_amarillo" min="1" max="100" step="0.5">
+					</div>
+					<div class="inv-form-row">
+						<span class="inv-label">No rentable sobre (%)</span>
+						<input type="number" class="inv-input" id="cos_um_rojo" min="1" max="100" step="0.5">
+					</div>
+					<p class="inv-nota">Referencia usual en restaurantes: 28–35 %.</p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" onclick="xCosGuardarUmbrales()">Guardar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Rentabilidad de carta</h3>
+						<p>Costo de cada plato calculado con el precio actual de sus insumos. Si sube un insumo, el costo se actualiza solo y el plato cambia de color.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="window.location.href='#/recetas'">Volver a recetas</button>
+						<button class="btn btn-sm btn-light" onclick="xCosPorcionesAbrir()"><i class="fa fa-link"></i>Porciones</button>
+						<button class="btn btn-sm btn-light" onclick="xCosAbrirUmbrales()"><i class="fa fa-sliders"></i>Umbrales</button>
+						<button class="btn btn-sm btn-primary" onclick="xCosSimToggle()"><i class="fa fa-flask"></i>Simular subida</button>
+						<button class="btn btn-sm btn-success" onclick="xCosExcel()">Exportar a Excel</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="cos-sim" id="cos_sim" style="display:none">
+					<p class="cos-sim-ayuda">Elige un insumo y cuánto sube su precio. Verás al instante qué platos dejan de ser rentables. <b>No se guarda nada.</b></p>
+					<div class="inv-toolbar cos-sim-bar">
+						<div class="inv-field">
+							<span class="inv-label">1. Insumo</span>
+							<select class="inv-select" id="cos_sim_insumo" style="width:280px" onchange="xCosSimAplicar()"></select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">2. ¿Cuánto sube?</span>
+							<div class="cos-sim-pcts" id="cos_sim_pcts">
+								<button class="btn btn-sm btn-light" data-pct="10" onclick="xCosSimPct(10)">+10 %</button>
+								<button class="btn btn-sm btn-light" data-pct="20" onclick="xCosSimPct(20)">+20 %</button>
+								<button class="btn btn-sm btn-light" data-pct="30" onclick="xCosSimPct(30)">+30 %</button>
+								<input type="number" class="inv-input" id="cos_sim_pct" value="10" step="1" style="width:80px" oninput="xCosSimAplicar()" title="Otro porcentaje">
+								<span class="inv-muted">%</span>
+							</div>
+						</div>
+						<span class="inv-sep"></span>
+						<button class="btn btn-sm btn-light" onclick="xCosSimToggle()"><i class="fa fa-times"></i>Cerrar simulación</button>
+					</div>
+					<p class="cos-sim-resumen" id="cos_sim_resumen"></p>
+				</div>
+				<div class="cos-alertas" id="cos_alertas" style="display:none"></div>
+				<div class="inv-kpis" id="cos_kpis"></div>
+				<div class="inv-toolbar">
+					<div class="inv-field">
+						<span class="inv-label">Buscar</span>
+						<input type="text" class="inv-input" id="cos_buscar" placeholder="Plato o sección" oninput="xCosPintar()">
+					</div>
+					<div class="inv-field">
+						<span class="inv-label">Estado</span>
+						<select class="inv-select" id="cos_filtro" onchange="xCosPintar()">
+							<option value="">Todos</option>
+							<option value="rojo">No rentables</option>
+							<option value="amarillo">En observación</option>
+							<option value="verde">Rentables</option>
+							<option value="incompleto">Costo incompleto</option>
+							<option value="simulados">Afectados por la simulación</option>
+						</select>
+					</div>
+					<span class="inv-sep"></span>
+					<p class="inv-ayuda" id="cos_leyenda"></p>
+				</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_cos_platos">
+						<thead><tr>
+							<th>Plato</th><th class="inv-num">Precio</th><th class="inv-num">Costo</th>
+							<th class="inv-num">Margen</th><th class="inv-cen">Food cost</th><th>Avisos</th><th></th>
+						</tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+// Umbrales de food cost (% del precio): vienen de costeo_config por sede en cada 'listar'
+var COS_UMBRAL_AMARILLO = 30;
+var COS_UMBRAL_ROJO = 38;
+var xCosPlatos = [];
+var xCosInsumos = null;
+var xCosVinculo = {};
+var xCosSinReceta = 0;
+var xCosSimBase = null;   // [{iditem, idproducto, descripcion, costo}] costo de cada insumo dentro de cada plato
+var xCosSim = null;       // { idproducto, nombre, pct } simulacion activa
+
+var COS_ORIGEN = {
+	promedio: 'Costo promedio', compra: 'Última compra', manual: 'Precio manual · revisar',
+	ninguno: 'Sin precio', fijo: 'Costo fijo', subreceta: 'Subreceta', subreceta_parcial: 'Subreceta (parcial)'
+};
+var COS_TIPO = { '1': 'Porción', '2': 'Producto', '3': 'Subreceta' };
+
+function xCosAviso(texto, icono) { showAlertSwalOk(icono || 'warning', '', texto, 'Entendido', 1); }
+function xCosConfirmar(texto, titulo, boton) {
+	return showAlertSwalHtmlDecision({ title: titulo, html: texto, icon: 'question', showCancelButton: true,
+		confirmButtonText: boton, cancelButtonText: 'Cancelar' }, 1).then(function (r) { return !!(r && r.isConfirmed); });
+}
+function xCosApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_costeo.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		if (!r || !r.success) { xCosAviso((r && r.error) || 'Error de comunicación con el servidor', 'error'); }
+		d.resolve(r || { success: false });
+	})
+	.fail(function (x) {
+		try { xPopupLoad.xclose(); } catch (e) {}
+		xCosAviso(x && x.status === 401 ? 'Tu sesión expiró, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		d.resolve({ success: false });
+	});
+	return d.promise();
+}
+function xCosEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+function xCosSoles(n) { var v = parseFloat(n); return isNaN(v) ? '' : 'S/ ' + v.toFixed(2); }
+function xCosNum(n, dec) { var v = parseFloat(n); return isNaN(v) ? '' : String(Math.round(v * Math.pow(10, dec || 4)) / Math.pow(10, dec || 4)); }
+
+// Estado del plato: rojo = pierde o food cost alto; incompleto = hay ingredientes sin costo real
+function xCosEstado(p) {
+	if (p.costo <= 0) { return 'incompleto'; }
+	if (p.margen <= 0 || p.fc > COS_UMBRAL_ROJO) { return 'rojo'; }
+	if (p.fc >= COS_UMBRAL_AMARILLO) { return 'amarillo'; }
+	return 'verde';
+}
+var COS_ORDEN = { rojo: 0, amarillo: 1, verde: 2, incompleto: 3 };
+
+function xCosCargar() {
+	xPopupLoad.titulo = 'Calculando costos...'; xPopupLoad.xopen();
+	return xCosApi('listar').then(function (r) {
+		xPopupLoad.xclose();
+		if (!r.success) { return; }
+		COS_UMBRAL_AMARILLO = parseFloat(r.datos.umbrales.amarillo) || 30;
+		COS_UMBRAL_ROJO = parseFloat(r.datos.umbrales.rojo) || 38;
+		xCosAlertas(r.datos.alertas || []);
+		xCosPlatos = r.datos.platos.map(function (p) {
+			var precio = parseFloat(p.precio) || 0, costo = parseFloat(p.costo) || 0;
+			var x = $.extend({}, p, {
+				precio: precio, costo: costo, costo_receta: parseFloat(p.costo_receta) || 0,
+				costo_30d: p.costo_30d === null ? null : parseFloat(p.costo_30d),
+				margen: precio - costo, fc: precio > 0 ? costo * 100 / precio : null,
+				n_sin_costo: parseInt(p.n_sin_costo) || 0, n_fijos: parseInt(p.n_fijos) || 0,
+				n_manual: parseInt(p.n_manual) || 0, n_incons: parseInt(p.n_incons) || 0
+			});
+			x.estado = xCosEstado(x);
+			x.incompleto = x.n_sin_costo > 0 || x.n_fijos > 0;
+			return x;
+		}).sort(function (a, b) {
+			return (COS_ORDEN[a.estado] - COS_ORDEN[b.estado]) || ((b.fc || 0) - (a.fc || 0));
+		});
+		xCosSinReceta = r.datos.sin_receta;
+		xCosSimBase = null; // los costos cambiaron: la base del simulador se vuelve a pedir
+		if (xCosSim) { return xCosSimCargarBase().then(xCosRefrescarVista); }
+		xCosRefrescarVista();
+	});
+}
+function xCosRefrescarVista() { xCosKpis(); xCosPintar(); xCosSimResumen(); }
+
+// Platos a mostrar: los reales o, con simulacion activa, copias con el costo proyectado
+function xCosVista() {
+	if (!xCosSim || !xCosSimBase) { return xCosPlatos; }
+	var extra = {};
+	xCosSimBase.forEach(function (b) {
+		if (b.idproducto == xCosSim.idproducto) { extra[b.iditem] = (extra[b.iditem] || 0) + parseFloat(b.costo) * xCosSim.pct / 100; }
+	});
+	return xCosPlatos.map(function (p) {
+		var ex = extra[p.iditem] || 0;
+		if (!ex) { return p; }
+		var costo = p.costo + ex;
+		var x = $.extend({}, p, { costo: costo, margen: p.precio - costo, fc: p.precio > 0 ? costo * 100 / p.precio : null,
+			sim_extra: ex, costo_real: p.costo, estado_real: p.estado });
+		x.estado = xCosEstado(x);
+		return x;
+	}).sort(function (a, b) {
+		return (COS_ORDEN[a.estado] - COS_ORDEN[b.estado]) || ((b.fc || 0) - (a.fc || 0));
+	});
+}
+// Precio para volver al umbral amarillo, redondeado hacia arriba a 10 centimos
+function xCosPrecioSugerido(costo) { return Math.ceil(costo / (COS_UMBRAL_AMARILLO / 100) * 10) / 10; }
+function xCosFcPromedio(lista) {
+	var c = 0, pr = 0;
+	lista.forEach(function (p) { if (p.costo > 0 && p.precio > 0) { c += p.costo; pr += p.precio; } });
+	return pr > 0 ? c * 100 / pr : null;
+}
+
+function xCosKpis() {
+	var vista = xCosVista(), sinReceta = xCosSinReceta;
+	var conCosto = vista.filter(function (p) { return p.costo > 0 && p.precio > 0; });
+	var sumC = 0, sumP = 0;
+	conCosto.forEach(function (p) { sumC += p.costo; sumP += p.precio; });
+	var rojos = vista.filter(function (p) { return p.estado === 'rojo'; }).length;
+	var incompletos = vista.filter(function (p) { return p.incompleto; }).length;
+	$('#cos_kpis').html(
+		'<div class="inv-kpi inv-kpi-azul"><span>Food cost promedio</span><b>' + (sumP > 0 ? (sumC * 100 / sumP).toFixed(1) + ' %' : '-') + '</b><em>' + conCosto.length + ' platos con costo</em></div>' +
+		'<div class="inv-kpi inv-kpi-rojo cos-kpi-click" onclick="xCosFiltrar(\'rojo\')"><span>No rentables</span><b class="' + (rojos ? 'text-danger' : '') + '">' + rojos + '</b><em>food cost &gt; ' + COS_UMBRAL_ROJO + ' % o margen negativo</em></div>' +
+		'<div class="inv-kpi inv-kpi-celeste cos-kpi-click" onclick="xCosFiltrar(\'incompleto\')"><span>Costo incompleto</span><b>' + incompletos + '</b><em>ingredientes sin precio o con costo fijo</em><span class="cos-kpi-accion" onclick="event.stopPropagation(); xCosPorcionesAbrir()">Vincular porciones →</span></div>' +
+		'<div class="inv-kpi"><span>Platos sin receta</span><b>' + sinReceta + '</b><em>no se pueden costear</em></div>'
+	);
+	$('#cos_leyenda').html('<span class="cos-fc verde">&lt; ' + COS_UMBRAL_AMARILLO + ' %</span> <span class="cos-fc amarillo">' + COS_UMBRAL_AMARILLO + '–' + COS_UMBRAL_ROJO + ' %</span> <span class="cos-fc rojo">&gt; ' + COS_UMBRAL_ROJO + ' %</span>');
+}
+function xCosAlertas(lista) {
+	if (!lista.length) { $('#cos_alertas').hide().html(''); return; }
+	var html = '<div class="cos-alertas-top"><b><i class="fa fa-exclamation-triangle"></i>' + lista.length + ' plato' + (lista.length > 1 ? 's dejaron' : ' dejó') +
+		' de ser rentable' + (lista.length > 1 ? 's' : '') + '</b><span class="inv-link" onclick="xCosAlertasVistas()"><i class="fa fa-check"></i>Marcar como vistas</span></div>';
+	lista.forEach(function (a) {
+		html += '<div class="cos-alerta">' +
+			'<span class="inv-link" onclick="xCosDetalle(' + a.iditem + ')">' + xCosEsc(a.descripcion) + '</span>' +
+			' · food cost ' + (a.fc_antes === null ? '-' : parseFloat(a.fc_antes).toFixed(1) + ' %') + ' → <b class="text-danger">' + (a.fc_despues === null ? '-' : parseFloat(a.fc_despues).toFixed(1) + ' %') + '</b>' +
+			' · costo ' + xCosSoles(a.costo_antes) + ' → ' + xCosSoles(a.costo_despues) + ' · precio ' + xCosSoles(a.precio) +
+			(a.causa ? '<span class="inv-sub">' + xCosEsc(a.causa) + ' · ' + xCosEsc(a.fecha) + '</span>' : '') +
+			'</div>';
+	});
+	$('#cos_alertas').html(html).show();
+}
+function xCosAlertasVistas() {
+	xCosApi('alertas-vistas').then(function (r) {
+		if (!r.success) { return; }
+		xCosAlertas([]);
+		try { window.localStorage.removeItem('::app3_sys_costeo_alertas'); } catch (e) {}
+		showToastSwal('success', 'Alertas marcadas como vistas');
+	});
+}
+function xCosAbrirUmbrales() {
+	$('#cos_um_amarillo').val(COS_UMBRAL_AMARILLO);
+	$('#cos_um_rojo').val(COS_UMBRAL_ROJO);
+	dlg_cos_umbrales.open();
+}
+function xCosGuardarUmbrales() {
+	xCosApi('config-guardar', { umbral_amarillo: parseFloat($('#cos_um_amarillo').val()), umbral_rojo: parseFloat($('#cos_um_rojo').val()) })
+	.then(function (r) {
+		if (!r.success) { return; }
+		dlg_cos_umbrales.close();
+		showToastSwal('success', 'Umbrales guardados');
+		xCosCargar();
+	});
+}
+function xCosFiltrar(v) { $('#cos_filtro').val(v); xCosPintar(); }
+
+function xCosPintar() {
+	var txt = ($('#cos_buscar').val() || '').toLowerCase();
+	var filtro = $('#cos_filtro').val();
+	var html = '';
+	xCosVista().forEach(function (p) {
+		if (txt && (p.descripcion + ' ' + (p.seccion || '')).toLowerCase().indexOf(txt) < 0) { return; }
+		if (filtro === 'incompleto' ? !p.incompleto : (filtro === 'simulados' ? !p.sim_extra : (filtro && p.estado !== filtro))) { return; }
+		var avisos = '';
+		if (p.n_fijos) { avisos += '<span class="inv-tag cos-tag-warn">' + p.n_fijos + ' costo fijo</span> '; }
+		if (p.n_sin_costo) { avisos += '<span class="inv-tag cos-tag-warn">' + p.n_sin_costo + ' sin precio</span> '; }
+		if (p.n_manual) { avisos += '<span class="inv-tag">' + p.n_manual + ' precio manual</span> '; }
+		if (p.n_incons) { avisos += '<span class="inv-tag cos-tag-err" title="La cantidad que descuenta el stock no coincide con la de la receta">' + p.n_incons + ' receta inconsistente</span>'; }
+		// Variacion contra hace 30 dias si hay historial; si no, contra el costo guardado en la receta
+		var base = p.costo_30d !== null ? p.costo_30d : p.costo_receta;
+		var dif = p.costo - base;
+		var sub = p.sim_extra ? '<span class="inv-sub cos-sube">+' + xCosSoles(p.sim_extra) + ' simulado (hoy ' + xCosSoles(p.costo_real) + ')</span>' : Math.abs(dif) >= 0.01 ? '<span class="inv-sub' + (dif > 0 ? ' cos-sube' : '') + '">' + (dif > 0 ? '▲ ' : '▼ ') + xCosSoles(Math.abs(dif)) +
+			(p.costo_30d !== null ? ' vs 30 días' : ' vs receta') + '</span>' : '';
+		html += '<tr>' +
+			'<td>' + xCosEsc(p.descripcion) + '<span class="inv-sub">' + xCosEsc(p.seccion || 'Sin sección') + ' · ' + p.n_ing + ' ing.</span></td>' +
+			'<td class="inv-num">' + xCosSoles(p.precio) +
+				(p.sim_extra && p.estado === 'rojo' ? '<span class="inv-sub">sugerido ' + xCosSoles(xCosPrecioSugerido(p.costo)) + '</span>' : '') + '</td>' +
+			'<td class="inv-num">' + xCosSoles(p.costo) + sub + '</td>' +
+			(p.costo > 0 ? '<td class="inv-num' + (p.margen <= 0 ? ' inv-neg' : '') + '">' + xCosSoles(p.margen) + '</td>' : '<td class="inv-num inv-muted">–</td>') +
+			'<td class="inv-cen">' + (p.estado === 'incompleto' || p.fc === null ? '<span class="cos-fc gris">sin costo</span>' : '<span class="cos-fc ' + p.estado + '">' + p.fc.toFixed(1) + ' %</span>') + '</td>' +
+			'<td>' + avisos + '</td>' +
+			'<td class="inv-acciones"><span class="inv-link" onclick="xCosDetalle(' + p.iditem + ')"><i class="fa fa-search"></i>Ver costo</span></td></tr>';
+	});
+	$('#tb_cos_platos tbody').html(html || '<tr><td colspan="7" class="inv-empty">' +
+		(xCosPlatos.length ? 'Ningún plato coincide con el filtro.' : 'Aún no hay platos con receta. Arma las recetas en <b>Recetas y costos</b> para ver su rentabilidad.') + '</td></tr>');
+}
+
+function xCosDetalle(iditem) {
+	var p = xCosPlatos.filter(function (x) { return x.iditem == iditem; })[0];
+	if (!p) { return; }
+	xCosApi('detalle', { iditem: iditem }).then(function (r) {
+		if (!r.success) { return; }
+		$('#cos_det_titulo').text(p.descripcion);
+		$('#cos_det_bajada').html('Precio ' + xCosSoles(p.precio) + ' · Costo ' + xCosSoles(p.costo) + ' · Margen ' + xCosSoles(p.margen) +
+			(p.fc !== null && p.costo > 0 ? ' · Food cost <b>' + p.fc.toFixed(1) + ' %</b>' : ''));
+		var html = '';
+		xCosDetFilas = r.datos;
+		r.datos.forEach(function (i, idx) {
+			var und = i.viene_de === '2' ? (i.und_receta || i.und_medida || '') : (i.viene_de === '1' ? 'porc.' : '');
+			var cant = i.viene_de === '2' && parseFloat(i.cantidad_show) > 0 ? i.cantidad_show : xCosNum(i.cantidad, 4);
+			var insumo = '';
+			if (i.viene_de === '1' && i.rend_idps) {
+				var uk = parseFloat(i.insumo_factor) > 1 && i.und_receta ? i.und_receta : (i.und_kardex || '');
+				var cantR = parseFloat(i.insumo_factor) > 1 && i.und_receta ? parseFloat(i.rend_cantidad) * parseFloat(i.insumo_factor) : parseFloat(i.rend_cantidad);
+				insumo = '<span class="inv-sub">↳ ' + xCosEsc(i.insumo) + ' · ' + xCosNum(cantR, 4) + ' ' + xCosEsc(uk) + ' por porción' +
+					(parseFloat(i.merma_pct) > 0 ? ' + ' + xCosNum(i.merma_pct, 2) + ' % merma' : '') + '</span>';
+			} else if (i.viene_de === '2' && i.insumo) {
+				insumo = '<span class="inv-sub">' + xCosSoles(i.costo_kardex_insumo) + ' / ' + xCosEsc(i.und_kardex || 'und') + '</span>';
+			}
+			var acc = '';
+			if (i.viene_de === '1') {
+				acc = '<span class="inv-link" onclick="xCosDetVincular(' + idx + ')">' +
+					(i.rend_idps ? '<i class="fa fa-pencil"></i>Cambiar' : '<i class="fa fa-link"></i>Vincular a insumo') + '</span>';
+				if (i.rend_idps) { acc += '<span class="inv-link inv-link-rojo" onclick="xCosQuitarVinculo(' + i.idporcion + ', ' + iditem + ')"><i class="fa fa-unlink"></i>Quitar</span>'; }
+			}
+			var origen = COS_ORIGEN[i.costo_origen] || i.costo_origen;
+			var claseOrigen = (i.costo_origen === 'fijo' || i.costo_origen === 'ninguno' || i.costo_origen === 'subreceta_parcial') ? ' cos-tag-warn' : '';
+			html += '<tr>' +
+				'<td>' + xCosEsc(i.descripcion) + '<span class="inv-sub">' + (COS_TIPO[i.viene_de] || '') + '</span>' + insumo +
+					(parseInt(i.inconsistente) ? '<span class="inv-sub text-danger">La cantidad que descuenta el stock no coincide con la receta</span>' : '') + '</td>' +
+				'<td class="inv-num">' + xCosEsc(cant) + ' ' + xCosEsc(und) + '</td>' +
+				'<td class="inv-num">' + xCosSoles(i.costo) + '</td>' +
+				'<td class="inv-num inv-muted">' + xCosSoles(i.costo_snapshot) + '</td>' +
+				'<td><span class="inv-tag' + claseOrigen + '">' + xCosEsc(origen) + '</span></td>' +
+				'<td class="inv-acciones">' + acc + '</td></tr>';
+		});
+		$('#tb_cos_detalle tbody').html(html || '<tr><td colspan="6" class="inv-empty">Sin ingredientes.</td></tr>');
+		dlg_cos_detalle.open();
+	});
+}
+
+// previo = { idproducto_stock, cantidad_por_porcion } para "Cambiar"; iditem = 0 si se abre desde la lista de porciones
+var xCosDetFilas = [];
+function xCosDetVincular(idx) {
+	var i = xCosDetFilas[idx];
+	xCosAbrirVincular(i.idporcion, i.porcion || i.descripcion, i.iditem,
+		i.rend_idps ? { idproducto_stock: i.rend_idps, cantidad_por_porcion: i.rend_cantidad } : null);
+}
+function xCosAbrirVincular(idporcion, nombre, iditem, previo) {
+	xCosVinculo = { idporcion: idporcion, iditem: iditem, insumo: null };
+	var abrir = function () {
+		$('#cos_vin_titulo').text('Vincular: ' + nombre);
+		$('#cos_vin_insumo').val('');
+		$('#cos_vin_cant').val('');
+		$('#cos_vin_und').text('');
+		$('#cos_vin_preview').text('');
+		var ins = previo ? xCosInsumos.filter(function (x) { return x.idproducto_stock == previo.idproducto_stock; })[0] : null;
+		if (ins) {
+			$('#cos_vin_insumo').val(ins.label);
+			var usaReceta = parseFloat(ins.factor) > 1 && ins.und_receta;
+			$('#cos_vin_cant').val(xCosNum(parseFloat(previo.cantidad_por_porcion) * (usaReceta ? parseFloat(ins.factor) : 1), 4));
+		}
+		$('#cos_vin_insumo').autocomplete({
+			source: xCosInsumos, appendTo: '#dlg_cos_vincular', minLength: 1, autoFocus: true,
+			select: function (e, ui) {
+				$('#cos_vin_insumo').val(ui.item.label);
+				xCosElegirInsumo(ui.item);
+				$('#cos_vin_cant').focus();
+				return false;
+			},
+			// ui.item llega null si se escribió o pegó el nombre completo sin elegir del menú
+			change: function (e, ui) {
+				var txt = $('#cos_vin_insumo').val();
+				xCosElegirInsumo(ui.item || xCosInsumos.filter(function (x) { return x.label === txt; })[0] || null);
+			}
+		});
+		$('#cos_vin_cant').off('input').on('input', xCosPreview);
+		$('#cos_vin_merma').off('input').on('input', xCosPreview);
+		if (ins) { xCosElegirInsumo(ins); }
+		dlg_cos_vincular.open();
+	};
+	if (xCosInsumos) { abrir(); return; }
+	xCosApi('insumos').then(function (r) {
+		if (!r.success) { return; }
+		xCosInsumos = r.datos.map(function (x) { return $.extend({ value: x.label }, x); });
+		abrir();
+	});
+}
+function xCosElegirInsumo(ins) {
+	xCosVinculo.insumo = ins;
+	$('#cos_vin_merma').val(ins ? xCosNum(ins.merma_pct || 0, 2) : 0);
+	var usaReceta = ins && parseFloat(ins.factor) > 1 && ins.und_receta;
+	$('#cos_vin_und').text(ins ? '(en ' + (usaReceta ? ins.und_receta : (ins.und_kardex || 'unidades')) + ')' : '');
+	xCosPreview();
+}
+// ---- Lista de porciones (vincular todas desde un solo lugar) ----
+var xCosPorciones = [];
+function xCosPorcionesAbrir() {
+	xCosPorcionesCargar().then(function () { dlg_cos_porciones.open(); });
+}
+function xCosPorcionesCargar() {
+	return xCosApi('porciones').then(function (r) {
+		if (!r.success) { return; }
+		xCosPorciones = r.datos;
+		var total = r.datos.length, hechas = r.datos.filter(function (x) { return x.idproducto_stock; }).length;
+		$('#cos_porc_avance').html(total ? '<b>' + hechas + ' de ' + total + '</b> porciones vinculadas' +
+			(hechas < total ? ' · empieza por las de arriba: se usan en más platos.' : ' · ¡todas listas!') : '');
+		var html = '';
+		r.datos.forEach(function (x, idx) {
+			var ok = !!x.idproducto_stock;
+			var sale = '<span class="inv-muted">Sin vincular · usa costo fijo</span>';
+			if (ok) {
+				var usaReceta = parseFloat(x.factor) > 1 && x.und_receta;
+				var cant = parseFloat(x.cantidad_por_porcion) * (usaReceta ? parseFloat(x.factor) : 1);
+				sale = '<i class="fa fa-check-circle cos-ok"></i>' + xCosEsc(x.insumo) + '<span class="inv-sub">' + xCosNum(cant, 4) + ' ' +
+					xCosEsc(usaReceta ? x.und_receta : (x.und_kardex || 'und')) + ' por porción' +
+					(parseFloat(x.merma_pct) > 0 ? ' + ' + xCosNum(x.merma_pct, 2) + ' % merma' : '') + '</span>';
+			}
+			html += '<tr class="' + (ok ? '' : 'cos-porc-pend') + '">' +
+				'<td>' + xCosEsc(x.descripcion) + '</td>' +
+				'<td class="inv-num">' + x.n_platos + '</td>' +
+				'<td>' + sale + '</td>' +
+				'<td class="inv-num">' + (ok ? xCosSoles(x.costo_porcion) : '–') + '</td>' +
+				'<td class="inv-acciones">' + (ok
+					? '<button class="btn btn-sm btn-light" onclick="xCosPorcionVincular(' + idx + ')">Cambiar</button>'
+					: '<button class="btn btn-sm btn-primary" onclick="xCosPorcionVincular(' + idx + ')"><i class="fa fa-link"></i> Vincular</button>') + '</td></tr>';
+		});
+		$('#tb_cos_porciones tbody').html(html || '<tr><td colspan="5" class="inv-empty">Ninguna receta usa porciones en esta sede.</td></tr>');
+	});
+}
+function xCosPorcionVincular(idx) {
+	var x = xCosPorciones[idx];
+	xCosAbrirVincular(x.idporcion, x.descripcion, 0, x.idproducto_stock ? { idproducto_stock: x.idproducto_stock, cantidad_por_porcion: x.cantidad_por_porcion } : null);
+}
+
+// Cantidad escrita -> unidad kardex (lo que se guarda y lo que usa la vista)
+function xCosCantKardex() {
+	var ins = xCosVinculo.insumo, cant = parseFloat($('#cos_vin_cant').val());
+	if (!ins || !(cant > 0)) { return 0; }
+	return parseFloat(ins.factor) > 1 && ins.und_receta ? cant / parseFloat(ins.factor) : cant;
+}
+function xCosMerma() {
+	var m = parseFloat($('#cos_vin_merma').val());
+	return isNaN(m) ? 0 : m;
+}
+// Unidad en la que se escribe el peso (la de receta si el producto tiene conversion, si no la de compra)
+function xCosUndPeso(ins) {
+	var usaReceta = parseFloat(ins.factor) > 1 && ins.und_receta;
+	return { und: usaReceta ? ins.und_receta : (ins.und_kardex || 'und'), factor: usaReceta ? parseFloat(ins.factor) : 1 };
+}
+function xCosPreview() {
+	var ins = xCosVinculo.insumo, k = xCosCantKardex(), m = xCosMerma();
+	if (!ins || !k || m < 0 || m > 90) { $('#cos_vin_preview').text(''); return; }
+	var u = xCosUndPeso(ins);
+	var bruto = k / (1 - m / 100);
+	var costo = bruto * parseFloat(ins.costo_kardex);
+	var neto = xCosNum(k * u.factor, 3) + ' ' + xCosEsc(u.und);
+	var html = m > 0
+		? 'Por la merma (' + xCosNum(m, 2) + ' %), cada porción de ' + neto + ' usa <b>' + xCosNum(bruto * u.factor, 3) + ' ' + xCosEsc(u.und) + '</b> de ' + xCosEsc(ins.descripcion || ins.label) + '.'
+		: 'Cada porción usa ' + neto + ' de ' + xCosEsc(ins.descripcion || ins.label) + '.';
+	html += '<br>Costará <b>' + xCosSoles(costo) + '</b> por porción <span class="inv-muted">(precio actual ' +
+		xCosSoles(ins.costo_kardex) + ' / ' + xCosEsc(ins.und_kardex || 'und') + ', ' + xCosEsc(COS_ORIGEN[ins.costo_origen] || '') + ')</span>';
+	$('#cos_vin_preview').html(html);
+}
+function xCosGuardarVinculo() {
+	var k = xCosCantKardex();
+	if (!xCosVinculo.insumo) { xCosAviso('Elige el insumo de la lista.'); return; }
+	if (!k) { xCosAviso('Escribe cuánto pesa la porción.'); return; }
+	var m = xCosMerma();
+	if (m < 0 || m > 90) { xCosAviso('La merma debe estar entre 0 y 90 %.'); return; }
+	xCosApi('rendimiento-guardar', { idporcion: xCosVinculo.idporcion, idproducto_stock: xCosVinculo.insumo.idproducto_stock, cantidad_por_porcion: k, merma_pct: m })
+	.then(function (r) {
+		if (!r.success) { return; }
+		// la merma es del producto: todas sus entradas (en cualquier almacen) la comparten
+		(xCosInsumos || []).forEach(function (x) { if (x.idproducto == xCosVinculo.insumo.idproducto) { x.merma_pct = m; } });
+		dlg_cos_vincular.close();
+		showToastSwal('success', 'Porción vinculada');
+		if (xCosVinculo.iditem) { xCosRefrescar(xCosVinculo.iditem); } else { xCosPorcionesCargar(); xCosCargar(); }
+	});
+}
+function xCosQuitarVinculo(idporcion, iditem) {
+	xCosConfirmar('La porción vuelve a usar el costo fijo de la receta en todos los platos donde aparece.', '¿Quitar el vínculo?', 'Sí, quitar').then(function (ok) {
+		if (!ok) { return; }
+		xCosApi('rendimiento-quitar', { idporcion: idporcion }).then(function (r) {
+			if (!r.success) { return; }
+			if (iditem) { xCosRefrescar(iditem); } else { xCosPorcionesCargar(); xCosCargar(); }
+		});
+	});
+}
+// El vínculo de una porción afecta a todos los platos que la usan: recargar lista y reabrir el detalle
+function xCosRefrescar(iditem) {
+	dlg_cos_detalle.close();
+	xCosCargar().then(function () { xCosDetalle(iditem); });
+}
+// ---- Simulador "¿y si sube?" (solo en el navegador, no guarda nada) ----
+function xCosSimCargarBase() {
+	if (xCosSimBase) { return $.Deferred().resolve().promise(); }
+	return xCosApi('simular-base').then(function (r) { xCosSimBase = r.success ? r.datos : []; });
+}
+function xCosSimToggle() {
+	if ($('#cos_sim').is(':visible')) { xCosSimQuitar(); $('#cos_sim').hide(); return; }
+	xCosSimCargarBase().then(function () {
+		// Solo insumos que hoy tienen costo dentro de algun plato, en orden alfabetico
+		var vistos = {}, lista = [];
+		xCosSimBase.forEach(function (b) {
+			if (vistos[b.idproducto]) { return; }
+			vistos[b.idproducto] = 1;
+			lista.push(b);
+		});
+		lista.sort(function (a, b) { return a.descripcion < b.descripcion ? -1 : 1; });
+		var html = '<option value="">Elige un insumo...</option>';
+		lista.forEach(function (b) { html += '<option value="' + b.idproducto + '">' + xCosEsc(b.descripcion) + '</option>'; });
+		$('#cos_sim_insumo').html(html);
+		$('#cos_sim_pct').val(10);
+		xCosSimMarcarPct();
+		$('#cos_sim').show();
+		document.getElementById('cos_sim').scrollIntoView({ block: 'nearest' });
+	});
+}
+function xCosSimPct(n) { $('#cos_sim_pct').val(n); xCosSimAplicar(); }
+function xCosSimMarcarPct() {
+	var v = parseFloat($('#cos_sim_pct').val());
+	$('#cos_sim_pcts .btn').each(function () { $(this).toggleClass('btn-primary', parseFloat($(this).data('pct')) === v).toggleClass('btn-light', parseFloat($(this).data('pct')) !== v); });
+}
+// Se aplica sola al elegir insumo o cambiar el %: sin boton "Simular"
+function xCosSimAplicar() {
+	xCosSimMarcarPct();
+	var id = $('#cos_sim_insumo').val();
+	var pct = parseFloat($('#cos_sim_pct').val());
+	if (!id || isNaN(pct) || pct === 0 || pct < -90 || pct > 500) { xCosSimQuitar(); return; }
+	xCosSim = { idproducto: id, nombre: $('#cos_sim_insumo option:selected').text(), pct: pct };
+	$('#cos_filtro').val('simulados');
+	xCosRefrescarVista();
+}
+function xCosSimQuitar() {
+	xCosSim = null;
+	if ($('#cos_filtro').val() === 'simulados') { $('#cos_filtro').val(''); }
+	xCosRefrescarVista();
+}
+function xCosSimResumen() {
+	if (!xCosSim) { $('#cos_sim_resumen').html($('#cos_sim').is(':visible') ? '<span class="inv-muted">Elige un insumo para ver el efecto.</span>' : ''); return; }
+	var vista = xCosVista();
+	var afectados = vista.filter(function (p) { return p.sim_extra; });
+	var pasanRojo = afectados.filter(function (p) { return p.estado === 'rojo' && p.estado_real !== 'rojo'; });
+	var fcAntes = xCosFcPromedio(xCosPlatos), fcDesp = xCosFcPromedio(vista);
+	var pl = function (n, uno, varios) { return n === 1 ? uno : varios; };
+	$('#cos_sim_resumen').html('<b>' + xCosEsc(xCosSim.nombre) + ' ' + (xCosSim.pct > 0 ? '+' : '') + xCosSim.pct + ' %</b>: ' +
+		afectados.length + ' ' + pl(afectados.length, 'plato afectado', 'platos afectados') +
+		' · <b class="' + (pasanRojo.length ? 'text-danger' : '') + '">' + pasanRojo.length + ' ' + pl(pasanRojo.length, 'pasa a no rentable', 'pasan a no rentables') + '</b>' +
+		(fcAntes !== null ? ' · food cost promedio ' + fcAntes.toFixed(1) + ' % → ' + fcDesp.toFixed(1) + ' %' : '') +
+		(pasanRojo.length ? '<span class="inv-sub">En la columna Precio aparece el precio sugerido para volver a ' + COS_UMBRAL_AMARILLO + ' % de food cost.</span>' : ''));
+}
+
+function xCosExcel() {
+	var t = $('#tb_cos_platos').clone();
+	t.find('th:last-child, td:last-child').remove();
+	t.attr('id', 'tb_cos_platos_xls').css('display', 'none');
+	$('body').append(t);
+	try { tableToExcel('tb_cos_platos_xls', 'rentabilidad_carta'); } finally { t.remove(); }
+}
+
+Polymer({
+	is: 'x-rentabilidad-carta',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xCosCargar(); });
+		$('#Titulo_page').text('Rentabilidad de carta');
+	}
+});
+</script>
+</dom-module>
+
+<!-- fuera del dom-module: el <style> dentro del template queda scoped y no alcanza filas insertadas con jQuery -->
+<style>
+	.cos-fc { display:inline-block; min-width:58px; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; text-align:center; font-variant-numeric:tabular-nums; }
+	.cos-fc.verde { background:#d1e7dd; color:#0f5132; }
+	.cos-fc.amarillo { background:#fff3cd; color:#7a5b00; }
+	.cos-fc.rojo { background:#f8d7da; color:#842029; }
+	.cos-fc.gris { background:#e2e3e5; color:#41464b; }
+	.inv-tag.cos-tag-warn { background:#fff3cd; color:#7a5b00; }
+	.inv-tag.cos-tag-err { background:#f8d7da; color:#842029; }
+	.cos-kpi-click { cursor:pointer; }
+	.cos-sube { color:#b42318; }
+	.cos-sim { border:1px solid #cfe2ff; background:#f5f9ff; border-radius:8px; padding:8px 10px 2px; margin-bottom:12px; }
+	.cos-sim-bar { background:transparent; padding:0; margin-bottom:6px; }
+	.cos-sim-resumen { font-size:12px; color:#212529; margin:0 0 8px; }
+	.cos-sim-resumen:empty { display:none; }
+	.cos-sim-ayuda { font-size:12px; color:#495057; margin:2px 0 8px; }
+	.cos-sim-pcts { display:flex; gap:6px; align-items:center; }
+	.cos-sim-pcts .btn + .btn { margin-left:0; }
+	.ui-autocomplete { max-height:280px; overflow-y:auto; overflow-x:hidden; z-index:200; }
+	.cos-alertas { border:1px solid #f5c2c7; background:#fff7f7; border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+	.cos-alertas-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:6px; font-size:13px; color:#842029; }
+	.cos-alertas-top .fa { margin-right:6px; }
+	.cos-alerta { font-size:12px; color:#212529; padding:6px 0; border-top:1px solid #f5d5d8; }
+	#dlg_cos_umbrales { width:380px; max-width:96vw; }
+	#dlg_cos_porciones { width:820px; max-width:96vw; }
+	.cos-porc-wrap { max-height:60vh; overflow-y:auto; }
+	.cos-porc-avance { font-size:13px; margin:0 0 10px; }
+	.cos-porc-pend td:first-child { font-weight:600; }
+	.cos-ok { color:#198754; margin-right:6px; }
+	.cos-vin-ayuda { display:block; margin-top:4px; font-size:11px; color:#6c757d; line-height:1.4; }
+	#cos_vin_preview { background:#f5f9ff; border-radius:8px; padding:8px 10px; line-height:1.5; }
+	#cos_vin_preview:empty { display:none; }
+	.cos-kpi-accion { display:inline-block; margin-top:6px; font-size:11px; font-weight:600; color:#007bff; cursor:pointer; }
+	.cos-kpi-accion:hover { text-decoration:underline; }
+	.inv-card .btn > .fa { margin-right:6px; }
+	#dlg_cos_detalle { width:860px; max-width:96vw; }
+	#dlg_cos_vincular { width:480px; max-width:96vw; }
+	#dlg_cos_vincular .ui-autocomplete { max-height:260px; overflow-y:auto; overflow-x:hidden; z-index:200; }
+	.inv-link > .fa { margin-right:5px; font-size:11px; }
+</style>

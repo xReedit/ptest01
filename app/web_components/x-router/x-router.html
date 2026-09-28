@@ -23,7 +23,9 @@
 			<app-route path="/c_pedido" import="x-control-mesas.html"></app-route>
 			<app-route path="/detalle_pedido" import="x-detalle-pedido.html"></app-route>
 			<app-route path="/pedido_detalle" import="x-pedido-detalle.html"></app-route>
-			<app-route path="/compras" import="x-compras.html"></app-route>
+			<!-- compras rediseño 2026-09: la pantalla vieja queda en /compras_legacy para volver atras -->
+			<app-route path="/compras" import="x-compras2/x-compras2.html"></app-route>
+			<app-route path="/compras_legacy" import="x-compras.html"></app-route>
 			<app-route path="/distribuicion" import="x-distribuicion.html"></app-route>
 			<app-route path="/porcionar" import="x-porcionar.html"></app-route>
 			<app-route path="/recetas" import="x-recetas.html"></app-route>
@@ -50,7 +52,9 @@
 			<app-route path="/gastos_fijos" import="x-gastos-fijos/x-gastos-fijos.html"></app-route>
 			<app-route path="/gastos_variables" import="x-gastos-variables/x-gastos-variables.html"></app-route>
 			<app-route path="/otros_ingresos" import="x-ingresos-otros/x-ingresos-otros.html"></app-route>
-			<app-route path="/cuentas_p_c" import="x-cuentas-por-cobrar-pagar/x-cuentas-por-cobrar-pagar.html"></app-route>
+			<!-- cuentas rediseño 2026-09: la pantalla vieja queda en /cuentas_p_c_legacy para volver atras -->
+			<app-route path="/cuentas_p_c" import="x-cuentas2/x-cuentas2.html"></app-route>
+			<app-route path="/cuentas_p_c_legacy" import="x-cuentas-por-cobrar-pagar/x-cuentas-por-cobrar-pagar.html"></app-route>
 			<app-route path="/clientes" import="x-clientes/x-clientes.html"></app-route>
 			<app-route path="/recursos_humanos" import="x-rrhh/x-rrhh.html"></app-route>
 			<app-route path="/recursos_humanos_file" import="x-rrhh/x-planilla-colaborador-file.html"></app-route>
@@ -90,6 +94,8 @@
 			<app-route path="/seguimiento_delivery" import="x-tracker-delivery.html"></app-route>
 			<app-route path="/asistencia" import="x-asistencia.html"></app-route>
 			<app-route path="/marcadores_asistencia" import="x-marcador-asistencia.html"></app-route>
+			<app-route path="/aplicaciones_descargables" import="x-aplicaciones-descargables/x-aplicaciones-descargables.html"></app-route>
+			<app-route path="/rentabilidad_carta" import="x-rentabilidad-carta/x-rentabilidad-carta.html"></app-route>
 			
 		</app-router>
 	</template>

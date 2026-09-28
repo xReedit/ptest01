@@ -286,6 +286,8 @@
 		}
 	</style>
 </dom-module>
+<!-- aviso de limite de credito al vender (plan/CUENTAS-PAGAR-COBRAR-PLAN.md) -->
+<script type="text/javascript" src="../../shared/credito.limite.js"></script>
 <script>
 	var xThisPago2
 	, xdialoag_pago
@@ -899,6 +901,19 @@
 	function xListoRegistraPago() {
 		if (!xThisPago2.change_monto_pago_valid) {return}		
 		if (registrando) return;
+
+		// limite de credito: si la venta a credito pasa el limite del cliente pregunta "¿vender igual?" (nunca bloquea)
+		if (!xThisPago2._limiteOk && typeof xCreditoLimiteVerificar === 'function') {
+			if (xThisPago2._limiteVerificando) return;
+			xThisPago2._limiteVerificando = true;
+			xCreditoLimiteVerificar(xIdCliente_pago, xtipoP, function (ok) {
+				xThisPago2._limiteVerificando = false;
+				if (!ok) { return; }
+				xThisPago2._limiteOk = true;
+				try { xListoRegistraPago(); } finally { xThisPago2._limiteOk = false; }
+			});
+			return;
+		}
 		registrando = true;
 		xSumarTotales_row();
 		// xThisPago2.hidden_container_pago = true; //regresa a la pantalla inicial

@@ -563,20 +563,74 @@ function xAsisHorarioAbrir(id) {
 
 // El mismo grid lo usan el horario individual y el masivo. Escrito dos veces,
 // los selectores de clase de un dialogo terminarian leyendo los inputs del otro.
+// El break es OPCIONAL, y no se muestra hasta que lo piden.
+//
+// Casi todos los restaurantes tienen un solo turno corrido: se entra, se sale,
+// listo. El que sale al mediodia y vuelve de noche es la excepcion, y no puede
+// costarle a los demas catorce campos mas en pantalla.
+//
+// POR QUE SE PIDE EL BREAK Y NO DOS TURNOS
+// Es la misma jornada dicha de dos maneras, pero no se entienden igual. "Entra
+// 11, sale 23, break de 15 a 18" es como lo dice el dueno. "Trabaja 11-15 y
+// 18-23" obliga a que la primera SALIDA signifique otra cosa que en los demas
+// dias. Asi, entrada y salida siguen siendo las del dia y el break va aparte.
+//
+// El break es UNO para toda la semana: nadie tiene un break distinto los
+// martes, y siete pares de horas serian justo lo que se quiere evitar.
 function xAsisHorarioGridHtml(h) {
 	h = h || {};
 	var html = '';
 	XASIS_DIAS.forEach(function (d) {
-		var t = h[d];
+		var ts = xAsisTramos(h[d]);
+		var hay = ts.length > 0;
+		// Con break, la entrada y la salida del DIA son la del primer tramo y
+		// la del ultimo; el hueco del medio es el break.
+		var e = hay ? ts[0].e : '08:00';
+		var sal = hay ? ts[ts.length - 1].s : '17:00';
 		html += '<div class="asis-dia">' +
-			'<label class="inv-check"><input type="checkbox" class="asis-dia-chk" data-d="' + d + '"' + (t ? ' checked' : '') +
+			'<label class="inv-check"><input type="checkbox" class="asis-dia-chk" data-d="' + d + '"' + (hay ? ' checked' : '') +
 				' onchange="xAsisHorarioToggle(this)"> ' + XASIS_DIAS_TXT[d] + '</label>' +
-			'<input type="time" class="inv-input asis-hora" data-d="' + d + '" data-k="e" value="' + (t ? t.e : '08:00') + '"' + (t ? '' : ' disabled') + '>' +
+			'<input type="time" class="inv-input asis-hora" data-d="' + d + '" data-k="e" value="' + e + '"' + (hay ? '' : ' disabled') + '>' +
 			'<span class="inv-muted">a</span>' +
-			'<input type="time" class="inv-input asis-hora" data-d="' + d + '" data-k="s" value="' + (t ? t.s : '17:00') + '"' + (t ? '' : ' disabled') + '>' +
+			'<input type="time" class="inv-input asis-hora" data-d="' + d + '" data-k="s" value="' + sal + '"' + (hay ? '' : ' disabled') + '>' +
 			'</div>';
 	});
+
+	// El control del break, una sola vez y despues de los siete dias.
+	var br = xAsisBreakDe(h);
+	html += '<label class="inv-check asis-break-chk" style="margin-top:10px">' +
+			'<input type="checkbox" class="asis-break-hay"' + (br.hay ? ' checked' : '') +
+			' onchange="xAsisBreakToggle(this)"> Sale a break y vuelve' +
+			' <span class="inv-muted">(por ejemplo, cierra a media tarde)</span></label>' +
+		'<div class="asis-break-horas"' + (br.hay ? '' : ' style="display:none"') + '>' +
+			'<span class="inv-muted">Break de</span>' +
+			'<input type="time" class="inv-input asis-break-ini" value="' + br.ini + '">' +
+			'<span class="inv-muted">a</span>' +
+			'<input type="time" class="inv-input asis-break-fin" value="' + br.fin + '">' +
+			'<p class="inv-nota">Esas horas no se cuentan como trabajadas, y se aplican a todos los dias marcados.</p>' +
+		'</div>';
+
 	return html;
+}
+
+/** Los tramos de un dia, venga guardado como tramo suelto o como lista. */
+function xAsisTramos(t) {
+	if (!t) { return []; }
+	return Object.prototype.toString.call(t) === '[object Array]' ? t : [t];
+}
+
+/** El break que sale de un horario ya guardado, si lo tiene. */
+function xAsisBreakDe(h) {
+	for (var i = 0; i < XASIS_DIAS.length; i++) {
+		var ts = xAsisTramos(h[XASIS_DIAS[i]]);
+		if (ts.length > 1) { return { hay: true, ini: ts[0].s, fin: ts[1].e }; }
+	}
+	return { hay: false, ini: '15:00', fin: '18:00' };
+}
+
+/** Muestra u oculta las dos horas del break. */
+function xAsisBreakToggle(chk) {
+	$(chk).closest('.inv-check').next('.asis-break-horas').toggle(!!chk.checked);
 }
 
 // Solo toca las horas de SU fila: sin el closest, tildar el lunes de un dialogo
@@ -589,6 +643,12 @@ function xAsisHorarioToggle(chk) {
 function xAsisHorarioLeer(contenedor) {
 	var horario = {};
 	var error = '';
+	var caja = $(contenedor);
+	var br = {
+		hay: caja.find('.asis-break-hay').is(':checked'),
+		ini: caja.find('.asis-break-ini').val(),
+		fin: caja.find('.asis-break-fin').val()
+	};
 	$(contenedor).find('.asis-dia-chk:checked').each(function () {
 		var fila = $(this).closest('.asis-dia');
 		var d = $(this).attr('data-d');
@@ -596,7 +656,24 @@ function xAsisHorarioLeer(contenedor) {
 		var s = fila.find('.asis-hora[data-k="s"]').val();
 		if (!e || !s) { error = error || ('Falta una hora en ' + XASIS_DIAS_TXT[d] + '.'); return; }
 		if (e === s) { error = error || ('En ' + XASIS_DIAS_TXT[d] + ' la entrada y la salida son iguales.'); return; }
-		horario[d] = { e: e, s: s };
+
+		// Sin break: un solo tramo, exactamente como siempre.
+		if (!br.hay) { horario[d] = [{ e: e, s: s }]; return; }
+
+		// Con break la jornada se parte en dos. Las MISMAS validaciones que
+		// rrhh-1 y que el servidor: si una puerta acepta lo que la otra rechaza,
+		// el mismo dato queda distinto segun por donde se cargo.
+		if (!br.ini || !br.fin) { error = error || 'Falta una hora del break.'; return; }
+		if (br.ini === br.fin) { error = error || 'El break empieza y termina a la misma hora.'; return; }
+		if (br.fin < br.ini) { error = error || 'El break termina antes de empezar.'; return; }
+		if (s <= e) { error = error || (XASIS_DIAS_TXT[d] + ' pasa la medianoche, y con break eso no se puede calcular.'); return; }
+		if (br.ini <= e || br.fin >= s) {
+			error = error || ('El break (' + br.ini + ' a ' + br.fin + ') tiene que caer dentro del horario de ' +
+				XASIS_DIAS_TXT[d] + ' (' + e + ' a ' + s + ').');
+			return;
+		}
+
+		horario[d] = [{ e: e, s: br.ini }, { e: br.fin, s: s }];
 	});
 	return { horario: horario, vacio: !Object.keys(horario).length, error: error };
 }

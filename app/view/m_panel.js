@@ -393,10 +393,10 @@ async function xOpenPage(xop, parametro){
 		case 53: 
 			// console.log('getDataUsRRHH()', getDataUsRRHH());
 			const _data = btoa(JSON.stringify(getDataUsRRHH()))
-			// produccion  <-- ACTIVO
+			// produccion
 			const _urlRRHH = 'https://recursos-humanos.papaya.com.pe/login?us=' + _data;
-			// dev: el puerto de `npm run dev` de rrhh-1 es 5173.
-			//      Si se descomenta, volver a produccion ANTES de minificar.
+			// dev: el puerto de `npm run dev` de rrhh-1 es 5173.  <-- ACTIVO
+			//      minify.sh no deja minificar con esta linea activa.
 			// const _urlRRHH = 'http://localhost:5173/login?us=' + _data;
 			
 			window.open(_urlRRHH, "RRHH");
@@ -423,6 +423,7 @@ async function xOpenPage(xop, parametro){
 		case 62: xruta = '/vincular_yape'; break; // WizPay (A28)
 		case 63: xruta = '/asistencia'; break; // Control de Asistencia (D8)
 		case 64: xruta = '/marcadores_asistencia'; break; // Marcadores de Asistencia (D9)
+		case 65: xruta = '/aplicaciones_descargables'; break; // Aplicaciones descargables (A29)
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

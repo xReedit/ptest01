@@ -254,7 +254,7 @@
 			.rec-entry-row {
 				display: grid;
 				grid-template-columns: minmax(0, 1fr) 78px 96px 44px;
-				align-items: end;
+				align-items: start;
 				gap: 12px;
 				margin: 4px 0 10px;
 			}
@@ -295,7 +295,7 @@
 				background: var(--ui-bg-soft);
 			}
 			.rec-entry-action {
-				align-self: flex-end;
+				align-self: start;
 			}
 			.rec-entry-action .btn {
 				display: inline-flex;
@@ -470,6 +470,9 @@
 				.rec-entry-action {
 					width: 100%;
 				}
+				.rec-entry-action .rec-entry-label {
+					display: none;
+				}
 				.rec-entry-action .btn {
 					width: 100%;
 				}
@@ -573,12 +576,14 @@
 							<div class="rec-entry-field qty">
 								<p class="rec-entry-label">Cant</p>
 								<input type="number" class="selected-template-1 xPasarEnter2 text-center" placeholder="Cant" on-keyup="calcCostoConversion" id="cant_item" required>
+								<p style="margin: 0; text-align: center; line-height: 1.2em;" hidden="[[!isProductoConversion]]"><span class="rec-chip-info" style="padding: 2px 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title$="Cantidad en {{undConvercion.unidad}}">{{undConvercion.unidad}}</span></p>
 							</div>
 							<div class="rec-entry-field cost">
 								<p class="rec-entry-label">Costo</p>
 								<input type="number" class="selected-template-1 text-center" placeholder="Costo" id="costo_item" readonly="[[isProductoConversion]]" required>
 							</div>
-							<div class="rec-entry-action">
+							<div class="rec-entry-action rec-entry-field">
+								<p class="rec-entry-label">&nbsp;</p>
 								<button class="btn btn-sm btn-success" onclick="xAddItemIngrediente()" title="Agregar item">
 									<fa class="fa fa-plus"></fa>
 								</button>
@@ -603,7 +608,6 @@
 								</tr>
 							</thead>
 						</table>
-						<p style="margin: 4px 0 0; text-align: right; line-height: 1.2em;" class="fs-10" hidden="[[!isProductoConversion]]">Cantidad en: <span class="rec-chip-info"><strong>{{undConvercion.unidad}}</strong></span></p>
 						</div>
 				</div>
 				</div>
@@ -629,9 +633,10 @@
 						<h3 class="rec-toolbar-title">Listado de platos</h3>
 						<p class="rec-toolbar-note">Busca rapidamente un plato y entra a su receta para revisar ingredientes, costo y margen.</p>
 					</div>
-					<div class="d-flexx">
+					<div class="d-flexx" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
 						<!-- <div class="xBoton2 xVerde xDerecha" onclick="xNuevoPlato()">Nueva Receta</div> -->
-						<div class="xBoton2 xVerde xDerecha" onclick="xGoSubReceta()">Subreceta</div>
+						<button type="button" class="btn btn-success" onclick="xGoSubReceta()">Subreceta</button>
+						<button type="button" class="btn btn-primary" onclick="window.location.href='#/rentabilidad_carta'"><i class="fa fa-line-chart"></i> Rentabilidad</button>
 					</div>
 				</div>
 				<input type="text" class="selected-template-1 rec-search" placeholder="Buscar plato..." style="width:100%;" id="txt_bus">

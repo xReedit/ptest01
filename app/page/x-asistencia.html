@@ -219,21 +219,34 @@ function xAsisAttr(s) { return xAsisEsc(s).replace(/"/g, '&quot;'); }
 var XASIS_DIAS = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
 var XASIS_DIAS_TXT = { lun: 'Lun', mar: 'Mar', mie: 'Mie', jue: 'Jue', vie: 'Vie', sab: 'Sab', dom: 'Dom' };
 
+// Un dia se guarda como una LISTA de tramos (turno partido). Lo cargado antes
+// del cambio tiene un tramo suelto; las dos formas se leen igual.
+function xAsisTramosDia(t) {
+	if (!t) { return []; }
+	return Object.prototype.toString.call(t) === '[object Array]' ? t : [t];
+}
+
+/** "08:00-17:00", o "11:00-15:00 y 18:00-23:00" si el turno es partido. */
+function xAsisTramosTexto(t) {
+	var partes = [];
+	xAsisTramosDia(t).forEach(function (x) { if (x && x.e && x.s) { partes.push(x.e + '-' + x.s); } });
+	return partes.join(' y ');
+}
+
 function xAsisHorarioTexto(h) {
 	if (!h || typeof h !== 'object' || !Object.keys(h).length) { return ''; }
 	var partes = [], i = 0;
 	while (i < XASIS_DIAS.length) {
-		var d = XASIS_DIAS[i], t = h[d];
-		if (!t) { i++; continue; }
+		var d = XASIS_DIAS[i];
+		var txt = xAsisTramosTexto(h[d]);
+		if (!txt) { i++; continue; }
 		var j = i;
-		// avanza mientras el dia siguiente tenga exactamente el mismo tramo
-		while (j + 1 < XASIS_DIAS.length) {
-			var sig = h[XASIS_DIAS[j + 1]];
-			if (!sig || sig.e !== t.e || sig.s !== t.s) { break; }
-			j++;
-		}
+		// avanza mientras el dia siguiente tenga EXACTAMENTE la misma jornada:
+		// se comparan ya en texto, asi que agrupa solo si coinciden todos los
+		// tramos y en el mismo orden.
+		while (j + 1 < XASIS_DIAS.length && xAsisTramosTexto(h[XASIS_DIAS[j + 1]]) === txt) { j++; }
 		var etiqueta = (j > i) ? (XASIS_DIAS_TXT[d] + '-' + XASIS_DIAS_TXT[XASIS_DIAS[j]]) : XASIS_DIAS_TXT[d];
-		partes.push(etiqueta + ' ' + t.e + '-' + t.s);
+		partes.push(etiqueta + ' ' + txt);
 		i = j + 1;
 	}
 	return partes.join(' · ');
@@ -242,7 +255,10 @@ function xAsisHorarioTexto(h) {
 // cambia como se cuentan las horas y a que dia operativo pertenece la salida.
 function xAsisCruzaMedianoche(h) {
 	if (!h) { return false; }
-	for (var d in h) { if (h[d] && h[d].s <= h[d].e) { return true; } }
+	for (var d in h) {
+		var ts = xAsisTramosDia(h[d]);
+		for (var i = 0; i < ts.length; i++) { if (ts[i].s <= ts[i].e) { return true; } }
+	}
 	return false;
 }
 

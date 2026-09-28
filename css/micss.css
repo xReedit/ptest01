@@ -6545,6 +6545,21 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	.asis-dia { grid-template-columns:72px 1fr 14px 1fr; gap:5px; padding:5px; }
 }
 
+/* El break: un check y, solo si se marca, dos horas. Va debajo de los 7 dias
+   porque vale para toda la semana, no para un dia en particular. */
+.asis-break-chk { font-size:12px; font-weight:600; }
+.asis-break-horas {
+	display:grid;
+	grid-template-columns:auto 1fr 18px 1fr;
+	gap:8px;
+	align-items:center;
+	margin:6px 0 0 22px;
+}
+.asis-break-horas .inv-input { height:31px; font-variant-numeric:tabular-nums; }
+.asis-break-horas .inv-muted { font-size:11px; text-align:center; }
+/* La nota ocupa el ancho entero, debajo de las horas */
+.asis-break-horas .inv-nota { grid-column:1 / -1; margin:2px 0 0; }
+
 /* ===== marcadores de asistencia (seleccion de pantalla) ===== */
 /* Lista pensada para tocarse con el dedo en una tablet de cocina: filas altas,
    nombre grande y una sola accion por fila. Nada de tablas ni menus. */

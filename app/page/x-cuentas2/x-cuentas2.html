@@ -1,0 +1,912 @@
+<dom-module id="x-cuentas2">
+	<script type="text/javascript" src="../../view/export.excel.js"></script>
+	<script type="text/javascript" src="../../view/xSOAPSunat.js"></script>
+	<template>
+		<!-- ===== registrar un pago al proveedor ===== -->
+		<paper-dialog modal id="dlg_cta_pg_pago" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Registrar pago</h3>
+					<p id="cta_pg_pago_bajada"></p>
+				</div>
+				<div class="xdlg-body">
+					<div id="cta_pg_form">
+												<div class="cta-form-grid">
+							<div class="inv-field">
+								<span class="inv-label">¿Cuánto pagaste? · <span class="inv-link cta-todo" onclick="xCtaPgTodo()">Pagar todo</span></span>
+								<input type="number" class="inv-input" id="cta_pg_importe" min="0" step="0.01">
+							</div>
+							<div class="inv-field">
+								<span class="inv-label">¿Con qué pagaste?</span>
+								<select class="inv-select" id="cta_pg_tp"></select>
+							</div>
+							<div class="inv-field">
+								<span class="inv-label">Fecha del pago</span>
+								<input type="date" class="inv-input" id="cta_pg_fecha">
+							</div>
+							<div class="inv-field cta-f-nota">
+								<span class="inv-label">Nota (opcional)</span>
+								<input type="text" class="inv-input" id="cta_pg_nota" maxlength="150" placeholder="Ej: depósito BCP op. 123">
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" id="cta_pg_btn" onclick="xCtaPgRegistrar()"><i class="fa fa-check"></i>Registrar pago</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- ===== registrar un cobro al cliente ===== -->
+		<paper-dialog modal id="dlg_cta_cb_cobro" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Registrar cobro</h3>
+					<p id="cta_cb_cobro_bajada"></p>
+				</div>
+				<div class="xdlg-body">
+					<div class="cta-form-grid cta-form-grid-2">
+						<div class="inv-field">
+							<span class="inv-label">¿Cuánto te pagó? · <span class="inv-link cta-todo" onclick="xCtaCbTodo()">Todo</span></span>
+							<input type="number" class="inv-input" id="cta_cb_importe" min="0" step="0.01">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">¿Con qué pagó?</span>
+							<select class="inv-select" id="cta_cb_tp"></select>
+						</div>
+					</div>
+					<p class="cta-ayuda" id="cta_cb_cobro_ayuda"></p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" id="cta_cb_btn" onclick="xCtaCbRegistrar()"><i class="fa fa-check"></i>Registrar cobro</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- ===== limite de credito del cliente ===== -->
+		<paper-dialog modal id="dlg_cta_cb_limite" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Límite de crédito</h3>
+					<p id="cta_cb_limite_bajada"></p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-field">
+						<span class="inv-label">¿Hasta cuánto le puedes fiar? (S/)</span>
+						<input type="number" class="inv-input" id="cta_cb_lim_in" min="0" step="1" placeholder="sin límite">
+					</div>
+					<p class="cta-ayuda">Si al vender a crédito pasa este monto, la caja muestra un aviso (no bloquea la venta).<br>Déjalo vacío si no quieres ponerle tope.</p>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" id="cta_cb_lim_ok" onclick="xCtaCbGuardarLimite()"><i class="fa fa-check"></i>Guardar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<!-- ===== anular un cobro o un pago: pide usuario autorizado ===== -->
+		<paper-dialog modal id="dlg_cta_autoriza" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="cta_aut_titulo"></h3>
+					<p id="cta_aut_bajada"></p>
+				</div>
+				<div class="xdlg-body">
+					<p class="cta-ayuda cta-aut-texto"><span id="cta_aut_texto"></span><br>
+						Para anular se necesita un <b>usuario autorizado</b> (con permiso "Eliminar pedidos").</p>
+					<div class="cta-form-grid cta-form-grid-2">
+						<div class="inv-field">
+							<span class="inv-label">Usuario</span>
+							<input type="text" class="inv-input" id="cta_aut_us" autocomplete="off">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Clave</span>
+							<input type="password" class="inv-input" id="cta_aut_pass" autocomplete="new-password" onkeyup="if (event.keyCode === 13) { xCtaAutorizaOk(); }">
+						</div>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-danger" id="cta_aut_btn" onclick="xCtaAutorizaOk()"><i class="fa fa-undo"></i>Autorizar y anular</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<!-- ===== detalle de una compra por pagar (reemplaza a la lista) ===== -->
+		<div class="xMiCard xradius inv-card cta-vista" id="cta_vista_pagar">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<span class="inv-link cta-volver" onclick="xCtaAtras()"><i class="fa fa-arrow-left"></i>Volver a la lista</span>
+						<h3 id="cta_pg_titulo"></h3>
+						<p id="cta_pg_bajada"></p>
+					</div>
+					<div class="inv-head-acciones"></div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="cta-resumen" id="cta_pg_resumen"></div>
+
+				<div class="cta-acciones">
+					<button class="btn btn-sm btn-success" id="cta_pg_btn_abrir" onclick="xCtaPgAbrirPago()"><i class="fa fa-money"></i>Registrar pago</button>
+				</div>
+
+				<div class="cta-sub-tit">Pagos hechos</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table" id="tb_cta_pg_pagos">
+						<thead><tr><th>Fecha</th><th>Forma</th><th>Registró</th><th class="inv-num">Importe</th><th></th></tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<!-- ===== detalle de un cliente por cobrar (reemplaza a la lista) ===== -->
+		<div class="xMiCard xradius inv-card cta-vista" id="cta_vista_cobrar">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<span class="inv-link cta-volver" onclick="xCtaAtras()"><i class="fa fa-arrow-left"></i>Volver a la lista</span>
+						<h3 id="cta_cb_titulo"></h3>
+						<p id="cta_cb_bajada"></p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xCtaCbWhatsapp()"><i class="fa fa-whatsapp"></i>Enviar por WhatsApp</button>
+						<button class="btn btn-sm btn-light" onclick="xCtaCbImprimir()"><i class="fa fa-print"></i>Imprimir estado de cuenta</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="cta-resumen" id="cta_cb_resumen"></div>
+				<div class="cta-acciones">
+					<button class="btn btn-sm btn-success" id="cta_cb_btn_abrir" onclick="xCtaCbAbrirCobro()"><i class="fa fa-money"></i>Registrar cobro</button>
+					<button class="btn btn-sm btn-light" onclick="xCtaCbAbrirLimite()"><i class="fa fa-shield"></i><span id="cta_cb_lim_btn">Límite de crédito</span></button>
+					<span class="cta-lim-estado" id="cta_cb_lim_estado"></span>
+				</div>
+
+				<div class="inv-seg">
+					<span class="inv-seg-item cta-cb-tab activa" id="cta_cb_tab_consumos" onclick="xCtaCbTab('consumos')"><i class="fa fa-cutlery"></i>Consumos a crédito</span>
+					<span class="inv-seg-item cta-cb-tab" id="cta_cb_tab_cobros" onclick="xCtaCbTab('cobros')"><i class="fa fa-money"></i>Cobros registrados</span>
+				</div>
+				<span class="inv-muted cta-cb-sel" id="cta_cb_sel"></span>
+
+				<div class="inv-table-wrap cta-cb-panel" id="cta_cb_p_consumos">
+					<table class="inv-table" id="tb_cta_cb_consumos">
+						<thead><tr><th class="inv-cen"><input type="checkbox" id="cta_cb_todos" onchange="xCtaCbMarcarTodos(this.checked)" title="Marcar todos"></th>
+							<th>Fecha</th><th class="inv-num">Consumo</th><th class="inv-num">Pagado</th><th class="inv-num">Debe</th><th></th></tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+
+				<div class="inv-table-wrap cta-cb-panel" id="cta_cb_p_cobros" style="display:none">
+					<table class="inv-table" id="tb_cta_cb_cobros">
+						<thead><tr><th>Fecha</th><th>Forma</th><th>Registró</th><th class="inv-num">Importe</th><th></th></tr></thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<!-- ===== inicio: elegir por pagar o por cobrar ===== -->
+		<div class="xMiCard xradius inv-card" id="cta_inicio">
+			<div class="xEncanezadoCard inv-head">
+				<h3>Cuentas por pagar y por cobrar</h3>
+				<p>Elige qué quieres revisar.</p>
+			</div>
+			<div class="xContentCard">
+				<div class="cta-tipos">
+					<div class="cta-tipo" onclick="xCtaSeg('pagar')">
+						<img src="../../../images/001-por-pagar.png" alt="">
+						<b>Cuentas por <span class="cta-t-pagar">pagar</span></b>
+						<span>Compras hechas a tus proveedores al crédito.</span>
+						<em id="cta_ini_pagar"></em>
+					</div>
+					<div class="cta-tipo" onclick="xCtaSeg('cobrar')">
+						<img src="../../../images/002-por-cobrar.png" alt="">
+						<b>Cuentas por <span class="cta-t-cobrar">cobrar</span></b>
+						<span>Consumos de tus clientes registrados al crédito.</span>
+						<em id="cta_ini_cobrar"></em>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="xMiCard xradius inv-card cta-lista" id="cta_lista">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<span class="inv-link cta-volver" onclick="xCtaAtras()"><i class="fa fa-arrow-left"></i>Volver</span>
+						<h3 id="cta_lista_tit"></h3>
+						<p id="cta_lista_bajada"></p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xCtaExcel()"><i class="fa fa-file-excel-o"></i>Exportar a Excel</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<!-- ===== POR PAGAR ===== -->
+				<div class="cta-panel activa" id="cta_panel_pagar">
+					<div class="inv-kpis" id="cta_pg_kpis"></div>
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Ver</span>
+							<select class="inv-select" id="cta_pg_ver" onchange="xCtaPgListar()" style="width:170px">
+								<option value="pendientes">Por pagar</option>
+								<option value="pagadas">Ya pagadas</option>
+							</select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Proveedor</span>
+							<select class="inv-select" id="cta_pg_prov" onchange="xCtaPgListar()" style="width:240px"></select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Buscar</span>
+							<input type="text" class="inv-input" id="cta_pg_buscar" placeholder="Proveedor, comprobante, N°..." oninput="xCtaPgPintar()">
+						</div>
+					</div>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_cta_pagar">
+							<thead><tr>
+								<th>Proveedor</th><th>Compra</th><th>Vence</th>
+								<th class="inv-num">Total</th><th class="inv-num">Pagado</th><th class="inv-num">Debes</th><th></th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+
+				<!-- ===== POR COBRAR ===== -->
+				<div class="cta-panel" id="cta_panel_cobrar">
+					<div class="inv-kpis" id="cta_cb_kpis"></div>
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Ver</span>
+							<select class="inv-select" id="cta_cb_ver" onchange="xCtaCbListar()" style="width:190px">
+								<option value="deben">Clientes que deben</option>
+								<option value="todos">Todos los clientes con crédito</option>
+							</select>
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Buscar</span>
+							<input type="text" class="inv-input" id="cta_cb_buscar" placeholder="Cliente, DNI/RUC, teléfono..." oninput="xCtaCbPintar()">
+						</div>
+						<span class="inv-sep"></span>
+						<label class="inv-check"><input type="checkbox" id="cta_cb_limite_f" onchange="xCtaCbPintar()"> Solo sobre su límite</label>
+					</div>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_cta_cobrar">
+							<thead><tr>
+								<th>Cliente</th><th class="inv-num">Consumos</th><th>Antigüedad</th><th>Límite</th><th class="inv-num">Debe</th><th></th>
+							</tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br><br>
+	</template>
+<script>
+// Cuentas por pagar / cobrar (rediseño). Backend: bdphp/log_cuentas.php. Plan: plan/CUENTAS-PAGAR-COBRAR-PLAN.md
+var xCtaData = null;       // init: tipos_pago, proveedores, hoy
+var xCtaPagar = [];        // compras a credito del filtro actual
+var xCtaPgSel = null;      // compra abierta en el dialogo
+
+function xCtaAviso(texto, icono) { showAlertSwalOk(icono || 'warning', '', texto, 'Entendido', 1); }
+function xCtaConfirmar(html, titulo, boton) {
+	return showAlertSwalHtmlDecision({ title: titulo, html: html, icon: 'question', showCancelButton: true,
+		confirmButtonText: boton, cancelButtonText: 'Cancelar' }, 1).then(function (r) { return !!(r && r.isConfirmed); });
+}
+function xCtaApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_cuentas.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) {
+		if (!r || !r.success) { xCtaAviso((r && r.error) || 'Error de comunicación con el servidor', 'error'); }
+		d.resolve(r || { success: false });
+	})
+	.fail(function (x) {
+		try { xPopupLoad.xclose(); } catch (e) {}
+		xCtaAviso(x && x.status === 401 ? 'Tu sesión expiró, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
+		d.resolve({ success: false });
+	});
+	return d.promise();
+}
+function xCtaEsc(s) { return $('<div>').text(s === null || s === undefined ? '' : String(s)).html(); }
+// '2026-09-27 14:42:36' -> '27/09/2026 14:42' (fecha_hora es texto en el legacy; otros formatos se dejan igual)
+function xCtaFechaHora(t) {
+	var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(String(t || ''));
+	return m ? m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5] : (t || '');
+}
+function xCtaSoles(n) { var v = parseFloat(n); return isNaN(v) ? '' : 'S/ ' + v.toFixed(2); }
+
+function xCtaIniciar() {
+	xPopupLoad.titulo = 'Cargando...'; xPopupLoad.xopen();
+	xCtaApi('init').then(function (r) {
+		if (!r.success) { xPopupLoad.xclose(); return; }
+		xCtaData = r.datos;
+		var h = '';
+		xCtaData.tipos_pago.forEach(function (t) { h += '<option value="' + t.idtipo_pago + '">' + xCtaEsc(t.descripcion) + '</option>'; });
+		$('#cta_pg_tp').html(h);
+		h = '<option value="0">Todos los proveedores</option>';
+		xCtaData.proveedores.forEach(function (p) { h += '<option value="' + p.idproveedor + '">' + xCtaEsc(p.descripcion) + '</option>'; });
+		$('#cta_pg_prov').html(h);
+		$.when(xCtaPgListar(), xCtaCbListar()).then(function () { xPopupLoad.xclose(); });
+	});
+}
+// Navegacion inicio -> lista -> detalle. Cada pantalla se guarda en el historial del navegador (misma URL,
+// el router no se entera) para que la flecha "atras" del navegador y los botones "Volver" hagan lo mismo.
+function xCtaHist(estado) {
+	try {
+		var act = history.state || {};
+		history[act.cta === estado.cta && act.cual === estado.cual ? 'replaceState' : 'pushState'](estado, '', location.href);
+	} catch (e) {}
+}
+function xCtaAtras() {
+	var act = history.state || {};
+	if (act.cta === 'lista' || act.cta === 'vista') { history.back(); return; }
+	xCtaInicio(true);   // sin historial (p.ej. el navegador no lo permite): vuelve directo
+}
+function xCtaVista(cual, sinHist) {
+	$('#cta_inicio, #cta_lista, .cta-vista').hide(); $('#cta_vista_' + cual).show();
+	window.scrollTo(0, 0);
+	if (!sinHist) { xCtaHist({ cta: 'vista', cual: cual }); }
+}
+function xCtaInicio(sinHist) {
+	$('.cta-vista, #cta_lista').hide(); $('#cta_inicio').show(); window.scrollTo(0, 0);
+	if (!sinHist) { xCtaHist({ cta: 'inicio' }); }
+}
+function xCtaSeg(cual, sinHist) {
+	var pg = cual === 'pagar';
+	$('#cta_lista_tit').text(pg ? 'Cuentas por pagar' : 'Cuentas por cobrar');
+	$('#cta_lista_bajada').text(pg ? 'Lo que le debes a tus proveedores por compras al crédito.' : 'Lo que te deben tus clientes por consumos al crédito.');
+	$('.cta-panel').removeClass('activa'); $('#cta_panel_' + cual).addClass('activa');
+	$('#cta_inicio, .cta-vista').hide(); $('#cta_lista').show(); window.scrollTo(0, 0);
+	if (!sinHist) { xCtaHist({ cta: 'lista', cual: cual }); }
+	(pg ? xCtaPgListar : xCtaCbListar)();
+}
+if (!window.xCtaPopstate) {
+	window.xCtaPopstate = true;
+	window.addEventListener('popstate', function (e) {
+		if (!document.getElementById('cta_inicio') || location.hash.indexOf('cuentas_p_c') < 0) { return; }
+		var st = e.state || {};
+		var hayDetalle = st.cual === 'pagar' ? !!xCtaPgSel : !!xCtaCb;
+		if (st.cta === 'vista' && hayDetalle) { xCtaVista(st.cual, true); }
+		else if (st.cta === 'lista' || st.cta === 'vista') { xCtaSeg(st.cual, true); }
+		else { xCtaInicio(true); }
+	});
+}
+
+// ===================== POR PAGAR =====================
+function xCtaPgListar() {
+	return xCtaApi('pagar-listar', { ver: $('#cta_pg_ver').val(), idproveedor: parseInt($('#cta_pg_prov').val()) || 0 }).then(function (r) {
+		if (!r.success) { return; }
+		xCtaPagar = r.datos;
+		xCtaPgPintar();
+	});
+}
+// Semaforo de vencimiento: dias = f_pago - hoy
+function xCtaVence(c) {
+	if (parseInt(c.pagado) === 1) { return '<span class="cta-chip verde">Pagada</span>' + (c.f_ultimo_pago ? '<span class="inv-sub">' + xCtaEsc(c.f_ultimo_pago) + '</span>' : ''); }
+	if (c.dias === null || c.dias === undefined) { return '<span class="cta-chip gris">Sin fecha</span>'; }
+	var d = parseInt(c.dias);
+	var chip = d < 0 ? '<span class="cta-chip rojo">Vencida hace ' + Math.abs(d) + ' día' + (Math.abs(d) === 1 ? '' : 's') + '</span>'
+		: d === 0 ? '<span class="cta-chip rojo">Vence hoy</span>'
+		: d <= 7 ? '<span class="cta-chip amarillo">Vence en ' + d + ' día' + (d === 1 ? '' : 's') + '</span>'
+		: '<span class="cta-chip verde">Vence en ' + d + ' días</span>';
+	return chip + '<span class="inv-sub">' + xCtaEsc(c.f_pago) + '</span>';
+}
+function xCtaPgPintar() {
+	var pend = xCtaPagar.filter(function (c) { return parseInt(c.pagado) === 0; });
+	var sum = function (l) { return l.reduce(function (s, c) { return s + (parseFloat(c.pendiente) || 0); }, 0); };
+	var vencidas = pend.filter(function (c) { return c.dias !== null && parseInt(c.dias) <= 0; });
+	var semana = pend.filter(function (c) { return c.dias !== null && parseInt(c.dias) > 0 && parseInt(c.dias) <= 7; });
+	var provs = {}; pend.forEach(function (c) { provs[c.idproveedor] = 1; });
+	if ($('#cta_pg_ver').val() === 'pendientes') {
+		$('#cta_ini_pagar').html(pend.length ? 'Debes <b>' + xCtaSoles(sum(pend)) + '</b>' + (vencidas.length ? ' · <b class="cta-debe">' + vencidas.length + ' vencida' + (vencidas.length === 1 ? '' : 's') + '</b>' : '') : 'No le debes nada a tus proveedores');
+		$('#cta_pg_kpis').html(
+			'<div class="inv-kpi inv-kpi-azul"><span>Total por pagar</span><b>' + xCtaSoles(sum(pend)) + '</b><em>' + pend.length + ' compra' + (pend.length === 1 ? '' : 's') + ' · ' + Object.keys(provs).length + ' proveedor' + (Object.keys(provs).length === 1 ? '' : 'es') + '</em></div>' +
+			'<div class="inv-kpi ' + (vencidas.length ? 'inv-kpi-rojo' : 'inv-kpi-verde') + '"><span>Vencido</span><b class="' + (vencidas.length ? 'text-danger' : '') + '">' + xCtaSoles(sum(vencidas)) + '</b><em>' + vencidas.length + ' compra' + (vencidas.length === 1 ? '' : 's') + ' con la fecha pasada</em></div>' +
+			'<div class="inv-kpi inv-kpi-celeste"><span>Vence en 7 días</span><b>' + xCtaSoles(sum(semana)) + '</b><em>' + semana.length + ' compra' + (semana.length === 1 ? '' : 's') + '</em></div>');
+	} else {
+		$('#cta_pg_kpis').html('<div class="inv-kpi inv-kpi-verde"><span>Compras a crédito ya pagadas</span><b>' + xCtaPagar.length + '</b><em>las 500 más recientes</em></div>');
+	}
+	var txt = ($('#cta_pg_buscar').val() || '').toLowerCase();
+	var h = '';
+	xCtaPagar.forEach(function (c, i) {
+		if (txt && [c.proveedor, c.ruc, c.comprobante, c.idcompra, c.f_compra].join(' ').toLowerCase().indexOf(txt) < 0) { return; }
+		// compra marcada pagada: no se debe nada (hay pagadas antiguas sin pagos registrados y a_pagar sin descontar)
+		var esPagada = parseInt(c.pagado) === 1;
+		var debe = esPagada ? 0 : (parseFloat(c.pendiente) || 0);
+		var pagado = (parseFloat(c.total) || 0) - debe;
+		h += '<tr>' +
+			'<td>' + (c.proveedor ? xCtaEsc(c.proveedor) + (c.ruc ? '<span class="inv-sub">' + xCtaEsc(c.ruc) + '</span>' : '') : '<span class="cmp-sin-prov">Sin proveedor</span><span class="inv-sub">compra antigua sin proveedor</span>') + '</td>' +
+			'<td>#' + c.idcompra + ' · ' + xCtaEsc(c.f_compra) + (c.comprobante ? '<span class="inv-sub">' + xCtaEsc(c.comprobante) + '</span>' : '') + '</td>' +
+			'<td>' + xCtaVence(c) + '</td>' +
+			'<td class="inv-num">' + xCtaSoles(c.total) + '</td>' +
+			'<td class="inv-num">' + (pagado > 0.004 ? xCtaSoles(pagado) + (parseInt(c.n_pagos) > 0 ? '<span class="inv-sub">' + c.n_pagos + ' pago' + (parseInt(c.n_pagos) === 1 ? '' : 's') + '</span>' : '') : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td class="inv-num"><b class="' + (esPagada ? '' : 'cta-debe') + '">' + xCtaSoles(debe) + '</b></td>' +
+			'<td class="inv-acciones">' + (parseInt(c.pagado) === 0
+				? '<button class="btn btn-sm btn-success" onclick="xCtaPgAbrir(' + i + ')"><i class="fa fa-money"></i>Pagar</button>'
+				: '<span class="inv-link" onclick="xCtaPgAbrir(' + i + ')"><i class="fa fa-search"></i>Ver</span>') + '</td></tr>';
+	});
+	$('#tb_cta_pagar tbody').html(h || '<tr><td colspan="7" class="inv-empty">' +
+		($('#cta_pg_ver').val() === 'pendientes' ? '¡No le debes nada a tus proveedores! Las compras a crédito que registres aparecerán aquí.' : 'No hay compras a crédito pagadas con este filtro.') + '</td></tr>');
+}
+function xCtaPgAbrir(i) {
+	var c = xCtaPagar[i];
+	xCtaApi('pagar-detalle', { idcompra: c.idcompra }).then(function (r) {
+		if (!r.success) { return; }
+		xCtaPgSel = r.datos.compra;
+		xCtaPgPintarDetalle(r.datos);
+		xCtaVista('pagar');
+	});
+}
+function xCtaPgPintarDetalle(d) {
+	var c = d.compra, pagada = parseInt(c.pagado) === 1;
+	var pagado = (parseFloat(c.total) || 0) - (pagada ? 0 : (parseFloat(c.pendiente) || 0));
+	$('#cta_pg_titulo').text((c.proveedor || 'Sin proveedor') + ' · Compra #' + c.idcompra);
+	$('#cta_pg_bajada').html(xCtaEsc(c.f_compra) + (c.comprobante ? ' · ' + xCtaEsc(c.comprobante) : '') + (c.f_pago ? ' · vence ' + xCtaEsc(c.f_pago) : ''));
+	$('#cta_pg_resumen').html(
+		'<div><span>Total de la compra</span><b>' + xCtaSoles(c.total) + '</b></div>' +
+		'<div><span>Ya pagaste</span><b class="cmp-baja">' + xCtaSoles(pagado) + '</b></div>' +
+		'<div><span>' + (pagada ? 'Estado' : 'Todavía debes') + '</span><b class="' + (pagada ? 'cmp-baja' : 'cta-debe') + '">' + (pagada ? 'PAGADA' : xCtaSoles(c.pendiente)) + '</b></div>');
+	$('#cta_pg_btn_abrir').toggle(!pagada);
+	var h = '';
+	d.pagos.forEach(function (p) {
+		var anulado = parseInt(p.estado) !== 0;
+		h += '<tr class="' + (anulado ? 'cmp-fila-anulada' : '') + '">' +
+			'<td>' + xCtaEsc(p.fecha) + (p.nota ? '<span class="inv-sub">' + xCtaEsc(p.nota) + '</span>' : '') + '</td>' +
+			'<td>' + (p.tipo_pago ? xCtaEsc(p.tipo_pago) : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td>' + (p.usuario ? xCtaEsc(p.usuario) + (p.fecha_hora ? '<span class="inv-sub">' + xCtaEsc(p.fecha_hora) + '</span>' : '') : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td class="inv-num">' + xCtaSoles(p.importe) + (anulado ? '<span class="inv-sub"><span class="inv-estado anulado">ANULADO</span></span>' : '') + '</td>' +
+			'<td class="inv-acciones">' + (anulado ? '<span class="inv-sub">Autorizó ' + xCtaEsc(p.usuario_anula || '–') + '<br>' + xCtaEsc(p.fecha_anula || '') + '</span>'
+				: '<span class="inv-link inv-link-rojo" onclick="xCtaPgAnular(' + p.idcompra_pago_cuenta + ', ' + parseFloat(p.importe) + ')"><i class="fa fa-undo"></i>Anular</span>') + '</td></tr>';
+	});
+	$('#tb_cta_pg_pagos tbody').html(h || '<tr><td colspan="5" class="inv-empty">Todavía no hay pagos para esta compra.</td></tr>');
+}
+// token por apertura del dialogo: un doble clic o reintento no registra dos veces
+function xCtaToken() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+var xCtaPgToken = '', xCtaCbToken = '';
+function xCtaPgAbrirPago() {
+	xCtaPgToken = xCtaToken();
+	var c = xCtaPgSel;
+	$('#cta_pg_pago_bajada').html(xCtaEsc(c.proveedor || 'Sin proveedor') + ' · Compra #' + c.idcompra + ' · debes <b class="cta-debe">' + xCtaSoles(c.pendiente) + '</b>');
+	$('#cta_pg_importe').val((parseFloat(c.pendiente) || 0).toFixed(2));
+	$('#cta_pg_fecha').val(xCtaData.hoy).attr('max', xCtaData.hoy);
+	$('#cta_pg_nota').val('');
+	dlg_cta_pg_pago.open();
+	setTimeout(function () { $('#cta_pg_importe').focus().select(); }, 300);
+}
+function xCtaPgTodo() { if (xCtaPgSel) { $('#cta_pg_importe').val((parseFloat(xCtaPgSel.pendiente) || 0).toFixed(2)); } }
+function xCtaPgRegistrar() {
+	var c = xCtaPgSel, imp = parseFloat($('#cta_pg_importe').val());
+	if (!c) { return; }
+	if (!(imp > 0)) { xCtaAviso('Escribe cuánto pagaste.'); $('#cta_pg_importe').focus(); return; }
+	if (imp > (parseFloat(c.pendiente) || 0) + 0.009) { xCtaAviso('No puedes pagar más de lo que debes (' + xCtaSoles(c.pendiente) + ').'); return; }
+	var queda = Math.max(0, (parseFloat(c.pendiente) || 0) - imp);
+	xCtaConfirmar('Pago de <b>' + xCtaSoles(imp) + '</b> con ' + xCtaEsc($('#cta_pg_tp option:selected').text()) + '.<br>' +
+		(queda < 0.01 ? 'La compra quedará <b>PAGADA</b>.' : 'Todavía quedarás debiendo <b>' + xCtaSoles(queda) + '</b>.'),
+		'¿Registrar el pago a ' + xCtaEsc(c.proveedor || 'este proveedor') + '?', 'Sí, registrar').then(function (ok) {
+		if (!ok) { return; }
+		$('#cta_pg_btn').prop('disabled', true);
+		xCtaApi('pagar-registrar', { token: xCtaPgToken, idcompra: c.idcompra, importe: imp, idtipo_pago: parseInt($('#cta_pg_tp').val()) || 0,
+			fecha: $('#cta_pg_fecha').val(), nota: $('#cta_pg_nota').val() }).then(function (r) {
+			$('#cta_pg_btn').prop('disabled', false);
+			if (!r.success) { return; }
+			dlg_cta_pg_pago.close(); xCtaAtras();
+			showToastSwal('success', r.datos.pagada ? 'Pago registrado: compra PAGADA' : 'Pago registrado. Queda ' + xCtaSoles(r.datos.pendiente));
+			xCtaPgListar();
+		});
+	});
+}
+function xCtaPgAnular(idp, importe) {
+	xCtaAutorizar('Anular pago', (xCtaPgSel.proveedor || 'Sin proveedor') + ' · Compra #' + xCtaPgSel.idcompra,
+		'Los <b>' + xCtaSoles(importe) + '</b> vuelven a quedar como deuda con el proveedor.',
+		'pagar-anular', { idcompra_pago_cuenta: idp }, function (d) {
+			showToastSwal('success', 'Pago anulado. Debes ' + xCtaSoles(d.pendiente));
+			xCtaApi('pagar-detalle', { idcompra: d.idcompra }).then(function (r2) { if (r2.success) { xCtaPgSel = r2.datos.compra; xCtaPgPintarDetalle(r2.datos); } });
+			xCtaPgListar();
+		});
+}
+
+// ===================== POR COBRAR =====================
+var xCtaCobrar = [];       // clientes del filtro
+var xCtaCb = null;         // detalle abierto: {cliente, consumos, cobros}
+
+function xCtaCbListar() {
+	return xCtaApi('cobrar-listar', { ver: $('#cta_cb_ver').val() }).then(function (r) {
+		if (!r.success) { return; }
+		xCtaCobrar = r.datos;
+		xCtaCbPintar();
+	});
+}
+function xCtaCbSobreLimite(c) { return c.limite !== null && c.limite !== undefined && (parseFloat(c.debe) || 0) > parseFloat(c.limite) + 0.009; }
+function xCtaCbAntig(dias) {
+	if (dias === null || dias === undefined) { return '<span class="inv-muted">–</span>'; }
+	var d = parseInt(dias);
+	var cls = d > 60 ? 'rojo' : d > 30 ? 'amarillo' : 'verde';
+	var txt = d < 30 ? d + ' día' + (d === 1 ? '' : 's') : d < 365 ? Math.floor(d / 30) + ' mes' + (Math.floor(d / 30) === 1 ? '' : 'es') : Math.floor(d / 365) + ' año' + (Math.floor(d / 365) === 1 ? '' : 's');
+	return '<span class="cta-chip ' + cls + '">' + txt + '</span><span class="inv-sub">el consumo impago más antiguo</span>';
+}
+function xCtaCbLimiteCelda(c) {
+	if (c.limite === null || c.limite === undefined) { return '<span class="inv-muted">Sin límite</span>'; }
+	var lim = parseFloat(c.limite) || 0, debe = parseFloat(c.debe) || 0;
+	var pct = lim > 0 ? Math.min(100, Math.round(debe * 100 / lim)) : 100;
+	var cls = debe > lim + 0.009 ? 'rojo' : pct >= 80 ? 'amarillo' : 'verde';
+	return '<div class="cta-barra"><div class="cta-barra-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+		'<span class="inv-sub">' + xCtaSoles(lim) + (debe > lim + 0.009 ? ' · <b class="cta-debe">pasó por ' + xCtaSoles(debe - lim) + '</b>' : '') + '</span>';
+}
+function xCtaCbPintar() {
+	var deben = xCtaCobrar.filter(function (c) { return (parseFloat(c.debe) || 0) > 0.009; });
+	var total = deben.reduce(function (s, c) { return s + (parseFloat(c.debe) || 0); }, 0);
+	var masAntigua = deben.reduce(function (m, c) { return Math.max(m, parseInt(c.dias) || 0); }, 0);
+	var sobre = deben.filter(xCtaCbSobreLimite);
+	if ($('#cta_cb_ver').prop('selectedIndex') === 0) {
+		$('#cta_ini_cobrar').html(deben.length ? 'Te deben <b>' + xCtaSoles(total) + '</b> · ' + deben.length + ' cliente' + (deben.length === 1 ? '' : 's') : 'Nadie te debe');
+	}
+	$('#cta_cb_kpis').html(
+		'<div class="inv-kpi inv-kpi-azul"><span>Total por cobrar</span><b>' + xCtaSoles(total) + '</b><em>' + deben.length + ' cliente' + (deben.length === 1 ? '' : 's') + ' con deuda</em></div>' +
+		'<div class="inv-kpi ' + (masAntigua > 60 ? 'inv-kpi-rojo' : 'inv-kpi-celeste') + '"><span>Deuda más antigua</span><b>' + (deben.length ? masAntigua + ' días' : '–') + '</b><em>desde el consumo impago más viejo</em></div>' +
+		'<div class="inv-kpi ' + (sobre.length ? 'inv-kpi-rojo' : 'inv-kpi-verde') + ' cos-kpi-click" onclick="$(\'#cta_cb_limite_f\').prop(\'checked\', true); xCtaCbPintar();"><span>Sobre su límite</span><b class="' + (sobre.length ? 'text-danger' : '') + '">' + sobre.length + '</b><em>clientes que pasaron su límite de crédito</em></div>');
+	var txt = ($('#cta_cb_buscar').val() || '').toLowerCase();
+	var soloLim = $('#cta_cb_limite_f').is(':checked');
+	var h = '';
+	xCtaCobrar.forEach(function (c, i) {
+		if (txt && [c.cliente, c.doc, c.telefono].join(' ').toLowerCase().indexOf(txt) < 0) { return; }
+		if (soloLim && !xCtaCbSobreLimite(c)) { return; }
+		var debe = parseFloat(c.debe) || 0;
+		h += '<tr>' +
+			'<td>' + xCtaEsc(c.cliente) + '<span class="inv-sub">' + [c.doc, c.telefono].filter(function (x) { return x; }).map(xCtaEsc).join(' · ') + '</span></td>' +
+			'<td class="inv-num">' + (parseInt(c.n_impagos) || 0) + ' <span class="inv-muted">de ' + c.n_consumos + '</span></td>' +
+			'<td>' + (debe > 0.009 ? xCtaCbAntig(c.dias) : '<span class="cta-chip verde">Al día</span>') + '</td>' +
+			'<td>' + xCtaCbLimiteCelda(c) + '</td>' +
+			'<td class="inv-num"><b class="' + (debe > 0.009 ? 'cta-debe' : '') + '">' + xCtaSoles(debe) + '</b></td>' +
+			'<td class="inv-acciones">' + (debe > 0.009
+				? '<button class="btn btn-sm btn-success" onclick="xCtaCbAbrir(' + c.idcliente + ')"><i class="fa fa-money"></i>Cobrar</button>'
+				: '<span class="inv-link" onclick="xCtaCbAbrir(' + c.idcliente + ')"><i class="fa fa-search"></i>Ver</span>') + '</td></tr>';
+	});
+	$('#tb_cta_cobrar tbody').html(h || '<tr><td colspan="6" class="inv-empty">' +
+		(xCtaCobrar.length ? 'Ningún cliente coincide con el filtro.' : '¡Nadie te debe! Las ventas a crédito aparecerán aquí.') + '</td></tr>');
+}
+function xCtaCbAbrir(idcliente) {
+	xCtaApi('cobrar-detalle', { idcliente: idcliente }).then(function (r) {
+		if (!r.success) { return; }
+		if (!xCtaCb || xCtaCb.cliente.idcliente !== r.datos.cliente.idcliente) { xCtaCbTab('consumos'); }
+		xCtaCb = r.datos;
+		xCtaCbPintarDetalle();
+		xCtaVista('cobrar');
+	});
+}
+function xCtaCbDebe() { return xCtaCb.consumos.reduce(function (s, x) { return s + (parseFloat(x.debe) || 0); }, 0); }
+function xCtaCbPintarDetalle() {
+	var d = xCtaCb, c = d.cliente, debe = xCtaCbDebe();
+	var total = d.consumos.filter(function (x) { return parseFloat(x.debe) > 0.009; }).reduce(function (s, x) { return s + (parseFloat(x.importe) || 0); }, 0);
+	$('#cta_cb_titulo').text(c.cliente);
+	$('#cta_cb_bajada').html([c.doc ? 'DNI/RUC ' + xCtaEsc(c.doc) : '', c.telefono ? '<i class="fa fa-phone"></i> ' + xCtaEsc(c.telefono) : '', xCtaEsc(c.direccion)].filter(function (x) { return x; }).join(' · '));
+	$('#cta_cb_resumen').html(
+		'<div><span>Consumos impagos</span><b>' + xCtaSoles(total) + '</b></div>' +
+		'<div><span>Ya pagó de ellos</span><b class="cmp-baja">' + xCtaSoles(total - debe) + '</b></div>' +
+		'<div><span>' + (debe > 0.009 ? 'Debe' : 'Estado') + '</span><b class="' + (debe > 0.009 ? 'cta-debe' : 'cmp-baja') + '">' + (debe > 0.009 ? xCtaSoles(debe) : 'AL DÍA') + '</b></div>');
+	var lim = c.limite, hayLim = lim !== null && lim !== undefined;
+	$('#cta_cb_lim_btn').text('Límite de crédito: ' + (hayLim ? xCtaSoles(lim) : 'sin límite'));
+	$('#cta_cb_lim_estado').html(!hayLim ? ''
+		: debe > parseFloat(lim) + 0.009 ? '<b class="cta-debe">Pasó su límite por ' + xCtaSoles(debe - parseFloat(lim)) + '</b>'
+		: 'Le quedan ' + xCtaSoles(parseFloat(lim) - debe));
+	$('#cta_cb_btn_abrir').toggle(debe > 0.009);
+	var tp = '';
+	xCtaData.tipos_pago.forEach(function (t) { tp += '<option value="' + t.idtipo_pago + '">' + xCtaEsc(t.descripcion) + '</option>'; });
+	$('#cta_cb_tp').html(tp);
+	// consumos
+	var h = '';
+	d.consumos.forEach(function (x, i) {
+		var imp = parseFloat(x.debe) > 0.009;
+		h += '<tr class="' + (imp ? '' : 'cmp-fila-anulada') + '">' +
+			'<td class="inv-cen">' + (imp ? '<input type="checkbox" class="cta-cb-chk" data-i="' + i + '" onchange="xCtaCbSeleccion()">' : '') + '</td>' +
+			'<td>' + xCtaEsc(x.fecha) + '<span class="inv-sub">' + (imp ? 'hace ' + x.dias + ' día' + (parseInt(x.dias) === 1 ? '' : 's') : 'pagado') + (x.correlativo ? ' · ' + xCtaEsc(x.correlativo) : '') + '</span></td>' +
+			'<td class="inv-num">' + xCtaSoles(x.importe) + '</td>' +
+			'<td class="inv-num">' + (parseFloat(x.pagado) > 0 ? xCtaSoles(x.pagado) : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td class="inv-num"><b class="' + (imp ? 'cta-debe' : '') + '">' + xCtaSoles(x.debe) + '</b></td>' +
+			'<td class="inv-acciones"><span class="inv-link" onclick="xCtaCbVerConsumo(' + x.idregistro_pago + ')"><i class="fa fa-list"></i>Ver</span>' +
+				(x.external_id ? '<span class="inv-link" onclick="xSoapSunat_DownloadFile(\'pdf\', \'' + xCtaEsc(x.external_id) + '\')"><i class="fa fa-file-pdf-o"></i>PDF</span>' : '') + '</td></tr>';
+	});
+	$('#tb_cta_cb_consumos tbody').html(h || '<tr><td colspan="6" class="inv-empty">Sin consumos a crédito.</td></tr>');
+	var nImp = d.consumos.filter(function (x) { return parseFloat(x.debe) > 0.009; }).length;
+	$('#cta_cb_tab_consumos').html('<i class="fa fa-cutlery"></i>Consumos a crédito (' + (nImp ? nImp + ' sin pagar' : d.consumos.length) + ')');
+	$('#cta_cb_tab_cobros').html('<i class="fa fa-money"></i>Cobros registrados (' + d.cobros.length + ')');
+	$('#cta_cb_todos').prop('checked', false); xCtaCbSeleccion();
+	// cobros
+	h = '';
+	d.cobros.forEach(function (x) {
+		var anulado = String(x.estado) !== '0';
+		var puede = !anulado && parseInt(x.n_aplic) > 0 && parseInt(x.caja_cerrada) !== 1;
+		var porque = anulado ? '' : parseInt(x.n_aplic) === 0 ? 'Cobro de la pantalla anterior: no se puede anular aquí' : parseInt(x.caja_cerrada) === 1 ? 'La caja de este cobro ya se cerró' : '';
+		h += '<tr class="' + (anulado ? 'cmp-fila-anulada' : '') + '">' +
+			'<td>' + xCtaEsc(xCtaFechaHora(x.fecha_hora)) + '</td>' +
+			'<td>' + (x.tipo_pago ? xCtaEsc(x.tipo_pago) : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td>' + (x.usuario ? xCtaEsc(x.usuario) : '<span class="inv-muted">–</span>') + '</td>' +
+			'<td class="inv-num">' + xCtaSoles(x.importe) + (anulado ? '<span class="inv-sub"><span class="inv-estado anulado">ANULADO</span></span>' : '') + '</td>' +
+			'<td class="inv-acciones">' + (anulado ? '<span class="inv-sub">Autorizó ' + xCtaEsc(x.usuario_anula || '–') + '<br>' + xCtaEsc(x.fecha_anula || '') + '</span>'
+				: puede ? '<span class="inv-link inv-link-rojo" onclick="xCtaCbAnular(' + x.idcobro + ', ' + parseFloat(x.importe) + ')"><i class="fa fa-undo"></i>Anular</span>'
+				: '<span class="inv-sub" title="' + xCtaEsc(porque) + '"><i class="fa fa-lock"></i> ' + xCtaEsc(parseInt(x.caja_cerrada) === 1 ? 'caja cerrada' : 'anterior') + '</span>') + '</td></tr>';
+	});
+	$('#tb_cta_cb_cobros tbody').html(h || '<tr><td colspan="5" class="inv-empty">Todavía no hay cobros a este cliente.</td></tr>');
+}
+function xCtaCbTab(cual) {
+	$('.cta-cb-tab').removeClass('activa'); $('#cta_cb_tab_' + cual).addClass('activa');
+	$('.cta-cb-panel').hide(); $('#cta_cb_p_' + cual).show();
+	$('#cta_cb_sel').toggle(cual === 'consumos');
+}
+function xCtaCbAbrirCobro() {
+	xCtaCbToken = xCtaToken();
+	$('#cta_cb_cobro_bajada').html(xCtaEsc(xCtaCb.cliente.cliente) + ' · debe <b class="cta-debe">' + xCtaSoles(xCtaCbDebe()) + '</b>');
+	xCtaCbSeleccion();
+	dlg_cta_cb_cobro.open();
+	setTimeout(function () { $('#cta_cb_importe').focus().select(); }, 300);
+}
+function xCtaCbAbrirLimite() {
+	var c = xCtaCb.cliente, hayLim = c.limite !== null && c.limite !== undefined;
+	$('#cta_cb_limite_bajada').html(xCtaEsc(c.cliente) + ' · hoy debe <b>' + xCtaSoles(xCtaCbDebe()) + '</b>');
+	$('#cta_cb_lim_in').val(hayLim ? parseFloat(c.limite) : '');
+	dlg_cta_cb_limite.open();
+	setTimeout(function () { $('#cta_cb_lim_in').focus().select(); }, 300);
+}
+function xCtaCbMarcados() {
+	return $('.cta-cb-chk:checked').map(function () { return xCtaCb.consumos[parseInt($(this).data('i'))]; }).get();
+}
+function xCtaCbSeleccion() {
+	var sel = xCtaCbMarcados();
+	var sum = sel.reduce(function (s, x) { return s + (parseFloat(x.debe) || 0); }, 0);
+	$('#cta_cb_sel').text(sel.length ? sel.length + ' marcado' + (sel.length === 1 ? '' : 's') + ' = ' + xCtaSoles(sum) : 'Marca consumos si el cliente paga algunos en específico');
+	$('#cta_cb_importe').val((sel.length ? sum : xCtaCbDebe()).toFixed(2));
+	$('#cta_cb_cobro_ayuda').text(sel.length ? (sel.length === 1 ? 'Se aplica al consumo que marcaste' : 'Se aplica a los ' + sel.length + ' consumos que marcaste') + ' (' + xCtaSoles(sum) + '). Entra a tu caja como "otro ingreso".'
+		: 'Se aplica primero a los consumos más antiguos. Entra a tu caja como "otro ingreso".');
+}
+function xCtaCbMarcarTodos(v) { $('.cta-cb-chk').prop('checked', v); xCtaCbSeleccion(); }
+function xCtaCbTodo() { xCtaCbSeleccion(); }
+function xCtaCbRegistrar() {
+	var sel = xCtaCbMarcados();
+	var tope = sel.length ? sel.reduce(function (s, x) { return s + (parseFloat(x.debe) || 0); }, 0) : xCtaCbDebe();
+	var imp = parseFloat($('#cta_cb_importe').val());
+	if (!(imp > 0)) { xCtaAviso('Escribe cuánto te pagó.'); $('#cta_cb_importe').focus(); return; }
+	if (imp > tope + 0.009) { xCtaAviso('No puede pagar más de lo que debe' + (sel.length ? ' en los consumos marcados' : '') + ' (' + xCtaSoles(tope) + ').'); return; }
+	var queda = Math.max(0, xCtaCbDebe() - imp);
+	xCtaConfirmar('Cobro de <b>' + xCtaSoles(imp) + '</b> en ' + xCtaEsc($('#cta_cb_tp option:selected').text()) + '. Entra a tu caja como "otro ingreso".<br>' +
+		(queda < 0.01 ? 'El cliente queda <b>AL DÍA</b>.' : 'Todavía deberá <b>' + xCtaSoles(queda) + '</b>.'),
+		'¿Registrar el cobro a ' + xCtaEsc(xCtaCb.cliente.cliente) + '?', 'Sí, registrar').then(function (ok) {
+		if (!ok) { return; }
+		$('#cta_cb_btn').prop('disabled', true);
+		xCtaApi('cobrar-registrar', { token: xCtaCbToken, idcliente: xCtaCb.cliente.idcliente, importe: imp, idtipo_pago: parseInt($('#cta_cb_tp').val()) || 0,
+			ids: sel.map(function (x) { return x.idregistro_pago_detalle; }) }).then(function (r) {
+			$('#cta_cb_btn').prop('disabled', false);
+			if (!r.success) { return; }
+			dlg_cta_cb_cobro.close();
+			showToastSwal('success', r.datos.saldo < 0.01 ? 'Cobro registrado: cliente AL DÍA' : 'Cobro registrado. Debe ' + xCtaSoles(r.datos.saldo));
+			xCtaCbAbrir(xCtaCb.cliente.idcliente);
+			xCtaCbListar();
+		});
+	});
+}
+// Anular (cobro o pago) con usuario autorizado; el servidor vuelve a validar usuario + clave + permiso
+var xCtaAutoriza = null;   // {op, body, listo(datos)}
+function xCtaAutorizar(titulo, bajada, texto, op, body, listo) {
+	xCtaAutoriza = { op: op, body: body, listo: listo };
+	$('#cta_aut_titulo').text(titulo);
+	$('#cta_aut_bajada').text(bajada);
+	$('#cta_aut_texto').html(texto);
+	$('#cta_aut_us, #cta_aut_pass').val('');
+	dlg_cta_autoriza.open();
+	setTimeout(function () { $('#cta_aut_us').focus(); }, 300);
+}
+function xCtaAutorizaOk() {
+	var u = String($('#cta_aut_us').val() || '').trim(), p = String($('#cta_aut_pass').val() || '');
+	if (!u || !p) { xCtaAviso('Escribe el usuario y la clave de quien autoriza.'); return; }
+	$('#cta_aut_btn').prop('disabled', true);
+	xCtaApi(xCtaAutoriza.op, $.extend({}, xCtaAutoriza.body, { u: u, p: p })).then(function (r) {
+		$('#cta_aut_btn').prop('disabled', false);
+		if (!r.success) { $('#cta_aut_pass').val('').focus(); return; }
+		dlg_cta_autoriza.close();
+		xCtaAutoriza.listo(r.datos);
+	});
+}
+function xCtaCbAnular(idcobro, importe) {
+	xCtaAutorizar('Anular cobro', xCtaCb.cliente.cliente,
+		'Los <b>' + xCtaSoles(importe) + '</b> vuelven a ser deuda del cliente y salen de tu caja.',
+		'cobrar-anular', { idcobro: idcobro }, function (d) {
+			showToastSwal('success', 'Cobro anulado');
+			xCtaCbAbrir(d.idcliente);
+			xCtaCbListar();
+		});
+}
+function xCtaCbGuardarLimite() {
+	var c = xCtaCb.cliente, v = String($('#cta_cb_lim_in').val() || '').trim();
+	if (v !== '' && !(parseFloat(v) >= 0)) { xCtaAviso('Escribe un monto válido, o déjalo vacío para "sin límite".'); return; }
+	xCtaApi('cobrar-limite', { idcliente: c.idcliente, limite: v === '' ? null : parseFloat(v) }).then(function (r) {
+		if (!r.success) { return; }
+		dlg_cta_cb_limite.close();
+		showToastSwal('success', r.datos.limite === null ? 'Sin límite de crédito' : 'Límite: ' + xCtaSoles(r.datos.limite));
+		xCtaCb.cliente = $.extend({}, c, { limite: r.datos.limite });
+		xCtaCbPintarDetalle();
+		xCtaCbListar();
+	});
+}
+function xCtaCbVerConsumo(idregistro_pago) {
+	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=2003', data: { i: idregistro_pago } }).done(function (t) {
+		var items = [];
+		try { items = JSON.parse(t).datos || []; } catch (e) {}
+		var h = '<table style="width:100%;font-size:13px;text-align:left">' + items.map(function (it) {
+			return '<tr><td>' + xCtaEsc(it.cantidad) + ' × ' + xCtaEsc(it.descripcion) + '</td><td style="text-align:right">' + xCtaEsc(it.ptotal) + '</td></tr>';
+		}).join('') + '</table>';
+		showAlertSwalHtml({ title: 'Detalle del consumo', html: items.length ? h : 'Sin detalle disponible.', icon: 'info', confirmButtonText: 'Cerrar' }, 1);
+	});
+}
+// Estado de cuenta: mismo texto para WhatsApp e impresion
+function xCtaCbEstadoTexto() {
+	var c = xCtaCb.cliente, debe = xCtaCbDebe();
+	var sede = '';
+	try { sede = (xm_log_get('datos_org_sede')[0].nombre || '').toString(); } catch (e) {}
+	var lineas = xCtaCb.consumos.filter(function (x) { return parseFloat(x.debe) > 0.009; })
+		.map(function (x) { return '• ' + x.fecha + ': consumo ' + xCtaSoles(x.importe) + (parseFloat(x.pagado) > 0 ? ', pagado ' + xCtaSoles(x.pagado) : '') + ', debe ' + xCtaSoles(x.debe); });
+	return 'Hola ' + c.cliente + ', te saludamos' + (sede ? ' de ' + sede : '') + '.\n\nEste es tu estado de cuenta al ' + xCtaData.hoy.split('-').reverse().join('/') + ':\n' +
+		lineas.join('\n') + '\n\n*Total pendiente: ' + xCtaSoles(debe) + '*\n\n¡Gracias por tu preferencia!';
+}
+function xCtaCbWhatsapp() {
+	var tel = String(xCtaCb.cliente.telefono || '').replace(/\D/g, '');
+	if (tel.length === 9 && tel.charAt(0) === '9') { tel = '51' + tel; }
+	window.open('https://wa.me/' + (tel.length >= 11 ? tel : '') + '?text=' + encodeURIComponent(xCtaCbEstadoTexto()), '_blank');
+}
+function xCtaCbImprimir() {
+	showAlertSwalHtmlDecision({ title: 'Imprimir estado de cuenta', html: '¿En qué papel lo vas a imprimir?', icon: 'question',
+		showCancelButton: true, confirmButtonText: '<i class="fa fa-print"></i> Ticket 80mm', cancelButtonText: '<i class="fa fa-file-o"></i> Hoja A5' }, 1)
+	.then(function (r) {
+		if (r && r.isConfirmed) { xCtaCbImprimirEn('ticket'); }
+		else if (r && r.dismiss === 'cancel') { xCtaCbImprimirEn('a5'); }
+	});
+}
+// Estado de cuenta en un iframe oculto: ticket 80mm (72mm utiles) u hoja A5
+function xCtaCbImprimirEn(papel) {
+	var c = xCtaCb.cliente, debe = xCtaCbDebe(), t = papel === 'ticket', o = {};
+	try { o = xm_log_get('datos_org_sede')[0] || {}; } catch (e) {}
+	var ahora = new Date(), dd = function (n) { return (n < 10 ? '0' : '') + n; };
+	var fecha = dd(ahora.getDate()) + '/' + dd(ahora.getMonth() + 1) + '/' + ahora.getFullYear() + ' ' + dd(ahora.getHours()) + ':' + dd(ahora.getMinutes());
+	var pend = xCtaCb.consumos.filter(function (x) { return parseFloat(x.debe) > 0.009; });
+	var cobros = xCtaCb.cobros.filter(function (x) { return String(x.estado) === '0'; }).slice(0, 5);
+	var filas = pend.map(function (x) {
+		return '<tr><td>' + xCtaEsc(x.fecha) + (x.correlativo ? '<br><small>' + xCtaEsc(x.correlativo) + '</small>' : '') + '</td>' +
+			(t ? '' : '<td class="n">' + xCtaSoles(x.importe) + '</td><td class="n">' + (parseFloat(x.pagado) > 0 ? xCtaSoles(x.pagado) : '–') + '</td>') +
+			'<td class="n"><b>' + xCtaSoles(x.debe) + '</b></td></tr>';
+	}).join('');
+	var lim = c.limite !== null && c.limite !== undefined ? parseFloat(c.limite) : null;
+	var h = '<!doctype html><html><head><meta charset="utf-8"><title>Estado de cuenta</title><style>' +
+		(t ? '@page{size:80mm auto;margin:0}body{width:72mm;margin:0 auto;padding:4mm 0;font-size:11px}'
+			: '@page{size:A5;margin:12mm}body{margin:0;font-size:12px}') +
+		'body{font-family:Arial,Helvetica,sans-serif;color:#000}' +
+		'.c{text-align:center}.n{text-align:right;white-space:nowrap}h1{font-size:' + (t ? '14px' : '17px') + ';margin:0}' +
+		'h2{font-size:' + (t ? '12px' : '14px') + ';margin:10px 0 4px;letter-spacing:1px}' +
+		'.muted{font-size:' + (t ? '10px' : '11px') + '}.sep{border-top:1px dashed #000;margin:8px 0}' +
+		'table{width:100%;border-collapse:collapse}th{text-align:left;border-bottom:1px solid #000;padding:3px 0;font-size:' + (t ? '10px' : '11px') + '}' +
+		'th.n{text-align:right}td{padding:3px 0;vertical-align:top;border-bottom:1px dotted #999}small{font-size:9px}' +
+		'.tot{display:flex;justify-content:space-between;font-size:' + (t ? '14px' : '16px') + ';font-weight:bold;margin-top:8px}' +
+		(t ? '' : '.head{display:flex;justify-content:space-between;align-items:flex-start}.head>div:first-child{text-align:left}.head>div:last-child{text-align:right}') +
+		'</style></head><body>' +
+		'<div class="head"><div class="c"><h1>' + xCtaEsc(o.sedenombre || o.nombre || '') + '</h1>' +
+			'<div class="muted">' + [o.nombre && o.nombre !== o.sedenombre ? xCtaEsc(o.nombre) : '', o.ruc ? 'RUC ' + xCtaEsc(o.ruc) : ''].filter(Boolean).join(' · ') + '</div>' +
+			'<div class="muted">' + [xCtaEsc(o.sededireccion || o.direccion || ''), xCtaEsc(o.sedeciudad || '')].filter(Boolean).join(' - ') + '</div>' +
+			(o.sedetelefono ? '<div class="muted">Tel. ' + xCtaEsc(o.sedetelefono) + '</div>' : '') + '</div>' +
+		'<div class="c"><h2>ESTADO DE CUENTA</h2><div class="muted">' + fecha + '</div></div></div>' +
+		'<div class="sep"></div>' +
+		'<div><b>Cliente:</b> ' + xCtaEsc(c.cliente) + '</div>' +
+		(c.doc ? '<div class="muted">DNI/RUC: ' + xCtaEsc(c.doc) + '</div>' : '') +
+		(c.telefono ? '<div class="muted">Tel.: ' + xCtaEsc(c.telefono) + '</div>' : '') +
+		'<div class="sep"></div>' +
+		(pend.length
+			? '<table><thead><tr><th>Consumo</th>' + (t ? '' : '<th class="n">Importe</th><th class="n">Pagado</th>') + '<th class="n">Debe</th></tr></thead><tbody>' + filas + '</tbody></table>'
+			: '<div class="c">No tiene consumos pendientes.</div>') +
+		'<div class="tot"><span>TOTAL PENDIENTE</span><span>' + xCtaSoles(debe) + '</span></div>' +
+		(lim !== null ? '<div class="muted">Límite de crédito: ' + xCtaSoles(lim) + '</div>' : '') +
+		(cobros.length ? '<h2>ÚLTIMOS PAGOS</h2><table><tbody>' + cobros.map(function (x) {
+			return '<tr><td>' + xCtaEsc(xCtaFechaHora(x.fecha_hora)) + (x.tipo_pago ? ' · ' + xCtaEsc(x.tipo_pago) : '') + '</td><td class="n">' + xCtaSoles(x.importe) + '</td></tr>';
+		}).join('') + '</tbody></table>' : '') +
+		'<div class="sep"></div><div class="c muted">¡Gracias por tu preferencia!</div>' +
+		'</body></html>';
+	var f = document.createElement('iframe');
+	f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+	document.body.appendChild(f);
+	f.contentDocument.open(); f.contentDocument.write(h); f.contentDocument.close();
+	setTimeout(function () {
+		f.contentWindow.focus(); f.contentWindow.print();
+		setTimeout(function () { document.body.removeChild(f); }, 1000);
+	}, 250);
+}
+
+function xCtaExcel() {
+	var id = $('#cta_panel_pagar').hasClass('activa') ? 'tb_cta_pagar' : 'tb_cta_cobrar';
+	var t = $('#' + id).clone();
+	if (!t.length) { return; }
+	t.find('th:last-child, td:last-child').remove();
+	t.attr('id', id + '_xls').css('display', 'none');
+	$('body').append(t);
+	try { tableToExcel(id + '_xls', id === 'tb_cta_pagar' ? 'cuentas_por_pagar' : 'cuentas_por_cobrar'); } finally { t.remove(); }
+}
+
+Polymer({
+	is: 'x-cuentas2',
+	attached: function () {
+		xPopupLoad = document.getElementById('xLoad');
+		$('#Titulo_page').text('Cuentas por pagar y cobrar');
+		xm_LogChequea(function () { xm_log_get('ini_us'); $('body').addClass('loaded'); xCtaIniciar(); });
+	}
+});
+</script>
+</dom-module>
+
+<style>
+	.cta-panel { display:none; }
+	.cta-panel.activa { display:block; }
+	.inv-seg-item > .fa { margin-right:6px; }
+	.cta-chip { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+	.cta-chip.rojo { background:#f8d7da; color:#842029; }
+	.cta-chip.amarillo { background:#fff3cd; color:#7a5b00; }
+	.cta-chip.verde { background:#d1e7dd; color:#0f5132; }
+	.cta-chip.gris { background:#e2e3e5; color:#41464b; }
+	.cta-debe { color:#b42318; }
+	.cmp-sin-prov { color:#b42318; font-weight:600; }
+	.cmp-baja { color:#198754; }
+	tr.cmp-fila-anulada td { opacity:.55; }
+	.inv-card .btn > .fa { margin-right:6px; }
+	.inv-table td.inv-acciones .btn { height:28px; line-height:26px; padding:0 10px; }
+	.cta-vista { display:none; }
+	.cta-lista { display:none; }
+	.cta-tipos { display:grid; grid-template-columns:repeat(2, minmax(0, 260px)); justify-content:center; gap:24px; padding:24px 0 28px; }
+	.cta-tipo { display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; padding:24px 18px; border:2px solid #e5e7eb; border-radius:14px; background:#fff; cursor:pointer; transition:all .15s; }
+	.cta-tipo:hover { border-color:#0d6efd; box-shadow:0 6px 18px rgba(13,110,253,.12); transform:translateY(-2px); }
+	.cta-tipo img { width:80px; height:80px; object-fit:contain; margin-bottom:6px; }
+	.cta-tipo b { font-size:18px; font-weight:600; color:#212529; }
+	.cta-tipo > span { font-size:12px; color:#6c757d; }
+	.cta-tipo em { font-style:normal; font-size:13px; color:#495057; margin-top:6px; min-height:18px; }
+	.cta-tipo em b { font-size:14px; font-weight:600; color:#212529; }
+	.cta-tipo em b.cta-debe { color:#b42318; }
+	.cta-t-pagar { color:#d97706; }
+	.cta-t-cobrar { color:#0d6efd; }
+	.cta-aut-texto { margin:0 0 12px; }
+	#dlg_cta_autoriza { width:420px; max-width:94vw; }
+	#dlg_cta_autoriza .btn > .fa { margin-right:6px; }
+	@media (max-width: 600px) { .cta-tipos { grid-template-columns:minmax(0, 1fr); } }
+	.cta-volver { display:inline-block; font-size:12px; margin-bottom:6px; }
+	.cta-volver .fa { margin-right:6px; }
+	.cta-scroll { max-height:48vh; overflow-y:auto; }
+	.cta-acciones { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:-4px 0 14px; }
+	.cta-acciones .btn > .fa { margin-right:6px; }
+	.cta-lim-estado { font-size:12px; color:#6c757d; }
+	.cta-cb-sel { font-size:12px; margin-left:10px; }
+	.cta-form-grid-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+	.cta-ayuda { font-size:12px; color:#6c757d; margin:12px 0 0; }
+	#dlg_cta_pg_pago, #dlg_cta_cb_cobro, #dlg_cta_cb_limite { width:460px; max-width:94vw; }
+	#dlg_cta_pg_pago .cta-form-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+	#dlg_cta_cb_limite .inv-input { width:100%; }
+	#dlg_cta_pg_pago .cta-f-nota { grid-column:1 / -1; }
+	#dlg_cta_pg_pago .btn > .fa, #dlg_cta_cb_cobro .btn > .fa, #dlg_cta_cb_limite .btn > .fa { margin-right:6px; }
+	.cta-barra { width:110px; height:6px; border-radius:3px; background:#e5e7eb; overflow:hidden; }
+	.cta-barra-fill { height:6px; border-radius:3px; }
+	.cta-barra-fill.verde { background:#28a745; }
+	.cta-barra-fill.amarillo { background:#f59e0b; }
+	.cta-barra-fill.rojo { background:#dc3545; }
+	.cos-kpi-click { cursor:pointer; }
+	.cta-resumen { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin-bottom:14px; }
+	.cta-resumen > div { background:#f5f6f8; border-radius:8px; padding:10px 12px; }
+	.cta-resumen span { display:block; font-size:10px; color:#6c757d; text-transform:uppercase; letter-spacing:.4px; font-weight:600; }
+	.cta-resumen b { display:block; font-size:19px; font-weight:600; margin-top:2px; font-variant-numeric:tabular-nums; }
+	.cta-form-grid { display:grid; grid-template-columns: 150px 170px 160px minmax(0, 1fr); gap:10px 14px; align-items:end; }
+	.cta-form-grid .inv-input, .cta-form-grid .inv-select { width:100%; }
+	.cta-todo { text-transform:none; letter-spacing:0; }
+	.cta-sub-tit { font-size:13px; font-weight:600; margin:4px 0 6px; }
+	@media (max-width: 800px) {
+		.cta-form-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+		.cta-resumen { grid-template-columns: minmax(0, 1fr); }
+	}
+</style>
