@@ -52,6 +52,7 @@ function CpeInterno_Registrar(data) {
             // manda 'accepted' esa es la respuesta a "¿SUNAT lo declaro?": con 1032/1033
             // el envio falla pero el comprobante YA esta en SUNAT y debe quedar en 0,
             // no en 1 ("Registrado") de por vida. API viejo sin 'accepted' -> regla anterior.
+            // verifica cdr
             const _resp = data.response;
             const _estado_sunat = typeof _resp.accepted === 'boolean'
                 ? (_resp.accepted ? 0 : (parseInt(_resp.code, 10) || 1))

@@ -238,6 +238,7 @@
 							<select class="inv-select" id="cta_pg_ver" onchange="xCtaPgListar()" style="width:170px">
 								<option value="pendientes">Por pagar</option>
 								<option value="pagadas">Ya pagadas</option>
+								<option value="pagos">Pagos que hice</option>
 							</select>
 						</div>
 						<div class="inv-field">
@@ -251,7 +252,7 @@
 					</div>
 					<div class="inv-table-wrap">
 						<table class="inv-table" id="tb_cta_pagar">
-							<thead><tr>
+							<thead id="cta_pg_thead"><tr>
 								<th>Proveedor</th><th>Compra</th><th>Vence</th>
 								<th class="inv-num">Total</th><th class="inv-num">Pagado</th><th class="inv-num">Debes</th><th></th>
 							</tr></thead>
@@ -269,6 +270,7 @@
 							<select class="inv-select" id="cta_cb_ver" onchange="xCtaCbListar()" style="width:190px">
 								<option value="deben">Clientes que deben</option>
 								<option value="todos">Todos los clientes con crédito</option>
+								<option value="cobros">Cobros (últimos 2 meses)</option>
 							</select>
 						</div>
 						<div class="inv-field">
@@ -280,7 +282,7 @@
 					</div>
 					<div class="inv-table-wrap">
 						<table class="inv-table" id="tb_cta_cobrar">
-							<thead><tr>
+							<thead id="cta_cb_thead"><tr>
 								<th>Cliente</th><th class="inv-num">Consumos</th><th>Antigüedad</th><th>Límite</th><th class="inv-num">Debe</th><th></th>
 							</tr></thead>
 							<tbody></tbody>
@@ -384,7 +386,8 @@ if (!window.xCtaPopstate) {
 
 // ===================== POR PAGAR =====================
 function xCtaPgListar() {
-	return xCtaApi('pagar-listar', { ver: $('#cta_pg_ver').val(), idproveedor: parseInt($('#cta_pg_prov').val()) || 0 }).then(function (r) {
+	var ver = $('#cta_pg_ver').val();
+	return xCtaApi(ver === 'pagos' ? 'pagar-pagos' : 'pagar-listar', { ver: ver, idproveedor: parseInt($('#cta_pg_prov').val()) || 0 }).then(function (r) {
 		if (!r.success) { return; }
 		xCtaPagar = r.datos;
 		xCtaPgPintar();
@@ -401,7 +404,11 @@ function xCtaVence(c) {
 		: '<span class="cta-chip verde">Vence en ' + d + ' días</span>';
 	return chip + '<span class="inv-sub">' + xCtaEsc(c.f_pago) + '</span>';
 }
+var xCtaPgThead = null;   // encabezado original de la tabla (compras); la vista de pagos usa otro
 function xCtaPgPintar() {
+	if (xCtaPgThead === null) { xCtaPgThead = $('#cta_pg_thead').html(); }
+	if ($('#cta_pg_ver').val() === 'pagos') { xCtaPgPintarPagos(); return; }
+	$('#cta_pg_thead').html(xCtaPgThead);
 	var pend = xCtaPagar.filter(function (c) { return parseInt(c.pagado) === 0; });
 	var sum = function (l) { return l.reduce(function (s, c) { return s + (parseFloat(c.pendiente) || 0); }, 0); };
 	var vencidas = pend.filter(function (c) { return c.dias !== null && parseInt(c.dias) <= 0; });
@@ -437,6 +444,25 @@ function xCtaPgPintar() {
 	});
 	$('#tb_cta_pagar tbody').html(h || '<tr><td colspan="7" class="inv-empty">' +
 		($('#cta_pg_ver').val() === 'pendientes' ? '¡No le debes nada a tus proveedores! Las compras a crédito que registres aparecerán aquí.' : 'No hay compras a crédito pagadas con este filtro.') + '</td></tr>');
+}
+// Historial: cada fila es un pago hecho (no una compra). "Ver" abre la compra.
+function xCtaPgPintarPagos() {
+	$('#cta_pg_thead').html('<tr><th>Fecha del pago</th><th>Proveedor</th><th>Compra</th><th>Forma de pago</th><th class="inv-num">Importe</th><th></th></tr>');
+	var txt = ($('#cta_pg_buscar').val() || '').toLowerCase();
+	var total = 0, n = 0, h = '';
+	xCtaPagar.forEach(function (p, i) {
+		if (txt && [p.proveedor, p.ruc, p.comprobante, p.idcompra, p.fecha, p.tipo_pago, p.usuario, p.nota].join(' ').toLowerCase().indexOf(txt) < 0) { return; }
+		total += parseFloat(p.importe) || 0; n++;
+		h += '<tr>' +
+			'<td>' + xCtaEsc(p.fecha) + ((p.fecha_hora || p.usuario) ? '<span class="inv-sub">' + [p.fecha_hora ? 'registrado ' + xCtaEsc(p.fecha_hora) : '', xCtaEsc(p.usuario)].filter(function (x) { return x; }).join(' · ') + '</span>' : '') + '</td>' +
+			'<td>' + (p.proveedor ? xCtaEsc(p.proveedor) + (p.ruc ? '<span class="inv-sub">' + xCtaEsc(p.ruc) + '</span>' : '') : '<span class="cmp-sin-prov">Sin proveedor</span>') + '</td>' +
+			'<td>#' + p.idcompra + ' · ' + xCtaEsc(p.f_compra) + (p.comprobante ? '<span class="inv-sub">' + xCtaEsc(p.comprobante) + '</span>' : '') + '</td>' +
+			'<td>' + xCtaEsc(p.tipo_pago) + (p.nota ? '<span class="inv-sub">' + xCtaEsc(p.nota) + '</span>' : '') + '</td>' +
+			'<td class="inv-num"><b>' + xCtaSoles(p.importe) + '</b></td>' +
+			'<td class="inv-acciones"><span class="inv-link" onclick="xCtaPgAbrir(' + i + ')"><i class="fa fa-search"></i>Ver compra</span></td></tr>';
+	});
+	$('#cta_pg_kpis').html('<div class="inv-kpi inv-kpi-verde"><span>Total pagado</span><b>' + xCtaSoles(total) + '</b><em>' + n + ' pago' + (n === 1 ? '' : 's') + (xCtaPagar.length >= 500 ? ' · los 500 más recientes' : '') + '</em></div>');
+	$('#tb_cta_pagar tbody').html(h || '<tr><td colspan="6" class="inv-empty">Todavía no registraste pagos a proveedores con este filtro.</td></tr>');
 }
 function xCtaPgAbrir(i) {
 	var c = xCtaPagar[i];
@@ -520,7 +546,8 @@ var xCtaCobrar = [];       // clientes del filtro
 var xCtaCb = null;         // detalle abierto: {cliente, consumos, cobros}
 
 function xCtaCbListar() {
-	return xCtaApi('cobrar-listar', { ver: $('#cta_cb_ver').val() }).then(function (r) {
+	var ver = $('#cta_cb_ver').val();
+	return xCtaApi(ver === 'cobros' ? 'cobrar-cobros' : 'cobrar-listar', { ver: ver }).then(function (r) {
 		if (!r.success) { return; }
 		xCtaCobrar = r.datos;
 		xCtaCbPintar();
@@ -542,7 +569,13 @@ function xCtaCbLimiteCelda(c) {
 	return '<div class="cta-barra"><div class="cta-barra-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
 		'<span class="inv-sub">' + xCtaSoles(lim) + (debe > lim + 0.009 ? ' · <b class="cta-debe">pasó por ' + xCtaSoles(debe - lim) + '</b>' : '') + '</span>';
 }
+var xCtaCbThead = null;   // encabezado original (clientes); la vista de cobros usa otro
 function xCtaCbPintar() {
+	if (xCtaCbThead === null) { xCtaCbThead = $('#cta_cb_thead').html(); }
+	var esCobros = $('#cta_cb_ver').val() === 'cobros';
+	$('#cta_cb_limite_f').closest('label').toggle(!esCobros);
+	if (esCobros) { xCtaCbPintarCobros(); return; }
+	$('#cta_cb_thead').html(xCtaCbThead);
 	var deben = xCtaCobrar.filter(function (c) { return (parseFloat(c.debe) || 0) > 0.009; });
 	var total = deben.reduce(function (s, c) { return s + (parseFloat(c.debe) || 0); }, 0);
 	var masAntigua = deben.reduce(function (m, c) { return Math.max(m, parseInt(c.dias) || 0); }, 0);
@@ -573,6 +606,25 @@ function xCtaCbPintar() {
 	});
 	$('#tb_cta_cobrar tbody').html(h || '<tr><td colspan="6" class="inv-empty">' +
 		(xCtaCobrar.length ? 'Ningún cliente coincide con el filtro.' : '¡Nadie te debe! Las ventas a crédito aparecerán aquí.') + '</td></tr>');
+}
+// Historial: cada fila es un cobro hecho. "Ver cliente" abre su cuenta.
+function xCtaCbPintarCobros() {
+	$('#cta_cb_thead').html('<tr><th>Fecha</th><th>Cliente</th><th>Forma de pago</th><th>Registró</th><th class="inv-num">Importe</th><th></th></tr>');
+	var txt = ($('#cta_cb_buscar').val() || '').toLowerCase();
+	var total = 0, n = 0, h = '';
+	xCtaCobrar.forEach(function (x) {
+		if (txt && [x.cliente, x.doc, x.telefono, x.tipo_pago, x.usuario].join(' ').toLowerCase().indexOf(txt) < 0) { return; }
+		total += parseFloat(x.importe) || 0; n++;
+		h += '<tr>' +
+			'<td>' + xCtaEsc(xCtaFechaHora(x.fecha_hora)) + '</td>' +
+			'<td>' + xCtaEsc(x.cliente) + '<span class="inv-sub">' + [x.doc, x.telefono].filter(function (v) { return v; }).map(xCtaEsc).join(' · ') + '</span></td>' +
+			'<td>' + xCtaEsc(x.tipo_pago) + '</td>' +
+			'<td>' + xCtaEsc(x.usuario) + '</td>' +
+			'<td class="inv-num"><b>' + xCtaSoles(x.importe) + '</b></td>' +
+			'<td class="inv-acciones"><span class="inv-link" onclick="xCtaCbAbrir(' + x.idcliente + ')"><i class="fa fa-search"></i>Ver cliente</span></td></tr>';
+	});
+	$('#cta_cb_kpis').html('<div class="inv-kpi inv-kpi-verde"><span>Total cobrado</span><b>' + xCtaSoles(total) + '</b><em>' + n + ' cobro' + (n === 1 ? '' : 's') + ' en los últimos 2 meses' + (xCtaCobrar.length >= 500 ? ' (los 500 más recientes)' : '') + '</em></div>');
+	$('#tb_cta_cobrar tbody').html(h || '<tr><td colspan="6" class="inv-empty">No hay cobros en los últimos 2 meses' + (txt ? ' con este filtro' : '') + '.</td></tr>');
 }
 function xCtaCbAbrir(idcliente) {
 	xCtaApi('cobrar-detalle', { idcliente: idcliente }).then(function (r) {
