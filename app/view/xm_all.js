@@ -587,6 +587,9 @@ function xm_log_get(seccion){
 	if (!rawSrc) {
 		rawSrc = window.localStorage.getItem("::app3_woDUS");
 	}
+	// Recien logueado el snapshot aun no existe (llega con -1111): atob(null) decodifica
+	// el texto "null" y JSON.parse ensuciaba la consola en cada ajax. Sin datos, sin datos.
+	if (!rawSrc) { return; }
 	try {
 		xdt_log=window.atob(rawSrc);
 		xdt_log=JSON.parse(xdt_log)

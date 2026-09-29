@@ -1474,8 +1474,17 @@ function recibirTicketEntrada(obj) {
 
 function xOpenDialogPermisoRemotoUs() {
 	txt_total_tengo.value = txt_total_caja.value;
-	// dialog_permiso_remoto.open();
-	com_dialog_solicitud_remota_permiso.open();
+
+	// Se abre por `openDialog()` del componente y NO por el dialogo de adentro.
+	// Abriendolo a mano se saltaba `_loadSolicitudData()`, que es quien arma el
+	// texto de la solicitud: al admin le llegaba "Solicitud: undefined" por
+	// WhatsApp y la pantalla le mostraba el renglon vacio.
+	const _dialogPermiso = document.getElementById('compUsPermisoCerrarCaja');
+	if (!_dialogPermiso) {
+		console.error('No se encontro el componente x-comp-dialog-permiso');
+		return;
+	}
+	_dialogPermiso.openDialog();
 }
 
 function xLoadTicketsEntradaCaja() {

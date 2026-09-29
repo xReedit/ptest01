@@ -247,7 +247,9 @@
                     descripcionEliminar = `<span class="fw-600 text-danger">Cambiar metodo de pago</span> <strong>${desTpBefore}</strong> de un importe de: <strong>${importeTotal}</strong>`;
                     _descripcionEliminarNoHtml = `Cambiar metodo de pago ${desTpBefore} de un importe de: ${importeTotal}`;
                 } else if (solicitud.tipo_permiso === 4) {
-                    const importeTotal = solicitud.obj.importe_1.toFixed(2);
+                    // importe_1 sale de un input, o sea que es texto: .toFixed
+                    // sobre texto revienta y se cae todo el armado del mensaje.
+                    const importeTotal = (parseFloat(solicitud.obj.importe_1) || 0).toFixed(2);
                     const importeEvaluar = parseFloat(solicitud.obj.importe_2);
                     const importeDif = (importeTotal - importeEvaluar).toFixed(2);
                     descripcionEliminar = `<span class="fw-600 text-danger">Cerrar caja</span> hay una diferencia en el efectivo de caja. Tengo <strong>${importeTotal}</strong>`;
