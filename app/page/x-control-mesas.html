@@ -3630,8 +3630,7 @@ function quitarSubTotal(obj, index) {
 	var idQuitar = xLocal_xDtSubTotales_cp[index].id || "";
 	
 	if ( tachado === "true") {
-		idQuitar = idQuitar + ",";
-		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(idQuitar,''); 
+		xLocal_SubTotal_Quitados = xQuitarIdSubtotal(xLocal_SubTotal_Quitados, idQuitar); 
 		xLocal_xDtSubTotales_cp[index].tachado = false;		
 		obj.dataset.tachado = false;
 		xLocal_xDtSubTotales_cp[index].importe_tachado = parseFloat();
@@ -3646,7 +3645,7 @@ function quitarSubTotal(obj, index) {
 	$("#tb_det_pedidos .row").each(function(i,e){
 		const index = $(e).attr('data-i'); // index del array de items
 		var xsubtotales_tachados = $(e).attr('data-subtotales_tachados');
-		xsubtotales_tachados = tachado === "true" ? xsubtotales_tachados.replace(idQuitar,'') : xsubtotales_tachados + idQuitar + ',';
+		xsubtotales_tachados = tachado === "true" ? xQuitarIdSubtotal(xsubtotales_tachados, idQuitar) : xsubtotales_tachados + idQuitar + ',';
 		$(e).attr('data-subtotales_tachados', xsubtotales_tachados);
 
 		xThisCM.xdtPedDet[index].subtotales_tachados = xsubtotales_tachados;

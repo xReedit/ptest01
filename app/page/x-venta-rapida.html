@@ -2933,7 +2933,7 @@ function quitarSubTotal(obj, index) {
 	const idQuitar = xLocal_xDtSubTotales[index].id;
 	
 	if ( tachado == "true") {
-		xLocal_SubTotal_Quitados = xLocal_SubTotal_Quitados.replace(idQuitar+",",''); 
+		xLocal_SubTotal_Quitados = xQuitarIdSubtotal(xLocal_SubTotal_Quitados, idQuitar); 
 	} else {
 		if (xLocal_SubTotal_Quitados.indexOf(idQuitar) >=0 ) { return; }
 		xLocal_SubTotal_Quitados += idQuitar + ',';	

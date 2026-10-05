@@ -60,6 +60,9 @@
 		// El permiso especifico, no basta con ser usuario del POS.
 		// Las comas envuelven el codigo para que ',D1,' no matchee ',D10,'.
 		if (strpos(',' . $u['acc'] . ',', ',D10,') === false) { return 'sin_permiso'; }
+		// sede bloqueada o dada de baja: no entra nadie
+		require_once __DIR__ . '/../bdphp/_sede_estado.php';
+		if (!xSedeHabilitadaBD($bd->bd, $u['idsede'])) { return 'sede_bloqueada'; }
 		return $u;
 	}
 
@@ -82,6 +85,9 @@
 
 			if ($us === null) {
 				$error = 'Usuario o clave incorrectos.';
+			} else if ($us === 'sede_bloqueada') {
+				$error = SEDE_BLOQUEADA_MSJ;
+				$us = null;
 			} else if ($us === 'sin_permiso') {
 				$error = 'Ese usuario no tiene permiso para marcar por otro. Habilitalo en Usuarios.';
 				$us = null;

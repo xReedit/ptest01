@@ -200,16 +200,36 @@ function xCosConfirmar(texto, titulo, boton) {
 	return showAlertSwalHtmlDecision({ title: titulo, html: texto, icon: 'question', showCancelButton: true,
 		confirmButtonText: boton, cancelButtonText: 'Cancelar' }, 1).then(function (r) { return !!(r && r.isConfirmed); });
 }
-function xCosApi(op, body) {
+// El popup vive en el <x-load> de la pagina y se asigna recien en el ready,
+// asi que cada uso va protegido: si todavia no esta, la llamada igual sale.
+function xCosLoad(abrir, titulo) {
+	try {
+		if (!abrir) { xPopupLoad.xclose(); return; }
+		xPopupLoad.titulo = titulo || 'Un momento...';
+		xPopupLoad.xopen();
+	} catch (e) {}
+}
+
+// `cargando`: false = sin popup (llamadas de fondo), texto = ese titulo,
+// nada = el titulo por defecto.
+//
+// El popup se maneja ACA y no en cada boton: "Ver costo" tarda un par de
+// segundos y sin señal la gente vuelve a tocar creyendo que no funciona. Son
+// nueve llamadas en la pagina y solo una lo tenia.
+function xCosApi(op, body, cargando) {
+	var conLoader = cargando !== false;
+	if (conLoader) { xCosLoad(true, typeof cargando === 'string' ? cargando : null); }
+
 	var d = $.Deferred();
 	$.ajax({ type: 'POST', url: '../../bdphp/log_costeo.php?op=' + op,
 		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
 	.done(function (r) {
+		if (conLoader) { xCosLoad(false); }
 		if (!r || !r.success) { xCosAviso((r && r.error) || 'Error de comunicación con el servidor', 'error'); }
 		d.resolve(r || { success: false });
 	})
 	.fail(function (x) {
-		try { xPopupLoad.xclose(); } catch (e) {}
+		xCosLoad(false);
 		xCosAviso(x && x.status === 401 ? 'Tu sesión expiró, vuelve a entrar.' : 'No se pudo conectar con el servidor', 'error');
 		d.resolve({ success: false });
 	});
@@ -229,9 +249,7 @@ function xCosEstado(p) {
 var COS_ORDEN = { rojo: 0, amarillo: 1, verde: 2, incompleto: 3 };
 
 function xCosCargar() {
-	xPopupLoad.titulo = 'Calculando costos...'; xPopupLoad.xopen();
-	return xCosApi('listar').then(function (r) {
-		xPopupLoad.xclose();
+	return xCosApi('listar', null, 'Calculando costos...').then(function (r) {
 		if (!r.success) { return; }
 		COS_UMBRAL_AMARILLO = parseFloat(r.datos.umbrales.amarillo) || 30;
 		COS_UMBRAL_ROJO = parseFloat(r.datos.umbrales.rojo) || 38;
@@ -316,7 +334,7 @@ function xCosAlertas(lista) {
 	$('#cos_alertas').html(html).show();
 }
 function xCosAlertasVistas() {
-	xCosApi('alertas-vistas').then(function (r) {
+	xCosApi('alertas-vistas', null, false).then(function (r) {
 		if (!r.success) { return; }
 		xCosAlertas([]);
 		try { window.localStorage.removeItem('::app3_sys_costeo_alertas'); } catch (e) {}

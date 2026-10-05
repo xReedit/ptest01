@@ -809,28 +809,43 @@
 					</div>
 					<!-- IMPRESORAS POR CANAL DE CONSUMO -->
 
-					<!-- IMPRESORAS PARA PRECUNETAS ENVIADAS DESDE EL MOZO -->
-					<div id="div_impresora_precuenta">
-						<h3 class="xBold">Impresora para pre-cuentas - Mozos -</h3>
-						<p>Configura la(s) impresora(s) donde se imprimiran las pre-cuentas enviadas por los mozos. Ej.
-							para: "Piso 1" que abarca las mesas "1" al "20" la impresora "Piso 1 - Precuenta", para
-							"Piso 2" ...</p>
+					<!-- IMPRESORA POR AREA DE MESAS (reglas en area_mesa.reglas_impresora) -->
+					<div id="div_impresora_area">
+						<h3 class="xBold">Impresora por área de mesas</h3>
+						<p style="margin-bottom: 14px;">Úsalo cuando un área de mesas tiene su propia impresora.</p>
+						<p style="margin-bottom: 14px;"><b>Ejemplo:</b> tienes una barra en cada piso. En "Secciones e impresoras" los tragos van a <b>BARRA 1</b>.
+							Aquí agregas: <b>PISO 2</b> · en vez de <b>BARRA 1</b> · imprimir en <b>BARRA 2</b>.<br>
+							Resultado: los tragos de las mesas del piso 2 salen en la barra del piso 2. El piso 1 sigue igual y la cocina no cambia.</p>
+						<p style="margin-bottom: 14px;"><b>Pre-cuenta del mozo (celular o tablet):</b> recomendado, crea una impresora solo para pre-cuenta, por ejemplo <b>PRECUENTA</b>,
+							con la IP de la impresora del piso 1, y elígela en "Otros comprobantes" → Pre-cuenta.
+							Luego agrega aquí: <b>PISO 2</b> · en vez de <b>PRECUENTA</b> · imprimir en <b>BARRA 2</b>.<br>
+							Resultado: la cuenta de la mesa 5 (piso 1) sale abajo y la de la mesa 25 (piso 2) sale en BARRA 2.</p>
+						<p class="text-secondary" style="margin-bottom: 14px;">Para llevar y delivery no cambian. Las estaciones con impresora propia siguen sacando su pre-cuenta en su impresora.
+							No le pongas a PRECUENTA la misma IP que BARRA 1. Las áreas se crean en "Áreas y Mesas".</p>
 						<br>
-						<table id="tb_sec_impr_precuenta" class="xtable1">
+						<table id="tb_impr_area" class="xtable1">
 							<thead>
-								<th>Area</th>
-								<th>Mesas</th>
-								<th>Impresora</th>
+								<th>Área</th>
+								<th>En vez de</th>
+								<th>Imprimir en</th>
+								<th></th>
 							</thead>
+							<tbody>
+								<tr>
+									<td><select id="sel_impr_area_area"></select></td>
+									<td><select id="sel_impr_area_origen"></select></td>
+									<td><select id="sel_impr_area_destino"></select></td>
+									<td><button type="button" class="btn btn-sm btn-primary" onclick="xAgregarReglaImpresoraArea()">+ Agregar</button></td>
+								</tr>
+								<tr><td colspan="4" class="text-danger fw-600" id="msj_impr_area" style="display: none;"></td></tr>
+							</tbody>
+							<tbody id="tb_impr_area_reglas"></tbody>
 						</table>
-						<div class="xInvisible">
-							<select id="sel_impr_precuenta"></select>
-						</div>
 						<br>
 						<br>
 						<div class="xLinea2"></div><br>
 					</div>
-					<!-- IMPRESORAS PARA PRECUNETAS ENVIADAS DESDE EL MOZO -->
+					<!-- IMPRESORA POR AREA DE MESAS -->
 
 					<div class="xInvisible" id="div_secciones_bodega">
 						<h3 class="xBold">Secciones de Bodega </h3>
@@ -1613,6 +1628,7 @@
 				$("#sel_impr_Sec_otro").html(xcandena_sel_print).trigger('create');
 				$("#sel_impr_Sec_bodega").html(xcandena_sel_print).trigger('create');
 				$("#sel_impr_tpc").html(xcandena_sel_print).trigger('create');
+				xLoadReglasImpresoraArea(xdtImp);
 				//encabezado pie de pagina logo
 				$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=307' })
 					.done(function (DtPrint) {
@@ -1872,6 +1888,61 @@
 
 	function xGuardarCambiosTPCPrint(id_row, id_print) {
 		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=40103', data: { id: id_row, idprint: id_print } })
+	}
+
+	// IMPRESORA POR AREA DE MESAS: area_mesa.reglas_impresora = [{o: idimpresora_origen, d: idimpresora_destino}]
+	var xAreasImpresora = [], xImpresorasArea = [];
+	function xEscImprArea(t) { return $('<div>').text(t == null ? '' : String(t)).html(); }
+	async function xLoadReglasImpresoraArea(impresoras) {
+		xImpresorasArea = impresoras || [];
+		const _rpt = await new httpFecht().axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 5001 } }, true, false);
+		xAreasImpresora = (_rpt && _rpt.success ? _rpt.datos : []).map(a => {
+			let reglas = [];
+			try { reglas = a.reglas_impresora ? JSON.parse(a.reglas_impresora) : []; } catch (e) { reglas = []; }
+			return Object.assign({}, a, { reglas: reglas });
+		});
+		const _optsPrint = xImpresorasArea.map(p => '<option value="' + parseInt(p.idimpresora) + '">' + xEscImprArea(p.descripcion) + '</option>').join('');
+		$("#sel_impr_area_area").html(xAreasImpresora.map((a, i) => '<option value="' + i + '">' + xEscImprArea(a.titulo) + '</option>').join(''));
+		$("#sel_impr_area_origen").html(_optsPrint);
+		$("#sel_impr_area_destino").html(_optsPrint);
+		$("#div_impresora_area").toggleClass('xInvisible', xAreasImpresora.length === 0 || xImpresorasArea.length < 2);
+		xPintarReglasImpresoraArea();
+	}
+	function xNomImpresoraArea(id) {
+		const p = xImpresorasArea.find(x => String(x.idimpresora) === String(id));
+		return p ? xEscImprArea(p.descripcion) : '(impresora borrada)';
+	}
+	function xPintarReglasImpresoraArea() {
+		let html = '';
+		xAreasImpresora.forEach((a, ia) => a.reglas.forEach((r, ir) => {
+			html += '<tr class="row"><td>' + xEscImprArea(a.titulo) + '</td><td>' + xNomImpresoraArea(r.o) + '</td><td>' + xNomImpresoraArea(r.d) + '</td>' +
+				'<td><span class="xDeleteRow" title="Quitar" onclick="xQuitarReglaImpresoraArea(' + ia + ',' + ir + ')"></span></td></tr>';
+		}));
+		$("#tb_impr_area_reglas").html(html);
+	}
+	function xMsjReglaImpresoraArea(msj) {
+		$("#msj_impr_area").text(msj || '').toggle(!!msj);
+	}
+	function xAgregarReglaImpresoraArea() {
+		const area = xAreasImpresora[parseInt($("#sel_impr_area_area").val())];
+		const o = parseInt($("#sel_impr_area_origen").val()), d = parseInt($("#sel_impr_area_destino").val());
+		xMsjReglaImpresoraArea('');
+		if (!area) { xMsjReglaImpresoraArea('Primero cree las áreas en "Áreas y Mesas".'); return; }
+		if (!o || !d) { xMsjReglaImpresoraArea('Elija las dos impresoras.'); return; }
+		if (o === d) { xMsjReglaImpresoraArea('Elija dos impresoras distintas.'); return; }
+		if (area.reglas.some(r => r.o === o)) { xMsjReglaImpresoraArea('Esa impresora ya tiene un cambio en el área ' + area.titulo + '. Quítelo primero.'); return; }
+		xGuardarReglasImpresoraArea(area, area.reglas.concat([{ o: o, d: d }]));
+	}
+	function xQuitarReglaImpresoraArea(ia, ir) {
+		const area = xAreasImpresora[ia];
+		xGuardarReglasImpresoraArea(area, area.reglas.filter((r, i) => i !== ir));
+	}
+	async function xGuardarReglasImpresoraArea(area, reglas) {
+		const _rpt = await new httpFecht().axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 52, listReglas: [{ idarea_mesa: area.idarea_mesa, reglas: reglas }] } }, true, false);
+		if (_rpt && _rpt.error === 'area_no_vigente') { xMsjReglaImpresoraArea('Las áreas cambiaron. Recargue la página e intente de nuevo.'); return; }
+		if (!_rpt || !_rpt.success) { console.error('op 52', _rpt); xMsjReglaImpresoraArea('No se pudo guardar. Intente de nuevo.'); return; }
+		xAreasImpresora = xAreasImpresora.map(a => a === area ? Object.assign({}, a, { reglas: reglas }) : a);
+		xPintarReglasImpresoraArea();
 	}
 
 	function xLoadConfOtrosDoc() {

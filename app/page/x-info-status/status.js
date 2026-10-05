@@ -1,5 +1,13 @@
 window.onload = () => {    
-    this.checkAlertServicio();
+    // Con la cobranza de restobar-consola activa, el aviso de pago lo ve SOLO el administrador dentro
+    // del POS (js/x-aviso-suscripcion.js): aqui ya no se muestra el modal con cuenta regresiva.
+    fetch('../../../bdphp/log_suscripcion.php?op=modo', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(r => {
+            if (r && r.success && r.datos && r.datos.nuevo) { urlNext(); return; }
+            this.checkAlertServicio();
+        })
+        .catch(() => this.checkAlertServicio());
 
     // click boton cerrar
     var btn = document.getElementById('btnStatusNext');

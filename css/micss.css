@@ -6858,3 +6858,98 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	.aus-dato { flex: 1 1 0; }
 	.aus-fila .btn { width: 100%; }
 }
+
+/* --- Aviso de pago de la suscripcion (js/x-aviso-suscripcion.js) ---
+   Tarjeta flotante NO modal, abajo a la izquierda (no tapa .xver-card). Cabecera de color solido para que
+   se note; un solo boton grande de accion. Solo la ve el administrador; nunca bloquea la caja. */
+.xsus-card {
+	position: fixed;
+	left: 18px;
+	bottom: 18px;
+	z-index: 10600;
+	width: 360px;
+	max-width: calc(100vw - 36px);
+	box-sizing: border-box;
+	overflow: hidden;
+	background: #fff;
+	border-radius: 16px;
+	box-shadow: 0 18px 48px rgba(16, 24, 40, .28);
+	animation: xverEntra .32s cubic-bezier(.16, .84, .44, 1);
+	--xsus-color: #e8590c;
+	--xsus-hover: #c94d0a;
+}
+.xsus-card.xsus-saliendo { animation: xverSale .22s ease forwards; }
+.xsus-rojo { --xsus-color: #e03131; --xsus-hover: #c92a2a; }
+.xsus-cab {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 16px 18px;
+	background: var(--xsus-color);
+	color: #fff;
+}
+.xsus-icon {
+	flex: 0 0 auto;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20px;
+	background: rgba(255, 255, 255, .2);
+}
+.xsus-tit { min-width: 0; }
+.xsus-tit b { display: block; font-size: 18px; font-weight: 700; line-height: 1.2; }
+.xsus-tit span { display: block; margin-top: 2px; font-size: 13px; opacity: .92; }
+.xsus-cuerpo { padding: 14px 18px 12px; }
+.xsus-texto { margin: 0 0 12px; font-size: 14px; color: #343a40; line-height: 1.45; }
+.xsus-monto {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 10px 12px;
+	margin-bottom: 12px;
+	border-radius: 10px;
+	background: #f8f9fa;
+}
+.xsus-monto span { font-size: 13px; color: #6c757d; }
+.xsus-monto b { font-size: 22px; font-weight: 700; color: #212529; }
+.xsus-pagar {
+	display: block;
+	text-align: center;
+	padding: 12px 14px;
+	border-radius: 10px;
+	background: var(--xsus-color);
+	color: #fff !important;
+	font-size: 16px;
+	font-weight: 700;
+	text-decoration: none !important;
+	transition: background .15s;
+}
+.xsus-pagar:hover, .xsus-pagar:focus { background: var(--xsus-hover); }
+.xsus-medios { margin-top: 6px; text-align: center; font-size: 12px; color: #6c757d; }
+.xsus-nota { margin-top: 10px; font-size: 12px; color: #6c757d; text-align: center; }
+.xsus-reconexion {
+	margin: -4px 0 12px;
+	padding: 9px 11px;
+	border-radius: 10px;
+	background: #fff5f5;
+	color: #c92a2a;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	text-align: center;
+}
+.xsus-despues {
+	display: block;
+	width: 100%;
+	margin-top: 6px;
+	padding: 6px;
+	border: 0;
+	background: none;
+	font-size: 13px;
+	color: #6c757d;
+	cursor: pointer;
+}
+.xsus-despues:hover { color: #212529; text-decoration: underline; }

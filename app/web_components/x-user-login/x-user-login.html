@@ -58,6 +58,9 @@
 					<p hidden$="[[!xErrorCredenciales]]" class="animate__animated animate__shakeX" style="color: #d32f2f; margin: 0; padding: 0;">
 						Credenciales incorrectas, usuario o clave incorrecto
 					</p>
+					<p hidden$="[[!xSedeSuspendida]]" class="animate__animated animate__shakeX" style="color: #d32f2f; margin: 0; padding: 0;">
+						Servicio suspendido para esta sede. Comunícate con Papaya.
+					</p>
 					<div hidden$="[[!xIsLoading]]" class="text-center animate__animated animate__fadeIn">
 						<p>Conectando...</p>
 						<paper-progress  indeterminate class="w-100"></paper-progress>
@@ -194,6 +197,7 @@
 
 		// Ocultar mensaje de error previo
 		xThis.xErrorCredenciales = false;
+		xThis.xSedeSuspendida = false;
 
 		xvalidateFormLogin(xfrm, function (a) {
 			if (a === false) { 
@@ -274,6 +278,11 @@
 				notify: true
 			},
 			xErrorCredenciales: {
+				type: Boolean,
+				value: false,
+				notify: true
+			},
+			xSedeSuspendida: {
 				type: Boolean,
 				value: false,
 				notify: true
@@ -362,6 +371,10 @@
 				case 2: // Éxito en el login
 					// Solo desactivar el loading, el resto se maneja en logueese.js
 					this.xErrorCredenciales = false;
+					break;
+				case 3: // sede bloqueada o dada de baja
+					this.xErrorCredenciales = false;
+					this.xSedeSuspendida = true;
 					break;
 			}
 		},

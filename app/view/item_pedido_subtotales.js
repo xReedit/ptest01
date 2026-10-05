@@ -110,6 +110,9 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 							
 							const id = c.tipo+c.id; // para quitar												
 							const desCompare = c.descripcion; // para comparar y unir
+							// hay una config por seccion con la misma descripcion (TAPER x seccion) y se muestran
+							// en UNA fila con el id de la primera; "Quitar" debe valer para todas las del grupo
+							const idsGrupo = xIdsSubtotalMismaDescripcion(xCartaSubtotales, desCompare);
 							const nivel = parseInt(c.nivel);										
 							let sumItem = 0;
 							let importe_tachado = 0;
@@ -141,9 +144,9 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 							// }
 
 
-							subtotales_tachados_local.indexOf(id) >=0 ? sumItem = 0 : importe_tachado = 0;
+							xCountIdsSubtotal(subtotales_tachados_local, idsGrupo) > 0 ? sumItem = 0 : importe_tachado = 0;
 
-							const tachado = checkSubTotalQuitado(cantidadItemPedido, id, sumItem);
+							const tachado = checkSubTotalQuitado(cantidadItemPedido, idsGrupo, sumItem);
 							
 							var IdExite = null;
 							// arrSuma.map((z, index) => {if (z.id === id) {IdExite = index; return;}} );
@@ -237,17 +240,36 @@ function xCalcTotalSubArray(arrDt, importeTotal) {
 // val = valor a sumar si no esta quitado
 // x = grupo analizado que trae el subtotales_tachados
 // countPedidos == cantidad de items
-function checkSubTotalQuitado(countPedidos, id , val) {	
+function checkSubTotalQuitado(countPedidos, ids , val) {	
 	var rpt = false;
 	if (!xLocal_SubTotal_Quitados) { return; }	
 
-	const CountIdTacahdos = xLocal_SubTotal_Quitados.toLowerCase().split(",").sort().filter(x => x===id).length;
+	const CountIdTacahdos = xCountIdsSubtotal(xLocal_SubTotal_Quitados, ids);
 	const hbilitarTachado =  parseInt(CountIdTacahdos) >= parseFloat(countPedidos);
 
-	rpt = xLocal_SubTotal_Quitados.indexOf(id) >=0 ? true : false;
+	rpt = CountIdTacahdos > 0;
 	if (!rpt) {xSumCantImporte += parseFloat(val);}
 	
 	return hbilitarTachado ? rpt : false; 
+}
+
+// ids ('a'+id) de los adicionales con la misma descripcion
+function xIdsSubtotalMismaDescripcion(cartaSubtotales, descripcion) {
+	const des = String(descripcion || '').toLowerCase();
+	return (cartaSubtotales || [])
+		.filter(z => z.tipo === 'a' && String(z.descripcion || '').toLowerCase() === des)
+		.map(z => String(z.tipo + z.id).toLowerCase());
+}
+
+// cuantas veces aparece alguno de los ids en la cadena "a7,a8,a7," (comparacion exacta: a1 no es a12)
+function xCountIdsSubtotal(cadena, ids) {
+	return String(cadena || '').toLowerCase().split(',').filter(x => x !== '' && ids.indexOf(x) >= 0).length;
+}
+
+// quita TODAS las apariciones de id en la cadena (el calculo puede duplicarla: "a7,a7,")
+function xQuitarIdSubtotal(cadena, id) {
+	const _id = String(id).toLowerCase();
+	return String(cadena || '').split(',').filter(x => x !== '' && x.toLowerCase() !== _id).map(x => x + ',').join('');
 }
 
 var groupBy = function(xs, key) {

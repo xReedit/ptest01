@@ -37,6 +37,8 @@ window.addEventListener('WebComponentsReady', function (e) {
 	//$('body').addClass('loaded');
 	xdialog = document.querySelector('x-dialog');
 	xul=document.querySelector('x-user-login');
+	// vuelve aqui porque la sede se bloqueo con la sesion abierta (ver xm_all.js: 423 ERR_SEDE_BLOQUEADA)
+	if (/[?&]suspendido=1/.test(window.location.search)) { xul.xocurrencia(3); }
 
 	
 	//destruye sessuion
@@ -123,6 +125,10 @@ window.addEventListener('WebComponentsReady', function (e) {
 						// 	location.href='app/page/m_panel.html';
 						//  }
 						// window.Headers
+					} else if (dt == 2) {
+						// Clave correcta pero la sede esta bloqueada o dada de baja
+						xul.xocurrencia(3);
+						xdialog.xclose();
 					} else {
 						// Credenciales incorrectas
 						xul.xocurrencia(0);

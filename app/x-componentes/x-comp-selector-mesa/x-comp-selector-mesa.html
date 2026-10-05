@@ -249,6 +249,7 @@
 			},
 			
 			_loadAreas: async function() {
+				let areasData = [];
 				try {
 					const datosSede = xm_log_get('sede_otros_datos');
 					this.esAlfanumerica = datosSede && datosSede[0] && datosSede[0].mesas_alfanumerica === "1";
@@ -261,7 +262,7 @@
 					const data = await response.json();
 					
 					if (data && data.datos) {
-						const areasData = data.datos.map(area => {
+						areasData = data.datos.map(area => {
 							const mesas = [];
 							const desde = parseInt(area.desde);
 							const hasta = parseInt(area.hasta);
@@ -282,12 +283,22 @@
 								mesas: mesas
 							};
 						});
-						
-						this.set('areas', areasData);
 					}
 				} catch (error) {
 					console.error('Error al cargar áreas:', error);
 				}
+
+				// mesas numericas sin areas configuradas: de la 1 a la cantidad de mesas de la sede
+				if (!this.esAlfanumerica && areasData.length === 0) {
+					const generales = xm_log_get('sede_generales');
+					const numMesas = (generales && generales[0]) ? parseInt(generales[0].mesas || 0, 10) : 0;
+					const mesas = [];
+					for (let i = 1; i <= numMesas; i++) { mesas.push({ codigo: this._padLeft(i, 2) }); }
+					if (mesas.length) { areasData = [{ titulo: 'MESAS', idarea_mesa: 0, mesas: mesas }]; }
+				}
+
+				// si fallo la carga de alfanumericas se conserva la lista anterior (validarMesaExiste la usa)
+				if (areasData.length || !this.esAlfanumerica) { this.set('areas', areasData); }
 			},
 			
 			_padLeft: function(num, size) {

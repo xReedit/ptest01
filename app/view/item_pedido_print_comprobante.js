@@ -474,6 +474,71 @@ function xgetImpresoraById(xIdPrintSearch) {
 // 	})
 // }
 
+// IMPRESORA POR AREA DE MESAS (plan/IMPRESION-POR-AREA-PLAN.md)
+// area_mesa.reglas_impresora = [{o, d}]: en las mesas del area, lo que va a la impresora o se imprime en d.
+// Mesa 0 / vacia (para llevar, delivery) no cae en ningun area. Sin reglas todo imprime como antes.
+// ponytail: cache en localStorage refrescada cada 5 min; un cambio de reglas tarda hasta 5 min en llegar a cada equipo.
+function xRefrescarAreasImpresora() {
+	const _ts = parseInt(window.localStorage.getItem('::app3_areasImprTs') || '0');
+	if (Date.now() - _ts < 300000) { return; }
+	window.localStorage.setItem('::app3_areasImprTs', Date.now());
+	$.ajax({ type: 'POST', url: '../../bdphp/log_009.php?op=5001', dataType: 'json' })
+		.done(res => { if (res && res.success) { window.localStorage.setItem('::app3_areasImpr', JSON.stringify(res.datos || [])); } })
+		.fail(() => window.localStorage.setItem('::app3_areasImprTs', '0'));
+}
+xRefrescarAreasImpresora();
+
+function xBuscarAreaMesa(areas, mesa) {
+	mesa = String(mesa == null ? '' : mesa).trim();
+	if (mesa === '' || /^0+$/.test(mesa)) { return null; } // '0' / '00' = sin mesa (para llevar, delivery)
+	return areas.find(a => {
+		const ini = parseInt(a.desde), fin = parseInt(a.hasta);
+		if (a.prefijo) {
+			const pre = String(a.prefijo).toUpperCase();
+			if (!mesa.toUpperCase().startsWith(pre)) { return false; }
+			const resto = mesa.substring(pre.length);
+			if (!/^\d+$/.test(resto)) { return false; }
+			const n = parseInt(resto, 10);
+			return n >= ini && n <= fin;
+		}
+		if (!/^\d+$/.test(mesa)) { return false; }
+		const n = parseInt(mesa, 10);
+		return n >= ini && n <= fin;
+	}) || null;
+}
+
+// devuelve la funcion idimpresora -> idimpresora para la mesa (identidad si no hay regla)
+function xMapaImpresoraArea(mesa) {
+	let reglas = [];
+	try {
+		const area = xBuscarAreaMesa(JSON.parse(window.localStorage.getItem('::app3_areasImpr') || '[]'), mesa);
+		reglas = area && area.reglas_impresora ? JSON.parse(area.reglas_impresora) : [];
+	} catch (e) { reglas = []; }
+	// destino borrado o creado despues del login: se imprime en la original (no se pierde la comanda)
+	const _impresoras = xm_log_get('app3_woIpPrint') || [];
+	reglas = reglas.filter(r => _impresoras.some(p => String(p.idimpresora) === String(r.d)));
+	return id => {
+		const r = reglas.find(x => String(x.o) === String(id));
+		return r ? String(r.d) : id;
+	};
+}
+
+// copia de xArrayCuerpo con idimpresora / idimpresora_otro cambiados segun el area de la mesa
+function xAplicarReglaImpresoraArea(mesa, xArrayCuerpo) {
+	const _map = xMapaImpresoraArea(mesa);
+	return xArrayCuerpo.map(grupo => {
+		if (!grupo || typeof grupo !== 'object') { return grupo; }
+		const _g = Object.assign({}, grupo);
+		Object.keys(_g).forEach(k => {
+			const it = _g[k];
+			if (it && typeof it === 'object' && 'idimpresora' in it) {
+				_g[k] = Object.assign({}, it, { idimpresora: _map(it.idimpresora), idimpresora_otro: _map(it.idimpresora_otro) });
+			}
+		});
+		return _g;
+	});
+}
+
 function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, callback, idPedido) {
 	if (xArrayCuerpo.length ===0 ) return;
 
@@ -496,6 +561,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	xArrayEnca.isprint_subitems_vertical = xImpresoraPrint[0].isprint_subitems_vertical || 0;
 	
 	xArrayCuerpo = xArrayCuerpo.filter(x => x);
+	xRefrescarAreasImpresora();
+	const xMapImpresoraArea = xMapaImpresoraArea(xArrayEnca.m);
 	//si existe impresora local // saca una copia de todo el pedido
 	if(xPrintLocal!=undefined && xPrintLocal!=''){
 		xPrintLocal=$.parseJSON(xPrintLocal);
@@ -521,6 +588,8 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 		}
 	}
 
+	xArrayCuerpo = xAplicarReglaImpresoraArea(xArrayEnca.m, xArrayCuerpo);
+
 	// 041052022
 	// si el tipo de consumo tiene un impresora especifica
 	// ej: todo delivery se imprime en una impresora x
@@ -532,7 +601,7 @@ function xCocinarImprimirComanda(xArrayEnca, xArrayCuerpo, xArraySubTotales, cal
 	if ( isTpcPrinter ) {
 		listTPCPrinter.map(p => {
 			const _tpcPrint = p.idtipo_consumo;
-			xIdPrint=p.idimpresora;
+			xIdPrint=xMapImpresoraArea(p.idimpresora);
 			xArrayBodyPrint=[];
 			for (var i = 0; i < xArrayCuerpo.length; i++) {
 				if(xArrayCuerpo[i]==null){continue;}
