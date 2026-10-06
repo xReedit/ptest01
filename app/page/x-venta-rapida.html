@@ -2244,7 +2244,8 @@ async function goSendPedidoFecht(_data) {
 		
 		verifyDescuentosInCuenta(_data);
 		
-		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data, isShowPreload: false }, true, false)
+		// 30 s y sin reintento por timeout: reintentar un pedido/pago que el servidor ya pudo grabar lo duplicaba
+		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data, isShowPreload: false, timeoutMs: 30000, sinReintentoPorTimeout: true }, true, false)
 		if (rpt) {
 
 			// si hay codigo localizador guardar

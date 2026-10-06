@@ -269,6 +269,12 @@
             xThisComSubItemEdit.isCompartido = true;
         }
 
+        // precio del subitem: vacio o no numerico = 0 (si no, la suma del pedido sale NaN)
+        function xPrecioSubitem(valor) {
+            const n = parseFloat(String(valor || '').replace(',', '.'));
+            return isNaN(n) ? '0.00' : n.toFixed(2);
+        }
+
         function xloadSubitems(iditemContent) {
             // subitems
             $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=801', data:{i:iditemContent}})
@@ -368,7 +374,7 @@
                 iditem: iditemSelect, 
                 descripcion: descripcion_item,
                 cantidad: txt_sub_cant.value,
-                precio: txt_sub_precio.value,
+                precio: xPrecioSubitem(txt_sub_precio.value),
                 cant_select: txt_sub_condicion_cant.value,
                 required_select: xcheck_subitem_required.checked ? 1 : 0,
                 controlable: xcheck_controlable.checked ? 1 : 0,
@@ -473,7 +479,7 @@
             
             var _subItemMod = xThisComSubItemEdit.listCompSubitems[index];
             _subItemMod.cantidad = tr_cant;
-            _subItemMod.precio = tr_precio.trim();
+            _subItemMod.precio = xPrecioSubitem(tr_precio);
             _subItemMod.descripcion = tr_des;
             _subItemMod.descuenta = tr_descuenta;
 

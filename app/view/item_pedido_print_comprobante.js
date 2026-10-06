@@ -479,6 +479,7 @@ function xgetImpresoraById(xIdPrintSearch) {
 // Mesa 0 / vacia (para llevar, delivery) no cae en ningun area. Sin reglas todo imprime como antes.
 // ponytail: cache en localStorage refrescada cada 5 min; un cambio de reglas tarda hasta 5 min en llegar a cada equipo.
 function xRefrescarAreasImpresora() {
+	if (typeof $ === 'undefined') { return; } // jQuery carga async en m_panel
 	const _ts = parseInt(window.localStorage.getItem('::app3_areasImprTs') || '0');
 	if (Date.now() - _ts < 300000) { return; }
 	window.localStorage.setItem('::app3_areasImprTs', Date.now());
@@ -486,7 +487,8 @@ function xRefrescarAreasImpresora() {
 		.done(res => { if (res && res.success) { window.localStorage.setItem('::app3_areasImpr', JSON.stringify(res.datos || [])); } })
 		.fail(() => window.localStorage.setItem('::app3_areasImprTs', '0'));
 }
-xRefrescarAreasImpresora();
+// NO llamarla al cargar el archivo: si fallaba (jQuery aun no cargado) cortaba el script y dejaba
+// ID_TIPO_PAGO_CREDITO sin inicializar -> todo cobro fallaba. xCocinarImprimirComanda ya la llama.
 
 function xBuscarAreaMesa(areas, mesa) {
 	mesa = String(mesa == null ? '' : mesa).trim();
@@ -1203,7 +1205,7 @@ function isComprobanteConsumo(xArrayComprobante, xArraySubTotales, xArrayCuerpo)
 }
 
 // --- Guía de remisión en venta al crédito (sede.venta_credito_guia = 1, solo punto de venta) ---
-const ID_TIPO_PAGO_CREDITO = '2';
+var ID_TIPO_PAGO_CREDITO = '2'; // var (no const): el archivo se carga varias veces y un const repetido rompe el script
 
 function getVentaCreditoGuiaActivo() {
 	try {

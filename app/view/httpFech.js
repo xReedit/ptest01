@@ -80,7 +80,14 @@ class httpFecht {
         };            
 
         // Agregar tiempo máximo de espera de 10 segundos
-        params.timeout = 10000;
+        // opcionales (sin ellos todo igual que antes):
+        //   timeoutMs: otra espera maxima
+        //   sinReintentoPorTimeout: si se agota la espera NO reintenta (guardar pedido/pago: el servidor
+        //   pudo haberlo grabado y el reintento lo duplicaba)
+        const sinReintentoPorTimeout = params.sinReintentoPorTimeout === true;
+        params.timeout = params.timeoutMs || 10000;
+        delete params.timeoutMs;
+        delete params.sinReintentoPorTimeout;
         
 
         if(isShowPreload == true) {
@@ -95,7 +102,8 @@ class httpFecht {
                     const response = await this.axiosPost(params);
                     resolve(respondeString ? JSON.stringify(response) : response);
                 } catch (error) {
-                    if (retry > 0) {
+                    const esTimeout = error && error.code === 'ECONNABORTED';
+                    if (retry > 0 && !(sinReintentoPorTimeout && esTimeout)) {
                         setTimeout(() => attempt(--retry), 2000);
                     } else {                        
                         this.manejoErrorPetitionHttp(error);                        
