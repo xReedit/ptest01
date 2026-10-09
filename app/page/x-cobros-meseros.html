@@ -1,0 +1,447 @@
+<!-- Cobros de meseros (rendicion de mozos). Se abre desde Control de Pedidos (xOpenPage(62) -> /cobros_meseros).
+	 Servidor: bdphp/log_cobros_meseros.php. Menu: app/shared/cobros.meseros.js.
+	 Usa las clases globales del patron de modulo (inv-*, xdlg en css/micss.css); lo propio va con prefijo cmp-
+	 y se inyecta una sola vez en <head> (shady DOM: un <style> del template no alcanza a lo que pinta jQuery). -->
+<dom-module id="x-cobros-meseros">
+	<link rel="import" href="../web_components/paper-dialog/paper-dialog.html">
+	<template>
+		<paper-dialog modal id="dlg_cmp_recibir" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="cmp_dlg_titulo">Recibir cobros</h3>
+					<p>Desmarca un cobro si el mozo todavia no lo entrega: quedara pendiente para despues.</p>
+				</div>
+				<div class="xdlg-body">
+					<div class="inv-table-wrap">
+						<table class="inv-table">
+							<thead>
+								<tr>
+									<th style="width:30px"><input type="checkbox" id="cmp_chk_todos" checked onchange="xCmpMarcarTodos(this.checked)" title="Marcar todos"></th>
+									<th>Hora</th>
+									<th>Mesa</th>
+									<th>Cliente</th>
+									<th>Como pago</th>
+									<th class="inv-num">Total</th>
+								</tr>
+							</thead>
+							<tbody id="cmp_dlg_cobros"></tbody>
+						</table>
+					</div>
+					<p class="inv-titulo-sec">Resumen por forma de pago</p>
+					<div id="cmp_dlg_metodos" class="cmp-metodos"></div>
+					<p class="inv-nota">El <b>efectivo</b> entra a tu caja como ingreso. Yape, Plin y transferencias llegan a la <b>cuenta del negocio</b>; tarjeta y Pinpad, al <b>POS / banco</b>. Todo queda registrado en esta rendición.</p>
+
+					<div class="cmp-cuadre">
+						<div class="inv-field">
+							<span class="inv-label">Efectivo que debe entregar</span>
+							<b id="cmp_dlg_esperado" class="cmp-monto">S/ 0.00</b>
+						</div>
+						<div class="inv-field">
+							<label class="inv-label" for="cmp_txt_entregado">Efectivo entregado</label>
+							<input type="number" min="0" step="0.10" class="inv-input cmp-input-monto" id="cmp_txt_entregado" oninput="xCmpEntregadoEditado()">
+						</div>
+						<div class="inv-field">
+							<span class="inv-label">Diferencia</span>
+							<b id="cmp_dlg_diferencia" class="cmp-monto">S/ 0.00</b>
+							<span id="cmp_dlg_diferencia_txt" class="inv-sub"></span>
+						</div>
+					</div>
+					<div class="cmp-aviso"><i class="fa fa-info-circle"></i> Al recibir, <b>confirmas todos los medios de pago que declaró el mozo</b> en los cobros marcados (efectivo, Yape, tarjeta y otros).</div>
+					<div class="inv-form-row" id="cmp_obs_wrap">
+						<label class="inv-label" for="cmp_txt_obs" id="cmp_lbl_obs">Observacion (opcional)</label>
+						<textarea id="cmp_txt_obs" class="cmp-textarea" maxlength="250" placeholder="Ej: falto S/ 5, lo entrega manana"></textarea>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cancelar</button>
+					<button class="btn btn-sm btn-success" id="cmp_btn_confirmar" onclick="xCmpConfirmar()"><i class="fa fa-check"></i><span id="cmp_btn_confirmar_txt">Recibir</span></button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xMiCard xradius inv-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Cobros de meseros</h3>
+						<p>Lo que cobraron los mozos al confirmar pedidos de la carta QR. Al recibir, el efectivo entra a su caja como ingreso.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button class="btn btn-sm btn-light" onclick="xCmpCargar()"><i class="fa fa-refresh"></i>Actualizar</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-kpis" id="cmp_kpis"></div>
+
+				<p class="inv-titulo-sec">Por rendir</p>
+				<div id="cmp_pendientes" class="cmp-mozos"><p class="inv-empty">Cargando...</p></div>
+
+				<div class="cmp-hist-head">
+					<p class="inv-titulo-sec" id="cmp_hist_titulo">Recibido hoy</p>
+					<div class="inv-field">
+						<label class="inv-label" for="cmp_txt_fecha">Ver otro dia</label>
+						<input type="date" class="inv-input cmp-input-fecha" id="cmp_txt_fecha" onchange="xCmpCargarHistorial()">
+					</div>
+				</div>
+				<div class="inv-table-wrap">
+					<table class="inv-table">
+						<thead>
+							<tr>
+								<th>Hora</th>
+								<th>Mozo</th>
+								<th>Recibio</th>
+								<th class="inv-num">Cobros</th>
+								<th class="inv-num">Total</th>
+								<th class="inv-num">Efectivo esperado</th>
+								<th class="inv-num">Efectivo entregado</th>
+								<th class="inv-num">Diferencia</th>
+								<th>Observacion</th>
+							</tr>
+						</thead>
+						<tbody id="cmp_hist_filas"></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<br>
+	</template>
+<script>
+// REGLA (incidente 2026-10-06): nada se ejecuta en nivel superior; todo arranca en attached().
+
+function xCmpEstado() {
+	if (!window.__xCmp) { window.__xCmp = { mozos: [], mozoSel: null, entregadoEditado: false, enviando: false, cargando: false }; }
+	return window.__xCmp;
+}
+function xCmpEsc(s) {
+	return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+		return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+	});
+}
+function xCmpSoles(n) { var v = parseFloat(n); return 'S/ ' + (isNaN(v) ? 0 : v).toFixed(2); }
+function xCmpRedondear(n) { return Math.round((parseFloat(n) || 0) * 100) / 100; }
+function xCmpHoyIso() {
+	var d = new Date();
+	return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+// 'YYYY-MM-DD HH:MM:SS' -> 'HH:MM' (hoy) o 'DD/MM HH:MM' (otro dia)
+function xCmpHora(f) {
+	var s = String(f || '');
+	if (s.length < 16) { return s; }
+	var hora = s.substr(11, 5);
+	return s.substr(0, 10) === xCmpHoyIso() ? hora : s.substr(8, 2) + '/' + s.substr(5, 2) + ' ' + hora;
+}
+function xCmpAviso(texto, icono, titulo) {
+	showAlertSwalOk(icono || 'warning', titulo || '', texto, 'Entendido', 1);
+}
+function xCmpApi(op, body) {
+	return new Promise(function (resolve) {
+		$.ajax({ type: 'POST', url: '../../bdphp/log_cobros_meseros.php?op=' + op, data: JSON.stringify(body || {}),
+			contentType: 'application/json', dataType: 'json', timeout: 30000 })
+		.done(function (r) { resolve(r && typeof r === 'object' ? r : { success: false, error: 'Respuesta no valida del servidor.' }); })
+		.fail(function (x) {
+			resolve({ success: false, error: x && x.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No hay conexion con el servidor. Intenta de nuevo.' });
+		});
+	});
+}
+function xCmpInyectarCss() {
+	if (document.getElementById('cmp_css')) { return; }
+	var st = document.createElement('style');
+	st.id = 'cmp_css';
+	st.textContent =
+		'.cmp-mozos{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:8px;}' +
+		'.cmp-mozo{display:block;background:#fff;border:1px solid #dddddd;border-radius:8px;padding:12px 14px;}' +
+		'.cmp-mozo-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}' +
+		'.cmp-mozo-nombre{font-size:14px;font-weight:600;color:#212529;margin:0;}' +
+		'.cmp-mozo-total{font-size:18px;font-weight:600;color:#212529;white-space:nowrap;font-variant-numeric:tabular-nums;}' +
+		'.cmp-efectivo{display:flex;justify-content:space-between;align-items:center;margin:10px 0;padding:8px 10px;border-radius:6px;background:#eef9f3;font-size:12px;color:#0f5132;}' +
+		'.cmp-efectivo b{font-size:16px;font-variant-numeric:tabular-nums;}' +
+		'.cmp-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}' +
+		'.cmp-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #dddddd;border-radius:999px;font-size:11px;color:#495057;background:#f8fafc;white-space:nowrap;}' +
+		'.cmp-chip img{width:16px;height:16px;object-fit:contain;}' +
+		'.cmp-chip b{font-variant-numeric:tabular-nums;color:#212529;}' +
+		'.cmp-mozo .btn{width:100%;height:34px;font-weight:600;}' +
+		// cuadre: 3 columnas iguales; etiqueta arriba y valor/input a la misma altura (36px)
+		'.cmp-cuadre{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;margin:14px 0 12px;padding:12px;background:#f7f8fa;border-radius:8px;}' +
+		'.cmp-cuadre .inv-field{display:flex;flex-direction:column;gap:4px;margin:0;}' +
+		'.cmp-cuadre .inv-label{min-height:16px;margin:0;}' +
+		'.cmp-monto{display:block;height:36px;line-height:36px;font-size:18px;font-weight:600;color:#212529;font-variant-numeric:tabular-nums;}' +
+		'.cmp-cuadre .cmp-input-monto{width:100% !important;box-sizing:border-box;margin:0;}' +
+		'.cmp-aviso{margin:0 0 12px;padding:8px 10px;border:1px solid #bfdbfe;border-radius:6px;background:#eff6ff;color:#1e3a8a;font-size:12px;}' +
+		'.cmp-tabla-metodos{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0;}' +
+		'.cmp-tabla-metodos td{padding:5px 6px;border-bottom:1px solid #edf0f2;color:#495057;white-space:nowrap;}' +
+		'.cmp-tabla-metodos tr:last-child td{border-bottom:0;}' +
+		'.cmp-tabla-metodos img{width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:6px;}' +
+		'.cmp-tabla-metodos .cmp-num{text-align:right;font-variant-numeric:tabular-nums;}' +
+		'.cmp-tabla-metodos b{color:#212529;}' +
+		'.cmp-metodos{border:1px solid #dddddd;border-radius:6px;padding:0 6px;margin:8px 0;}' +
+		'.cmp-monto.cmp-faltante{color:#dc3545;}.cmp-monto.cmp-sobrante{color:#b45309;}' +
+		'.cmp-input-monto{width:150px !important;height:36px !important;font-size:16px !important;text-align:right;}' +
+		'.cmp-input-fecha{width:160px !important;}' +
+		'.cmp-textarea{width:100%;min-height:56px;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:6px;padding:6px 8px;font-size:12px;color:#212529;outline:none;resize:vertical;}' +
+		'.cmp-textarea:focus{border-color:#007bff;}.cmp-textarea.cmp-requerido{border-color:#dc3545;}' +
+		'.cmp-hist-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-top:18px;margin-bottom:6px;}' +
+		'.cmp-hist-head .inv-titulo-sec{margin:0;}' +
+		'#dlg_cmp_recibir{width:760px;max-width:96vw;}' +
+		'#dlg_cmp_recibir .btn{height:31px;padding:0 12px;font-size:12px;font-weight:600;line-height:29px;border-radius:6px;}' +
+		'#dlg_cmp_recibir .btn > .fa{margin-right:6px;}' +
+		'.inv-table tr.cmp-fila-off td{opacity:.45;}' +
+		'.inv-table td.cmp-dif-neg{color:#dc3545;font-weight:600;}.inv-table td.cmp-dif-pos{color:#b45309;font-weight:600;}' +
+		'.inv-table tbody tr td{height:26px;}';
+	document.head.appendChild(st);
+}
+
+// ---------- carga ----------
+function xCmpCargar() {
+	xCmpCargarPendientes();
+	xCmpCargarHistorial();
+}
+function xCmpCargarPendientes() {
+	var st = xCmpEstado();
+	if (st.cargando) { return; }
+	st.cargando = true;
+	xCmpApi('pendientes', {}).then(function (r) {
+		st.cargando = false;
+		var cont = document.getElementById('cmp_pendientes');
+		if (!cont) { return; }
+		if (!r.success) {
+			cont.innerHTML = '<p class="inv-empty">' + xCmpEsc(r.error || 'No se pudo cargar.') + '</p>';
+			return;
+		}
+		st.mozos = (r.data && Array.isArray(r.data.mozos)) ? r.data.mozos : [];
+		xCmpPintarPendientes();
+	});
+	if (typeof xCmRevisar === 'function') { xCmRevisar(); } // badge del menu
+}
+function xCmpCargarHistorial() {
+	var inp = document.getElementById('cmp_txt_fecha');
+	var fecha = inp && inp.value ? inp.value : xCmpHoyIso();
+	xCmpApi('historial', { fecha: fecha }).then(function (r) {
+		var tb = document.getElementById('cmp_hist_filas');
+		if (!tb) { return; }
+		var tit = document.getElementById('cmp_hist_titulo');
+		var dia = r.data && r.data.fecha ? r.data.fecha : fecha;
+		if (tit) { tit.textContent = dia === xCmpHoyIso() ? 'Recibido hoy' : 'Recibido el ' + dia.substr(8, 2) + '/' + dia.substr(5, 2) + '/' + dia.substr(0, 4); }
+		if (!r.success) {
+			tb.innerHTML = '<tr><td colspan="9" class="inv-empty">' + xCmpEsc(r.error || 'No se pudo cargar.') + '</td></tr>';
+			return;
+		}
+		xCmpPintarHistorial(r.data && Array.isArray(r.data.rendiciones) ? r.data.rendiciones : []);
+	});
+}
+
+// ---------- pintado ----------
+// medios de pago en tabla: icono + nombre | cantidad | importe
+function xCmpChips(metodos) {
+	var filas = (metodos || []).map(function (m) {
+		var img = m.img ? '<img src="../../images/' + xCmpEsc(m.img) + '" alt="">' : '';
+		var cant = parseInt(m.cantidad, 10) || 0;
+		return '<tr><td>' + img + xCmpEsc(m.descripcion) + '</td><td class="cmp-num inv-muted">' + (cant ? cant + (cant === 1 ? ' cobro' : ' cobros') : '')
+			+ '</td><td class="cmp-num"><b>' + xCmpSoles(m.importe) + '</b></td></tr>';
+	}).join('');
+	return filas ? '<table class="cmp-tabla-metodos"><tbody>' + filas + '</tbody></table>' : '';
+}
+function xCmpPintarPendientes() {
+	var st = xCmpEstado();
+	var cont = document.getElementById('cmp_pendientes');
+	if (!cont) { return; }
+	var totalPend = 0, efecPend = 0, nCobros = 0;
+	st.mozos.forEach(function (m) { totalPend += m.total; efecPend += m.efectivo; nCobros += m.cobros.length; });
+	xCmpPintarKpis(st.mozos.length, nCobros, totalPend, efecPend);
+	if (!st.mozos.length) {
+		cont.innerHTML = '<p class="inv-empty" style="grid-column:1/-1"><i class="fa fa-check-circle-o"></i> No hay cobros de meseros pendientes.</p>';
+		return;
+	}
+	cont.innerHTML = st.mozos.map(function (m) {
+		var n = m.cobros.length;
+		return '<div class="cmp-mozo">'
+			+ '<div class="cmp-mozo-top"><div><p class="cmp-mozo-nombre"><i class="fa fa-user"></i> ' + xCmpEsc(m.nombre) + '</p>'
+			+ '<span class="inv-sub">' + n + (n === 1 ? ' cobro' : ' cobros') + ' por rendir</span></div>'
+			+ '<span class="cmp-mozo-total">' + xCmpSoles(m.total) + '</span></div>'
+			+ '<div class="cmp-metodos">' + xCmpChips(m.por_metodo) + '</div>'
+			+ '<div class="cmp-efectivo"><span>Efectivo que debe entregar</span><b>' + xCmpSoles(m.efectivo) + '</b></div>'
+			+ '<button class="btn btn-sm btn-success" onclick="xCmpAbrirRecibir(' + parseInt(m.idusuario, 10) + ')"><i class="fa fa-hand-paper-o"></i> Recibir</button>'
+			+ '</div>';
+	}).join('');
+}
+function xCmpPintarKpis(nMozos, nCobros, total, efectivo) {
+	var k = document.getElementById('cmp_kpis');
+	if (!k) { return; }
+	k.innerHTML = '<div class="inv-kpi inv-kpi-azul"><span>Mozos con cobros</span><b>' + nMozos + '</b></div>'
+		+ '<div class="inv-kpi inv-kpi-celeste"><span>Cobros por rendir</span><b>' + nCobros + '</b></div>'
+		+ '<div class="inv-kpi"><span>Total por rendir</span><b>' + xCmpSoles(total) + '</b></div>'
+		+ '<div class="inv-kpi inv-kpi-verde"><span>Efectivo por recibir</span><b>' + xCmpSoles(efectivo) + '</b></div>';
+}
+function xCmpPintarHistorial(rows) {
+	var tb = document.getElementById('cmp_hist_filas');
+	if (!tb) { return; }
+	if (!rows.length) {
+		tb.innerHTML = '<tr><td colspan="9" class="inv-empty">Todavia no se recibio ningun cobro de meseros este dia. Cuando reciba uno arriba, aparecera aqui.</td></tr>';
+		return;
+	}
+	tb.innerHTML = rows.map(function (r) {
+		var dif = parseFloat(r.diferencia) || 0;
+		var cls = dif < -0.004 ? ' cmp-dif-neg' : (dif > 0.004 ? ' cmp-dif-pos' : '');
+		var difTxt = dif < -0.004 ? 'Falto ' + xCmpSoles(-dif) : (dif > 0.004 ? 'Sobro ' + xCmpSoles(dif) : 'Cuadra');
+		return '<tr>'
+			+ '<td>' + xCmpEsc(xCmpHora(r.fecha_hora)) + '<span class="inv-sub">#' + parseInt(r.idmozo_rendicion, 10) + '</span></td>'
+			+ '<td>' + xCmpEsc(r.mozo) + '</td>'
+			+ '<td>' + xCmpEsc(r.caja) + '</td>'
+			+ '<td class="inv-num">' + parseInt(r.cantidad_cobros, 10) + '</td>'
+			+ '<td class="inv-num">' + xCmpSoles(r.total_esperado) + '<span class="inv-sub">' + xCmpEsc((r.detalle_metodos || []).map(function (m) { return m.descripcion + ' ' + xCmpSoles(m.importe); }).join(' · ')) + '</span></td>'
+			+ '<td class="inv-num">' + xCmpSoles(r.efectivo_esperado) + '</td>'
+			+ '<td class="inv-num">' + xCmpSoles(r.efectivo_entregado) + '</td>'
+			+ '<td class="inv-num' + cls + '">' + difTxt + '</td>'
+			+ '<td>' + xCmpEsc(r.observacion) + '</td>'
+			+ '</tr>';
+	}).join('');
+}
+
+// ---------- dialogo Recibir ----------
+function xCmpMozo(idusuario) {
+	var lista = xCmpEstado().mozos;
+	for (var i = 0; i < lista.length; i++) { if (parseInt(lista[i].idusuario, 10) === idusuario) { return lista[i]; } }
+	return null;
+}
+function xCmpAbrirRecibir(idusuario) {
+	var st = xCmpEstado();
+	var m = xCmpMozo(parseInt(idusuario, 10));
+	if (!m) { xCmpCargarPendientes(); return; }
+	st.mozoSel = m;
+	st.entregadoEditado = false;
+	document.getElementById('cmp_dlg_titulo').textContent = 'Recibir cobros de ' + m.nombre;
+	document.getElementById('cmp_dlg_cobros').innerHTML = m.cobros.map(function (c) {
+		var met = c.metodos.map(function (x) { return xCmpEsc(x.descripcion) + ' ' + xCmpSoles(x.importe); }).join('<br>');
+		return '<tr data-id="' + parseInt(c.idregistro_pago, 10) + '">'
+			+ '<td><input type="checkbox" class="cmp-chk" value="' + parseInt(c.idregistro_pago, 10) + '" checked onchange="xCmpRecalcular()"></td>'
+			+ '<td>' + xCmpEsc(xCmpHora(c.fecha_hora)) + '</td>'
+			+ '<td>' + xCmpEsc(c.mesa) + '</td>'
+			+ '<td>' + xCmpEsc(c.nombre_cliente) + '</td>'
+			+ '<td>' + met + '</td>'
+			+ '<td class="inv-num">' + xCmpSoles(c.total) + '</td>'
+			+ '</tr>';
+	}).join('');
+	document.getElementById('cmp_chk_todos').checked = true;
+	document.getElementById('cmp_txt_obs').value = '';
+	xCmpRecalcular();
+	document.getElementById('dlg_cmp_recibir').open();
+	setTimeout(function () { var i = document.getElementById('cmp_txt_entregado'); if (i) { i.focus(); i.select(); } }, 300);
+}
+function xCmpMarcarTodos(on) {
+	var chks = document.querySelectorAll('#cmp_dlg_cobros .cmp-chk');
+	for (var i = 0; i < chks.length; i++) { chks[i].checked = !!on; }
+	xCmpRecalcular();
+}
+function xCmpEntregadoEditado() {
+	xCmpEstado().entregadoEditado = true;
+	xCmpRecalcular();
+}
+// Cobros marcados del mozo elegido
+function xCmpMarcados() {
+	var m = xCmpEstado().mozoSel;
+	if (!m) { return []; }
+	var ids = {};
+	var chks = document.querySelectorAll('#cmp_dlg_cobros .cmp-chk');
+	for (var i = 0; i < chks.length; i++) {
+		var tr = chks[i].closest ? chks[i].closest('tr') : null;
+		if (tr) { tr.className = chks[i].checked ? '' : 'cmp-fila-off'; }
+		if (chks[i].checked) { ids[parseInt(chks[i].value, 10)] = true; }
+	}
+	return m.cobros.filter(function (c) { return ids[parseInt(c.idregistro_pago, 10)] === true; });
+}
+function xCmpRecalcular() {
+	var st = xCmpEstado();
+	var marcados = xCmpMarcados();
+	var porMetodo = {}, orden = [], efectivo = 0, total = 0;
+	marcados.forEach(function (c) {
+		total += c.total;
+		efectivo += c.efectivo;
+		c.metodos.forEach(function (x) {
+			if (!porMetodo[x.idtipo_pago]) { porMetodo[x.idtipo_pago] = { descripcion: x.descripcion, img: x.img, cantidad: 0, importe: 0 }; orden.push(x.idtipo_pago); }
+			porMetodo[x.idtipo_pago].cantidad++;
+			porMetodo[x.idtipo_pago].importe += x.importe;
+		});
+	});
+	efectivo = xCmpRedondear(efectivo);
+	document.getElementById('cmp_dlg_metodos').innerHTML = orden.length
+		? xCmpChips(orden.map(function (k) { return porMetodo[k]; }))
+		: '<span class="inv-muted">Marca al menos un cobro.</span>';
+	document.getElementById('cmp_dlg_esperado').textContent = xCmpSoles(efectivo);
+
+	var inp = document.getElementById('cmp_txt_entregado');
+	if (!st.entregadoEditado) { inp.value = efectivo.toFixed(2); }
+	var entregado = xCmpRedondear(inp.value);
+	var dif = xCmpRedondear(entregado - efectivo);
+	var difEl = document.getElementById('cmp_dlg_diferencia');
+	var difTxt = document.getElementById('cmp_dlg_diferencia_txt');
+	difEl.textContent = xCmpSoles(dif);
+	difEl.className = 'cmp-monto' + (dif < 0 ? ' cmp-faltante' : (dif > 0 ? ' cmp-sobrante' : ''));
+	difTxt.textContent = dif < 0 ? 'Falta dinero' : (dif > 0 ? 'Entrego de mas' : 'Cuadra');
+
+	var obligatoria = dif !== 0;
+	document.getElementById('cmp_lbl_obs').textContent = obligatoria ? 'Observacion (obligatoria: explica la diferencia)' : 'Observacion (opcional)';
+	document.getElementById('cmp_txt_obs').className = 'cmp-textarea' + (obligatoria ? ' cmp-requerido' : '');
+
+	var n = marcados.length;
+	document.getElementById('cmp_btn_confirmar_txt').textContent = entregado > 0
+		? 'Recibir ' + xCmpSoles(entregado)
+		: 'Recibir ' + n + (n === 1 ? ' cobro' : ' cobros');
+	document.getElementById('cmp_btn_confirmar').disabled = n === 0 || st.enviando;
+	return { marcados: marcados, efectivo: efectivo, entregado: entregado, dif: dif, total: xCmpRedondear(total) };
+}
+function xCmpConfirmar() {
+	var st = xCmpEstado();
+	if (st.enviando || !st.mozoSel) { return; }
+	var c = xCmpRecalcular();
+	var inpVal = document.getElementById('cmp_txt_entregado').value;
+	if (!c.marcados.length) { xCmpAviso('Marca al menos un cobro para recibir.'); return; }
+	if (inpVal === '' || isNaN(parseFloat(inpVal)) || parseFloat(inpVal) < 0) { xCmpAviso('Escribe cuanto efectivo te entrego el mozo. Si no entrego efectivo, escribe 0.'); return; }
+	var obs = document.getElementById('cmp_txt_obs').value.trim();
+	if (c.dif !== 0 && obs.length < 3) { xCmpAviso('El efectivo no cuadra. Escribe en la observacion por que hay diferencia.'); return; }
+	st.enviando = true;
+	var btn = document.getElementById('cmp_btn_confirmar');
+	btn.disabled = true;
+	xCmpApi('rendir', {
+		idusuario_mozo: parseInt(st.mozoSel.idusuario, 10),
+		idsregistro_pago: c.marcados.map(function (x) { return parseInt(x.idregistro_pago, 10); }),
+		efectivo_entregado: c.entregado,
+		observacion: obs
+	}).then(function (r) {
+		st.enviando = false;
+		btn.disabled = false;
+		if (!r.success) {
+			xCmpAviso(r.error || 'No se pudo registrar.', 'error');
+			xCmpCargarPendientes();
+			return;
+		}
+		document.getElementById('dlg_cmp_recibir').close();
+		var d = r.data || {};
+		showToastSwal('success', d.efectivo_entregado > 0
+			? 'Recibido. ' + xCmpSoles(d.efectivo_entregado) + ' entraron a su caja como ingreso.'
+			: 'Recibido. Los cobros quedaron registrados.');
+		st.mozoSel = null;
+		xCmpCargar();
+	});
+}
+// Lo llama shared/cobros.meseros.js cuando un mozo cobra (socket). No refresca con el dialogo abierto.
+function xCmpRefrescarSiVisible() {
+	var cont = document.getElementById('cmp_pendientes');
+	var dlg = document.getElementById('dlg_cmp_recibir');
+	if (!cont || !document.body.contains(cont) || (dlg && dlg.opened)) { return; }
+	xCmpCargarPendientes();
+}
+
+Polymer({
+	is: 'x-cobros-meseros',
+	attached: function () {
+		xCmpInyectarCss();
+		$("#Titulo_page").text("COBROS DE MESEROS");
+		var f = document.getElementById('cmp_txt_fecha');
+		if (f && !f.value) { f.value = xCmpHoyIso(); }
+		// la carga va DENTRO del callback: fuera de el se dispara antes de que la sesion este confirmada
+		xm_LogChequea(function () { xCmpCargar(); });
+	}
+});
+</script>
+</dom-module>

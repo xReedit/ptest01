@@ -1160,6 +1160,13 @@ async function xAnularPedidoHistorial(){
 	})
 	.done( function (dt_xx) {
 		xPopupLoad.xclose();
+		// cargo a habitacion: el pago se anulo, pero avisa si el hotel no anulo el cargo (p. ej. el huesped ya hizo checkout)
+		try {
+			var _rptHotel = JSON.parse(dt_xx).hotel;
+			if (_rptHotel && !_rptHotel.ok) {
+				showAlertSwalOk('warning', 'El cargo a la habitación sigue en el hotel', 'El pago se anuló, pero el hotel no anuló el cargo de la habitación ' + (_rptHotel.habitacion || '') + '. ' + (_rptHotel.error || '') + ' Resuélvelo en recepción.');
+			}
+		} catch (e) {}
 		$(".xMiBoton_icon_lateral").attr('disabled', true);
 		xloadHistorial();
 		dialog_registro_detalle.close();

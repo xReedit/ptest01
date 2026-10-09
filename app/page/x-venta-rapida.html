@@ -231,7 +231,7 @@
 			<div class="xBoton2 xPlomo" dialog-dismiss onclick="xedit_detalle_item=false;">Cancelar</div>
 			<br><br> -->
 			<div id="div_pago_vr">
-				<x-pago id="component_pago_vr"></x-pago>
+				<x-pago id="component_pago_vr" permitehotel></x-pago>
 				<!-- <div class="xLinea"></div>
 				<br>
 
@@ -1260,6 +1260,26 @@ function xIniVentaRapida(){
 	});
 
 
+	// cargo a habitacion (forma de pago 17): el beneficio del huesped entra como descuento, igual que "Aplicar descuento"
+	if (typeof xHotelCargoRegistrarPagina === 'function') {
+		xHotelCargoRegistrarPagina(xValPago, {
+			descuentoActual: () => xHotelCargoDescuentoDeSubtotales(xLocal_xDtSubTotales),
+			aplicarDescuento: (importe, descripcion) => {
+				if (xDataPagoPedidoPendiente) { return null; } // cobro de una cuenta pendiente: sus subtotales vienen de otra pantalla
+				xHotelCargoMarcarDescuento(xCompDescuentoPedidoVR, importe, descripcion);
+				arrSubtTotalesDescuentoVR = colocarDescuentoSubtotales(importe, xLocal_xDtSubTotales, descripcion, importe > 0);
+				xSumarTotal(true);
+				return parseFloat(tt_pedido);
+			},
+			limpiar: () => { xCompDescuentoPedidoVR.resetDsc(); }
+		});
+	}
+
+	// cerrar el cobro sin registrar: quita el beneficio del huesped si se habia aplicado
+	$("#dialog_pagar_vr").on('iron-overlay-closed', function () {
+		if (typeof xHotelCargoQuitar === 'function') { xHotelCargoQuitar(null); }
+	});
+
 	$("#component_descuento_pedido_vr").on('focus-input', (e) => {
 		// console.log('focus inoput ', e.detail);
 		xtxt_descuento_focus_vr = e.detail;
@@ -2178,7 +2198,7 @@ async function pagarCompPeiddoCuentaPendiente(data) {
 	xPopupLoad.xopen(); // quitar comentario
 
 	const idP = await goSendPedidoFecht(dataSendPedido);
-	if (!idP) return;
+	if (!idP) { xPopupLoad.xclose(); return; }
 	const _arrRpt = idP;
 
 	const xIdRegistroPago = _arrRpt.idregistro_pago; // se necesita para guardar el id_externo_comprobante electronico
@@ -2234,7 +2254,12 @@ function verifyDescuentosInCuenta(_data) {
 
 async function goSendPedidoFecht(_data) {
 	const _fetchApiPedido = new httpFecht();
+	let _cargoHotel = { ok: true };
 	try {		
+		// cargo a habitacion (forma de pago 17): primero el cargo en el hotel; si falla no se guarda el pago
+		if (typeof xHotelCargoAntesDeGuardar === 'function') { _cargoHotel = await xHotelCargoAntesDeGuardar(_data, _data.p_body); }
+		if (!_cargoHotel.ok) { guardando_vr = false; return false; }
+
 		console.log('¿_data', _data);
 		const codigo_localizador = (document.getElementById('text_code_localizator') || {}).value || '';		
 		const tipoDesc = (typeof xCompDescuentoPedidoVR !== 'undefined' && xCompDescuentoPedidoVR && xCompDescuentoPedidoVR.get)
@@ -2246,6 +2271,7 @@ async function goSendPedidoFecht(_data) {
 		
 		// 30 s y sin reintento por timeout: reintentar un pedido/pago que el servidor ya pudo grabar lo duplicaba
 		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data, isShowPreload: false, timeoutMs: 30000, sinReintentoPorTimeout: true }, true, false)
+		if (_cargoHotel.ref) { xHotelCargoDespuesDeGuardar(_cargoHotel, rpt, _data); _cargoHotel = { ok: true }; } // vincula o anula el cargo
 		if (rpt) {
 
 			// si hay codigo localizador guardar
@@ -2288,6 +2314,7 @@ async function goSendPedidoFecht(_data) {
 		};
 		return rpt;
 	} catch (error) {		
+		if (_cargoHotel.ref) { xHotelCargoDespuesDeGuardar(_cargoHotel, null, _data); } // no se guardo el pago: anula el cargo
 		guardando_vr = false;
 		return false;
 	}

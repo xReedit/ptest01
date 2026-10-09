@@ -23,6 +23,7 @@
 											novisibles$={{item.novisibles}} 
 											deshabilitado$="{{item.deshabilitado}}"
 											ispagoappop$="[[ispagoapp]]"
+											permitehotel$="[[permitehotel]]"
 											onclick="xCalcImporte()" 
 											id="comp-pago-option">
 										</x-comp-find-tipo-pago-option>
@@ -298,6 +299,7 @@
 			properties: {
 				_class: {type: String, value: 'xtable3 xRowPading2'},
 				ispagoapp: {type: Boolean, value:false},
+				permitehotel: {type: Boolean, value:false}, // muestra "Cargo habitacion" (17) si la sede esta vinculada a un hotel
 				importetotal: {type: String, value: '0'},
 				valImporteRestante: {type: String, value: '0'},
 				listTabla: [],

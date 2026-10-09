@@ -95,6 +95,11 @@
 			
 			
 			_listOption = dtValues.map((x, index) => {	
+					// cargo a habitacion (17): solo en el cobro del POS (permitehotel) y si la sede esta vinculada a un hotel (shared/hotel.cargo.js)
+					if ( x.idtipo_pago.toString() === '17' ) {
+						if ( !xThisComTipoPagoOption.permitehotel || typeof xHotelCargoVinculado === 'undefined' || xHotelCargoVinculado !== true ) {
+							x.visible = false; return x; }
+					} else
 					// no aceptado
 					if ( metodosPagosAceptados ) {
 						if ( metodosPagosAceptados.indexOf(x.idtipo_pago) < 0 ) { 
@@ -109,7 +114,8 @@
 						
 						// x.clase = 'xMiBoton_icon_option';						
 						x.logo='../../images/'+x.img;
-						x.descripcion = xMayusculaPrimera(x.descripcion.toLowerCase());
+						// "C.Habitacion" (17) se muestra tal cual: con Mayuscula-primera quedaria "C.habitacion".
+						x.descripcion = x.idtipo_pago.toString() === '17' ? 'C.Habitacion' : xMayusculaPrimera(x.descripcion.toLowerCase());
 						x.hidden = xThisComTipoPagoOption.novisibles.indexOf(x.idtipo_pago) > -1 ? true : false;
 						// xThisComTipoPagoOption.hiddenIconBorrar = true;
 						if (!x.hidden && !yaEncontroPrimero) {
@@ -181,6 +187,7 @@
 				// idTipoIngreso: {type : Number, notify: true, reflectToAttribute: true},
 				novisibles: {type: String, value:''},
 				ispagoappop: Boolean,
+				permitehotel: {type: Boolean, value: false},
 				deshabilitado: {type: Boolean, value:false},
 				hiddenIconBorrar: {type: Boolean, value:true},
 				idselect: {type: Number, value:1},

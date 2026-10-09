@@ -26,6 +26,7 @@
 	
 	<!-- <script type="text/javascript" src="../view/socket.master.service.js"></script> -->
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
+	<script type="text/javascript" src="../shared/pedido.por.confirmar.js"></script>
 
 	<script type="text/javascript" src="../view/notifica.js"></script>
 
@@ -354,7 +355,7 @@
 						</div>
 					</div>
 					<div id="div_pago">
-						<x-pago id="component_pago"></x-pago>
+						<x-pago id="component_pago" permitehotel></x-pago>
 			
 					</div>
 					<br><br>
@@ -996,6 +997,19 @@ function xIniControlMesa(){
 
 		xValPago=document.getElementById('component_pago');
 		xValPago.setObjConntet($("#dialog_detalle"));
+		// cargo a habitacion (forma de pago 17): el beneficio del huesped entra como descuento, igual que "Aplicar descuento"
+		if (typeof xHotelCargoRegistrarPagina === 'function') {
+			xHotelCargoRegistrarPagina(xValPago, {
+				descuentoActual: () => xHotelCargoDescuentoDeSubtotales(arrSumSubtTotales),
+				aplicarDescuento: async (importe, descripcion) => {
+					xHotelCargoMarcarDescuento(xCompDescuentoPedido, importe, descripcion);
+					arrSubtTotalesDescuento = colocarDescuentoSubtotales(importe, arrSumSubtTotales, descripcion, importe > 0);
+					await xSumarTotalPedidos(null, true);
+					return parseFloat(xtt_pedidos);
+				},
+				limpiar: () => { xCompDescuentoPedido.resetDsc(); }
+			});
+		}
 		xValPago.addEventListener('xSend', function (e) {
 			xRpt_pago=e.detail.xRpts;
 			// console.log('xRpt_pago', xRpt_pago);
@@ -2022,12 +2036,24 @@ async function xArmarSqlAddLUlI(){
 
 
 async function goSendPedidoFecht(_data) {
+	// cargo a habitacion (forma de pago 17): primero el cargo en el hotel; si falla no se guarda el pago (devuelve false)
+	const _cargoHotel = typeof xHotelCargoAntesDeGuardar === 'function'
+		? await xHotelCargoAntesDeGuardar(_data, typeof xarr_items_seleccionados !== 'undefined' ? xarr_items_seleccionados : null) : { ok: true };
+	if (!_cargoHotel.ok) { return false; }
+
 	// console.log('arrSubtTotalesDescuento', arrSubtTotalesDescuento);
 	const tipoDesc = xCompDescuentoPedido.get();
 	console.log('¿tipoDesc', tipoDesc);
 	_data.p_descuento = tipoDesc.idtipo_descuento ? tipoDesc.idtipo_descuento === 0 ? null : tipoDesc : null;
 	const _fetchApi = new httpFecht();
-	const rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
+	let rpt;
+	try {
+		rpt = await _fetchApi.postJson('../../bdphp/log_001.php', _data);
+	} catch (error) {
+		if (_cargoHotel.ref) { xHotelCargoDespuesDeGuardar(_cargoHotel, null, _data); } // no se guardo el pago: anula el cargo
+		throw error;
+	}
+	if (_cargoHotel.ref) { xHotelCargoDespuesDeGuardar(_cargoHotel, rpt, _data); }
 
 	xCheckIsCuponCanjeadoCM();
 
@@ -2184,6 +2210,7 @@ async function xRegistrarClientePagoCP(){
 
 
 		const idP = await goSendPedidoFecht(dataSendPedido);
+		if (!idP) { xCancelarGuardarPagoCP(timeEnProcesoGuardarPagoCP); return; } // cargo a habitacion rechazado
 		const _arrRpt = idP;
 
 		
@@ -2239,6 +2266,7 @@ async function xRegistrarClientePagoCP(){
 		}
 
 		const idP = await goSendPedidoFecht(dataSendPedido);
+		if (!idP) { xCancelarGuardarPagoCP(timeEnProcesoGuardarPagoCP); return; } // cargo a habitacion rechazado
 		const _arrRpt = idP;
 		
 
@@ -2284,11 +2312,20 @@ async function xRegistrarClientePagoCP(){
 		saveTransactionPinPad(xIdRegistroPago, xarr_tipo_pago, reponsePinpad);
 		xValPago.cleanResponsePinPad();
 
-		xValPago.setResetFormaPago();
+		// pago total: el dialogo se esta cerrando con fade-out; limpiar la forma de pago despues de la
+		// animacion (antes se vaciaba a la vista y "parpadeaba"). 600 ms: nadie abre otra mesa y llega a pagar en ese tiempo
+		setTimeout(() => xValPago.setResetFormaPago(), 600);
 
 		const amountTotal = getAmountTotalSubTotales(xarr_subtotal);
 		checkCuponesActivos(xarr_cliente, amountTotal);
 	}
+}
+
+// el pago no se guardo (p. ej. el hotel rechazo el cargo a habitacion): libera el boton y cierra el "Guardando..."
+function xCancelarGuardarPagoCP(timer) {
+	enProcesoGuardarPago = false;
+	clearTimeout(timer);
+	xPopupLoad.xclose();
 }
 
 // function xRegistrarPagoCM(xidclie,xidp,arrayItems,xcant_rp,idtpc){
@@ -2774,6 +2811,7 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 
 		$('#tb_pedidos .row').remove();
 		$('#tb_pedidos').append(xcadena_pedido).trigger('create');
+		if (typeof xPpcMarcarConfirmados === 'function') { xPpcMarcarConfirmados(); } // pedido QR: quien lo confirmo
 
 		$("#xBody div").remove();
 		$("#xBody").append('<div><paper-spinner active class="xCentradoVerticalHorizontal"></paper-spinner></div>').trigger('create');
@@ -5180,6 +5218,7 @@ Polymer({
 			xIniControlMesa();
 			
 			_cpSocketOpen();
+			if (typeof xPpcIniciar === 'function') { xPpcIniciar(); }
 			// console.log('entra socket');
 		}, 500);
 		// if ( xThisCM ) {return}

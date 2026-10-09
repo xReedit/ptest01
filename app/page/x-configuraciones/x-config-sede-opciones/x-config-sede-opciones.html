@@ -62,6 +62,22 @@
                         <input type="checkbox" id="mozoAvisoPlatoListo" name="mozo-aviso-plato-listo" checked>
                     </td>
                 </tr>
+                <tr>
+                    <td><p class="fs-15 fw-600">Confirmar pedidos de la carta virtual (QR de mesa):</p>
+                        <span class="text-secondary">El pedido que el cliente hace desde el QR de la mesa <strong>no</strong> se env&iacute;a a cocina/bar hasta que un mozo (desde su celular) o caja lo confirme. Al cliente se le indica que un personal se acercar&aacute;. Si nadie lo confirma en 30 minutos, se anula solo.</span>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="pwaRequiereConfirmacion" name="pwa-requiere-confirmacion" on-change="_onRequiereConfirmacion">
+                    </td>
+                </tr>
+                <tr>
+                    <td><p class="fs-15 fw-600">Cobrar al confirmar el pedido de la carta virtual:</p>
+                        <span class="text-secondary">Para confirmar el pedido del QR, el mozo o caja debe registrar el pago en ese momento (el cliente paga primero).</span>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="pwaConfirmacionExigePago" name="pwa-confirmacion-exige-pago">
+                    </td>
+                </tr>
             </table>
                   
             <br>
@@ -94,6 +110,8 @@
                 inputs.hora_cierre = hora_cierre_dia;
                 inputs.mozo_num_personas = this.$.mozoNumPersonas.value;
                 inputs.mozo_aviso_plato_listo = this.$.mozoAvisoPlatoListo.checked ? 1 : 0;
+                inputs.pwa_requiere_confirmacion = this.$.pwaRequiereConfirmacion.checked ? 1 : 0;
+                inputs.pwa_confirmacion_exige_pago = this.$.pwaRequiereConfirmacion.checked && this.$.pwaConfirmacionExigePago.checked ? 1 : 0;
 
 
                 console.log('inputs', inputs);
@@ -131,6 +149,9 @@
                             this.$.descuentoStock.checked = _data.update_stock_after === '1';
                             this.$.mozoNumPersonas.value = _data.mozo_num_personas || '1';
                             this.$.mozoAvisoPlatoListo.checked = _data.mozo_aviso_plato_listo !== '0'; // sin dato = avisar
+                            this.$.pwaRequiereConfirmacion.checked = _data.pwa_requiere_confirmacion === '1';
+                            this.$.pwaConfirmacionExigePago.checked = _data.pwa_confirmacion_exige_pago === '1';
+                            this._onRequiereConfirmacion();
                             // convertir a formato hora para mostrar en el input time
                             _data.hora_cierre = !_data.hora_cierre_dia || _data.hora_cierre_dia == '0' ? '00:00' : _data.hora_cierre_dia;
                             const _horaCierre = _data.hora_cierre.split(':');
@@ -145,11 +166,20 @@
                             this.$.horaCierre.value = '00:00';
                             this.$.mozoNumPersonas.value = '1';
                             this.$.mozoAvisoPlatoListo.checked = true;
+                            this.$.pwaRequiereConfirmacion.checked = false;
+                            this.$.pwaConfirmacionExigePago.checked = false;
+                            this._onRequiereConfirmacion();
                         }
                     }
                 }).catch((err) => {
                     console.log('err', err);
                 });                                            
+            },
+            // "Cobrar al confirmar" solo tiene sentido si se confirman los pedidos del QR
+            _onRequiereConfirmacion: function() {
+                const activo = this.$.pwaRequiereConfirmacion.checked;
+                this.$.pwaConfirmacionExigePago.disabled = !activo;
+                if (!activo) { this.$.pwaConfirmacionExigePago.checked = false; }
             },
             ready: function() {
                 // this.loadData();

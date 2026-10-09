@@ -61,6 +61,9 @@ function xLoadDataCierre(){
 							xArmarDataItems(2,70022,function(){
 								xArrayCierrePrint.push({'des':'VENTAS AL CREDITO', 't1':'Pedido', 't2':'','t3':''});
 								xArmarDataItems(3,702,function(){
+								// cargo a habitacion (forma de pago 17): no suma al efectivo, se lista aparte como el credito
+								xArrayCierrePrint.push({'des':'CARGOS A HABITACION', 't1':'', 't2':'cant','t3':'importe'});
+								xArmarDataItems(3,70201,function(){
 									// xArrayCierrePrint.push({'des':'TOTAL EFECTIVO', 't1':'', 't2':'','t3':''});
 									// xArmarDataItems(4,7001,function(){
 										xArrayCierrePrint.push({'des':'PEDIDOS ATENDIDOS', 't1':'', 't2':'cant','t3':'importe'});
@@ -86,6 +89,7 @@ function xLoadDataCierre(){
 											})
 										})
 									// })
+								})
 								})
 							})
 						})

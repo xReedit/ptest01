@@ -15,11 +15,14 @@ function _cpSocketOpen() {
             
         } else {
             console.log('socket exist');
-            if ( !this.socketCP._socket.connected ) {
+            // window._cpReconectando: si la pagina llama 2 veces en estos 2 s se abrian 2 sockets y cada aviso salia repetido
+            if ( !this.socketCP._socket.connected && !window._cpReconectando ) {
                 console.log('socket desconetacdo');
+                window._cpReconectando = true;
                 this.socketCP.disconnectSocket();
                 setTimeout(() => {                 
                     console.log('socket conectado');   
+                    window._cpReconectando = false;
                     this.socketCP.connectSocket();
                     this.listenSocketP();
                 }, 2000);
@@ -38,6 +41,10 @@ function listenSocketP() {
     setTimeout(() => {    
         $.ajax({ type: 'POST', url: '../../bdphp/log_005.php?op=14', data: { socketId:  this.socketCP._socket.id}})        
     }, 1200);
+
+    // al reconectar, socket.io devuelve el mismo socket: sin esto cada reconexion duplica los avisos (pedido x3)
+    if (this.socketCP._socket.__cpListenOn) { return; }
+    this.socketCP._socket.__cpListenOn = true;
 
     // restore si hay
     this.socketCP.listen('nuevoPedido').subscribe(res => {

@@ -148,7 +148,7 @@
 					<!-- <paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
 						class="btnAdd2"></paper-fab>
 					<br> -->
-					<x-comp-table-forma-pago class="ctablefp" id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="[[pedidoPagadoFromAPP]]"></x-comp-table-forma-pago>
+					<x-comp-table-forma-pago class="ctablefp" id="comp-table-fp" importetotal$="{{importe_total_cobrar}}" ispagoapp$="[[pedidoPagadoFromAPP]]" permitehotel$="[[permitehotel]]"></x-comp-table-forma-pago>
 					<br>
 
 					<!-- <table class="xtable3 xRowPading2" style="width: 100%;" id="tb_tp">
@@ -316,6 +316,8 @@
 </dom-module>
 <!-- aviso de limite de credito al vender (plan/CUENTAS-PAGAR-COBRAR-PLAN.md) -->
 <script type="text/javascript" src="../../shared/credito.limite.js"></script>
+<!-- cargo a habitacion, forma de pago 17 (restobar-2026/docs/plans/cargo-habitacion-pos.md) -->
+<script type="text/javascript" src="../../shared/hotel.cargo.js"></script>
 <script>
 	var xThisPago
 	, xdialoag_pago
@@ -511,6 +513,9 @@
 			// console.log('valor table pago ', e.detail);
 			const evento = e.detail.evenwwwto;
 			xtipoP = e.detail.datos;
+
+			// cargo a habitacion (17): al elegirlo abre el selector de habitacion; al quitarlo revierte el beneficio
+			if (xThisPago.permitehotel && typeof xHotelCargoRevisarPagos === 'function') { xHotelCargoRevisarPagos(xtipoP, xThisPago); }
 
 			const lastTpPago = xtipoP[xtipoP.length - 1];
 			xThisPago.is_tp_pinpad = lastTpPago.id == 12 ? true : false;
@@ -827,6 +832,7 @@
 	}
 
 	function xCancelarCerrar() {
+		if (typeof xHotelCargoQuitar === 'function') { xHotelCargoQuitar(xThisPago); } // sale del cobro: quita el beneficio del huesped
 		xThisPago.fire('xCancelarCerrar', true);
 	}
 
@@ -881,6 +887,8 @@
 	function xListoRegistraPago() {
 		if (!xThisPago.change_monto_pago_valid) {return}		
 		if (registrando) return;
+		// cargo a habitacion: debe ser la unica forma de pago y tener habitacion elegida
+		if (typeof xHotelCargoPuedeRegistrar === 'function' && !xHotelCargoPuedeRegistrar(xCompTableFP.getListPagoSeleted())) { return; }
 
 		// limite de credito: si la venta a credito pasa el limite del cliente pregunta "¿vender igual?" (nunca bloquea)
 		if (!xThisPago._limiteOk && typeof xCreditoLimiteVerificar === 'function') {
@@ -1198,6 +1206,11 @@
 				type: Boolean,
 				value: false
 			},
+			// cargo a habitacion (forma de pago 17): solo lo activan los cobros del POS (control de mesas, venta rapida)
+			permitehotel: {
+				type: Boolean,
+				value: false
+			},
 		},
 		attached: function () {
 			//this.total='83.00';
@@ -1227,6 +1240,7 @@
 		setVal: function (val) {
 			// xThisPago.total = val;
 			// xThisPago.importe_total_cobrar = val;
+			if (typeof xHotelCargoAlAbrirPago === 'function') { xHotelCargoAlAbrirPago(); } // cobro nuevo: olvida la habitacion elegida
 			xThisPago.ComprobanteRequiereCliente = parseFloat(val) > 700 ? true : false;
 			xThisPago.hidden_container_cliente = xThisPago.ComprobanteRequiereCliente;
 			xThisPago.tipoPagoRequiereCliente = false;
@@ -1350,6 +1364,38 @@
 		cleanResponsePinPad: () => {
 			// this.componenteTablaFP = this.$.compTableFp;
 			xCompTableFP.cleanResponsePinPad();
-		},		
+		},
+		// --- cargo a habitacion (shared/hotel.cargo.js) ---
+		// el beneficio del huesped cambia el total sin reiniciar cliente ni comprobante (setVal si los reinicia)
+		setTotalCobrar: (val) => {
+			const _val = xMoneda(val);
+			xThisPago.total = _val;
+			xThisPago.importe_total_cobrar = _val;
+			setTimeout(() => {
+				$('#tpf_option0').val(_val); // el cargo a habitacion es la unica fila
+				try { xCalcImporte(); } catch (error) {}
+			}, 250);
+		},
+		// pre-llena el cliente del comprobante con el huesped, solo si el cajero no puso otro
+		setClienteHotel: (numDoc, nombre) => {
+			if (($("#sel_cliente").val() || '') !== '' || (_inputAutocompleteObj.inputValue || '') !== '') { return false; }
+			xThisPago.$.sel_cliente.value = numDoc || '';
+			_inputAutocompleteObj.inputValue = nombre || '';
+			xIdCliente_pago = '';
+			xThisPago.changeDatosClienteSave = null;
+			return true;
+		},
+		// elige el comprobante "NINGUNO": el hotel lo emite al checkout
+		setSinComprobante: () => {
+			const _lista = objSelComprobante.list || [];
+			const _i = _lista.findIndex(x => String(x.idtipo_comprobante) === '0');
+			if (_i < 0) { return false; }
+			$(objSelComprobante).find('.xMiBoton_icon_option').each((i, e) => {
+				e.dataIndex === _i ? $(e).attr('selected', true) : $(e).removeAttr('selected');
+			});
+			objSelComprobante.isSeletedFirtsOption = _i === 0;
+			xSelectViewOptionTC(_i); // dispara _onchange -> xSelectedTpComprobante
+			return true;
+		},
 	})
 </script>

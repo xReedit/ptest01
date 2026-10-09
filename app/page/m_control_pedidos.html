@@ -287,6 +287,13 @@
 							<img class="xIconUlMenu" src="../../images/x_pedidos_registrados.png" alt="pedidos_registrados">
 						</div>
 					</li>
+					<!-- cobros de meseros: oculto; lo muestra app/shared/cobros.meseros.js solo si hay cobros de mozos -->
+					<li onclick="xOpenPage(62);" id="li_cobros_meseros" style="display:none">
+						<div>
+							<span>COBROS DE MESEROS</span>
+							<span class="xIndicadorCant3" id="cm_badge_pendientes" style="display:none">0</span>
+						</div>
+					</li>
 					<li onclick="xOpenPage(9);">
 	    				<div id="labelPagoFromApp">
 	    				<span>PAGOS DESDE DE LA APP</span>
@@ -334,6 +341,7 @@
 	<!-- <script src="../../js/isotope.pkgd.min.js"></script>	 -->
 	<script type="text/javascript" src="../view/x-views.js" defer></script>
 	<script type="text/javascript" src="../view/m_control_pedidos.js" defer></script>
+	<script type="text/javascript" src="../shared/cobros.meseros.js" defer></script>
 	<script rel="preload"  type="text/javascript" src="../view/config.const.js"></script>
 	<script type="text/javascript" src="../view/item_pedidos.js" defer></script>
 	

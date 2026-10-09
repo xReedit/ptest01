@@ -71,6 +71,7 @@ function xIniControlPedido(){
 
 		// xOpenPage(2, "?f1=1?df1=LOCAL");
 		loadCuponesActivos();
+		if (typeof xCmIniciar === 'function') { xCmIniciar(); } // opcion "Cobros de meseros" (shared/cobros.meseros.js)
 	});
 	//if(xIdUsuario==''){	xIdUsuario=window.localStorage.getItem('::app3_woU');}
 
@@ -134,6 +135,7 @@ function xOpenPage(xop, parametro){
 		case 61:
 			xruta = '/pedidos_registrados';
 			break;
+		case 62: xruta = '/cobros_meseros'; break; // rendicion de mozos (app/shared/cobros.meseros.js)
 	}
 	xruta=xruta+parametro;
 	// setTimeout( function(){
