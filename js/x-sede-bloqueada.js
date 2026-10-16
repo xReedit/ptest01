@@ -25,8 +25,8 @@
 	function pintarAviso() {
 		var ahora = Date.now(), lento = false;
 		for (var k in pendientes) { if (ahora - pendientes[k] > LENTO_MS) { lento = true; break; } }
-		var msj = ahora < errorHasta ? 'No se pudo conectar con el servidor. Revise su internet e intente de nuevo.'
-			: (lento ? 'El servidor está tardando en responder. Espere un momento, no vuelva a hacer clic…' : '');
+		var msj = ahora < errorHasta ? 'Sin conexión. Revise su internet e intente de nuevo.'
+			: (lento ? 'Conexión en proceso, espere un momento…' : '');
 		if (!msj) { if (aviso) { aviso.style.display = 'none'; } return; }
 		if (!aviso) {
 			if (!document.body) { return; }

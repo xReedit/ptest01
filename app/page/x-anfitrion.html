@@ -1,0 +1,488 @@
+<!-- Vista de anfitrion: mesas libres/ocupadas por area, tiempo, mozo, personas y detalle. SOLO LECTURA (no cobra).
+	 Ruta /anfitrion (m_panel.js case 67), permiso E1 en us_home_opciones. Servidor: bdphp/log_anfitrion.php
+	 (config, detalle) + log.php?op=501 (mesas ocupadas, el mismo procedure que Control de Mesas).
+	 Sin consultas cada X segundos: repinta cuando llega un aviso por socket (pedido nuevo, despacho, precuenta,
+	 pago, 'mesa-cambio' que emite Control de Mesas al cobrar/anular/cambiar mesa), al reconectar y al volver
+	 a encender la pantalla. Colores y grilla isotope iguales a Control de Mesas, con clases propias anf-*. -->
+<dom-module id="x-anfitrion">
+	<link rel="import" href="../web_components/paper-dialog/paper-dialog.html">
+	<template>
+		<paper-dialog id="dlg_anf_detalle" class="xdlg" entry-animation="fade-in-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3 id="anf_det_titulo">Mesa</h3>
+					<p id="anf_det_sub"></p>
+				</div>
+				<div class="xdlg-body" id="anf_det_body"><p class="inv-empty">Cargando...</p></div>
+				<div class="xdlg-foot">
+					<b class="anf-det-total" id="anf_det_total"></b>
+					<button class="btn btn-sm btn-light" dialog-dismiss>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<br>
+		<div class="xContent anf-wrap">
+			<div class="anf-barra">
+				<div class="anf-areas" id="anf_areas"></div>
+				<button class="anf-btn-ref" title="Actualizar" onclick="xAnfCargar()"><i class="fa fa-refresh"></i></button>
+			</div>
+			<div class="anf-fila2">
+			<details class="anf-resumen">
+				<summary><span id="anf_res_txt">Cargando mesas...</span></summary>
+				<div class="anf-leyenda">
+					<span><i class="anf-dot anf-dot-libre"></i>Libre <b id="anf_n_libre"></b></span>
+					<span><i class="anf-dot anf-dot-ocupada"></i>Ocupada <b id="anf_n_ocupada"></b></span>
+					<span><i class="anf-dot anf-dot-despachada"></i>Ya se sirvió <b id="anf_n_despachada"></b></span>
+					<span><i class="anf-dot anf-dot-cuenta"></i>Pidió la cuenta <b id="anf_n_cuenta"></b></span>
+				</div>
+				<p class="anf-res-extra">Toca una mesa ocupada para ver lo que pidieron. <span id="anf_res_personas"></span> <span id="anf_vivo"></span></p>
+			</details>
+			<div class="anf-orden" id="anf_orden">
+				<span class="anf-orden-btn" data-orden="numero" onclick="xAnfElegirOrden('numero')">N° mesa</span><span class="anf-orden-btn" data-orden="ocupadas" onclick="xAnfElegirOrden('ocupadas')">Ocupadas</span>
+			</div>
+			</div>
+			<p class="inv-empty" id="anf_msg" style="display:none"></p>
+			<div class="anf-grid" id="anf_grid"></div>
+		</div>
+		<br>
+	</template>
+<script>
+// REGLA (incidente 2026-10-06): nada se ejecuta en nivel superior; todo arranca en attached().
+
+function xAnfEstado() {
+	if (!window.__xAnf) {
+		window.__xAnf = { config: null, mesas: [], area: 'todas', espera: null, cargando: false, pendiente: false,
+			ultimaCarga: 0, timerReloj: null, abrioSocket: false, mesaDetalle: null, alVolver: null, cards: [], gridClave: null, iso: false, orden: 'numero' };
+	}
+	return window.__xAnf;
+}
+function xAnfEsc(s) {
+	return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) {
+		return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+	});
+}
+function xAnfPad(n) { var s = String(n); return s.length < 2 ? '0' + s : s; }
+function xAnfVisible() { var el = document.getElementById('anf_grid'); return !!(el && document.body.contains(el)); }
+// Aviso arriba de las mesas ('' lo oculta)
+function xAnfMsg(txt) {
+	var el = document.getElementById('anf_msg');
+	if (!el) { return; }
+	el.textContent = txt || '';
+	el.style.display = txt ? '' : 'none';
+}
+// isotope lo cargan Control de Mesas / Venta rapida; si se entra directo aqui aun no esta: se pide una vez
+function xAnfIsotope() {
+	if ($.fn.isotope) { return Promise.resolve(true); }
+	return new Promise(function (resolve) {
+		$.ajax({ url: '../../js/isotope.pkgd.min.js', dataType: 'script', cache: true, timeout: 20000 })
+		.done(function () { resolve(!!$.fn.isotope); })
+		.fail(function () { resolve(false); });
+	});
+}
+
+function xAnfApi(op, body) {
+	return new Promise(function (resolve) {
+		$.ajax({ type: 'POST', url: '../../bdphp/log_anfitrion.php?op=' + op, data: JSON.stringify(body || {}),
+			contentType: 'application/json', dataType: 'json', timeout: 30000 })
+		.done(function (r) { resolve(r && typeof r === 'object' ? r : { success: false, error: 'Respuesta no valida del servidor.' }); })
+		.fail(function (x) {
+			resolve({ success: false, error: x && x.status === 401 ? 'Tu sesion expiro, vuelve a entrar.' : 'No hay conexion con el servidor. Intenta de nuevo.' });
+		});
+	});
+}
+// Mesas ocupadas: el mismo procedure que Control de Mesas (sin objPedido = todas las de la sede)
+function xAnfPedirOcupadas() {
+	return new Promise(function (resolve) {
+		$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=501', data: {}, timeout: 30000 })
+		.done(function (r) {
+			try { var d = typeof r === 'string' ? JSON.parse(r) : r; resolve(d && Array.isArray(d.datos) ? d.datos : null); }
+			catch (e) { resolve(null); }
+		})
+		.fail(function () { resolve(null); });
+	});
+}
+
+// ---------- datos ----------
+// Lista de mesas de la sede: por areas (desde-hasta, con prefijo si es alfanumerica) o 1..N sin areas
+function xAnfListaMesas(cfg) {
+	var lista = [];
+	if (cfg.areas && cfg.areas.length) {
+		cfg.areas.forEach(function (a) {
+			for (var i = parseInt(a.desde, 10); i <= parseInt(a.hasta, 10); i++) {
+				var cod = cfg.alfanumerica && a.prefijo ? a.prefijo + xAnfPad(i) : xAnfPad(i);
+				lista.push({ codigo: cod, idarea: String(a.idarea_mesa), area: a.titulo });
+			}
+		});
+	} else {
+		for (var j = 1; j <= cfg.mesas; j++) { lista.push({ codigo: xAnfPad(j), idarea: '', area: '' }); }
+	}
+	return lista;
+}
+// "2 PERS" lo agrega la app del mozo a la referencia; si hay varias, la mayor
+function xAnfPersonas(referencia) {
+	var max = 0, re = /(\d+)\s*PERS/gi, m;
+	while ((m = re.exec(String(referencia || ''))) !== null) { max = Math.max(max, parseInt(m[1], 10)); }
+	return max;
+}
+// fecha 'dd/mm/yyyy' + hora 'HH:MM:SS' (hora de Lima, igual que el equipo) -> Date
+function xAnfInicio(fecha, hora) {
+	var f = String(fecha || '').split('/'), h = String(hora || '').split(':');
+	if (f.length !== 3 || h.length < 2) { return null; }
+	var d = new Date(parseInt(f[2], 10), parseInt(f[1], 10) - 1, parseInt(f[0], 10), parseInt(h[0], 10), parseInt(h[1], 10), parseInt(h[2] || '0', 10));
+	return isNaN(d.getTime()) ? null : d;
+}
+function xAnfTiempo(inicio) {
+	if (!inicio) { return ''; }
+	var min = Math.max(0, Math.floor((Date.now() - inicio.getTime()) / 60000));
+	return min < 60 ? min + ' min' : Math.floor(min / 60) + ' h ' + xAnfPad(min % 60) + ' min';
+}
+// Une la lista de mesas con las filas del op=501 (mesa '0' = llevar/delivery: no es mesa)
+function xAnfUnir(lista, filas) {
+	var porMesa = {};
+	(filas || []).forEach(function (f) {
+		var n = String(f.nummesa === null || f.nummesa === undefined ? '' : f.nummesa).trim();
+		if (n === '' || n === '0' || String(f.confirmar_pago) === '1') { return; } // pagado por app: lo resuelve su otra fila
+		porMesa[n] = f;
+		porMesa[xAnfPad(n)] = f;
+	});
+	return lista.map(function (m) {
+		var f = porMesa[m.codigo];
+		if (!f) { return { codigo: m.codigo, idarea: m.idarea, area: m.area, ocupada: false }; }
+		return { codigo: m.codigo, idarea: m.idarea, area: m.area, ocupada: true,
+			despachado: String(f.despachado) === '1', precuenta: String(f.is_precuenta) === '1',
+			mozo: f.nommozo || '', referencia: f.referencia || '', personas: xAnfPersonas(f.referencia), inicio: xAnfInicio(f.fecha, f.hora) };
+	});
+}
+
+// ---------- carga ----------
+function xAnfCargar() {
+	var st = xAnfEstado();
+	if (st.cargando) { st.pendiente = true; return; } // llego otro aviso mientras cargaba: una vuelta mas al terminar
+	st.cargando = true;
+	var pCfg = st.config ? Promise.resolve({ success: true, data: st.config }) : xAnfApi('config', {});
+	Promise.all([pCfg, xAnfPedirOcupadas(), xAnfIsotope()]).then(function (res) {
+		st.cargando = false;
+		st.ultimaCarga = Date.now();
+		if (!xAnfVisible()) { return; }
+		if (!res[0].success) { xAnfMsg(res[0].error || 'No se pudo cargar.'); return; }
+		st.config = res[0].data;
+		// el area guardada en este equipo ya no existe (al guardar areas se crean ids nuevos): volver a Todas
+		if (st.area !== 'todas' && !(st.config.areas || []).some(function (a) { return String(a.idarea_mesa) === st.area; })) { st.area = 'todas'; }
+		if (res[1] === null) { xAnfMsg('No se pudo leer el estado de las mesas. Toca el botón de actualizar.'); return; }
+		st.mesas = xAnfUnir(xAnfListaMesas(st.config), res[1]);
+		xAnfMsg(st.mesas.length ? '' : 'La sede no tiene mesas configuradas. Se configuran en Datos del sistema.');
+		xAnfPintar();
+		if (st.mesaDetalle) { xAnfCargarDetalle(st.mesaDetalle); }
+		if (st.pendiente) { st.pendiente = false; xAnfCargar(); }
+	});
+}
+// Varios avisos seguidos (hora punta) se juntan en una sola consulta
+function xAnfAviso() {
+	var st = xAnfEstado();
+	if (!xAnfVisible()) { return; }
+	clearTimeout(st.espera);
+	st.espera = setTimeout(xAnfCargar, 1500);
+}
+</script>
+<script>
+// ---------- pintado (isotope, como Control de Mesas) ----------
+// Clases propias (anf-*) con los mismos colores de las tarjetas de Control de Mesas: si se usara xMiCardPedido/xOcupado,
+// el reloj (setInterval) y los sockets que Control de Mesas deja vivos al salir escribirian en estas tarjetas.
+function xAnfPintar() {
+	var st = xAnfEstado();
+	var grid = document.getElementById('anf_grid');
+	if (!grid) { return; }
+	xAnfPintarResumen();
+	xAnfPintarAreas();
+	var clave = st.mesas.map(function (m) { return m.idarea + ':' + m.codigo; }).join(',');
+	if (st.gridClave !== clave) { xAnfArmarGrid(grid, clave); } // solo si cambiaron las mesas; si no, se actualizan en su sitio
+	st.mesas.forEach(function (m, i) { xAnfTarjeta(st.cards[i], m); });
+	xAnfIsoLayout();
+}
+function xAnfArmarGrid(grid, clave) {
+	var st = xAnfEstado();
+	if (st.iso) { try { $(grid).isotope('destroy'); } catch (e) {} st.iso = false; }
+	grid.innerHTML = st.mesas.map(function (m, i) {
+		return '<div class="anf-mesa" data-i="' + i + '" data-mesa="' + xAnfEsc(m.codigo) + '" onclick="xAnfAbrirDetalle(this.getAttribute(\'data-mesa\'))"></div>';
+	}).join('');
+	st.cards = [].slice.call(grid.children);
+	st.gridClave = clave;
+}
+function xAnfTarjeta(el, m) {
+	var clase = !m.ocupada ? 'anf-libre' : (m.despachado ? 'anf-despachada' : 'anf-ocupada');
+	el.className = 'anf-mesa ' + clase + ' anf-a-' + m.idarea;
+	el.setAttribute('data-estado', !m.ocupada ? 2 : (m.precuenta ? 0 : 1)); // orden "Ocupadas": pidio cuenta, ocupadas, libres
+	var refs = m.ocupada ? String(m.referencia || '').split(',').map(function (r) { return r.trim(); }).filter(Boolean) : [];
+	el.innerHTML = '<div class="show-led-precuenta' + (m.precuenta ? '' : ' xInvisible') + '" title="Pidió la cuenta"><i class="fa fa-pencil-square-o"></i></div>'
+		+ '<p class="show-mozo-pedido' + (m.ocupada ? ' pintar' : '') + '" title="Atendido por">'
+		+ (m.ocupada ? '<span class="fs-8 pr-1"><i class="fa fa-user-circle"></i></span> ' : '') + xAnfEsc(m.mozo || '-') + '</p>'
+		+ '<p class="tipo">Mesa</p><p class="anf-num">' + xAnfEsc(m.codigo) + '</p>'
+		+ (refs.length ? '<div>' + refs.map(function (r) { return '<p class="show-referencia-pedido">' + xAnfEsc(r) + '</p>'; }).join(' ') + '</div>' : '')
+		+ '<p class="tiempo xfont11">' + (m.ocupada ? xAnfTiempo(m.inicio) : 'disponible') + '</p>';
+}
+// Filtra por area y reacomoda con animacion (si isotope no cargo: mostrar/ocultar sin animacion)
+function xAnfIsoLayout() {
+	var st = xAnfEstado();
+	var filtro = st.area === 'todas' ? '*' : '.anf-a-' + st.area;
+	var orden = st.orden === 'ocupadas' ? ['estado', 'i'] : 'i';
+	xAnfPintarOrden();
+	if (!$.fn.isotope) {
+		(st.cards || []).forEach(function (c) { c.style.display = filtro === '*' || $(c).is(filtro) ? '' : 'none'; });
+		return;
+	}
+	if (!st.iso) {
+		$('#anf_grid').isotope({ itemSelector: '.anf-mesa', layoutMode: 'masonry', percentPosition: true, filter: filtro, sortBy: orden,
+			getSortData: { i: '[data-i] parseInt', estado: '[data-estado] parseInt' }, masonry: { horizontalOrder: true } });
+		st.iso = true;
+		return;
+	}
+	// datos de orden nuevos (una mesa se ocupo/libero) + re-filtra y reacomoda con animacion
+	$('#anf_grid').isotope('updateSortData').isotope({ filter: filtro, sortBy: orden });
+}
+// Conteos del area elegida (o de todas)
+function xAnfPintarResumen() {
+	var st = xAnfEstado();
+	var mesas = st.mesas.filter(function (m) { return st.area === 'todas' || m.idarea === st.area; });
+	var oc = mesas.filter(function (m) { return m.ocupada; });
+	var n = { libre: mesas.length - oc.length, ocupada: oc.filter(function (m) { return !m.despachado; }).length,
+		despachada: oc.filter(function (m) { return m.despachado; }).length, cuenta: oc.filter(function (m) { return m.precuenta; }).length };
+	Object.keys(n).forEach(function (k) { var el = document.getElementById('anf_n_' + k); if (el) { el.textContent = '(' + n[k] + ')'; } });
+	var cuenta = oc.filter(function (m) { return m.precuenta; }).length;
+	var personas = oc.reduce(function (s, m) { return s + (m.personas || 0); }, 0);
+	var txt = document.getElementById('anf_res_txt');
+	var per = document.getElementById('anf_res_personas');
+	if (txt) { txt.textContent = oc.length + ' ocupadas · ' + (mesas.length - oc.length) + ' libres' + (cuenta ? ' · ' + cuenta + ' pidieron la cuenta' : ''); }
+	if (per) { per.textContent = personas ? personas + ' personas en mesa.' : ''; }
+}
+// Botones de area como Control de Mesas (x-comp-area-mesa) + "Todas"; el numero = mesas ocupadas
+function xAnfPintarAreas() {
+	var st = xAnfEstado();
+	var cont = document.getElementById('anf_areas');
+	if (!cont) { return; }
+	var areas = st.config && st.config.areas ? st.config.areas : [];
+	if (areas.length < 2) { cont.style.visibility = 'hidden'; return; }
+	cont.style.visibility = '';
+	var item = function (id, txt) {
+		var n = st.mesas.filter(function (m) { return m.ocupada && (id === 'todas' || m.idarea === id); }).length;
+		return '<div class="anf-area noselect' + (st.area === id ? ' selected' : '') + '" data-area="' + xAnfEsc(id) + '" onclick="xAnfElegirArea(this.getAttribute(\'data-area\'))">'
+			+ xAnfEsc(txt) + (n ? ' <span class="badge badge-dark ml-1">' + n + '</span>' : '') + '</div>';
+	};
+	cont.innerHTML = item('todas', 'Todas') + areas.map(function (a) { return item(String(a.idarea_mesa), a.titulo); }).join('');
+}
+function xAnfElegirArea(id) {
+	var st = xAnfEstado();
+	st.area = id;
+	try { localStorage.setItem('::anf_area', id); } catch (e) {}
+	xAnfPintarAreas();
+	xAnfPintarResumen();
+	xAnfIsoLayout();
+}
+function xAnfElegirOrden(orden) {
+	var st = xAnfEstado();
+	st.orden = orden;
+	try { localStorage.setItem('::anf_orden', orden); } catch (e) {}
+	xAnfIsoLayout();
+}
+function xAnfPintarOrden() {
+	var b = document.querySelectorAll('#anf_orden .anf-orden-btn');
+	for (var i = 0; i < b.length; i++) { b[i].classList.toggle('selected', b[i].getAttribute('data-orden') === xAnfEstado().orden); }
+}
+// Solo mueve los relojes; no consulta nada
+function xAnfTic() {
+	var st = xAnfEstado();
+	st.mesas.forEach(function (m, i) {
+		var t = m.ocupada && st.cards && st.cards[i] ? st.cards[i].querySelector('.tiempo') : null;
+		if (t) { t.textContent = xAnfTiempo(m.inicio); }
+	});
+}
+</script>
+<script>
+// ---------- detalle (solo lectura) ----------
+function xAnfAbrirDetalle(codigo) {
+	var st = xAnfEstado();
+	var m = st.mesas.filter(function (x) { return x.codigo === codigo; })[0];
+	if (!m || !m.ocupada) { return; }
+	st.mesaDetalle = codigo;
+	document.getElementById('anf_det_titulo').textContent = 'Mesa ' + codigo;
+	document.getElementById('anf_det_sub').textContent = [xAnfTiempo(m.inicio) ? 'Ocupada hace ' + xAnfTiempo(m.inicio) : '',
+		m.mozo ? 'Atiende ' + m.mozo : '', m.personas ? m.personas + (m.personas === 1 ? ' persona' : ' personas') : '',
+		m.precuenta ? 'Pidió la cuenta' : ''].filter(Boolean).join(' · ');
+	document.getElementById('anf_det_body').innerHTML = '<p class="inv-empty">Cargando...</p>';
+	document.getElementById('dlg_anf_detalle').open();
+	xAnfCargarDetalle(codigo);
+}
+function xAnfCargarDetalle(codigo) {
+	var tot = document.getElementById('anf_det_total');
+	if (tot) { tot.textContent = ''; }
+	xAnfApi('detalle', { nummesa: codigo }).then(function (r) {
+		var st = xAnfEstado();
+		var body = document.getElementById('anf_det_body');
+		if (!body || st.mesaDetalle !== codigo) { return; }
+		var pedidos = r.success && r.data && Array.isArray(r.data.pedidos) ? r.data.pedidos : [];
+		if (!r.success) { body.innerHTML = '<p class="inv-empty">' + xAnfEsc(r.error || 'No se pudo cargar.') + '</p>'; }
+		else if (!pedidos.length) { body.innerHTML = '<p class="inv-empty">Esta mesa ya no tiene pedidos pendientes. Puede que ya la hayan cobrado.</p>'; }
+		else {
+			body.innerHTML = pedidos.map(xAnfPedidoHtml).join('');
+			var total = pedidos.reduce(function (s, p) { return s + xAnfTotalPedido(p); }, 0);
+			var tot = document.getElementById('anf_det_total');
+			if (tot) { tot.textContent = 'Total mesa ' + xAnfSoles(total); }
+		}
+	});
+}
+function xAnfSoles(n) { return 'S/ ' + (Number(n) || 0).toFixed(2); }
+function xAnfTotalPedido(p) { return p.items.reduce(function (s, it) { return s + (Number(it.importe) || 0); }, 0); }
+function xAnfPedidoHtml(p) {
+	var ref = String(p.referencia || '').replace(/^,/, '').trim();
+	var items = p.items.map(function (it) {
+		var cant = it.cantidad % 1 === 0 ? String(it.cantidad) : it.cantidad.toFixed(2);
+		return '<tr><td class="anf-cant">' + xAnfEsc(cant) + '</td><td>' + xAnfEsc(it.descripcion)
+			+ '<br>' + (it.despachado ? '<span class="anf-salio"><i class="fa fa-check"></i> Salió</span>' : '<span class="anf-prep">En preparación</span>') + '</td>'
+			+ '<td class="anf-imp">' + (Number(it.importe) ? xAnfSoles(it.importe) : '') + '</td></tr>'; // 0 = va incluido (menu, cortesia)
+	}).join('');
+	return '<p class="anf-ped-tit"><span>Pedido de las ' + xAnfEsc(String(p.hora || '').substr(0, 5))
+		+ (p.mozo ? ' · ' + xAnfEsc(p.mozo) : '') + (ref ? ' <span class="inv-muted">· ' + xAnfEsc(ref) + '</span>' : '') + '</span>'
+		+ '<b>' + xAnfSoles(xAnfTotalPedido(p)) + '</b></p>'
+		+ '<table class="anf-det-tabla"><tbody>' + items + '</tbody></table>';
+}
+
+// ---------- socket ----------
+// Usa la conexion compartida (socketService), no _cpSocketOpen(): ese registra los oyentes de Control de
+// Pedidos, que aqui llamarian a funciones que no existen. Se marca el socket para no escuchar dos veces.
+function xAnfSocket() {
+	var st = xAnfEstado();
+	var vivo = document.getElementById('anf_vivo');
+	if (!xAnfVisible()) { return; } // ya salio de la pagina: no abrir un socket que nadie cerraria
+	try {
+		if (typeof socketService === 'undefined') { return; } // aun no carga (async): reintenta a los 3 s
+		var svc = socketService.getInstance();
+		if (!svc._socket || !svc._socket.connected) { svc.connectSocket(); st.abrioSocket = true; }
+		var sk = svc._socket;
+		if (vivo) { vivo.textContent = 'Se actualiza sola.'; }
+		if (!sk || sk.__xAnfOn) { return; }
+		sk.__xAnfOn = true;
+		['nuevoPedido', 'printerOnly', 'notifica-impresion-precuenta', 'restobar-venta-registrada-res',
+			'restobar-notifica-pay-pedido-res', 'mesa-cambio'].forEach(function (ev) { svc._listen(ev, xAnfAviso); });
+		svc._listen('connect', xAnfAlReconectar);
+	} catch (e) {
+		if (vivo) { vivo.textContent = 'Sin actualización en vivo: toca Actualizar para ver cambios.'; }
+	}
+}
+// Reconexion (se cayo el internet): lo que paso mientras tanto no llego. La primera conexion no cuenta: ya se cargo.
+function xAnfAlReconectar() {
+	if (Date.now() - xAnfEstado().ultimaCarga > 5000) { xAnfAviso(); }
+}
+// Al volver a encender la tablet/celular: lo que paso con la pantalla apagada no llego por socket
+function xAnfAlVolver() {
+	if (document.visibilityState === 'visible' && Date.now() - xAnfEstado().ultimaCarga > 15000) { xAnfAviso(); }
+}
+function xAnfInyectarCss() {
+	if (document.getElementById('anf_css')) { return; }
+	var st = document.createElement('style');
+	st.id = 'anf_css';
+	st.textContent =
+		'.anf-wrap{display:block;padding:0 8px;}' +
+		// barra de areas = x-comp-area-mesa de Control de Mesas
+		'.anf-barra{display:flex;align-items:center;gap:8px;margin-bottom:4px;}' +
+		'.anf-areas{flex:1 1 auto;min-width:0;display:flex;overflow-x:auto;white-space:nowrap;padding:7px;background:#cbcbcb;border-radius:8px;-webkit-overflow-scrolling:touch;}' +
+		'.anf-area{flex:0 0 auto;margin-right:8px;cursor:pointer;border:1px solid #bdbdbd;border-radius:5px;padding:4px 10px;background:#fff;font-weight:600;color:#7f7f7f;}' +
+		'.anf-area:last-child{margin-right:0;}.anf-area.selected{background:#701b9a;color:#fff;}' +
+		'.anf-btn-ref{flex:0 0 auto;width:38px;height:38px;border:1px solid #bdbdbd;border-radius:8px;background:#fff;color:#555;cursor:pointer;}' +
+		// resumen plegable
+		'.anf-fila2{display:flex;align-items:flex-start;gap:8px;margin:0 2px 4px;}' +
+		'.anf-resumen{flex:1 1 auto;min-width:0;font-size:12px;color:#6c757d;}' +
+		'.anf-orden{flex:0 0 auto;display:flex;background:#cbcbcb;border-radius:6px;padding:2px;margin-top:2px;}' +
+		'.anf-orden-btn{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:600;color:#7f7f7f;cursor:pointer;white-space:nowrap;}' +
+		'.anf-orden-btn.selected{background:#701b9a;color:#fff;}' +
+		'.anf-resumen summary{cursor:pointer;padding:4px 0;font-weight:600;outline:none;}' +
+		'.anf-leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0;font-size:11px;}' +
+		'.anf-leyenda span{display:inline-flex;align-items:center;gap:5px;}' +
+		'.anf-dot{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid #B7B7B7;}' +
+		'.anf-dot-libre{background:#fff;}.anf-dot-ocupada{background:#6a1b9a;border-color:#6a1b9a;}' +
+		'.anf-dot-despachada{background:#00897b;border-color:#00897b;}.anf-dot-cuenta{background:gold;border-color:gold;border-radius:50%;}' +
+		'.anf-res-extra{margin:4px 0 0;font-size:11px;}' +
+		// tarjeta = .xMiCardPedido de Control de Mesas (css/micss.css), mismos colores
+		'.anf-grid:after{content:"";display:block;clear:both;}' +
+		// ancho en % segun la pantalla: las columnas siempre llenan la fila (sin hueco a la derecha).
+		// 1px menos que la fraccion exacta: si suman justo 100%, el redondeo de isotope deja una columna menos
+		'.anf-mesa{box-sizing:border-box;position:relative;width:calc(10% - 7px);margin:3px;padding:10px 4px;border:1px solid #B7B7B7;border-radius:8px;text-align:center;line-height:15px;display:inline-block;background:#fff;}' +
+		'@media (max-width:1200px){.anf-mesa{width:calc(12.5% - 7px);}}@media (max-width:900px){.anf-mesa{width:calc(16.666% - 7px);}}' +
+		'.anf-mesa p{margin:0;}.anf-libre .tipo,.anf-libre .tiempo{color:#6c757d;}' +
+		'.anf-ocupada{background:#6a1b9a;color:#fff;cursor:pointer;}.anf-despachada{background:#00897b;color:#fff;cursor:pointer;}' +
+		'.anf-ocupada .show-mozo-pedido,.anf-despachada .show-mozo-pedido{background:#424242;opacity:.8;}' +
+		'.anf-mesa .show-mozo-pedido{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top;}' +
+		'.anf-despachada .show-referencia-pedido{background:#46a769;}.anf-mesa .show-referencia-pedido{display:inline-block;margin:1px 0;}' +
+		'.anf-mesa .show-led-precuenta{top:8px;left:8px;}' +
+		'.anf-num{font-size:28px;line-height:1;padding:.5rem 0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}' +
+		// Centrado y alto por CSS, no por iron-fit: iron-fit mide mientras el contenido aun carga/anima y deja
+		// el dialog cortito o abajo. !important le gana a los estilos en linea que pone iron-fit.
+		// Columna: cabecera y pie fijos, solo la lista hace scroll.
+		'#dlg_anf_detalle{width:520px;max-width:94vw !important;font-size:12px;position:fixed !important;top:50% !important;left:50% !important;' +
+		'right:auto !important;bottom:auto !important;margin:0 !important;transform:translate(-50%,-50%);max-height:calc(100vh - 32px) !important;}' +
+		'#dlg_anf_detalle > .xContent{display:flex;flex-direction:column;max-height:calc(100vh - 32px);}' +
+		'#dlg_anf_detalle .xdlg-head,#dlg_anf_detalle .xdlg-foot{flex:0 0 auto;}' +
+		'#dlg_anf_detalle .xdlg-body{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;}' +
+		'#dlg_anf_detalle h3{font-size:15px;margin:0;}#dlg_anf_detalle #anf_det_sub{font-size:11px;margin:2px 0 0;}' +
+		'#dlg_anf_detalle .xdlg-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}' +
+		'#dlg_anf_detalle .btn{height:31px;padding:0 12px;font-size:12px;font-weight:600;border-radius:6px;}' +
+		'.anf-det-total{font-size:13px;}' +
+		'.anf-ped-tit{display:flex;justify-content:space-between;gap:8px;margin:10px 0 2px;font-size:12px;font-weight:600;}' +
+		'.anf-det-tabla{width:100%;border-collapse:collapse;font-size:12px;}' +
+		'.anf-det-tabla td{padding:4px;border-bottom:1px solid #eee;vertical-align:top;line-height:1.3;}' +
+		'.anf-cant{width:28px;text-align:right;font-variant-numeric:tabular-nums;}' +
+		'.anf-imp{width:70px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}' +
+		'.anf-salio{color:#00897b;font-weight:600;font-size:10px;}.anf-prep{color:#6c757d;font-size:10px;}' +
+		// celular: 4 por fila. Ancho 1px menos que 25%: si las 4 suman justo el 100%, el redondeo deja solo 3 (o 2)
+		'@media (max-width:600px){.anf-wrap{padding:0 4px;}.anf-areas{padding:4px;border-radius:6px;}.anf-area{font-size:11px;padding:2px 7px;margin-right:5px;}' +
+		'.anf-area .badge{font-size:9px;padding:2px 4px;}.anf-btn-ref{width:30px;height:30px;font-size:12px;border-radius:6px;}.anf-leyenda{font-size:10px;gap:4px 10px;}' +
+		'.anf-mesa{width:calc(25% - 7px);padding:6px 2px;line-height:13px;border-radius:6px;}' +
+		'.anf-num{font-size:20px;padding:.3rem 0;}.anf-mesa .tipo,.anf-mesa .tiempo{font-size:10px;}.anf-mesa .show-mozo-pedido{font-size:9px;padding:0 4px;}' +
+		'.anf-mesa .show-referencia-pedido{font-size:9px;padding:0 3px;}.anf-mesa .show-led-precuenta{top:4px;left:4px;}}';
+	document.head.appendChild(st);
+}
+
+Polymer({
+	is: 'x-anfitrion',
+	attached: function () {
+		var st = xAnfEstado();
+		xAnfInyectarCss();
+		$("#Titulo_page").text("ANFITRIÓN");
+		try { st.area = localStorage.getItem('::anf_area') || 'todas'; } catch (e) { st.area = 'todas'; }
+		try { st.orden = localStorage.getItem('::anf_orden') === 'ocupadas' ? 'ocupadas' : 'numero'; } catch (e) { st.orden = 'numero'; }
+		st.config = null; // las areas pueden haber cambiado desde la ultima vez
+		st.mesaDetalle = null;
+		st.cards = []; st.gridClave = null; st.iso = false; // el DOM es nuevo: armar la grilla de cero
+		var dlg = document.getElementById('dlg_anf_detalle');
+		if (dlg && dlg.parentNode !== document.body) { document.body.appendChild(dlg); } // dentro del panel se centra mal (queda abajo)
+		if (dlg) { dlg.addEventListener('iron-overlay-closed', function () { xAnfEstado().mesaDetalle = null; }); }
+		st.alVolver = xAnfAlVolver;
+		document.addEventListener('visibilitychange', st.alVolver);
+		st.timerReloj = setInterval(xAnfTic, 30000);
+		// la carga va DENTRO del callback: fuera de el se dispara antes de que la sesion este confirmada
+		xm_LogChequea(function () {
+			xm_log_get('ini_us');
+			$('body').addClass('loaded'); // quita el spinner del panel (al recargar con F5 en /anfitrion nadie mas lo quita)
+			if (!xAnfVisible()) { return; }
+			xAnfCargar();
+			xAnfSocket();
+			st.timerSocket = setTimeout(xAnfSocket, 3000); // socket.master.service.js carga async en m_panel
+		});
+	},
+	detached: function () {
+		var st = xAnfEstado();
+		clearInterval(st.timerReloj);
+		clearTimeout(st.espera);
+		clearTimeout(st.timerSocket);
+		// el dialog se movio al body: hay que sacarlo a mano
+		var dlg = document.getElementById('dlg_anf_detalle');
+		if (dlg) { try { dlg.close(); } catch (e) {} if (dlg.parentNode) { dlg.parentNode.removeChild(dlg); } }
+		if (st.alVolver) { document.removeEventListener('visibilitychange', st.alVolver); }
+		// si esta pagina abrio el socket, lo cierra: asi la siguiente pagina (caja, etc.) lo abre con sus oyentes
+		if (st.abrioSocket) {
+			st.abrioSocket = false;
+			try { socketService.getInstance().disconnectSocket(); } catch (e) {}
+		}
+	}
+});
+</script>
+</dom-module>

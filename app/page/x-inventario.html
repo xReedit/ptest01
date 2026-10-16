@@ -3,12 +3,14 @@
 	<link rel="import" href="./x-inventario/x-inventario-contar.html">
 	<link rel="import" href="./x-inventario/x-inventario-resultado.html">
 	<link rel="import" href="./x-inventario/x-inventario-reportes.html">
+	<link rel="import" href="./x-inventario/x-inventario-mermas.html">
 	<script type="text/javascript" src="../view/export.excel.js"></script>
 	<template>
 		<div class="inv-vista activa" id="inv_vista_conteos"><x-inventario-conteos></x-inventario-conteos></div>
 		<div class="inv-vista" id="inv_vista_contar"><x-inventario-contar></x-inventario-contar></div>
 		<div class="inv-vista" id="inv_vista_resultado"><x-inventario-resultado></x-inventario-resultado></div>
 		<div class="inv-vista" id="inv_vista_reportes"><x-inventario-reportes></x-inventario-reportes></div>
+		<div class="inv-vista" id="inv_vista_mermas"><x-inventario-mermas></x-inventario-mermas></div>
 	</template>
 <script>
 // Avisos del modulo: SweetAlert en lugar de alert()/confirm() nativos, que muestran la IP del
@@ -55,6 +57,7 @@ function xInvIr(vista, id) {
 	if (vista === 'contar') { xInvContarCargar(id); }
 	if (vista === 'resultado') { xInvResultadoCargar(id); }
 	if (vista === 'reportes') { xInvReportesCargar(); }
+	if (vista === 'mermas') { xInvPerdidasCargar(); }
 }
 // Exporta una tabla del modulo a Excel. tableToExcel copia el innerHTML tal cual, asi que sin
 // limpiar salen las filas ocultas por los filtros, la fila "Sin diferencias" y los checkboxes

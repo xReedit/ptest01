@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Logística</title>
+	<!-- pagina suelta (celular del almacenero). Dentro del POS el modulo se monta en app/page/x-logistica. -->
+	<link rel="stylesheet" href="../../css/mibootstra.css">
+	<link rel="stylesheet" href="../../css/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="../../css/micss.css">
+</head>
+<body style="margin:0;background:#fff">
+	<main id="lg_vista"><p class="inv-muted" style="padding:16px">Cargando…</p></main>
+	<script type="module">
+		// version.txt sin cache: al desplegar se baja lo nuevo (ver plan: Despliegue)
+		const v = await fetch('./version.txt', { cache: 'no-store' }).then(r => r.ok ? r.text() : 'v=20261015i', () => 'v=20261015i');
+		const { montar } = await import('./js/app.js?' + v.trim());
+		montar(document.getElementById('lg_vista'), true);
+	</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<dom-module id="x-logistica">
+	<!-- Host minimo: el modulo vive en app/logistica/ (JS sin Polymer) y se monta en este div.
+	     Sin iframe: hereda fondo, ancho y scroll del POS como las demas paginas. -->
+	<template>
+		<div id="lg_root"><p class="inv-empty"><i class="fa fa-spinner fa-spin"></i>Cargando…</p></div>
+	</template>
+<script>
+Polymer({
+	is: 'x-logistica',
+	attached: function () {
+		var root = this.$.lg_root;
+		$("#Titulo_page").text("Centro Logístico");
+		xPopupLoad = document.getElementById('xLoad');
+		// Mismo arranque que x-encuesta: al recargar directo en #/logistica, xm_LogChequea confirma la sesion
+		// y 'loaded' en el body quita el circulo de carga del POS. El modulo se monta DENTRO del callback.
+		xm_LogChequea(function () {
+			xm_log_get('ini_us');
+			$('body').addClass('loaded');
+			// URL resuelta contra la pagina (app/page/m_panel.html) -> app/logistica/js/app.js
+			// La version sale de version.txt pedido SIN cache: al desplegar todos bajan lo nuevo (ver plan: Despliegue)
+			var base = new URL('../logistica/', document.baseURI).href;
+			fetch(base + 'version.txt', { cache: 'no-store' })
+				.then(function (r) { return r.ok ? r.text() : 'v=20261015i'; }, function () { return 'v=20261015i'; })
+				.then(function (v) { return import(base + 'js/app.js?' + v.trim()); })
+				.then(function (m) { m.montar(root, false); })
+				.catch(function () { root.innerHTML = '<p class="inv-empty">No se pudo abrir Logística. Recarga la página (Ctrl+F5).</p>'; });
+		});
+	}
+});
+</script>
+</dom-module>

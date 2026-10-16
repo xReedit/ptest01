@@ -1600,6 +1600,7 @@ function xAnularPedido(isRecuperarStock = false, motivoAnularEstablecido = ''){
 		xThisCM.isCheckRecuperarStock = false;
 		xPopupLoad.xclose();
 		xActualizarItems();
+		_cpSocketEmitMesaCambio($(xObj_miPedido).attr('data-nummesa')); // vista anfitrion
 		//xLoadMesas()
 		if(xSelAllPedidos==true){
 			$(xObj_miPedido).removeClass('xOcupado');
@@ -1646,6 +1647,7 @@ function xCambiarMesa(){
 		dialog_cambiar_mesa.close();
 		txt_num_mesa_change.value='';
 		xPopupLoad.xclose()
+		_cpSocketEmitMesaCambio(xnum_txt_mesa); // vista anfitrion
 		
 		xCPcloseDialogDetalle();		
 
@@ -1939,7 +1941,7 @@ async function xArmarSqlAddLUlI(){
 	// xImporteTotalRowArray = xLocal_xDtSubTotales.length > 1 ? xLocal_xDtSubTotales[xLocal_xDtSubTotales.length -1].importe : xLocal_xDtSubTotales[0].importe;
 
 	
-	if(xArmarSubtotalesArray() == 0){return}
+	if(xArmarSubtotalesArray() == 0){guardandoPedido_cp = 0; return} // pedido vacio: liberar F9
 	xLocal_xDtSubTotales_cp = xLocal_xDtSubTotales;
 
 	var xsolo_llevar="0", xdelivery="0";
@@ -1980,7 +1982,14 @@ async function xArmarSqlAddLUlI(){
 		estado_p:0
 	};
 
-	const idP = await goSendPedidoFecht(dataSendPedido);
+	let idP;
+	try {
+		idP = await goSendPedidoFecht(dataSendPedido);
+	} catch (error) { // fallo de red / servidor: liberar F9 para reintentar
+		guardandoPedido_cp = 0;
+		try { xm_all_xToastOpen('No se pudo guardar el pedido, intente de nuevo.', 4000, false); } catch (e) {}
+		return;
+	}
 	lastDataPedidoInsert = idP;
 
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=30401', data:{arr:xArrayGuardarPedido,idpedido:0}})
@@ -2334,6 +2343,7 @@ function xRegistrarPagoCM(xcant_rp){
 	// .done( function (xidC) {
 		var xnum_mesa_obj=parseInt($(xObj_miPedido).attr('data-nummesa'));
 		var xsolo_confirmar_pago=parseInt($(xObj_miPedido).attr('data-isconfirmarpago'));
+		_cpSocketEmitMesaCambio(xnum_mesa_obj); // vista anfitrion
 		
 		if(xcant_rp==0){
 			if(xnum_mesa_obj!=0 && xsolo_confirmar_pago.toString() === '0'){
@@ -2845,6 +2855,8 @@ function xLoadDetallesPedido (obj, clearDataLastPedidoInsert = true){
 				xArrayDtOrdenFiltro=xdtPbdet.datos;
 			}
 
+			// la lista de pedidos se pinta toda marcada: quitar filtro por pedido previo (visible=1)
+			Object.values(xArrayDtOrdenFiltro).forEach(x => { x.visible = 0; });
 
 			xThisCM.xdtPedDet=xArrayDtOrdenFiltro;
 			// console.log('xThisCM.xdtPedDet', xThisCM.xdtPedDet);
@@ -4990,6 +5002,8 @@ function xAddRowInsertListItems(obj) {
 				xArrayDtOrdenFiltro=xdtPbdet.datos;
 			}
 
+			// xPintarListPedido vuelve a marcar TODOS los pedidos: quitar el filtro por pedido (visible=1) para que el detalle y el cobro incluyan todo
+			Object.values(xArrayDtOrdenFiltro).forEach(x => { x.visible = 0; });
 
 			xThisCM.xdtPedDet=xArrayDtOrdenFiltro;
 			// console.log('xThisCM.xdtPedDet', xThisCM.xdtPedDet);

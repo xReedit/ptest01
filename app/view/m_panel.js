@@ -424,6 +424,8 @@ async function xOpenPage(xop, parametro){
 		case 63: xruta = '/asistencia'; break; // Control de Asistencia (D8)
 		case 64: xruta = '/marcadores_asistencia'; break; // Marcadores de Asistencia (D9)
 		case 65: xruta = '/aplicaciones_descargables'; break; // Aplicaciones descargables (A29)
+		case 66: xruta = '/logistica'; break; // Logistica cadenas (B15) -> app/logistica/
+		case 67: xruta = '/anfitrion'; break; // Anfitrion, vista de mesas solo lectura (E1)
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

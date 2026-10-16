@@ -366,6 +366,14 @@ function _cpSocketEmitPrinterPrecuenta(item) {
     this.socketCP.emit('notificar-impresion-precuenta', item);
 }
 
+// avisa a la vista de anfitrion (/anfitrion) que una mesa se libero o cambio. Sin socket no hace nada.
+function _cpSocketEmitMesaCambio(nummesa) {
+    try {
+        if (!this.socketCP || !this.socketCP._socket) { return; }
+        this.socketCP.emit('mesa-cambio', { nummesa: nummesa });
+    } catch (error) {}
+}
+
 function _cpSocketClose() {
     try {
         if (!isSocket) { return; }        
