@@ -1,9 +1,9 @@
 // Produccion: que producir hoy, recetas y lo producido. La PLANTA produce para las sedes (lo que la Bandeja mando
 // a producir); cada local tiene sus propias recetas (mayonesa, aji de la casa) y produce para si mismo.
 // La central puede ver y manejar la produccion de cualquier sede (selector arriba).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, autocompletar, nuevoToken, leerNum } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, autocompletar, nuevoToken, leerNum } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(Number(n || 0).toFixed(3)).toLocaleString('es-PE', { maximumFractionDigits: 3 });
 const soles = n => 'S/ ' + Number(n || 0).toFixed(2);

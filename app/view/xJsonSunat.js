@@ -641,6 +641,41 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
 
     // console.log('xArrayComprobante.correlativo E numero_comp', numero_comp);
 
+    const _dataCe = {
+            pdf:'0',
+            cdr: '0',
+            xml: '0',
+            idcliente: idclienteComprobante,
+            total: totalComprobante,
+            totales_json: totalesJson,
+            nomcliente: nomCliente,
+            numero: numero_comp,
+            jsonxml: json_xml,
+            external_id: '',
+            estado_api: 0,
+            estado_sunat: 1,
+            viene_facturador: _viene_facturador,
+            idtipo_comprobante_serie: idtipo_comprobante_serie,
+        }
+
+    // 2026-10: PRE-REGISTRO. La fila en ce se graba ANTES de mandar a apifac. Antes se
+    // grababa recien con la respuesta: si el navegador moria en medio (F5, celular que
+    // suspende la pestaña al imprimir) el CPE quedaba en SUNAT sin fila en ce, "CPE
+    // emitidos" mostraba saltos y el historial dejaba emitir OTRO comprobante para la
+    // misma venta (sede 448, B001-1239/1241). Queda "Sin registrar" hasta la respuesta
+    // (se actualiza por idce); si no llega, el cierre de caja la reenvia y apifac devuelve
+    // el documento que ya tiene.
+    let _rptPreCe = null;
+    if ( json_xml.numero_documento !== '#' ) {
+        try {
+            _rptPreCe = await CpeInterno_Error({ ..._dataCe }, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);
+        } catch (error) {
+            // sin pre-registro se sigue como antes: se registra con la respuesta
+            console.error('xSendApiSunat: no se pudo pre-registrar el CPE', error);
+        }
+    }
+    const _idcePre = _rptPreCe?.idce || null;
+
     await fetch(_url, {
         method: 'POST',
         headers: _headers,
@@ -701,7 +736,7 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             // res.data.jsonxml = errSoap ? json_xml : ''; // si hay un error al enviar a sunat guarda jsonxml para enviarlo luego
 
             
-            CpeInterno_Registrar(res);
+            CpeInterno_Registrar(res, _idcePre);
 
             // enviar socket url pdf whatsapp
             if ( telefonoCliente !== '' ) {
@@ -734,28 +769,14 @@ async function xSendApiSunat(json_xml, idregistro_pago, idtipo_comprobante_serie
             
     }).catch(async function (error) { // error de conexion o algo pero imprime
         
-        const data = {
-                pdf:'0',
-                cdr: '0',
-                xml: '0',                
-                idcliente: idclienteComprobante,
-                total: totalComprobante,
-                totales_json: totalesJson,
-                nomcliente: nomCliente,
-                numero: numero_comp, 
-                jsonxml: json_xml, 
-                external_id: '',  
-                estado_api: 0,
-                estado_sunat: 1,
-                viene_facturador: _viene_facturador,
-                idtipo_comprobante_serie: idtipo_comprobante_serie,                
-            }
-        
         rpt.ok = true;
         rpt.qr = '';
         rpt.hash = "www.papaya.com.pe";
         rpt.external_id = '';
-        const correlativo_error = await CpeInterno_Error(data, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);        
+        // pre-registrado: la fila "Sin registrar" ya existe, no se inserta otra
+        const correlativo_error = _idcePre
+            ? _rptPreCe
+            : await CpeInterno_Error({ ..._dataCe }, _idregistro_p, _viene_facturador, idtipo_comprobante_serie);
         rpt.correlativo_comprobante = correlativo_error.correlativo;
         // console.log('xArrayComprobante.correlativo F error res api', rpt.correlativo_comprobante);
         console.log('error res api', error);

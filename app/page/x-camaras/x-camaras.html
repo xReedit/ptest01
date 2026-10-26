@@ -1,0 +1,61 @@
+<dom-module id="x-camaras">
+	<!-- Host minimo: el modulo vive en app/camaras/ (JS sin Polymer) y se monta en este div.
+	     Sin iframe: hereda fondo, ancho y scroll del POS como las demas paginas. Copia de x-logistica. -->
+	<template>
+		<div id="cm_root"><p class="inv-empty"><i class="fa fa-spinner fa-spin"></i>Cargando…</p></div>
+	</template>
+<script>
+Polymer({
+	is: 'x-camaras',
+	attached: function () {
+		var self = this;
+		var root = this.$.cm_root;
+		self._abierto = true;
+		// Sede que el POS tiene puesta AHORA (cambia sin recargar desde la barra de sedes): se muestra al vincular.
+		// Local (no global): nada suelto en el nivel superior del POS.
+		var sedePOS = function () {
+			try {
+				var d = xm_log_get('datos_org_sede')[0];
+				return { idsede: d.idsede, nombre: [d.sedenombre, d.sedeciudad].filter(Boolean).join(' | ') };
+			} catch (e) { return null; }
+		};
+		// La barra de sedes (x-comp-sede-toolbar) avisa por status_isUsChangeSede$ (BehaviorSubject, view/listenStatus.js)
+		// cuando la sesion PHP ya tiene la sede nueva. Al suscribirse repite el ultimo valor (true si ya se cambio
+		// antes de abrir Camaras IA): ese primero se ignora. Devuelve como dejar de escuchar.
+		var alCambiarSede = function (fn) {
+			if (typeof status_isUsChangeSede$ === 'undefined' || !status_isUsChangeSede$) { return function () {}; }
+			var primero = true;
+			var s = status_isUsChangeSede$.subscribe(function (v) { if (!primero && v === true) { fn(); } });
+			primero = false;
+			return function () { s.unsubscribe(); };
+		};
+		$("#Titulo_page").text("Cámaras IA");
+		xPopupLoad = document.getElementById('xLoad');
+		// Mismo arranque que x-logistica: al recargar directo en #/camaras, xm_LogChequea confirma la sesion
+		// y 'loaded' en el body quita el circulo de carga del POS. El modulo se monta DENTRO del callback.
+		xm_LogChequea(function () {
+			xm_log_get('ini_us');
+			$('body').addClass('loaded');
+			// URL resuelta contra la pagina (app/page/m_panel.html) -> app/camaras/js/app.js
+			// La version sale de version.txt pedido SIN cache: al desplegar todos bajan lo nuevo
+			var base = new URL('../camaras/', document.baseURI).href;
+			fetch(base + 'version.txt', { cache: 'no-store' })
+				.then(function (r) { return r.ok ? r.text() : 'v=20261020i'; }, function () { return 'v=20261020i'; })
+				.then(function (v) { return import(base + 'js/app.js?' + v.trim()); })
+				.then(function (m) {
+					if (!self._abierto) { return; }   // salio de la pagina antes de que cargara
+					self._cm = m;
+					m.montar(root, false, { sedePOS: sedePOS, alCambiarSede: alCambiarSede });
+				})
+				.catch(function () { root.innerHTML = '<p class="inv-empty">No se pudo abrir Cámaras IA. Recarga la página (Ctrl+F5).</p>'; });
+		});
+	},
+	// salir de Camaras IA: cortar las esperas (buscar, conectar, fotos), soltar las fotos y dejar de escuchar la sede
+	detached: function () {
+		this._abierto = false;
+		if (this._cm && this._cm.desmontar) { this._cm.desmontar(); }
+		this._cm = null;
+	}
+});
+</script>
+</dom-module>

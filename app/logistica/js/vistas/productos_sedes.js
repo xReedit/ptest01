@@ -1,9 +1,9 @@
 // "Productos de las sedes": productos que una sede creo por su cuenta (no vienen del catalogo central).
 // Por cada uno, dos acciones claras: "Es el mismo que…" (vincular) o "Agregar al catálogo".
 // Si no se hace nada, sigue siendo un producto solo de esa sede.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, autocompletar, confirmar, paginador } from '../ui.js?v=20261015i';
-import { vigente } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, autocompletar, confirmar, paginador } from '../ui.js?v=20261026a';
+import { vigente } from '../router.js?v=20261026a';
 
 // elegidos: { idproducto: {valor, texto} } lo que el usuario eligio en "es el mismo que" (sobrevive al buscar)
 let estado = { sedes: [], idsede: 0, productos: [], central: [], elegidos: {}, pagina: 1 };

@@ -1,8 +1,8 @@
 // Diagrama vivo del inicio (central): cada caja es una etapa con lo que esta esperando ahi.
 // Lineas animadas = hay algo por avanzar; rojo = urgente; clic en una caja = ir a resolverlo.
 // SVG + CSS, sin librerias. Se refresca solo cada 2 minutos mientras esta en pantalla.
-import { api } from '../api.js?v=20261015i';
-import { esc } from '../ui.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc } from '../ui.js?v=20261026a';
 
 const W = 144, H = 54;
 const C = { sede: '#0d9488', central: '#2563eb', reparto: '#16a34a', compra: '#ea580c', alerta: '#dc2626', ambar: '#d97706', planta: '#7c3aed' };

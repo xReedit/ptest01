@@ -1,7 +1,7 @@
 // Resumen automatico por WhatsApp (va en Configurar): todos los dias, a la hora elegida, le llega al dueno o
 // administrador el resumen de lo pendiente. Lo dispara resumen_auto.php (reloj de backend-pedidos).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta } from '../ui.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta } from '../ui.js?v=20261026a';
 
 const hora = h => `${h > 12 ? h - 12 : h}:00 ${h < 12 ? 'a.m.' : 'p.m.'}`;
 

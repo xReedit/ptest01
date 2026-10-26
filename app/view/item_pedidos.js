@@ -388,6 +388,9 @@ function checkExistSubItemsWithCantidad(item) {
 
 async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 // $(document).on('click', '.xBtn_li, .xBtn_li2', function(e) {		
+		// mientras se esperan las opciones de un producto se ignoran los clics
+		// (antes se acumulaban y con internet lento entraban todos de golpe)
+		if (Date.now() - (handlerFnMiPedidoControl.esperando || 0) < 10000) { return; }
 	
 
 		var _nomClassXcant_li = 'xcant_li';
@@ -441,9 +444,8 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 		}
 
 		// si tiene subitems lanza el popup opciones (venta rapida Y control de mesas)
-		// el dialog es obligatorio si alguna opcion descuenta stock (producto/porcion/subreceta)
-		// o si algun grupo es de seleccion obligatoria, aunque el toggle "opciones primero"
-		// este apagado; solo las opciones libres respetan el toggle.
+		// el dialog es obligatorio si algun grupo es de seleccion obligatoria, aunque el toggle
+		// "opciones primero" este apagado; sin obligatorios respeta el toggle (apagado = entra al clic).
 		// Antes solo venta rapida lo abria: desde control de mesas el item entraba sin bebida
 		// (subitems_view null) y el stock de bodega no se descontaba.
 		{
@@ -456,12 +458,19 @@ async function handlerFnMiPedidoControl(e, cant_venta_x_peso = null) {
 					// real con el loader del componente (cache-first en ::app3_listSubItem);
 					// getSubtItemsItem deja la estructura en itemPedidos_objItemSelected.subitems
 					if (!xEsEstructuraSubitems(itemPedidos_objItemSelected.subitems) && typeof getSubtItemsItem === 'function') {
+						handlerFnMiPedidoControl.esperando = Date.now();
+						document.body.style.cursor = 'progress';
 						try {
 							const _idItemSub = itemPedidos_objItemSelected.iditem2 ? itemPedidos_objItemSelected.iditem2 : itemPedidos_objItemSelected.iditem;
+							// normalmente ya vienen en la precarga de la carta (cache): no hay espera
+							if (xPrecargarSubitemsCarta.carga) { await xPrecargarSubitemsCarta.carga; }
 							await getSubtItemsItem(_idItemSub);
 						} catch (e) {
 							// si no se pudo cargar, abrir el dialog (nunca arriesgar el descuento de stock)
 							_abrirDialogSubitems = true;
+						} finally {
+							handlerFnMiPedidoControl.esperando = 0;
+							document.body.style.cursor = '';
 						}
 					}
 					_abrirDialogSubitems = _abrirDialogSubitems || xSubitemsRequierenDialog(itemPedidos_objItemSelected.subitems);
@@ -960,24 +969,10 @@ function xSubitemsRequierenDialog(subitems) {
 		if (grupos && !Array.isArray(grupos) && typeof grupos === 'object') { grupos = Object.values(grupos); }
 		if (!Array.isArray(grupos)) { return false; }
 
+		// solo un grupo obligatorio abre el dialogo; sin obligatorios el producto entra al clic,
+		// aunque sus opciones descuenten stock (producto/porcion/subreceta), igual que las opciones ND
 		return grupos.some(function (g) {
-			if (!g || typeof g !== 'object') { return false; }
-			if (parseInt(g.subitem_required_select || 0, 10) === 1) { return true; }
-
-			var opciones = g.opciones !== undefined ? g.opciones : g.subitems;
-			if (typeof opciones === 'string') {
-				try { opciones = JSON.parse(opciones); } catch (e2) { opciones = []; }
-			}
-			if (opciones && !Array.isArray(opciones) && typeof opciones === 'object') { opciones = Object.values(opciones); }
-			if (!Array.isArray(opciones)) { return false; }
-
-			return opciones.some(function (o) {
-				return o && (
-					parseInt(o.idporcion || 0, 10) > 0 ||
-					parseInt(o.idproducto || 0, 10) > 0 ||
-					parseInt(o.idsubreceta || 0, 10) > 0
-				);
-			});
+			return !!g && typeof g === 'object' && parseInt(g.subitem_required_select || 0, 10) === 1;
 		});
 	} catch (e) {
 		console.warn('xSubitemsRequierenDialog error', e);
@@ -1635,6 +1630,7 @@ function xGeneralLoadItems(xidCategoria, x_rpt){
 		// if(!xdt_rpt.success){alert(xdt_rpt.error); return x_rpt(false);}
 		xGeneralDataCarta=xdt_rpt.datos || [];
 		console.log('xGeneralDataCarta', xGeneralDataCarta);
+		xPrecargarSubitemsCarta();
 		if(x_rpt){return x_rpt(xGeneralDataCarta);}
 	})
 	.fail(function () {
@@ -1663,7 +1659,29 @@ async function xGeneralLoadItemsAddItem(xidCategoria){
 
 	var xdt_rpt=JSON.parse(result)
 	xGeneralDataCarta=xdt_rpt.datos;
+	xPrecargarSubitemsCarta();
 	return xGeneralDataCarta;
+}
+
+// trae en un solo pedido (log_subitems_lote.php) las opciones de todos los productos de la carta
+// y las deja en la cache que usa getSubtItemsItem: el clic ya no espera log.php?op=20051 por producto
+function xPrecargarSubitemsCarta() {
+	var ids = (xGeneralDataCarta || [])
+		.filter(function (x) { return x.subitems && x.subitems !== '0' && !xEsEstructuraSubitems(x.subitems); })
+		.map(function (x) { return x.iditem2 ? x.iditem2 : x.iditem; });
+	if (!ids.length) { xPrecargarSubitemsCarta.carga = null; return; }
+
+	var carga = xPrecargarSubitemsCarta.carga = $.ajax({ type: 'POST', url: '../../bdphp/log_subitems_lote.php', data: { iditems: ids.join(',') } })
+		.then(function (rpt) {
+			try {
+				rpt = typeof rpt === 'string' ? JSON.parse(rpt) : rpt;
+				if (xPrecargarSubitemsCarta.carga !== carga || !rpt || !rpt.success) { return; } // llego otra carta o fallo: el clic consulta como antes
+				var porId = {};
+				rpt.datos.forEach(function (r) { porId[String(r.iditem)] = typeof r.subitems === 'string' ? JSON.parse(r.subitems) : r.subitems; });
+				// mismo formato que getSubtItemsItem; sin opciones activas = null (como el SP)
+				localStorage.setItem('::app3_listSubItem', JSON.stringify(ids.map(function (id) { return { iditem: id, subitems: porId[String(id)] || null }; })));
+			} catch (e) { console.warn('precarga de opciones', e); }
+		}, function () {});
 }
 
 // limpia los items que tienen subitems seleccionados

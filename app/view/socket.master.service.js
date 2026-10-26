@@ -73,9 +73,12 @@ class socketService {
 
     getDataClient() {
         const dtUs = xm_log_get('app3_us');
+        // call center (A27) operando otra sede en esta pestaña: el socket entra a la sala de esa sede
+        // para que stock, comanda (printerOnly) y avisos vayan a ella y no a la sede del usuario.
+        const op = (typeof opSede !== 'undefined' && opSede.isOverride()) ? opSede.get() : null;
         this.dataSocket = {
-            idorg: dtUs.ido,
-            idsede: dtUs.idsede,
+            idorg: op ? op.idorg : dtUs.ido,
+            idsede: op ? op.idsede : dtUs.idsede,
             idusuario: dtUs.idus,
             // socketid: this._idConexSocket,
             isFromApp: 0

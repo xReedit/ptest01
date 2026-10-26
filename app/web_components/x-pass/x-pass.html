@@ -64,7 +64,8 @@ function xVerificarPassUs(){
 	.done( function (dt) {					
 		var xdt=$.parseJSON(dt);			
 		if(xdt.datos.length>0){	
-			if(xdt.datos[0].per.indexOf(xValBus)==-1){
+			// 'Pe1' no debe coincidir con 'Pe10' (igual que xSupTienePermiso en bdphp/_supervisor.php)
+			if(!new RegExp(xValBus + '(?!\\d)').test(xdt.datos[0].per)){
 				xrpt=0;				
 			}
 			else{				
@@ -73,6 +74,8 @@ function xVerificarPassUs(){
 
 				if ( xValBus === 'Pe5' ) {					
 					xThisPass.fire('xSendPe5', {xRpts});
+				} else if ( xValBus === 'Pe10' ) {
+					xThisPass.fire('xSendPe10', {xRpts});
 				} else {
 					xThisPass.fire('xSend', {xRpts});
 				}

@@ -1,7 +1,7 @@
 // "Pedir a la central" (sede): la lista ya trae lo que falta con la cantidad sugerida. La sede revisa y envia.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, paginador, nuevoToken, leerNum } from '../ui.js?v=20261015i';
-import { ir, vigente } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, paginador, nuevoToken, leerNum } from '../ui.js?v=20261026a';
+import { ir, vigente } from '../router.js?v=20261026a';
 
 const POR_PAGINA = 50;
 // cantidades: { idproducto: numero } lo que se va a pedir (arranca con lo sugerido; sobrevive a filtros y paginas)

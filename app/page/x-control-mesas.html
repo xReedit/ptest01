@@ -27,6 +27,7 @@
 	<!-- <script type="text/javascript" src="../view/socket.master.service.js"></script> -->
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 	<script type="text/javascript" src="../shared/pedido.por.confirmar.js"></script>
+	<script type="text/javascript" src="../shared/vision.mesas.js"></script>
 
 	<script type="text/javascript" src="../view/notifica.js"></script>
 
@@ -43,6 +44,15 @@
 			<div class="xBoton2 xVerde divLeft23" onclick="xReImprimir();">Intentar Nuevamente</div>
 			<div class="xBoton2 xPlomo divLeft23" dialog-dismiss onclick="xCPcloseDialogDetalle();">No imprimir</div>
 			<br><br><br>
+		</paper-dialog>
+		<paper-dialog class="dialog_redondo" style="max-width:380px; background: #212121; color: #fff;" id="dialog_cortesia_seguro" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">
+				<h3>¿ESTÁS SEGURO?</h3>
+				<p id="cortesia_seguro_texto" class="fs-15"></p>
+				<br>
+				<button class="btn btn-success mr-1" dialog-dismiss onclick="xCortesiaSeguroSi();"><i class="fa fa-check"></i> Sí, confirmar</button>
+				<button class="btn btn-danger" dialog-dismiss>No</button>
+			</div>
 		</paper-dialog>
 		<paper-dialog class="dialog_redondo" style="max-width:350px; background: #212121; color: #fff;" id="dialog_borrar_item" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -337,7 +347,26 @@
 							<!-- <div class="xLinea"></div> -->
 							<br>
 							<!-- style="margin-top: 12px;display: inline-flex;" -->
+										<!-- cortesias por item: panel en el footer (que en el modo queda vacio): al final de la lista y siempre visible, sin dialogos -->
+										<div id="panel_cortesia" class="panel-cortesia-footer" hidden>
+											<div class="panel-cortesia-caja">
+												<span id="cortesia_resumen" class="fw-600">&#127873; Toca lo que vas a regalar o quitar</span>
+												<select id="cortesia_motivo" class="xCursor" onchange="xCortesiaMotivoCambio();">
+													<option value="">Elige el motivo</option>
+													<option value="Cliente frecuente">Cliente frecuente</option>
+													<option value="Compensación por demora o error">Compensación por demora o error</option>
+													<option value="Cumpleaños o celebración">Cumpleaños o celebración</option>
+													<option value="Invitado del dueño">Invitado del dueño</option>
+													<option value="Otro">Otro</option>
+												</select>
+												<input type="text" id="cortesia_motivo_otro" maxlength="100" placeholder="Escribe el motivo" autocomplete="off" hidden>
+												<span id="cortesia_aviso" class="text-danger fw-600"></span>
+												<button class="btn btn-secondary" onclick="xCortesiaSalir();">Cancelar</button>
+												<button class="btn btn-success" id="btn_cortesia_confirmar" onclick="xCortesiaConfirmar();"><i class="fa fa-check"></i> Confirmar</button>
+											</div>
+										</div>
 							<div class="xDerecha pos-fotter-btn">
+								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" id="btn_cortesia" onclick="xCortesiaEntrar();" hidden><img src="../../images/_cortesia.png"><p class="fs-10 m-0">Cortesía</p></div>
 								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" onclick="xImprimirPrecuenta();"><img src="../../images/_pre_cuenta.png"><p class="fs-10 m-0">Pre-cuenta</p></div>
 								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" onclick="xOpenCambiarMesa();" id="btn_cambiar_mesa"><img src="../../images/_cambiar_mesa.png"><p class="fs-10">Cambiar mesa</p></div>
 								<div class="xMiBoton_icon_lateral bgwhite mg-t-15" onclick="xOpenAnularPedido();" id="btn_anular_pedido"><img src="../../images/_delete_pedido.png">
@@ -465,6 +494,7 @@
 	#dialog_detalle.normal{border-radius: 5px; width: auto 0;min-width: 300px;}
 	.xtd-derecha{height: calc(100vh - 193px); bottom: 0;  overflow-y:auto;}
 	img.xdisabled{pointer-events:none;opacity:0.5; cursor:auto;}
+
 
 	
 
@@ -775,7 +805,7 @@ function xIniControlMesa(){
 
 
 	$(document).on('click', '.click_row_dt_p', function(e) {
-		
+		if (xCortesiaModo) { xCortesiaToggle($(this).parent()); e.stopPropagation(); e.stopImmediatePropagation(); return; } // modo cortesia: no toca los check de cobro parcial
 	//$(".click_row_dt_p")('click',function(e){		
 		var obj_row=$(this).parent();
 		var xcheck=obj_row.hasClass('selected1');
@@ -916,6 +946,7 @@ function xIniControlMesa(){
 			e.stopImmediatePropagation()
 		}
 	});
+	xCortesiaIniciar(); // cortesias por item: boton, clave Pe10 (xSendPe10), salir del modo al cerrar la cuenta
 
 	$("#dialog_cotent").on('iron-overlay-opened',function(){
 		$("#dialog_cotent #us").focus()
@@ -981,10 +1012,9 @@ function xIniControlMesa(){
 
 		// dialog_detalle.center();
 
-		const dialog_detalleHeight = $('#dialog_detalle').height();
-		const footer_dialogHeight = $('#dialog_detalle .footer_dialog').height();	
-		const contentHeight = (dialog_detalleHeight - footer_dialogHeight) - 135;
-		$('.xtd-derecha').height(contentHeight);
+		xCMAjustarAltoLista();
+		// la ventana cambia de tamano (o zoom) con la cuenta abierta: recalcular, si no la lista queda debajo del footer sin scroll
+		$(window).off('resize.altolista').on('resize.altolista', xCMAjustarAltoLista);
 		// // $('.xtd-derecha').height(contentHeight);
 
 
@@ -1182,6 +1212,13 @@ function xCPcloseDialogDetalle() {
 	const backdrop = document.querySelector('#backdrop-dialog-detalle');
 	// backdrop.style.display = 'none';
 	backdrop.classList.add('fade-out');	
+}
+
+// alto de las listas de la cuenta = dialogo - footer - cabecera. El footer es absolute: si la lista es mas alta queda tapada.
+function xCMAjustarAltoLista() {
+	if (!dialog_detalle.opened) { return; }
+	const contentHeight = ($('#dialog_detalle').height() - $('#dialog_detalle .footer_dialog').height()) - 135;
+	$('.xtd-derecha').height(contentHeight);
 }
 
 function xCPopenDialogDetalle() {
@@ -2974,11 +3011,15 @@ function xJuntarFilasIguales(){
 	if(xArraychek_pedido.length===0){xVerificarCheckPedidos();}//verifica check de pedidos activos
 
 	hist=objDt.map(x => {
-		x.grupo = x.idtipo_consumo+x.idseccion_index+x.idcarta_lista;
+		// cortesia ('CORTESIA S/...', S/ 0) va en su propio grupo: no se une con la linea pagada del mismo producto
+		x.grupo = x.idtipo_consumo+x.idseccion_index+x.idcarta_lista + (String(x.descripcion||'').indexOf('CORTESIA S/')===0 ? '|c' : '');
 		return x;
 		}).filter(z => z.grupo ).reduce(function(rv, x) {
 	    //(rv[x['idcarta_lista']] = rv[x['idcarta_lista']] || []).push(x);
 
+
+		// pedido sin check en el filtro: su linea no se suma ni se cobra con esta fila
+		if (!xArraychek_pedido.some(function (p) { return x['idpedido'] == p.idp; })) { return rv; }
 
 		xi_grupo = x.grupo;
 		if (!rv[xi_grupo]){			
@@ -2990,10 +3031,14 @@ function xJuntarFilasIguales(){
 		} else {
 			xcant_item = parseFloat(rv[xi_grupo].cantidad);
 			xptotal_item = parseFloat(rv[xi_grupo].ptotal);
+			// el grupo puede reaparecer despues de otro (filas intercaladas): retomar SUS acumuladores, no los del ultimo grupo
+			ids_pd = rv[xi_grupo].idpedido_detalle_r || '';
+			cant_pd = rv[xi_grupo].cantidad_r || '';
+			xtt_pd = rv[xi_grupo].total_r || '';
 		}
 
-		i_cantidad = parseFloat(x.cantidad);
-		i_ptotal =  parseFloat(x.ptotal);
+		i_cantidad = parseFloat(String(x.cantidad).replace(/,/g, ''));
+		i_ptotal =  parseFloat(String(x.ptotal).replace(/,/g, '')); // el trigger puede dejar '1,200.00'
 
 		xcant_item += i_cantidad;
 		xptotal_item += i_ptotal;
@@ -3004,30 +3049,11 @@ function xJuntarFilasIguales(){
 		cant_pd=cant_pd + i_cantidad + ',';
 		xtt_pd=xtt_pd + i_ptotal + ',';
 		//var xtipo_index_consumo=x['idtipo_consumo']+x['idcarta_lista'];
-		var xtipo_index_consumo=x['idtipo_consumo']+x['idseccion_index']+x['idcarta_lista'];//mantener el orden de seccion
+		var xtipo_index_consumo=x['idtipo_consumo']+x['idseccion_index']+x['idcarta_lista'] + (String(x.descripcion||'').indexOf('CORTESIA S/')===0 ? '|c' : '');//mantener el orden de seccion (igual que x.grupo)
 		//var xtipo_index_consumo=x['idseccion_index'];//para que ordene
-		var xpasa_sel_pedido=false;
-		for (z in xArraychek_pedido) {//si el pedido esta seleccionado
-			if(x['idpedido']!=xArraychek_pedido[z].idp){xpasa_sel_pedido=false;}
-			else{
-				xpasa_sel_pedido=true; break;}
-		};
-		if(xpasa_sel_pedido==true){
-
-			// if(rv[xtipo_index_consumo] == rv[xtipo_index_consumo] && rv[xtipo_index_consumo]!=undefined){
-			// 	rv[xtipo_index_consumo].cantidad=xCeroIzq(parseFloat(rv[xtipo_index_consumo].cantidad)+xi_cant,2);
-			// 	rv[xtipo_index_consumo].ptotal=xMoneda(parseFloat(rv[xtipo_index_consumo].ptotal)+xi_precio);
-		  	// }else{
-		  	// 	rv[xtipo_index_consumo]=x
-			// 		rv[xtipo_index_consumo].cantidad_r="";
-			// 		rv[xtipo_index_consumo].total_r="";
-		  	// }
-			// if (rv[xi_grupo]['idcarta_lista'] === undefined) { rv[xi_grupo]=x};
-			if(!rv[xi_grupo]) { rv[xi_grupo]=x; }
-			rv[xi_grupo].cantidad = xCeroIzq(xcant_item,2);
-			rv[xi_grupo].ptotal = xMoneda(xptotal_item);
-
-		}
+		if(!rv[xi_grupo]) { rv[xi_grupo]=x; }
+		rv[xi_grupo].cantidad = xCeroIzq(xcant_item,2);
+		rv[xi_grupo].ptotal = xMoneda(xptotal_item);
 		//cant_pd=cant_pd.slice(0,-1);
 		//xtt_pd=xtt_pd.slice(0,-1);
 		rv[xtipo_index_consumo].idpedido_detalle_r=ids_pd; //al pagar, se detalla por idp_d
@@ -3042,6 +3068,7 @@ function xJuntarFilasIguales(){
 }
 
 function xLoadMipedidoBD(dt){
+	if (xCortesiaModo) { xCortesiaSalirPorRepintado(); } // la lista se vuelve a pintar: las marcas de cortesia se pierden
 	var xTpConsumo='';
 	var xCadenaItemArray;
 	var xEncabezadoCollapse='';
@@ -3640,7 +3667,8 @@ async function xSumarTotalPedidos(viene_borrar, viene_dsct ){
 	// y si no viene de descuento
 		// if(parseFloat(xtt_pedidos)==0 && !viene_dsct){//cierra pedido
 		// 151221 comparamos el importe de diferencia para no cerrar si seleccionan un item de costo 0.00
-		if((parseFloat(xtt_pedidos)==0 && xtt_dif == 0 ) && !viene_dsct){//cierra pedido
+		// cortesias: una cuenta 100% cortesia queda en 0 pero sigue abierta (hay que cobrarla en 0 para cerrar el pedido)
+		if((parseFloat(xtt_pedidos)==0 && xtt_dif == 0 ) && !viene_dsct && !xCortesiaHayPendiente()){//cierra pedido
 			// console.log('sumar pedidos neutro');
 			$(xObj_miPedido).removeClass('xOcupado');
 			$(xObj_miPedido).removeClass('xDespachado');
@@ -5125,6 +5153,265 @@ function xCMDlgMotivoAnular() {
 	pass_us.open()
 }
 
+// ===== Cortesias por item (plan: .superpowers/sdd/CORTESIAS-PLAN/). Backend: bdphp/log_cortesia.php =====
+// Modo cortesia en la misma lista: tocar una fila la marca (fondo + badge); el panel del final confirma.
+// Las filas ya cortesia llegan con descripcion 'CORTESIA S/<importe> - ...' e importe 0: tocarlas las marca para QUITAR
+// la cortesia (vuelven a su precio). Un solo Confirmar manda las dos listas, previo "¿Estás seguro?".
+var xCortesiaModo = false, xCortesiaCfg = { activo: false, puede: false }, xCortesiaEnviando = false,
+	xCortesiaPassTocado = false, xCortesiaRemotoPrev = false, xCortesiaRepintado = false;
+
+function xCortesiaIniciar() {
+	xCortesiaModo = false;
+	xCortesiaEnviando = false;
+	xCortesiaPassTocado = false;
+	// misma funcion = el navegador no la duplica aunque el init corra otra vez
+	xPSupervisor.addEventListener('xSendPe10', xCortesiaOnPe10);
+	document.addEventListener('keydown', xCortesiaOnTecla, true);
+	$('#dialog_detalle').off('iron-overlay-closed.cortesia').on('iron-overlay-closed.cortesia', xCortesiaOnCerrarCuenta);
+	xCortesiaApi('config', {}).then(function (r) {
+		var d = r.success && r.datos ? r.datos : {};
+		xCortesiaCfg = { activo: d.activo === true, puede: d.puede === true };
+		$('#btn_cortesia').prop('hidden', !xCortesiaCfg.activo);
+	});
+}
+
+// POST JSON (log_cortesia.php exige application/json). Siempre resuelve {success, datos, error}.
+function xCortesiaApi(op, body) {
+	var d = $.Deferred();
+	$.ajax({ type: 'POST', url: '../../bdphp/log_cortesia.php?op=' + op,
+		data: JSON.stringify(body || {}), contentType: 'application/json', dataType: 'json' })
+	.done(function (r) { d.resolve(r || { success: false, error: 'Error de comunicación con el servidor' }); })
+	.fail(function (x) {
+		d.resolve({ success: false, error: x && x.status === 401 ? 'Tu sesión expiró, vuelve a entrar.' : 'No se pudo conectar con el servidor' });
+	});
+	return d.promise();
+}
+
+function xCortesiaToast(msj, ms) {
+	try { xm_all_xToastOpen(msj, ms || 4000, false); } catch (e) { console.warn(msj); }
+}
+
+function xCortesiaSoles(n) { var v = parseFloat(n); return 'S/ ' + (isNaN(v) ? 0 : v).toFixed(2); }
+
+function xCortesiaElegible($tr) {
+	var imp = parseFloat($tr.find('#td_importe').text().replace(/,/g, ''));
+	var des = $.trim($tr.find('#descripcion_item').text()).toUpperCase();
+	return imp > 0 && des.indexOf('CORTESIA S/') !== 0;
+}
+
+// linea que ya es cortesia: se puede marcar para quitarla
+function xCortesiaQuitable($tr) {
+	return $.trim($tr.find('#descripcion_item').text()).toUpperCase().indexOf('CORTESIA S/') === 0;
+}
+
+// importe original de una linea cortesia, sacado del prefijo 'CORTESIA S/42.00 - '
+function xCortesiaImporteQuitar($tr) {
+	var m = /^CORTESIA S\/([\d.,]+)/i.exec($.trim($tr.find('#descripcion_item').text()));
+	return m ? parseFloat(m[1].replace(/,/g, '')) || 0 : 0;
+}
+
+// La cuenta cargada tiene lineas de cortesia sin cobrar: un total 0 no significa "mesa vacia"
+function xCortesiaHayPendiente() {
+	var d = Object.values((xThisCM && xThisCM.xdtPedDet) || {}); // a veces llega como objeto
+	return d.some(function (x) { return String(x.descripcion || '').indexOf('CORTESIA S/') === 0 && parseFloat(x.cantidad) > 0; });
+}
+
+// la misma linea pintada en varias filas (separar items)
+function xCortesiaFilasRepetidas() {
+	var vistos = {}, repetido = false;
+	$('#tb_det_pedidos tr.row').each(function () {
+		var id = $(this).attr('data-idpedidodetalle');
+		if (vistos[id]) { repetido = true; }
+		vistos[id] = true;
+	});
+	return repetido;
+}
+
+function xCortesiaEntrar() {
+	if (!xCortesiaCfg.activo || xCortesiaModo) { return; }
+	if ((xThisCM && xThisCM.isAddItemRow) || xopen_add_item) { xCortesiaToast('Termina de agregar productos primero', 3000); return; }
+	// filas unidas/separadas no son 1 fila = 1 linea de la cuenta: se vuelve a la lista normal (respeta el filtro de pedidos)
+	if (xAgrupar_item_activo || xCortesiaFilasRepetidas()) {
+		xFiltrarRowArray();
+		if (xAgrupar_item_activo || xCortesiaFilasRepetidas()) { xCortesiaToast('Vuelve a abrir la cuenta para dar cortesía', 3000); return; }
+	}
+
+	xCortesiaModo = true;
+	xCortesiaRepintado = false;
+	$('#div_detalle_pedido').addClass('modo-cortesia');
+	$('#tb_det_pedidos tr.row').each(function () {
+		if (!xCortesiaElegible($(this)) && !xCortesiaQuitable($(this))) { $(this).addClass('cortesia-no'); }
+	});
+	$('#cortesia_motivo').val('');
+	$('#cortesia_motivo_otro').val('').prop('hidden', true);
+	$('#btn_cortesia_confirmar').prop('disabled', false);
+	xCortesiaResumen();
+	$('#panel_cortesia').prop('hidden', false);
+	xCMAjustarAltoLista();
+}
+
+function xCortesiaSalir() {
+	xCortesiaModo = false;
+	$('#div_detalle_pedido').removeClass('modo-cortesia');
+	$('#tb_det_pedidos tr.fila-cortesia').removeClass('fila-cortesia');
+	$('#tb_det_pedidos tr.fila-quitar').removeClass('fila-quitar');
+	$('#tb_det_pedidos tr.cortesia-no').removeClass('cortesia-no');
+	$('#tb_det_pedidos .badge-cortesia').remove();
+	try { if (dialog_cortesia_seguro.opened) { dialog_cortesia_seguro.close(); } } catch (e) {}
+	$('#cortesia_aviso').text('');
+	$('#panel_cortesia').prop('hidden', true);
+	xCMAjustarAltoLista();
+	if (xCortesiaPassTocado) { // la clave vuelve a como la usa borrar/anular
+		xCortesiaPassTocado = false;
+		xPSupervisor.setVal('Pe1');
+		xPSupervisor.solicitarPermisoRemoto(xCortesiaRemotoPrev);
+	}
+}
+
+// la lista se repinto (otro equipo, socket, recarga) con el modo activo: se sale avisando. Si la clave
+// de supervisor estaba abierta para la cortesia se cierra ANTES de volver x-pass a Pe1 (si no, esa clave
+// dispararia el flujo de borrar).
+function xCortesiaSalirPorRepintado() {
+	var passAbierto = false;
+	try { passAbierto = xCortesiaPassTocado && xpass_d && xpass_d.opened; } catch (e) {}
+	if (passAbierto) { try { xPSupervisor.xclose(); } catch (e) {} }
+	var enviando = xCortesiaEnviando;
+	xCortesiaSalir();
+	if (!enviando) {
+		xCortesiaRepintado = true;
+		xCortesiaToast('La cuenta se actualizó, vuelve a marcar los productos', 5000);
+	}
+}
+
+function xCortesiaToggle($tr) {
+	if (!xCortesiaModo || xCortesiaEnviando || !$tr || !$tr.length) { return; }
+	if ($tr.hasClass('fila-cortesia') || $tr.hasClass('fila-quitar')) {
+		$tr.removeClass('fila-cortesia fila-quitar');
+		$tr.find('#descripcion_item .badge-cortesia').remove();
+	} else if (xCortesiaQuitable($tr)) {
+		$tr.addClass('fila-quitar');
+		$tr.find('#descripcion_item').append('<span class="badge-cortesia badge-quitar"><i class="fa fa-undo"></i> Quitar</span>');
+	} else {
+		if (!xCortesiaElegible($tr)) { return; }
+		$tr.addClass('fila-cortesia');
+		$tr.find('#descripcion_item').append('<span class="badge-cortesia"><i class="fa fa-gift"></i> Cortesía</span>');
+	}
+	xCortesiaResumen();
+}
+
+// n/total a regalar, nq/totalq a quitar
+function xCortesiaCuenta() {
+	var c = { n: 0, total: 0, nq: 0, totalq: 0 };
+	$('#tb_det_pedidos tr.fila-cortesia').each(function () { c.n++; c.total += parseFloat($(this).find('#td_importe').text().replace(/,/g, '')) || 0; });
+	$('#tb_det_pedidos tr.fila-quitar').each(function () { c.nq++; c.totalq += xCortesiaImporteQuitar($(this)); });
+	return c;
+}
+
+function xCortesiaProductos(n) { return n + (n === 1 ? ' producto' : ' productos'); }
+
+function xCortesiaResumen() {
+	var c = xCortesiaCuenta(), partes = [];
+	if (c.n) { partes.push('🎁 ' + xCortesiaProductos(c.n) + ' · ' + xCortesiaSoles(c.total)); }
+	if (c.nq) { partes.push('↩ quitar ' + c.nq + ' · ' + xCortesiaSoles(c.totalq)); }
+	$('#cortesia_resumen').text(partes.length ? partes.join('  |  ') : '🎁 Toca lo que vas a regalar o quitar');
+	$('#cortesia_aviso').text('');
+}
+
+function xCortesiaMotivoCambio() {
+	var esOtro = $('#cortesia_motivo').val() === 'Otro';
+	$('#cortesia_motivo_otro').prop('hidden', !esOtro);
+	if (esOtro) { $('#cortesia_motivo_otro').focus(); }
+	$('#cortesia_aviso').text('');
+}
+
+function xCortesiaMotivo() {
+	var v = $('#cortesia_motivo').val() || '';
+	if (v === 'Otro') { v = $.trim($('#cortesia_motivo_otro').val() || ''); }
+	return v.substring(0, 100);
+}
+
+function xCortesiaConfirmar() {
+	if (!xCortesiaModo || xCortesiaEnviando) { return; }
+	var c = xCortesiaCuenta();
+	if (c.n + c.nq === 0) { $('#cortesia_aviso').text('Toca al menos un producto.'); return; }
+	if (c.n && !xCortesiaMotivo()) { // el motivo es de lo que se regala; quitar no lo pide
+		$('#cortesia_aviso').text($('#cortesia_motivo').val() === 'Otro' ? 'Escribe el motivo.' : 'Elige el motivo.');
+		return;
+	}
+	var t = [];
+	if (c.n) { t.push('Se regalará' + (c.n === 1 ? ' 1 producto' : 'n ' + c.n + ' productos') + ' por ' + xCortesiaSoles(c.total) + '.'); }
+	if (c.nq) { t.push('Se quitará la cortesía de ' + xCortesiaProductos(c.nq) + ' y la cuenta sube ' + xCortesiaSoles(c.totalq) + '.'); }
+	$('#cortesia_seguro_texto').text(t.join(' '));
+	dialog_cortesia_seguro.open();
+}
+
+// "Sí, confirmar" del dialogo: con Pe10 se envia; sin el, pide la clave de un supervisor
+function xCortesiaSeguroSi() {
+	if (!xCortesiaModo || xCortesiaEnviando) { return; }
+	if (xCortesiaCfg.puede) { xCortesiaEnviar(0); return; }
+	// sin permiso Pe10: clave de un supervisor (unico popup del flujo). Sin el boton de permiso remoto (es para borrar/anular).
+	if (!xCortesiaPassTocado) { xCortesiaRemotoPrev = !!xPSupervisor.permisoremoto; }
+	xCortesiaPassTocado = true;
+	xPSupervisor.solicitarPermisoRemoto(false);
+	xPSupervisor.setVal('Pe10');
+	pass_us.open();
+}
+
+function xCortesiaOnPe10(e) {
+	e.stopPropagation();
+	e.stopImmediatePropagation();
+	if (!xCortesiaModo) {
+		if (xCortesiaRepintado) { xCortesiaToast('La cuenta se actualizó, vuelve a marcar los productos', 5000); }
+		return;
+	}
+	if (xCortesiaEnviando) { return; }
+	var r = e.detail && e.detail.xRpts ? e.detail.xRpts[0] : null;
+	if (!r || r.p !== 1) { return; }
+	xCortesiaEnviar(parseInt(r.us, 10) || 0);
+}
+
+function xCortesiaEnviar(idSupervisor) {
+	if (!xCortesiaModo || xCortesiaEnviando) { return; }
+	var idsDe = function (sel) { return $('#tb_det_pedidos tr.' + sel).map(function () { return parseInt($(this).attr('data-idpedidodetalle'), 10); }).get(); };
+	var ids = idsDe('fila-cortesia'), quitar = idsDe('fila-quitar');
+	var motivo = xCortesiaMotivo();
+	if (ids.length + quitar.length === 0 || (ids.length && !motivo)) { return; }
+
+	xCortesiaEnviando = true;
+	$('#btn_cortesia_confirmar').prop('disabled', true);
+	xPopupLoad.titulo = 'Guardando...';
+	xPopupLoad.xopen();
+	xCortesiaApi('aplicar', { items: ids, quitar: quitar, u: idSupervisor, motivo: motivo }).then(function (r) {
+		xCortesiaEnviando = false;
+		$('#btn_cortesia_confirmar').prop('disabled', false);
+		xPopupLoad.xclose();
+		if (!r.success) { xCortesiaToast(r.error || 'No se pudo aplicar la cortesía.', 6000); return; } // sigue en modo cortesia con las marcas
+
+		var d = r.datos || {}, n = parseInt(d.cantidad, 10) || 0, nq = parseInt(d.quitadas, 10) || 0, msj = [];
+		xCortesiaSalir();
+		if (n) { msj.push('Cortesía aplicada: ' + xCortesiaProductos(n) + ', ' + xCortesiaSoles(d.importe_total)); }
+		if (nq) { msj.push('Cortesía quitada: ' + xCortesiaProductos(nq) + ', ' + xCortesiaSoles(d.importe_quitado)); }
+		xCortesiaToast(msj.join(' · '), 4000);
+		if (dialog_detalle.opened) { xLoadDetallesPedido(xObj_miPedido); } // recarga la cuenta (descripcion CORTESIA S/..., total nuevo)
+		try { xPintarEstadoPedido(); } catch (er) { console.warn('cortesia: repintar mesas', er); }
+		try { _cpSocketEmitMesaCambio($(xObj_miPedido).attr('data-nummesa')); } catch (er) {} // vista anfitrion
+	});
+}
+
+// cerrar la cuenta (Cerrar, Esc, cambiar mesa, anular): sale del modo. Solo el dialogo de la cuenta, no los internos.
+function xCortesiaOnCerrarCuenta(e) {
+	if (e.target === this && xCortesiaModo) { xCortesiaSalir(); }
+}
+
+// en modo cortesia no van F8 (agregar), F9 ni F10 (pagar): primero Confirmar o Cancelar
+function xCortesiaOnTecla(e) {
+	if (xCortesiaModo && e.keyCode >= 119 && e.keyCode <= 121 && document.querySelector('#div_detalle_pedido.modo-cortesia')) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.stopImmediatePropagation();
+	}
+}
+
 // function addContadorLoad() {
 // 	var contadoLoad = parseInt(localStorage.getItem('::app3_sys_count_load_m'));
 // 	contadoLoad = isNaN(contadoLoad) ? 1 : contadoLoad + 1;
@@ -5233,6 +5520,7 @@ Polymer({
 			
 			_cpSocketOpen();
 			if (typeof xPpcIniciar === 'function') { xPpcIniciar(); }
+			if (typeof xVisionMesasIniciar === 'function') { xVisionMesasIniciar({ pantalla: 'control', escuchar: (e, fn) => socketService.getInstance()._listen(e, fn), socket: () => socketService.getInstance()._socket }); }
 			// console.log('entra socket');
 		}, 500);
 		// if ( xThisCM ) {return}

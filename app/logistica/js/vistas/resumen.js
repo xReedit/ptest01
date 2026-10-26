@@ -1,8 +1,8 @@
 // Resumen del dia (F7, central): que hay que hacer hoy (cada pendiente lleva a su pantalla), diferencias que se repiten
 // en 30 dias, y el resumen para mandar por WhatsApp (redactado por la IA o, si no hay IA, por plantilla).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver } from '../ui.js?v=20261015i';
-import { vigente } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver } from '../ui.js?v=20261026a';
+import { vigente } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 

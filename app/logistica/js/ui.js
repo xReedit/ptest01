@@ -1,5 +1,5 @@
 // Helpers de interfaz compartidos por las vistas.
-import { rutaActual } from './router.js?v=20261015i';   // ciclo router<->ui: solo se usa al dibujar, no al cargar
+import { rutaActual } from './router.js?v=20261026a';   // ciclo router<->ui: solo se usa al dibujar, no al cargar
 
 export function esc(s) {
 	return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

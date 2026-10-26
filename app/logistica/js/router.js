@@ -1,6 +1,7 @@
 // Navegacion interna. Dentro del POS no se toca location.hash (es del router de Polymer); solo la pagina
 // suelta (index.html) sincroniza el hash para poder recargar. Enlaces: <a data-ir="catalogo">.
-import { esc } from './ui.js?v=20261015i';
+import { esc } from './ui.js?v=20261026a';
+import { api } from './api.js?v=20261026a';
 
 let vistas = {};
 let cont = null;
@@ -27,6 +28,12 @@ const rutaDelHash = () => location.hash.replace(/^#\/?/, '').split('?')[0];
 export function ir(ruta) {
 	if (suelta) { location.hash = '#/' + ruta; return; }   // hashchange llama a mostrar
 	mostrar(ruta);
+}
+
+/** Vuelve a leer la sesion (despues de activar Logistica o cambiar de sede): el rol pudo cambiar. */
+export async function refrescarSesion() {
+	sesion = await api('sesion.php');
+	return sesion;
 }
 
 /** Vuelve a dibujar la pantalla actual (ej. despues de cancelar algo). */

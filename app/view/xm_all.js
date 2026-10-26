@@ -452,6 +452,10 @@ function setClearLocalStorage(redirec = true) {
 	var app3_woZD = window.localStorage.getItem('::app3_woZD');
 	var app3_woZD_TP = window.localStorage.getItem('::app3_woZD_TP');
 	var app3_woZD_orderItemVerticalZD = window.localStorage.getItem('::app3_woZD_orderItemVerticalZD');
+
+	// marcador de asistencia (asistencia/kiosko.html, mismo origen): sin su token la pantalla queda desvinculada
+	var asis_kiosko_token = window.localStorage.getItem('asis_kiosko_token');
+	var asis_no_instalar = window.localStorage.getItem('asis_no_instalar');
 	
 	window.localStorage.clear();
 
@@ -466,6 +470,10 @@ function setClearLocalStorage(redirec = true) {
 	if (app3_woZD) { window.localStorage.setItem('::app3_woZD', app3_woZD); }
 	if (app3_woZD_TP) { window.localStorage.setItem('::app3_woZD_TP', app3_woZD_TP); }
 	if (app3_woZD_orderItemVerticalZD) { window.localStorage.setItem('::app3_woZD_orderItemVerticalZD', app3_woZD_orderItemVerticalZD); }
+
+	// marcador de asistencia
+	if (asis_kiosko_token) { window.localStorage.setItem('asis_kiosko_token', asis_kiosko_token); }
+	if (asis_no_instalar) { window.localStorage.setItem('asis_no_instalar', asis_no_instalar); }
 
 	if(redirec) {
 		document.location.href='../../logueese.html';

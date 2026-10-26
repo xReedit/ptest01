@@ -1,8 +1,8 @@
 // Linea de tiempo de cualquier proceso (pedido, envio, orden de compra, conteo): quien hizo que y cuando.
 // Uso: poner <div data-historia="pedido:58"></div> (o traslado/oc/conteo) y llamar cargarHistorias(contenedor).
 // Dentro de un <details> cerrado se carga recien al abrirlo.
-import { api } from './api.js?v=20261015i';
-import { esc } from './ui.js?v=20261015i';
+import { api } from './api.js?v=20261026a';
+import { esc } from './ui.js?v=20261026a';
 
 const ICONO = { pedido: 'fa-shopping-basket', visto: 'fa-eye', bandeja: 'fa-inbox', creada: 'fa-file-text-o', aprobada: 'fa-check',
 	precio: 'fa-tag', volvio: 'fa-undo', enviada: 'fa-paper-plane', recepcion: 'fa-truck', anulada: 'fa-ban', cerrada: 'fa-lock',

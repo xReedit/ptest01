@@ -426,6 +426,7 @@ async function xOpenPage(xop, parametro){
 		case 65: xruta = '/aplicaciones_descargables'; break; // Aplicaciones descargables (A29)
 		case 66: xruta = '/logistica'; break; // Logistica cadenas (B15) -> app/logistica/
 		case 67: xruta = '/anfitrion'; break; // Anfitrion, vista de mesas solo lectura (E1)
+		case 68: xruta = '/camaras'; break; // Camaras IA (E2) -> app/camaras/
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

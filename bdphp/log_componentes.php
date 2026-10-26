@@ -21,7 +21,21 @@
     switch($_GET['op'])
 	{
         case 1:// load sedes
-            $sql = "select idorg, idsede, nombre, ciudad, direccion from sede where idorg = $g_ido and estado=0 order by nombre";
+            $sql = "select s.idorg, s.idsede, s.nombre, s.ciudad, s.direccion, s.latitude, s.longitude from sede s where s.idorg = $g_ido and s.estado=0";
+            // POS call center (x-comp-pos-sede): sin sedes bloqueadas ni dadas de baja (misma regla que _sede_estado.php).
+            // Reportes y configuracion no mandan el parametro y siguen viendo todas.
+            if (isset($_POST['solo_operables']) && $_POST['solo_operables'] === '1') {
+                $sql .= " and not exists (select 1 from sede_estado se
+                            where se.idsede_estado = (select max(x.idsede_estado) from sede_estado x where x.idsede = s.idsede)
+                              and (ifnull(se.is_bloqueado, '0') <> '0' or ifnull(se.is_baja, '0') <> '0'))";
+                // Call center (A27) no admin: solo las sedes que atiende (casa + usuario_sede_atiende).
+                require_once __DIR__ . '/_sedes_atiende.php';
+                if (xEsCallCenter() && (!isset($_SESSION['rol']) || (int)$_SESSION['rol'] !== 1)) {
+                    $lista = array_map('intval', xSedesAtiendeUsuario($bd, $g_idusuario));
+                    $sql .= " and s.idsede in (" . ($lista ? implode(',', $lista) : '0') . ")";
+                }
+            }
+            $sql .= " order by s.nombre";
             $bd->xConsulta($sql);
             break;
         case 1001:// load all sedes
@@ -275,10 +289,12 @@
             // pedido por confirmar de la carta QR (migracion 069, migraciones/pendientes-prod)
             $pwa_requiere_confirmacion = isset($items->pwa_requiere_confirmacion) && (string)$items->pwa_requiere_confirmacion === '1' ? '1' : '0';
             $pwa_confirmacion_exige_pago = $pwa_requiere_confirmacion === '1' && isset($items->pwa_confirmacion_exige_pago) && (string)$items->pwa_confirmacion_exige_pago === '1' ? '1' : '0';
+            // cortesias por item (migracion 078, migraciones/pendientes-prod): sin dato = desactivado
+            $permite_cortesia = isset($items->permite_cortesia) && (string)$items->permite_cortesia === '1' ? '1' : '0';
             // insertar o actualizar segun la columna idsede 
-            $sql = "insert into sede_opciones (idsede, switch2, num_intentos_cierre, update_stock_after, hora_cierre_dia, mozo_num_personas, mozo_aviso_plato_listo, pwa_requiere_confirmacion, pwa_confirmacion_exige_pago)
-                    values ($g_idsede, $items->switch2, $items->num_intentos_cierre, $items->update_stock_after, '$items->hora_cierre', '$mozo_num_personas', '$mozo_aviso_plato_listo', '$pwa_requiere_confirmacion', '$pwa_confirmacion_exige_pago')
-                    on duplicate key update switch2 = $items->switch2, num_intentos_cierre = $items->num_intentos_cierre, update_stock_after = $items->update_stock_after, hora_cierre_dia = '$items->hora_cierre', mozo_num_personas = '$mozo_num_personas', mozo_aviso_plato_listo = '$mozo_aviso_plato_listo', pwa_requiere_confirmacion = '$pwa_requiere_confirmacion', pwa_confirmacion_exige_pago = '$pwa_confirmacion_exige_pago'";
+            $sql = "insert into sede_opciones (idsede, switch2, num_intentos_cierre, update_stock_after, hora_cierre_dia, mozo_num_personas, mozo_aviso_plato_listo, pwa_requiere_confirmacion, pwa_confirmacion_exige_pago, permite_cortesia)
+                    values ($g_idsede, $items->switch2, $items->num_intentos_cierre, $items->update_stock_after, '$items->hora_cierre', '$mozo_num_personas', '$mozo_aviso_plato_listo', '$pwa_requiere_confirmacion', '$pwa_confirmacion_exige_pago', '$permite_cortesia')
+                    on duplicate key update switch2 = $items->switch2, num_intentos_cierre = $items->num_intentos_cierre, update_stock_after = $items->update_stock_after, hora_cierre_dia = '$items->hora_cierre', mozo_num_personas = '$mozo_num_personas', mozo_aviso_plato_listo = '$mozo_aviso_plato_listo', pwa_requiere_confirmacion = '$pwa_requiere_confirmacion', pwa_confirmacion_exige_pago = '$pwa_confirmacion_exige_pago', permite_cortesia = '$permite_cortesia'";
             
             $bd->xConsulta($sql);
             break;

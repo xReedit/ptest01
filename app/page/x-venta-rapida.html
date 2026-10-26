@@ -147,7 +147,10 @@
 				</span>
 				<!-- <paper-icon-button paper-drawer-toggle onclick="xOpenPedidosCuentaPendientes();"></paper-icon-button> -->
 				<x-comp-pos-sede id="compPosSede"></x-comp-pos-sede>
-			</div>
+				<span id="vrNombrePestana" onclick="xEditarNombrePestanaVR()" title="Ponle un nombre a esta venta para reconocer su pestaña"
+					style="display:inline-block; vertical-align:middle; margin-left:6px; padding:2px 8px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#fff; font-size:12px; border:1px dashed rgba(255,255,255,.55); border-radius:4px; cursor:pointer;">
+					<i class="fa fa-pencil"></i> <span id="vrNombrePestanaTxt">Ponle nombre</span>
+				</span>			</div>
 			<div style="display: flex; align-items: center; margin-right: 10px;">
 
 					<div class="mr-2" style="border-right: 1px solid; padding-right: 10px;" hidden$="[[!_hasItems(dataSelectTipoPrecio)]]">
@@ -448,6 +451,10 @@
 			<div class="footer_fixed zindex-0">
 					<div class="xBoton2 xRojo xIzquierda" onclick="dialog_nuevo_pedido.open()">
 						Nuevo pedido
+					</div>
+					<div class="xBoton2 xVerde xIzquierda" id="vrOtraVenta" onclick="xOtraVentaVR()" style="margin-left: 8px;"
+						title="Abre otra venta en una pestaña nueva. Esta venta se queda como está.">
+						<i class="fa fa-plus"></i> Otra venta
 					</div>
 					<div class="xDerecha" style="margin-top: 15px;">
 						<div class="xBoton2 xAzul xInvisible" id="btn_enviar_cuenta" onclick="xEnviarACuenta()">[F8] Enviar a cuenta</div>
@@ -1356,7 +1363,6 @@ function xIniVentaRapida(){
 	function xResetPedidoVRSilente() {
 		localStorage.removeItem('::app3_woDUS::cxe');
 		window.localStorage.removeItem('::app3_sys_dta_pe');
-		window.localStorage.removeItem('::app3_sys_dta_pe_sk');
 		if (typeof xCompDatosDelivery !== 'undefined' && xCompDatosDelivery) {
 			xCompDatosDelivery.resetValInit();
 		}
@@ -1369,10 +1375,12 @@ function xIniVentaRapida(){
 		xLoadArrayPedido();
 		const elLoc = document.getElementById('text_code_localizator');
 		if (elLoc) elLoc.value = '';
+		// devolver el stock antes de borrar el pedido guardado (antes se borraba primero y el stock quedaba descontado)
 		if (isSocket) {
 			_cpSocketRestoreFromPedidoStorage();
 			_resetCeroItemcarta();
 		}
+		window.localStorage.removeItem('::app3_sys_dta_pe_sk');
 		$('#xtb_pedido_subtotales tr').remove();
 		$('#tb_pedido_detalle').remove();
 		$('.xcheck_print').attr('checked', false);
@@ -1434,6 +1442,7 @@ function xIniVentaRapida(){
 		xArrayPedido = [];
 		xLoadArrayPedido();
 		xTraerDtTipoConsumo();
+		xRestorePedidoLocalStorageVR(); // multi-venta: venta de una pestaña cerrada de esta sede
 
 		if (typeof reloadCanalConsumoPosSede === 'function') {
 			reloadCanalConsumoPosSede();
@@ -1446,6 +1455,15 @@ function xIniVentaRapida(){
 		loadCuponesActivos();
 		if (xThisVentaRapida.getDataTipoPrecio) {
 			xThisVentaRapida.getDataTipoPrecio();
+		}
+		// series de comprobante y comisiones se cargaban solo al abrir la pagina: sin esto el cobro en la
+		// sede destino usaba la serie/correlativo de la sede del usuario
+		if (typeof xThisComComprobante !== 'undefined' && xThisComComprobante && xThisComComprobante.reloadAllComprobantes) {
+			xThisComComprobante.reloadAllComprobantes();
+		}
+		var compComision = document.querySelector('x-comp-comision');
+		if (compComision && typeof compComision._loadComisiones === 'function') {
+			compComision._loadComisiones();
 		}
 
 		// Recarga categorias + carta (getValorIncial dispara xLoadCartaVR).
@@ -1807,7 +1825,14 @@ function xNuevoPedidoVR() {
 
 	dialog_nuevo_pedido.close();
 	//tt_pedido=0;
-	
+	try { sessionStorage.removeItem('::vr_tab_nombre'); } catch (e) {} // la siguiente venta es de otro cliente
+
+	// call center: despues de cada venta elegir la sede del siguiente pedido (evita ingresarlo en la sede anterior)
+	if (window._opSedeElegirTrasVenta) {
+		window._opSedeElegirTrasVenta = false;
+		var compSede = document.querySelector('x-comp-pos-sede');
+		if (compSede && compSede.elegirSedeObligatorio) { setTimeout(() => compSede.elegirSedeObligatorio(), 600); }
+	}
 }
 
 // despues de hacer pedido
@@ -2273,6 +2298,7 @@ async function goSendPedidoFecht(_data) {
 		const rpt = await _fetchApiPedido.axiosExecute({ type: 'POST', url: '../../bdphp/log_001.php', data: _data, isShowPreload: false, timeoutMs: 30000, sinReintentoPorTimeout: true }, true, false)
 		if (_cargoHotel.ref) { xHotelCargoDespuesDeGuardar(_cargoHotel, rpt, _data); _cargoHotel = { ok: true }; } // vincula o anula el cargo
 		if (rpt) {
+			window._opSedeElegirTrasVenta = true; // lo usa xNuevoPedidoVR al limpiar la venta
 
 			// si hay codigo localizador guardar
 			if (codigo_localizador!=='') {
@@ -3226,7 +3252,63 @@ function xLoadItemMiPedidoVR(xid, xidseccion, xprocede) {
 	_pedido_pagar_cuenta.loadPedidosPendientesCobrar();
   }
 
+  // multi-venta: nombre de la pestaña para saber de quien es cada venta.
+  // Prioridad: nombre puesto a mano (por pestaña, sobrevive F5) > REFERENCIA / CLIENTE > cliente del delivery.
+  function xNombreVentaVR() {
+	var manual = '';
+	try { manual = sessionStorage.getItem('::vr_tab_nombre') || ''; } catch (e) {}
+	if (manual) { return manual; }
+	var ref = ($('#txt_ref_vr').val() || '').trim();
+	if (ref) { return ref; }
+	var del = arrDatosAdjuntoDelivery;
+	if (typeof del === 'string') { try { del = JSON.parse(del); } catch (e) { del = null; } }
+	return (del && del.nombre) ? String(del.nombre).trim() : '';
+  }
+
+  // ponytail: se refresca cada 1 s (total, referencia, delivery y sede cambian por muchos caminos)
+  function xTituloPestanaVR() {
+	if (window.location.hash.indexOf('venta_rapida') < 0) { return; }
+	var nombre = xNombreVentaVR();
+	var total = parseFloat(tt_pedido || 0) || 0;
+	var sede = (xThisVentaRapida && xThisVentaRapida.xt_nombre_sede) || '';
+	var titulo = [nombre || (total > 0 ? '' : 'Venta nueva'), total > 0 ? 'S/ ' + total.toFixed(2) : '', sede]
+		.filter(Boolean).join(' · ');
+	if (document.title !== titulo) { document.title = titulo; }
+	var txt = document.getElementById('vrNombrePestanaTxt');
+	if (txt && txt.textContent !== (nombre || 'Ponle nombre')) { txt.textContent = nombre || 'Ponle nombre'; }
+	// el nombre solo sirve para distinguir ventas: se ve con mas de una pestaña abierta
+	var chip = document.getElementById('vrNombrePestana');
+	var ver = !window.vrTab || vrTab.abiertas() > 1;
+	if (chip && (chip.style.display === 'none') === ver) { chip.style.display = ver ? 'inline-block' : 'none'; }
+  }
+
+  function xEditarNombrePestanaVR() {
+	var actual = '';
+	try { actual = sessionStorage.getItem('::vr_tab_nombre') || ''; } catch (e) {}
+	showAlertSwalHtmlDecision({
+		title: 'Nombre de esta venta',
+		html: 'Sale en la pestaña del navegador para saber de quién es cada venta.',
+		input: 'text',
+		inputValue: actual || xNombreVentaVR(),
+		inputPlaceholder: 'Ej: Rosa 987 654 321',
+		confirmButtonText: 'Guardar',
+		cancelButtonText: 'Cancelar',
+		showCancelButton: true
+	}, 1).then(function (res) {
+		if (!res || !res.isConfirmed) { return; }
+		try { sessionStorage.setItem('::vr_tab_nombre', (res.value || '').trim()); } catch (e) {}
+		xTituloPestanaVR();
+	});
+  }
+
+  // multi-venta: otra venta en una pestaña nueva; esta se queda como esta.
+  // window.open copia el sessionStorage (la sede del call center incluida); vr_tab_storage.js le da otro id y le quita el nombre.
+  function xOtraVentaVR() {
+	window.open(window.location.href, 'vr_otra_venta_' + Date.now());
+  }
+
   function xRestorePedidoLocalStorageVR() {
+	if (window.vrTab) { vrTab.adoptar(); } // multi-venta: recupera la venta de una pestaña cerrada
 	let isPedidoFromStorageVR = window.localStorage.getItem("::app3_sys_dta_pe_sk")	
 	if ( isPedidoFromStorageVR ) {
 		xArrayPedidoObj = JSON.parse(isPedidoFromStorageVR);
@@ -3272,6 +3354,7 @@ Polymer({
 		_cpSocketOpen();
 		xRestorePedidoLocalStorageVR();		
 		this.getDataTipoPrecio();
+		if (!window._vrTituloTimer) { window._vrTituloTimer = setInterval(xTituloPestanaVR, 1000); }
 		
 
 		$("#x-main").removeClass('xContent');

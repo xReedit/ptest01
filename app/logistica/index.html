@@ -13,7 +13,7 @@
 	<main id="lg_vista"><p class="inv-muted" style="padding:16px">Cargando…</p></main>
 	<script type="module">
 		// version.txt sin cache: al desplegar se baja lo nuevo (ver plan: Despliegue)
-		const v = await fetch('./version.txt', { cache: 'no-store' }).then(r => r.ok ? r.text() : 'v=20261015i', () => 'v=20261015i');
+		const v = await fetch('./version.txt', { cache: 'no-store' }).then(r => r.ok ? r.text() : 'v=20261026a', () => 'v=20261026a');
 		const { montar } = await import('./js/app.js?' + v.trim());
 		montar(document.getElementById('lg_vista'), true);
 	</script>

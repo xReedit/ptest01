@@ -1,8 +1,8 @@
 // Choferes / repartidores (central): nombre y celular. A ese celular le llega por WhatsApp su enlace personal a la
 // app del chofer (chofer.html), donde ve sus rutas y marca cada entrega (hora + GPS).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
 
 export async function render(cont, sesion, t) {
 	const lista = await api('choferes.php?op=listar');

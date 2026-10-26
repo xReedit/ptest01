@@ -1,8 +1,8 @@
 // Stock minimo sugerido (F7, central): por sede, minimo = lo que vende en N dias. Con un buen minimo, el pedido sugerido
 // de la sede no la deja sin stock. Se revisa y se aplica con un boton (solo lo marcado).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, leerNum } from '../ui.js?v=20261015i';
-import { vigente } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, leerNum } from '../ui.js?v=20261026a';
+import { vigente } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 

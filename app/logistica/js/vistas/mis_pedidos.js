@@ -1,8 +1,8 @@
 // "Mis pedidos" (sede): que se pidio y en que va cada pedido. Se puede cancelar mientras la central no lo vio.
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
 
 // estado legacy -> texto simple + clase inv-estado
 const ESTADOS = {

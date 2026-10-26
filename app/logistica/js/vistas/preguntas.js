@@ -1,8 +1,8 @@
 // Preguntas en lenguaje natural (F8, central), como chat. La IA solo elige que consultar; los numeros salen del sistema.
 // Las sugerencias (rapidas y las que vienen con cada respuesta) van directo, sin IA: funcionan aunque la IA no este configurada.
 // La conversacion vive mientras no se recargue la pagina (volver a esta vista la conserva).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver } from '../ui.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver } from '../ui.js?v=20261026a';
 
 const INICIALES = [
 	{ texto: '¿Qué pedidos faltan atender?', herramienta: 'pedidos', icono: 'fa-inbox' },

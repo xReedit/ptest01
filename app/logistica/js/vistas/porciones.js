@@ -1,10 +1,10 @@
 // Catalogo > Porciones (central): las porciones de la central son el modelo para todas las sedes.
 // Cada una dice de que producto sale (1 bote = 20 porciones) y se envia a las sedes: cada sede la enlaza con la suya
 // (sugerida por nombre) o se le crea. Asi, al recibir botes, a la sede le suben las porciones solas.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, autocompletar } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
-import { parecida } from './recibir.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, autocompletar } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
+import { parecida } from './recibir.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 3 });
 

@@ -1,8 +1,8 @@
 // Mermas y perdidas (central): S/ perdidos por sede y por motivo, mas lo que falto en los conteos rapidos.
 // Clic en una sede: el detalle (que, cuanto, quien, por que).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, fecha } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, fecha } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

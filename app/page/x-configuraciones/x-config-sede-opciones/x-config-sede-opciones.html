@@ -78,6 +78,14 @@
                         <input type="checkbox" id="pwaConfirmacionExigePago" name="pwa-confirmacion-exige-pago">
                     </td>
                 </tr>
+                <tr>
+                    <td><p class="fs-15 fw-600">Permitir cortes&iacute;as:</p>
+                        <span class="text-secondary">El cajero puede regalar productos de la cuenta desde el bot&oacute;n Cortes&iacute;a (quedan en S/ 0 y no salen en el comprobante). Quien no tenga el permiso 'Dar cortes&iacute;as' necesita la clave de un administrador.</span>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="permiteCortesia" name="permite-cortesia">
+                    </td>
+                </tr>
             </table>
                   
             <br>
@@ -112,7 +120,7 @@
                 inputs.mozo_aviso_plato_listo = this.$.mozoAvisoPlatoListo.checked ? 1 : 0;
                 inputs.pwa_requiere_confirmacion = this.$.pwaRequiereConfirmacion.checked ? 1 : 0;
                 inputs.pwa_confirmacion_exige_pago = this.$.pwaRequiereConfirmacion.checked && this.$.pwaConfirmacionExigePago.checked ? 1 : 0;
-
+                inputs.permite_cortesia = this.$.permiteCortesia.checked ? 1 : 0;
 
                 console.log('inputs', inputs);
                 const _httpFech = new httpFecht();
@@ -151,6 +159,7 @@
                             this.$.mozoAvisoPlatoListo.checked = _data.mozo_aviso_plato_listo !== '0'; // sin dato = avisar
                             this.$.pwaRequiereConfirmacion.checked = _data.pwa_requiere_confirmacion === '1';
                             this.$.pwaConfirmacionExigePago.checked = _data.pwa_confirmacion_exige_pago === '1';
+                            this.$.permiteCortesia.checked = _data.permite_cortesia === '1';
                             this._onRequiereConfirmacion();
                             // convertir a formato hora para mostrar en el input time
                             _data.hora_cierre = !_data.hora_cierre_dia || _data.hora_cierre_dia == '0' ? '00:00' : _data.hora_cierre_dia;
@@ -168,6 +177,7 @@
                             this.$.mozoAvisoPlatoListo.checked = true;
                             this.$.pwaRequiereConfirmacion.checked = false;
                             this.$.pwaConfirmacionExigePago.checked = false;
+                            this.$.permiteCortesia.checked = false;
                             this._onRequiereConfirmacion();
                         }
                     }

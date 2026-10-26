@@ -1,9 +1,9 @@
 // Conteos de las sedes (central): quien conto hoy, que no cuadra y cuanto vale. "Ajustar stock" deja el sistema
 // igual a lo contado (como aprobar un conteo de Inventario); "Descartar" lo deja como estaba (ej. se conto mal).
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => (n < 0 ? '-' : '') + 'S/ ' + Math.abs(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

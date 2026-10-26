@@ -20,7 +20,7 @@ Polymer({
 			// La version sale de version.txt pedido SIN cache: al desplegar todos bajan lo nuevo (ver plan: Despliegue)
 			var base = new URL('../logistica/', document.baseURI).href;
 			fetch(base + 'version.txt', { cache: 'no-store' })
-				.then(function (r) { return r.ok ? r.text() : 'v=20261015i'; }, function () { return 'v=20261015i'; })
+				.then(function (r) { return r.ok ? r.text() : 'v=20261026a'; }, function () { return 'v=20261026a'; })
 				.then(function (v) { return import(base + 'js/app.js?' + v.trim()); })
 				.then(function (m) { m.montar(root, false); })
 				.catch(function () { root.innerHTML = '<p class="inv-empty">No se pudo abrir Logística. Recarga la página (Ctrl+F5).</p>'; });

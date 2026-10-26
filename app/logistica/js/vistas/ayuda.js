@@ -1,8 +1,8 @@
 // Ayuda del modulo. "ayuda/<pantalla>" abre el tema de esa pantalla (boton Ayuda junto a Volver).
 // El texto vive en bdphp/abastecimiento/_ayuda.php: es el mismo que usa "Pregúntale a la IA" para responder cómo se usa.
-import { api } from '../api.js?v=20261015i';
-import { esc, tarjeta, volver } from '../ui.js?v=20261015i';
-import { vigente } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, tarjeta, volver } from '../ui.js?v=20261026a';
+import { vigente } from '../router.js?v=20261026a';
 
 let temas = null;   // se piden una vez por carga de pagina
 const norma = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();

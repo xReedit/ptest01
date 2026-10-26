@@ -1,11 +1,11 @@
 // Envios a las sedes (F6, central): lo que sale del almacen central o se trae de otra sede, agrupado por
 // origen -> destino. Se marca lo que va hoy, vehiculo y chofer, y "Despachar ruta": sale el stock del origen,
 // se imprime la hoja de ruta y se avisa por WhatsApp a cada encargado.
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, autocompletar, imprimir, nuevoToken, leerNum, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
-import { dialogoChofer } from './choferes.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, autocompletar, imprimir, nuevoToken, leerNum, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
+import { dialogoChofer } from './choferes.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

@@ -1,9 +1,9 @@
 // Recepcion en la central (F5): las ordenes que esperan mercaderia -> clic -> anotar lo que llego
 // (cantidad, precio, lote, vencimiento). Opcional: leer la factura con IA (mismo servicio que Compras).
 // Al confirmar entra el stock al almacen central como una compra normal (cuentas por pagar, kardex).
-import { api, subirLegacy } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, autocompletar, leerNum, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar, turnoActual } from '../router.js?v=20261015i';
+import { api, subirLegacy } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, autocompletar, leerNum, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

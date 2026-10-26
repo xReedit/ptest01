@@ -1,8 +1,8 @@
 // Proveedores (central): como cumple cada uno (a tiempo, completo, precio; ultimos 90 dias) y, debajo, que subio de
 // precio en la ultima compra, cuanto, y quien lo vende mas barato. Clic en un producto: su historial de compras.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, fecha } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, fecha } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const FILTROS = [['subieron', 'Lo que subió de precio'], ['mas_barato', 'Lo que otro vende más barato'], ['todos', 'Todos los productos comprados']];

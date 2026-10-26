@@ -196,6 +196,64 @@
 			</div>
 		</paper-dialog>
 
+		<!-- call center: el cliente llama y pregunta. Busca por telefono o nombre y lee la frase lista. -->
+		<paper-dialog modal id="dlg_trk_cliente" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>¿Como va mi pedido?</h3>
+					<p>Pedidos delivery de hoy. Se actualiza solo cada 20 segundos.</p>
+				</div>
+				<div class="xdlg-body">
+					<!-- un solo scroll (el del cuerpo); pestañas y buscador quedan fijos arriba -->
+					<div class="trk-cli-fijo">
+						<div class="inv-seg" id="trk_cli_tabs">
+							<div class="inv-seg-item activa" data-tab="pedidos" onclick="xTrkClienteTab('pedidos')"><i class="fa fa-shopping-bag"></i>Pedidos</div>
+							<div class="inv-seg-item" data-tab="reps" onclick="xTrkClienteTab('reps')"><i class="fa fa-motorcycle"></i>Repartidores mas demorados</div>
+						</div>
+						<input class="inv-input" id="trk_cli_buscar" style="width:100%; margin-top:10px" autocomplete="off"
+							placeholder="Escribe el telefono o el nombre del cliente" oninput="xTrkPintarCliente()">
+					</div>
+					<div id="trk_cli_pedidos"><div id="trk_cli_lista"></div></div>
+					<div id="trk_cli_reps" style="display:none"></div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
+		<paper-dialog modal id="dlg_trk_resumen" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Resumen del dia</h3>
+					<p id="trk_res_sub"></p>
+				</div>
+				<div class="xdlg-body">
+					<div id="trk_res_sedes">
+						<div class="inv-titulo-sec">Por sede</div>
+						<div class="inv-table-wrap">
+							<table class="inv-table" id="tb_trk_res_sedes">
+								<thead><tr><th>Sede</th><th class="inv-num">Pedidos</th><th class="inv-num">Entregados</th>
+									<th class="inv-num">En curso</th><th class="inv-num">Tiempo prom.</th><th class="inv-num">Demorados</th></tr></thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+					<div class="inv-titulo-sec">Por repartidor</div>
+					<div class="inv-table-wrap">
+						<table class="inv-table" id="tb_trk_res_reps">
+							<thead><tr><th>Repartidor</th><th class="inv-num">Entregados</th><th class="inv-num">En curso</th>
+								<th class="inv-num">Tiempo prom.</th><th class="inv-num">Mas lento</th><th class="inv-num">Demorados</th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Cerrar</button>
+				</div>
+			</div>
+		</paper-dialog>
+
 		<br>
 		<div class="xMiCard xradius inv-card">
 			<div class="xEncanezadoCard inv-head">
@@ -207,6 +265,8 @@
 					<div class="inv-head-acciones">
 						<span class="trk-alerta" id="trk_alerta"></span>
 						<span class="trk-actualizado" id="trk_actualizado"></span>
+						<button class="btn btn-sm btn-primary" id="trk_btn_cliente" onclick="xTrkAbrirCliente()"><i class="fa fa-search"></i>¿Como va mi pedido?</button>
+						<button class="btn btn-sm btn-light" id="trk_btn_resumen" onclick="xTrkAbrirResumen()"><i class="fa fa-bar-chart"></i>Resumen del dia</button>
 						<button class="btn btn-sm btn-light" onclick="xTrkComoActivar()"><i class="fa fa-question-circle"></i>Como activar el seguimiento</button>
 						<button class="btn btn-sm btn-light" onclick="xTrkCargar()"><i class="fa fa-refresh"></i>Actualizar</button>
 					</div>
@@ -214,13 +274,19 @@
 			</div>
 			<div class="xContentCard">
 
-				<div class="trk-aviso" id="trk_aviso_app"></div>
 
-				<div class="inv-kpis" id="trk_kpis"></div>
+				<div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap">
+					<div class="inv-kpis" id="trk_kpis" style="flex:1 1 auto"></div>
+					<!-- call center con 2+ sedes: filtro por sede (en modo sede no se muestra) -->
+					<select class="inv-select" id="trk_sedes_chips" onchange="xTrkFiltrarSede(this.value)"
+						style="display:none; width:220px; max-width:100%" title="Ver una sede o todas"></select>
+				</div>
 
 				<div class="trk-mapa" id="trk_mapa"></div>
 
 				<div class="inv-titulo-sec">Repartidores</div>
+				<!-- call center: conectados / desconectados (con muchas sedes la lista es larga) -->
+				<div class="inv-seg" id="trk_tabs_rep" style="display:none"></div>
 				<div class="inv-table-wrap">
 					<table class="inv-table" id="tb_trk_repartidores">
 						<thead>
@@ -306,6 +372,12 @@
 		var TRK_REC_CERCA_M = 150;   // dentro de esto se considera que llego a la direccion
 		var TRK_REC_LEJOS_M = 500;   // pasado esto el recorrido contradice la entrega
 		var TRK_REC_CORTE_MIN = 3;   // si el ultimo punto es mas viejo que esto, el trazo no sirve
+		// Multi-sede (plan/REPARTIDOR-MULTISEDE-PLAN.md T6). En modo 'sede' nada de esto cambia la pantalla.
+		var xTrkVistaCC = false;     // modo = 'callcenter': ve las sedes que atiende, asigna, no rinde
+		var xTrkSedesVista = [];     // sedes de la vista [{idsede, nombre, latitude, longitude}]
+		var xTrkFiltroSede = 0;      // chip elegido; 0 = todas
+		var xTrkTabRep = 'on';       // call center: pestaña de repartidores 'on' (conectados) | 'off'
+		var xTrkDatos = null;        // ultima respuesta de estado, para refiltrar sin consultar
 
 		/**
 		 * Siempre resuelve con {success, datos, error}.
@@ -473,6 +545,10 @@
 				// propio es "suscrito A ESTA sede", no "suscrito a alguna": un repartidor de otra
 				// sede que toma un pedido tuyo es global para vos. Lo resuelve el SQL (es_propio).
 				esPropio: parseInt(f.es_propio, 10) === 1,
+				// de la red: sin sede de casa. Los propios traen sedes_atiende (CSV) desde `propios`
+				casa: parseInt(f.idsede_suscrito, 10) || 0,
+				global: !(parseInt(f.idsede_suscrito, 10) > 0),
+				sedesAtiende: xTrkCsvIds(f.sedes_atiende),
 				conectado: parseInt(f.online, 10) === 1 && !!f.socketid,
 				// nunca entro a la app: sin esto no hay seguimiento posible, por mas que este trabajando
 				sinApp: parseInt(f.tiene_app, 10) !== 1,
@@ -512,7 +588,11 @@
 					horaPedido: creado ? creado.toTimeString().slice(0, 5) : '',
 					pago: xTrkPago(f.operacion, parseFloat(f.total_r) || 0),
 					rendido: parseInt(f.rendido, 10) === 1,
-					costoDelivery: xTrkCostoDelivery(f)
+					costoDelivery: xTrkCostoDelivery(f),
+					idsede: parseInt(f.idsede, 10) || 0,
+					sedeNombre: f.sede_nombre || '',
+					telefono: f.cliente_telefono || '',
+					paso: xTrkPaso(f.time_line)
 				};
 
 				var idr = parseInt(f.idrepartidor, 10) || 0;
@@ -527,6 +607,8 @@
 			(propios || []).forEach(function (f) {
 				var idr = parseInt(f.idrepartidor, 10) || 0;
 				if (idr && !porId[idr]) { porId[idr] = xTrkRepartidorDesde(f, idr, ahora); }
+				// si ya vino por un pedido, la lista de sedes que atiende sale de aqui
+				else if (idr) { porId[idr].sedesAtiende = xTrkCsvIds(f.sedes_atiende); }
 			});
 
 			Object.keys(porId).forEach(function (k) {
@@ -601,25 +683,42 @@
 			xTrkCapas.clearLayers();
 			xTrkMarcadores = {};
 
+			xTrkDatos = datos;
+			xTrkVistaCC = datos.modo === 'callcenter';
+			xTrkSedesVista = datos.sedes || [];
+			if (xTrkFiltroSede && !xTrkSedesVista.some(function (s) { return parseInt(s.idsede, 10) === xTrkFiltroSede; })) {
+				xTrkFiltroSede = 0;
+			}
+			xTrkPintarChipsSede();
+			xTrkPintarCliente();
+			xTrkPintarResumen();
+
 			var sede = datos.sede || {};
 			xTrkSede = sede;
 			if (datos.metodos && datos.metodos.length) { xTrkMetodos = datos.metodos; }
 			var sedeLat = parseFloat(sede.latitude);
 			var sedeLng = parseFloat(sede.longitude);
 
-			if (isFinite(sedeLat) && isFinite(sedeLng)) {
-				L.marker([sedeLat, sedeLng], {
-					icon: L.divIcon({ className: '', html: '<div class="trk-local"><i class="fa fa-home"></i>' + xTrkEsc(sede.nombre || 'Local') + '</div>' })
-				}).addTo(xTrkCapas);
-				if (!xTrkCentrado) { xTrkMapa.setView([sedeLat, sedeLng], 14); xTrkCentrado = true; }
+			if (!xTrkVistaCC) {
+				if (isFinite(sedeLat) && isFinite(sedeLng)) {
+					L.marker([sedeLat, sedeLng], {
+						icon: L.divIcon({ className: '', html: '<div class="trk-local"><i class="fa fa-home"></i>' + xTrkEsc(sede.nombre || 'Local') + '</div>' })
+					}).addTo(xTrkCapas);
+					if (!xTrkCentrado) { xTrkMapa.setView([sedeLat, sedeLng], 14); xTrkCentrado = true; }
+				}
+			} else {
+				xTrkPintarLocales();
 			}
 
-			var agrupado = xTrkAgrupar(datos.filas, datos.propios);
+			var vista = xTrkFiltrarVista(datos);
+			var agrupado = xTrkAgrupar(vista.filas, vista.propios);
 			xTrkUltimo = agrupado;
 
 			agrupado.repartidores.forEach(function (r) {
 				// cada destino lleva el color de su repartidor: en gris uniforme no se sabia de quien era
 				var color = xTrkColor(r);
+				// call center: el repartidor libre vuelve a su sede de casa, no a la de la sesion
+				var local = xTrkVistaCC ? xTrkLocalDe(r) : { lat: sedeLat, lng: sedeLng };
 
 				r.porEntregar.forEach(function (p) {
 					if (!isFinite(p.lat) || !isFinite(p.lng)) { return; }
@@ -629,6 +728,7 @@
 					}).addTo(xTrkCapas).bindPopup(
 						'<div class="trk-popup"><b>#' + xTrkEsc(p.numero) + ' · ' + xTrkEsc(p.cliente) + '</b>' +
 						'<span>' + xTrkEsc(p.direccion) + '</span>' +
+						xTrkSedePopup(p) +
 						'<span>Lleva ' + xTrkEsc(r.nombre) + '</span>' +
 						(xTrkTramoTexto(r, p) ? '<span class="trk-eta">A ' + xTrkTramoTexto(r, p) + ' de distancia</span>' : '') +
 						'</div>');
@@ -664,7 +764,7 @@
 				// sin pedidos pendientes la linea apunta al local: es como se ve que va de vuelta
 				var hacia = siguiente
 					? { lat: siguiente.lat, lng: siguiente.lng }
-					: (isFinite(sedeLat) && isFinite(sedeLng) ? { lat: sedeLat, lng: sedeLng } : null);
+					: (isFinite(local.lat) && isFinite(local.lng) ? { lat: local.lat, lng: local.lng } : null);
 
 				if (hacia) {
 					// halo blanco debajo: sobre las calles claras de OSM un trazo fino se pierde
@@ -688,6 +788,7 @@
 				}).addTo(xTrkCapas).bindPopup(
 					'<div class="trk-popup"><b>#' + xTrkEsc(p.numero) + ' · ' + xTrkEsc(p.cliente) + '</b>' +
 					'<span>' + xTrkEsc(p.direccion) + '</span>' +
+					xTrkSedePopup(p) +
 					'<span>Esperando ' + xTrkFmtMin(p.minutos) + ' sin repartidor</span>' +
 					'<span class="trk-eta"><a href="javascript:void(0)" onclick="xTrkAbrirAsignar(' + p.idpedido + ')">' +
 					'<i class="fa fa-user-plus"></i> Asignar repartidor</a></span></div>');
@@ -722,24 +823,30 @@
 				? '<i class="fa fa-exclamation-triangle"></i>' + demorados + (demorados === 1 ? ' pedido demorado' : ' pedidos demorados')
 				: '').toggleClass('activa', demorados > 0);
 
-			// Solo molesta cuando hay algo que hacer: si todos tienen la app, el aviso no existe.
-			var sinApp = reps.filter(function (r) { return r.esPropio && r.sinApp; });
-			$('#trk_aviso_app').html(sinApp.length
-				? '<i class="fa fa-mobile"></i> <b>' + (sinApp.length === 1
-						? xTrkEsc(sinApp[0].nombre) + ' no aparece en el mapa</b> porque todavia no inicio sesion en la aplicacion.'
-						: sinApp.length + ' repartidores no aparecen en el mapa</b> porque todavia no iniciaron sesion en la aplicacion: ' +
-						  xTrkEsc(sinApp.map(function (r) { return r.nombre; }).join(', ')) + '.') +
-					' <a href="javascript:void(0)" onclick="xTrkComoActivar()">Ver como activarlos</a>'
-				: '').toggleClass('activo', sinApp.length > 0);
-
 			$('#trk_kpis').html(
 				'<div class="inv-kpi inv-kpi-azul"><span>Repartidores en ruta</span><b>' + enRuta + '</b></div>' +
 				'<div class="inv-kpi inv-kpi-celeste"><span>Pedidos por entregar</span><b>' + porEntregar + '</b></div>' +
 				'<div class="inv-kpi inv-kpi-verde"><span>Entregados hoy</span><b>' + entregados + '</b></div>' +
 				'<div class="inv-kpi"><span>Tiempo promedio</span><b>' + xTrkFmtMin(promedio) + '</b></div>');
 
+			// call center: pestañas. Quien lleva pedidos va en "Conectados" aunque se haya caido la app: es a quien hay que seguir.
+			var listaReps = reps;
+			if (xTrkVistaCC) {
+				var activo = function (r) { return r.conectado || r.porEntregar.length > 0; };
+				var on = reps.filter(activo);
+				var off = reps.filter(function (r) { return !activo(r); });
+				listaReps = xTrkTabRep === 'off' ? off : on;
+				$('#trk_tabs_rep').html(
+					'<div class="inv-seg-item' + (xTrkTabRep !== 'off' ? ' activa' : '') + '" onclick="xTrkVerTabRep(\'on\')">' +
+						'<i class="fa fa-circle" style="color:#00a859"></i>Conectados (' + on.length + ')</div>' +
+					'<div class="inv-seg-item' + (xTrkTabRep === 'off' ? ' activa' : '') + '" onclick="xTrkVerTabRep(\'off\')">' +
+						'<i class="fa fa-circle-o"></i>Desconectados (' + off.length + ')</div>').css('display', 'inline-flex');
+			} else {
+				$('#trk_tabs_rep').hide().html('');
+			}
+
 			var html = '';
-			reps.forEach(function (r) {
+			listaReps.forEach(function (r) {
 				var demoradosDe = r.porEntregar.filter(function (p) {
 					return p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
 				}).length;
@@ -785,20 +892,21 @@
 						: '0') + '</td>' +
 					'<td class="inv-num">' + xTrkFmtMin(r.minutosPromedio) + '</td>' +
 					'<td class="inv-acciones">' + verEnMapa +
-						(r.porRendir && r.porRendir.length
+						(!xTrkVistaCC && r.porRendir && r.porRendir.length
 							? '<span class="inv-link trk-rendir" onclick="xTrkAbrirRendicion(' + r.idrepartidor + ')">' +
 								'<i class="fa fa-money"></i>Rendir (' + r.porRendir.length + ')</span>'
 							: '') + '</td>' +
 					'</tr>';
 			});
-			$('#tb_trk_repartidores tbody').html(html ||
-				'<tr><td colspan="7" class="inv-empty">Esta sede no tiene repartidores propios registrados y ninguno de la red lleva pedidos tuyos. Puedes registrar los tuyos en <b>Control de delivery</b>.</td></tr>');
+			$('#tb_trk_repartidores tbody').html(html || (xTrkVistaCC
+				? '<tr><td colspan="7" class="inv-empty">' + (xTrkTabRep === 'off' ? 'Todos tus repartidores estan conectados.' : 'Ningun repartidor conectado ahora.') + '</td></tr>'
+				: '<tr><td colspan="7" class="inv-empty">Esta sede no tiene repartidores propios registrados y ninguno de la red lleva pedidos tuyos. Puedes registrar los tuyos en <b>Control de delivery</b>.</td></tr>'));
 
 			var htmlSin = '';
 			sin.forEach(function (p) {
 				var tarde = p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
 				htmlSin += '<tr>' +
-					'<td><b>#' + xTrkEsc(p.numero) + '</b></td>' +
+					'<td><b>#' + xTrkEsc(p.numero) + '</b>' + xTrkSedeSub(p) + '</td>' +
 					'<td>' + xTrkEsc(p.cliente) + '</td>' +
 					'<td>' + xTrkEsc(p.direccion) + (p.referencia ? '<span class="inv-sub">' + xTrkEsc(p.referencia) + '</span>' : '') + '</td>' +
 					'<td class="inv-num' + (tarde ? ' trk-tarde' : '') + '">' + xTrkFmtMin(p.minutos) + '</td>' +
@@ -815,9 +923,16 @@
 		 * La carga pesa TRK_PESO_CARGA km por pedido pendiente, asi que uno a 500 m con tres entregas
 		 * encima queda detras de otro a 2 km con las manos libres. Sin posicion, al final.
 		 */
-		function xTrkCandidatos(pedido) {
+		function xTrkCandidatos(pedido, todos) {
 			if (!xTrkUltimo) { return []; }
-			return xTrkUltimo.repartidores.map(function (r) {
+			// todos: sin el filtro de sede de la pantalla (cambiar repartidor desde "¿Como va mi pedido?")
+			var lista = todos ? xTrkPedidosCliente().repartidores : xTrkUltimo.repartidores;
+			// call center: solo quien atiende la sede del pedido, o los de la red (el servidor lo exige igual),
+			// y solo conectados: a un desconectado no le llega el pedido.
+			if (xTrkVistaCC) {
+				lista = lista.filter(function (r) { return r.conectado && (r.global || r.sedesAtiende.indexOf(pedido.idsede) >= 0); });
+			}
+			return lista.map(function (r) {
 				var t = xTrkTramo(r, pedido);
 				return {
 					r: r,
@@ -955,12 +1070,30 @@
 			}
 		}
 
-		function xTrkAbrirAsignar(idpedido) {
-			if (!xTrkUltimo) { return; }
-			var p = xTrkUltimo.sinAsignar.filter(function (x) { return x.idpedido === idpedido; })[0];
-			if (!p) { xTrkAviso('Ese pedido ya no esta sin asignar. Actualiza la pantalla.', 'info'); return; }
+		/** "Cambiar" solo mientras el pedido no salio en camino: despues la comida la tiene el repartidor. */
+		function xTrkLinkCambiar(p) {
+			return (!p.entregado && p.paso < 2)
+				? '<span class="inv-link" onclick="xTrkAbrirAsignar(' + (parseInt(p.idpedido, 10) || 0) + ', true)"><i class="fa fa-exchange"></i>Cambiar repartidor</span>'
+				: '';
+		}
 
-			var candidatos = xTrkCandidatos(p);
+		// xTrkAsignar va a 'reasignar' cuando el dialogo se abrio para cambiar el repartidor de un pedido
+		var xTrkReasignando = null;   // { idpedido, actual: repartidor } | null
+
+		function xTrkAbrirAsignar(idpedido, cambiar) {
+			if (!xTrkUltimo) { return; }
+			var p, actual = null;
+			if (cambiar) {
+				// de todas las sedes (no solo la del filtro): se puede abrir desde "¿Como va mi pedido?"
+				(xTrkPedidosCliente().pedidos || []).forEach(function (x) { if (x.p.idpedido === idpedido) { p = x.p; actual = x.r; } });
+				if (!p || !actual || p.entregado || p.paso >= 2) { xTrkAviso('Ese pedido ya no se puede cambiar de repartidor. Actualiza la pantalla.', 'info'); return; }
+			} else {
+				p = xTrkUltimo.sinAsignar.filter(function (x) { return x.idpedido === idpedido; })[0];
+				if (!p) { xTrkAviso('Ese pedido ya no esta sin asignar. Actualiza la pantalla.', 'info'); return; }
+			}
+			xTrkReasignando = cambiar ? { idpedido: idpedido, actual: actual } : null;
+
+			var candidatos = xTrkCandidatos(p, !!cambiar).filter(function (c) { return !actual || c.r.idrepartidor !== actual.idrepartidor; });
 			var html = '';
 			candidatos.forEach(function (c, i) {
 				var r = c.r;
@@ -984,20 +1117,26 @@
 					'</tr>';
 			});
 
-			$('#trk_asig_titulo').text('Asignar el pedido #' + p.numero);
-			$('#trk_asig_sub').text(p.cliente + ' · ' + p.direccion + ' · esperando ' + xTrkFmtMin(p.minutos));
-			$('#tb_trk_candidatos tbody').html(html ||
-				'<tr><td colspan="5" class="inv-empty">No hay repartidores disponibles para esta sede. Registra uno en <b>Control de delivery</b> o solicita uno de la red.</td></tr>');
+			$('#trk_asig_titulo').text((cambiar ? 'Cambiar el repartidor del pedido #' : 'Asignar el pedido #') + p.numero);
+			$('#trk_asig_sub').text((cambiar ? 'Ahora lo tiene ' + actual.nombre + ' · ' : '') +
+				(xTrkVistaCC && p.sedeNombre ? p.sedeNombre + ' · ' : '') +
+				p.cliente + ' · ' + p.direccion + ' · esperando ' + xTrkFmtMin(p.minutos));
+			$('#tb_trk_candidatos tbody').html(html || (xTrkVistaCC
+				? '<tr><td colspan="5" class="inv-empty">Ningun repartidor de esta sede esta conectado ahora. Cuando uno abra la app aparecera aqui.</td></tr>'
+				: '<tr><td colspan="5" class="inv-empty">No hay repartidores disponibles para esta sede. Registra uno en <b>Control de delivery</b> o solicita uno de la red.</td></tr>'));
 			dlg_trk_asignar.open();
 		}
 
 		function xTrkAsignar(idpedido, idrepartidor) {
-			xPopupLoad.titulo = 'Asignando...'; xPopupLoad.xopen();
-			xTrkApi('asignar', { idpedido: idpedido, idrepartidor: idrepartidor }).then(function (r) {
+			var cambio = xTrkReasignando && xTrkReasignando.idpedido === idpedido;
+			xPopupLoad.titulo = cambio ? 'Cambiando repartidor...' : 'Asignando...'; xPopupLoad.xopen();
+			xTrkApi(cambio ? 'reasignar' : 'asignar', { idpedido: idpedido, idrepartidor: idrepartidor }).then(function (r) {
 				xPopupLoad.xclose();
 				if (!r.success) { return; }   // xTrkApi ya mostro el motivo
 				dlg_trk_asignar.close();
-				showToastSwal('success', 'Pedido #' + idpedido + ' asignado a ' + r.datos.nombre);
+				xTrkReasignando = null;
+				if (cambio && window.dlg_trk_pedidos && dlg_trk_pedidos.opened) { dlg_trk_pedidos.close(); }
+				showToastSwal('success', 'Pedido #' + idpedido + (cambio ? ' ahora lo lleva ' : ' asignado a ') + r.datos.nombre);
 				xTrkAvisarRepartidor(idpedido, idrepartidor);
 				xTrkCargar(false);
 			});
@@ -1158,14 +1297,14 @@
 			if (pendientes) {
 				cabecera = '<tr><th>Pedido</th><th>Cliente</th><th>Direccion</th>' +
 					'<th class="inv-cen">Hora</th><th class="inv-num">Esperando</th>' +
-					'<th class="inv-num">Distancia</th><th class="inv-num">Llega en</th><th class="inv-num">Importe</th></tr>';
+					'<th class="inv-num">Distancia</th><th class="inv-num">Llega en</th><th class="inv-num">Importe</th><th></th></tr>';
 				// del mas antiguo al mas nuevo: el que mas espero es el que hay que mirar primero
 				lista.slice().sort(function (a, b) { return (b.minutos || 0) - (a.minutos || 0); }).forEach(function (p) {
 					total += p.importe || 0;
 					var tarde = p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
 					var t = xTrkTramo(r, p);
 					html += '<tr>' +
-						'<td><b>#' + xTrkEsc(p.numero) + '</b></td>' +
+						'<td><b>#' + xTrkEsc(p.numero) + '</b>' + xTrkSedeSub(p) + '</td>' +
 						'<td>' + xTrkEsc(p.cliente) + '</td>' +
 						'<td>' + xTrkEsc(p.direccion) +
 							(p.referencia ? '<span class="inv-sub">' + xTrkEsc(p.referencia) + '</span>' : '') + '</td>' +
@@ -1174,6 +1313,7 @@
 						'<td class="inv-num">' + (t ? xTrkFmtDistancia(t.km) : '—') + '</td>' +
 						'<td class="inv-num">' + (t ? '~' + t.min + ' min' : '<span class="inv-muted">sin ubicacion</span>') + '</td>' +
 						'<td class="inv-num">S/ ' + (p.importe || 0).toFixed(2) + '</td>' +
+						'<td class="inv-acciones">' + xTrkLinkCambiar(p) + '</td>' +
 						'</tr>';
 				});
 				$('#trk_dlg_titulo').text('Por entregar · ' + r.nombre);
@@ -1191,7 +1331,7 @@
 						porPago[clave] = (porPago[clave] || 0) + (p.pago ? p.pago.importe : (p.importe || 0));
 						var lento = p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN;
 						html += '<tr>' +
-							'<td><b>#' + xTrkEsc(p.numero) + '</b></td>' +
+							'<td><b>#' + xTrkEsc(p.numero) + '</b>' + xTrkSedeSub(p) + '</td>' +
 							'<td>' + xTrkEsc(p.cliente) + '</td>' +
 							'<td>' + xTrkEsc(p.direccion) +
 								(p.referencia ? '<span class="inv-sub">' + xTrkEsc(p.referencia) + '</span>' : '') + '</td>' +
@@ -1243,7 +1383,7 @@
 		}
 
 		function xTrkAbrirRendicion(idrepartidor) {
-			if (!xTrkUltimo) { return; }
+			if (!xTrkUltimo || xTrkVistaCC) { return; }   // el call center no recibe rendiciones
 			var r = xTrkUltimo.repartidores.filter(function (x) { return x.idrepartidor === idrepartidor; })[0];
 			if (!r || !r.porRendir || !r.porRendir.length) {
 				xTrkAviso('Este repartidor no tiene entregas pendientes de rendir.', 'info');
@@ -1492,6 +1632,301 @@
 			xTrkMapa.setView(marcador.getLatLng(), 16);
 			marcador.openPopup();
 			$('#trk_mapa')[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+
+		/** "13,26" -> [13, 26]. Vacio o nulo -> []. */
+		function xTrkCsvIds(csv) {
+			return String(csv || '').split(',').map(function (x) { return parseInt(x, 10) || 0; })
+				.filter(function (x) { return x > 0; });
+		}
+
+		/** Nombre de la sede bajo el numero de pedido y en el globo; solo en modo call center. */
+		function xTrkSedeSub(p) {
+			return xTrkVistaCC && p.sedeNombre ? '<span class="inv-sub trk-sede-ped"><i class="fa fa-home"></i> ' + xTrkEsc(p.sedeNombre) + '</span>' : '';
+		}
+		function xTrkSedePopup(p) {
+			return xTrkVistaCC && p.sedeNombre ? '<span><i class="fa fa-home"></i> ' + xTrkEsc(p.sedeNombre) + '</span>' : '';
+		}
+
+		/** Combo "Todas las sedes · SEDE A · SEDE B": solo call center con 2 o mas sedes. */
+		function xTrkPintarChipsSede() {
+			var cont = $('#trk_sedes_chips');
+			if (!xTrkVistaCC || xTrkSedesVista.length < 2) { cont.hide().html(''); return; }
+			var html = '<option value="0">Todas las sedes (' + xTrkSedesVista.length + ')</option>';
+			xTrkSedesVista.forEach(function (s) {
+				var id = parseInt(s.idsede, 10) || 0;
+				html += '<option value="' + id + '">' + xTrkEsc(s.nombre) + '</option>';
+			});
+			// se repinta cada 20 s: si las sedes no cambiaron no se toca, para no cerrar el combo abierto
+			if (cont.data('html') !== html) { cont.html(html).data('html', html); }
+			cont.val(String(xTrkFiltroSede)).show();
+		}
+
+		function xTrkFiltrarSede(idsede) {
+			xTrkFiltroSede = parseInt(idsede, 10) || 0;
+			xTrkCentrado = false;
+			// refiltrar no es un pedido nuevo demorado: que no salte el aviso por cambiar de chip
+			xTrkDemorados = Infinity;
+			if (xTrkDatos && xTrkCapas && xTrkVivo) { xTrkPintar(xTrkDatos); }
+		}
+
+		/* ===== "¿Como va mi pedido?" (call center): buscar al cliente y leerle en que va su pedido ===== */
+
+		/** Paso que guarda la app del repartidor: 0 va al local, 1 llego al local, 2 en camino. */
+		function xTrkPaso(tl) {
+			try {
+				var o = tl ? (typeof tl === 'string' ? JSON.parse(tl) : tl) : null;
+				return o ? (parseInt(o.paso, 10) || 0) : 0;
+			} catch (e) { return 0; }
+		}
+
+		function xTrkSinTildes(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+
+		/** "JUAN DEMO" -> "Juan": asi se le nombra al cliente. */
+		function xTrkNombreCorto(n) {
+			var w = String(n || '').trim().split(/\s+/)[0] || '';
+			return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+		}
+
+		/** Todos los pedidos de hoy de las sedes del call center, sin el filtro de sede de la pantalla. */
+		function xTrkPedidosCliente() {
+			if (!xTrkDatos) { return { pedidos: [], repartidores: [] }; }
+			var ag = xTrkAgrupar(xTrkDatos.filas, xTrkDatos.propios);
+			var lista = ag.sinAsignar.map(function (p) { return { p: p, r: null }; });
+			ag.repartidores.forEach(function (r) {
+				r.porEntregar.concat(r.entregados).forEach(function (p) { lista.push({ p: p, r: r }); });
+			});
+			return { pedidos: lista, repartidores: ag.repartidores };
+		}
+
+		/** Lo que el call center le dice al cliente, tal cual. Los minutos solo si el GPS del repartidor esta al dia. */
+		function xTrkFraseCliente(p, r) {
+			if (p.entregado) { return 'Su pedido fue entregado a las ' + p.horaEntrega + '.'; }
+			if (!r) { return 'Su pedido se esta preparando en ' + p.sedeNombre + '. En unos minutos sale con un repartidor.'; }
+			var nom = xTrkNombreCorto(r.nombre);
+			if (p.paso >= 2) {
+				var t = r.sinSenal ? null : xTrkTramo(r, p);
+				return 'Su pedido ya esta en camino con ' + nom + (t ? ', llega en unos ' + t.min + ' minutos.' : '.');
+			}
+			if (p.paso === 1) { return nom + ' ya esta en ' + p.sedeNombre + ' recogiendo su pedido. Sale en unos minutos.'; }
+			return 'Su pedido ya tiene repartidor: ' + nom + ' esta yendo a recogerlo a ' + p.sedeNombre + '.';
+		}
+
+		function xTrkEstadoCliente(p, r) {
+			if (p.entregado) { return '<span class="inv-estado anulado">ENTREGADO</span>'; }
+			if (!r) { return '<span class="inv-estado borrador">SIN REPARTIDOR</span>'; }
+			if (p.paso >= 2) { return '<span class="inv-estado aprobado"><i class="fa fa-motorcycle"></i>EN CAMINO</span>'; }
+			return '<span class="inv-estado cerrado">' + (p.paso === 1 ? 'EN EL LOCAL' : 'VA AL LOCAL') + '</span>';
+		}
+
+		/** Verde, ambar o rojo segun lo que lleva esperando el cliente. */
+		function xTrkClaseDemora(min) {
+			if (min === null) { return ''; }
+			return min > TRK_PEDIDO_TARDE_MIN ? 'rojo' : (min > TRK_PEDIDO_TARDE_MIN * 2 / 3 ? 'ambar' : 'verde');
+		}
+
+		function xTrkAbrirCliente() {
+			$('#trk_cli_buscar').val('');
+			xTrkClienteTab('pedidos');
+			dlg_trk_cliente.open();
+			xTrkPintarCliente();
+			setTimeout(function () { $('#trk_cli_buscar').focus(); }, 300);
+		}
+
+		function xTrkClienteTab(tab) {
+			$('#trk_cli_tabs .inv-seg-item').each(function () { $(this).toggleClass('activa', $(this).data('tab') === tab); });
+			$('#trk_cli_pedidos, #trk_cli_buscar').toggle(tab === 'pedidos');
+			$('#trk_cli_reps').toggle(tab === 'reps');
+		}
+
+		/** Se llama al escribir y en cada refresco de 20 s mientras el dialogo esta abierto. */
+		function xTrkPintarCliente() {
+			if (!window.dlg_trk_cliente || !dlg_trk_cliente.opened) { return; }
+			var todo = xTrkPedidosCliente();
+			var q = xTrkSinTildes($('#trk_cli_buscar').val()).trim();
+			var dig = q.replace(/[^0-9]/g, '');
+
+			// sin buscar: los que faltan entregar. Buscando: tambien los entregados (el cliente puede llamar despues)
+			var lista = (todo.pedidos || []).filter(function (x) {
+				if (!q) { return !x.p.entregado; }
+				if (dig.length >= 3 && String(x.p.telefono).replace(/[^0-9]/g, '').indexOf(dig) >= 0) { return true; }
+				return xTrkSinTildes(x.p.cliente).indexOf(q) >= 0;
+			}).sort(function (a, b) {
+				return (a.p.entregado - b.p.entregado) || ((b.p.minutos || 0) - (a.p.minutos || 0));
+			});
+
+			// el refresco de 20 s no puede borrar una nota a medio escribir
+			var escrito = {};
+			$('#trk_cli_lista .trk-nota-in').each(function () { if (this.value) { escrito[$(this).data('id')] = this.value; } });
+			var foco = $(document.activeElement).hasClass('trk-nota-in') ? $(document.activeElement).data('id') : null;
+			var notas = {};
+			((xTrkDatos && xTrkDatos.notas) || []).forEach(function (n) { (notas[n.idpedido] = notas[n.idpedido] || []).push(n); });
+
+			var html = lista.map(function (x) {
+				var p = x.p, r = x.r, id = parseInt(p.idpedido, 10) || 0;
+				return '<div class="trk-cli">' +
+					'<div class="trk-cli-top">' +
+						'<b>#' + xTrkEsc(p.numero) + '</b> ' + xTrkEsc(p.cliente) +
+						(p.telefono ? ' <span class="inv-sub trk-cli-tel">' + xTrkEsc(p.telefono) + '</span>' : '') +
+						'<span class="trk-cli-der">' + xTrkEstadoCliente(p, r) +
+						(p.entregado ? '' : ' <span class="trk-cli-min ' + xTrkClaseDemora(p.minutos) + '">' + xTrkFmtMin(p.minutos) + '</span>') +
+						'</span>' +
+					'</div>' +
+					'<div class="trk-cli-frase">"' + xTrkEsc(xTrkFraseCliente(p, r)) + '"</div>' +
+					'<div class="inv-sub"><i class="fa fa-home"></i> ' + xTrkEsc(p.sedeNombre) + ' · pedido a las ' + xTrkEsc(p.horaPedido) +
+						(r ? ' · Repartidor: <b>' + xTrkEsc(r.nombre) + '</b>' + xTrkContacto(r.telefono) + ' ' + xTrkLinkCambiar(p) : '') +
+					'</div>' +
+					'<div class="trk-cli-notas">' +
+						(notas[id] || []).map(function (n) {
+							return '<div class="trk-cli-nota"><i class="fa fa-sticky-note-o"></i> <b>' + xTrkEsc(n.usuario) + '</b> ' +
+								xTrkEsc(n.hora) + ': ' + xTrkEsc(n.nota) + '</div>';
+						}).join('') +
+						'<div class="trk-cli-nota-add">' +
+							'<input class="inv-input trk-nota-in" data-id="' + id + '" maxlength="300" autocomplete="off"' +
+								' placeholder="Agregar nota (ej: el cliente llamo otra vez)" onkeydown="if(event.key===\'Enter\'){xTrkAgregarNota(' + id + ')}">' +
+							'<button class="btn btn-sm btn-light" onclick="xTrkAgregarNota(' + id + ')"><i class="fa fa-plus"></i>Nota</button>' +
+						'</div>' +
+					'</div>' +
+				'</div>';
+			}).join('');
+			$('#trk_cli_lista').html(html || '<p class="inv-empty">' +
+				(q ? 'No hay pedidos de hoy con ese telefono o nombre.' : 'No hay pedidos en curso.') + '</p>');
+			Object.keys(escrito).forEach(function (k) { $('#trk_cli_lista .trk-nota-in[data-id="' + k + '"]').val(escrito[k]); });
+			if (foco) { $('#trk_cli_lista .trk-nota-in[data-id="' + foco + '"]').focus(); }
+
+			// repartidores con pedidos, el que tiene el pedido mas atrasado primero: a quien hay que apurar
+			var reps = (todo.repartidores || []).filter(function (r) { return r.porEntregar.length > 0; }).map(function (r) {
+				var peor = Math.max.apply(null, r.porEntregar.map(function (p) { return p.minutos || 0; }));
+				return { r: r, peor: peor };
+			}).sort(function (a, b) { return b.peor - a.peor; });
+			$('#trk_cli_reps').html(reps.map(function (x) {
+				var r = x.r;
+				return '<div class="trk-cli">' +
+					'<div class="trk-cli-top">' + xTrkChip(r) + ' <b>' + xTrkEsc(r.nombre) + '</b>' + xTrkContacto(r.telefono) +
+						'<span class="trk-cli-der"><span class="trk-cli-min ' + xTrkClaseDemora(x.peor) + '">' + xTrkFmtMin(x.peor) + '</span></span>' +
+					'</div>' +
+					'<div class="inv-sub">Lleva ' + r.porEntregar.length + ' pedido' + (r.porEntregar.length > 1 ? 's' : '') +
+						' · el mas antiguo espera ' + xTrkFmtMin(x.peor) +
+						(r.conectado ? (r.sinSenal ? ' · <span class="trk-tarde">sin senal</span>' : ' · conectado') : ' · <span class="trk-tarde">desconectado</span>') +
+						' · ' + r.porEntregar.map(function (p) { return '#' + xTrkEsc(p.numero) + ' ' + xTrkEsc(p.cliente); }).join(', ') +
+					'</div>' +
+				'</div>';
+			}).join('') || '<p class="inv-empty">Ningun repartidor lleva pedidos ahora.</p>');
+		}
+
+		function xTrkAgregarNota(idpedido) {
+			var inp = $('#trk_cli_lista .trk-nota-in[data-id="' + idpedido + '"]');
+			var nota = $.trim(inp.val());
+			if (!nota) { inp.focus(); return; }
+			xTrkApi('nota', { idpedido: idpedido, nota: nota }).then(function (r) {
+				if (!r.success) { return; }   // xTrkApi ya mostro el motivo
+				inp.val('');
+				// se ve al instante; el refresco trae el nombre de quien la escribio
+				if (xTrkDatos) {
+					xTrkDatos.notas = (xTrkDatos.notas || []).concat([{ idpedido: idpedido, nota: nota, usuario: 'Tu', hora: new Date().toTimeString().slice(0, 5) }]);
+				}
+				xTrkPintarCliente();
+				xTrkCargar(true);
+			});
+		}
+
+		/* ===== Resumen del dia: demoras por sede y por repartidor, con lo que ya trae el tracker ===== */
+
+		function xTrkAbrirResumen() {
+			dlg_trk_resumen.open();
+			xTrkPintarResumen();
+		}
+
+		function xTrkPintarResumen() {
+			if (!window.dlg_trk_resumen || !dlg_trk_resumen.opened) { return; }
+			var todo = xTrkPedidosCliente();
+			var tarde = function (p) { return p.minutos !== null && p.minutos > TRK_PEDIDO_TARDE_MIN; };
+			var prom = function (ps) {
+				var t = ps.filter(function (p) { return p.minutos !== null; });
+				return t.length ? Math.round(t.reduce(function (a, p) { return a + p.minutos; }, 0) / t.length) : null;
+			};
+			var celdaTarde = function (n) { return '<td class="inv-num' + (n ? ' trk-tarde' : '') + '">' + n + '</td>'; };
+
+			// por sede (solo si la vista tiene mas de una)
+			var sedes = {};
+			(todo.pedidos || []).forEach(function (x) {
+				var s = sedes[x.p.idsede] = sedes[x.p.idsede] || { nombre: x.p.sedeNombre, todos: [], entregados: [], curso: 0 };
+				s.todos.push(x.p);
+				if (x.p.entregado) { s.entregados.push(x.p); } else { s.curso++; }
+			});
+			var filasSede = Object.keys(sedes).map(function (k) { return sedes[k]; })
+				.sort(function (a, b) { return (prom(b.entregados) || 0) - (prom(a.entregados) || 0); });
+			$('#trk_res_sedes').toggle(filasSede.length > 1);
+			$('#tb_trk_res_sedes tbody').html(filasSede.map(function (s) {
+				return '<tr><td><i class="fa fa-home"></i> ' + xTrkEsc(s.nombre) + '</td>' +
+					'<td class="inv-num">' + s.todos.length + '</td>' +
+					'<td class="inv-num">' + s.entregados.length + '</td>' +
+					'<td class="inv-num">' + s.curso + '</td>' +
+					'<td class="inv-num">' + xTrkFmtMin(prom(s.entregados)) + '</td>' +
+					celdaTarde(s.todos.filter(tarde).length) + '</tr>';
+			}).join(''));
+
+			// por repartidor: el de entregas mas lentas primero
+			var reps = (todo.repartidores || []).filter(function (r) { return r.entregados.length || r.porEntregar.length; }).map(function (r) {
+				var e = r.entregados.filter(function (p) { return p.minutos !== null; });
+				return { r: r, prom: prom(r.entregados), max: e.length ? Math.max.apply(null, e.map(function (p) { return p.minutos; })) : null,
+					tarde: r.entregados.concat(r.porEntregar).filter(tarde).length };
+			}).sort(function (a, b) { return (b.prom === null ? -1 : b.prom) - (a.prom === null ? -1 : a.prom); });
+			$('#tb_trk_res_reps tbody').html(reps.map(function (x) {
+				return '<tr><td><div class="trk-rep">' + xTrkChip(x.r) + '<div class="trk-rep-datos"><b>' + xTrkEsc(x.r.nombre) + '</b>' +
+						(x.r.telefono ? '<span class="inv-sub">' + xTrkEsc(x.r.telefono) + xTrkContacto(x.r.telefono) + '</span>' : '') + '</div></div></td>' +
+					'<td class="inv-num">' + x.r.entregados.length + '</td>' +
+					'<td class="inv-num">' + x.r.porEntregar.length + '</td>' +
+					'<td class="inv-num' + (x.prom !== null && x.prom > TRK_PEDIDO_TARDE_MIN ? ' trk-tarde' : '') + '">' + xTrkFmtMin(x.prom) + '</td>' +
+					'<td class="inv-num">' + xTrkFmtMin(x.max) + '</td>' +
+					celdaTarde(x.tarde) + '</tr>';
+			}).join('') || '<tr><td colspan="6" class="inv-empty">Ningun repartidor llevo pedidos hoy.</td></tr>');
+			$('#trk_res_sub').text('Hoy hasta las ' + new Date().toTimeString().slice(0, 5) + ' · demorado = mas de ' + TRK_PEDIDO_TARDE_MIN + ' min desde que se hizo el pedido');
+		}
+
+		function xTrkVerTabRep(tab) {
+			xTrkTabRep = tab === 'off' ? 'off' : 'on';
+			xTrkDemorados = Infinity;   // cambiar de pestaña no es un pedido nuevo demorado
+			if (xTrkDatos && xTrkCapas && xTrkVivo) { xTrkPintar(xTrkDatos); }
+		}
+
+		/** Con un chip elegido: sus pedidos y los repartidores que atienden esa sede. */
+		function xTrkFiltrarVista(datos) {
+			if (!xTrkVistaCC || !xTrkFiltroSede) { return { filas: datos.filas, propios: datos.propios }; }
+			return {
+				filas: (datos.filas || []).filter(function (f) { return parseInt(f.idsede, 10) === xTrkFiltroSede; }),
+				propios: (datos.propios || []).filter(function (f) { return xTrkCsvIds(f.sedes_atiende).indexOf(xTrkFiltroSede) >= 0; })
+			};
+		}
+
+		/** Marcadores de las sedes de la vista (o de la elegida) y encuadre la primera vez. */
+		function xTrkPintarLocales() {
+			var puntos = [];
+			xTrkSedesVista.forEach(function (s) {
+				if (xTrkFiltroSede && parseInt(s.idsede, 10) !== xTrkFiltroSede) { return; }
+				var lat = parseFloat(s.latitude), lng = parseFloat(s.longitude);
+				if (!isFinite(lat) || !isFinite(lng)) { return; }
+				L.marker([lat, lng], {
+					icon: L.divIcon({ className: '', html: '<div class="trk-local"><i class="fa fa-home"></i>' + xTrkEsc(s.nombre || 'Local') + '</div>' })
+				}).addTo(xTrkCapas);
+				puntos.push([lat, lng]);
+			});
+			if (xTrkCentrado || !puntos.length) { return; }
+			if (puntos.length === 1) { xTrkMapa.setView(puntos[0], 14); }
+			else { xTrkMapa.fitBounds(L.latLngBounds(puntos).pad(0.2)); }
+			xTrkCentrado = true;
+		}
+
+		/** Sede de casa del repartidor si es de la vista; si no, la primera con coordenadas. */
+		function xTrkLocalDe(r) {
+			var casa = null, primera = null;
+			xTrkSedesVista.forEach(function (s) {
+				var lat = parseFloat(s.latitude), lng = parseFloat(s.longitude);
+				if (!isFinite(lat) || !isFinite(lng)) { return; }
+				if (!primera) { primera = { lat: lat, lng: lng }; }
+				if (parseInt(s.idsede, 10) === r.casa) { casa = { lat: lat, lng: lng }; }
+			});
+			return casa || primera || { lat: NaN, lng: NaN };
 		}
 
 		Polymer({

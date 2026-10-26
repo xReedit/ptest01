@@ -1,5 +1,6 @@
 <link rel="import" href="../../web_components/polymer/polymer.html">
 <link rel="import" href="../../web_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../x-comp-direccion-google/x-comp-direccion-google.html">
 <!--
   x-comp-pos-sede — selector de sede operativa (call center / POS multi-sede).
 -->
@@ -136,6 +137,16 @@
                 text-overflow: ellipsis;
             }
             .sede-card.actual .sede-card__line1 { color: #1b5e20; }
+            .sede-card__km { font-size: 12px; font-weight: 700; color: #555; white-space: nowrap; }
+            .sede-card.cercana { border: 2px solid #1e88e5; }
+            .sede-card.cercana .sede-card__km { color: #1565c0; }
+            .sede-card__badge {
+                display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 3px;
+                background: #1e88e5; color: #fff; font-size: 9px; font-weight: 700; vertical-align: middle;
+            }
+            .buscar-dir { margin: 0 0 8px; }
+            .buscar-dir__ayuda { margin-top: 3px; font-size: 10px; color: #888; }
+            .buscar-dir__quitar { color: #1565c0; cursor: pointer; text-decoration: underline; }
             .sede-card__dir {
                 font-size: 10px;
                 color: #999;
@@ -168,9 +179,15 @@
         <paper-dialog id="dlgSedes" class="dialog_redondo" with-backdrop hidden$="[[!_permCallCenter]]"
                       entry-animation="scale-up-animation" exit-animation="fade-out-animation">
             <div class="dlg-header">
-                <h3>Cambiar sede</h3>
+                <h3>[[_tituloSedes(_obligatorio)]]</h3>
                 <p>Cada pestaña puede operar una sede distinta.</p>
                 <span class="dlg-activa">Activa ahora: [[_nombreLabel]][[_activaMetaSuffix]]</span>
+            </div>
+
+            <div class="buscar-dir">
+                <x-comp-direccion-google id="dirSede"></x-comp-direccion-google>
+                <div class="buscar-dir__ayuda" hidden$="[[_dirOrden]]">¿Ya tienes la dirección del cliente? Escríbela o pega la ubicación y las sedes se ordenan de la más cercana a la más lejana.</div>
+                <div class="buscar-dir__ayuda" hidden$="[[!_dirOrden]]">Sedes ordenadas por cercanía (en línea recta) · <span class="buscar-dir__quitar" on-tap="_limpiarDir">quitar</span></div>
             </div>
 
             <div class="sede-lista">
@@ -182,6 +199,7 @@
                             <div class="sede-card__line1">[[item.nombre]] · [[item.ciudad]]</div>
                             <div class="sede-card__dir" hidden$="[[!_tieneDir(item.direccion)]]">[[item.direccion]]</div>
                         </div>
+                        <div class="sede-card__km" hidden$="[[!item.km]]">[[item.km]]<span class="sede-card__badge" hidden$="[[!item.cercana]]">MÁS CERCANA</span></div>
                     </div>
                 </template>
             </div>
@@ -189,7 +207,7 @@
             <div class="btn-nueva-pestana" hidden$="[[!_permCallCenter]]" on-tap="_abrirNuevaPestanaPrompt">
                 + Abrir nueva pestaña con otra sede
             </div>
-            <div class="dlg-footer">
+            <div class="dlg-footer" hidden$="[[_obligatorio]]">
                 <button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
             </div>
         </paper-dialog>
@@ -245,10 +263,108 @@
                     _pillClass:         { type: String,  value: 'sede-activa' },
                     _permCallCenter:    { type: Boolean, value: false },
                     _idsedeActual:      { type: Number,  value: 0, notify: true },
-                    _sedeSel:           { type: Object,  value: function () { return null; } }
+                    _sedeSel:           { type: Object,  value: function () { return null; } },
+                    _obligatorio:       { type: Boolean, value: false },
+                    _dirOrden:          { type: Boolean, value: false }
                 },
 
-                ready: function () { this._refreshLabel(); },
+                listeners: {
+                    'dlgSedes.iron-overlay-closed': '_onSedesCerrado',
+                    'dlgSedes.iron-overlay-canceled': '_onSedesCancelado',
+                    'dlgNuevaPestana.iron-overlay-closed': '_onNuevaPestanaCerrado'
+                },
+
+                ready: function () {
+                    this._refreshLabel();
+                    // direccion del cliente -> sedes por cercania (Google o coordenadas pegadas, p. ej. ubicacion de WhatsApp)
+                    var self = this, dir = this.$.dirSede;
+                    dir.addEventListener('getPlaces', function (e) {
+                        var loc = e.detail && e.detail.geometry && e.detail.geometry.location;
+                        if (loc) { self._ordenarPorCercania(loc.lat(), loc.lng()); }
+                    });
+                    dir.$.autocomplete.addEventListener('input', function () {
+                        if (!dir.isCoordinates(this.value)) { return; }
+                        var c = this.value.split(',');
+                        self._ordenarPorCercania(parseFloat(c[0]), parseFloat(c[1]));
+                    });
+                },
+
+                // las sugerencias de Google se pintan fuera del dialogo: elegir una no debe cerrarlo
+                _onSedesCancelado: function (e) {
+                    var t = e.detail && e.detail.target;
+                    if (t && t.closest && t.closest('.pac-container')) { e.preventDefault(); }
+                },
+
+                _ordenarPorCercania: function (lat, lng) {
+                    if (isNaN(lat) || isNaN(lng)) { return; }
+                    var self = this;
+                    var lista = (this.sedes || []).map(function (s) {
+                        var la = parseFloat(s.latitude), lo = parseFloat(s.longitude);
+                        var d = (la && lo) ? self._km(lat, lng, la, lo) : null;
+                        var km = d === null ? 'sin ubicación' : (d < 1 ? Math.round(d * 1000) + ' m' : d.toFixed(1) + ' km');
+                        return Object.assign({}, s, { _d: d, km: km, cercana: false });
+                    });
+                    lista.sort(function (a, b) {
+                        if (a._d === null || b._d === null) { return (a._d === null) - (b._d === null); }
+                        return a._d - b._d;
+                    });
+                    if (lista[0] && lista[0]._d !== null) { lista[0].cercana = true; }
+                    this.sedes = lista;
+                    this._dirOrden = true;
+                },
+
+                _limpiarDir: function () {
+                    this.$.dirSede.$.autocomplete.value = '';
+                    if (!this._dirOrden) { return; }
+                    this._dirOrden = false;
+                    this.sedes = (this.sedes || []).map(function (s) {
+                        return Object.assign({}, s, { _d: null, km: '', cercana: false });
+                    }).sort(function (a, b) { return String(a.nombre).localeCompare(String(b.nombre)); });
+                },
+
+                // distancia en linea recta (haversine), en km
+                // ponytail: linea recta, no ruta; si un rio/via la engaña, pasar a Distance Matrix de Google
+                _km: function (lat1, lng1, lat2, lng2) {
+                    var r = Math.PI / 180;
+                    var a = Math.pow(Math.sin((lat2 - lat1) * r / 2), 2) +
+                        Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.pow(Math.sin((lng2 - lng1) * r / 2), 2);
+                    return 12742 * Math.asin(Math.sqrt(a));
+                },
+
+                /**
+                 * Call center: tras cada venta hay que elegir la sede del siguiente pedido.
+                 * Sin "Cerrar" ni clic afuera: se elige una sede (la actual sigue igual) o se abre otra pestaña.
+                 */
+                elegirSedeObligatorio: function () {
+                    if (typeof opSede === 'undefined' || !opSede.tienePermiso()) return;
+                    this._obligatorio = true;
+                    this.$.dlgSedes.noCancelOnOutsideClick = true;
+                    this.$.dlgSedes.noCancelOnEscKey = true;
+                    this._limpiarDir();
+                    this._refreshLabel();
+                    this._marcarSedeActivaEnLista();
+                    var self = this;
+                    this.async(function () { self.$.dlgSedes.open(); });
+                },
+
+                _tituloSedes: function (obligatorio) {
+                    return obligatorio ? '¿Para qué sede es el siguiente pedido?' : 'Cambiar sede';
+                },
+
+                _onSedesCerrado: function () {
+                    this._volverObligatorio = this._obligatorio && this._abriendoNuevaPestana;
+                    this._abriendoNuevaPestana = false;
+                    this._obligatorio = false;
+                    this.$.dlgSedes.noCancelOnOutsideClick = false;
+                    this.$.dlgSedes.noCancelOnEscKey = false;
+                },
+
+                // si vino de la eleccion obligatoria, al cerrar "Nueva pestaña" se vuelve a pedir la sede de esta pestaña
+                _onNuevaPestanaCerrado: function () {
+                    if (!this._volverObligatorio) return;
+                    this._volverObligatorio = false;
+                    this.elegirSedeObligatorio();
+                },
 
                 attached: function () {
                     var self = this;
@@ -257,7 +373,7 @@
                         self._refreshLabel();
                         return;
                     }
-                    $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=1' })
+                    $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=1', data: { solo_operables: 1 } })
                     .done(function (rpt) {
                         try {
                             var dt = (typeof rpt === 'string') ? JSON.parse(rpt) : rpt;
@@ -331,14 +447,7 @@
                     var out = [];
                     for (var i = 0; i < lista.length; i++) {
                         var s = lista[i];
-                        out.push({
-                            idorg: s.idorg,
-                            idsede: s.idsede,
-                            nombre: s.nombre,
-                            ciudad: s.ciudad,
-                            direccion: s.direccion,
-                            esActual: parseInt(s.idsede, 10) === actualId
-                        });
+                        out.push(Object.assign({}, s, { esActual: parseInt(s.idsede, 10) === actualId })); // conserva ubicacion y km
                     }
                     this.sedes = out;
                 },
@@ -346,7 +455,7 @@
                 /** Polymer 1 no soporta ternarios en class$ — usar helper. */
                 _clsCard: function (item) {
                     if (!item) { return 'sede-card'; }
-                    return item.esActual ? 'sede-card actual' : 'sede-card';
+                    return (item.esActual ? 'sede-card actual' : 'sede-card') + (item.cercana ? ' cercana' : '');
                 },
 
                 _tieneDir: function (dir) {
@@ -424,6 +533,7 @@
 
                 _onPillTap: function () {
                     if (!opSede.tienePermiso()) return;
+                    this._limpiarDir();
                     this._refreshLabel();
                     this._marcarSedeActivaEnLista();
                     var self = this;
@@ -501,6 +611,7 @@
 
                 _abrirNuevaPestanaPrompt: function () {
                     if (!opSede.tienePermiso()) return;
+                    this._abriendoNuevaPestana = true;
                     this.$.dlgSedes.close();
                     this.$.dlgNuevaPestana.open();
                 },

@@ -1,10 +1,10 @@
 // Ordenes de compra (F4, central):
 //  - "Por comprar": lo que la Bandeja decidio comprar, agrupado por proveedor habitual -> "Generar orden".
 //  - "Ordenes": lista; clic -> detalle con Aprobar / Enviar por WhatsApp / Imprimir-PDF / Anular.
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, autocompletar, imprimir, nuevoToken, leerNum, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar, turnoActual } from '../router.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, autocompletar, imprimir, nuevoToken, leerNum, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

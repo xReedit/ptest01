@@ -1,8 +1,8 @@
 // Por vencer (F6b): lo que vence pronto en cada sede. Si no se va a vender a tiempo, el sistema dice a que sede llevarlo
 // (la que mas lo vende y alcanza) y con un boton queda en Envios. La sede ve solo lo suyo (sin botones).
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, nuevoToken, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, nuevoToken, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 

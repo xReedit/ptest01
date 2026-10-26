@@ -15,7 +15,8 @@ function CpeInterno_RegistrarNC(data) {
 
 }
 
-function CpeInterno_Registrar(data) {
+// idcePre: fila ya pre-registrada en ce ("Sin registrar", xSendApiSunat) → se actualiza en vez de insertar
+function CpeInterno_Registrar(data, idcePre = null) {
     
     if (data.success) { //si todo salio bien graba en CE (comprobantes electronicos)
         
@@ -63,7 +64,13 @@ function CpeInterno_Registrar(data) {
             dataSave.msj = data.response.description; 
         } 
 
-        CpeInterno_SaveBD(dataSave);
+        if ( idcePre ) {
+            dataSave.idce = idcePre;
+            dataSave.anulado = 0;
+            CpeInterno_UpdateRegistro(dataSave);
+        } else {
+            CpeInterno_SaveBD(dataSave);
+        }
 
     }
 }

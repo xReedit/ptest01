@@ -1,8 +1,8 @@
 // Registrar merma (sede o central): lo que se rompio, vencio, malogro o consumio el personal. Baja el stock de tu
 // almacen principal y queda con su valor para el reporte de perdidas. Debajo: lo registrado este mes.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, autocompletar, leerNum, fecha } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, autocompletar, leerNum, fecha } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

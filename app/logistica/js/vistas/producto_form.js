@@ -1,8 +1,8 @@
 // Dialogo de producto del catalogo, en 3 partes con preguntas simples:
 // 1. Datos del producto · 2. ¿Cómo lo compras? (presentaciones) · 3. ¿A quién se lo compras? (proveedor habitual).
 // Un solo Guardar: crear/editar + presentaciones + proveedor van juntos en una transaccion del servidor.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, autocompletar } from '../ui.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, autocompletar } from '../ui.js?v=20261026a';
 
 const PRESENTACIONES_COMUNES = ['CAJA', 'PAQUETE', 'SACO', 'FARDO', 'DOCENA', 'BOLSA', 'BIDON', 'JABA', 'SIXPACK', 'BALDE', 'GALONERA'];
 

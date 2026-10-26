@@ -250,6 +250,49 @@
                                                 </table>
                                             </div>                                            
                                         </template>
+
+                                        <!-- CORTESIAS (log_cortesia.php?op=reporte). Bindings {{ }} = texto, sin HTML -->
+                                        <div class="mt-4 content-table-iv">
+                                            <p class="fs-18 text-secondary fw-600">Cortesías <i class="fa fa-gift text-danger"></i> </p>
+                                            <p class="text-secondary" hidden$="[[ cortesiasError ]]">Total <span class="fw-600 color-text-principal">{{ cortesiasTotal }}</span> · <span class="fw-600">{{ cortesiasCantidad }}</span></p>
+                                            <p class="color-text-secondary" hidden$="[[ !cortesiasMensaje ]]">{{ cortesiasMensaje }}</p>
+                                            <br>
+                                            <template is="dom-if" if="[[ cortesiasHay ]]">
+                                                <div style="overflow-x: auto; width: 100%; max-width: 100%;">
+                                                <table>
+                                                    <thead>
+                                                        <th>Fecha/hora</th>
+                                                        <th align="center">Mesa</th>
+                                                        <th>Producto</th>
+                                                        <th align="center">Cant.</th>
+                                                        <th align="right">Importe</th>
+                                                        <th>Motivo</th>
+                                                        <th>Pidió</th>
+                                                        <th>Autorizó</th>
+                                                    </thead>
+                                                    <tbody>
+                                                        <template is="dom-repeat" items="{{listCortesias}}" as="item">
+                                                            <tr>
+                                                                <td><p class="color-text-secondary">{{item.fecha_hora}}</p></td>
+                                                                <td align="center"><p class="color-text-secondary">{{item.nummesa}}</p></td>
+                                                                <td><p class="color-text-secondary">{{item.descripcion}}</p></td>
+                                                                <td align="center"><p class="color-text-principal">{{item.cantidad}}</p></td>
+                                                                <td align="right"><p class="color-text-principal">{{item.importe}}</p></td>
+                                                                <td><p class="color-text-secondary">{{item.motivo}}</p></td>
+                                                                <td><p class="color-text-secondary">{{item.solicita}}</p></td>
+                                                                <td><p class="color-text-secondary">{{item.autoriza}}</p></td>
+                                                            </tr>
+                                                        </template>
+                                                        <tr>
+                                                            <td colspan="4" align="right"><p class="fw-600 fs-15">Total</p></td>
+                                                            <td align="right"><p class="fw-600 fs-15 color-text-principal">{{cortesiasTotal}}</p></td>
+                                                            <td colspan="3"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
                 
                                     <!-- totales pedidos -->
@@ -1032,6 +1075,7 @@
 
                 xloadDComprobantesEmitidos();
                 xloadDescuentos();
+                xloadCortesias();
 			});
     }
 
@@ -1051,6 +1095,102 @@
 
                 xThisI2.listDescuentos = JSON.parse(JSON.stringify(_data));
                 console.log('xThisI2.listDescuentos', xThisI2.listDescuentos);
+            });
+    }
+
+    // CORTESIAS (.superpowers/sdd/CORTESIAS-PLAN). log_cortesia.php?op=reporte recibe {desde, hasta} (Y-m-d,
+    // dias de calendario, max 92 dias) y solo de la sede de la sesion.
+    var xIndCortesiasSeq = 0; // descarta respuestas viejas si el usuario cambia de periodo rapido
+
+    function xIndCortesiasYmd(d) {
+        return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
+
+    function xIndCortesiasFecha(s) { // 'Y-m-d' -> Date en hora local (new Date('Y-m-d') seria UTC)
+        var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ''));
+        return p ? new Date(+p[1], +p[2] - 1, +p[3]) : null;
+    }
+
+    // Mismo periodo que bdphp/log_005.php op 400 (descuentos), para que ambas tarjetas cuadren
+    function xIndCortesiasRango(filtro) {
+        var ahora = new Date();
+        var hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+        var desde = hoy, hasta = hoy;
+        switch (filtro.rango) {
+            case 'semana': // strtotime('last week monday'): lunes de la semana anterior .. hoy
+                desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - ((hoy.getDay() + 6) % 7) - 7);
+                break;
+            case 'mes': // op 400: mes actual ('first day of this month' .. 'first day of next month')
+                desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                hasta = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+                break;
+            case 'rango':
+                var opc = filtro.option || {};
+                desde = xIndCortesiasFecha(opc.value1);
+                hasta = xIndCortesiasFecha(opc.value2);
+                if (!desde || !hasta) { return null; }
+                // validarRangoMaximo3Meses: si pasa de 90 dias, desde = hasta - 90
+                if (Math.abs(Math.round((hasta - desde) / 86400000)) > 90) {
+                    desde = new Date(hasta.getFullYear(), hasta.getMonth(), hasta.getDate() - 90);
+                }
+                break;
+        }
+        return { desde: xIndCortesiasYmd(desde), hasta: xIndCortesiasYmd(hasta) };
+    }
+
+    // datos = filas del reporte (o null si hubo error); mensaje = texto bajo el titulo
+    function xIndCortesiasMostrar(seq, datos, mensaje) {
+        if (seq !== xIndCortesiasSeq) { return; }
+        var filas = Array.isArray(datos) ? datos : [];
+        var total = 0;
+        var lista = filas.map(function (x) {
+            var imp = parseFloat(x.importe) || 0;
+            total += imp;
+            return {
+                fecha_hora: x.fecha_hora, nummesa: x.nummesa, descripcion: x.descripcion, cantidad: x.cantidad,
+                importe: numeroConComas(imp.toFixed(2)), motivo: x.motivo, solicita: x.solicita, autoriza: x.autoriza
+            };
+        });
+        if (!mensaje && datos && lista.length === 0) { mensaje = 'Sin cortesías en este rango'; }
+        if (!mensaje && lista.length >= 2000) { mensaje = 'Se muestran las últimas 2000 cortesías. Elige menos días para ver todas.'; }
+        xThisI2.cortesiasError = !datos;
+        xThisI2.cortesiasTotal = 'S/ ' + numeroConComas(total.toFixed(2));
+        xThisI2.cortesiasCantidad = lista.length === 1 ? '1 cortesía' : lista.length + ' cortesías';
+        xThisI2.cortesiasMensaje = mensaje || '';
+        xThisI2.listCortesias = lista;
+        xThisI2.cortesiasHay = lista.length > 0;
+    }
+
+    function xloadCortesias() {
+        var seq = ++xIndCortesiasSeq;
+        var sedeSesion = 0;
+        try { sedeSesion = parseInt(xm_log_get('datos_org_sede')[0].idsede, 10) || 0; } catch (e) { sedeSesion = 0; }
+        var sedeFiltro = parseInt(dataFiltro.idsede, 10) || 0;
+        if (sedeFiltro > 0 && sedeFiltro !== sedeSesion) {
+            xIndCortesiasMostrar(seq, null, 'Las cortesías solo se ven del local donde iniciaste sesión.');
+            return;
+        }
+        var rango = xIndCortesiasRango(dataFiltro);
+        if (!rango) { xIndCortesiasMostrar(seq, null, 'Elige la fecha de inicio y la fecha final.'); return; }
+
+        xIndCortesiasMostrar(seq, null, 'Cargando cortesías...');
+        $.ajax({
+                type: 'POST',
+                url: '../../bdphp/log_cortesia.php?op=reporte',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: JSON.stringify(rango)
+            })
+            .done(function (res) {
+                if (!res || !res.success) {
+                    xIndCortesiasMostrar(seq, null, (res && res.error) || 'No se pudieron cargar las cortesías.');
+                    return;
+                }
+                xIndCortesiasMostrar(seq, res.datos || [], '');
+            })
+            .fail(function (xhr) {
+                var r = xhr && xhr.responseJSON;
+                xIndCortesiasMostrar(seq, null, (r && r.error) || 'No se pudieron cargar las cortesías. Revisa tu conexión.');
             });
     }
 
@@ -1863,6 +2003,12 @@
             listTipoPagoIngresosVarios: [],
             listDescuentos: [],
             totalDescuentos: Number,
+            listCortesias: { type: Array, value: function () { return []; } },
+            cortesiasHay: { type: Boolean, value: false },
+            cortesiasError: { type: Boolean, value: true },
+            cortesiasTotal: { type: String, value: '' },
+            cortesiasCantidad: { type: String, value: '' },
+            cortesiasMensaje: { type: String, value: '' },
             tablaTipoPagoIngresosVarios: [],
             sedeCalificacion: String,
             dtVentasHoy: Object,    

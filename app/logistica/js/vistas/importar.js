@@ -1,7 +1,7 @@
 // Importar catalogo desde Excel (alta inicial de la cadena). Se lee en el navegador con SheetJS (misma version que
 // x-producto-almacen) y se envia en lotes de 100 a catalogo.php?op=importar.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver } from '../ui.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver } from '../ui.js?v=20261026a';
 
 const XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 const LOTE = 100;

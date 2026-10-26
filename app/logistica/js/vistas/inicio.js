@@ -1,6 +1,7 @@
 // Inicio del modulo: muestra SOLO las opciones del rol de quien entra (central o sede), para que sea simple.
-import { esc, tarjeta } from '../ui.js?v=20261015i';
-import { dibujarFlujo } from './flujo.js?v=20261015i';
+import { esc, tarjeta, aviso } from '../ui.js?v=20261026a';
+import { dibujarFlujo } from './flujo.js?v=20261026a';
+import { ir, refrescarSesion } from '../router.js?v=20261026a';
 
 const CENTRAL = [
 	{ icono: 'fa-sun-o', titulo: 'Resumen del día', texto: 'Qué hay que hacer hoy, lo urgente primero', ruta: 'resumen' },
@@ -32,6 +33,32 @@ const SEDE = [
 const AVISO = {
 	no_participa: 'Esta sede todavía no participa en Logística. Pide a la central que la active en <b>Configurar</b>.',
 };
+
+// Fuera de la central: decir cual es y, al admin dentro del POS, ofrecer pasar a ella (lo que confundia al activar).
+function avisoCentral(sesion) {
+	const c = sesion.central;
+	if (!c) { return ''; }
+	const nombre = `<b>${esc(c.nombre)}</b>`;
+	const enPos = typeof window.xCompSedeToll_CambiarSede === 'function';
+	const salida = !sesion.es_admin ? 'Entra con un usuario de esa sede.'
+		: enPos ? `<button class="btn btn-sm btn-success" id="lg_ir_central" style="margin-left:6px"><i class="fa fa-exchange"></i>Pasar a ${esc(c.nombre)}</button>`
+		: 'Toca el nombre de la sede, arriba, y elígela.';
+	return `<p class="inv-ayuda" style="margin-bottom:12px"><i class="fa fa-home"></i> La sede central es ${nombre}: comprar, armar el catálogo y despachar se hace desde ahí. ${salida}</p>`;
+}
+
+// Usa el mismo cambio de sede de la barra del POS (x-comp-sede-toolbar) y espera a que la sesion del servidor ya este en la central.
+async function pasarACentral(c) {
+	const lista = (window.xThisComToolSede && window.xThisComToolSede.listSede) || [];
+	const idx = lista.findIndex(s => String(s.idsede) === String(c.idsede));
+	if (idx < 0) { aviso(`Toca el nombre de la sede, arriba, y elige ${c.nombre}.`, 'error'); return; }
+	window.xCompSedeToll_CambiarSede({ dataId: idx });
+	for (let i = 0; i < 20; i++) {
+		await new Promise(r => setTimeout(r, 400));
+		if ((await refrescarSesion()).rol_logistica === 'central') { ir(''); return; }
+	}
+	// ponytail: 8 s sin respuesta = la sede esta suspendida o el POS fallo; el toolbar no avisa del error
+	aviso(`No se pudo pasar a ${c.nombre}. Si esa sede está suspendida, actívala primero.`, 'error');
+}
 
 // Primera vez (empresa sin configurar): que es el modulo y que podra hacer, segun tenga uno o varios locales.
 function bienvenida(sesion) {
@@ -93,11 +120,13 @@ export function render(cont, sesion) {
 	}) : '') + tarjeta({
 		titulo: rol === 'sede' ? 'Logística · ' + sesion.sede : 'Centro Logístico',
 		ayuda: `${esc(sesion.usuario)} · ${esc(sesion.sede)}` + (rol === 'central' ? ' (sede central)' : ''),
-		cuerpo: `${AVISO[rol] ? `<p class="inv-ayuda" style="margin-bottom:12px"><i class="fa fa-info-circle"></i> ${AVISO[rol]}</p>` : ''}
+		cuerpo: `${avisoCentral(sesion)}${AVISO[rol] ? `<p class="inv-ayuda" style="margin-bottom:12px"><i class="fa fa-info-circle"></i> ${AVISO[rol]}</p>` : ''}
 			<div class="lg-grid">${mods.map(m => m.ruta
 				? `<a class="lg-mod" href="#" data-ir="${m.ruta}"><i class="fa ${m.icono}"></i><div><h4>${esc(m.titulo)}</h4><p>${esc(m.texto)}</p></div></a>`
 				: `<div class="lg-mod off"><i class="fa ${m.icono}"></i><div><h4>${esc(m.titulo)}</h4><p>${esc(m.texto)} · próximamente</p></div></div>`
 			).join('')}</div>`,
 	});
 	if (rol === 'central') { dibujarFlujo(cont.querySelector('#lg_flujo')); }
+	const btnCentral = cont.querySelector('#lg_ir_central');
+	if (btnCentral) { btnCentral.addEventListener('click', () => pasarACentral(sesion.central)); }
 }

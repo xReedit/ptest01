@@ -1,7 +1,7 @@
 // Catalogo de la central: listar, crear/editar (se propaga a las sedes) y replicar lo que falte.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, paginador } from '../ui.js?v=20261015i';
-import { abrirForm, leerPresentaciones } from './producto_form.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, paginador } from '../ui.js?v=20261026a';
+import { abrirForm, leerPresentaciones } from './producto_form.js?v=20261026a';
 
 let datos = null;   // ultima respuesta de 'listar'
 

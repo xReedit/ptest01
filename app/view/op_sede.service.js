@@ -144,7 +144,7 @@ var opSede = (function () {
     if (isOverride()) {
       var fname = url.split('/').pop().replace('.php', '');
       // Solo enrutamos los destinos soportados por log_pos_op.php.
-      var destinosValidos = ['log', 'log_001', 'log_componentes', 'log_010'];
+      var destinosValidos = ['log', 'log_001', 'log_componentes', 'log_010', 'log_002', 'log_003', 'log_009', 'log_encuesta'];
       if (destinosValidos.indexOf(fname) >= 0) {
         opts.url = url.replace(fname + '.php', 'log_pos_op.php');
         // Limpia querystring residual de ?op= y la pasa por POST.
@@ -189,6 +189,31 @@ var opSede = (function () {
 function posAjax(opts) { return opSede.posAjax(opts); }
 
 /**
+ * El socket de la pestaña sigue a la sede operativa: al cambiar de sede se reconecta
+ * a la sala de la nueva (socketService.getDataClient lee opSede). Sin esto el stock,
+ * la comanda (printerOnly) y los avisos se iban a la sede del usuario.
+ */
+(function () {
+    if (window.__opSedeSocketOn) { return; } // el archivo puede cargarse dos veces
+    window.__opSedeSocketOn = true;
+
+    window.addEventListener('op-sede-changed', function () {
+        try {
+            var inst = (typeof socketService !== 'undefined') ? socketService.instance : null;
+            if (!inst || !inst._socket) { return; } // la pagina no usa socket
+            var s = opSede.isOverride() ? opSede.get() : opSede.getPertenencia();
+            if (parseInt(inst.dataSocket.idsede, 10) === s.idsede) { return; } // ya esta en esa sala
+            inst.disconnectSocket();
+            inst._socket = null;
+            inst.connectSocket();
+            if (typeof listenSocketP === 'function') { listenSocketP(); }
+        } catch (e) {
+            console.error('op_sede: no se pudo reconectar el socket', e);
+        }
+    });
+})();
+
+/**
  * Prefilter automatico: cuando la pestaña esta operando en otra sede,
  * cualquier $.ajax dirigido a log.php / log_001.php / log_componentes.php /
  * log_010.php se reescribe transparentemente a log_pos_op.php agregando
@@ -202,7 +227,8 @@ function posAjax(opts) { return opSede.posAjax(opts); }
     if (typeof jQuery === 'undefined' || !jQuery.ajaxPrefilter) {
         return;
     }
-    var DESTINOS = /\/bdphp\/(log_001|log_componentes|log_010|log)\.php(\?[^#]*)?$/;
+    // misma lista que $destinos_validos de bdphp/log_pos_op.php
+    var DESTINOS = /\/bdphp\/(log_001|log_002|log_003|log_009|log_componentes|log_010|log_encuesta|log)\.php(\?[^#]*)?$/;
 
     jQuery.ajaxPrefilter(function (options, originalOptions, jqXHR) {
         try {
@@ -246,6 +272,19 @@ function posAjax(opts) { return opSede.posAjax(opts); }
             // options.data.replace(...) mas adelante y revienta
             // ("v.data.replace is not a function"), rompiendo la carta/promos.
             var prev = (typeof options.data === 'string') ? options.data : '';
+            // JSON en texto (set-codigo-localizador de log_010): los _op_* van dentro del JSON;
+            // pegados como &k=v rompian el json_decode y el codigo se perdia.
+            if (prev.charAt(0) === '{') {
+                try {
+                    var j = JSON.parse(prev);
+                    j._op_dest = dest;
+                    j._op_org  = params._op_org;
+                    j._op_sede = params._op_sede;
+                    if (opVal != null && j.op == null) { j.op = opVal; }
+                    options.data = JSON.stringify(j);
+                    return;
+                } catch (e) { /* no era JSON: sigue como formulario */ }
+            }
             var extra = '_op_dest=' + encodeURIComponent(dest) +
                         '&_op_org=' + encodeURIComponent(params._op_org) +
                         '&_op_sede=' + encodeURIComponent(params._op_sede);
@@ -264,7 +303,7 @@ function posAjax(opts) { return opSede.posAjax(opts); }
  * siempre muestran la sede de pertenencia. Este interceptor espeja el prefilter.
  */
 (function () {
-    var DESTINOS = /\/bdphp\/(log_001|log_componentes|log_010|log)\.php(\?[^#]*)?$/;
+    var DESTINOS = /\/bdphp\/(log_001|log_002|log_003|log_009|log_componentes|log_010|log_encuesta|log)\.php(\?[^#]*)?$/;
     var intentos = 0;
 
     function registrar() {
@@ -296,6 +335,19 @@ function posAjax(opts) { return opSede.posAjax(opts); }
             config.method = config.method || 'post';
 
             var params = opSede.ajaxParams();
+
+            // GET (p.ej. cupones log_009 op=6004): axios no manda body, los _op_* van en la URL
+            // (log_pos_op.php y _sede_op.php tambien los leen de $_GET). Sin esto: 403.
+            var metodo = String(config.method).toLowerCase();
+            if (metodo === 'get' || metodo === 'head' || metodo === 'delete') {
+                config.params = Object.assign({}, config.params, {
+                    _op_dest: dest,
+                    _op_org:  params._op_org,
+                    _op_sede: params._op_sede
+                });
+                if (opVal != null && config.params.op == null) { config.params.op = opVal; }
+                return config;
+            }
 
             // Cuerpo JSON (httpFecht/axiosExecute con isHeadersJson=true): fusionar
             // _op_* dentro del objeto. NO convertir a form-urlencoded vacio.

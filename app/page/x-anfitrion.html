@@ -6,6 +6,7 @@
 	 a encender la pantalla. Colores y grilla isotope iguales a Control de Mesas, con clases propias anf-*. -->
 <dom-module id="x-anfitrion">
 	<link rel="import" href="../web_components/paper-dialog/paper-dialog.html">
+	<script type="text/javascript" src="../shared/vision.mesas.js"></script>
 	<template>
 		<paper-dialog id="dlg_anf_detalle" class="xdlg" entry-animation="fade-in-animation" exit-animation="fade-out-animation" with-backdrop>
 			<div class="xContent">
@@ -466,6 +467,7 @@ Polymer({
 			xAnfCargar();
 			xAnfSocket();
 			st.timerSocket = setTimeout(xAnfSocket, 3000); // socket.master.service.js carga async en m_panel
+			if (typeof xVisionMesasIniciar === 'function') { xVisionMesasIniciar({ pantalla: 'anfitrion', escuchar: function (e, fn) { socketService.getInstance()._listen(e, fn); }, socket: function () { return socketService.getInstance()._socket; } }); }
 		});
 	},
 	detached: function () {

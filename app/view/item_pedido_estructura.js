@@ -65,7 +65,9 @@ function xEstructuraItemsJsonComprobante(_SubItems, xArraySubTotales, cpe=false,
                 if ( typeof items[x] === 'object' ) { 
                     const item = items[x]; 
                     // si es precuenta adjunta por descripcion
-                    item.grupo = !isPrecuenta ? item.iditem : item.des; 
+                    // cortesia: grupo propio (total 0) para no fundirse con la linea cobrada del mismo iditem; el CPE la omite
+                    const _esCortesia = !isPrecuenta && String(item.des || item.descripcion || '').trim().indexOf('CORTESIA S/') === 0;
+                    item.grupo = !isPrecuenta ? (_esCortesia ? item.iditem + '|cortesia' : item.iditem) : item.des; 
                     itemsObj.push(item); 
                 }
             })
@@ -286,5 +288,5 @@ function xDesSinParentesis(des) {
 // Export para pruebas en Node (test/item_pedido_estructura.des.test.js);
 // en el navegador la funcion queda global como el resto del archivo.
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { xDesSinParentesis };
+    module.exports = { xDesSinParentesis, xEstructuraItemsJsonComprobante };
 }

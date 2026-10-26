@@ -1,9 +1,9 @@
 // Stock parado en las sedes (central): productos que se venden (gaseosas, cervezas, snacks...) y que en una sede no
 // salen. Solo cuenta lo que se descuenta con ventas: los abarrotes sin receta no aparecen (su stock nunca baja).
 // Cada fila sugiere la sede que mas lo vende y con un clic queda para despachar en Envios a las sedes.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, nuevoToken } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, nuevoToken } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

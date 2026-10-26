@@ -43,6 +43,9 @@
 						<paper-checkbox id="check_mod_catalogo_maestro"><span>Catálogo maestro (cadenas)</span></paper-checkbox>
 						<p class="fs-12 text-secondary">Unifica los productos de todas las sedes en una sola lista. Necesita 2 o más sedes y el módulo de arriba activo.</p>
 
+						<paper-checkbox id="check_mod_camaras_ia"><span>Cámaras IA</span></paper-checkbox>
+						<p class="fs-12 text-secondary">Muestra con las cámaras del local qué mesas están ocupadas. Al activarlo, la opción <strong>Cámaras IA</strong> del menú queda disponible. No necesita los módulos de arriba.</p>
+
 						<p id="lbl_modulos_msg" class="fs-12 fw-600"></p>
 						<br><br>
 
@@ -816,7 +819,7 @@ function transferenciaCompletaMini(xfile){
 	// --- Modulos ERP: opt-in por organizacion (tabla org_modulo) ---
 	// Se prenden/apagan a solicitud del cliente. Guardado inmediato: un clic = un
 	// cambio en BD, sin boton Guardar (para que sea obvio quien opera el panel).
-	var ERP_MODULOS = ['erp', 'catalogo_maestro'];
+	var ERP_MODULOS = ['erp', 'catalogo_maestro', 'camaras_ia'];
 
 	function xErpCheck(modulo) {
 		return document.getElementById('check_mod_' + modulo);
@@ -851,6 +854,9 @@ function transferenciaCompletaMini(xfile){
 	function xErpRefrescarBloqueo(sinOrg) {
 		xErpCheck('erp').disabled = sinOrg;
 		xErpCheck('catalogo_maestro').disabled = sinOrg || !xErpCheck('erp').checked;
+		// Camaras IA no depende del ERP: solo se bloquea si no hay restaurante cargado.
+		// Sin esta linea quedaria deshabilitado para siempre tras el primer clic.
+		xErpCheck('camaras_ia').disabled = sinOrg;
 	}
 
 	function xErpCargarModulos() {
@@ -896,6 +902,12 @@ function transferenciaCompletaMini(xfile){
 		$.ajax({ type: 'POST', url: '../../bdphp/log_004.php?op=111', data: { idorg: _idorg, modulo: modulo, activo: _activo } })
 		.done(() => {
 			if (xThisAdminNew.xIdOrg !== _idorg) return;
+			if (modulo === 'camaras_ia') {
+				xErpMensaje(_activo
+					? 'Activado. Se aplica de inmediato, la próxima vez que el usuario entre a Cámaras IA.'
+					: 'Desactivado. Cámaras IA deja de abrirse de inmediato.');
+				return;
+			}
 			xErpMensaje(_activo
 				? 'Activado. Se aplica de inmediato, la próxima vez que el usuario entre a Compras.'
 				: 'Desactivado. El menú Compras vuelve al sistema de siempre de inmediato.');

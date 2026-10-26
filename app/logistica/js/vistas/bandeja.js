@@ -3,10 +3,10 @@
 //  2) Al hacer clic: el detalle de ESE pedido (sede, fecha y nota una sola vez; una fila por producto) con la
 //     propuesta de donde sale cada cosa: almacen central, traslado desde una sede con stock parado, o comprar.
 // La propuesta la calcula el servidor para TODOS los pedidos juntos (el stock del central se reparte por orden de llegada).
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, nuevoToken, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar, turnoActual } from '../router.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, nuevoToken, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar, turnoActual } from '../router.js?v=20261026a';
 
 const MODOS = [
 	['auto', 'Lo que propone el sistema'],

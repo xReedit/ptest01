@@ -37,9 +37,13 @@
                 var listCC = JSON.parse(dt);
                 xThisComCanalConsumo.canalSeleted = null;
 
+                // venta recuperada (F5 o pestaña cerrada): quedarse en su canal; antes se pasaban sus productos a LOCAL
+                var idConItems = canalConItems();
+                var hayCanal = listCC.datos.some(x => String(x.idtipo_consumo) === idConItems);
+
                 listCC.datos.map((x, i) => {
                     x.seleccionado = false;
-                    if ( i === 0) {
+                    if ( hayCanal ? String(x.idtipo_consumo) === idConItems : i === 0 ) {
                         x.seleccionado = true;
                         xThisComCanalConsumo.canalSeleted = x;
                     }
@@ -54,6 +58,12 @@
                     xThisComCanalConsumo.getValorIncial(xThisComCanalConsumo.canalSeleted);
                 }
             });
+        }
+
+        function canalConItems() {
+            if ( typeof xArrayPedidoObj === 'undefined' || !xArrayPedidoObj ) { return null; }
+            var tpc = Object.values(xArrayPedidoObj).find(t => t && Object.values(t).some(it => it && typeof it === 'object' && parseFloat(it.cantidad) > 0));
+            return tpc ? String(tpc.id) : null;
         }
 
         function reloadCanalConsumoPosSede() {

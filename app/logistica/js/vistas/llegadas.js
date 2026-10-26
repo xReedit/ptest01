@@ -1,9 +1,9 @@
 // Lo que llego al almacen de la central (central): lista de llegadas (con o sin orden de compra) -> detalle con
 // que llego, cuanto se pidio, precio, lote/vencimiento, quien lo recibio y a que almacen entro.
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, paginador, fecha } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, paginador, fecha } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 /** Resumen de lo que anoto el recepcionista: completa, falto, cambio, observaciones. */

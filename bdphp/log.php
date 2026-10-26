@@ -2676,8 +2676,8 @@
 			//UPDATE pedido AS p INNER JOIN registro_pago AS rp ON p.idregistro_pago=rp.idregistro_pago SET p.cierre=1 WHERE (p.idorg=".$g_ido." AND p.idsede=".$g_idsede.") and (p.cierre=0 AND rp.idusuario=".$_POST['i'].");
 			$sql="
 				UPDATE ie_caja SET cierre=1 WHERE idusuario=".$_POST['i']." AND cierre=0 and (idorg=".$g_ido." AND idsede=".$g_idsede.");
-				UPDATE registro_pago SET cierre=1, fecha_cierre='".$hora_now."' WHERE idusuario=".$_POST['i']." and cierre=0 and (idorg=".$g_ido." AND idsede=".$g_idsede.");
-				UPDATE pedido AS p INNER JOIN registro_pago AS rp ON p.idregistro_pago=rp.idregistro_pago SET p.cierre=1 WHERE (rp.idorg=".$g_ido." AND rp.idsede=".$g_idsede.") AND rp.idusuario=".$_SESSION['idusuario']." AND p.cierre=0 ;
+				UPDATE registro_pago SET cierre=1, fecha_cierre='".$hora_now."' WHERE idusuario=".$_POST['i']." and cierre=0 and ".xFiltroSedeCaja('', $g_ido, $g_idsede).";
+				UPDATE pedido AS p INNER JOIN registro_pago AS rp ON p.idregistro_pago=rp.idregistro_pago SET p.cierre=1 WHERE ".xFiltroSedeCaja('rp', $g_ido, $g_idsede)." AND rp.idusuario=".$_SESSION['idusuario']." AND p.cierre=0 ;
 				UPDATE pedido SET cierre=1 WHERE estado=3 AND (idorg=".$g_ido." AND idsede=".$g_idsede.");
 				update pedido_borrados set fecha_cierre=now() where fecha_cierre='' and idusuario=".$_SESSION['idusuario'].";
 				DELETE FROM print_server_detalle WHERE (idorg=".$g_ido." and idsede=".$g_idsede.") and (impreso=1 or estado=1 or error=1);
@@ -2756,7 +2756,7 @@
 					INNER JOIN registro_pago_detalle AS rpd using(idregistro_pago)
 					INNER JOIN tipo_pago AS tp using(idtipo_pago)
 					INNER JOIN cliente AS c using(idcliente)
-				WHERE (rp.idorg=".$g_ido." AND rp.idsede=".$g_idsede." AND rp.idusuario=".$_SESSION['idusuario'].") AND rpd.idtipo_pago=3 AND (rp.estado=0 AND rpd.estado=0) AND rp.cierre=0
+				WHERE ".xFiltroSedeCaja('rp', $g_ido, $g_idsede)." AND rp.idusuario=".$_SESSION['idusuario']." AND rpd.idtipo_pago=3 AND (rp.estado=0 AND rpd.estado=0) AND rp.cierre=0
 				GROUP BY rp.idcliente
 			";
 			$bd->xConsulta($sql);
@@ -2767,7 +2767,7 @@
 					FROM registro_pago AS rp
 					INNER JOIN registro_pago_detalle AS rpd using(idregistro_pago)
 					LEFT JOIN registro_pago_hotel AS rph ON rph.idregistro_pago = rp.idregistro_pago AND rph.idsede = rp.idsede AND rph.estado = 'CARGADO'
-				WHERE (rp.idorg=".$g_ido." AND rp.idsede=".$g_idsede." AND rp.idusuario=".$_SESSION['idusuario'].") AND rpd.idtipo_pago=17 AND (rp.estado=0 AND rpd.estado=0) AND rp.cierre=0
+				WHERE ".xFiltroSedeCaja('rp', $g_ido, $g_idsede)." AND rp.idusuario=".$_SESSION['idusuario']." AND rpd.idtipo_pago=17 AND (rp.estado=0 AND rpd.estado=0) AND rp.cierre=0
 				GROUP BY rph.habitacion, rph.huesped
 			";
 			$bd->xConsulta($sql);
@@ -2784,7 +2784,7 @@
 			SELECT tpc.descripcion,'' as t1, count(rp.idregistro_pago) AS t2, format(sum(rp.total),2) AS t3
 				FROM registro_pago AS rp
 				INNER JOIN tipo_consumo AS tpc using(idtipo_consumo)
-			WHERE (rp.idorg=".$g_ido." AND rp.idsede=".$g_idsede." AND rp.idusuario=".$_SESSION['idusuario'].") AND rp.cierre=0 AND rp.estado=0
+			WHERE ".xFiltroSedeCaja('rp', $g_ido, $g_idsede)." AND rp.idusuario=".$_SESSION['idusuario']." AND rp.cierre=0 AND rp.estado=0
 			GROUP BY rp.idtipo_consumo
 			";
 			$bd->xConsulta($sql);
@@ -4080,6 +4080,59 @@
 			// respuesta: "<ERP_URL>|<token>" — el JS del menú hace split('|') para el redirect.
 			print ERP_URL . '|' . $erp_b64 . '.' . $erp_sigb;
 			break;
+		case -4003: // SSO token -> papaya-vision (servidor Go de Camaras IA). Mismo formato que -4002.
+			@require_once __DIR__ . '/../private/vision_secrets.php';
+			if (!defined('VISION_SHARED_SECRET') || !defined('VISION_URL')) {
+				http_response_code(500);
+				print 'vision_secrets_missing';
+				break;
+			}
+			if (empty($_SESSION['idusuario']) || empty($_SESSION['idsede'])) {
+				http_response_code(401);
+				print 'no_session';
+				break;
+			}
+			// Permiso del usuario: opcion "Cámaras IA" (codigo E2 en us_home_opciones, migracion 076).
+			// acc es "A1,C6,E2," (a veces con ",," o espacios): con comas a los lados E2 no casa con un E20.
+			$vis_acc = ',' . str_replace(' ', '', isset($_SESSION['acc']) ? (string)$_SESSION['acc'] : '') . ',';
+			if (strpos($vis_acc, ',E2,') === false) {
+				http_response_code(403);
+				print 'sin_permiso';
+				break;
+			}
+			// Gate opt-in: Camaras IA se activa por organizacion desde el panel Adm Sedes
+			// (tabla org_modulo, modulo 'camaras_ia'). Sin fila activa no se emite token.
+			// Falla en cerrado si la tabla aun no existe.
+			$vis_idorg = (int)($_SESSION['ido'] ?? 0);
+			$vis_activo = $bd->xDevolverUnDato(
+				"SELECT 1 FROM org_modulo WHERE idorg = $vis_idorg AND modulo = 'camaras_ia' AND activo = 1 LIMIT 1"
+			);
+			if (!$vis_activo) {
+				http_response_code(403);
+				print 'modulo_no_activo';
+				break;
+			}
+			$now = time();
+			$vis_payload = [
+				'idorg'     => $vis_idorg,
+				'idsede'    => (int)$_SESSION['idsede'],
+				'idusuario' => (int)$_SESSION['idusuario'],
+				'rol'       => (string)($_SESSION['rol'] ?? ''),
+				'nombre'    => (string)($_SESSION['nomU'] ?? ($_SESSION['unom'] ?? '')),
+				'iat'       => $now,
+				'exp'       => $now + 120, // 2 min — token de handoff de un solo uso (nonce)
+				'nonce'     => bin2hex(random_bytes(16))
+			];
+			// Un nombre con UTF-8 invalido no debe romper el token: se reemplaza el byte
+			// malo (PHP >= 7.2). En PHP viejo la constante no existe y se usa solo UNESCAPED.
+			$vis_json = json_encode($vis_payload, JSON_UNESCAPED_UNICODE | (defined('JSON_INVALID_UTF8_SUBSTITUTE') ? JSON_INVALID_UTF8_SUBSTITUTE : 0));
+			$vis_b64  = rtrim(strtr(base64_encode($vis_json), '+/', '-_'), '=');
+			$vis_sig  = hash_hmac('sha256', $vis_b64, VISION_SHARED_SECRET, true);
+			$vis_sigb = rtrim(strtr(base64_encode($vis_sig), '+/', '-_'), '=');
+			// respuesta: "<VISION_URL>|<token>" — el modulo Camaras IA hace split('|') y canjea
+			// el token en <VISION_URL>/api/v1/sso/canje.
+			print VISION_URL . '|' . $vis_b64 . '.' . $vis_sigb;
+			break;
 		case -4100: // feature flag por sede para la UI v3
 			if (empty($_SESSION['idsede'])) {
 				http_response_code(401);
@@ -4108,6 +4161,19 @@
 
 // ---- sesion: que org/sede puede tener un usuario (reconexion, -1112, -1001) ----
 // Devuelve el idsede (texto) si la sede pertenece a la org, o null.
+// Filtro de sede de los pagos de la caja del usuario (cierre 70012 y reportes 702/70201/703).
+// Call center (permiso A27): sus pagos previos quedan con la sede del pedido (otra sede de la org);
+// se cierran con SU caja, igual que ya los suma el resumen (op 7, que filtra solo por idusuario).
+// El resto de usuarios sigue con org+sede, sin cambios.
+function xFiltroSedeCaja($alias, $ido, $idsede) {
+	$p = $alias ? $alias.'.' : '';
+	$acc = isset($_SESSION['acc']) ? $_SESSION['acc'] : '';
+	if (preg_match('/(^|,)\s*A27\s*(,|$)/', $acc)) {
+		return $p."idorg=".(int)$ido;
+	}
+	return "(".$p."idorg=".(int)$ido." AND ".$p."idsede=".(int)$idsede.")";
+}
+
 function xSedeDeOrg($bd, $idsede, $idorg) {
 	$st = $bd->bd->prepare("SELECT idsede FROM sede WHERE idsede = ? AND idorg = ?");
 	if (!$st) { return null; }

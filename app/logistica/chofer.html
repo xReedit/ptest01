@@ -152,7 +152,7 @@
 	<main id="ch_vista" aria-live="polite"><div class="esqueleto"></div><div class="esqueleto"></div></main>
 	<script type="module">
 		// version.txt sin cache: al desplegar el chofer baja lo nuevo sin borrar nada
-		const v = await fetch('./version.txt', { cache: 'no-store' }).then(r => r.ok ? r.text() : 'v=20261015i', () => 'v=20261015i');
+		const v = await fetch('./version.txt', { cache: 'no-store' }).then(r => r.ok ? r.text() : 'v=20261026a', () => 'v=20261026a');
 		await import('./js/chofer.js?' + v.trim());
 	</script>
 </body>

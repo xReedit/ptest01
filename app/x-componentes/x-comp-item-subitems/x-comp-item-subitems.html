@@ -1,355 +1,254 @@
 <dom-module id="x-comp-item-subitems">
     <link rel="import" href="../../x-componentes/x-comp-ctrl-add-fast/x-comp-ctrl-add-fast.html">
     <template>
-        <paper-dialog id="dialog_item_comp" class="xDlgItem_mipedido dialog_redondo dlg-subitems" 
-             modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-            <div style="max-height: 82vh;">
-                <!-- descripcion producto -->
-                <div class="xheader-top">
-                    <h4>{{desProducto}} <span class="xmenu_item_2" id="contetStock">{{stockProducto}}</span></h4>                
-                    <!-- stock
-                    <div class="xstock_item" id="contetStock">
-                        <span>stock</span>
-                        <p>{{stockProducto}}</p>
-                    </div> -->
-                </div>            
-                <!-- descripcion producto -->
+        <!-- Rediseño 2026-10: grupos como tarjetas, opciones como botones grandes y panel con lo ya agregado.
+             La logica de agregar sigue siendo la de siempre: el boton Agregar y los +/- de cada linea disparan
+             los .xBtn de las filas de canal (#_xdlgBody, ocultas) que atiende handlerFnMiPedido (item_pedidos.js). -->
+        <paper-dialog id="dialog_item_comp" class="xdlg dlg-op" modal with-backdrop
+             entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+            <div class="op-wrap">
+                <div class="op-head">
+                    <div class="op-info">
+                        <h3>{{desProducto}}</h3>
+                        <p class="op-det" hidden$="[[!isShowDetalleProducto]]">{{detalleProducto}}</p>
+                        <div class="op-chips">
+                            <span class="op-chip" id="opChipStock"><i class="fa fa-cubes"></i> Stock: <b id="contetStock">{{stockProducto}}</b></span>
+                        </div>
+                        <div class="op-progreso" id="opProgreso"></div>
+                    </div>
+                    <div class="op-precio"><b id="opPrecio"></b><span id="opPrecioSub"></span></div>
+                    <button class="op-x" title="Cerrar" onclick="xListoDlgVR_comp();"><i class="fa fa-times"></i></button>
+                </div>
 
-                <!-- body -->
-                <div class="body-content">
-                    <div hidden$ = "[[ !isShowDetalleProducto ]]" class="pb-10">
-                        <span class="fs-12 color-secundario">{{detalleProducto}}</span>
-                        <!-- <div class="xLinea2"></div> -->
-                        <br>
-                    </div>                
-                    <!-- sub items -->
-                    <div hidden$="[[ !isExistSubitems ]]" class="div-content-subitems">                    
+                <div class="op-cuerpo">
+                    <div class="op-grupos" hidden$="[[ !isExistSubitems ]]">
                         <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
-                            <div class="div-subitem">
-                                <div class="xtitulo-subitems">
-                                    <div>
-                                        <p class="xBold">{{ labelUpperCase(contentSub.des) }}</p>
-                                        <span class="fs-12 color-secundario">{{contentSub.des_cant_select}} {{contentSub.subitem_cant_select}}</span>
-                                        <span class="txt-obligatorio" hidden$="[[!contentSub.isObligatorio]]">Obligatorio</span>
-                                    </div>                            
+                            <div class="op-grupo" data-idcontent$="[[contentSub.iditem_subitem_content]]">
+                                <div class="op-g-head">
+                                    <span class="op-paso"></span>
+                                    <div class="op-g-titulo">[[_titulo(contentSub.des)]]<div class="op-g-regla"></div></div>
+                                    <span class="op-g-chip"></span>
                                 </div>
-                                
-                                <div id="group-[[contentSub.iditem_subitem_content]]">
+                                <div class="op-opciones" id="group-[[contentSub.iditem_subitem_content]]">
                                     <template is="dom-repeat" items="[[contentSub.opciones]]" as="subitem">
-                                        <div class="xoption w-100 xCursor" hidden$="{{isSubItemCheckBox(contentSub.show_cant_item)}}">
-                                            <paper-checkbox   
-                                                data-item = "{{subitem}}"         
-                                                data-idcontent = "{{contentSub.iditem_subitem_content}}"
-                                                data-id = "{{index}}"
-                                                checked$ = "[[subitem.selected]]"
-                                                class = "check-subitem w-100"
-                                                disabled$ = "[[subitem.disabled]]"
-                                                onchange = "addSubItem(this)"
-                                                >                                            
-                                                <div class$="[[subitem.classAgotado]]">
-                                                        {{subitem.des}}                                                
-                                                        <span class="xprecio" hidden$ = "[[!subitem.cantidad_visible]]">
-                                                            | [[subitem.cantidad]]
-                                                        </span>
-                                                        <span class="xprecio aling-derecha" hidden$ = "[[!subitem.precio_visible]]">
-                                                            + {{subitem.precio}}
-                                                        </span>
-                                                    </div>
-                                            </paper-checkbox>
-                                        </div>
-                                        <div class="xoption w-100 xCursor" hidden$="{{!isSubItemCheckBox(contentSub.show_cant_item)}}">
-                                            <div class$="[[subitem.classAgotado]] w-100">
-                                                <div class="div-count-subitem pl-2">
-                                                    <div>
-                                                        {{subitem.des}}
-                                                        <span class="xprecio" hidden$="[[!subitem.cantidad_visible]]">
-                                                            | {{subitem.cantidad}}
-                                                        </span>                                                        
-                                                    </div>
-                                                    <div class="d-flexx align-content-center align-items-center">
-                                                        <p class="xprecio mr-2" style="width: 15px;" hidden$="[[!subitem.precio_visible]]">
-                                                            + {{subitem.precio}}
-                                                        </p>
-                                                        <x-comp-ctrl-add-fast 
-                                                            on-chagecount="handleCountChange"
-                                                            iditem_subitem_content="[[contentSub.iditem_subitem_content]]"
-                                                            subitem="{{subitem}}"                                                            
-                                                            descripcion_item_ini="[[subitem.des]]"
-                                                            max-quantity="[[contentSub.subitem_cant_select]]"
-                                                        >
-                                                        </x-comp-ctrl-add-fast>
-                                                    </div>
+                                        <div class="op-op check-subitem" hidden$="{{isSubItemCheckBox(contentSub.show_cant_item)}}"
+                                            data-item="{{subitem}}" data-idcontent="{{contentSub.iditem_subitem_content}}" data-id="{{index}}"
+                                            on-tap="_tocarOpcion">
+                                            <i class="fa fa-circle-o op-ic"></i>
+                                            <div class="op-tx">
+                                                <div class="op-nom">[[subitem.des]]</div>
+                                                <div class="op-sub">
+                                                    <span class="op-mas" hidden$="[[!subitem.precio_visible]]">+ S/ [[_dinero(subitem.precio)]]</span>
+                                                    <span class="op-stock"></span>
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div class="op-op op-cant-op" hidden$="{{!isSubItemCheckBox(contentSub.show_cant_item)}}" data-item="{{subitem}}">
+                                            <div class="op-tx">
+                                                <div class="op-nom">[[subitem.des]]</div>
+                                                <div class="op-sub">
+                                                    <span class="op-mas" hidden$="[[!subitem.precio_visible]]">+ S/ [[_dinero(subitem.precio)]]</span>
+                                                    <span class="op-stock"></span>
+                                                </div>
+                                            </div>
+                                            <x-comp-ctrl-add-fast
+                                                on-chagecount="handleCountChange"
+                                                iditem_subitem_content="[[contentSub.iditem_subitem_content]]"
+                                                subitem="{{subitem}}"
+                                                descripcion_item_ini="[[subitem.des]]"
+                                                max-quantity="[[contentSub.subitem_cant_select]]">
+                                            </x-comp-ctrl-add-fast>
                                         </div>
                                     </template>
                                 </div>
                             </div>
-                        </template> 
-                        <br><br>
+                        </template>
                     </div>
-                    <!-- sub items -->
 
-                    <!-- otras indicaciones -->
-                    <div class="div-add-item">                        
-                        <div class="xreferencia_item pr-2">
-                            <label for="txt_referencia" class="xBold">Instrucciones adicionales</label>
-                            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="nota_plato_item" placeholder="Agregue una nota (poco aji, sin arroz, etc.)" class="xMiTextReferencia text-primary fw-900" id="txt_referencia" onkeyup="xChangeIndicacionesItem()">
-                            <hr>
+                    <div class="op-lado">
+                        <div class="op-bloque" hidden$="[[ !isExistSubitems ]]">
+                            <h4><i class="fa fa-hand-pointer-o"></i> <span id="opTituloSel">Selección</span>
+                                <span class="op-der" on-tap="_limpiarSeleccion"><i class="fa fa-eraser"></i> Limpiar</span></h4>
+                            <div id="opSeleccion" class="op-resumen"></div>
                         </div>
-                        <!-- otras indicaciones -->
-    
-                        <!-- tipos de consumo -->
-                        <!-- <br><br> -->
-                        <div class="add-count">
-                            <span class="xColorRow_Rojo" hidden$="[[isOptionRequeridosComplet]]">Hay opciones requeridas por marcar</span>
-                            <div class="xdlgBody" id="_xdlgBody" disabled$="[[!isOptionRequeridosComplet]]">
-                                <div class="spinner"><paper-spinner active></paper-spinner></div>
-                            </div>                
+                        <div class="op-bloque">
+                            <h4><i class="fa fa-pencil"></i> Indicaciones adicionales</h4>
+                            <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="nota_plato_item"
+                                placeholder="Ej: poco ají, sin arroz" class="op-nota" id="txt_referencia"
+                                onkeyup="xChangeIndicacionesItem(); xThisComSubItem._pintar();">
+                            <div class="op-rapidas" id="opRapidas"></div>
                         </div>
-                        <!-- tipos de consumo -->
+                        <div class="op-bloque">
+                            <h4><i class="fa fa-map-marker"></i> Se agrega a</h4>
+                            <div class="op-seg" id="opCanales"></div>
+                        </div>
+                        <div class="op-bloque">
+                            <h4><i class="fa fa-shopping-basket"></i> Ya en el pedido <span id="opCantPedido"></span></h4>
+                            <div id="opAgregados"></div>
+                        </div>
+                        <!-- filas de canal de siempre (xArmarTipoConsumo): ocultas, las usan Agregar y los +/- -->
+                        <div class="op-filas-canal xdlgBody" id="_xdlgBody">
+                            <div class="spinner"><paper-spinner active></paper-spinner></div>
+                        </div>
                     </div>
                 </div>
-                <!-- body -->            
 
-                <div class="xfooter-bottom">
-                    <button class="xBoton2 xPlomo xInvisible" id="dlgBtn" onclick="xListoDlgVR_comp();">
-                        Cerrar
-                    </button>
-                    <div class="txt-precio">
-                        {{precioProducto}}
-                    </div>
+                <div class="op-pie">
+                    <div class="op-estado" id="opEstado"></div>
+                    <div class="op-total"><small id="opTotalSub"></small><b id="opTotal"></b></div>
+                    <button class="btn btn-light op-btn xInvisible" id="dlgBtn" onclick="xListoDlgVR_comp();"><i class="fa fa-check"></i> Listo</button>
+                    <button class="btn btn-primary op-btn" id="opBtnAgregar" on-tap="_agregar"></button>
                 </div>
-        </div>
-		</paper-dialog>
+            </div>
+        </paper-dialog>
     </template>
 </dom-module>
 <style>
-    hr {
-       background: #e0e0e0;       
+    hr { background: #e0e0e0; } /* global de siempre: otras pantallas lo heredan de aqui */
+
+    /* ===== dialogo de opciones del producto (x-comp-item-subitems) ===== */
+    #dialog_item_comp.dlg-op { width: min(1500px, 95vw); height: min(940px, 94vh); max-width: none !important; max-height: none !important; }
+    /* alto fijo: si crece con cada linea agregada hay que recentrarlo y parpadea; lo que no entra hace scroll adentro */
+    #dialog_item_comp.op-compacto { width: min(980px, 96vw); height: min(720px, 94vh); max-height: 94vh !important; }
+    #dialog_item_comp.op-sin-grupos { width: min(640px, 96vw); height: min(560px, 94vh); max-height: 94vh !important; }
+    /* sin grupos es angosto: el estado va en su propia fila para que total y botones no se corten */
+    #dialog_item_comp.op-sin-grupos .op-pie { flex-wrap: wrap; }
+    #dialog_item_comp.op-sin-grupos .op-estado { flex-basis: 100%; }
+    #dialog_item_comp.op-sin-grupos .op-total { flex: 1 1 auto; text-align: left; }
+    #dialog_item_comp .op-wrap { display: flex; flex-direction: column; height: 100%; max-height: 94vh; color: #212529; margin: 0 !important; padding: 0 !important; }
+    #dialog_item_comp .op-wrap * { box-sizing: border-box; }
+
+    #dialog_item_comp .op-head { display: flex; gap: 14px; align-items: center; padding: 10px 18px; background: lavenderblush; border-bottom: 1px solid #edf0f2; }
+    /* nombre, stock y obligatorias en una sola fila para que el encabezado sea bajo */
+    #dialog_item_comp .op-info { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+    #dialog_item_comp .op-info h3 { margin: 0; font-size: 18px; font-weight: 700; color: #3a3a3a; }
+    #dialog_item_comp .op-det { order: 1; flex-basis: 100%; margin: 0; font-size: 12px; color: #6c757d; max-width: 760px; }
+    #dialog_item_comp .op-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    #dialog_item_comp .op-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; border: 1px solid #b7e4c3; color: #1e7e34; background: #eef9f3; }
+    #dialog_item_comp .op-chip b { font-weight: 700; background: transparent !important; color: inherit !important; padding: 0 !important; }
+    #dialog_item_comp .op-progreso { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #6c757d; font-weight: 600; }
+    #dialog_item_comp .op-progreso:empty { display: none; }
+    #dialog_item_comp .op-progreso .op-barra { width: 140px; height: 6px; border-radius: 3px; background: #ead9e1; overflow: hidden; }
+    #dialog_item_comp .op-progreso .op-barra i { display: block; height: 100%; background: #28a745; border-radius: 3px; }
+    #dialog_item_comp .op-precio { text-align: right; flex: 0 0 auto; }
+    #dialog_item_comp .op-precio b { display: block; font-size: 22px; font-weight: 700; color: #3a3a3a; font-variant-numeric: tabular-nums; }
+    #dialog_item_comp .op-precio span { font-size: 11px; color: #6c757d; }
+    #dialog_item_comp .op-x { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 8px; border: 0; background: transparent; color: #8a8a8a; font-size: 18px; cursor: pointer; }
+    #dialog_item_comp .op-x:hover { background: rgba(0, 0, 0, .05); }
+
+    #dialog_item_comp .op-cuerpo { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 380px; }
+    #dialog_item_comp.op-compacto .op-cuerpo { grid-template-columns: 1fr 340px; }
+    #dialog_item_comp.op-sin-grupos .op-cuerpo { grid-template-columns: 1fr; }
+    #dialog_item_comp .op-grupos { overflow-y: auto; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+    #dialog_item_comp .op-grupos[hidden] { display: none; }
+    #dialog_item_comp .op-lado { border-left: 1px solid #e5e7eb; background: #f8fafc; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 11px; }
+    #dialog_item_comp.op-sin-grupos .op-lado { border-left: 0; }
+
+    #dialog_item_comp .op-grupo { border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; overflow: hidden; order: 1; }
+    #dialog_item_comp .op-grupo.op-req { order: 0; }
+    #dialog_item_comp .op-grupo.pendiente { border-color: #f6c26b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .12); }
+    #dialog_item_comp .op-grupo.listo { border-color: #b7e4c3; }
+    #dialog_item_comp .op-g-head { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #fafbfc; border-bottom: 1px solid #f0f1f3; }
+    #dialog_item_comp .op-paso { width: 24px; height: 24px; border-radius: 50%; background: #e9ecef; color: #495057; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    #dialog_item_comp .listo .op-paso { background: #28a745; color: #fff; }
+    #dialog_item_comp .pendiente .op-paso { background: #f59e0b; color: #fff; }
+    #dialog_item_comp .op-g-titulo { flex: 1 1 auto; font-size: 14px; font-weight: 700; color: #343a40; }
+    #dialog_item_comp .op-g-regla { font-size: 11px; color: #6c757d; font-weight: 600; }
+    #dialog_item_comp .op-g-chip:empty { display: none; }
+    #dialog_item_comp .op-g-chip, #dialog_item_comp .op-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    #dialog_item_comp .op-g-chip.ok { color: #1e7e34; border: 1px solid #b7e4c3; background: #eef9f3; }
+    #dialog_item_comp .op-g-chip.warn { color: #9a5b00; border: 1px solid #fcd9a5; background: #fff7ed; }
+    #dialog_item_comp .op-g-chip.info { color: #0056b3; border: 1px solid #b8d8ff; background: #eaf3ff; }
+
+    #dialog_item_comp .op-opciones { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 8px; padding: 10px 12px 12px; }
+    #dialog_item_comp .op-op { display: flex; align-items: center; gap: 9px; min-height: 52px; padding: 8px 10px; border: 1px solid #dddddd; border-radius: 8px; background: #fff; cursor: pointer; user-select: none; }
+    #dialog_item_comp .op-op[hidden] { display: none; }
+    #dialog_item_comp .op-op:hover { border-color: #9ec5fe; }
+    #dialog_item_comp .op-op.op-cant-op { cursor: default; }
+    #dialog_item_comp .op-ic { font-size: 18px; color: #adb5bd; width: 18px; text-align: center; flex: 0 0 auto; }
+    #dialog_item_comp .op-tx { flex: 1 1 auto; min-width: 0; }
+    #dialog_item_comp .op-nom { font-size: 12.5px; font-weight: 600; color: #343a40; line-height: 1.25; word-break: break-word; }
+    #dialog_item_comp .op-sub { margin-top: 2px; font-size: 11px; color: #6c757d; display: flex; gap: 6px; flex-wrap: wrap; }
+    #dialog_item_comp .op-sub:empty { display: none; }
+    #dialog_item_comp .op-mas { color: #0056b3; font-weight: 700; }
+    #dialog_item_comp .op-mas[hidden] { display: none; }
+    #dialog_item_comp .op-stock.poco { color: #b45309; font-weight: 700; }
+    #dialog_item_comp .op-stock.ago { color: #dc3545; font-weight: 700; }
+    #dialog_item_comp .op-op.sel { border-color: #007bff; background: #eaf3ff; box-shadow: inset 0 0 0 1px #007bff; }
+    #dialog_item_comp .op-op.sel .op-ic { color: #007bff; }
+    #dialog_item_comp .op-op.agotado { cursor: not-allowed; background: #f8f9fa; border-style: dashed; }
+    #dialog_item_comp .op-op.agotado .op-nom { color: #adb5bd; text-decoration: line-through; }
+    #dialog_item_comp .op-cant-op .container { background: transparent !important; }
+    #dialog_item_comp .op-cant-op .increment, #dialog_item_comp .op-cant-op .decrement { font-size: 18px !important; padding: 0 10px 2px !important; }
+
+    #dialog_item_comp .op-bloque[hidden] { display: none; }
+    #dialog_item_comp .op-bloque h4 { margin: 0 0 7px; font-size: 11px; font-weight: 700; color: #6c757d; letter-spacing: .5px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+    #dialog_item_comp .op-der { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; color: #007bff; cursor: pointer; }
+    #dialog_item_comp .op-resumen { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 9px 12px; }
+    #dialog_item_comp .op-resumen.nueva { border: 1px dashed #007bff; }
+    #dialog_item_comp .op-linea { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 700; }
+    #dialog_item_comp .op-ops-txt { font-size: 11.5px; color: #495057; line-height: 1.45; margin-top: 2px; }
+    #dialog_item_comp .op-ops-txt b { color: #0056b3; }
+    #dialog_item_comp .op-falta { color: #b45309; font-weight: 600; font-size: 12px; margin-top: 3px; }
+    #dialog_item_comp .op-aviso { margin-top: 6px; padding: 6px 8px; border-radius: 6px; font-size: 11px; background: #eaf3ff; color: #0056b3; }
+    #dialog_item_comp .op-nota { width: 100%; height: 36px; border: 1px solid #dddddd; border-radius: 8px; padding: 0 10px; font: inherit; font-size: 13px; background: #fff; }
+    #dialog_item_comp .op-nota:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0, 123, 255, .12); }
+    #dialog_item_comp .op-rapidas { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+    #dialog_item_comp .op-rapidas:empty { display: none; }
+    #dialog_item_comp .op-rapida { padding: 3px 9px; border-radius: 999px; border: 1px solid #dddddd; background: #fff; font-size: 11px; color: #495057; cursor: pointer; }
+    #dialog_item_comp .op-rapida.on { border-color: #007bff; color: #007bff; background: #eaf3ff; }
+
+    #dialog_item_comp .op-seg { display: flex; background: #eef0f3; border-radius: 9px; padding: 3px; gap: 3px; }
+    #dialog_item_comp .op-seg span { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 4px; border-radius: 7px; font-size: 10.5px; font-weight: 700; color: #6c757d; cursor: pointer; text-align: center; line-height: 1.15; }
+    #dialog_item_comp .op-seg span img { width: 16px; height: 16px; object-fit: contain; opacity: .55; flex: 0 0 auto; }
+    #dialog_item_comp .op-seg span.on { background: #fff; color: #007bff; box-shadow: 0 1px 2px rgba(16, 24, 40, .08); }
+    #dialog_item_comp .op-seg span.on img { opacity: 1; }
+
+    #dialog_item_comp .op-agregado { display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; }
+    #dialog_item_comp .op-agregado.actual { border: 2px solid #007bff; }
+    #dialog_item_comp .op-agregado .op-num { width: 24px; height: 24px; border-radius: 50%; background: #e9ecef; color: #495057; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    #dialog_item_comp .op-agregado.actual .op-num { background: #007bff; color: #fff; }
+    #dialog_item_comp .op-agregado .op-ad { flex: 1 1 auto; min-width: 0; }
+    #dialog_item_comp .op-agregado .op-ad b { display: block; font-size: 12px; }
+    #dialog_item_comp .op-agregado .op-ad small { display: block; font-size: 11px; color: #6c757d; line-height: 1.3; }
+    #dialog_item_comp .op-agregado .op-ad em { font-style: normal; font-size: 10.5px; color: #007bff; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    #dialog_item_comp .op-agregado .op-ad em img { width: 14px; height: 14px; object-fit: contain; }
+    #dialog_item_comp .op-vacio { font-size: 12px; color: #6c757d; background: #fff; border: 1px dashed #dddddd; border-radius: 10px; padding: 10px 12px; }
+    #dialog_item_comp .op-step { display: inline-flex; align-items: center; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden; background: #fff; flex: 0 0 auto; }
+    #dialog_item_comp .op-step button { width: 30px; height: 30px; border: 0; background: #fff; color: #495057; font-size: 13px; cursor: pointer; }
+    #dialog_item_comp .op-step button:hover { background: #f1f3f5; }
+    #dialog_item_comp .op-step b { min-width: 26px; text-align: center; font-size: 13px; }
+    #dialog_item_comp .op-filas-canal { display: none; }
+
+    #dialog_item_comp .op-pie { border-top: 1px solid #e5e7eb; padding: 10px 16px; display: flex; align-items: center; gap: 12px; background: #fff; }
+    #dialog_item_comp .op-estado { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+    #dialog_item_comp .op-estado.mal { color: #b45309; }
+    #dialog_item_comp .op-estado.bien { color: #1e7e34; }
+    #dialog_item_comp .op-estado.info { color: #0056b3; }
+    #dialog_item_comp .op-estado .fa { font-size: 18px; }
+    #dialog_item_comp .op-total { text-align: right; white-space: nowrap; }
+    #dialog_item_comp .op-total small { display: block; font-size: 11px; color: #6c757d; }
+    #dialog_item_comp .op-total b { font-size: 22px; font-variant-numeric: tabular-nums; }
+    #dialog_item_comp .op-btn { height: 40px; padding: 0 18px; font-weight: 700; border-radius: 8px; white-space: nowrap; }
+    #dialog_item_comp #opBtnAgregar { font-weight: 400; }
+    #dialog_item_comp #dlgBtn { background: #e9ecef; border: 1px solid #ced4da; }
+    #dialog_item_comp #dlgBtn:hover { background: #dee2e6; }
+
+    /* pantallas grandes: los grupos en dos columnas */
+    @media (min-width: 1500px) {
+        #dialog_item_comp:not(.op-compacto) .op-grupos { display: grid; grid-template-columns: 1fr 1fr; align-content: start; align-items: start; }
     }
-    .subitem-content {
-        display: inline-flex;
-        width: 100%;
-        padding-bottom: 20px;
-        background: lightgoldenrodyellow;
-        padding: 5px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-        margin-bottom: 20px;
-        border-top: 1px solid #bdbdbd;
-        border-bottom: 1px solid #bdbdbd;
-    }
-
-    .subitem-content .xoption {
-        display: inline-flex;  
-        padding-right: 8px;
-        min-width: 150px;
-        font-size: 12px;
-    }
-
-    .subitem-content .xoption .agotado {
-        text-decoration: line-through;
-        color: palevioletred;
-    }
-
-    .subitem-content .xoption .xprecio {
-        font-size: 10px;
-        color: #757575;
-        width: 25px !important;
-    }
-
-    .xstock_item.xstock_item-redondo {
-        border-radius: 50%;
-        padding: 8px 10px 8px 10px;
-    }
-
-    .xtitulo-subitems {
-        background: #eeeeee;
-        width: 100%;
-        padding: 5px;
-        border-radius: 2px;
-    }
-
-    .xoption {        
-        padding-right: 8px;
-        min-width: 150px;
-        font-size: 12px;
-        display: inline-flex;
-        border-bottom: 1px solid #e0e0e0;
-        padding-bottom: 5px;
-        padding-top: 5px;
-    }
-
-    .xoption .agotado {
-        text-decoration: line-through;
-        color: palevioletred;
-    }
-
-    .xoption .xprecio {
-        font-size: 10px;
-        color: #757575;
-        width: 25px !important;
-    }
-
-    .xprecio.aling-derecha{
-        position: relative;
-        float: right;
-    }
-
-    .xhidden {
-        display: none !important;
-    }
-
-    .txt-obligatorio {
-        font-size: 12px;
-        background: #bdbdbd;
-        padding: 6px;
-        margin-left: 5px;
-        border-radius: 8px;
-        position: relative;
-        float: right;
-        top: -18px;
-    }
-
-    .xheader-top {
-        padding: 25px 0px 5px;
-        background: white;
-        position: sticky;
-        top: 0;
-        /* width: 355px; */
-        z-index: 1;
-        border-bottom: 1px solid lightgray;
-        padding-bottom: 5px;
-        margin-top: -32px;
-    }
-
-    .xfooter-bottom {
-        position: sticky;
-        bottom: -10px;
-        z-index: 1;
-        border-top: 1px solid lightgray;
-        /* width: 355px; */
-        background: white;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-
-    .txt-precio {
-        position: absolute;
-        top: 0px;
-        right: 0px;
-        font-size: 20px;
-        padding: 20px;
-    }
-
-    .body-content {
-        position: relative;
-        top: 15px;
-        margin-bottom: 15px;
-    }
-
-    #contetStock {
-        border-radius: 5px;
-        padding: 3px;
-        font-weight: 100;
-    }
-
-    #checkboxLabel { width: 90%;}
-
-    #checkboxLabel div {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    /* .paper-dialog-0 > *:first-child #dialog_item_comp {
-        margin-top: 0px;
-        margin-bottom: 0px;
-    } */
-
-    #_xdlgBody[disabled] {
-        pointer-events:none;opacity:0.43;
-    }
-
-    .div-content-subitems {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 10px; /* Espaciado vertical y horizontal entre los elementos */
-        width: 100%;
-    }
-
-    .div-add-item {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 10px; /* Ajusta este valor para cambiar el espacio entre los elementos */
-        width: 100%;
-        align-items: center;
-        background: #f2f9ff;
-        padding-top: 10px;
-    }
-
-    .div-subitem {
-        padding: 5px;
-        border-radius: 10px;
-        margin-right: 5px;
-        margin-bottom: 5px;   
-        width: 100%;     
-        display: block;
-    }
-
-    .dlg-subitems {
-        padding: 0px;
-        width: 400px;
-        overflow-x: auto;        
-        /* scrollbar-width: thin;
-        scrollbar-color: #bdbdbd white; */
-    }
-
-    .div-count-subitem {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    .dlg-subitems-on-option {
-        padding: 0px;
-        width: 400px !important;
-        overflow-x: auto; 
-    }    
-
-    @media screen and (min-width: 870px) {
-        .dlg-subitems-with-items {
-            width: 700px;
-        }
-
-        .div-subitem {            
-            max-width: 300px;
-            min-width: 200px;
-        }
-
-        /* .add-count {
-            width: 310px;            
-        } */
-    }
-
-    @media screen and (max-width: 870px) {
-        /* .add-count {
-            width: 100%;
-        } */
-        .div-add-item {
-            background: transparent;            
-        }
-
-        /* .div-add-item .xreferencia_item {
-            padding-right: 0px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .div-add-item {
-            flex-wrap: wrap;
-        } */
+    /* pantallas chicas: una sola columna, todo con scroll */
+    @media (max-width: 860px) {
+        #dialog_item_comp.dlg-op, #dialog_item_comp.op-compacto, #dialog_item_comp.op-sin-grupos { width: 100vw; height: 100vh; max-height: none !important; border-radius: 0; }
+        #dialog_item_comp .op-cuerpo { grid-template-columns: 1fr !important; overflow-y: auto; }
+        #dialog_item_comp .op-grupos, #dialog_item_comp .op-lado { overflow: visible; }
+        #dialog_item_comp .op-lado { border-left: 0; border-top: 1px solid #e5e7eb; }
+        #dialog_item_comp .op-det { display: none; }
+        #dialog_item_comp .op-opciones { grid-template-columns: 1fr 1fr; }
+        #dialog_item_comp .op-pie { flex-wrap: wrap; }
+        #dialog_item_comp .op-estado { flex-basis: 100%; font-size: 12px; }
+        #dialog_item_comp .op-total { flex: 1 1 auto; text-align: left; }
     }
 </style>
 <script>
@@ -441,9 +340,8 @@
             $('.contet-subitem').addClass('xhidden');
         }
 
-        isExistSubitems ? $('#dialog_item_comp').addClass('dlg-subitems-with-items') : $('#dialog_item_comp').removeClass('dlg-subitems-with-items');
-
         xThisComSubItem.isExistSubitems = isExistSubitems;
+        xThisComSubItem._prepararVista();
         
 
         cocinarListSubItemsView();
@@ -469,50 +367,8 @@
         
 
         dialog_item_comp.open();
-        // objOptionItemSelect.checked = false;
-
-        // la cantidad de items es < 2 entonces al dialog_item_com darle la clase 'dlg-subitems-on-option'
-        if ( itemPedidos_objItemSelected.subitems.length < 2) {
-            dialog_item_comp.classList.add('dlg-subitems-on-option');
-            chageStyleElements();
-        } else {            
-            dialog_item_comp.classList.remove('dlg-subitems-on-option');
-            chageStyleElements2();
-        }
-
-        // isotope
-        setTimeout(() => {
-            $('.div-content-subitems').isotope({
-                itemSelector: '.div-subitem',
-                layoutMode: 'masonry'                
-            });
-        }, 200);
-        
-    }
-
-    function chageStyleElements() {
-        if (window.innerWidth <= 870) return;
-
-            var divSubitem = document.querySelectorAll('.div-subitem');
-            divSubitem.forEach(function (item) {
-                item.style.maxWidth = 'fit-content';
-                item.style.maxWidth = '-webkit-fill-available'
-                item.style.maxWidth = '97%';
-                // item.style.minWidth = '200px';
-            });
-
-           
-        // }
-    }
-
-    function chageStyleElements2() {
-        if (window.innerWidth <= 870) return;
-
-        var divSubitem = document.querySelectorAll('.div-subitem');
-        divSubitem.forEach(function (item) {
-            item.style.maxWidth = '300px';
-            item.style.minWidth = '200px';
-        });
+        // los grupos se pintan cuando el dom-repeat termina de dibujar
+        setTimeout(() => { xThisComSubItem._pintar(); dialog_item_comp.notifyResize(); }, 0);
     }
 
     async function getSubtItemsItem(_iditem) {
@@ -610,6 +466,7 @@
 		// });       
         // cocinarListSubItemsView();
         // xThisComSubItem.listSubItems = listUpdate;
+        xThisComSubItem._pintar(); // stock de las opciones cambio por socket
     }
 
     function cocinarListSubItemsView() {
@@ -646,11 +503,6 @@
         if (typeof xVerMipedidoVR === 'function') { xVerMipedidoVR(); } // solo existe en venta rapida
         dialog_item_comp.close();
         resetCmpCtrlAddFact();
-
-        // destroy isotope
-        setTimeout(() => {            
-            $('.div-content-subitems').isotope('destroy');
-        }, 100);
     }
 
     function resetCmpCtrlAddFact() {
@@ -767,6 +619,7 @@
 
         checkOptionObligario();
         compItemSumImporte(true);
+        xThisComSubItem._pintar();
 
     // }
     }
@@ -934,6 +787,7 @@
         });
         dialog_item_comp.center();
         compResetInputIndicaciones(xindicaciones || '');
+        xThisComSubItem._pintar();
     // });
     //     $("#txt_referencia").val(xindicaciones);
     }
@@ -987,6 +841,26 @@
             xThisComSubItem = this;				
             this.isShowDetalleProducto = false;
             xThisComSubItem.cantSubItemSelect = 0 ;
+            if (this._clicsListos) { return; }
+            this._clicsListos = true;
+            // el panel derecho se arma con innerHTML: un solo listener por contenedor
+            var self = this;
+            this.$$('#opCanales').addEventListener('click', function (e) {
+                var s = e.target.closest('span[data-id]');
+                if (s) { self._canalSel = s.getAttribute('data-id'); self._pintar(); }
+            });
+            this.$$('#opAgregados').addEventListener('click', function (e) {
+                var b = e.target.closest('button[data-fila]');
+                if (b) { self._linea(b.getAttribute('data-fila'), parseInt(b.getAttribute('data-index'), 10), parseInt(b.getAttribute('data-signo'), 10)); }
+            });
+            this.$$('#opRapidas').addEventListener('click', function (e) {
+                var s = e.target.closest('[data-nota]');
+                if (s) { self._tocarNota(s.getAttribute('data-nota')); }
+            });
+            // el dialogo es modal (sin Esc nativo): Esc hace lo mismo que la X
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && dialog_item_comp.opened) { e.preventDefault(); xListoDlgVR_comp(); }
+            });
         },
         openDialog: function(tpc, id) {
             xOpenDlgItemVR_comp(tpc, id);
@@ -1004,6 +878,302 @@
         },
         labelUpperCase: (val) => {
             return val.toUpperCase();
+        },
+
+        // ===== vista nueva (2026-10). Pinta estados a mano: los datos de las opciones se mutan sin notificar. =====
+        _titulo: function (des) {
+            var t = String(des || '').trim().toLowerCase();
+            return t.charAt(0).toUpperCase() + t.slice(1);
+        },
+        _dinero: function (n) { return (parseFloat(n) || 0).toFixed(2); },
+        _esc: function (t) {
+            return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        },
+        // iconos de canal (tabla tipo_cosnumo_img: se elige por la descripcion, igual que log_componentes op=18)
+        _imgCanal: function (des) {
+            var d = String(des || '').toUpperCase();
+            if (d.indexOf('DELIVERY') > -1) { return '../../images/img_tpc_3.png'; }
+            if (d.indexOf('LLEVAR') > -1) { return '../../images/img_tpc_2.png'; }
+            if (d.indexOf('LOCAL') > -1) { return '../../images/img_tpc_1.png'; }
+            return '';
+        },
+        // "CONSUMIR EN EL LOCAL" es muy largo para el boton del canal
+        _nomCanal: function (des) { return /LOCAL/i.test(des) ? 'EN LOCAL' : des; },
+        // sugerencias = ultimas 4 indicaciones de este producto (localStorage, compartido entre pestañas)
+        _notasRapidas: function () {
+            try { return JSON.parse(localStorage.getItem('::app3_notas_item') || '{}')[itemPedidos_objItemSelected.iditem] || []; } catch (e) { return []; }
+        },
+        _guardarNotas: function () {
+            var partes = (document.getElementById('txt_referencia').value || '').split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+            if (!partes.length) { return; }
+            try {
+                var todas = JSON.parse(localStorage.getItem('::app3_notas_item') || '{}'), id = itemPedidos_objItemSelected.iditem;
+                var bajas = partes.map(function (p) { return p.toLowerCase(); });
+                todas[id] = partes.concat((todas[id] || []).filter(function (n) { return bajas.indexOf(n.toLowerCase()) < 0; })).slice(0, 4);
+                localStorage.setItem('::app3_notas_item', JSON.stringify(todas));
+            } catch (e) {}
+        },
+
+        _prepararVista: function () {
+            var n = (this.listContentSub || []).length;
+            dialog_item_comp.classList.toggle('op-sin-grupos', n === 0);
+            dialog_item_comp.classList.toggle('op-compacto', n > 0 && n <= 2);
+            this._canalSel = null;
+        },
+
+        _tocarOpcion: function (e) {
+            var el = e.currentTarget;
+            if (!el.dataItem || el.dataItem.disabled) { return; }
+            el.checked = !el.dataItem.selected;
+            addSubItem(el); // misma logica que el checkbox de antes (desmarca el exceso del grupo)
+        },
+
+        _limpiarSeleccion: function () {
+            (this.listContentSub || []).forEach(function (g) {
+                g.opciones.forEach(function (o) { o.selected = false; });
+                g.cantidad_selected = 0;
+                g.isObligatorio = g.subitem_required_select === 1;
+            });
+            resetCmpCtrlAddFact();
+            itemPedidos_objItemSelected.subitems_selected = [];
+            compResetInputIndicaciones('');
+            checkOptionObligario();
+            this._pintar();
+        },
+
+        _tocarNota: function (frase) {
+            var el = document.getElementById('txt_referencia');
+            var partes = (el.value || '').split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+            var i = partes.map(function (p) { return p.toLowerCase(); }).indexOf(frase.toLowerCase());
+            if (i > -1) { partes.splice(i, 1); } else { partes.push(frase); }
+            el.value = partes.join(', ');
+            xChangeIndicacionesItem();
+            this._pintar();
+        },
+
+        // filas de canal de siempre (xArmarTipoConsumo) que quedaron en #_xdlgBody
+        _filasCanal: function () {
+            return $('#_xdlgBody .xpedir_row').toArray().map(function (f) {
+                return { id: String(f.getAttribute('data-id')), des: $(f).find('p').first().text().trim(), el: f };
+            });
+        },
+
+        _claveItem: function () {
+            var it = itemPedidos_objItemSelected || {};
+            return it.idcarta_lista || it.iditem;
+        },
+
+        // las combinaciones ya agregadas: una linea por subitems_view (xAddSubItemsView), en cada canal
+        _lineasPedido: function (filas) {
+            var key = this._claveItem(), lineas = [];
+            filas.forEach(function (f) {
+                var e = (xArrayPedidoObj && xArrayPedidoObj[f.id]) ? xArrayPedidoObj[f.id][key] : null;
+                if (!e || !(parseFloat(e.cantidad) > 0)) { return; }
+                var base = parseFloat(e.precio_unitario || e.precio) || 0;
+                if (e.subitems_view && e.subitems_view.length) {
+                    e.subitems_view.forEach(function (v, i) {
+                        var q = parseFloat(v.cantidad_seleccionada) || 0;
+                        if (q <= 0) { return; }
+                        lineas.push({ fila: f, index: i, cant: q, unit: base + (parseFloat(v.precio) || 0) / q, des: v.des || '', vid: v.id, nota: v.indicaciones_item || '' });
+                    });
+                } else {
+                    lineas.push({ fila: f, index: -1, cant: parseFloat(e.cantidad), unit: parseFloat(e.precio) || base, des: '', vid: null, nota: '' });
+                }
+            });
+            return lineas;
+        },
+
+        _precioBase: function () {
+            var it = itemPedidos_objItemSelected || {};
+            var p = parseFloat(it.precio_unitario || it.precio) || 0;
+            try { // lista de precios elegida en venta rapida (misma regla que handlerFnMiPedido)
+                if (typeof idtipo_precio_selected_vr !== 'undefined' && idtipo_precio_selected_vr !== 0 && it.tipo_precios) {
+                    var tp = typeof it.tipo_precios === 'string' ? JSON.parse(it.tipo_precios) : it.tipo_precios;
+                    var hit = tp.filter(function (x) { return x.idtipo_precio === idtipo_precio_selected_vr; })[0];
+                    if (hit) { p = parseFloat(hit.precio) || p; }
+                }
+            } catch (err) {}
+            return p;
+        },
+
+        _agregar: function () {
+            if (!this.isOptionRequeridosComplet) { return; }
+            var fila = this._filasCanal().filter(function (f) { return f.id === this._canalSel; }, this)[0];
+            if (!fila) { return; }
+            $(fila.el).find('.xBtnDe').trigger('click'); // el "+" de siempre
+            this._guardarNotas();
+            this._pintar();
+        },
+
+        // +/- de una linea ya agregada: mismo camino que los +/- de la lista de venta rapida (subitems_selected_index)
+        _linea: function (idFila, index, signo) {
+            var fila = this._filasCanal().filter(function (f) { return f.id === String(idFila); })[0];
+            if (!fila) { return; }
+            var btn = $(fila.el).find(signo > 0 ? '.xBtnDe' : '.xBtnIz');
+            if (index < 0) { btn.trigger('click'); this._pintar(); return; }
+            var it = itemPedidos_objItemSelected;
+            var e = xArrayPedidoObj[fila.id][this._claveItem()];
+            var guardado = it.subitems_selected;
+            it.subitems_selected = e.subitems_view[index].subitems;
+            it.subitems_selected_index = String(index); // texto: el indice 0 como numero se lee como "sin indice"
+            try { btn.trigger('click'); } finally {
+                it.subitems_selected = guardado;
+                it.subitems_selected_index = undefined;
+            }
+            this._pintar();
+        },
+
+        _pintar: function () {
+            if (!itemPedidos_objItemSelected || !this.$) { return; }
+            Polymer.dom.flush();
+            var self = this, root = Polymer.dom(this.root), esc = this._esc;
+            var grupos = this.listContentSub || [];
+            var it = itemPedidos_objItemSelected;
+
+            // --- grupos: obligatorios primero, numerados en el orden en que se ven
+            var nodos = root.querySelectorAll('.op-grupo');
+            var esReq = function (g) { return g.subitem_required_select === 1 ? 1 : 0; };
+            var elegidas = function (g) {
+                return parseInt(g.show_cant_item, 10) === 1
+                    ? g.opciones.reduce(function (a, o) { return a + (o.selected ? (parseFloat(o.cantidad_selected) || 0) : 0); }, 0)
+                    : g.opciones.filter(function (o) { return o.selected; }).length;
+            };
+            var orden = grupos.map(function (g, i) { return i; }).sort(function (a, b) { return (esReq(grupos[b]) - esReq(grupos[a])) || (a - b); });
+            var req = 0, reqOk = 0, pendientes = [];
+            orden.forEach(function (gi, n) {
+                var g = grupos[gi], el = nodos[gi];
+                if (!el) { return; }
+                var obligatorio = esReq(g) === 1, cuantas = elegidas(g), completo = !obligatorio || !g.isObligatorio;
+                var max = parseInt(g.subitem_cant_select, 10) || g.opciones.length;
+                var cant = parseInt(g.show_cant_item, 10) === 1;
+                if (obligatorio) { req++; if (completo) { reqOk++; } else { pendientes.push(self._titulo(g.des)); } }
+                el.className = 'op-grupo' + (obligatorio ? ' op-req' : '') + (obligatorio ? (completo ? ' listo' : ' pendiente') : (cuantas ? ' listo' : ''));
+                el.querySelector('.op-paso').innerHTML = obligatorio && completo ? '<i class="fa fa-check"></i>' : String(n + 1);
+                var tipo = obligatorio ? 'Obligatorio' : 'Opcional';
+                el.querySelector('.op-g-regla').textContent = cant ? tipo + ' · hasta ' + max + ' en total'
+                    : (max === 1 ? tipo + ' · elige 1' : (max >= g.opciones.length ? tipo + ' · elige las que quieras' : tipo + ' · elige hasta ' + max));
+                var chip = el.querySelector('.op-g-chip');
+                if (obligatorio) {
+                    chip.className = 'op-g-chip ' + (completo ? 'ok' : 'warn');
+                    chip.innerHTML = completo ? '<i class="fa fa-check"></i> Listo' : '<i class="fa fa-exclamation"></i> Falta elegir';
+                } else {
+                    chip.className = 'op-g-chip info';
+                    chip.innerHTML = cuantas ? cuantas + (cuantas > 1 ? ' elegidas' : ' elegida') : '';
+                }
+                // opciones
+                el.querySelectorAll('.op-op').forEach(function (op) {
+                    var s = op.dataItem;
+                    if (!s) { return; }
+                    var agot = !!s.disabled;
+                    op.classList.toggle('sel', !!s.selected);
+                    op.classList.toggle('agotado', agot);
+                    var ic = op.querySelector('.op-ic');
+                    if (ic) { ic.className = 'fa op-ic ' + (max === 1 ? (s.selected ? 'fa-dot-circle-o' : 'fa-circle-o') : (s.selected ? 'fa-check-square' : 'fa-square-o')); }
+                    var st = op.querySelector('.op-stock');
+                    var q = parseFloat(s.cantidad);
+                    st.className = 'op-stock' + (!s.cantidad_visible ? '' : (q <= 0 ? ' ago' : (q <= 5 ? ' poco' : '')));
+                    st.textContent = !s.cantidad_visible ? '' : (q <= 0 ? 'AGOTADO' : (q <= 5 ? 'quedan ' + q : q + ' disp.'));
+                });
+            });
+
+            // --- precio con las opciones elegidas
+            var sel = [], extra = 0;
+            orden.forEach(function (gi) {
+                grupos[gi].opciones.forEach(function (o) {
+                    if (!o.selected) { return; }
+                    var p = parseFloat(o.precio) || 0;
+                    extra += p;
+                    sel.push(esc(String(o.des || '').trim()) + (p ? ' <b>+' + p.toFixed(2) + '</b>' : ''));
+                });
+            });
+            var unit = this._precioBase() + extra;
+            this.$$('#opPrecio').textContent = 'S/ ' + unit.toFixed(2);
+            this.$$('#opPrecioSub').textContent = extra ? 'con estas opciones (+ S/ ' + extra.toFixed(2) + ')' : 'precio unitario';
+            this.$$('#opProgreso').innerHTML = req ? 'Obligatorias ' + reqOk + ' de ' + req + ' <span class="op-barra"><i style="width:' + (reqOk / req * 100) + '%"></i></span>' : '';
+            // el stock se escribe aqui y no por binding: el socket de stock hace .text() sobre #contetStock,
+            // eso rompe el binding y el chip se quedaba con el stock de otro producto
+            var stock = parseFloat(it.stock_actual);
+            this.$$('#contetStock').textContent = isNaN(stock) ? '' : stock;
+            this.$$('#opChipStock').style.display = isNaN(stock) || String(it.cantidad).toUpperCase() === 'ND' ? 'none' : '';
+
+            // --- canales con su icono
+            var filas = this._filasCanal();
+            if (!filas.some(function (f) { return f.id === self._canalSel; })) {
+                var canalVenta = (typeof xThisComCanalConsumo !== 'undefined' && xThisComCanalConsumo && xThisComCanalConsumo.canalSeleted)
+                    ? String(xThisComCanalConsumo.canalSeleted.idtipo_consumo) : null;
+                var conCant = filas.filter(function (f) { var e = xArrayPedidoObj[f.id] && xArrayPedidoObj[f.id][self._claveItem()]; return e && e.cantidad > 0; })[0];
+                var porVenta = filas.filter(function (f) { return f.id === canalVenta; })[0];
+                this._canalSel = (porVenta || conCant || filas[0] || {}).id || null;
+            }
+            var canalDes = (filas.filter(function (f) { return f.id === self._canalSel; })[0] || {}).des || '';
+            this.$$('#opCanales').innerHTML = filas.map(function (f) {
+                var img = self._imgCanal(f.des);
+                return '<span data-id="' + esc(f.id) + '" class="' + (f.id === self._canalSel ? 'on' : '') + '">' + (img ? '<img src="' + img + '" alt="">' : '') + esc(self._nomCanal(f.des)) + '</span>';
+            }).join('');
+
+            // --- lineas ya agregadas
+            var lineas = this._lineasPedido(filas);
+            var nota = (document.getElementById('txt_referencia').value || '').trim();
+            var claveSel = (it.subitems_selected || []).map(function (x) { return String(x.iditem_subitem); }).join('');
+            var iActual = lineas.findIndex(function (l) { return l.fila.id === self._canalSel && l.vid !== null && l.vid === claveSel && l.nota === nota; });
+            var total = lineas.reduce(function (a, l) { return a + l.unit * l.cant; }, 0);
+            var unidades = lineas.reduce(function (a, l) { return a + l.cant; }, 0);
+            this.$$('#opCantPedido').textContent = unidades ? '(' + unidades + ')' : '';
+            this.$$('#opAgregados').innerHTML = lineas.length ? lineas.map(function (l, i) {
+                var img = self._imgCanal(l.fila.des);
+                return '<div class="op-agregado' + (i === iActual ? ' actual' : '') + '"><span class="op-num">' + (i + 1) + '</span>'
+                    + '<div class="op-ad"><b>' + l.cant + ' × S/ ' + l.unit.toFixed(2) + '</b>' + (l.des ? '<small>' + esc(l.des) + '</small>' : '')
+                    + '<em>' + (img ? '<img src="' + img + '" alt="">' : '') + esc(self._nomCanal(l.fila.des)) + '</em></div>'
+                    + '<div class="op-step"><button data-fila="' + esc(l.fila.id) + '" data-index="' + l.index + '" data-signo="-1"><i class="fa fa-minus"></i></button><b>' + l.cant
+                    + '</b><button data-fila="' + esc(l.fila.id) + '" data-index="' + l.index + '" data-signo="1"><i class="fa fa-plus"></i></button></div></div>';
+            }).join('') : '<div class="op-vacio">Todavía no agregas nada. Elige las opciones y toca <b>Agregar</b>.'
+                + (grupos.length ? ' Para otra persona con otras opciones: cambia las opciones y vuelve a tocar Agregar.' : '') + '</div>';
+
+            // --- seleccion actual
+            var hayLineas = lineas.some(function (l) { return l.vid !== null; });
+            var esNueva = hayLineas && iActual < 0 && claveSel !== '';
+            // con stock 0 el "+" de siempre no agrega (handlerFnMiPedido): se avisa en vez de dejar un boton que no responde
+            var sinStock = parseFloat(it.stock_actual) === 0;
+            var puede = !!this.isOptionRequeridosComplet && filas.length > 0 && !sinStock;
+            this.$$('#opTituloSel').textContent = esNueva ? 'Selección nueva' : 'Selección';
+            var resumen = this.$$('#opSeleccion');
+            resumen.classList.toggle('nueva', esNueva);
+            resumen.innerHTML = '<div class="op-linea"><span>' + esc(this.desProducto) + '</span><span>S/ ' + unit.toFixed(2) + '</span></div>'
+                + (sel.length ? '<div class="op-ops-txt">' + sel.join(' · ') + '</div>' : '')
+                + pendientes.map(function (t) { return '<div class="op-falta"><i class="fa fa-exclamation-circle"></i> Falta: ' + esc(t) + '</div>'; }).join('')
+                + (esNueva && puede ? '<div class="op-aviso"><i class="fa fa-info-circle"></i> Opciones distintas: al agregar queda como <b>otra línea (#' + (lineas.length + 1) + ')</b>.</div>' : '')
+                + (iActual >= 0 ? '<div class="op-aviso"><i class="fa fa-info-circle"></i> Igual a la <b>#' + (iActual + 1) + '</b>: al agregar suma 1 a esa línea.</div>' : '');
+
+            // --- notas rapidas
+            var notaLow = nota.toLowerCase().split(',').map(function (p) { return p.trim(); });
+            this.$$('#opRapidas').innerHTML = this._notasRapidas().map(function (t) {
+                return '<span class="op-rapida' + (notaLow.indexOf(t.toLowerCase()) > -1 ? ' on' : '') + '" data-nota="' + esc(t) + '">' + esc(t) + '</span>';
+            }).join('');
+
+            // --- pie
+            var estado = this.$$('#opEstado');
+            if (sinStock) {
+                estado.className = 'op-estado mal';
+                estado.innerHTML = '<i class="fa fa-ban"></i> Sin stock: este producto no se puede agregar';
+            } else if (!this.isOptionRequeridosComplet) {
+                estado.className = 'op-estado mal';
+                estado.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Falta elegir: ' + esc(pendientes.join(', '));
+            } else if (esNueva) {
+                estado.className = 'op-estado info';
+                estado.innerHTML = '<i class="fa fa-plus-circle"></i> Opciones nuevas: se agregará como línea #' + (lineas.length + 1);
+            } else {
+                estado.className = 'op-estado bien';
+                estado.innerHTML = '<i class="fa fa-check-circle"></i> ' + (unidades ? unidades + ' en el pedido' + (lineas.length > 1 ? ', en ' + lineas.length + ' líneas' : '') : 'Todo elegido: ya puedes agregar');
+            }
+            this.$$('#opTotalSub').textContent = unidades ? unidades + ' en el pedido' : 'precio unitario';
+            this.$$('#opTotal').textContent = 'S/ ' + (unidades ? total : unit).toFixed(2);
+            this.$$('#dlgBtn').innerHTML = unidades ? '<i class="fa fa-check"></i> Listo' : 'Cerrar';
+            var btn = this.$$('#opBtnAgregar');
+            btn.disabled = !puede;
+            btn.innerHTML = '<i class="fa ' + (puede ? 'fa-plus' : 'fa-lock') + '"></i> '
+                + (iActual >= 0 ? 'Agregar otra igual a la #' + (iActual + 1) : 'Agregar ' + (/LOCAL/i.test(canalDes) ? '' : 'a ') + esc(this._nomCanal(canalDes)));
         },
         isSubItemCheckBox: (show_cant_item) => {            
             return show_cant_item === 1 ? true : false;

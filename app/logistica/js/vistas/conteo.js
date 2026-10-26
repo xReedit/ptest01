@@ -1,8 +1,8 @@
 // Conteo rapido de hoy (sede o central, solo si se activo en Configurar): unos pocos productos al dia, sin ver
 // lo que dice el sistema (asi el conteo es real). Al terminar se ve que cuadro y que no; la central lo revisa.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, leerNum } from '../ui.js?v=20261015i';
-import { vigente } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, leerNum } from '../ui.js?v=20261026a';
+import { vigente } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const soles = n => (n < 0 ? '-' : '') + 'S/ ' + Math.abs(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

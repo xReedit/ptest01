@@ -14,79 +14,108 @@
 			</div>
 		</paper-dialog>
 
-		<paper-dialog id="dialog_add_us" class="dialog_redondo" style="max-width: 600px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-			<div class="xContent">
-				<paper-tabs selected="{{selected_us}}">
-					<paper-tab>DATOS</paper-tab>
-					<paper-tab>ACCESOS</paper-tab>
-					<paper-tab>ZONA</paper-tab>
-	      		</paper-tabs>
-	      		<div class="xLinea2"></div>
-	      		<br>
-	      		<iron-pages selected="{{selected_us}}">
-	      			<div id="datos_us" >
-						  <select class="xTextRow2" id="select_rol" onchange="tipoUsuario(this)">
-							  <option value="0">COLABORADOR</option>
-							  <option value="1">ADMINISTRADOR</option>
-							  <option value="2">MESERO / MOZO</option>
-							  <option value="4">CAJERO</option>
-							  <option value="3">REPARTIDOR / DELIVERISTA</option>
-							  <!-- <option value="2">ZONA</option> -->
-						  </select>
-						  <br><br>
+		<paper-dialog id="dialog_sedes_rep" class="dialog_redondo" style="max-width: 420px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<h4 class="xsa-dlg-tit">Sedes que atiende</h4>
+			<div id="sedesAtiendeDlg" class="xsa"></div>
+			<p id="sedesAtiendeDlgErr" class="text-danger fs-12" hidden></p>
+			<div class="buttons">
+				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
+				<button class="xBoton2 xAzul" onclick="xSedesRepGuardar();">Guardar</button>
+			</div>
+		</paper-dialog>
 
-	      				<form id="frm_us" hidden$="[[showFormRepartidor]]">
+		<!-- diseño B: izquierda "quien es", derecha "que hara" (rol + resumen de accesos); estilos en xUsCss() -->
+		<paper-dialog id="dialog_add_us" class="dialog_redondo usb" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="usb-cab">
+				<div id="usb_titulo" class="usb-titulo">Nuevo usuario</div>
+				<button type="button" class="usb-x" aria-label="Cerrar" onclick="dialog_add_us.close();">&times;</button>
+			</div>
+			<div class="usb-grid">
+				<div class="usb-col usb-quien">
+					<div class="usb-paso">1 · ¿QUIÉN ES?</div>
 
-		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRES" onChange="conMayusculas(this)" id="nombres" name="nombres" espaciar required>
-		      				<input type="text" class="xMiInput xPasarEnter2" placeholder="CARGO" onChange="conMayusculas(this)" id="cargo" name="cargo" espaciar required>
-									
-									<div style="display: flex;margin-left: 5px;">
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO" id="txt_sufijo" value$="[[xt_sufijo]]" style="width: 50px;" enLinea readonly>
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO"  id="usuario" name="usuario" enLinea required>
-									</div>
-									
-									<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass" name="pass" espaciar required>									
-									<br>
-
-									<!-- si tiene rol de administrador muestra input telefono -->																		
-									<div>
-										<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="telefono" name="telefono" espaciar>
-										<div style="max-width: 230px; line-height: 1;">
-											<span class="text-info fs-11">A este numero de telefono se notificara las solicitudes remotas</span>
-										</div>
-									</div>
-									
-		      				<div class="xInvisible">
-		      					<input type="text" id="idusuario" name="idusuario">
-		      					<input type="text" id="idorg" name="idorg" value$="{{xt_org}}">
-								<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
-								<input type="text" id="idalmacen" name="idalmacen">
-								<input type="text" id="estadistica" name="estadistica">
-		      					<input type="text" id="acc" name="acc">
-										<input type="text" id="per" name="per">
-										<input type="text" id="rol" name="rol">
-		      				</div>
-						</form>
-
-						<!-- datos del repartidor -->
-						<div id="formRepartidor"  hidden$="[[!showFormRepartidor]]">
-							<input type="text" class="xMiInput xPasarEnter2" placeholder="NOMBRES" onChange="conMayusculas(this)" id="nombres_r" name="nombres" espaciar required>
-							<input type="text" class="xMiInput xPasarEnter2" placeholder="APELLIDOS" onChange="conMayusculas(this)" id="apellidos_r" name="apellidos" espaciar required>
-							<input type="text" class="xMiInput xPasarEnter2" placeholder="DNI" onChange="conMayusculas(this)" id="dni_r" name="dni_r" espaciar required>
-							<input type="text" class="xMiInput xPasarEnter2" placeholder="TELEFONO" onChange="conMayusculas(this)" id="telefono_r" name="telefono" espaciar required>
-							<div style="display: flex;margin-left: 5px;">
-								<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO" id="txt_sufijo_r" value$="[[xt_sufijo]]" style="width: 50px;" enLinea readonly>
-								<input type="text" class="xMiInput xPasarEnter2" placeholder="USUARIO"  id="usuario_r" name="usuario" enLinea required>
-							</div>
-							<input type="password" class="xMiInput xPasarEnter2" placeholder="clave" id="pass_r" name="pass" espaciar required>
+					<form id="frm_us" hidden$="[[showFormRepartidor]]">
+						<label class="usb-lbl" for="nombres">Nombres</label>
+						<input type="text" class="xMiInput xPasarEnter2" placeholder="Ej. ROSA QUISPE" onChange="conMayusculas(this)" id="nombres" name="nombres" required>
+						<label class="usb-lbl" for="cargo">Cargo</label>
+						<input type="text" class="xMiInput xPasarEnter2" placeholder="Ej. CAJERA" onChange="conMayusculas(this)" id="cargo" name="cargo" required>
+						<label class="usb-lbl" for="usuario">Usuario para entrar</label>
+						<div class="usb-usu">
+							<input type="text" class="xMiInput usb-pref" id="txt_sufijo" value$="[[xt_sufijo]]" aria-label="Prefijo de la sede" readonly tabindex="-1">
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="usuario" id="usuario" name="usuario" required>
 						</div>
-						
-						<br>
-						<a href="#" onclick="xResetearClave()"> Resetear clave</a>
-						<br>								
-	      			</div>
-	      			<div id="acc_us" class="" style="max-height: 70vh;">
-	      				<div style="overflow-y:auto;overflow-x:none; max-height: 60vh;">
+						<label class="usb-lbl" for="pass">Clave</label>
+						<input type="password" class="xMiInput xPasarEnter2" placeholder="Clave" id="pass" name="pass" required>
+						<label class="usb-lbl" for="telefono">Teléfono (opcional)</label>
+						<input type="text" class="xMiInput xPasarEnter2" placeholder="999 999 999" onChange="conMayusculas(this)" id="telefono" name="telefono">
+						<div class="usb-ayuda">A este número le llegan las solicitudes remotas.</div>
+
+						<div class="xInvisible">
+							<input type="text" id="idusuario" name="idusuario">
+							<input type="text" id="idorg" name="idorg" value$="{{xt_org}}">
+							<input type="text" id="idsede" name="idsede" value$="[[xt_idsede]]">
+							<input type="text" id="idalmacen" name="idalmacen">
+							<input type="text" id="estadistica" name="estadistica">
+							<input type="text" id="acc" name="acc">
+							<input type="text" id="per" name="per">
+							<input type="text" id="rol" name="rol">
+						</div>
+					</form>
+
+					<!-- datos del repartidor -->
+					<div id="formRepartidor" hidden$="[[!showFormRepartidor]]">
+						<label class="usb-lbl" for="nombres_r">Nombres</label>
+						<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="nombres_r" name="nombres" required>
+						<label class="usb-lbl" for="apellidos_r">Apellidos</label>
+						<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="apellidos_r" name="apellidos" required>
+						<label class="usb-lbl" for="dni_r">DNI</label>
+						<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="dni_r" name="dni_r" required>
+						<label class="usb-lbl" for="telefono_r">Teléfono</label>
+						<input type="text" class="xMiInput xPasarEnter2" onChange="conMayusculas(this)" id="telefono_r" name="telefono" required>
+						<label class="usb-lbl" for="usuario_r">Usuario para entrar</label>
+						<div class="usb-usu">
+							<input type="text" class="xMiInput usb-pref" id="txt_sufijo_r" value$="[[xt_sufijo]]" aria-label="Prefijo de la sede" readonly tabindex="-1">
+							<input type="text" class="xMiInput xPasarEnter2" placeholder="usuario" id="usuario_r" name="usuario" required>
+						</div>
+						<label class="usb-lbl" for="pass_r">Clave</label>
+						<input type="password" class="xMiInput xPasarEnter2" id="pass_r" name="pass" required>
+					</div>
+
+					<div id="div_zona" class="usb-zona" hidden$="[[showFormRepartidor]]">
+						<label class="usb-lbl" for="listAlmacen">Descuenta stock del almacén</label>
+						<x-comp-find-almacen id="listAlmacen" opninguno="true"></x-comp-find-almacen>
+						<div class="usb-ayuda">Solo para bares o discotecas con varias barras: lo que venda este usuario sale de ese almacén. Si no aplica, déjelo en ninguno.</div>
+					</div>
+				</div>
+
+				<div class="usb-col usb-hara">
+					<div class="usb-paso">2 · ¿QUÉ HARÁ EN EL SISTEMA?</div>
+					<!-- select_rol sigue siendo el valor real (tipoUsuario, xGuardarUs); los botones solo lo cambian -->
+					<select id="select_rol" onchange="tipoUsuario(this)" hidden>
+						<option value="0">COLABORADOR</option>
+						<option value="1">ADMINISTRADOR</option>
+						<option value="2">MESERO / MOZO</option>
+						<option value="4">CAJERO</option>
+						<option value="3">REPARTIDOR / DELIVERISTA</option>
+					</select>
+					<div class="usb-roles">
+						<button type="button" class="usb-rol" data-rol="0" onclick="xUsRolElegir(this)"><b>Colaborador</b><span>Accesos a medida</span></button>
+						<button type="button" class="usb-rol" data-rol="1" onclick="xUsRolElegir(this)"><b>Administrador</b><span>Todo el sistema</span></button>
+						<button type="button" class="usb-rol" data-rol="2" onclick="xUsRolElegir(this)"><b>Mozo</b><span>Toma pedidos</span></button>
+						<button type="button" class="usb-rol" data-rol="4" onclick="xUsRolElegir(this)"><b>Cajero</b><span>Cobra y emite</span></button>
+						<button type="button" class="usb-rol" data-rol="3" onclick="xUsRolElegir(this)"><b>Repartidor</b><span>Lleva delivery</span></button>
+					</div>
+
+					<div hidden$="[[!showFormRepartidor]]" class="usb-caja usb-ayuda">El repartidor entra con su usuario a la app de delivery. No necesita accesos del sistema.</div>
+					<!-- sedes que atiende el repartidor (solo si la organizacion tiene mas de una sede) -->
+					<div id="sedesAtiendeRep" class="xsa usb-caja" hidden></div>
+
+					<div hidden$="[[showFormRepartidor]]">
+						<div id="usb_resumen" class="usb-caja"></div>
+						<button type="button" id="usb_btn_personalizar" class="usb-btn-sec" onclick="xUsPersonalizar()">Elegir accesos uno por uno</button>
+
+						<div id="acc_us" class="usb-acc" hidden>
+							<div class="usb-ayuda">Marque o desmarque lo que necesite. El resumen de arriba se actualiza solo.</div>
 	      					<h4>OPERATIVIDAD</h4>
 							<paper-checkbox class="checkA" data-id='A1,'> Elaborar carta</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='A2,'> Realizar Pedidos</paper-checkbox><br>
@@ -146,6 +175,7 @@
 							<paper-checkbox class="checkA" data-id='C2,'> Usuarios</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='C5,'> Andalitica Modulo Gerencial</paper-checkbox><br>
 							<paper-checkbox class="checkA" data-id='C6,'> Configurar Encuestas</paper-checkbox><br>
+							<paper-checkbox class="checkA" data-id='E2,'> Cámaras IA</paper-checkbox><br>
 							<br>
 
 							<h4>OTROS</h4>
@@ -159,10 +189,12 @@
 								<span class="fs-11 text-secondary">Permite al usuario ver lo que esta cobrando los meseros y el importe que deben declarar.</span>
 							</div>
 							<br>
-							<paper-checkbox class="checkA" data-id='A27,'> Call Center</paper-checkbox><br>
+							<paper-checkbox class="checkA" data-id='A27,' onchange="xSedesAtiendeVer()"> Call Center</paper-checkbox><br>
 							<div style="max-width: 310px;">
 								<span class="fs-11 text-secondary">Registra pedidos en varias sedes.</span>
 							</div>
+							<!-- sedes que atiende (solo si la organizacion tiene mas de una sede) -->
+							<div id="sedesAtiendeAcc" class="xsa" hidden></div>
 							
 							
 							
@@ -175,28 +207,22 @@
 							<paper-checkbox class="checkP" data-id='Pe3,'>Agregar sin imprimir</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe4,'>Cambiar de mesa el pedido</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe5,'>Asignar descuentos</paper-checkbox><br>
+							<paper-checkbox class="checkP" data-id='Pe10,'>Dar cortesías</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe6,'>Eliminar Porciones</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe7,'>Eliminar Productos</paper-checkbox><br>
 							<paper-checkbox class="checkP" data-id='Pe8,'>Eliminar Clientes</paper-checkbox><br>							
-	      				</div>
-					  </div>
-					  <div id="div_zona">
-						  <h4>Asignar un almacen.</h4>
-						  <span class="xfont8">Esta opcion se utiliza en los siguientes escenarios: Discoteca, bares o locales que tengan mas zona de despacho de productos terminados o embotellados, 
-							  <br><strong>Ejemplo:</strong> En una discoteca cuentan con varios bares de venta de cerveza, entonces al usuario se le asigna un bar(almacen) del que va ser responsable, entonces todas las ventas que haga el sistema descontara de este almacen(bar) asignado.
-							  <br><strong>Tenga en cuenta que si utiliza esta opcion, lo mejor es trabajar directamente con las cajas a la hora de hacer los pedidos. </strong>
-						</span>
-						<br><br>
-						<label for="listAlmacen">Asigne un Almacen:</label>
-						<x-comp-find-almacen id="listAlmacen" opninguno="true"></x-comp-find-almacen>
-
-					  </div>
-				</iron-pages>	
-				<br>
-	      		<button class="xBoton2 xAzul" onclick="xGuardarUs();">Guardar</button>
-				<button class="xBoton2 xPlomo" onclick="dialog_add_us.close();">Cancelar</button>
-				<br>
-	      	</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="usb-pie">
+				<a href="#" id="usb_reset" onclick="xResetearClave(); return false;" hidden>Resetear clave</a>
+				<span id="usb_falta" class="usb-falta"></span>
+				<span class="usb-pie-btns">
+					<button class="xBoton2 xPlomo" onclick="dialog_add_us.close();">Cancelar</button>
+					<button id="usb_guardar" class="xBoton2 xAzul" onclick="xGuardarUs();" disabled>Guardar usuario</button>
+				</span>
+			</div>
 		</paper-dialog>
 		<br>
 		<h3>USUARIOS</h3>
@@ -223,6 +249,7 @@
 				<th align="left">Cargo</th>
 				<th align="left">usuario</th>
 				<th width="5px"></th>
+				<th width="5px"></th>
 			</thead>
 		</table>
 
@@ -244,6 +271,14 @@ function xIniUsuarios(){
 	xThis.xt_idus=xIdUsuario;
 	xThis.xt_sufijo = sufijoSede;
 	xThis.showFormRepartidor = false;
+	xThis.sedesOrgPromise = null;
+	xThis.sedesAt = null;
+	xSedesAtiendeCss();
+	xSedesAtiendeOrg();
+	xUsCss();
+	$('#acc_us').off('.usb').on('change.usb', 'paper-checkbox', xUsResumen);
+	$('#usb_resumen').off('.usb').on('click.usb', '.usb-chip-x', xUsQuitarAcceso);
+	$('#frm_us, #formRepartidor').off('.usb').on('input.usb change.usb', 'input', xUsPuedeGuardar);
 
 	if (xIdOrg === "" || xIdOrg == undefined){
 			var _dtUs = xm_log_get('app3_us');
@@ -283,9 +318,17 @@ function xResetearClave() {
 	if ( idUsReset === '') return;
 	xPopupLoad.xopen();
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4031', data:{i:idUsReset}})
-	setTimeout(() => {
+	.done(function () {
+		// el formulario aun tiene la clave anterior: si luego guardan, deshacia el reseteo
+		$("#frm_us #pass").val('123456');
+		xSedesAtiendeAviso('Clave reseteada. La nueva clave de este usuario es 123456.');
+	})
+	.fail(function () {
+		xSedesAtiendeAviso('No se pudo resetear la clave. Revise su conexion.');
+	})
+	.always(function () {
 		xPopupLoad.xclose();
-	}, 200);
+	});
 }
 
 function xModificarUs(obj){
@@ -333,9 +376,16 @@ function xModificarUs(obj){
 				if(xCharFind==xBus){element.checked=true;return false;}
 			})
 		}
-		dialog_add_us.open();
-		xPopupLoad.xclose();
-		xPopupLoad.titulo="Guardando..";
+		$('#usb_titulo').text('Editar usuario');
+		$('#usb_reset')[0].hidden = false;
+		xUsRolPintar();
+		xUsResumen();
+		xSedesAtiendeLeerUs(xid).always(function () {
+			xSedesAtiendeVer();
+			dialog_add_us.open();
+			xPopupLoad.xclose();
+			xPopupLoad.titulo="Guardando..";
+		});
 	});
 }
 function xGuardarUs(){
@@ -383,9 +433,11 @@ function xGuardarUs(){
 			console.log(DtProv);			
 			// var xDtProv=$.parseJSON(DtProv);
 			// xThisPago.dataClientes=xDtProv.datos;
-			xLoadUs();
-			xPopupLoad.xclose();
-			dialog_add_us.close();
+			xSedesAtiendeGuardarRepNuevo(_dataSend.usuario).always(function () {
+				xLoadUs();
+				xPopupLoad.xclose();
+				dialog_add_us.close();
+			});
 		});
 
 		return;
@@ -395,15 +447,18 @@ function xGuardarUs(){
 		if(a===false){xThis.selected_us=0; return;}
 		xPopupLoad.xopen();
 		$.post("../../bdphp/ManejoBD_IUD.php?tb=usuario",$("#frm_us").serialize(),function(id){
-			dialog_add_us.close();
-			xPopupLoad.xclose();
-			xNuevoUsuario();
-			xLoadUs();
+			xSedesAtiendeGuardarUs(id).always(function () {
+				dialog_add_us.close();
+				xPopupLoad.xclose();
+				xNuevoUsuario();
+				xLoadUs();
+			});
 		})
 	});
 
 }
 function xNuevoUsuario(){
+	xSedesAtiendeLimpiar();
 	$("#frm_us").reset();
 	$(".checkA").each(function(index, element){
 		element.checked=false;
@@ -411,6 +466,15 @@ function xNuevoUsuario(){
 	$(".checkP").each(function(index, element){
 		element.checked=false;
 	});
+	// antes quedaba el rol del ultimo usuario abierto
+	select_rol.value = '0';
+	xThis.showFormRepartidor = false;
+	$('#usb_titulo').text('Nuevo usuario');
+	$('#usb_reset')[0].hidden = true;
+	$('#acc_us')[0].hidden = true;
+	xUsRolPintar();
+	xUsResumen();
+	xSedesAtiendeVer();
 }
 function xLoadUs(){
 	$("#tb_us").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>');
@@ -434,15 +498,19 @@ function xLoadUs(){
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4021'})
 	.done( function (dtUs) {
 		var xdtUs=$.parseJSON(dtUs);
-		var xCadenaUs='';
 		xdtUs=xdtUs.datos;
-		for (var i = 0; i < xdtUs.length; i++) {
-			xCadenaUs=String(xCadenaUs+'<tr class="row" data-id="'+xdtUs[i].idrepartidor+'" data-t="repartidor"><td>'+xdtUs[i].nombre+' '+ xdtUs[i].apellido +'</td><td>Repartidor</td><td>'+xdtUs[i].usuario+'</td>'+
-				'<td><span onclick="xBorrarItem(this);" class="xDeleteRow" title="Borrar"></span></td>'+
-				'</tr>');
-		}
-		$("#tb_us_re .row").remove();
-		$("#tb_us_re").append(xCadenaUs).trigger('create');
+		xSedesAtiendeOrg().then(function (org) {
+			var xCadenaUs='';
+			var tdSedes = org.total > 1 ? '<td><span class="xsa-icono xCursor" title="Sedes que atiende" onclick="xSedesRepAbrir(this)">Sedes</span></td>' : '<td></td>';
+			for (var i = 0; i < xdtUs.length; i++) {
+				xCadenaUs=String(xCadenaUs+'<tr class="row" data-id="'+xdtUs[i].idrepartidor+'" data-t="repartidor"><td>'+xdtUs[i].nombre+' '+ xdtUs[i].apellido +'</td><td>Repartidor</td><td>'+xdtUs[i].usuario+'</td>'+
+					tdSedes+
+					'<td><span onclick="xBorrarItem(this);" class="xDeleteRow" title="Borrar"></span></td>'+
+					'</tr>');
+			}
+			$("#tb_us_re .row").remove();
+			$("#tb_us_re").append(xCadenaUs).trigger('create');
+		});
 	});
 }
 
@@ -511,7 +579,408 @@ function tipoUsuario($event) {
 				break;
 		}
 	}
+	xUsRolPintar();
+	xUsResumen();
+	xSedesAtiendeVer();
 }
+
+/* ===== Dialogo usuario (diseño B): botones de rol + resumen de accesos ===== */
+function xUsRolElegir(btn) {
+	select_rol.value = btn.dataset.rol;
+	tipoUsuario(select_rol);
+	// colaborador arranca sin accesos: se abre la lista para elegirlos
+	if (btn.dataset.rol === '0') { xUsPersonalizar(true); }
+}
+
+function xUsRolPintar() {
+	$('#dialog_add_us .usb-rol').each(function () {
+		this.setAttribute('aria-pressed', String(this.dataset.rol === select_rol.value));
+	});
+}
+
+function xUsPersonalizar(abrir) {
+	var acc = $('#acc_us')[0];
+	acc.hidden = abrir === true ? false : !acc.hidden;
+	$('#usb_btn_personalizar').text(acc.hidden ? 'Elegir accesos uno por uno' : 'Ocultar lista de accesos');
+	if (dialog_add_us.refit) { dialog_add_us.refit(); }
+}
+
+function xUsNombre(el) {
+	return xSedesAtiendeEsc($.trim($(el).text()));
+}
+
+function xUsResumen() {
+	var acc = $('#acc_us .checkA'), per = $('#acc_us .checkP');
+	var accOn = acc.filter(function () { return this.checked; });
+	var perOn = per.filter(function () { return this.checked; });
+	var perOff = per.filter(function () { return !this.checked; });
+	var n = accOn.length + perOn.length, html;
+	// con muchos accesos el resumen se vuelve lista: se cortan a 16 y el resto se ve en la lista completa
+	var chips = function ($els, cls) {
+		var html = $els.slice(0, 16).map(function () {
+			var nom = xUsNombre(this);
+			return '<span class="usb-chip ' + cls + '">' + nom + '<button type="button" class="usb-chip-x" data-id="' + xSedesAtiendeEsc(this.dataset.id) +
+				'" title="Quitar" aria-label="Quitar ' + nom + '">&times;</button></span>';
+		}).get().join('');
+		if ($els.length > 16) { html += '<button type="button" class="usb-chip usb-chip-mas" onclick="xUsPersonalizar(true)">y ' + ($els.length - 16) + ' más</button>'; }
+		return '<div class="usb-chips">' + html + '</div>';
+	};
+
+	if (n === 0) {
+		html = '<div class="usb-res-tit">Todavía no tiene accesos</div>' +
+			'<div class="usb-ayuda">Elija un rol arriba o toque «Elegir accesos uno por uno».</div>';
+	} else if (n === acc.length + per.length) {
+		html = '<div class="usb-res-tit">Puede usar todo el sistema <span>' + n + ' accesos</span></div>';
+	} else {
+		html = '<div class="usb-res-tit">Podrá usar <span>' + n + ' accesos</span></div>' + chips(accOn, '');
+		if (perOn.length) { html += '<div class="usb-res-sub">Permisos especiales</div>' + chips(perOn, 'usb-chip-p'); }
+		if (perOff.length) {
+			html += '<div class="usb-no"><b>No podrá:</b> ' + perOff.map(function () { return xUsNombre(this).toLowerCase(); }).get().join(', ') + '.</div>';
+		}
+	}
+	$('#usb_resumen').html(html);
+	xUsPuedeGuardar();
+}
+
+// × de un chip: desmarca ese checkbox (asignar checked por codigo no dispara change, por eso se repinta aqui)
+function xUsQuitarAcceso() {
+	var id = this.dataset.id;
+	$('#acc_us .checkA, #acc_us .checkP').filter(function () { return this.dataset.id === id; }).each(function () { this.checked = false; });
+	xUsResumen();
+	xSedesAtiendeVer();
+}
+
+// Guardar solo se habilita sin datos pendientes: campos obligatorios del formulario visible
+// y, si no es repartidor, al menos un acceso. Lo que falta se dice al lado del boton.
+function xUsPuedeGuardar() {
+	var rep = !!xThis.showFormRepartidor;
+	var falta = $(rep ? '#formRepartidor' : '#frm_us').find('input[required]').filter(function () {
+		return $.trim(this.value) === '';
+	}).map(function () {
+		return $.trim($('#dialog_add_us label[for="' + this.id + '"]').text()).toLowerCase();
+	}).get();
+	if (!rep && !$('#acc_us .checkA, #acc_us .checkP').filter(function () { return this.checked; }).length) {
+		falta.push('accesos');
+	}
+	$('#usb_guardar').prop('disabled', falta.length > 0);
+	$('#usb_falta').text(falta.length ? 'Falta: ' + falta.join(', ') : '');
+}
+
+// en <head> como xSedesAtiendeCss: el resumen se pinta con jQuery y no recibe el scope de Polymer
+function xUsCss() {
+	if (document.getElementById('usb-css')) { return; }
+	var st = document.createElement('style');
+	st.id = 'usb-css';
+	st.textContent = '#dialog_add_us.usb{width:960px;max-width:calc(100vw - 16px);margin:8px;padding:0;border-radius:12px;color:#212529}' +
+		'#dialog_add_us [hidden]{display:none!important}' +
+		'#dialog_add_us>.usb-cab{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;margin:0;padding:8px 10px 8px 20px;background:#fff0f5;border-bottom:1px solid #ddd}' +
+		'.usb-titulo{font-size:16px;font-weight:600}' +
+		'.usb-x{width:36px;height:36px;border:0;border-radius:8px;background:transparent;font-size:24px;line-height:1;color:#6c757d;cursor:pointer}' +
+		'#dialog_add_us>.usb-grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);margin:0;padding:0}' +
+		'.usb-col{min-width:0;padding:14px 18px}' +
+		'.usb-quien{border-right:1px solid #ddd}' +
+		'.usb-hara{background:#fbfcfd}' +
+		'.usb-paso{font-size:11px;font-weight:700;letter-spacing:.4px;color:#6c757d;margin-bottom:4px}' +
+		'.usb-lbl{display:block;font-size:11px;font-weight:600;color:#495057;margin:10px 0 4px}' +
+		'#dialog_add_us input.xMiInput{box-sizing:border-box;width:100%;height:34px;margin:0;padding:0 10px;border:1px solid #cdcdcd;border-radius:6px;background:#fff;font-size:13px}' +
+		'#dialog_add_us input.xMiInput:focus{border-color:#2979ff;box-shadow:0 0 0 3px rgba(41,121,255,.15)}' +
+		'#dialog_add_us input.xMiInput[required]:valid{border-color:#cdcdcd}' +
+		'#dialog_add_us input.xMiInput.invalido{border-color:#dc3545}' +
+		'.usb-usu{display:flex}' +
+		'#dialog_add_us input.usb-pref{flex:none;width:54px;padding:0 8px;border-right:0;border-radius:6px 0 0 6px;background:#f1f3f5;color:#495057}' +
+		'#dialog_add_us .usb-usu input.xMiInput:not(.usb-pref){flex:1;min-width:0;border-radius:0 6px 6px 0}' +
+		'.usb-ayuda{font-size:11px;line-height:1.4;color:#6c757d;margin-top:4px}' +
+		'.usb-zona{margin-top:8px}' +
+		'.usb-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px;margin-top:8px}' +
+		'.usb-rol{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:52px;padding:8px;border:1px solid #cdcdcd;border-radius:8px;background:#fff;color:#212529;font:inherit;text-align:left;cursor:pointer}' +
+		'.usb-rol b{font-size:13px}.usb-rol span{font-size:10px;color:#6c757d}' +
+		'.usb-rol[aria-pressed="true"]{padding:7px;border:2px solid #0b5ed7;background:#e7f0ff;color:#084298}' +
+		'.usb-caja{margin-top:12px;padding:12px 14px;border:1px solid #ddd;border-radius:10px;background:#fff}' +
+		'.usb-res-tit{font-size:14px;font-weight:600;margin-bottom:8px}.usb-res-tit span{margin-left:6px;font-size:11px;font-weight:400;color:#6c757d}' +
+		'.usb-chips{display:flex;flex-wrap:wrap;gap:5px}' +
+		'.usb-chip{padding:3px 9px;border-radius:12px;background:#e8f5ee;color:#146c43;font-size:11px}' +
+		'.usb-chip-p{background:#fff4e5;color:#8a4b00}' +
+		'.usb-chip-mas{border:0;background:#f1f3f5;color:#495057;font:inherit;font-size:11px;cursor:pointer}' +
+		'.usb-chip{display:inline-flex;align-items:center;gap:2px}' +
+		'.usb-chip-x{opacity:0;width:16px;height:16px;margin:0 -4px 0 2px;padding:0;border:0;border-radius:8px;background:transparent;color:inherit;font-size:14px;line-height:1;cursor:pointer}' +
+		'.usb-chip-x:hover{background:rgba(0,0,0,.12)}' +
+		'.usb-chip:hover .usb-chip-x,.usb-chip-x:focus{opacity:1}' +
+		'@media (hover:none){.usb-chip-x{opacity:1}}' +
+		'.usb-res-sub{font-size:11px;font-weight:600;color:#495057;margin:10px 0 5px}' +
+		'.usb-no{margin-top:10px;padding-top:8px;border-top:1px dashed #ddd;font-size:11px;line-height:1.5;color:#495057}' +
+		'.usb-btn-sec{min-height:36px;margin-top:10px;padding:0 14px;border:1px solid #0b5ed7;border-radius:8px;background:#fff;color:#0b5ed7;font:inherit;font-size:13px;font-weight:600;cursor:pointer}' +
+		'#dialog_add_us #sedesAtiendeRep{max-width:none;margin:14px 0 0}' +
+		'.usb-acc{max-height:50vh;overflow:auto;margin-top:12px;padding:12px;border:1px solid #ddd;border-radius:10px;background:#fff}' +
+		'#dialog_add_us>.usb-pie{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;gap:12px;margin:0;padding:10px 18px;border-top:1px solid #ddd;background:#fff}' +
+		'.usb-pie-btns{display:flex;gap:8px;margin-left:auto}' +
+		'.usb-falta{font-size:11px;color:#b02a37}' +
+		'#usb_guardar:disabled{opacity:.45;cursor:not-allowed}' +
+		'@media (max-width:760px){#dialog_add_us>.usb-grid{grid-template-columns:minmax(0,1fr)}.usb-quien{border-right:0;border-bottom:1px solid #ddd}.usb-col{padding:12px 14px}}' +
+		'@media (max-width:420px){.usb-pie-btns{flex:1}.usb-pie-btns .xBoton2{flex:1}}';
+	document.head.appendChild(st);
+}
+
+/* ===== Sedes que atiende (call center A27 y repartidor). Plan: plan/REPARTIDOR-MULTISEDE-PLAN.md Tarea 3 =====
+   Solo aparece si la organizacion tiene mas de una sede operable (sedes-org.total > 1). */
+function xSedesAtiendePost(op, body) {
+	return $.ajax({ type: 'POST', url: '../../bdphp/log_sedes_atiende.php?op=' + op, contentType: 'application/json',
+		data: JSON.stringify(body || {}), dataType: 'json' });
+}
+
+// sedes operables de la org (una vez por carga de pagina); si falla, total 0 = no se muestra nada nuevo
+function xSedesAtiendeOrg() {
+	if (!xThis.sedesOrgPromise) {
+		xThis.sedesOrgPromise = xSedesAtiendePost('sedes-org').then(function (r) {
+			var org = (r && r.success && r.datos) ? r.datos : { sedes: [], total: 0 };
+			xThis.sedesAt = org;
+			return org;
+		}, function () {
+			xThis.sedesAt = { sedes: [], total: 0 };
+			return $.Deferred().resolve(xThis.sedesAt).promise();
+		});
+	}
+	return xThis.sedesOrgPromise;
+}
+
+function xSedesAtiendeAviso(msj) {
+	if (typeof xm_all_xToastOpen === 'function') { xm_all_xToastOpen(msj, 5000, false); }
+}
+
+function xSedesAtiendeEsc(t) {
+	return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+		return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+	});
+}
+
+// minusculas y sin tildes, para el buscador
+function xSedesAtiendeNorm(t) {
+	return String(t == null ? '' : t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function xSedesAtiendeCss() {
+	if (document.getElementById('xsa-css')) { return; }
+	var st = document.createElement('style');
+	st.id = 'xsa-css';
+	st.textContent = '.xsa{margin:8px 0 4px 26px;max-width:340px;font-size:13px;color:#212529}' +
+		'.xsa[hidden],.xsa [hidden]{display:none!important}' +
+		'#sedesAtiendeRep{margin:12px 0 0 5px}#sedesAtiendeDlg{margin:0 24px;max-width:none}' +
+		'.xsa-tit{font-size:11px;font-weight:600;color:#6c757d;letter-spacing:.3px;margin-bottom:6px}' +
+		'.xsa-n{color:#3f51b5}' +
+		'.xsa-buscar{width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid #cdcdcd;border-radius:6px;margin-bottom:8px;font-size:13px}' +
+		'.xsa-ciudad{border:1px solid #ddd;border-radius:8px;margin-bottom:6px;background:#f8fafc}' +
+		'.xsa-cab{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;user-select:none}' +
+		'.xsa-flecha{display:inline-block;width:10px;color:#6c757d;font-size:10px;transition:transform .15s}' +
+		'.xsa-abierta>.xsa-cab .xsa-flecha{transform:rotate(90deg)}' +
+		'.xsa-cnom{flex:1;font-weight:600}' +
+		'.xsa-cont{font-size:11px;font-weight:600;color:#3f51b5;white-space:nowrap}' +
+		'.xsa-sedes{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:8px 10px 10px 28px;background:#fff;border-top:1px solid #eee;border-radius:0 0 8px 8px}' +
+		'.xsa-sede{display:flex;align-items:center;gap:6px;cursor:pointer;line-height:1.2}' +
+		'.xsa-sede small{color:#6c757d}' +
+		'.xsa input[type=checkbox]{width:16px;height:16px;accent-color:#3f51b5;margin:0;flex:none;cursor:pointer}' +
+		'#sedesAtiendeDlg .xsa-lista{max-height:50vh;overflow:auto}' +
+		'.xsa-icono{display:inline-block;padding:2px 8px;border:1px solid #3f51b5;border-radius:12px;color:#3f51b5;font-size:11px;font-weight:600;white-space:nowrap}';
+	document.head.appendChild(st);
+}
+
+// pinta el bloque: titulo con contador, buscador y ciudades plegables con "marcar toda la ciudad"
+function xSedesAtiendePintar(contenedor, sedesOrg, marcadas, casa) {
+	xSedesAtiendeCss();
+	var $c = $(contenedor);
+	var marc = (marcadas || []).map(Number);
+	var grupos = {}, orden = [];
+	(sedesOrg || []).forEach(function (s) {
+		var ciudad = $.trim(s.ciudad || '') || 'Sin ciudad';
+		if (!grupos[ciudad]) { grupos[ciudad] = []; orden.push(ciudad); }
+		grupos[ciudad].push(s);
+	});
+	var iSin = orden.indexOf('Sin ciudad');
+	if (iSin > -1) { orden.splice(iSin, 1); orden.push('Sin ciudad'); }
+
+	var html = '<div class="xsa-tit">SEDES QUE ATIENDE · <span class="xsa-n"></span></div>' +
+		'<input type="search" class="xsa-buscar" placeholder="Buscar sede o ciudad" autocomplete="off"><div class="xsa-lista">';
+	orden.forEach(function (ciudad) {
+		html += '<div class="xsa-ciudad" data-c="' + xSedesAtiendeEsc(ciudad) + '"><div class="xsa-cab"><span class="xsa-flecha">&#9654;</span>' +
+			'<input type="checkbox" class="xsa-todas" title="Marcar toda la ciudad"><span class="xsa-cnom">' + xSedesAtiendeEsc(ciudad) + '</span>' +
+			'<span class="xsa-cont"></span></div><div class="xsa-sedes" hidden>';
+		grupos[ciudad].forEach(function (s) {
+			var id = Number(s.idsede), esCasa = id === Number(casa);
+			html += '<label class="xsa-sede" data-n="' + xSedesAtiendeEsc(xSedesAtiendeNorm(s.nombre)) + '"><input type="checkbox" class="xsa-chk" value="' + id + '"' +
+				(esCasa || marc.indexOf(id) > -1 ? ' checked' : '') + (esCasa ? ' disabled' : '') + '> ' + xSedesAtiendeEsc(s.nombre) +
+				(esCasa ? ' <small>(su sede)</small>' : '') + '</label>';
+		});
+		html += '</div></div>';
+	});
+	html += '</div>';
+
+	$c.html(html).attr('data-pintado', '1').off('.xsa')
+		.on('click.xsa', '.xsa-cab', function (e) {
+			if ($(e.target).hasClass('xsa-todas')) { return; }
+			xSedesAtiendePlegar($(this).parent(), null);
+		})
+		.on('change.xsa', '.xsa-todas', function () {
+			$(this).closest('.xsa-ciudad').find('.xsa-chk:not(:disabled)').prop('checked', this.checked);
+			xSedesAtiendeContar($c);
+		})
+		.on('change.xsa', '.xsa-chk', function () { xSedesAtiendeContar($c); })
+		.on('input.xsa', '.xsa-buscar', function () { xSedesAtiendeFiltrar($c, this.value); });
+	xSedesAtiendeContar($c);
+}
+
+function xSedesAtiendePlegar($ciudad, abrir) {
+	var sedes = $ciudad.find('.xsa-sedes')[0];
+	if (abrir === null) { abrir = sedes.hidden; }
+	sedes.hidden = !abrir;
+	$ciudad.toggleClass('xsa-abierta', abrir);
+}
+
+// "x de y" por ciudad, estado intermedio de "marcar toda la ciudad" y "N de M" del titulo
+function xSedesAtiendeContar($c) {
+	var total = 0, marc = 0;
+	$c.find('.xsa-ciudad').each(function () {
+		var chks = $(this).find('.xsa-chk'), n = chks.filter(':checked').length, todas = $(this).find('.xsa-todas')[0];
+		total += chks.length;
+		marc += n;
+		$(this).find('.xsa-cont').text(n + ' de ' + chks.length);
+		todas.checked = n === chks.length;
+		todas.indeterminate = n > 0 && n < chks.length;
+		todas.disabled = chks.filter(':not(:disabled)').length === 0;
+	});
+	$c.find('.xsa-n').text(marc + ' de ' + total);
+}
+
+// por nombre de sede o ciudad; con texto abre las ciudades que coinciden, sin texto vuelve todo plegado
+function xSedesAtiendeFiltrar($c, texto) {
+	var q = xSedesAtiendeNorm($.trim(texto || ''));
+	$c.find('.xsa-ciudad').each(function () {
+		var $ciudad = $(this), alguna = false;
+		var ciudadOk = !q || xSedesAtiendeNorm($ciudad.attr('data-c')).indexOf(q) > -1;
+		$ciudad.find('.xsa-sede').each(function () {
+			var ok = ciudadOk || String($(this).attr('data-n')).indexOf(q) > -1;
+			this.hidden = !ok;
+			if (ok) { alguna = true; }
+		});
+		this.hidden = !alguna;
+		xSedesAtiendePlegar($ciudad, !!q);
+	});
+}
+
+// ids marcados sin la sede de casa (siempre cuenta, no se guarda)
+function xSedesAtiendeMarcadas(contenedor) {
+	return $(contenedor).find('.xsa-chk:checked:not(:disabled)').map(function () { return Number(this.value); }).get();
+}
+
+function xSedesAtiendeLimpiar() {
+	if (!xThis) { return; }
+	xThis.sedesAtLeido = null;
+	$('#sedesAtiendeAcc, #sedesAtiendeRep').each(function () {
+		this.hidden = true;
+		$(this).off('.xsa').empty().removeAttr('data-pintado');
+	});
+}
+
+// lista guardada del usuario a modificar; si falla queda marcado el error y no se toca su lista al guardar
+function xSedesAtiendeLeerUs(idusuario) {
+	return xSedesAtiendeOrg().then(function (org) {
+		if (org.total <= 1) { return null; }
+		return xSedesAtiendePost('leer', { tipo: 'usuario', id: Number(idusuario) }).then(function (r) {
+			xThis.sedesAtLeido = (r && r.success) ? r.datos : { error: true };
+		}, function () {
+			xThis.sedesAtLeido = { error: true };
+			return $.Deferred().resolve().promise();
+		});
+	});
+}
+
+// muestra u oculta los bloques segun Call Center (Accesos) y rol Repartidor (Datos)
+function xSedesAtiendeVer() {
+	if (!xThis) { return; }
+	var org = xThis.sedesAt || { sedes: [], total: 0 };
+	var leido = xThis.sedesAtLeido || { casa: Number(xThis.xt_idsede), sedes: [] };
+	var a27 = $('#acc_us .checkA[data-id="A27,"]')[0];
+	xSedesAtiendeMostrar('#sedesAtiendeAcc', org.total > 1 && !!(a27 && a27.checked), org, leido);
+	xSedesAtiendeMostrar('#sedesAtiendeRep', org.total > 1 && !!xThis.showFormRepartidor, org, { casa: Number(xThis.xt_idsede), sedes: [] });
+}
+
+function xSedesAtiendeMostrar(sel, ver, org, leido) {
+	var $c = $(sel);
+	if (!$c.length) { return; }
+	if (ver && $c.attr('data-pintado') !== '1') {
+		if (leido.error) {
+			$c.html('<span class="fs-12 text-danger">No se pudo cargar las sedes que atiende. Cierre y vuelva a abrir el usuario.</span>');
+		} else {
+			xSedesAtiendePintar($c, org.sedes, leido.sedes, leido.casa);
+		}
+	}
+	$c[0].hidden = !ver;
+}
+
+function xSedesAtiendeGuardar(body) {
+	return xSedesAtiendePost('guardar', body).then(function (r) {
+		if (!r || !r.success) { xSedesAtiendeAviso((r && r.error) || 'No se pudo guardar las sedes que atiende.'); }
+	}, function () {
+		xSedesAtiendeAviso('No se pudo guardar las sedes que atiende. Revise su conexion.');
+		return $.Deferred().resolve().promise();
+	});
+}
+
+// tras ManejoBD_IUD (devuelve el id): con Call Center su lista, sin Call Center lista vacia
+function xSedesAtiendeGuardarUs(id) {
+	var org = xThis.sedesAt || { total: 0 };
+	var idus = parseInt(String(id).trim(), 10);
+	var a27 = $('#acc_us .checkA[data-id="A27,"]')[0];
+	var conA27 = !!(a27 && a27.checked);
+	var pintado = $('#sedesAtiendeAcc').attr('data-pintado') === '1';
+	var errorLeer = !!(xThis.sedesAtLeido && xThis.sedesAtLeido.error);
+	if (org.total <= 1 || !(idus > 0) || (conA27 && (!pintado || errorLeer))) {
+		return $.Deferred().resolve().promise();
+	}
+	return xSedesAtiendeGuardar({ tipo: 'usuario', id: idus, sedes: conA27 ? xSedesAtiendeMarcadas('#sedesAtiendeAcc') : [] });
+}
+
+// repartidor recien creado (log_005 op=11 no devuelve id): el endpoint lo busca por usuario en la sede de la sesion
+function xSedesAtiendeGuardarRepNuevo(usuarioRep) {
+	var org = xThis.sedesAt || { total: 0 };
+	var sedes = xSedesAtiendeMarcadas('#sedesAtiendeRep');
+	if (org.total <= 1 || $('#sedesAtiendeRep').attr('data-pintado') !== '1' || !sedes.length) {
+		return $.Deferred().resolve().promise();
+	}
+	return xSedesAtiendeGuardar({ tipo: 'repartidor', usuario: usuarioRep, sedes: sedes });
+}
+
+// icono "Sedes" de un repartidor existente
+function xSedesRepAbrir(obj) {
+	var $tr = $(obj).closest('tr'), id = Number($tr.attr('data-id')), nombre = $.trim($tr.find('td').first().text());
+	xPopupLoad.titulo = "Cargando..";
+	xPopupLoad.xopen();
+	xSedesAtiendeOrg().then(function (org) {
+		return xSedesAtiendePost('leer', { tipo: 'repartidor', id: id }).then(function (r) {
+			xPopupLoad.xclose();
+			xPopupLoad.titulo = "Guardando..";
+			if (!r || !r.success) { xSedesAtiendeAviso((r && r.error) || 'No se pudo cargar las sedes.'); return; }
+			xSedesAtiendePintar('#sedesAtiendeDlg', org.sedes, r.datos.sedes, r.datos.casa);
+			$('#dialog_sedes_rep .xsa-dlg-tit').text('Sedes que atiende · ' + nombre);
+			$('#sedesAtiendeDlgErr')[0].hidden = true;
+			dialog_sedes_rep.dataset.id = id;
+			dialog_sedes_rep.open();
+		}, function () {
+			xPopupLoad.xclose();
+			xPopupLoad.titulo = "Guardando..";
+			xSedesAtiendeAviso('No se pudo cargar las sedes. Revise su conexion.');
+		});
+	});
+}
+
+function xSedesRepGuardar() {
+	var $err = $('#sedesAtiendeDlgErr');
+	var body = { tipo: 'repartidor', id: Number(dialog_sedes_rep.dataset.id), sedes: xSedesAtiendeMarcadas('#sedesAtiendeDlg') };
+	xSedesAtiendePost('guardar', body).then(function (r) {
+		if (r && r.success) { dialog_sedes_rep.close(); return; }
+		$err.text((r && r.error) || 'No se pudo guardar.')[0].hidden = false;
+	}, function () {
+		$err.text('No se pudo guardar. Revise su conexion.')[0].hidden = false;
+	});
+}
+
 Polymer({
 	is:'x-usuarios',
 	properties:{

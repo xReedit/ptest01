@@ -6255,12 +6255,24 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 .trk-conexion.sinapp { color: #dc3545; }
 .trk-conexion.sinapp > .fa { font-size: 11px; }
 
-/* aviso en linea: solo se muestra cuando hay repartidores sin la app */
-.trk-aviso { display: none; margin: 0 0 12px; padding: 9px 12px; border: 1px solid #f3e2b3;
-	border-radius: 8px; background: #fff8e6; color: #5c4400; font-size: 12px; line-height: 1.45; }
-.trk-aviso.activo { display: block; }
-.trk-aviso > .fa { margin-right: 5px; }
-.trk-aviso a { color: #00843f; font-weight: 600; }
+/* "¿Como va mi pedido?" (call center): una tarjeta por pedido o repartidor */
+#dlg_trk_cliente { width: min(760px, 96vw); }
+/* sube sobre el padding de .xdlg-body (16px) para que nada se asome por encima al bajar */
+.trk-cli-fijo { position: sticky; top: -16px; z-index: 2; background: #fff; margin-top: -16px; padding: 16px 0 10px; }
+.trk-cli { padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; font-size: 12px; }
+.trk-cli-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.trk-cli-tel { display: inline; }
+.trk-cli-der { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.trk-cli-frase { margin: 6px 0 4px; padding: 6px 10px; background: #f1f5f9; border-radius: 6px; font-size: 13px; color: #1e293b; }
+.trk-cli-min { font-weight: 700; padding: 1px 6px; border-radius: 8px; }
+.trk-cli-notas { margin-top: 6px; }
+.trk-cli-nota { color: #7a5b00; background: #fffbea; border-radius: 6px; padding: 3px 8px; margin-bottom: 3px; }
+.trk-cli-nota-add { display: flex; gap: 6px; }
+.trk-cli-nota-add .inv-input { flex: 1; width: auto; }
+#dlg_trk_resumen { width: min(820px, 96vw); }
+.trk-cli-min.verde { background: #d1e7dd; color: #0f5132; }
+.trk-cli-min.ambar { background: #fff3cd; color: #7a5b00; }
+.trk-cli-min.rojo { background: #f8d7da; color: #842029; }
 
 /* pasos de la ayuda */
 .trk-pasos { display: flex; flex-direction: column; gap: 14px; }
@@ -6953,3 +6965,32 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	cursor: pointer;
 }
 .xsus-despues:hover { color: #212529; text-decoration: underline; }
+
+/* cortesias por item (x-control-mesas): aqui y no en la pagina porque el <style> despues de </dom-module> no se carga y las filas se pintan con jQuery */
+	#btn_cortesia[hidden], #panel_cortesia[hidden], #cortesia_motivo_otro[hidden] { display: none !important; }
+	.modo-cortesia .td_op, .modo-cortesia .rowadditem, .modo-cortesia .btnAdd2,
+	.modo-cortesia #component_descuento_pedido, .modo-cortesia #component_comision_pedido { pointer-events: none; opacity: .3; }
+	.modo-cortesia #tb_pedidos, .modo-cortesia .pos-union, .modo-cortesia .pd-l-10-a { pointer-events: none; opacity: .5; }
+	.modo-cortesia #tb_det_pedidos .check_item { pointer-events: none; }
+	.modo-cortesia #tb_det_pedidos tr.cortesia-no { pointer-events: none; opacity: .35; }
+	.panel-cortesia-footer { display: flex; justify-content: flex-end; }
+	.modo-cortesia .footer_dialog > br { display: none; } /* el panel ocupa el lugar de los botones: el footer no crece */
+	.modo-cortesia .footer_dialog .pos-fotter-btn, .modo-cortesia #btn_registrar_pago, .modo-cortesia .footer_dialog button.btn-dark { display: none !important; }
+	#tb_det_pedidos tr.fila-cortesia, #tb_det_pedidos tr.fila-cortesia td { background: #e6ffe5; }
+	#tb_det_pedidos tr.fila-quitar, #tb_det_pedidos tr.fila-quitar td { background: #ffe5e5; }
+	.badge-cortesia.badge-quitar { border-color: #dc3545; color: #b02a37; }
+	.badge-cortesia { display: inline-block; margin-left: 5px; padding: 0 5px; border: 1px solid #f59e0b; border-radius: 8px; background: #fff; color: #b45309; font-size: 10px; line-height: 15px; font-weight: 600; white-space: nowrap; vertical-align: middle; }
+	.panel-cortesia-caja { display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; padding: 6px 10px; max-width: 100%; min-width: 0;
+		background: #fff; border: 1px solid #f59e0b; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+	.panel-cortesia-caja select, .panel-cortesia-caja input { height: 34px; padding: 0 6px; border: 1px solid #bdbdbd; border-radius: 4px; background: #fff; }
+	.panel-cortesia-caja input { width: 160px; max-width: 100%; }
+	.panel-cortesia-caja select { width: 210px; flex-shrink: 0; }
+	.panel-cortesia-caja button { flex-shrink: 0; }
+	/* una sola linea (el footer no crece y la lista no queda tapada): el texto se corta con ... si no entra */
+	#cortesia_resumen { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* pantallas angostas (<=950px, laptops de 15" o menos): el dialogo del pedido ocupa toda la pantalla */
+@media screen and (max-width:950px) {
+    #dialog_detalle.theme1 { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+        width: auto !important; height: auto !important; max-width: none; margin: 0 !important; border-radius: 0; }
+}

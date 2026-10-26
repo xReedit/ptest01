@@ -1,9 +1,9 @@
 // Recibir mercaderia (F6, sede; pensado para el celular del encargado): lo que viene en camino desde la central u
 // otra sede. Se cuenta, se anota lo que llego (si llego menos, el motivo) y se confirma: entra al stock de la sede.
-import { cargarHistorias } from '../historia.js?v=20261015i';
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261015i';
-import { vigente, recargar } from '../router.js?v=20261015i';
+import { cargarHistorias } from '../historia.js?v=20261026a';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, confirmar, fecha } from '../ui.js?v=20261026a';
+import { vigente, recargar } from '../router.js?v=20261026a';
 
 const num = n => Number(n).toLocaleString('es-PE', { maximumFractionDigits: 2 });
 const MOTIVOS = ['Llegó menos', 'Llegó roto o dañado', 'Llegó vencido', 'Otro'];

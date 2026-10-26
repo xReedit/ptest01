@@ -2,9 +2,9 @@
 //   1. marcas las sedes (lista con buscador)   2. agregas productos   3. tabla: una FILA por producto, una COLUMNA por sede
 //   ("A todas" llena la fila; "copiar a las demas" repite una sede)   4. OK -> Envios. Cada sede puede llevar distinto.
 // Despues se puede usar la misma orden para otras sedes. Cada sede lo cuenta en "Recibir mercaderia" y sube su stock.
-import { api } from '../api.js?v=20261015i';
-import { esc, aviso, tarjeta, volver, autocompletar, nuevoToken, leerNum } from '../ui.js?v=20261015i';
-import { vigente, turnoActual } from '../router.js?v=20261015i';
+import { api } from '../api.js?v=20261026a';
+import { esc, aviso, tarjeta, volver, autocompletar, nuevoToken, leerNum } from '../ui.js?v=20261026a';
+import { vigente, turnoActual } from '../router.js?v=20261026a';
 
 const num = n => Number(Number(n || 0).toFixed(3)).toLocaleString('es-PE', { maximumFractionDigits: 3 });
 const sinTildes = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();

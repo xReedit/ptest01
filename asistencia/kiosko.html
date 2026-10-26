@@ -181,6 +181,12 @@
 				return;
 			}
 
+			// El POS comparte origen y hace localStorage.clear() al entrar/salir de
+			// sesion. Reescribirlo en cada ciclo lo repone a los 15 s: si no, la
+			// proxima recarga (Chrome duerme la pestana, se reinicia la PC) cae en
+			// "no esta vinculada" aunque el marcador siga vigente en el servidor.
+			try { localStorage.setItem(LLAVE, token); } catch (e) {}
+
 			document.getElementById('pantalla').hidden = false;
 			document.getElementById('alerta').hidden = true;
 			document.getElementById('marcador').textContent = r.datos.nombre || '';
