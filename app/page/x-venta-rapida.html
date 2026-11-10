@@ -153,7 +153,7 @@
 				</span>			</div>
 			<div style="display: flex; align-items: center; margin-right: 10px;">
 
-					<div class="mr-2" style="border-right: 1px solid; padding-right: 10px;" hidden$="[[!_hasItems(dataSelectTipoPrecio)]]">
+					<div class="mr-2 vr-aparece" style="border-right: 1px solid; padding-right: 10px;" hidden$="[[!_hasItems(dataSelectTipoPrecio)]]">
 						<span class="fs-10 ml-2" style="margin-top: -15px; position: fixed;">Precios</span>
 						<x-comp-select id="selectTipoPrecio" items="[[dataSelectTipoPrecio]]" selected-item="{{selectedItemTipoPrecio}}" color-card="#28a745"></x-comp-select>
 					</div>
@@ -261,7 +261,7 @@
 		</paper-dialog>
 
 		<!-- pedidos pendietes por cobrar -->
-		<div id="contentPedidosPendientesCobrar" class="xInvisible">
+		<div id="contentPedidosPendientesCobrar" class="xInvisible vr-aparece">
 			<x-pedidos-por-pagar id="pedido_pagar_cuenta"></x-pedidos-por-pagar>
 		</div>
 
@@ -375,7 +375,7 @@
 										id="txt_ref_vr"									
 										/>
 									</td>
-									<tr hidden$="[[!showCodeLocalizator]]">
+									<tr class="vr-aparece" hidden$="[[!showCodeLocalizator]]">
 										<td colspan="2">
 											<div class="d-flexx justify-content-center align-items-center" style=" background: #cdefff; border-radius: 8px; padding: 5px 10px; border: 1px solid #dddddd;">
 												<p class="mr-2">Codigo Localizador</p>
@@ -419,7 +419,7 @@
 							<table width="100%" data-TablaName="pedido_subtotales" id="xtb_pedido_subtotales"></table>
 							<br>
 							<div class="p-2">
-								<div hidden$="[[!showCompDescuento]]">
+								<div class="vr-aparece" hidden$="[[!showCompDescuento]]">
 									<x-comp-descuento nom-table-pedido="tb_pedido_detalle" show-detalle="false" id="component_descuento_pedido_vr" importeventa$="[[ importeTotalPedido ]]" classselect="selected-template-1 fs-11"></x-comp-descuento>
 								</div>
 								<div class="mt-2">
@@ -457,8 +457,8 @@
 						<i class="fa fa-plus"></i> Otra venta
 					</div>
 					<div class="xDerecha" style="margin-top: 15px;">
-						<div class="xBoton2 xAzul xInvisible" id="btn_enviar_cuenta" onclick="xEnviarACuenta()">[F8] Enviar a cuenta</div>
-						<div class="xBoton2 xVerde xInvisible" id="btn_registrar_pago" onclick="xIrARegistrarPago();">[F10] Registrar pago</div>
+						<div class="xBoton2 xAzul xInvisible vr-sube" id="btn_enviar_cuenta" onclick="xEnviarACuenta()">[F8] Enviar a cuenta</div>
+						<div class="xBoton2 xVerde xInvisible vr-sube" id="btn_registrar_pago" onclick="xIrARegistrarPago();">[F10] Registrar pago</div>
 					</div>
 			</div>
 
@@ -1443,6 +1443,10 @@ function xIniVentaRapida(){
 		xLoadArrayPedido();
 		xTraerDtTipoConsumo();
 		xRestorePedidoLocalStorageVR(); // multi-venta: venta de una pestaña cerrada de esta sede
+		// Dialogo del producto: se armaba una sola vez con los tipos de consumo de la sede inicial, y sus filas
+		// ocultas quedaban pintadas. Al abrirlo se leen ANTES de repintar: con ids de otra sede daba TypeError y no abria.
+		xCadenaTC = xArmarTipoConsumo(1);
+		$('#_xdlgBody').empty();
 
 		if (typeof reloadCanalConsumoPosSede === 'function') {
 			reloadCanalConsumoPosSede();
@@ -2648,6 +2652,7 @@ async function xLoadItemsDetalleCartaALL(){
 	};
 
 	$("#accordion").html(xCadenaItems).trigger('create');
+	xVrAnimar($("#accordion")[0], [{ opacity: 0 }, { opacity: 1 }], 180);
 	xIniFocusMoveLi();
 
 	// === Sección virtual "PROMOCIONES" ===========================================
@@ -2755,6 +2760,7 @@ function xVerMipedidoVR(){
 	var xCantItems;
 	var xIndicacionItem='';
 
+	var xVrFilasAntes = xVrFilasPedido();
 	$("#xBody div").remove();
 	//xDtPedido=$.parseJSON(window.localStorage.getItem("::app3_sys_dta_pe"));	
 	xDtPedido=xArrayPedidoObj;
@@ -2868,9 +2874,31 @@ function xVerMipedidoVR(){
 	};
 	xCadenaGrupo=String('<table width="100%" class="xtb_pedido" data-TablaName="pedido_detalle" id="tb_pedido_detalle">'+xCadenaGrupo+'</table></div></div>');
 	$("#xBody").html(xCadenaGrupo).trigger('create');
+	xVrAnimarFilasPedido(xVrFilasAntes);
 	xValidarReglaCarta();
 
 	xValidarPedidoonBtnVR();
+}
+
+// === Animaciones: el pedido y los totales se repintan completos en cada clic; se anima solo lo que cambio ===
+function xVrAnimar(el, frames, ms) {
+	if (el && el.animate) { el.animate(frames, { duration: ms || 200, easing: 'ease-out' }); }
+}
+
+function xVrClaveFila(tr) { return tr.dataset.idtipocobus + '_' + tr.dataset.iditem; }
+
+function xVrFilasPedido() {
+	var filas = {};
+	$('#xBody tr.xPedidoItem').each(function () { filas[xVrClaveFila(this)] = $(this).find('#td_cant').text(); });
+	return filas;
+}
+
+function xVrAnimarFilasPedido(antes) {
+	$('#xBody tr.xPedidoItem').each(function () {
+		var previa = antes[xVrClaveFila(this)], actual = $(this).find('#td_cant').text();
+		if (previa === undefined) { xVrAnimar(this, [{ opacity: 0, transform: 'translateX(10px)' }, { opacity: 1, transform: 'none' }], 220); }
+		else if (previa !== actual) { xVrAnimar(this, [{ backgroundColor: '#fff3c4' }, { backgroundColor: 'transparent' }], 450); }
+	});
 }
 
 function xValidarReglaCarta(){
@@ -2970,7 +2998,9 @@ function xSumarTotal(viene_dsct = false){
 	xThisVentaRapida.importeTotalPedido = tt_pedido;
 	//
 
+	var xVrSubAntes = $("#xtb_pedido_subtotales tr").length;
 	$("#xtb_pedido_subtotales").html(htmlSubtotales).trigger('create');
+	$("#xtb_pedido_subtotales tr").slice(xVrSubAntes).each(function () { xVrAnimar(this, [{ opacity: 0 }, { opacity: 1 }]); });
 
 	if(tt_pedido==0){
 		$("#btn_registrar_pago").addClass('xInvisible'); xregistrar_pago=false;

@@ -517,11 +517,17 @@ function xJsonSunatCocinarItemDetalle(items, ValorIGV, isExoneradoIGV, esGratuit
 async function xCocinarJsonNotaCredito(doc) {
     const _dataXML = JSON.parse(doc.json_xml);    
     const _numSerieDoc = getSerieDoc(doc.numero);
-    const _codDocumento = doc.codsunat;
     const _fecha = xSetInputDate(xDevolverFecha());
     const _hora = xDevolverHora();
+    // 2026-11: la NC lleva la letra del comprobante afectado (B boleta / F factura).
+    // Antes era siempre "F": SUNAT rechaza una NC F que modifica una boleta y el
+    // POS igual marcaba la boleta como anulada.
+    // El tipo afectado sale de la misma letra: doc.codsunat no viene desde Historial de
+    // ventas (x-comp-anular-comprobante hace SELECT * FROM ce, sin codsunat).
+    const _letraSerie = String(_dataXML.serie_documento || doc.numero).charAt(0).toUpperCase() === 'B' ? 'B' : 'F';
+    const _codDocumento = _letraSerie === 'B' ? '03' : '01';
     const _jsonXmlNC = {
-        "serie_documento": "F"+_numSerieDoc,
+        "serie_documento": _letraSerie+_numSerieDoc,
         "numero_documento": "#",
         "fecha_de_emision": _fecha,
         "hora_de_emision": _hora,
@@ -578,14 +584,19 @@ async function xSendNotaCredito (_jsonXmlNC, idce) {
     })
     .then(function (res) {
 
-        // guardar nc
-        if ( res.success == true ) {
+        // guardar nc: solo si SUNAT la ACEPTO. res.success solo dice que apifac la
+        // registro; con un rechazo de SUNAT tambien llega true y la boleta quedaba
+        // "Anulado" en el POS pero vigente en SUNAT.
+        if ( res.success == true && xNotaCreditoAceptadaSunat(res.response) ) {
             res.idce = idce;
             res.jsonxml = _jsonXmlNC;
             CpeInterno_RegistrarNC(res);
 
             showToastSwal('success', 'Listo proceso correcto.');
 
+        } else if ( res.success == true ) {
+            const _msjSunat = (res.response && res.response.description) || 'SUNAT no respondió.';
+            showAlertSwalOk('error', 'SUNAT no aceptó la nota de crédito', 'El comprobante NO fue anulado. ' + _msjSunat);
         } else {
             // si hay algun error            
             showAlertSwalOk('error', 'Ocurrio un error!', res.message);
@@ -601,6 +612,15 @@ async function xSendNotaCredito (_jsonXmlNC, idce) {
     
     return _rpt;
 
+}
+
+// Misma regla que apifac (CdrStateResolver): code '' / '0' o >= 4000 (observaciones) = aceptado.
+// Usa response.accepted si apifac ya lo envia.
+function xNotaCreditoAceptadaSunat(response) {
+    if ( !response || response.success !== true ) return false;
+    if ( typeof response.accepted === 'boolean' ) return response.accepted;
+    const _code = String(response.code ?? '').trim();
+    return _code === '' || _code === '0' || (/^\d+$/.test(_code) && parseInt(_code) >= 4000);
 }
 
 function getSerieDoc(num_doc) {

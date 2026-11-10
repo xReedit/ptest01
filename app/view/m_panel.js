@@ -427,6 +427,10 @@ async function xOpenPage(xop, parametro){
 		case 66: xruta = '/logistica'; break; // Logistica cadenas (B15) -> app/logistica/
 		case 67: xruta = '/anfitrion'; break; // Anfitrion, vista de mesas solo lectura (E1)
 		case 68: xruta = '/camaras'; break; // Camaras IA (E2) -> app/camaras/
+		case 69: // Diseña tu Salón 3D (C7): abre directo el diseñador de la maqueta, siempre en la misma pestaña
+			window.open('../maqueta/index.html?v=' + Date.now(), 'disena_salon_3d');
+			xLiberarRouter();
+			return;
 	}
 	xruta=xruta+parametro;
 	// alert('go '+ xruta);

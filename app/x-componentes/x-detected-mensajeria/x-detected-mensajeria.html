@@ -134,6 +134,28 @@
                 font-size: 11px;
             }
             
+            .lbl-corto { display: none; }
+            :host([compact]) .title-status { white-space: nowrap; }
+
+            /* compacto (cabecera de Control de pedidos): solo el icono de WhatsApp en una bolita blanca,
+               rojo = desconectado, verde = conectado, ambar = chatbot pausado, gris = verificando.
+               El detalle va en el tooltip (title) y tocarlo abre mensajeria. */
+            .wa-ico { display: none; }
+            :host([compact]) .container-status {
+                width: 26px; height: 26px; padding: 0; gap: 0; border: 0; border-radius: 50%;
+                background: #fff; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+            }
+            :host([compact]) .container-status > * { display: none; }
+            :host([compact]) .container-status > .wa-ico {
+                display: block; width: 15px; height: 15px; fill: none; stroke: #9e9e9e; stroke-width: 2;
+                stroke-linecap: round; stroke-linejoin: round;
+            }
+            :host([compact]) .status-desconectado > .wa-ico { stroke: #dc3545; }
+            :host([compact]) .status-conectado > .wa-ico { stroke: #16a34a; }
+            :host([compact]) .status-pausado > .wa-ico { stroke: #d97706; }
+            :host([compact]) .status-desconectado { animation: wa-late 2s ease-in-out infinite; }
+            @keyframes wa-late { 50% { box-shadow: 0 0 0 4px rgba(220,53,69,.35); } }
+
             .btn-conectar:hover {
                 background: #0056b3;
             }
@@ -175,7 +197,10 @@
             }
         </style>
 
-        <div class$="container-status [[_getStatusClass(isConectado, isChecking, chatbotPausado)]]">
+        <div class$="container-status [[_getStatusClass(isConectado, isChecking, chatbotPausado)]]"
+             title$="[[_getTituloPunto(isConectado, isChecking, chatbotPausado)]]" on-click="_tocarPunto">
+            <!-- icono de linea (globo de chat con telefono), solo se ve en modo compacto -->
+            <svg class="wa-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M16 14.3v1.3a.9.9 0 0 1-1 .9 8.9 8.9 0 0 1-3.9-1.4 8.8 8.8 0 0 1-2.7-2.7A8.9 8.9 0 0 1 7 8.5a.9.9 0 0 1 .9-1h1.3a.9.9 0 0 1 .9.8c.1.4.2.9.3 1.3a.9.9 0 0 1-.2.9l-.6.6a7.2 7.2 0 0 0 2.7 2.7l.6-.6a.9.9 0 0 1 .9-.2c.4.1.8.2 1.3.3a.9.9 0 0 1 .8.9Z"/></svg>
             <template is="dom-if" if="[[!isChecking]]">
                 <iron-icon 
                     class$="icon-status [[_getIconClass(isConectado, chatbotPausado)]]" 
@@ -206,7 +231,7 @@
             
             <template is="dom-if" if="[[_showBotonConectar(isConectado, isChecking, chatbotPausado)]]">
                 <button class="btn-conectar" on-click="_irAMensajeria">
-                    [[_getLabelBotonConectar(chatbotPausado)]]
+                    <span class="lbl-largo">[[_getLabelBotonConectar(chatbotPausado)]]</span><span class="lbl-corto">[[_getLabelCorto(chatbotPausado)]]</span>
                 </button>
             </template>
             
@@ -399,6 +424,17 @@
                 xOpenPage(60);
             },
             
+            // compacto = solo el icono: tocarlo abre mensajeria (en grande, el boton ya hace esto)
+            _tocarPunto: function() {
+                if (this.compact) { this._irAMensajeria(); }
+            },
+
+            _getTituloPunto: function(isConectado, isChecking, chatbotPausado) {
+                if (isChecking) return 'WhatsApp: verificando la conexión...';
+                if (!isConectado) return 'WhatsApp DESCONECTADO: los clientes no reciben respuesta. Toca para conectarlo.';
+                return chatbotPausado ? 'WhatsApp conectado, pero el chatbot está PAUSADO: los mensajes no se responden solos. Toca para activarlo.' : 'WhatsApp conectado: el chatbot responde a los clientes.';
+            },
+
             _getStatusClass: function(isConectado, isChecking, chatbotPausado) {
                 if (isChecking) return '';
                 if (!isConectado) return 'status-desconectado';
@@ -433,7 +469,11 @@
             },
             
             _getLabelBotonConectar: function(chatbotPausado) {
-                return chatbotPausado ? 'Abrir Mensajería' : 'Conectar WhastApp Ahora';
+                return chatbotPausado ? 'Abrir Mensajería' : 'Conectar WhatsApp Ahora';
+            },
+
+            _getLabelCorto: function(chatbotPausado) {
+                return chatbotPausado ? 'Abrir' : 'Conectar WhatsApp';
             },
             
             _showBotonReconectar: function(isConectado, isChecking, compact, chatbotPausado) {

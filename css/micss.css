@@ -6454,6 +6454,13 @@ paper-dialog.xdlg > * { margin:0; padding:0; }
 	animation: xverEntra .32s cubic-bezier(.16, .84, .44, 1);
 }
 
+/* Punto de venta: lo que aparece de golpe. Se reproduce solo al pasar de display:none a visible.
+   vr-aparece solo usa opacidad: un transform en un contenedor moveria sus hijos position:fixed. */
+@keyframes vrAparece { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vrSube { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.vr-aparece, #contentVentaRapida > *, .comision-container .cancel-button { animation: vrAparece .2s ease-out; }
+.vr-sube, #comisionInputContainer.visible { animation: vrSube .2s ease-out; }
+
 @keyframes xverEntra {
 	from { opacity: 0; transform: translateY(22px) scale(.97); }
 	to   { opacity: 1; transform: translateY(0) scale(1); }

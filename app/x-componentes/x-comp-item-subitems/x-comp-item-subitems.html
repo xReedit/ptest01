@@ -24,11 +24,19 @@
                     <div class="op-grupos" hidden$="[[ !isExistSubitems ]]">
                         <template is="dom-repeat" items="[[listContentSub]]" as="contentSub">
                             <div class="op-grupo" data-idcontent$="[[contentSub.iditem_subitem_content]]">
-                                <div class="op-g-head">
+                                <div class="op-g-head" on-tap="_tocarCabecera" title="Tocar para mostrar u ocultar">
                                     <span class="op-paso"></span>
                                     <div class="op-g-titulo">[[_titulo(contentSub.des)]]<div class="op-g-regla"></div></div>
                                     <span class="op-g-chip"></span>
+                                    <div class="op-buscar" hidden$="[[!_conBusqueda(contentSub.opciones)]]">
+                                        <input type="text" autocomplete="off" spellcheck="false" placeholder="Buscar..." on-input="_buscar" tabindex="-1">
+                                        <span class="op-limpiar" title="Borrar"><i class="fa fa-times-circle"></i></span>
+                                    </div>
+                                    <span class="op-lupa" hidden$="[[!_conBusqueda(contentSub.opciones)]]" title="Buscar en este grupo"><i class="fa fa-search"></i></span>
+                                    <i class="fa fa-chevron-up op-flecha"></i>
                                 </div>
+                                <!-- op-plegable: anima el alto al plegar/desplegar (grid-template-rows 1fr <-> 0fr) -->
+                                <div class="op-plegable">
                                 <div class="op-opciones" id="group-[[contentSub.iditem_subitem_content]]">
                                     <template is="dom-repeat" items="[[contentSub.opciones]]" as="subitem">
                                         <div class="op-op check-subitem" hidden$="{{isSubItemCheckBox(contentSub.show_cant_item)}}"
@@ -60,6 +68,7 @@
                                             </x-comp-ctrl-add-fast>
                                         </div>
                                     </template>
+                                </div>
                                 </div>
                             </div>
                         </template>
@@ -96,7 +105,7 @@
                 <div class="op-pie">
                     <div class="op-estado" id="opEstado"></div>
                     <div class="op-total"><small id="opTotalSub"></small><b id="opTotal"></b></div>
-                    <button class="btn btn-light op-btn xInvisible" id="dlgBtn" onclick="xListoDlgVR_comp();"><i class="fa fa-check"></i> Listo</button>
+                    <button class="btn btn-light op-btn xInvisible vr-sube" id="dlgBtn" on-tap="_listo"><i class="fa fa-check"></i> Listo</button>
                     <button class="btn btn-primary op-btn" id="opBtnAgregar" on-tap="_agregar"></button>
                 </div>
             </div>
@@ -144,7 +153,35 @@
     #dialog_item_comp .op-lado { border-left: 1px solid #e5e7eb; background: #f8fafc; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 11px; }
     #dialog_item_comp.op-sin-grupos .op-lado { border-left: 0; }
 
-    #dialog_item_comp .op-grupo { border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; overflow: hidden; order: 1; }
+    /* flex-shrink 0: si no, con muchas opciones el grupo se encogia al alto del dialogo y cortaba las opciones sin scroll */
+    #dialog_item_comp .op-grupo { border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; overflow: hidden; order: 1; flex-shrink: 0; }
+    #dialog_item_comp .op-g-head { cursor: pointer; }
+    #dialog_item_comp .op-flecha { color: #adb5bd; font-size: 12px; transition: transform .25s ease; }
+    #dialog_item_comp .op-cerrado .op-flecha { transform: rotate(180deg); }
+    #dialog_item_comp .op-g-head { transition: border-color .25s ease; }
+    #dialog_item_comp .op-cerrado .op-g-head { border-bottom-color: transparent; }
+    #dialog_item_comp .op-plegable { display: grid; grid-template-rows: 1fr; overflow: hidden; transition: grid-template-rows .28s ease; }
+    #dialog_item_comp .op-plegable > .op-opciones { min-height: 0; overflow: hidden; transition: opacity .2s ease, padding .28s ease; }
+    #dialog_item_comp .op-cerrado .op-plegable { grid-template-rows: 0fr; }
+    #dialog_item_comp .op-cerrado .op-plegable > .op-opciones { opacity: 0; padding-top: 0; padding-bottom: 0; }
+    #dialog_item_comp .op-lupa { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #dddddd; background: #fff; color: #495057; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; transition: background .2s, border-color .2s, color .2s; }
+    #dialog_item_comp .op-lupa:hover, #dialog_item_comp .op-lupa.on { border-color: #007bff; color: #007bff; background: #eaf3ff; }
+    #dialog_item_comp .op-lupa[hidden], #dialog_item_comp .op-buscar[hidden] { display: none; }
+    /* buscador en la cabecera: sale desde la lupa hacia la izquierda */
+    #dialog_item_comp .op-buscar { width: 0; opacity: 0; overflow: hidden; flex: 0 1 auto; height: 32px; margin-right: -10px; border: 1px solid transparent; border-radius: 8px; background: #fff;
+        transition: width .3s ease, opacity .2s ease, margin .3s ease, border-color .3s ease; }
+    #dialog_item_comp .op-buscar.on { width: min(260px, 40%); opacity: 1; margin-right: 0; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0, 123, 255, .12); }
+    #dialog_item_comp .op-buscar { display: flex; align-items: center; }
+    #dialog_item_comp .op-buscar input { flex: 1 1 auto; min-width: 0; height: 100%; border: 0; outline: none; padding: 0 4px 0 10px; font: inherit; font-size: 13px; background: transparent; }
+    /* la X solo aparece cuando hay algo escrito */
+    #dialog_item_comp .op-limpiar { flex: 0 0 auto; padding: 0 9px; color: #adb5bd; font-size: 15px; cursor: pointer; line-height: 30px; }
+    #dialog_item_comp .op-limpiar:hover { color: #6c757d; }
+    #dialog_item_comp .op-buscar input:placeholder-shown + .op-limpiar { display: none; }
+    #dialog_item_comp .op-op.op-filtrado { display: none; }
+    #dialog_item_comp .op-sin-res { grid-column: 1 / -1; font-size: 12px; color: #6c757d; padding: 6px 2px; }
+    @media (prefers-reduced-motion: reduce) {
+        #dialog_item_comp .op-plegable, #dialog_item_comp .op-plegable > .op-opciones, #dialog_item_comp .op-buscar, #dialog_item_comp .op-flecha { transition: none; }
+    }
     #dialog_item_comp .op-grupo.op-req { order: 0; }
     #dialog_item_comp .op-grupo.pendiente { border-color: #f6c26b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .12); }
     #dialog_item_comp .op-grupo.listo { border-color: #b7e4c3; }
@@ -235,8 +272,9 @@
     #dialog_item_comp #dlgBtn:hover { background: #dee2e6; }
 
     /* pantallas grandes: los grupos en dos columnas */
+    /* tipo masonry: filas de 1px y cada grupo ocupa su alto (span lo pone _acomodar), asi no quedan huecos */
     @media (min-width: 1500px) {
-        #dialog_item_comp:not(.op-compacto) .op-grupos { display: grid; grid-template-columns: 1fr 1fr; align-content: start; align-items: start; }
+        #dialog_item_comp:not(.op-compacto) .op-grupos { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1px; grid-auto-flow: row dense; row-gap: 0; column-gap: 12px; align-content: start; align-items: start; }
     }
     /* pantallas chicas: una sola columna, todo con scroll */
     @media (max-width: 860px) {
@@ -842,6 +880,8 @@
             this.isShowDetalleProducto = false;
             xThisComSubItem.cantSubItemSelect = 0 ;
             if (this._clicsListos) { return; }
+            // 2 columnas en pantallas grandes: el alto de cada grupo cambia (plegar, buscar), se re-acomoda solo
+            this._medidor = window.ResizeObserver ? new ResizeObserver(function (es) { es.forEach(function (x) { self._acomodar(x.target); }); }) : null;
             this._clicsListos = true;
             // el panel derecho se arma con innerHTML: un solo listener por contenedor
             var self = this;
@@ -859,7 +899,12 @@
             });
             // el dialogo es modal (sin Esc nativo): Esc hace lo mismo que la X
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && dialog_item_comp.opened) { e.preventDefault(); xListoDlgVR_comp(); }
+                if (e.key !== 'Escape' || !dialog_item_comp.opened) { return; }
+                e.preventDefault();
+                // Esc en el buscador de un grupo solo cierra el buscador
+                var caja = e.target.closest && e.target.closest('.op-buscar');
+                if (caja) { caja.classList.remove('on'); caja.querySelector('input').value = ''; caja.querySelector('input').blur(); self._filtrar(caja.closest('.op-grupo'), ''); self._pintar(); return; }
+                xListoDlgVR_comp();
             });
         },
         openDialog: function(tpc, id) {
@@ -921,6 +966,59 @@
             dialog_item_comp.classList.toggle('op-sin-grupos', n === 0);
             dialog_item_comp.classList.toggle('op-compacto', n > 0 && n <= 2);
             this._canalSel = null;
+            // el dom-repeat reusa los nodos entre productos: limpiar busquedas y grupos plegados del anterior
+            this._cerrados = {};
+            Polymer.dom(this.root).querySelectorAll('.op-buscar').forEach(function (b) { b.classList.remove('on'); b.querySelector('input').value = ''; });
+            Polymer.dom(this.root).querySelectorAll('.op-filtrado').forEach(function (o) { o.classList.remove('op-filtrado'); });
+            Polymer.dom(this.root).querySelectorAll('.op-sin-res').forEach(function (s) { s.remove(); });
+        },
+
+        // con mas de 15 opciones aparece la lupa
+        _conBusqueda: function (opciones) { return (opciones || []).length > 15; },
+        _sinTildes: function (t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); },
+
+        // tocar la cabecera pliega/despliega el grupo; tocar la lupa abre el buscador del grupo
+        _tocarCabecera: function (e) {
+            var grupo = e.currentTarget.parentNode, id = grupo.getAttribute('data-idcontent');
+            if (e.target.closest('.op-limpiar')) {
+                var txt = grupo.querySelector('.op-buscar input');
+                txt.value = ''; this._filtrar(grupo, ''); txt.focus({ preventScroll: true });
+                return;
+            }
+            if (e.target.closest('.op-buscar')) { return; } // escribir en el buscador no pliega el grupo
+            if (e.target.closest('.op-lupa')) {
+                var caja = grupo.querySelector('.op-buscar'), input = caja.querySelector('input');
+                this._cerrados[id] = false;
+                var abrir = !caja.classList.contains('on');
+                caja.classList.toggle('on', abrir);
+                if (abrir) { input.focus({ preventScroll: true }); } else { input.value = ''; input.blur(); this._filtrar(grupo, ''); }
+            } else {
+                this._cerrados[id] = !this._cerrados[id];
+            }
+            this._pintar();
+        },
+        // span = alto del grupo + 12px de separacion (filas de 1px); en una columna no aplica.
+        // offsetHeight y no getBoundingClientRect: el dialogo entra con animacion de escala y mediria casi 0
+        _acomodar: function (g) {
+            var enGrid = getComputedStyle(g.parentNode).display === 'grid';
+            g.style.gridRowEnd = enGrid ? 'span ' + (g.offsetHeight + 12) : '';
+        },
+        _buscar: function (e) {
+            var grupo = e.currentTarget.closest('.op-grupo'), id = grupo.getAttribute('data-idcontent');
+            this._filtrar(grupo, e.currentTarget.value);
+            // si el grupo estaba plegado, se despliega para ver lo que se busca
+            if (this._cerrados[id]) { this._cerrados[id] = false; this._pintar(); }
+        },
+        _filtrar: function (grupo, texto) {
+            var q = this._sinTildes(texto).trim(), hay = 0, self = this;
+            grupo.querySelectorAll('.op-op').forEach(function (op) {
+                var ok = !q || self._sinTildes(op.querySelector('.op-nom').textContent).indexOf(q) > -1;
+                op.classList.toggle('op-filtrado', !ok);
+                if (ok && !op.hasAttribute('hidden')) { hay++; }
+            });
+            var cont = grupo.querySelector('.op-opciones'), aviso = cont.querySelector('.op-sin-res');
+            if (aviso) { aviso.remove(); }
+            if (!hay) { cont.insertAdjacentHTML('beforeend', '<div class="op-sin-res">No hay opciones con "' + this._esc(texto) + '"</div>'); }
         },
 
         _tocarOpcion: function (e) {
@@ -1007,6 +1105,34 @@
             this._pintar();
         },
 
+        // linea del canal elegido que entro sin opciones (producto sin obligatorios entra directo al clic)
+        _lineaSinOpciones: function () {
+            var it = itemPedidos_objItemSelected;
+            if (!it || !(it.subitems_selected || []).length || !this.isOptionRequeridosComplet) { return null; }
+            // ponytail: con grupo "controlable" el "-" sin opciones revienta en handlerFnMiPedido (subitems_selected[0]); no se toca
+            if (Array.isArray(it.subitems) && it.subitems[0] && parseInt(it.subitems[0].iscontrolable, 10) === 1) { return null; }
+            var fila = this._filasCanal().filter(function (f) { return f.id === this._canalSel; }, this)[0];
+            var e = fila && xArrayPedidoObj[fila.id] ? xArrayPedidoObj[fila.id][this._claveItem()] : null;
+            if (!e || !(parseInt(e.cantidad, 10) > 0)) { return null; }
+            if ((e.subitems_view || []).some(function (v) { return parseFloat(v.cantidad_seleccionada) > 0; })) { return null; }
+            return { fila: fila, cant: parseInt(e.cantidad, 10) };
+        },
+
+        // Listo: como antes, las opciones marcadas se ponen al plato que ya estaba en el pedido.
+        // Se quita sin opciones y se vuelve a poner con opciones por los +/- de siempre: precio, stock y socket cuadran.
+        _listo: function () {
+            var l = this._lineaSinOpciones();
+            if (l) {
+                var it = itemPedidos_objItemSelected, sel = it.subitems_selected, i;
+                it.subitems_selected = [];
+                try { for (i = 0; i < l.cant; i++) { $(l.fila.el).find('.xBtnIz').trigger('click'); } }
+                finally { it.subitems_selected = sel; }
+                for (i = 0; i < l.cant; i++) { $(l.fila.el).find('.xBtnDe').trigger('click'); }
+                this._guardarNotas();
+            }
+            xListoDlgVR_comp();
+        },
+
         // +/- de una linea ya agregada: mismo camino que los +/- de la lista de venta rapida (subitems_selected_index)
         _linea: function (idFila, index, signo) {
             var fila = this._filasCanal().filter(function (f) { return f.id === String(idFila); })[0];
@@ -1034,6 +1160,7 @@
 
             // --- grupos: obligatorios primero, numerados en el orden en que se ven
             var nodos = root.querySelectorAll('.op-grupo');
+            if (this._medidor) { nodos.forEach(function (n) { self._medidor.observe(n); }); }
             var esReq = function (g) { return g.subitem_required_select === 1 ? 1 : 0; };
             var elegidas = function (g) {
                 return parseInt(g.show_cant_item, 10) === 1
@@ -1049,10 +1176,15 @@
                 var max = parseInt(g.subitem_cant_select, 10) || g.opciones.length;
                 var cant = parseInt(g.show_cant_item, 10) === 1;
                 if (obligatorio) { req++; if (completo) { reqOk++; } else { pendientes.push(self._titulo(g.des)); } }
-                el.className = 'op-grupo' + (obligatorio ? ' op-req' : '') + (obligatorio ? (completo ? ' listo' : ' pendiente') : (cuantas ? ' listo' : ''));
+                var cerrado = !!(self._cerrados || {})[g.iditem_subitem_content];
+                el.className = 'op-grupo' + (obligatorio ? ' op-req' : '') + (obligatorio ? (completo ? ' listo' : ' pendiente') : (cuantas ? ' listo' : '')) + (cerrado ? ' op-cerrado' : '');
+                el.querySelector('.op-lupa').classList.toggle('on', el.querySelector('.op-buscar').classList.contains('on'));
                 el.querySelector('.op-paso').innerHTML = obligatorio && completo ? '<i class="fa fa-check"></i>' : String(n + 1);
                 var tipo = obligatorio ? 'Obligatorio' : 'Opcional';
-                el.querySelector('.op-g-regla').textContent = cant ? tipo + ' · hasta ' + max + ' en total'
+                var elegidasTxt = g.opciones.filter(function (o) { return o.selected; }).map(function (o) { return String(o.des || '').trim(); }).join(', ');
+                // plegado: se ve lo elegido en vez de la regla
+                el.querySelector('.op-g-regla').textContent = cerrado && elegidasTxt ? elegidasTxt
+                    : cant ? tipo + ' · hasta ' + max + ' en total'
                     : (max === 1 ? tipo + ' · elige 1' : (max >= g.opciones.length ? tipo + ' · elige las que quieras' : tipo + ' · elige hasta ' + max));
                 var chip = el.querySelector('.op-g-chip');
                 if (obligatorio) {
@@ -1137,6 +1269,8 @@
             // con stock 0 el "+" de siempre no agrega (handlerFnMiPedido): se avisa en vez de dejar un boton que no responde
             var sinStock = parseFloat(it.stock_actual) === 0;
             var puede = !!this.isOptionRequeridosComplet && filas.length > 0 && !sinStock;
+            var sinOp = this._lineaSinOpciones();
+            var avisoListo = sinOp ? 'Toca <b>Listo</b> para ponerlas al plato que ya está en el pedido' + (sinOp.cant > 1 ? ' (a los ' + sinOp.cant + ')' : '') + '.' : '';
             this.$$('#opTituloSel').textContent = esNueva ? 'Selección nueva' : 'Selección';
             var resumen = this.$$('#opSeleccion');
             resumen.classList.toggle('nueva', esNueva);
@@ -1144,6 +1278,7 @@
                 + (sel.length ? '<div class="op-ops-txt">' + sel.join(' · ') + '</div>' : '')
                 + pendientes.map(function (t) { return '<div class="op-falta"><i class="fa fa-exclamation-circle"></i> Falta: ' + esc(t) + '</div>'; }).join('')
                 + (esNueva && puede ? '<div class="op-aviso"><i class="fa fa-info-circle"></i> Opciones distintas: al agregar queda como <b>otra línea (#' + (lineas.length + 1) + ')</b>.</div>' : '')
+                + (sinOp ? '<div class="op-aviso"><i class="fa fa-info-circle"></i> ' + avisoListo + ' <b>Agregar</b> suma otro plato.</div>' : '')
                 + (iActual >= 0 ? '<div class="op-aviso"><i class="fa fa-info-circle"></i> Igual a la <b>#' + (iActual + 1) + '</b>: al agregar suma 1 a esa línea.</div>' : '');
 
             // --- notas rapidas
@@ -1160,6 +1295,9 @@
             } else if (!this.isOptionRequeridosComplet) {
                 estado.className = 'op-estado mal';
                 estado.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Falta elegir: ' + esc(pendientes.join(', '));
+            } else if (sinOp) {
+                estado.className = 'op-estado info';
+                estado.innerHTML = '<i class="fa fa-check-circle"></i> ' + avisoListo;
             } else if (esNueva) {
                 estado.className = 'op-estado info';
                 estado.innerHTML = '<i class="fa fa-plus-circle"></i> Opciones nuevas: se agregará como línea #' + (lineas.length + 1);

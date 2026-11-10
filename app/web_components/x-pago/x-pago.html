@@ -17,7 +17,7 @@
 			</div>
 			<div class="ancho_ini">				
 				<br>
-				<div class="container-cliente-comprobante" hidden="[[!hidden_container_pago]]">					
+				<div class="container-cliente-comprobante vr-aparece" hidden="[[!hidden_container_pago]]">					
 
 					<div id="container-cliente">
 						<div>
@@ -108,16 +108,16 @@
 								
 								<div class="d-flexx align-items-center justify-content-between">
 									<div>
-										<p id="pago_msj_whatsapp" style="line-height: 18px; display: flex; align-items: center;">
+										<p id="pago_msj_whatsapp" class="vr-aparece" style="line-height: 18px; display: flex; align-items: center;">
 											<span>
 												Se enviara el comprobante <br>al WhatsApp de este número. <img src="../../../images/whatsapp.png" width="16px">
 											</span>
 										</p>
 
 										<div>
-											<div id="telefono_confirmado" class="text-success" style="font-size: 12px; display: none;"><i
+											<div id="telefono_confirmado" class="text-success vr-aparece" style="font-size: 12px; display: none;"><i
 													class="fa fa-check-circle"></i> Número verificado</div>
-											<div id="telefono_verificacion" style="display: none;">
+											<div id="telefono_verificacion" class="vr-aparece" style="display: none;">
 												<div style="color: #007bff; font-size: 12px;">¿Es este el número correcto del cliente?</div>
 												<div class="btn btn-sm btn-warning fs-12 mt-2 animate__animated animate__shakeX" onclick="xConfirmarNumeroTelefono(true); return false;">
 													<i class="fa fa-check mr-1"></i>Telefono
@@ -144,7 +144,7 @@
 				</div>
 
 				<!-- <input type="text" placeholder="[[placeholder_clie]]" onChange="conMayusculas(this)" class="xMiInput xfont18 xPasarEnter2" id="sel_cliente" anchofull autofocus> -->
-				<div id="container-pago" hidden="[[hidden_container_pago]]">
+				<div id="container-pago" class="vr-aparece" hidden="[[hidden_container_pago]]">
 					<!-- <paper-fab icon="add" onclick="xAddTipoPago()" title="Agregar Tipo de Pago" tabindex="0"
 						class="btnAdd2"></paper-fab>
 					<br> -->
@@ -222,7 +222,7 @@
 			<!-- deshabilita verificaion de importe para habilitar btn -->
 			<!-- disabled="[[!valid_monto_pago]]" -->
 			<div hidden="[[hidden_container_pago]]">
-				<div hidden$="[[!tipoPagoRequiereCliente]]">
+				<div class="vr-aparece" hidden$="[[!tipoPagoRequiereCliente]]">
 					<p class="xColorRow_Rojo">Este medio de pago requiere un cliente.<br> Por
 						favor regrese y registre o seleccione un cliente.</p><br>
 				</div>				

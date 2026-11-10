@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Armar salón</title>
+	<link type="image/x-icon" href="../../images/logo_app.png" rel="shortcut icon" />
+	<!-- Editor de la maqueta 3D del salon (spec docs/superpowers/specs/2026-10-31-maqueta-salon-3d-design.md §6).
+	     Pagina suelta como app/logistica/ (sin Polymer); se abre desde Control de pedidos con ?area=<titulo sin espacios>
+	     y usa la sesion del POS (misma cookie). -->
+	<link rel="stylesheet" href="../../css/mibootstra.css">
+	<link rel="stylesheet" href="../../css/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="../../css/micss.css">
+	<link rel="stylesheet" href="./editor.css?v=20261102m">
+</head>
+<body class="mqe-pagina">
+	<main id="mqe_editor"><p class="mqe-cargando">Cargando el salón…</p></main>
+	<script type="module">
+		import { montarEditor } from './js/editor.js?v=20261102m';
+		montarEditor(document.getElementById('mqe_editor'));
+	</script>
+</body>
+</html>

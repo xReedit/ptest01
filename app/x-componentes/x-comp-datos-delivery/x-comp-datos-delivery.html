@@ -60,13 +60,13 @@
 
 				<div hidden$="{{showapigoogle}}">
 					
-					<div hidden$="{{!showInputDirNoMap}}">
+					<div class="vr-aparece" hidden$="{{!showInputDirNoMap}}">
 						<input type="text" class="xMiInput xPasarEnter2" placeholder="DIRECCION" onChange="conMayusculas(this)" onkeyup="removeSpecialCharObj(this)"
 							id="txt_delivery_direccion" espaciar required$ = "{{ !showapigoogle }}">
 					</div>
 
 					<!-- <div hidden$="{{showInputDirNoMap}}"> -->
-					<div class="list-direccion-cliente" hidden$="{{showInputDirNoMap}}">
+					<div class="list-direccion-cliente vr-aparece" hidden$="{{showInputDirNoMap}}">
 						<div style="width: 100%;">
 							<select id="selectDirClienteNoMap" class="xTextRow2 xCursor" onchange="selectOptionDirClienteNoMap()">
 								<template is="dom-repeat" items="{{listDirNoMap}}" as="direccion">
@@ -82,8 +82,8 @@
 
 					<!-- direccion con google api -->
 					<div class="content-direccion-ciente" hidden$="{{!showapigoogle}}">
-						<x-comp-direccion-google hidden$="{{ !showdir }}" id="compDirSearch"></x-comp-direccion-google>					
-						<div class="list-direccion-cliente" hidden$="{{ showdir }}">
+						<x-comp-direccion-google class="vr-aparece" hidden$="{{ !showdir }}" id="compDirSearch"></x-comp-direccion-google>					
+						<div class="list-direccion-cliente vr-aparece" hidden$="{{ showdir }}">
 							<div style="width: 100%;">
 								<x-comp-list-direcciones-cliente espaciar idcliente$="{{idclientedni}}" id="selectDirCliente"></x-comp-list-direcciones-cliente>
 							</div>
@@ -112,7 +112,7 @@
 			<br>
 			<div class="div-footer-delivery">
 				<div>
-					<p class="fs-14 m-0 xColorRow_Azul text-entrega" hidden$="{{ !showcostoentrega }}">Costo de entrega: S/. {{ costoentrega }} </p>
+					<p class="fs-14 m-0 xColorRow_Azul text-entrega vr-aparece" hidden$="{{ !showcostoentrega }}">Costo de entrega: S/. {{ costoentrega }} </p>
 				</div>
 				<div class="buttons">
 					<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>

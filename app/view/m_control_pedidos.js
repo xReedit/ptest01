@@ -47,8 +47,24 @@ if ('registerElement' in document && 'import' in document.createElement('link'))
 // 	xIniControlPedido();
 // });
 
+// Menu lateral: cerrado deja todo el ancho a las mesas (maqueta o tarjetas). paper-drawer-panel con forceNarrow lo
+// esconde; la pestaña #btnMenuAbrir lo vuelve a abrir. Se recuerda en este equipo (llave maq-*: el logout la conserva).
+function xMenuLateral(cerrar) {
+	var panel = document.querySelector('paper-drawer-panel');
+	var abrir = document.getElementById('btnMenuAbrir');
+	if (!panel || !abrir) { return; }
+	panel.forceNarrow = cerrar;
+	if (cerrar && typeof panel.closeDrawer === 'function') { panel.closeDrawer(); }
+	abrir.hidden = !cerrar;
+	document.body.classList.toggle('cp-menu-cerrado', cerrar);
+	try { window.localStorage.setItem('maq-menu-cerrado', cerrar ? '1' : '0'); } catch (e) { /* sin localStorage: no se recuerda */ }
+	// la maqueta y las tarjetas se acomodan al nuevo ancho cuando termina la animacion del menu
+	setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 350);
+}
+
 function xIniControlPedido(){
 	xVerificarSession();
+	try { if (window.localStorage.getItem('maq-menu-cerrado') === '1') { xMenuLateral(true); } } catch (e) { /* sin localStorage */ }
 	//setInterval(function(){ xVerificarSession(); }, 5000); // constantemente actualiza
 
 	xPopupLoad=document.getElementById('xLoad');

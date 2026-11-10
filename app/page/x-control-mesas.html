@@ -27,7 +27,8 @@
 	<!-- <script type="text/javascript" src="../view/socket.master.service.js"></script> -->
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 	<script type="text/javascript" src="../shared/pedido.por.confirmar.js"></script>
-	<script type="text/javascript" src="../shared/vision.mesas.js"></script>
+	<script type="text/javascript" src="../shared/vision.mesas.js?v=20261102m"></script>
+	<script type="text/javascript" src="../maqueta/js/vivo.js?v=20261102m"></script>
 
 	<script type="text/javascript" src="../view/notifica.js"></script>
 
@@ -397,6 +398,7 @@
 			<!-- <button onclick="sendPrintServerTest()"> enviar print server</button> -->
 			<div hidden$="[[!showVisibleAreaMesas]]">
 				<x-comp-area-mesa id="comp-area-mesas"></x-comp-area-mesa>
+				<!-- "Armar salón" se movio al home: opcion "Diseña tu Salón 3D" (C7). vivo.js ponerBotonArmar no hace nada sin este boton -->
 			</div>
 
 			<!-- dialog de opciones/seleccionables al agregar item desde el panel lateral (mismo componente que venta rapida) -->
@@ -1801,6 +1803,9 @@ function xNuevoPedidoCM(){
 
 	// Limpiar xArrayPedidoObj para forzar reinicialización
 	xArrayPedidoObj = [];
+	// notas del lapiz que quedaron sin agregar: no pasan al siguiente pedido
+	if (typeof xLimpiarItemIndicaciones === 'function') { xLimpiarItemIndicaciones(); }
+	$('.list_add_item #xinput_li').val('').css('display', 'none');
 
 	xThisCM.isAddItemRow = false;
 	xLoadArrayPedido();
@@ -3933,6 +3938,11 @@ function xPintarMesas() {
 	// }
 	
 	// $('.grid').isotope('layout');
+
+	// maqueta 3D del salon: si la sede la tiene activa, reemplaza a la vista las tarjetas del area (nunca lanza)
+	if (window.MaquetaVivo) {
+		MaquetaVivo.montar(document.getElementById('_gridCM'), { areaActual: xfilterArea.replace('.', ''), alfanumerica: esAlfanumerica, areas: listAreasMesas, sede: typeof xIdSede === 'undefined' ? '' : xIdSede });
+	}
 
 	iIniIsotope = true;
 

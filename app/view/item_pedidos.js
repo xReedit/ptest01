@@ -1144,11 +1144,24 @@ function xChangeTipoConsumoItems(idtipo_consumo) {
 }
 
 $(document.body).on('keyup', '.xMiTextReferencia', function(e) {
-		if ( !xidTipoConsumo || !xidItem ) return;
 		const val_ref = e.target.value;
-		try {			
-			xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones = val_ref;
-		} catch (error) {}
+		// la nota del lapiz de la lista (control de pedidos / venta rapida) es de SU producto, no del ultimo agregado:
+		// con xidItem global la nota caia en el producto anterior (caso "pizza lover (fanta 500)")
+		const _liNota = e.target.closest('li[data-idcl]');
+		if (_liNota) {
+			const _tpc = xidTipoConsumo || $("#select_ulTPC option:selected").val();
+			const _itemCarta = xGeneralDataCarta[_liNota.dataset.index];
+			if (_itemCarta) { _itemCarta.indicaciones = val_ref; } // se aplica al tocar + (handlerFnMiPedidoControl)
+			try {
+				const _enCarrito = xArrayPedidoObj[_tpc][_liNota.dataset.idcl];
+				if (_enCarrito) { _enCarrito.indicaciones = val_ref; }
+			} catch (error) {}
+		} else {
+			if ( !xidTipoConsumo || !xidItem ) return;
+			try {
+				xArrayPedidoObj[xidTipoConsumo][xidItem].indicaciones = val_ref;
+			} catch (error) {}
+		}
 		// Guardar sin nulls
 		setTimeout(() => {
 			const cleanObj = xArrayPedidoToCleanObject(xArrayPedidoObj);

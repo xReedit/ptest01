@@ -49,6 +49,24 @@
             }
 
             paper-dialog { min-width: 340px; max-width: 440px; padding: 0 2px 2px; }
+            #dlgSedes { width: 560px; max-width: calc(100vw - 32px); max-height: calc(100vh - 24px); overflow-y: auto; padding-bottom: 16px; }
+            #dlgSedes .dlg-header { margin: 24px 0 18px; }
+            #dlgSedes .dlg-header h3 { margin-bottom: 4px; font-size: 18px; }
+            #dlgSedes .dlg-header p { font-size: 12px; }
+            #dlgSedes .dlg-activa { margin-top: 10px; padding: 6px 10px; font-size: 12px; }
+            #dlgSedes .buscar-cli { margin-bottom: 16px; }
+            #dlgSedes .buscar-dir { margin-bottom: 18px; }
+            #dlgSedes .buscar-dir__ayuda { margin-top: 6px; font-size: 11px; }
+            #dlgSedes .sede-lista { max-height: min(320px, calc(100vh - 470px)); }
+            #dlgSedes .sede-card { padding: 10px 12px; margin-bottom: 7px; }
+            #dlgSedes .sede-card__line1 { font-size: 14px; }
+            #dlgSedes .sede-card__dir { font-size: 11px; }
+            #dlgSedes .btn-nueva-pestana { margin: 12px 24px 0; padding: 9px 10px; font-size: 12px; }
+            .dlg-x { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; padding: 0; border: none; border-radius: 50%; background: transparent; color: #757575; font-size: 17px; cursor: pointer; transition: background .15s, color .15s; }
+            .dlg-x:hover { background: #f0f0f0; color: #212121; }
+            #dlgSedes .sede-card.cercana.actual { border-color: #43a047; }
+            .btn-continuar { display: block; width: calc(100% - 48px); height: 44px; margin: 12px 24px 0; padding: 0 12px; border: none; border-radius: 8px; background: #43a047; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; animation: cliEntra .22s ease; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+            .btn-continuar:hover { background: #388e3c; }
             .dlg-header { margin: 20px 0 8px; }
             .dlg-header h3 { margin: 0 0 2px; font-size: 16px; font-weight: 700; color: #1a1a2e; }
             .dlg-header p { margin: 0; font-size: 11px; color: #888; }
@@ -144,6 +162,38 @@
                 display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 3px;
                 background: #1e88e5; color: #fff; font-size: 9px; font-weight: 700; vertical-align: middle;
             }
+            .buscar-cli { margin: 0 0 8px; }
+            .buscar-cli__lista { max-height: 132px; overflow-y: auto; margin-top: 4px; border: 1px solid #e0e0e0; border-radius: 6px; }
+            .cli-fila { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; font-size: 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+            .cli-fila:hover { background: #f5f9ff; }
+            .cli-fila__tel { margin-left: 4px; font-size: 11px; color: #777; }
+            .cli-fila__dir { font-size: 10px; font-weight: 700; white-space: nowrap; color: #2e7d32; }
+            .cli-fila__dir.sin { color: #c62828; }
+            #dlgSedes [hidden] { display: none !important; }
+            .cli-buscar { position: relative; }
+            .cli-buscar .fa { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #9e9e9e; }
+            .cli-buscar input { width: 100%; height: 40px; box-sizing: border-box; padding: 0 12px 0 34px; border: 1px solid #d6d9de; border-radius: 8px; background: #fff; font-size: 13px; outline: none; }
+            .cli-buscar input:focus { border-color: #1e88e5; box-shadow: 0 0 0 3px rgba(30,136,229,.12); }
+            .cli-card { margin: 0 24px 14px; padding: 12px 14px; border: 1px solid #e3e8ef; border-radius: 10px; background: #f8fafc; }
+            .cli-card__top { display: flex; align-items: center; gap: 10px; }
+            @keyframes cliEntra { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+            .cli-card, .cli-dirs, .buscar-cli__lista, .cli-msj { animation: cliEntra .22s ease; }
+            .cli-card__dat { flex: 1; min-width: 0; line-height: 1.3; }
+            .cli-card__nom { overflow: hidden; font-size: 14px; font-weight: 700; color: #212121; white-space: nowrap; text-overflow: ellipsis; }
+            .cli-card__tel { font-size: 12px; color: #757575; }
+            .cli-link { font-size: 12px; font-weight: 600; color: #1565c0; cursor: pointer; white-space: nowrap; }
+            .cli-link:hover { text-decoration: underline; }
+            .cli-dir { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dde3ea; font-size: 13px; color: #37474f; }
+            .cli-dir .fa, .cli-dirs__f .fa { flex-shrink: 0; color: #ef6c00; }
+            .cli-dir__txt { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+            .cli-dirs { max-height: 150px; margin-top: 10px; padding-top: 8px; overflow-y: auto; border-top: 1px dashed #dde3ea; }
+            .cli-dirs__f { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; font-size: 12px; color: #37474f; cursor: pointer; }
+            .cli-dirs__f:hover { background: #eef4fb; }
+            .cli-dirs__f.sel { background: #eef7ee; color: #1b5e20; font-weight: 700; }
+            .cli-sin { margin-top: 10px; padding: 8px 10px; border-radius: 6px; background: #fff8e1; color: #7a5d00; font-size: 12px; }
+            .cli-agregar { display: inline-block; margin-top: 10px; }
+            .cli-cancelar { display: inline-block; margin-top: 6px; }
+            .cli-msj { margin: -8px 0 12px; }
             .buscar-dir { margin: 0 0 8px; }
             .buscar-dir__ayuda { margin-top: 3px; font-size: 10px; color: #888; }
             .buscar-dir__quitar { color: #1565c0; cursor: pointer; text-decoration: underline; }
@@ -179,15 +229,63 @@
         <paper-dialog id="dlgSedes" class="dialog_redondo" with-backdrop hidden$="[[!_permCallCenter]]"
                       entry-animation="scale-up-animation" exit-animation="fade-out-animation">
             <div class="dlg-header">
-                <h3>[[_tituloSedes(_obligatorio)]]</h3>
+                <button type="button" class="dlg-x" dialog-dismiss hidden$="[[_obligatorio]]" title="Cerrar" aria-label="Cerrar"><i class="fa fa-times"></i></button>
+                <h3>[[_tituloSedes(_obligatorio, _tituloObligatorio)]]</h3>
                 <p>Cada pestaña puede operar una sede distinta.</p>
                 <span class="dlg-activa">Activa ahora: [[_nombreLabel]][[_activaMetaSuffix]]</span>
             </div>
 
+            <div class="buscar-cli" hidden$="[[_tiene(_cliSel)]]">
+                <div class="cli-buscar">
+                    <i class="fa fa-search"></i>
+                    <input id="txtCliente" type="text" autocomplete="off"
+                           placeholder="Buscar cliente por nombre o celular" on-input="_onClienteInput">
+                </div>
+                <div class="buscar-cli__lista" hidden$="[[!_hayClientes(_clientes)]]">
+                    <template is="dom-repeat" items="[[_clientes]]" as="c">
+                        <div class="cli-fila" on-tap="_onClienteTap" data-idx$="[[index]]">
+                            <span>[[c.nombres]]<span class="cli-fila__tel">[[c.telefono]]</span></span>
+                            <span class$="[[_clsDirCli(c)]]">[[_txtDirCli(c)]]</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="cli-card" hidden$="[[!_cliSel]]">
+                <div class="cli-card__top">
+                    <div class="cli-card__dat">
+                        <div class="cli-card__nom">[[_cliSel.nombres]]</div>
+                        <div class="cli-card__tel">[[_cliSel.telefono]]</div>
+                    </div>
+                    <span class="cli-link" on-tap="_limpiarDir">Cambiar cliente</span>
+                </div>
+
+                <div class="cli-dir" hidden$="[[_ocultaFilaDir(_dirCli, _verDirs)]]">
+                    <i class="fa fa-map-marker"></i>
+                    <span class="cli-dir__txt" title$="[[_dirCli.direccion]]">[[_dirCli.direccion]]</span>
+                    <span class="cli-link" hidden$="[[!_masDeUna(_dirsCli)]]" on-tap="_toggleDirs">Cambiar</span>
+                </div>
+
+                <div class="cli-dirs" hidden$="[[!_verDirs]]">
+                    <template is="dom-repeat" items="[[_dirsCli]]" as="d">
+                        <div class$="[[_clsFilaDir(d, _dirCli)]]" on-tap="_onDirTap" data-idx$="[[index]]">
+                            <i class="fa fa-map-marker"></i><span class="cli-dir__txt">[[d.direccion]]</span>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="cli-sin" hidden$="[[!_sinDirs(_cliSel, _dirCli)]]">Este cliente aún no tiene dirección. Escríbela abajo y queda guardada.</div>
+                <span class="cli-link cli-agregar" hidden$="[[_ocultaAgregar(_dirCli, _agregando)]]" on-tap="_abrirAgregar"><i class="fa fa-plus"></i> Agregar otra dirección</span>
+            </div>
+            <div class="buscar-dir__ayuda cli-msj" hidden$="[[!_cliMsj]]">[[_cliMsj]]</div>
+
             <div class="buscar-dir">
-                <x-comp-direccion-google id="dirSede"></x-comp-direccion-google>
-                <div class="buscar-dir__ayuda" hidden$="[[_dirOrden]]">¿Ya tienes la dirección del cliente? Escríbela o pega la ubicación y las sedes se ordenan de la más cercana a la más lejana.</div>
-                <div class="buscar-dir__ayuda" hidden$="[[!_dirOrden]]">Sedes ordenadas por cercanía (en línea recta) · <span class="buscar-dir__quitar" on-tap="_limpiarDir">quitar</span></div>
+                <div hidden$="[[_ocultaDir(_cliSel, _agregando)]]">
+                    <x-comp-direccion-google id="dirSede"></x-comp-direccion-google>
+                    <span class="cli-link cli-cancelar" hidden$="[[!_dirCli]]" on-tap="_cancelarAgregar">Cancelar</span>
+                </div>
+                <div class="buscar-dir__ayuda" hidden$="[[_ocultaAyuda(_dirOrden, _cliSel)]]">¿Ya tienes la dirección del cliente? Escríbela o pega la ubicación y las sedes se ordenan de la más cercana a la más lejana.</div>
+                <div class="buscar-dir__ayuda" hidden$="[[!_dirOrden]]">Sedes ordenadas por cercanía (en línea recta)<span hidden$="[[_tiene(_cliSel)]]"> · <span class="buscar-dir__quitar" on-tap="_limpiarDir">quitar</span></span></div>
             </div>
 
             <div class="sede-lista">
@@ -204,11 +302,10 @@
                 </template>
             </div>
 
+            <button class="btn-continuar" hidden$="[[!_sugerida]]" on-tap="_confirmarSugerida">Listo</button>
+
             <div class="btn-nueva-pestana" hidden$="[[!_permCallCenter]]" on-tap="_abrirNuevaPestanaPrompt">
                 + Abrir nueva pestaña con otra sede
-            </div>
-            <div class="dlg-footer" hidden$="[[_obligatorio]]">
-                <button class="xBoton2 xPlomo" dialog-dismiss>Cerrar</button>
             </div>
         </paper-dialog>
 
@@ -265,10 +362,22 @@
                     _idsedeActual:      { type: Number,  value: 0, notify: true },
                     _sedeSel:           { type: Object,  value: function () { return null; } },
                     _obligatorio:       { type: Boolean, value: false },
+                    _tituloObligatorio: { type: String,  value: '' },
+                    _clientes:          { type: Array,   value: function () { return []; } },
+                    _sugerida:          { type: Object,  value: null },
+                    _cliSel:            { type: Object,  value: null },
+                    _dirsCli:           { type: Array,   value: function () { return []; } },
+                    _dirCli:            { type: Object,  value: null },
+                    _verDirs:           { type: Boolean, value: false },
+                    _agregando:         { type: Boolean, value: false },
+                    _cliMsj:            { type: String,  value: '' },
                     _dirOrden:          { type: Boolean, value: false }
                 },
 
+                observers: ['_recentrar(_clientes, _cliSel, _dirCli, _verDirs, _agregando, _cliMsj, _sugerida)'],
+
                 listeners: {
+                    'dlgSedes.iron-overlay-opened': '_onSedesAbierto',
                     'dlgSedes.iron-overlay-closed': '_onSedesCerrado',
                     'dlgSedes.iron-overlay-canceled': '_onSedesCancelado',
                     'dlgNuevaPestana.iron-overlay-closed': '_onNuevaPestanaCerrado'
@@ -280,12 +389,26 @@
                     var self = this, dir = this.$.dirSede;
                     dir.addEventListener('getPlaces', function (e) {
                         var loc = e.detail && e.detail.geometry && e.detail.geometry.location;
-                        if (loc) { self._ordenarPorCercania(loc.lat(), loc.lng()); }
+                        if (!loc) { return; }
+                        // coordenadas pegadas: Google devuelve la direccion mas cercana, el punto sigue siendo el pegado
+                        var p = self._coordsPegadas, lat = p ? p.lat : loc.lat(), lng = p ? p.lng : loc.lng();
+                        clearTimeout(self._pegadasTimer);
+                        self._coordsPegadas = null;
+                        self._ordenarPorCercania(lat, lng);
+                        self._guardarDirNueva(lat, lng, e.detail);
                     });
                     dir.$.autocomplete.addEventListener('input', function () {
+                        clearTimeout(self._pegadasTimer);
+                        self._coordsPegadas = null;
                         if (!dir.isCoordinates(this.value)) { return; }
-                        var c = this.value.split(',');
-                        self._ordenarPorCercania(parseFloat(c[0]), parseFloat(c[1]));
+                        var c = this.value.split(','), lat = parseFloat(c[0]), lng = parseFloat(c[1]), texto = this.value.trim();
+                        self._ordenarPorCercania(lat, lng);
+                        self._coordsPegadas = { lat: lat, lng: lng };
+                        // si Google no responde, se guarda con las coordenadas como texto
+                        self._pegadasTimer = setTimeout(function () {
+                            self._coordsPegadas = null;
+                            self._guardarDirNueva(lat, lng, { formatted_address: texto });
+                        }, 2000);
                     });
                 },
 
@@ -308,15 +431,172 @@
                         if (a._d === null || b._d === null) { return (a._d === null) - (b._d === null); }
                         return a._d - b._d;
                     });
-                    if (lista[0] && lista[0]._d !== null) { lista[0].cercana = true; }
+                    var sug = (lista[0] && lista[0]._d !== null) ? lista[0] : null;
+                    if (sug) { sug.cercana = true; }
+                    this._sugerida = sug; // antes de pintar: _clsCard decide con esto cual lleva el check
                     this.sedes = lista;
                     this._dirOrden = true;
+                    if (sug) { this.async(this._animarSugerida, 40); }
+                },
+
+                // La primera fila se reutiliza al reordenar: una clase CSS no volveria a animarse.
+                _animarSugerida: function () {
+                    var lista = this.$.dlgSedes.querySelector('.sede-lista'), card = lista.querySelector('.sede-card');
+                    lista.scrollTop = 0;
+                    if (!card || !card.animate) { return; }
+                    card.animate([{ boxShadow: '0 0 0 0 rgba(67,160,71,.5)' }, { boxShadow: '0 0 0 9px rgba(67,160,71,0)' }], { duration: 560, easing: 'ease-out' });
+                    card.querySelector('.sede-card__check').animate([
+                        { transform: 'scale(.4)' }, { transform: 'scale(1.25)', offset: 0.6 }, { transform: 'scale(1)' }
+                    ], { duration: 320, easing: 'ease-out' });
+                },
+
+                _confirmarSugerida: function () { this._elegirSede(this._sugerida); },
+
+                _hayClientes: function (l) { return !!(l && l.length); },
+                _clsDirCli: function (c) { return 'cli-fila__dir' + ((c.direcciones || []).length ? '' : ' sin'); },
+                _txtDirCli: function (c) {
+                    var n = (c.direcciones || []).length;
+                    return !n ? 'Sin dirección' : (n === 1 ? '1 dirección' : n + ' direcciones');
+                },
+                _tiene: function (x) { return !!x; },
+                _ocultaFilaDir: function (dir, ver) { return !dir || ver; },
+                _masDeUna: function (l) { return !!(l && l.length > 1); },
+                _sinDirs: function (cli, dir) { return !!cli && !dir; },
+                _ocultaDir: function (cli, agregando) { return !!cli && !agregando; },
+                _ocultaAyuda: function (orden, cli) { return orden || !!cli; },
+                _ocultaAgregar: function (dir, agregando) { return !dir || agregando; },
+                _clsFilaDir: function (d, sel) { return 'cli-dirs__f' + (d === sel ? ' sel' : ''); },
+
+                _limpiarCliente: function () {
+                    clearTimeout(this._cliTimer);
+                    clearTimeout(this._pegadasTimer);
+                    this._coordsPegadas = null;
+                    this._cliSeq = (this._cliSeq || 0) + 1; // descarta respuestas en camino
+                    this._clientes = [];
+                    this._cliSel = null;
+                    this._dirsCli = [];
+                    this._dirCli = null;
+                    this._verDirs = false;
+                    this._agregando = false;
+                    this._cliMsj = '';
+                    this.$.txtCliente.value = '';
+                },
+
+                _onClienteInput: function () {
+                    var self = this, q = this.$.txtCliente.value.trim();
+                    clearTimeout(this._cliTimer);
+                    var seq = this._cliSeq = (this._cliSeq || 0) + 1;
+                    this._cliMsj = '';
+                    if (q.length < 3) { this._clientes = []; return; }
+                    this._cliTimer = setTimeout(function () {
+                        $.ajax({ type: 'POST', url: '../../bdphp/log_sedes_atiende.php?op=buscar-cliente', data: { q: q }, dataType: 'json' })
+                        .done(function (r) {
+                            if (seq !== self._cliSeq) { return; }
+                            if (!r || !r.success) { self._clientes = []; self._cliMsj = 'No se pudo buscar el cliente.'; return; }
+                            self._clientes = r.datos.clientes;
+                            if (!self._clientes.length) { self._cliMsj = 'No hay clientes con ese nombre o celular. Escribe la dirección abajo.'; }
+                        })
+                        .fail(function () {
+                            if (seq === self._cliSeq) { self._clientes = []; self._cliMsj = 'No se pudo buscar el cliente.'; }
+                        });
+                    }, 350);
+                },
+
+                _onClienteTap: function (ev) {
+                    var c = this._clientes[parseInt(ev.currentTarget.getAttribute('data-idx'), 10)];
+                    if (!c) { return; }
+                    var dirs = (c.direcciones || []).slice();
+                    this._limpiarDir();
+                    this._cliSel = c;
+                    this._dirsCli = dirs;
+                    if (dirs.length) {
+                        this._elegirDirCli(dirs[0]); // la mas reciente
+                        this._verDirs = dirs.length > 1; // con varias, que se vea cual es la de este pedido
+                    } else { this._abrirAgregar(); }
+                },
+
+                _elegirDirCli: function (d) {
+                    this._dirCli = d;
+                    this._verDirs = false;
+                    this._agregando = false;
+                    this._cliMsj = '';
+                    this.$.dirSede.$.autocomplete.value = '';
+                    this._ordenarPorCercania(parseFloat(d.latitude), parseFloat(d.longitude));
+                },
+
+                _toggleDirs: function () { this._verDirs = !this._verDirs; },
+
+                _onSedesAbierto: function () { this._altoDlg = this.$.dlgSedes.getBoundingClientRect().height; },
+
+                // Cambio de alto del contenido: refit recentra de golpe, asi que se anima
+                // desde el alto y la posicion anteriores hasta los nuevos.
+                _recentrar: function () {
+                    this.debounce('recentrar', function () {
+                        if (!this._altoDlg) { return; } // cerrada o abriendose
+                        var d = this.$.dlgSedes, topAntes = d.getBoundingClientRect().top, altoAntes = this._altoDlg;
+                        d.refit(); // no notifyResize: espera un cuadro y mediria la ventana a media animacion
+                        var r = d.getBoundingClientRect();
+                        this._altoDlg = r.height;
+                        if (altoAntes === r.height || !d.animate) { return; }
+                        d.style.overflowY = 'hidden'; // sin barra de desplazamiento durante la animacion
+                        d.animate([
+                            { transform: 'translateY(' + (topAntes - r.top) + 'px)', height: altoAntes + 'px' },
+                            { transform: 'none', height: r.height + 'px' }
+                        ], { duration: 220, easing: 'cubic-bezier(.2,0,0,1)' }).onfinish = function () { d.style.overflowY = ''; };
+                    });
+                },
+
+                _onDirTap: function (ev) {
+                    var d = this._dirsCli[parseInt(ev.currentTarget.getAttribute('data-idx'), 10)];
+                    if (d) { this._elegirDirCli(d); }
+                },
+
+                _abrirAgregar: function () {
+                    this._agregando = true;
+                    this._verDirs = false;
+                    this._cliMsj = '';
+                    var campo = this.$.dirSede.$.autocomplete;
+                    campo.value = '';
+                    this.async(function () { campo.focus(); }, 50);
+                },
+
+                _cancelarAgregar: function () {
+                    clearTimeout(this._pegadasTimer);
+                    this._coordsPegadas = null;
+                    if (this._dirCli) { this._elegirDirCli(this._dirCli); }
+                },
+
+                // Solo guarda si se esta agregando la direccion de un cliente; sin cliente el campo solo ordena las sedes.
+                _guardarDirNueva: function (lat, lng, place) {
+                    if (!this._cliSel || !this._agregando) { return; }
+                    var self = this, cli = this._cliSel;
+                    var parte = function (tipo) {
+                        var c = (place.address_components || []).filter(function (x) { return x.types.indexOf(tipo) >= 0; })[0];
+                        return c ? c.long_name : '';
+                    };
+                    $.ajax({ type: 'POST', url: '../../bdphp/log_sedes_atiende.php?op=agregar-direccion-cliente', dataType: 'json', data: {
+                        idcliente: cli.idcliente, latitude: lat, longitude: lng,
+                        direccion: place.formatted_address || place.name || '',
+                        ciudad: parte('locality'), provincia: parte('administrative_area_level_2'),
+                        departamento: parte('administrative_area_level_1'), pais: parte('country'), codigo: parte('postal_code')
+                    } }).done(function (r) {
+                        if (self._cliSel !== cli) { return; }
+                        if (!r || !r.success) { self._cliMsj = (r && r.error) || 'No se pudo guardar la dirección.'; return; }
+                        var ya = self._dirsCli.filter(function (d) { return d.idcliente_pwa_direccion === r.datos.idcliente_pwa_direccion; })[0];
+                        if (!ya) { self._dirsCli = [r.datos].concat(self._dirsCli); }
+                        self._elegirDirCli(ya || r.datos);
+                        try { showToastSwal('success', 'Dirección guardada'); } catch (e) {}
+                    }).fail(function () {
+                        if (self._cliSel === cli) { self._cliMsj = 'No se pudo guardar la dirección.'; }
+                    });
                 },
 
                 _limpiarDir: function () {
+                    this._limpiarCliente();
                     this.$.dirSede.$.autocomplete.value = '';
                     if (!this._dirOrden) { return; }
                     this._dirOrden = false;
+                    this._sugerida = null;
                     this.sedes = (this.sedes || []).map(function (s) {
                         return Object.assign({}, s, { _d: null, km: '', cercana: false });
                     }).sort(function (a, b) { return String(a.nombre).localeCompare(String(b.nombre)); });
@@ -335,11 +615,11 @@
                  * Call center: tras cada venta hay que elegir la sede del siguiente pedido.
                  * Sin "Cerrar" ni clic afuera: se elige una sede (la actual sigue igual) o se abre otra pestaña.
                  */
-                elegirSedeObligatorio: function () {
+                elegirSedeObligatorio: function (titulo) {
                     if (typeof opSede === 'undefined' || !opSede.tienePermiso()) return;
+                    this._tituloObligatorio = titulo || '';
                     this._obligatorio = true;
-                    this.$.dlgSedes.noCancelOnOutsideClick = true;
-                    this.$.dlgSedes.noCancelOnEscKey = true;
+                    this.$.dlgSedes.modal = true; // bloquea el fondo: sin esto se podian agregar productos con la ventana abierta
                     this._limpiarDir();
                     this._refreshLabel();
                     this._marcarSedeActivaEnLista();
@@ -347,23 +627,40 @@
                     this.async(function () { self.$.dlgSedes.open(); });
                 },
 
-                _tituloSedes: function (obligatorio) {
-                    return obligatorio ? '¿Para qué sede es el siguiente pedido?' : 'Cambiar sede';
+                _tituloSedes: function (obligatorio, titulo) {
+                    return obligatorio ? (titulo || '¿Para qué sede es el siguiente pedido?') : 'Cambiar sede';
+                },
+
+                // Call center: al abrir el POS se elige la sede antes de armar el pedido
+                // (cambiarla con un pedido en curso obliga a cancelarlo y rehacerlo).
+                _pedirSedeAlAbrir: function () {
+                    if (window._opSedeVinoPorUrl) return; // la pestaña se abrió ya con su sede
+                    if ((this.sedes || []).length < 2) return; // nada que elegir
+                    var self = this, intentos = 0;
+                    (function esperarPOS() {
+                        if (!self.isAttached) return;
+                        var host = self._host();
+                        if (host && typeof host.checkPedidoEnCurso === 'function') {
+                            if (!host.checkPedidoEnCurso()) { self.elegirSedeObligatorio('Seleccionar sede'); }
+                            return;
+                        }
+                        if (++intentos < 50) { setTimeout(esperarPOS, 100); }
+                    })();
                 },
 
                 _onSedesCerrado: function () {
+                    this._altoDlg = 0;
                     this._volverObligatorio = this._obligatorio && this._abriendoNuevaPestana;
                     this._abriendoNuevaPestana = false;
                     this._obligatorio = false;
-                    this.$.dlgSedes.noCancelOnOutsideClick = false;
-                    this.$.dlgSedes.noCancelOnEscKey = false;
+                    this.$.dlgSedes.modal = false;
                 },
 
                 // si vino de la eleccion obligatoria, al cerrar "Nueva pestaña" se vuelve a pedir la sede de esta pestaña
                 _onNuevaPestanaCerrado: function () {
                     if (!this._volverObligatorio) return;
                     this._volverObligatorio = false;
-                    this.elegirSedeObligatorio();
+                    this.elegirSedeObligatorio(this._tituloObligatorio);
                 },
 
                 attached: function () {
@@ -373,6 +670,13 @@
                         self._refreshLabel();
                         return;
                     }
+                    // el componente se monta dos veces y al segundo la URL ya viene limpia: se recuerda aqui
+                    if (this._readOpSedeParam()) { window._opSedeVinoPorUrl = true; }
+                    // paper-dialog apaga el fondo compartido al cerrar cualquier dialogo (el "Cargando" del POS): se vuelve a encender
+                    this._reponerFondo = function () {
+                        if (self.$.dlgSedes.opened && self.$.dlgSedes.modal) { Polymer.IronOverlayManager.trackBackdrop(); }
+                    };
+                    document.addEventListener('iron-overlay-closed', this._reponerFondo);
                     $.ajax({ type: 'POST', url: '../../bdphp/log_componentes.php?op=1', data: { solo_operables: 1 } })
                     .done(function (rpt) {
                         try {
@@ -381,12 +685,17 @@
                             self._refreshLabel();
                             self._marcarSedeActivaEnLista();
                             self._aplicarSedeDesdeURL();
+                            self._pedirSedeAlAbrir();
                         } catch (e) { console.error('[x-comp-pos-sede] error parseando sedes:', e); }
                     });
                     window.addEventListener('op-sede-changed', function () {
                         self._refreshLabel();
                         self._marcarSedeActivaEnLista();
                     });
+                },
+
+                detached: function () {
+                    if (this._reponerFondo) { document.removeEventListener('iron-overlay-closed', this._reponerFondo); }
                 },
 
                 _readOpSedeParam: function () {
@@ -455,7 +764,9 @@
                 /** Polymer 1 no soporta ternarios en class$ — usar helper. */
                 _clsCard: function (item) {
                     if (!item) { return 'sede-card'; }
-                    return (item.esActual ? 'sede-card actual' : 'sede-card') + (item.cercana ? ' cercana' : '');
+                    // con sede sugerida el check va en ella; sin direccion, en la sede activa
+                    var marcada = this._sugerida ? item.cercana : item.esActual;
+                    return (marcada ? 'sede-card actual' : 'sede-card') + (item.cercana ? ' cercana' : '');
                 },
 
                 _tieneDir: function (dir) {
@@ -541,8 +852,10 @@
                 },
 
                 _onSedeTap: function (ev) {
-                    var idx = parseInt(ev.currentTarget.getAttribute('data-idx'), 10);
-                    var sede = this.sedes[idx];
+                    this._elegirSede(this.sedes[parseInt(ev.currentTarget.getAttribute('data-idx'), 10)]);
+                },
+
+                _elegirSede: function (sede) {
                     if (!sede) return;
                     if (parseInt(sede.idsede, 10) === this._idsedeActual) {
                         this.$.dlgSedes.close();

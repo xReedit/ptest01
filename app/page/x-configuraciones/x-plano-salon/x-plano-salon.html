@@ -1,0 +1,163 @@
+<dom-module id="x-plano-salon">
+	<template>
+		<style>
+			:host { display: block; color: #212529; max-width: 820px; }
+			.ps-card { display: block; border: 1px solid #dddddd; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; background: #fff; }
+			.ps-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+			.ps-tit { font-weight: 600; font-size: 15px; }
+			.ps-sub { color: #6c757d; font-size: 13px; margin-top: 2px; }
+			.ps-estado { font-weight: 600; font-size: 13px; padding: 3px 10px; border-radius: 12px; background: #f1f3f5; color: #6c757d; }
+			.ps-estado[on] { background: #e8f5e9; color: #2e7d32; }
+			table { width: 100%; border-collapse: collapse; }
+			td, th { padding: 8px 6px; border-bottom: 1px solid #eeeeee; text-align: left; font-size: 14px; }
+			th { color: #6c757d; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+			.ps-ok { color: #2e7d32; font-weight: 600; }
+			.ps-no { color: #6c757d; }
+			.ps-der { text-align: right; }
+			.ps-nota { color: #6c757d; font-size: 12px; line-height: 1.5; }
+		</style>
+
+		<h3>Plano del salón</h3>
+		<p class="text-secondary">Dibuja cómo está tu local: mesas, barra, plantas, biombos. Control de pedidos lo muestra
+			en 3D en lugar de las tarjetas, con el estado de cada mesa.</p>
+		<div class="xLinea2"></div>
+		<br>
+
+		<div class="ps-card">
+			<div class="ps-fila">
+				<div>
+					<div class="ps-tit">Maqueta 3D en Control de pedidos</div>
+					<div class="ps-sub">[[textoEstado]]</div>
+				</div>
+				<div class="ps-fila">
+					<span class="ps-estado" on$="[[activo]]">[[etiquetaEstado]]</span>
+					<button class="btn btn-sm btn-light" on-click="alternar" disabled$="[[ocupado]]">[[textoBoton]]</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="ps-card">
+			<div class="ps-fila" style="margin-bottom:8px">
+				<div class="ps-tit">Áreas del local</div>
+				<button class="btn btn-sm btn-primary" on-click="abrir">Abrir diseñador</button>
+			</div>
+			<table>
+				<thead><tr><th>Área</th><th>Plano</th><th></th></tr></thead>
+				<tbody>
+					<template is="dom-repeat" items="[[areas]]">
+						<tr>
+							<td>[[item.nombre]]</td>
+							<td><span class$="[[_claseArmada(item.armada)]]">[[_textoArmada(item.armada)]]</span></td>
+							<td class="ps-der"><button class="btn btn-sm btn-light" on-click="abrirArea">Diseñar</button></td>
+						</tr>
+					</template>
+				</tbody>
+			</table>
+		</div>
+
+		<p class="ps-nota">
+			Las cajas ven los cambios al recargar Control de pedidos.<br>
+			Las computadoras sin tarjeta de video siguen viendo las tarjetas de siempre.
+		</p>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'x-plano-salon',
+			properties: {
+				areas: { type: Array, value: function () { return []; } },
+				activo: { type: Boolean, value: false },
+				ocupado: { type: Boolean, value: false },
+				textoEstado: { type: String, value: 'Cargando…' },
+				etiquetaEstado: { type: String, value: '' },
+				textoBoton: { type: String, value: 'Prender' }
+			},
+
+			// ruta desde m_panel.html (app/page/), igual que el boton "Armar salón" de Control de pedidos
+			URL_EDITOR: '../maqueta/index.html?v=20261102m',
+			URL_API: '../../bdphp/log_maqueta.php?op=',
+
+			// Carga al entrar a la pestaña (x-configuraciones llama cargar()) y al volver de la pestaña del diseñador.
+			attached: function () {
+				var self = this;
+				this._alVolver = this._alVolver || function () { if (self.offsetParent) { self.cargar(); } };
+				window.addEventListener('focus', this._alVolver);
+			},
+			detached: function () {
+				window.removeEventListener('focus', this._alVolver);
+			},
+
+			_maqueta: function (op, cuerpo) {
+				return fetch(this.URL_API + op, {
+					method: 'POST', credentials: 'same-origin',
+					headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo || {})
+				}).then(function (r) { return r.json(); });
+			},
+
+			cargar: function () {
+				if (this.ocupado) { return; }
+				var self = this;
+				var areasPOS = new httpFecht().axiosExecute({ type: 'POST', url: '../../bdphp/log_009.php', data: { op: 5001 } }, true, false);
+				Promise.all([this._maqueta('planos'), areasPOS]).then(function (res) {
+					var maq = res[0], filas = (res[1] && res[1].success && res[1].datos) || [];
+					if (!maq || !maq.success) { throw new Error((maq && maq.error) || 'sin_respuesta'); }
+					var armadas = {};
+					maq.data.planos.forEach(function (p) { armadas[p.area] = true; });
+					var areas = filas.length
+						? filas.map(function (f) { return { area: String(f.title), nombre: String(f.titulo), armada: !!armadas[String(f.title)] }; })
+						: [{ area: '', nombre: 'Salón', armada: !!armadas[''] }];
+					self.areas = areas;
+					self._pintarEstado(maq.data.activo, maq.data.planos.length);
+				}).catch(function (e) {
+					console.warn('x-plano-salon: no se pudo cargar', e);
+					self.textoEstado = 'No se pudo cargar. Revisa la conexión y vuelve a entrar.';
+				});
+			},
+
+			_pintarEstado: function (activo, armadas) {
+				this.activo = activo;
+				this._armadas = armadas;
+				this.etiquetaEstado = activo ? 'Prendida' : 'Apagada';
+				this.textoBoton = activo ? 'Apagar' : 'Prender';
+				this.textoEstado = activo
+					? 'Las cajas ven el salón en 3D.'
+					: (armadas ? 'Las cajas ven las tarjetas de siempre.' : 'Primero arma el plano de al menos un área.');
+			},
+
+			alternar: function () {
+				var self = this, quiere = !this.activo;
+				if (quiere && !this._armadas) {
+					showAlertSwalOk('info', 'Falta el plano', 'Primero arma al menos un área con "Diseñar".', 'Entendido', 1);
+					return;
+				}
+				this.ocupado = true;
+				this._maqueta('activar', { activo: quiere }).then(function (r) {
+					self.ocupado = false;
+					if (r && r.success) {
+						self._pintarEstado(quiere, self._armadas);
+						showToastSwal('success', quiere ? 'Maqueta prendida' : 'Maqueta apagada');
+						return;
+					}
+					var err = r && r.error;
+					showAlertSwalOk('warning', 'No se pudo cambiar',
+						err === 'sin_plano' ? 'Primero arma al menos un área con "Diseñar".'
+							: err === 'sin_permiso' ? 'Necesitas el permiso "Datos del sistema".'
+								: 'Intenta de nuevo en un momento.', 'Entendido', 1);
+				}).catch(function () {
+					self.ocupado = false;
+					showAlertSwalOk('warning', 'Sin conexión', 'No se pudo cambiar. Intenta de nuevo en un momento.', 'Entendido', 1);
+				});
+			},
+
+			abrir: function () {
+				window.open(this.URL_EDITOR, '_blank', 'noopener');
+			},
+			abrirArea: function (e) {
+				window.open(this.URL_EDITOR + '&area=' + encodeURIComponent(e.model.item.area), '_blank', 'noopener');
+			},
+
+			_textoArmada: function (si) { return si ? 'Armado' : 'Sin armar'; },
+			_claseArmada: function (si) { return si ? 'ps-ok' : 'ps-no'; }
+		});
+	</script>
+</dom-module>

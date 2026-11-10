@@ -10,6 +10,9 @@
 // Son pantallas de cobro: todo va en try/catch y es async; si algo falla, un console.warn y nada mas. Si la
 // organizacion no tiene camaras_ia o la sede esta en "Solo medir" (D4): un op=estado y nada mas (sin import(),
 // sin oyentes, sin tocar la pantalla).
+// Maqueta 3D del salon (app/maqueta/js/vivo.js, spec 2026-10-31-maqueta-salon-3d §5.3): al iniciarse define
+// window.VisionMesas {estadoDe, alCambiar, resolver, silenciar}, que lee lo ya cargado (nada se pide de nuevo) y usa
+// los mismos botones de la linea de la tarjeta. Sin camaras_ia o en "Solo medir", estadoDe da null.
 
 /**
  * Arranca el modulo en la pagina. opciones:
@@ -32,6 +35,8 @@ function xVisionMesasIniciar(opciones) {
 	};
 	var GENERICO = 'Algo salió mal. Vuelve a intentar.';
 	var IGNORAR = ['.tiempo', '.importe', '.ppc-cinta', '.vmp-cam'];   // mutaciones de la pagina que no despiertan al observador
+	var ESTADOS = ['libre', 'ocupada', 'por_limpiar', 'limpiando', 'sin_info'];   // Camara.estado de la maqueta
+	var ALERTAS = ['sin_atencion', 'cuenta_abierta', 'por_limpiar'];             // Camara.alerta de la maqueta
 	var o = opciones && typeof opciones === 'object' ? opciones : {};
 	var conf = typeof o.pantalla === 'string' && Object.prototype.hasOwnProperty.call(CONF, o.pantalla) ? CONF[o.pantalla] : null;
 	var st = null;
@@ -249,6 +254,7 @@ function xVisionMesasIniciar(opciones) {
 		st.datos = { modo: d.modo, mesas: Array.isArray(d.mesas) ? d.mesas : [] };
 		st.desfase = st.mod.desfaseReloj(d.ahora, Date.now());   // F2-R45: el reloj de la PC suele estar mal
 		st.ultimaCarga = Date.now();
+		cambio();
 	}
 	function recordar(id) {
 		if (Object.keys(st.avisadas).length > 200) { st.avisadas = {}; }
@@ -263,6 +269,7 @@ function xVisionMesasIniciar(opciones) {
 		delete st.avisadas[id];
 		cerrarAviso(id);
 		st.datos = st.mod.sinAlerta(st.datos, id);
+		cambio();
 	}
 	// Pila propia de PNotify (no stackBottomRight): su tope de 5 no cierra los avisos fijos de pago ni de pedido por
 	// confirmar (M6). A la izquierda de esa columna (PNotify mide 360 px) para no taparla.
@@ -317,6 +324,7 @@ function xVisionMesasIniciar(opciones) {
 		if (!grid() || !d || typeof d !== 'object' || !Array.isArray(d.mesas)) { return; }
 		st.ultimoEvento = Date.now();   // el Go sigue en "alertar" (en "Solo medir" no emite): no hace falta releer (I-1)
 		st.datos = { modo: st.datos ? st.datos.modo : 'alertar', mesas: d.mesas };
+		cambio();
 		pintar();
 	}
 	// vision-alerta: el cuerpo completo de la alerta; solo cuenta si es para caja
@@ -325,6 +333,7 @@ function xVisionMesasIniciar(opciones) {
 		if (!Array.isArray(d.para) || d.para.indexOf('caja') < 0) { return; }
 		recordar(String(d.alerta_id));
 		st.datos = st.mod.conAlerta(st.datos, d);
+		cambio();
 		pintar();
 		if (conf.aviso) { notificar(d); }
 	}
@@ -481,6 +490,85 @@ function xVisionMesasIniciar(opciones) {
 		}, true);
 	}
 
+	/* ---------- lectura para la maqueta 3D (window.VisionMesas) ---------- */
+
+	// La mesa de la tarjeta por la clave de las camaras (claveMesa de mesas-sede.js, como marcas): "05" = "5",
+	// "PISO1-05" ≠ "PISO2-05". La maqueta pasa el codigo de la tarjeta tal cual, no su propia clave.
+	function mesaDe(codigo) {
+		var k = st.claveMesa(codigo);
+		for (var i = 0; k && i < st.datos.mesas.length; i++) {
+			var m = st.datos.mesas[i];
+			if (m && typeof m === 'object' && st.claveMesa(m.mesa_clave || m.mesa) === k) { return m; }
+		}
+		return null;
+	}
+	function minutosDesde(iso, ahoraMs) {
+		var t = typeof iso === 'string' ? Date.parse(iso) : NaN;
+		return isFinite(t) ? Math.max(0, Math.floor((ahoraMs - t) / 60000)) : null;
+	}
+	// Con la sesion a la vista (op=estado), puedeSilenciar de estado-mesas.js. El socket no la trae: la misma regla que
+	// la linea de la tarjeta (sin_atencion); silenciarMesa la relee con op=estado antes de mandar nada.
+	function silenciable(m, alerta) {
+		if (!alerta || alerta.tipo !== 'sin_atencion') { return false; }
+		if (!Object.prototype.hasOwnProperty.call(m, 'sesion_id')) { return true; }
+		return st.mod.puedeSilenciar(Object.assign({}, m, { alerta: alerta }));
+	}
+	/**
+	 * El Camara de la maqueta para la mesa m: {estado, alerta, minutos, personas, conPedido, alertaId, puedeSilenciar}.
+	 * La alerta sale de marcas, como la linea (op=estado trae alerta {id, tipo}; el socket, alerta_id y alerta_tipo).
+	 * minutos desde m.desde con el reloj del servidor (desfase); personas solo si el servidor la manda; conPedido null
+	 * si no dice nada de la cuenta (sin puente o el socket).
+	 */
+	function camara(codigo, m) {
+		var ahora = Date.now() + st.desfase;
+		var marca = st.mod.marcas({ mesas: [m] }, [codigo], ahora).get(codigo);
+		var tipo = marca && ALERTAS.indexOf(marca.alertaTipo) >= 0 ? marca.alertaTipo : null;
+		var alerta = tipo ? { id: marca.alertaId, tipo: tipo } : null;
+		return {
+			estado: ESTADOS.indexOf(m.estado) >= 0 ? m.estado : 'sin_info',
+			alerta: tipo,
+			minutos: minutosDesde(m.desde, ahora),
+			personas: Number.isInteger(m.personas) && m.personas >= 0 ? m.personas : null,
+			conPedido: m.cuenta === undefined ? null : m.cuenta !== null,
+			alertaId: alerta ? String(alerta.id) : null,
+			puedeSilenciar: silenciable(m, alerta)
+		};
+	}
+	/** Camara de la mesa con ese codigo de tarjeta; null sin camaras_ia, en "Solo medir" o si la mesa no tiene camara. */
+	function estadoDe(codigo) {
+		if (!vigente() || !st.activo || !st.mod || !st.datos || codigo === null || codigo === undefined) { return null; }
+		var m = mesaDe(String(codigo));
+		return m ? camara(String(codigo), m) : null;
+	}
+	// Los botones de la maqueta son los de la linea (accion: dialogo del POS, op y aviso); solo en Control (D1).
+	function accionMesa(tipo, codigo) {
+		var c = conf.botones ? estadoDe(codigo) : null;
+		if (!c || !c.alertaId || (tipo === 'silenciar' && !c.puedeSilenciar)) { return; }
+		accion(tipo, c.alertaId, String(codigo));
+	}
+	// Cada cambio del estado (carga, socket, alerta cerrada, "Solo medir"). Un oyente que falla no corta a los demas.
+	function cambio() {
+		var fns = st.cambios.slice();
+		for (var i = 0; i < fns.length; i++) {
+			try { fns[i](); } catch (e) { avisar(e); }
+		}
+	}
+	// Un solo objeto por pagina: cada llamada va al montaje vigente (window.__xVisionMesas), como los oyentes del
+	// socket; los oyentes de alCambiar sobreviven a volver a montar la pantalla. Nunca lanza.
+	function exponer() {
+		if (window.VisionMesas) { return; }
+		var del = function (k) { var s = window.__xVisionMesas; return s && typeof s[k] === 'function' ? s[k] : null; };
+		window.VisionMesas = {
+			estadoDe: function (codigo) { var fn = del('estadoDe'); return (fn && fn(codigo)) || null; },
+			alCambiar: function (fn) {
+				var s = window.__xVisionMesas;
+				if (s && Array.isArray(s.cambios) && typeof fn === 'function' && s.cambios.indexOf(fn) < 0) { s.cambios.push(fn); }
+			},
+			resolver: function (codigo) { var fn = del('accionMesa'); if (fn) { fn('resolver', codigo); } },
+			silenciar: function (codigo) { var fn = del('accionMesa'); if (fn) { fn('silenciar', codigo); } }
+		};
+	}
+
 	/* ---------- ciclo ---------- */
 
 	function apagar() {
@@ -497,17 +585,22 @@ function xVisionMesasIniciar(opciones) {
 		st.activo = false;
 		st.alEvento = null;
 		st.alClick = null;
+		st.estadoDe = null;
+		st.accionMesa = null;
 		st.datos = null;
+		cambio();
 	}
 	function desactivar() {
 		apagar();
 		dormir();
 	}
 	function despertar(d) {
-		aplicar(d);
 		st.activo = true;
 		st.alEvento = alEvento;
 		st.alClick = alClick;
+		st.estadoDe = seguro(estadoDe);
+		st.accionMesa = seguro(accionMesa);
+		aplicar(d);   // avisa a la maqueta ya despierto: estadoDe lee lo nuevo
 		engancharSocket();
 		observar();
 		pintar();
@@ -522,8 +615,9 @@ function xVisionMesasIniciar(opciones) {
 		engancharSocket();
 		pintar();
 	}
-	function activar(mod, d) {
+	function activar(mod, claveMesa, d) {
 		st.mod = mod;
+		st.claveMesa = claveMesa;
 		css();
 		escucharClicks();
 		despertar(d);
@@ -540,11 +634,15 @@ function xVisionMesasIniciar(opciones) {
 		st.activo = false;
 		st.alEvento = null;
 		st.alClick = null;
+		st.estadoDe = null;
+		st.accionMesa = null;
+		st.cambios = st.cambios || [];
 		st.cargando = false;
 		st.ultimoEvento = 0;
 		st.pantalla = o.pantalla;
 		st.escuchar = o.escuchar;
 		st.socket = typeof o.socket === 'function' ? o.socket : null;
+		exponer();
 	} catch (e) {
 		avisar(e);
 		return Promise.resolve(false);
@@ -556,9 +654,13 @@ function xVisionMesasIniciar(opciones) {
 			return false;
 		}
 		if (r.data.activo !== true || r.data.modo !== 'alertar') { return false; }   // sin camaras_ia o "Solo medir" (D4)
-		return import('../camaras/js/estado-mesas.js?v=20261020i').then(function (mod) {
+		// mesas-sede.js ya lo carga estado-mesas.js con la misma URL: el segundo import() no vuelve a pedirlo.
+		return Promise.all([
+			import('../camaras/js/estado-mesas.js?v=20261020i'),
+			import('../camaras/js/mesas-sede.js?v=20261020i')
+		]).then(function (mods) {
 			if (!vigente()) { return false; }
-			activar(mod, r.data);
+			activar(mods[0], mods[1].claveMesa, r.data);
 			return true;
 		});
 	}).catch(function (e) { avisar(e); return false; });

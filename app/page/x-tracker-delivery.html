@@ -1,3 +1,4 @@
+<link rel="import" href="../x-componentes/x-comp-direccion-google/x-comp-direccion-google.html">
 <dom-module id="x-tracker-delivery">
 	<!-- fuera del <template>: Polymer 1 no ejecuta los <script> que estan dentro, y los QR salian vacios -->
 	<script src="../../js/qrious.js"></script>
@@ -255,6 +256,29 @@
 		</paper-dialog>
 
 		<br>
+		<!-- call center: sedes que atiende y no tienen coordenadas -->
+		<paper-dialog modal id="dlg_trk_coords" class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+			<div class="xContent">
+				<div class="xdlg-head">
+					<h3>Ubica tus sedes en el mapa</h3>
+					<p>Estas sedes no tienen ubicación. Sin ella no aparecen en el mapa y no se puede medir a qué distancia están tus repartidores.</p>
+				</div>
+				<div class="xdlg-body" style="overflow-x:hidden">
+					<div class="inv-titulo-sec" id="trk_co_paso"></div>
+					<p class="inv-resumen"><b id="trk_co_nombre"></b><span id="trk_co_dir"></span></p>
+					<x-comp-direccion-google id="trk_co_buscar"></x-comp-direccion-google>
+					<p class="inv-ayuda">Escribe la dirección o pega las coordenadas. También puedes tocar el punto exacto en el mapa o arrastrar el marcador.</p>
+					<div class="trk-mapa-sede" id="trk_mapa_coords"></div>
+					<div class="trk-sede-pie"><span class="trk-coords" id="trk_co_coords"></span></div>
+				</div>
+				<div class="xdlg-foot">
+					<button class="btn btn-sm btn-light" dialog-dismiss><i class="fa fa-times"></i>Ahora no</button>
+					<button class="btn btn-sm btn-light" id="trk_co_saltar" onclick="xTrkCoordsSiguiente()"><i class="fa fa-step-forward"></i>Saltar esta sede</button>
+					<button class="btn btn-sm btn-success" id="trk_co_guardar" onclick="xTrkCoordsGuardar()" disabled><i class="fa fa-map-marker"></i>Guardar ubicación</button>
+				</div>
+			</div>
+		</paper-dialog>
+
 		<div class="xMiCard xradius inv-card">
 			<div class="xEncanezadoCard inv-head">
 				<div class="inv-head-top">
@@ -690,6 +714,7 @@
 				xTrkFiltroSede = 0;
 			}
 			xTrkPintarChipsSede();
+			xTrkCoordsInvitar();
 			xTrkPintarCliente();
 			xTrkPintarResumen();
 
@@ -1033,6 +1058,7 @@
 			try { if (localStorage.getItem(clave)) { return; } } catch (e) { return; }
 			setTimeout(function () {
 				if (!xTrkVivo || !xTrkSede) { return; }
+				if (dlg_trk_coords.opened) { return; } // primero ubicar las sedes; la ayuda sale la proxima vez
 				try { localStorage.setItem(clave, '1'); } catch (e) { }
 				xTrkComoActivar();
 			}, 1200);
@@ -1917,6 +1943,105 @@
 			xTrkCentrado = true;
 		}
 
+		/* ===== Call center: invitar a ubicar las sedes que atiende y no tienen coordenadas ===== */
+		var xTrkCoordsFalta = [];         // sedes sin ubicacion
+		var xTrkCoordsI = 0;              // la que se esta ubicando
+		var xTrkCoordsPunto = null;       // punto elegido, sin guardar
+		var xTrkCoordsMapa = null;
+		var xTrkCoordsMarca = null;
+		var xTrkCoordsRevisado = false;   // una vez por entrada: el refresco de 20 s no debe reabrirlo
+
+		function xTrkCoordsInvitar() {
+			if (xTrkCoordsRevisado || !xTrkVistaCC) { return; }
+			xTrkCoordsRevisado = true;
+			xTrkCoordsFalta = xTrkSedesVista.filter(function (s) {
+				var lat = parseFloat(s.latitude), lng = parseFloat(s.longitude);
+				return !isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0);
+			});
+			if (!xTrkCoordsFalta.length) { return; }
+			xTrkCoordsI = 0;
+			xTrkCoordsPintar();
+			dlg_trk_coords.open();
+			// Leaflet mide 0 dentro de un dialogo que todavia se esta abriendo
+			setTimeout(xTrkCoordsCentrar, 350);
+		}
+
+		function xTrkCoordsPintar() {
+			var s = xTrkCoordsFalta[xTrkCoordsI], n = xTrkCoordsFalta.length;
+			xTrkCoordsPunto = null;
+			$('#trk_co_paso').text('Sede ' + (xTrkCoordsI + 1) + ' de ' + n);
+			$('#trk_co_nombre').text(s.nombre + (s.ciudad ? ' · ' + s.ciudad : ''));
+			$('#trk_co_dir').text(String(s.direccion || '').trim().length > 1 ? ' — ' + s.direccion : '');
+			$('#trk_co_saltar').toggle(xTrkCoordsI + 1 < n);
+			$('#trk_co_guardar').prop('disabled', true);
+			$('#trk_co_coords').removeClass('movida').text('Todavía sin ubicación.');
+			var dir = document.getElementById('trk_co_buscar');
+			if (dir && dir.$ && dir.$.autocomplete) { dir.$.autocomplete.value = ''; }
+		}
+
+		function xTrkCoordsCentrar() {
+			if (!xTrkVivo || !dlg_trk_coords.opened) { return; }
+			var centro = xTrkMapa ? xTrkMapa.getCenter() : [-6.0331, -76.9747];
+			if (!xTrkCoordsMapa) {
+				xTrkCoordsMapa = L.map('trk_mapa_coords', { attributionControl: false }).setView(centro, 14);
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(xTrkCoordsMapa);
+				xTrkCoordsMarca = L.marker(centro, {
+					draggable: true,
+					icon: L.divIcon({ className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+						html: '<div class="trk-local-pin"><i class="fa fa-home"></i></div>' })
+				}).addTo(xTrkCoordsMapa);
+				xTrkCoordsMarca.on('dragend', function () { var p = xTrkCoordsMarca.getLatLng(); xTrkCoordsMover(p.lat, p.lng, false); });
+				xTrkCoordsMapa.on('click', function (e) { xTrkCoordsMover(e.latlng.lat, e.latlng.lng, false); });
+
+				var dir = document.getElementById('trk_co_buscar');
+				dir.addEventListener('getPlaces', function (e) {
+					// coordenadas pegadas: Google devuelve la direccion mas cercana, no el punto exacto
+					if (dir._pegadas) { return; }
+					var loc = e.detail && e.detail.geometry && e.detail.geometry.location;
+					if (loc) { xTrkCoordsMover(loc.lat(), loc.lng(), true); }
+				});
+				// coordenadas pegadas: funcionan aunque Google Maps no cargue
+				dir.$.autocomplete.addEventListener('input', function () {
+					dir._pegadas = dir.isCoordinates(this.value);
+					if (!dir._pegadas) { return; }
+					var c = this.value.split(','), lat = parseFloat(c[0]), lng = parseFloat(c[1]);
+					if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0)) { xTrkCoordsMover(lat, lng, true); }
+				});
+			} else {
+				xTrkCoordsMapa.setView(centro, 14);
+				xTrkCoordsMarca.setLatLng(centro);
+			}
+			xTrkCoordsMapa.invalidateSize();
+		}
+
+		function xTrkCoordsMover(lat, lng, centrar) {
+			xTrkCoordsPunto = { lat: lat, lng: lng };
+			xTrkCoordsMarca.setLatLng([lat, lng]);
+			if (centrar) { xTrkCoordsMapa.setView([lat, lng], 17); }
+			$('#trk_co_guardar').prop('disabled', false);
+			$('#trk_co_coords').addClass('movida').text(lat.toFixed(6) + ', ' + lng.toFixed(6) + ' — sin guardar');
+		}
+
+		function xTrkCoordsGuardar() {
+			if (!xTrkCoordsPunto) { return; }
+			var s = xTrkCoordsFalta[xTrkCoordsI], p = xTrkCoordsPunto;
+			// sin xPopupLoad: al cerrarse, paper-dialog apagaria el fondo de este dialogo
+			$('#trk_co_guardar').prop('disabled', true);
+			xTrkApi('set-ubicacion-sede', { idsede: s.idsede, latitude: p.lat, longitude: p.lng }).then(function (r) {
+				if (!r.success) { $('#trk_co_guardar').prop('disabled', false); return; }
+				xTrkCentrado = false;
+				xTrkCargar(true);
+				if (xTrkCoordsI + 1 >= xTrkCoordsFalta.length) { showToastSwal('success', 'Ubicación guardada'); }
+				xTrkCoordsSiguiente();
+			});
+		}
+
+		function xTrkCoordsSiguiente() {
+			if (++xTrkCoordsI >= xTrkCoordsFalta.length) { dlg_trk_coords.close(); return; }
+			xTrkCoordsPintar();
+			xTrkCoordsCentrar();
+		}
+
 		/** Sede de casa del repartidor si es de la vista; si no, la primera con coordenadas. */
 		function xTrkLocalDe(r) {
 			var casa = null, primera = null;
@@ -1949,6 +2074,7 @@
 					xTrkMarcadores = {};
 					xTrkFallos = 0;
 					xTrkEnVuelo = false;
+					xTrkCoordsRevisado = false;
 					xTrkCrearMapa();
 					xTrkCargar(false);
 					xTrkAyudaPrimeraVez();
@@ -1967,6 +2093,7 @@
 				// quedara la referencia, al volver a entrar se operaria sobre un mapa muerto
 				if (xTrkMapaS) { xTrkMapaS.remove(); xTrkMapaS = null; }
 				if (xTrkMapaR) { xTrkMapaR.remove(); xTrkMapaR = null; xTrkCapaR = null; }
+				if (xTrkCoordsMapa) { xTrkCoordsMapa.remove(); xTrkCoordsMapa = null; xTrkCoordsMarca = null; }
 				xTrkMarcadorS = null;
 				xTrkUbicacionNueva = null;
 				xTrkCapas = null;

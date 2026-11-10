@@ -456,8 +456,13 @@ function setClearLocalStorage(redirec = true) {
 	// marcador de asistencia (asistencia/kiosko.html, mismo origen): sin su token la pantalla queda desvinculada
 	var asis_kiosko_token = window.localStorage.getItem('asis_kiosko_token');
 	var asis_no_instalar = window.localStorage.getItem('asis_no_instalar');
+
+	// maqueta 3D (app/maqueta): areas con maqueta, calidad y encuadre. Sin esto, al entrar se ven las tarjetas y luego salta la maqueta
+	var maqueta = Object.keys(window.localStorage).filter(function (k) { return k.indexOf('maq-') === 0; })
+		.map(function (k) { return [k, window.localStorage.getItem(k)]; });
 	
 	window.localStorage.clear();
+	maqueta.forEach(function (kv) { window.localStorage.setItem(kv[0], kv[1]); });
 
 	if (printL) {window.localStorage.setItem('::app3_woIpPrintLoC', printL); }
 	if (touchVR) {window.localStorage.setItem('::app3_sys_vr_touch', touchVR); }

@@ -6,6 +6,7 @@
 <link rel="import" href="./x-carta-virtual-config/x-carta-virtual-mesas.html">
 <link rel="import" href="../../page/x-configuraciones/x-config-sede-opciones/x-config-sede-opciones.html">
 <link rel="import" href="./x-areas-mesas/x-areas-mesas.html">
+<link rel="import" href="./x-plano-salon/x-plano-salon.html">
 <link rel="import" href="../../x-componentes/x-edit-tipo-precio/x-edit-tipo-precio.html">
 <link rel="import" href="./x-holding/x-create-holding.html">
 
@@ -224,6 +225,7 @@
 				<paper-tab>EMISION DE COMPROBANTES</paper-tab>
 				<paper-tab>CARTA APP</paper-tab>
 				<paper-tab>AREAS Y MESAS</paper-tab>
+				<paper-tab>PLANO DEL SALÓN</paper-tab>
 				<paper-tab>PIN PAD</paper-tab>
 				<paper-tab hidden$="[[isHiddenHolding]]">HOLDING</paper-tab>
 			</paper-tabs>
@@ -1115,6 +1117,11 @@
 					<x-areas-mesas></x-areas-mesas>
 				</div>
 
+				<!-- PLANO DEL SALON (maqueta 3D de Control de pedidos) -->
+				<div id="div_plano_salon" class="xContent">
+					<x-plano-salon></x-plano-salon>
+				</div>
+
 				<!-- CONFIGURACION DE PIN PAD -->
 				<div id="div_pin_pad" class="xContent">
 					<h3>Agregar PinPad</h3>
@@ -1299,6 +1306,7 @@
 				case 6: xLoadImpresorasConf(); break;
 				case 7: xLoadAlmacenes(); break;
 				case 8: config_comprobante_getall(); break;
+				case 11: xThisConfig.$$('x-plano-salon').cargar(); break;
 			}
 		})
 
