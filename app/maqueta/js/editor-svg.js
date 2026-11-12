@@ -13,7 +13,7 @@ import {
 	problemaEn, dentroDelArea, espacioDe, largoDe, sePuedeGirar, tieneLargo, estiradaHasta, estiradaQueCabe,
 	difAngulo, anguloConIman, giroCercano, conGiro, lugarManijaGiro, empujeManijaLargo, corrimientoDentro, grupoCorrido,
 	piezasEnMarco, tamanoQueCabe, extremosDe, ejeDe, medidaDe, conMedida,
-} from './editor-piezas.js?v=20261102m';
+} from './editor-piezas.js?v=20261110a';
 
 const NS = 'http://www.w3.org/2000/svg';
 const UMBRAL_PX = 5;            // menos que esto entre apretar y soltar = toque, no arrastre
@@ -162,7 +162,7 @@ function dibujarPieza(pz, ajustes, noExiste = false) {
 	if (pz.t === 'mesa') {
 		sillasDe(g, pz, c);
 		tablero(el('g', { transform: `rotate(${pz.giro})` }, g), pz, c);
-		rotulo(g, pz.codigo, 1.25, noExiste ? ROJO : tintaPara(c.mesa), c.mesa);
+		rotulo(g, pz.codigo || (noExiste ? '?' : ''), 1.25, noExiste ? ROJO : tintaPara(c.mesa), c.mesa);
 		return g;
 	}
 	const sinGiro = huellaDe({ ...pz, giro: 0 });

@@ -7,15 +7,15 @@
 import { validarPlano, ajustesConDefaults, mesasQueNoExisten, huellaDe } from './plano.js?v=20261102m';
 import {
 	BANDEJA, piezaDeBandeja, mesaPorColocar, lugarLibre, conSillas, SILLAS_MAX, codigosPorColocar, cercaDeAnterior,
-	conTamano, armarSalon, conCodigo,
-} from './editor-piezas.js?v=20261102m';
-import { crearVista, miniatura } from './editor-svg.js?v=20261102m';
+	conTamano, armarSalon, conCodigo, partesCodigo, codigoDelNumero, mesasSinNumero,
+} from './editor-piezas.js?v=20261110a';
+import { crearVista, miniatura } from './editor-svg.js?v=20261110a';
 import { pedirPlanos, guardarPlano, activarMaqueta, pedirAreas, datosSedePOS, areasDelEditor, guardarAreas } from './editor-datos.js?v=20261102m';
 import { editarAreas } from './editor-areas.js?v=20261102m';
 import { aviso, dialogo, preguntar, textoDeError } from './editor-ui.js?v=20261102m';
 import { abrirVista3D } from './editor-3d.js?v=20261102m';
 
-export { aCuadro } from './editor-svg.js?v=20261102m';
+export { aCuadro } from './editor-svg.js?v=20261110a';
 
 const LIMITE_HISTORIAL = 50;
 const AREA_NUEVA = { ancho: 60, fondo: 40 };   // cuadros: lo que mide un area que aun no tiene salon
@@ -303,9 +303,9 @@ export async function montarEditor(raiz) {
 		}));
 	}
 
-	/** Indices de las mesas del plano cuyo codigo el area ya no tiene. */
+	/** Indices de las mesas del plano cuyo codigo el area ya no tiene (las sin numero no: esas se numeran). */
 	function indicesNoExisten() {
-		const fuera = new Set(mesasQueNoExisten(plano(), area().codigos));
+		const fuera = new Set(mesasQueNoExisten(plano(), area().codigos).filter(pz => pz.codigo));
 		return new Set(plano().piezas.flatMap((pz, i) => (fuera.has(pz) ? [i] : [])));
 	}
 
@@ -355,26 +355,40 @@ export async function montarEditor(raiz) {
 		barra.style.top = `${lugar.y}px`;
 	}
 
-	/** Numero de la mesa: los por colocar y los que ya estan en el salon (esos se cambian con esta). */
+	/** Numero de la mesa: se toca y se escribe; el prefijo del area ("S1-") queda fijo delante. */
 	function selectorNumero(pz) {
-		const sel = nodo('select', 'form-control form-control-sm mqe-num');
-		sel.title = 'Cambiar el número de esta mesa';
-		const libres = codigosPorColocar(plano(), area().codigos);
-		const puestas = plano().piezas.filter(p => p.t === 'mesa' && p !== pz).map(p => p.codigo);
-		const grupo = (titulo, lista) => {
-			if (!lista.length) { return; }
-			const g = nodo('optgroup');
-			g.label = titulo;
-			g.append(...lista.map(c => { const o = nodo('option', '', c); o.value = c; return o; }));
-			sel.appendChild(g);
-		};
-		const actual = nodo('option', '', pz.codigo);
-		actual.value = pz.codigo;
-		sel.appendChild(actual);
-		grupo('Por colocar', libres);
-		grupo('En el salón (se cambian)', puestas);
-		sel.value = pz.codigo;
-		return sel;
+		const caja = nodo('label', pz.codigo ? 'mqe-num-caja' : 'mqe-num-caja mqe-num-falta');
+		const prefijo = partesCodigo(area().codigos[0] ?? pz.codigo).prefijo;
+		if (prefijo) { caja.appendChild(nodo('span', 'mqe-num-pre', prefijo)); }
+		const input = nodo('input', 'mqe-num');
+		input.type = 'text';
+		input.inputMode = 'numeric';
+		input.maxLength = 4;
+		input.defaultValue = partesCodigo(pz.codigo).numero;   // Escape vuelve a este
+		input.placeholder = '?';
+		input.title = 'Toca y escribe el número de esta mesa';
+		const ok = nodo('button', 'btn btn-sm btn-primary mqe-num-ok', 'OK');
+		ok.type = 'button';
+		ok.title = 'Cambiar el número';
+		caja.append(input, ok);
+		return caja;
+	}
+
+	const rangoDelArea = () => {
+		const c = area().codigos;
+		return c.length ? `En «${area().nombre}» las mesas van de la ${c[0]} a la ${c[c.length - 1]}.` : SIN_MESAS;
+	};
+
+	/** Mesas sin numero (quedaron asi al darle su numero a otra): las elige y avisa. true si hay. */
+	function faltaNumero() {
+		const sin = mesasSinNumero(plano());
+		if (!sin.length) { return false; }
+		elegir([sin[0]]);
+		pintar();
+		$('.mqe-num')?.focus();
+		aviso(sin.length === 1 ? 'Hay una mesa sin número (en rojo, con «?»). Escríbele su número.'
+			: `Hay ${sin.length} mesas sin número (en rojo, con «?»). Escríbeles su número.`, 'error');
+		return true;
 	}
 
 	function coloresAlfombra(pz) {
@@ -391,20 +405,32 @@ export async function montarEditor(raiz) {
 		return [...botones, libre];
 	}
 
-	function cambiarNumero(codigo) {
+	function cambiarNumero(texto) {
 		vista.apurar();
 		const i = st.seleccion, pz = plano().piezas[i];
-		if (!pz || pz.t !== 'mesa' || codigo === pz.codigo) { return; }
+		if (!pz || pz.t !== 'mesa') { return; }
+		if (!String(texto).trim()) { pintar(); return; }   // lo borro sin escribir otro: queda como estaba
+		const codigo = codigoDelNumero(area().codigos, texto);
+		if (!codigo) { aviso(`No hay mesa ${String(texto).trim()} en esta área. ${rangoDelArea()}`, 'error'); pintar(); return; }
+		if (codigo === pz.codigo) { pintar(); return; }
 		const r = conCodigo(plano(), i, codigo);
+		if (r.otra >= 0) {
+			// la que tenia ese numero queda elegida y con el cursor en su numero: se escribe el suyo y listo
+			cambiar(r.plano, r.otra);
+			$('.mqe-num')?.focus();
+			aviso(`Esta mesa ahora es la ${codigo}. La que era ${codigo} quedó sin número (en rojo): escríbele otro.`);
+			return;
+		}
 		cambiar(r.plano, i);
-		aviso(r.otra >= 0 ? `Listo: esta mesa ahora es la ${codigo} y la que era ${codigo} ahora es la ${pz.codigo}.`
-			: `Listo: esta mesa ahora es la ${codigo}. La ${pz.codigo} quedó en «Mesas por colocar».`);
+		aviso(pz.codigo ? `Listo: esta mesa ahora es la ${codigo}. La ${pz.codigo} quedó en «Mesas por colocar».`
+			: `Listo: esta mesa ahora es la ${codigo}.`);
 	}
 
 	function pintar() {
 		const s = sesion(), noExisten = indicesNoExisten();
 		raiz.classList.toggle('mqe-bloqueada', !!s.bloqueo);
-		vista.pintar(s.plano, { seleccion: st.seleccion, grupo: new Set(st.grupo), noExisten, editable: editable() });
+		const enRojo = new Set([...noExisten, ...mesasSinNumero(s.plano)]);
+		vista.pintar(s.plano, { seleccion: st.seleccion, grupo: new Set(st.grupo), noExisten: enRojo, editable: editable() });
 		pintarAreas();
 		pintarPorColocar();
 		pintarNotas(noExisten);
@@ -511,6 +537,7 @@ export async function montarEditor(raiz) {
 
 	async function guardar() {
 		if (sesion().bloqueo) { aviso(sesion().bloqueo, 'error'); return; }
+		if (faltaNumero()) { return; }
 		const valido = validarPlano(planoParaEnviar());
 		if (!valido.ok) { aviso(textoDeError(valido.error), 'error'); return; }
 		const s = sesion(), enviado = s.plano;
@@ -598,6 +625,7 @@ export async function montarEditor(raiz) {
 
 	function ver3d(abrirPanel) {
 		if (sesion().bloqueo) { aviso(sesion().bloqueo, 'error'); return; }
+		if (faltaNumero()) { return; }
 		const valido = validarPlano(planoParaEnviar());
 		if (!valido.ok) { aviso(textoDeError(valido.error), 'error'); return; }
 		let pendiente = false;   // se movio un deslizador o el selector de color y aun no se solto
@@ -698,6 +726,18 @@ export async function montarEditor(raiz) {
 			if (e.target.matches('.mqe-num')) { cambiarNumero(e.target.value); }
 			if (e.target.matches('.mqe-color-libre')) { hacerAccion(`color:${e.target.value.toLowerCase()}`); }
 		});
+		$('.mqe-acciones').addEventListener('keydown', e => {
+			if (!e.target.matches('.mqe-num')) { return; }
+			if (e.key === 'Escape') { e.target.value = e.target.defaultValue; e.target.blur(); }
+			if (e.key === 'Enter') { e.target.blur(); }
+		});
+		$('.mqe-acciones').addEventListener('focusin', e => { if (e.target.matches('.mqe-num')) { e.target.select(); } });
+		// el plano hace preventDefault al tocarlo (para arrastrar) y el foco no sale del numero: sin esto no habria
+		// "change" al tocar otra mesa o el piso. OK y cualquier otro clic sacan el foco y el numero se aplica.
+		document.addEventListener('pointerdown', e => {
+			const num = document.activeElement;
+			if (num?.matches?.('.mqe-num') && !e.target.closest('.mqe-num')) { num.blur(); }
+		}, true);
 		document.addEventListener('keydown', alTeclear);
 		window.addEventListener('beforeunload', alSalir);
 		window.addEventListener('resize', pintarAcciones);

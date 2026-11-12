@@ -1,203 +1,135 @@
 /**
- * Script para detectar y redirigir al servidor de impresión instalado
- * Soporta 2 versiones:
- * - Nueva versión: Node.js en localhost:3847
- * - Versión antigua: Laragon en ipPrintServerLocal
+ * Detecta que version del servidor de impresion tiene la sede y lo abre (m_panel case 27).
+ * - Nueva: Node.js en esta PC, http://localhost:3847 (/api/ping devuelve version, con CORS).
+ * - Anterior: Laragon en sede.ip_server_local -> restobar/print/client/index.html?o=...
+ * En produccion (https) el navegador bloquea consultar http://<ip> (contenido mixto): la anterior no se
+ * puede comprobar, solo abrir. Por eso, si no esta la nueva y la sede tiene ip, se pregunta.
+ * Se carga dos veces (m_panel.html y x-print-server-donwload.html): solo var/function en nivel superior.
  */
 
-const PrintServerDetector = {
-    NEW_SERVER_URL: 'http://localhost:3847',
-    NEW_SERVER_PING: 'http://localhost:3847/api/ping', 
-    
-    getOrgData: function() {
-        const demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
-        return {
-            o: typeof xIdOrg !== 'undefined' ? xIdOrg : '',
-            s: typeof xIdSede !== 'undefined' ? xIdSede : '',
-            d: demo
-        };
-    },
+var PrintServerDetector = {
+	NEW_SERVER_URL: 'http://localhost:3847',
+	NEW_SERVER_PING: 'http://localhost:3847/api/ping',
+	TIMEOUT_MS: 3000,
 
-    getEncodedOrgData: function() {
-        return btoa(JSON.stringify(this.getOrgData()));
-    },
+	getEncodedOrgData: function () {
+		var demo = window.location.href.indexOf('demo') > -1 ? 'd' : '';
+		return btoa(JSON.stringify({
+			o: typeof xIdOrg !== 'undefined' ? xIdOrg : '',
+			s: typeof xIdSede !== 'undefined' ? xIdSede : '',
+			d: demo
+		}));
+	},
 
-    getLaragonServerUrl: function() {
-        try {
-            const datosSede = xm_log_get('datos_org_sede');
-            if (datosSede && datosSede[0] && datosSede[0].ip_server_local) {
-                return 'http://' + datosSede[0].ip_server_local;
-            }
-        } catch (e) {
-            console.warn('No se pudo obtener ip_server_local:', e);
-        }
-        return null;
-    },
+	getLaragonServerUrl: function () {
+		try {
+			var datosSede = xm_log_get('datos_org_sede');
+			if (datosSede && datosSede[0] && datosSede[0].ip_server_local) {
+				return 'http://' + String(datosSede[0].ip_server_local).trim();
+			}
+		} catch (e) { /* sin datos de sede: no hay version anterior */ }
+		return null;
+	},
 
-    checkNewServer: async function() {
-        console.log('🔍 Verificando servidor nuevo en:', this.NEW_SERVER_PING);
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            
-            console.log('🔍 Iniciando fetch...');
-            const response = await fetch(this.NEW_SERVER_PING, {
-                method: 'GET',
-                mode: 'no-cors',
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            console.log('🔍 Fetch completado');
-            
-            console.log('✅ Servidor nuevo DETECTADO (responde en localhost:3847)');
-            return {
-                installed: true,
-                version: '1.0.0',
-                hostname: 'localhost',
-                isConfigured: true,
-                serverType: 'new'
-            };
-        } catch (e) {
-            console.log('❌ Error al detectar servidor nuevo:', e.name, '-', e.message);
-            console.log('❌ Stack:', e.stack);
-        }
-        console.log('❌ Servidor nuevo NO detectado');
-        return { installed: false, serverType: 'new' };
-    },
+	fetchConTiempo: function (url, mode) {
+		var controller = new AbortController();
+		var timer = setTimeout(function () { controller.abort(); }, this.TIMEOUT_MS);
+		return fetch(url, { method: 'GET', mode: mode, cache: 'no-store', signal: controller.signal })
+			.finally(function () { clearTimeout(timer); });
+	},
 
-    checkLaragonServer: async function() {
-        const baseUrl = this.getLaragonServerUrl();
-        if (!baseUrl) {
-            return { installed: false, serverType: 'laragon' };
-        }
+	// cors para leer la version; si el navegador no deja leerla, no-cors al menos confirma que responde
+	checkNewServer: async function () {
+		try {
+			var r = await this.fetchConTiempo(this.NEW_SERVER_PING, 'cors');
+			var data = r.ok ? await r.json() : {};
+			return { installed: true, serverType: 'new', version: data.version || '', isConfigured: !!data.isConfigured };
+		} catch (e) { /* sigue con no-cors */ }
+		try {
+			await this.fetchConTiempo(this.NEW_SERVER_PING, 'no-cors');
+			return { installed: true, serverType: 'new', version: '' };
+		} catch (e) {
+			return { installed: false, serverType: 'new' };
+		}
+	},
 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            
-            // Solo verificar si la baseUrl está activa, sin endpoint específico
-            const response = await fetch(baseUrl, {
-                method: 'GET',
-                mode: 'no-cors',
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            return {
-                installed: true,
-                baseUrl: baseUrl,
-                serverType: 'laragon'
-            };
-        } catch (e) {
-            console.log('Servidor Laragon no detectado:', e.message);
-        }
-        return { installed: false, serverType: 'laragon' };
-    },
+	// installed: true | false | 'unknown' (https no puede consultar http://<ip>)
+	checkLaragonServer: async function () {
+		var baseUrl = this.getLaragonServerUrl();
+		if (!baseUrl) { return { installed: false, serverType: 'laragon' }; }
+		if (window.location.protocol === 'https:') { return { installed: 'unknown', serverType: 'laragon', baseUrl: baseUrl }; }
+		try {
+			await this.fetchConTiempo(baseUrl, 'no-cors');
+			return { installed: true, serverType: 'laragon', baseUrl: baseUrl };
+		} catch (e) {
+			return { installed: false, serverType: 'laragon', baseUrl: baseUrl };
+		}
+	},
 
-    detectInstalledServer: async function() {
-        console.log('🔎 ========== INICIANDO BÚSQUEDA DE SERVIDOR DE IMPRESIÓN ==========');
-        
-        console.log('🔎 Paso 1: Verificando servidor NUEVO (Node.js)...');
-        const newServerResult = await this.checkNewServer();
-        console.log('🔎 Resultado servidor nuevo:', newServerResult);
-        
-        if (newServerResult.installed) {
-            console.log('✅ ========== SERVIDOR NUEVO DETECTADO Y SELECCIONADO ==========');
-            return newServerResult;
-        }
+	detectInstalledServer: async function () {
+		var nuevo = await this.checkNewServer();
+		if (nuevo.installed) { return nuevo; }
+		var anterior = await this.checkLaragonServer();
+		if (anterior.installed) { return anterior; }
+		return { installed: false, serverType: 'none', laragonUrl: anterior.baseUrl || null };
+	},
 
-        console.log('🔎 Paso 2: Verificando servidor LARAGON...');
-        const laragonResult = await this.checkLaragonServer();
-        console.log('🔎 Resultado servidor Laragon:', laragonResult);
-        
-        if (laragonResult.installed) {
-            console.log('✅ ========== SERVIDOR LARAGON DETECTADO Y SELECCIONADO ==========');
-            return laragonResult;
-        }
+	getRedirectUrl: function (serverInfo) {
+		if (serverInfo.serverType === 'new') { return this.NEW_SERVER_URL; }
+		if (serverInfo.serverType === 'laragon' && serverInfo.baseUrl) {
+			return serverInfo.baseUrl + '/restobar/print/client/index.html?o=' + this.getEncodedOrgData();
+		}
+		return null;
+	},
 
-        console.log('❌ ========== NO SE DETECTÓ NINGÚN SERVIDOR DE IMPRESIÓN ==========');
-        return { installed: false, serverType: 'none' };
-    },
+	abrir: function (url) {
+		window.open(url, 'Servidor de Impresion');
+	},
 
-    getRedirectUrl: function(serverInfo) {
-        const encodedData = this.getEncodedOrgData();
+	redirectToServer: async function () {
+		var info = await this.detectInstalledServer();
+		if (info.installed === true) {
+			var url = this.getRedirectUrl(info);
+			this.abrir(url);
+			return { success: true, serverType: info.serverType, version: info.version || '', url: url };
+		}
+		if (info.installed === 'unknown') { return this.preguntarAnterior(info); }
+		this.showDownloadPage();
+		return { success: false, reason: 'no_server' };
+	},
 
-        if (serverInfo.serverType === 'new') {
-            return this.NEW_SERVER_URL;
-        }
+	// la sede tiene la version anterior configurada pero no se puede comprobar si esta prendida
+	preguntarAnterior: function (info) {
+		var self = this;
+		var url = this.getRedirectUrl(info);
+		if (window.xPopupLoad && xPopupLoad.xclose) { xPopupLoad.xclose(); } // el "Cargando" de m_panel no debe quedar detras de la pregunta
+		if (typeof showAlertSwalHtmlDecision !== 'function') { this.abrir(url); return Promise.resolve({ success: true, serverType: 'laragon', url: url }); }
+		return showAlertSwalHtmlDecision({
+			title: 'Abrir servidor de impresion',
+			html: 'En esta computadora no esta instalado el <b>servidor de impresion nuevo</b>.<br><br>' +
+				'Tu local tiene configurada la <b>version anterior</b> (Laragon). Si no abre, revisa que Laragon este iniciado.',
+			icon: 'question', showCancelButton: true,
+			confirmButtonText: 'Abrir version anterior', cancelButtonText: 'Instalar version nueva'
+		}, 1).then(function (r) {
+			if (r && r.isConfirmed) { self.abrir(url); return { success: true, serverType: 'laragon', url: url }; }
+			if (r && r.dismiss === 'cancel') { self.showDownloadPage(); }
+			return { success: false, reason: 'cancel' };
+		});
+	},
 
-        if (serverInfo.serverType === 'laragon') {
-            const versionPath = 'restobar/print/client/index.html';
-            return serverInfo.baseUrl + '/' + versionPath + '?o=' + encodedData;
-        }
-
-        return null;
-    },
-
-    redirectToServer: async function(openInNewWindow = true) {
-        console.log('🚀 ========== INICIANDO REDIRECCIÓN AL SERVIDOR ==========');
-        const serverInfo = await this.detectInstalledServer();
-        console.log('🚀 Información del servidor detectado:', serverInfo);
-
-        if (!serverInfo.installed) {
-            console.log('⚠️ No hay servidor instalado, mostrando página de descarga...');
-            this.showDownloadPage();
-            return { success: false, reason: 'no_server' };
-        }
-
-        console.log('✅ Servidor instalado, obteniendo URL de redirección...');
-        const redirectUrl = this.getRedirectUrl(serverInfo);
-        console.log('🔗 URL de redirección:', redirectUrl);
-        
-        if (redirectUrl) {
-            console.log('🌐 Abriendo servidor de impresión en:', openInNewWindow ? 'nueva ventana' : 'misma ventana');
-            if (openInNewWindow) {
-                window.open(redirectUrl, 'Servidor de Impresion');
-            } else {
-                window.location.href = redirectUrl;
-            }
-            console.log('✅ ========== REDIRECCIÓN EXITOSA ==========');
-            return { success: true, serverType: serverInfo.serverType, url: redirectUrl };
-        }
-
-        console.log('❌ No se pudo obtener URL de redirección');
-        return { success: false, reason: 'no_url' };
-    },
-
-    showDownloadPage: function() {
-        if (typeof router !== 'undefined') {
-            router.go('/print-server');
-        } else {
-            window.location.hash = '#/print-server';
-        }
-    },
-
-    updateUIStatus: function(elementId, serverInfo) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-
-        if (serverInfo.installed) {
-            element.innerHTML = `
-                <div class="server-status online">
-                    <span class="status-icon">✓</span>
-                    <span>Servidor de impresión detectado (${serverInfo.serverType === 'new' ? 'Nueva versión' : 'Laragon'})</span>
-                </div>`;
-        } else {
-            element.innerHTML = `
-                <div class="server-status offline">
-                    <span class="status-icon">✗</span>
-                    <span>No se detectó servidor de impresión</span>
-                </div>`;
-        }
-    }
+	showDownloadPage: function () {
+		if (typeof router !== 'undefined' && router) {
+			router.go('/print-server');
+		} else {
+			window.location.hash = '#/print-server';
+		}
+	}
 };
 
-async function searchAndRedirectPrintServer(openInNewWindow = true) {
-    return await PrintServerDetector.redirectToServer(openInNewWindow);
+async function searchAndRedirectPrintServer() {
+	return await PrintServerDetector.redirectToServer();
 }
 
 async function checkPrintServerStatus() {
-    return await PrintServerDetector.detectInstalledServer();
+	return await PrintServerDetector.detectInstalledServer();
 }

@@ -870,6 +870,18 @@
         rowLoading.removeClass('xInvisible');
         // console.log('_rowCpe', _rowCpe);
 
+        // sin external_id no hay que reenviar: se recupera del API ("ya se encuentra registrado")
+        if ( !_rowCpe.external_id ) {
+            _rowCpe.external_id = await xSoapSunat_RecuperarExternalId(_rowCpe);
+        }
+        if ( !_rowCpe.external_id ) {
+            alert('No se encontró este comprobante en el facturador. Comuníquese con soporte.');
+            _rowCpe.isReenviandoLoading = false;
+            rowLoading.addClass('xInvisible');
+            rowEstado.removeClass('xInvisible');
+            return;
+        }
+
         const rpt = await xSoapSunat_SendSunat(_rowCpe.external_id, _rowCpe.idce)
         if (rpt.ok) {
             // _rowCpe.nom_estado = 'Aceptado';

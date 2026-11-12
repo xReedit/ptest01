@@ -17,7 +17,7 @@
 	const URL_PLATOS = '../../bdphp/log_maqueta.php?op=platos';
 	const MAX_PEDIDOS = 200, MAX_PLATOS_GUARDADOS = 600;
 	const URL_EDITOR = '../maqueta/index.html?v=20261102m&area=';
-	const URL_CSS = '../maqueta/maqueta.css?v=20261102m';
+	const URL_CSS = '../maqueta/maqueta.css?v=20261111c';
 	const ID_ARMAR = 'maq_armar_salon';      // boton "Armar salón" de x-control-mesas.html (con xInvisible si no hay C1)
 	const ID_AREAS = 'comp-area-mesas';      // pestañas de area: emite onChangeTitle {title}
 	const ID_DETALLE = 'dialog_detalle';     // paper-dialog del pedido de la mesa (x-control-mesas.html)

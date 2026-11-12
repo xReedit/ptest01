@@ -367,15 +367,15 @@ async function xOpenPage(xop, parametro){
 			// window.open('http://192.168.1.64/restobar-print-server/print-server.html?o=' + _xr, "Servidor de Impresion"); // desarrollo
 
 			
-			if ( rptPingServerPrint ) {
-				window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
-			}
-
+			/*if ( rptPingServerPrint ) {
+			 	window.open(_urlPrintServver, "Servidor de Impresion");// produccion			
+			}*/
+			
 
 			// implementar search-print-server
-			// xPopupLoad.xopen();
-			// await searchAndRedirectPrintServer();
-			// xPopupLoad.xclose();
+			xPopupLoad.xopen();
+			await searchAndRedirectPrintServer();
+			xPopupLoad.xclose();
 
 			return; 		
 		case 41: xruta = '/indicadores'; break;

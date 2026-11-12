@@ -38,7 +38,7 @@ window.addEventListener('WebComponentsReady', function (e) {
 	xdialog = document.querySelector('x-dialog');
 	xul=document.querySelector('x-user-login');
 	// vuelve aqui porque la sede se bloqueo con la sesion abierta (ver xm_all.js: 423 ERR_SEDE_BLOQUEADA)
-	if (/[?&]suspendido=1/.test(window.location.search)) { xul.xocurrencia(3); }
+	if (/[?&]suspendido=1/.test(window.location.search)) { xul.xocurrencia(3); if (window.xSuspendido) { xSuspendido(); } }
 
 	
 	//destruye sessuion
@@ -129,6 +129,7 @@ window.addEventListener('WebComponentsReady', function (e) {
 						// Clave correcta pero la sede esta bloqueada o dada de baja
 						xul.xocurrencia(3);
 						xdialog.xclose();
+						if (window.xSuspendido) { xSuspendido(); } // pantalla con el link de pago (js/x-aviso-suscripcion.js)
 					} else {
 						// Credenciales incorrectas
 						xul.xocurrencia(0);

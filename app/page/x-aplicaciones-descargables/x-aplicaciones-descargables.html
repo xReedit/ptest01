@@ -18,6 +18,7 @@
 			.apd-tienda { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 			.apd-tienda canvas { width: 120px; height: 120px; border: 1px solid #dddddd; border-radius: 6px; padding: 4px; background: #fff; }
 			.apd-nota { font-size: 12px; background: #f8fafc; border: 1px solid #dddddd; border-radius: 6px; padding: 8px 10px; }
+			.apd-nota:empty { display: none; }
 		</style>
 		<br>
 		<div class="xMiCard xradius" style="width:92%; max-width: 1200px;">
@@ -114,6 +115,30 @@
 						<p class="apd-nota" id="mozoPcVersion"></p>
 					</div>
 
+					<!-- instaladores con nombre fijo en S3 (los sube el release de print-server-node) -->
+					<div class="apd-card">
+						<div class="apd-head">
+							<div class="apd-ico"><i class="fa fa-print"></i></div>
+							<div><h4>Servidor de impresion</h4><span>Para la computadora conectada a las impresoras</span></div>
+						</div>
+						<p>Es el programa que imprime: recibe los pedidos y comprobantes del sistema y los manda a las impresoras de cocina, bar y caja.</p>
+						<ul>
+							<li>Se instala <b>una sola vez</b>, en la computadora que tiene las impresoras conectadas (USB o red).</li>
+							<li>Para revisarlo o configurarlo entra a <b>Servidor de impresion</b> desde el menu del sistema en esa computadora.</li>
+						</ul>
+						<a class="btn btn-sm btn-primary" href="https://papaya-comercio-files.s3.us-east-2.amazonaws.com/installers/RestobarPrintServer-Setup-Win64.exe" target="_blank" rel="noopener"><i class="fa fa-windows"></i> Windows</a>
+						<a class="btn btn-sm btn-light" href="https://papaya-comercio-files.s3.us-east-2.amazonaws.com/installers/restobar-print-server_amd64.deb" target="_blank" rel="noopener"><i class="fa fa-linux"></i> Linux</a>
+						<a class="btn btn-sm btn-light" href="https://papaya-comercio-files.s3.us-east-2.amazonaws.com/installers/xPrintServer-macOS-Installer.zip" target="_blank" rel="noopener"><i class="fa fa-apple"></i> Mac</a>
+						<br><br>
+						<p class="apd-nota">Sin computadora? Tambien funciona en una tablet o celular Android que se quede en el local junto a las impresoras.</p>
+						<div class="apd-tiendas">
+							<div class="apd-tienda">
+								<canvas data-qr="https://papaya-comercio-files.s3.us-east-2.amazonaws.com/installers/app-print-server.apk"></canvas>
+								<a class="btn btn-sm btn-success" href="https://papaya-comercio-files.s3.us-east-2.amazonaws.com/installers/app-print-server.apk" target="_blank" rel="noopener"><i class="fa fa-android"></i> Android</a>
+							</div>
+						</div>
+					</div>
+
 				</div>
 			</div>
 		</div>
@@ -135,7 +160,7 @@ Polymer({
 	},
 	// la version del instalador PC cambia: el url vigente lo publica el JSON del updater de Tauri
 	_cargarMozoPc: function () {
-		var root = this.root;
+		var root = Polymer.dom(this.root); // shady DOM: this.root.querySelector da null
 		fetch('https://papaya-comercio-files.s3.us-east-2.amazonaws.com/installers/latest_app_mozo.json', { cache: 'no-store' })
 			.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
 			.then(function (data) {

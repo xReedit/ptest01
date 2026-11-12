@@ -284,14 +284,33 @@ export function codigosPorColocar(plano, codigos) {
 }
 
 /**
- * La mesa i pasa a tener el numero codigo. Si otra mesa del plano ya lo tenia, se cambian los numeros; si no, el
- * numero que tenia la i queda libre (vuelve a "Mesas por colocar"). {plano, otra}: otra = indice de la que se cambio o -1.
+ * La mesa i pasa a tener el numero codigo. Si otra mesa del plano ya lo tenia, esa queda SIN numero (codigo '') y
+ * no se puede guardar hasta ponerle uno; el numero que tenia la i queda libre (vuelve a "Mesas por colocar").
+ * {plano, otra}: otra = indice de la que quedo sin numero o -1.
  */
 export function conCodigo(plano, i, codigo) {
-	const antes = plano.piezas[i].codigo, clave = claveMesa(codigo);
+	const clave = claveMesa(codigo);
 	const otra = plano.piezas.findIndex((pz, k) => k !== i && pz.t === 'mesa' && claveMesa(pz.codigo) === clave);
-	const piezas = plano.piezas.map((pz, k) => (k === i ? { ...pz, codigo } : k === otra ? { ...pz, codigo: antes } : pz));
+	const piezas = plano.piezas.map((pz, k) => (k === i ? { ...pz, codigo } : k === otra ? { ...pz, codigo: '' } : pz));
 	return { plano: { ...plano, piezas }, otra };
+}
+
+/** Parte fija del codigo (el prefijo "S1-" de "S1-05"; '' si es solo numero) y la parte que se escribe ("05"). */
+export function partesCodigo(codigo) {
+	const m = /^(.*?)([0-9]*)$/.exec(String(codigo ?? ''));
+	return { prefijo: m[1], numero: m[2] };
+}
+
+/** El codigo del area que tiene ese numero escrito ("5" o "05" → "S1-05"), o null si el area no tiene esa mesa. */
+export function codigoDelNumero(codigos, texto) {
+	const t = String(texto ?? '').trim();
+	if (!/^[0-9]{1,4}$/.test(t)) { return null; }
+	return codigos.find(c => partesCodigo(c).numero !== '' && Number(partesCodigo(c).numero) === Number(t)) ?? null;
+}
+
+/** Indices de las mesas que quedaron sin numero (conCodigo). */
+export function mesasSinNumero(plano) {
+	return plano.piezas.flatMap((pz, i) => (pz.t === 'mesa' && !pz.codigo ? [i] : []));
 }
 
 /**

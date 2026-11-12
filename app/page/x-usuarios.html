@@ -2,18 +2,6 @@
 <dom-module id="x-usuarios">
 	<template>
 
-		<paper-dialog class="dialog_redondo" id="dialog_borrar_usuario" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
-			<div class="xtxtCentro">
-				<img src="../../images/_dlg_remove.gif" alt="" width="150px">
-			</div>
-			<p>Esta seguro de querer borrar este usuario?</p>
-			<br>
-			<div class="buttons">
-				<button class="xBoton2 xPlomo" dialog-dismiss>Cancelar</button>
-				<button class="xBoton2 xRojo" onclick="xGoBorrarUsuario();">Si, borrar</button>
-			</div>
-		</paper-dialog>
-
 		<paper-dialog id="dialog_sedes_rep" class="dialog_redondo" style="max-width: 420px;" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
 			<h4 class="xsa-dlg-tit">Sedes que atiende</h4>
 			<div id="sedesAtiendeDlg" class="xsa"></div>
@@ -225,39 +213,106 @@
 				</span>
 			</div>
 		</paper-dialog>
-		<br>
-		<h3>USUARIOS</h3>
-		<div class="xLinea2"></div>
-		<br>
-		<paper-fab icon="add" onclick="xNuevoUsuario(); dialog_add_us.open();" title="Agregar" tabindex="0" class="btnAdd"></paper-fab>
-		<table id="tb_us" width="100%" class="xtable2">
-			<thead>
-				<th align="left">Nombres</th>
-				<th align="left">Cargo</th>
-				<th align="left">usuario</th>
-				<th width="5px"></th>
-				<th width="5px"></th>
-			</thead>
-		</table>
+		<div class="xMiCard xradius inv-card xus-card">
+			<div class="xEncanezadoCard inv-head">
+				<div class="inv-head-top">
+					<div>
+						<h3>Usuarios</h3>
+						<p>Las personas que entran al sistema: tu equipo, tus repartidores y tu contador. Cada uno entra con su propio usuario y clave.</p>
+					</div>
+					<div class="inv-head-acciones">
+						<button type="button" id="xus_btn_nuevo" class="btn btn-sm btn-success" onclick="xUsAccionNuevo()"><i class="fa fa-plus"></i>Nuevo usuario</button>
+					</div>
+				</div>
+			</div>
+			<div class="xContentCard">
+				<div class="inv-seg" id="xus_seg">
+					<div class="inv-seg-item activa" data-tab="equipo" onclick="xUsTab('equipo')"><i class="fa fa-users"></i>Equipo <span class="xus-n" id="xus_n_equipo"></span></div>
+					<div class="inv-seg-item" data-tab="repartidores" onclick="xUsTab('repartidores')"><i class="fa fa-motorcycle"></i>Repartidores <span class="xus-n" id="xus_n_repartidores"></span></div>
+					<div class="inv-seg-item" data-tab="contador" onclick="xUsTab('contador')"><i class="fa fa-calculator"></i>Contador</div>
+				</div>
 
-		<br>		
-		<br><br>
-		<h3>REPARTIDORES / DELIVERISTA</h3>
-		<div class="xLinea2"></div>
-		<table id="tb_us_re" width="100%" class="xtable2">
-			<thead>
-				<th align="left">Nombres</th>
-				<th align="left">Cargo</th>
-				<th align="left">usuario</th>
-				<th width="5px"></th>
-				<th width="5px"></th>
-			</thead>
-		</table>
+				<div class="xus-vista activa" data-tab="equipo">
+					<p class="inv-ayuda xus-ayuda">Cajeros, mozos, administradores y colaboradores. Toca <b>Editar</b> para cambiar sus datos, su rol, sus accesos o restablecer su clave.</p>
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Buscar</span>
+							<input type="text" class="inv-input xus-buscar" placeholder="Nombre, cargo o usuario" oninput="xUsBuscar(this)" autocomplete="off">
+						</div>
+					</div>
+					<div class="inv-table-wrap">
+						<table id="tb_us" class="inv-table">
+							<thead><tr><th>Nombre</th><th>Cargo</th><th>Usuario</th><th class="inv-acciones"></th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+
+				<div class="xus-vista" data-tab="repartidores">
+					<p class="inv-ayuda xus-ayuda">Los repartidores entran a la app de delivery para ver y entregar sus pedidos. Para crear uno toca <b>Nuevo usuario</b> y elige el rol <b>Repartidor</b>.</p>
+					<div class="inv-toolbar">
+						<div class="inv-field">
+							<span class="inv-label">Buscar</span>
+							<input type="text" class="inv-input xus-buscar" placeholder="Nombre o usuario" oninput="xUsBuscar(this)" autocomplete="off">
+						</div>
+					</div>
+					<div class="inv-table-wrap">
+						<table id="tb_us_re" class="inv-table">
+							<thead><tr><th>Nombre</th><th>Cargo</th><th>Usuario</th><th class="inv-acciones"></th></tr></thead>
+							<tbody></tbody>
+						</table>
+					</div>
+				</div>
+
+				<div class="xus-vista" data-tab="contador">
+					<div class="xct-intro">
+						<i class="fa fa-calculator"></i>
+						<div>
+							<p><b>Dale acceso a tu contador para que revise y descargue tus comprobantes electronicos</b> (boletas, facturas y notas de credito) sin tener que pedirtelos cada mes.</p>
+							<p>Entra con su propio usuario a un panel contable: solo ve los comprobantes de las sedes que le asignes, desde la fecha de inicio de cada sede. No puede vender, cobrar ni cambiar nada del sistema.</p>
+						</div>
+					</div>
+					<div id="xct_lista"></div>
+				</div>
+			</div>
+		</div>
+
+		<paper-dialog id="dialog_contador" modal class="xdlg" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+			<div class="xContent">
+				<div class="xdlg-head"><h3 id="xct_titulo">Nuevo contador</h3><p id="xct_bajada"></p></div>
+				<div class="xdlg-body">
+					<div id="xct_creado" class="xct-creado" style="display:none"><i class="fa fa-check-circle"></i>Listo. Ahora enviale estos datos a tu contador con <b>Copiar credenciales</b> o por WhatsApp.</div>
+					<div id="xct_acceso" class="xct-acceso" style="display:none">
+						<p class="xct-sec">Datos de acceso</p>
+						<div class="xct-ac-fila"><span>Link</span><span id="xct_ac_link"></span></div>
+						<div class="xct-ac-fila"><span>Usuario</span><b id="xct_ac_usuario"></b></div>
+						<div class="xct-ac-fila"><span>Clave</span><span id="xct_ac_clave"></span></div>
+						<div class="xct-ac-btns">
+							<button type="button" class="btn btn-sm btn-primary" onclick="xCtrCopiarCred()"><i class="fa fa-clone"></i>Copiar credenciales</button>
+							<a id="xct_wsp" class="btn btn-sm" target="_blank" rel="noopener" style="display:none"><i class="fa fa-whatsapp"></i>Enviar por WhatsApp</a>
+							<button type="button" id="xct_btn_reset" class="btn btn-sm btn-light" onclick="xCtrResetear()"><i class="fa fa-refresh"></i>Restablecer clave</button>
+						</div>
+					</div>
+					<p class="xct-sec">Datos del contador</p>
+					<span class="inv-label">NOMBRE DEL CONTADOR O ESTUDIO CONTABLE</span>
+					<input type="text" id="xct_nombre" class="inv-input" maxlength="250" autocomplete="off" placeholder="Ej. Estudio Contable Garcia">
+					<span class="inv-label">TELEFONO (OPCIONAL, PARA ENVIARLE SU ACCESO POR WHATSAPP)</span>
+					<input type="tel" id="xct_telefono" class="inv-input" maxlength="25" autocomplete="off" placeholder="Ej. 987654321">
+					<p class="xct-sec">Sedes que revisara</p>
+					<div id="xct_sedes" class="xct-sedes-box"></div>
+				</div>
+				<div class="xdlg-foot">
+					<button type="button" id="xct_cancelar" class="btn btn-sm btn-light" onclick="dialog_contador.close();">Cancelar</button>
+					<button type="button" id="xct_guardar" class="btn btn-sm btn-success" onclick="xCtrGuardar();">Guardar</button>
+				</div>
+			</div>
+		</paper-dialog>
 
 	</template>
 </dom-module>
+<script src="./x-usuarios-contador.js?v=20261111c"></script>
 <script>
-var xThis, objUsuarioSeleted;
+var xThis;
 function xIniUsuarios(){
 	// if(xIdOrg=='' || xIdOrg==undefined){xIdOrg=window.localStorage.getItem('::app3_wo');}
 	// if(xIdUsuario=='' || xIdUsuario==undefined){xIdUsuario=window.localStorage.getItem('::app3_woU');}
@@ -383,9 +438,10 @@ function xModificarUs(obj){
 		xUsResumen();
 		xSedesAtiendeLeerUs(xid).always(function () {
 			xSedesAtiendeVer();
-			dialog_add_us.open();
+			// primero cerrar el "Cargando..": si se cierra despues, se lleva el fondo oscuro del dialogo (backdrop compartido)
 			xPopupLoad.xclose();
 			xPopupLoad.titulo="Guardando..";
+			dialog_add_us.open();
 		});
 	});
 }
@@ -478,51 +534,77 @@ function xNuevoUsuario(){
 	xSedesAtiendeVer();
 }
 function xLoadUs(){
-	$("#tb_us").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>');
+	var cargando = '<tr><td colspan="4" class="inv-empty">Cargando...</td></tr>';
+	$("#tb_us tbody").html(cargando);
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=402'})
 	.done( function (dtUs) {
-		var xdtUs=$.parseJSON(dtUs);
-		var xCadenaUs='';
-		xdtUs=xdtUs.datos;
-		for (var i = 0; i < xdtUs.length; i++) {
-			xCadenaUs=String(xCadenaUs+'<tr class="row" data-id="'+xdtUs[i].idusuario+'" data-t="usuario"><td>'+xdtUs[i].nombres+'</td><td>'+xdtUs[i].cargo+'</td><td>'+xdtUs[i].usuario+'</td>'+
-				'<td title="Modificar" onClick="xModificarUs(this)"><span class="icon xCursor"><img src="../../images/edit.png"></span></td>'+
-				'<td><span onClick="xBorrarUsuarioOpenDialog(this)" class="xDeleteRow" title="Borrar"></span></td>'+
-				'</tr>');
-		}
-		$("#tb_us .row").remove();
-		$("#tb_us").append(xCadenaUs).trigger('create');
-	});
-	
+		var lista = $.parseJSON(dtUs).datos || [];
+		var filas = lista.map(function (u) {
+			return '<tr data-id="' + xSedesAtiendeEsc(u.idusuario) + '" data-t="usuario">' +
+				'<td><b>' + xSedesAtiendeEsc(u.nombres) + '</b></td><td>' + xSedesAtiendeEsc(u.cargo) + '</td><td>' + xSedesAtiendeEsc(u.usuario) + '</td>' +
+				'<td class="inv-acciones"><span class="inv-link" onclick="xModificarUs(this)"><i class="fa fa-pencil"></i>Editar</span>' +
+				'<span class="inv-link inv-link-rojo" onclick="xUsBorrar(this)"><i class="fa fa-trash-o"></i>Borrar</span></td></tr>';
+		}).join('');
+		$("#tb_us tbody").html(filas || '<tr><td colspan="4" class="inv-empty">Aun no hay usuarios. Toca <b>Nuevo usuario</b> para crear el primero.</td></tr>');
+		$('#xus_n_equipo').text(lista.length);
+	})
+	.fail(function () { $("#tb_us tbody").html('<tr><td colspan="4" class="inv-empty">No se pudo cargar. Revise su conexion.</td></tr>'); });
+
 	/// repartidor
-	$("#tb_us_re").append('<tr class="row"><td colspan="4"><paper-spinner active></paper-spinner></td></tr>');
+	$("#tb_us_re tbody").html(cargando);
 	$.ajax({ type: 'POST', url: '../../bdphp/log.php?op=4021'})
 	.done( function (dtUs) {
-		var xdtUs=$.parseJSON(dtUs);
-		xdtUs=xdtUs.datos;
+		var lista = $.parseJSON(dtUs).datos || [];
 		xSedesAtiendeOrg().then(function (org) {
-			var xCadenaUs='';
-			var tdSedes = org.total > 1 ? '<td><span class="xsa-icono xCursor" title="Sedes que atiende" onclick="xSedesRepAbrir(this)">Sedes</span></td>' : '<td></td>';
-			for (var i = 0; i < xdtUs.length; i++) {
-				xCadenaUs=String(xCadenaUs+'<tr class="row" data-id="'+xdtUs[i].idrepartidor+'" data-t="repartidor"><td>'+xdtUs[i].nombre+' '+ xdtUs[i].apellido +'</td><td>Repartidor</td><td>'+xdtUs[i].usuario+'</td>'+
-					tdSedes+
-					'<td><span onclick="xBorrarItem(this);" class="xDeleteRow" title="Borrar"></span></td>'+
-					'</tr>');
-			}
-			$("#tb_us_re .row").remove();
-			$("#tb_us_re").append(xCadenaUs).trigger('create');
+			var sedes = org.total > 1 ? '<span class="inv-link" onclick="xSedesRepAbrir(this)"><i class="fa fa-map-marker"></i>Sedes</span>' : '';
+			var filas = lista.map(function (r) {
+				return '<tr data-id="' + xSedesAtiendeEsc(r.idrepartidor) + '" data-t="repartidor">' +
+					'<td><b>' + xSedesAtiendeEsc(r.nombre + ' ' + (r.apellido || '')) + '</b></td><td>Repartidor</td><td>' + xSedesAtiendeEsc(r.usuario) + '</td>' +
+					'<td class="inv-acciones">' + sedes +
+					'<span class="inv-link inv-link-rojo" onclick="xUsBorrar(this)"><i class="fa fa-trash-o"></i>Borrar</span></td></tr>';
+			}).join('');
+			$("#tb_us_re tbody").html(filas || '<tr><td colspan="4" class="inv-empty">Aun no hay repartidores. Toca <b>Nuevo usuario</b> y elige el rol <b>Repartidor</b>.</td></tr>');
+			$('#xus_n_repartidores').text(lista.length);
 		});
+	})
+	.fail(function () { $("#tb_us_re tbody").html('<tr><td colspan="4" class="inv-empty">No se pudo cargar. Revise su conexion.</td></tr>'); });
+}
+
+// xBorrarItem lee el tr con obj.parentNode.parentNode: obj debe ser hijo directo del td
+function xUsBorrar(obj) {
+	var $tr = $(obj).closest('tr'), nombre = $.trim($tr.find('td').first().text());
+	var repartidor = $tr.attr('data-t') === 'repartidor';
+	showAlertSwalHtmlDecision({ title: 'Borrar a ' + xSedesAtiendeEsc(nombre) + '?',
+		html: (repartidor ? 'Ya no podra entrar a la app de delivery.' : 'Ya no podra entrar al sistema.') + ' Sus ventas y registros anteriores se conservan.',
+		icon: 'question', showCancelButton: true, confirmButtonText: 'Si, borrar', cancelButtonText: 'Cancelar' }, 1)
+	.then(function (r) {
+		if (!r || !r.isConfirmed) { return; }
+		xBorrarItem(obj);
+		var $n = $(repartidor ? '#xus_n_repartidores' : '#xus_n_equipo');
+		$n.text(Math.max(0, Number($n.text()) - 1));
 	});
 }
 
-function xBorrarUsuarioOpenDialog(obj) {
-	objUsuarioSeleted = obj;
-	dialog_borrar_usuario.open()
+// pestañas: Equipo | Repartidores | Contador (una sola tarjeta, control segmentado)
+function xUsTab(nombre) {
+	$('#xus_seg .inv-seg-item').removeClass('activa').filter('[data-tab="' + nombre + '"]').addClass('activa');
+	$('.xus-vista').removeClass('activa').filter('[data-tab="' + nombre + '"]').addClass('activa');
+	var contador = nombre === 'contador';
+	$('#xus_btn_nuevo').html('<i class="fa fa-plus"></i>' + (contador ? 'Agregar contador' : 'Nuevo usuario'))
+		.toggle(!contador || !window.xCtrDatos || xCtrLibres().length > 0);
 }
 
-function xGoBorrarUsuario() {
-	xBorrarItem(objUsuarioSeleted)
-	dialog_borrar_usuario.close()
+function xUsAccionNuevo() {
+	if ($('#xus_seg .inv-seg-item.activa').attr('data-tab') === 'contador') { xCtrAbrir(0); return; }
+	xNuevoUsuario();
+	dialog_add_us.open();
+}
+
+function xUsBuscar(input) {
+	var q = xSedesAtiendeNorm(input.value);
+	$(input).closest('.xus-vista').find('tbody tr[data-id]').each(function () {
+		$(this).toggle(!q || xSedesAtiendeNorm(this.textContent).indexOf(q) >= 0);
+	});
 }
 
 
@@ -717,7 +799,21 @@ function xUsCss() {
 		'.usb-falta{font-size:11px;color:#b02a37}' +
 		'#usb_guardar:disabled{opacity:.45;cursor:not-allowed}' +
 		'@media (max-width:760px){#dialog_add_us>.usb-grid{grid-template-columns:minmax(0,1fr)}.usb-quien{border-right:0;border-bottom:1px solid #ddd}.usb-col{padding:12px 14px}}' +
-		'@media (max-width:420px){.usb-pie-btns{flex:1}.usb-pie-btns .xBoton2{flex:1}}';
+		'@media (max-width:420px){.usb-pie-btns{flex:1}.usb-pie-btns .xBoton2{flex:1}}' +
+		// pagina (tarjeta unica con pestañas Equipo | Repartidores | Contador)
+		'.xus-card{margin-top:16px !important;margin-bottom:24px !important}' +
+		'.xus-vista{display:none}.xus-vista.activa{display:block}' +
+		'.xus-n{display:inline-block;min-width:18px;margin-left:6px;padding:0 6px;border-radius:9px;background:#e9ecf2;color:#495057;font-size:10px;line-height:16px;text-align:center}' +
+		'.xus-n:empty{display:none}' +
+		'.xus-ayuda{margin:0 0 10px}' +
+		'.xus-card .inv-table td{padding:11px 8px}' +
+		// micss trae "td.inv-acciones .inv-link{display:block}" del tracker: aqui van en linea
+		'.xus-card .inv-table td.inv-acciones{text-align:right}' +
+		'.xus-card .inv-table td.inv-acciones .inv-link{display:inline-block;margin:0 0 0 16px}' +
+		'.xus-card .inv-link>.fa,.xus-card .inv-seg-item>.fa{margin-right:5px}' +
+		'@media (max-width:600px){.xus-card .inv-seg{display:flex}.xus-card .inv-seg-item{flex:1;text-align:center;padding:6px 6px}.xus-card .inv-input{width:100%}.xus-card .inv-field{flex:1}' +
+		'.xus-card .inv-table th:nth-child(2),.xus-card .inv-table td:nth-child(2){display:none}' +
+		'.xus-card .inv-table td.inv-acciones .inv-link{margin-left:10px}}';
 	document.head.appendChild(st);
 }
 
@@ -1000,11 +1096,13 @@ Polymer({
 		this.showFormRepartidor = false;
     	xThis=this;
     	xIniUsuarios();
+		xCtrCargar();
 
 		this.subscription$ = onStatusSetUsChangeSede()		
 		.subscribe(res => {
 			if ( res == true ) {
-				xIniUsuarios();				
+				xIniUsuarios();
+				xCtrCargar();
 			}
 		});
     },

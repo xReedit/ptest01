@@ -270,6 +270,42 @@ function xSoapSunat_cpeAceptado(res) {
     return !!(res && res.success) && !_resp.error_soap;
 }
 
+// 2026-11: ce sin external_id. El CPE llego al API pero la respuesta se perdio y el
+// reenvio respondio "ya se encuentra registrado" (sin data). Lo busca en GET /records
+// por serie-numero y lo graba en ce (solo si sigue vacio). Caso sede 268 B001-839..842.
+// Devuelve '' si no lo encuentra.
+async function xSoapSunat_RecuperarExternalId(rowCpe) {
+    const _arrNum = String(rowCpe.numero || '').split('-');
+    const _serie = _arrNum[0];
+    const _num = parseInt(_arrNum[1], 10);
+    if (!_serie || !_num) { return ''; }
+
+    let _json = {};
+    try { _json = JSON.parse(rowCpe.json_xml); } catch (e) { _json = {}; }
+    const _fecha = _json.fecha_de_emision || String(rowCpe.fecha || '').split('/').reverse().join('-');
+    const _qs = '?search=' + _num + '&date_from=' + _fecha + '&date_to=' + _fecha + '&per_page=100&include=light'
+        + (_json.codigo_tipo_documento ? '&document_type_id=' + _json.codigo_tipo_documento : '');
+    const _headers = { ...HEADERS_COMPROBANTE, Authorization: 'Bearer ' + xm_log_get('datos_org_sede')[0].authorization_api_comprobante };
+
+    let _external_id = '';
+    try {
+        const res = await fetch(URL_COMPROBANTE + '/records' + _qs, { headers: _headers }).then(r => r.json());
+        const _rec = (res && Array.isArray(res.data) ? res.data : []).find(function (r) {
+            const _n = String(r.numero || '').split('-');
+            return _n[0] === _serie && parseInt(_n[1], 10) === _num;
+        });
+        _external_id = _rec && _rec.external_id ? _rec.external_id : '';
+    } catch (error) {
+        console.error('xSoapSunat_RecuperarExternalId: no se pudo consultar el API', error);
+        return '';
+    }
+
+    if (_external_id) {
+        await $.ajax({ type: 'POST', url: '../../bdphp/log_002.php', data: { op: '204', data: { idce: rowCpe.idce, external_id: _external_id } } });
+    }
+    return _external_id;
+}
+
 // esto se utiliza al cierre de caja
 // envia al servicio de la api los documentos documentos que no se enviaron por error de conexion u otro
 async function xSoapSunat_SendSunat(external_id, idce) {

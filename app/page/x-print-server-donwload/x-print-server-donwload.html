@@ -1,4 +1,4 @@
-<script src="search-print-server.js"></script>
+<script src="search-print-server.js?v=20261111a"></script>
 <dom-module id="x-print-server-donwload">
 	<template>
 		<style>
@@ -240,7 +240,7 @@ async function checkServerStatus() {
 	try {
 		currentServerInfo = await PrintServerDetector.detectInstalledServer();
 		
-		if (currentServerInfo.installed) {
+		if (currentServerInfo.installed === true) {
 			const serverTypeName = currentServerInfo.serverType === 'new' ? 'Nueva versión' : 'Laragon';
 			const versionText = currentServerInfo.version ? ` v${currentServerInfo.version}` : '';
 			

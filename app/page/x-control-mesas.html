@@ -28,7 +28,7 @@
 	<script type="text/javascript" src="../view/socket.service.p.js"></script>
 	<script type="text/javascript" src="../shared/pedido.por.confirmar.js"></script>
 	<script type="text/javascript" src="../shared/vision.mesas.js?v=20261102m"></script>
-	<script type="text/javascript" src="../maqueta/js/vivo.js?v=20261102m"></script>
+	<script type="text/javascript" src="../maqueta/js/vivo.js?v=20261111c"></script>
 
 	<script type="text/javascript" src="../view/notifica.js"></script>
 
@@ -1632,12 +1632,24 @@ function xAnularPedido(isRecuperarStock = false, motivoAnularEstablecido = ''){
 	cocinarImpresionAnulacionList(xArrayAnularItems, xPermisoSupervisorNombre, xNomU, infoDataPedido, _motivoAnulacionPedidoCM)
 	// return
 
-	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=5011', data: { ArrayPeAnular: xArrayAnularItems, xPedidos: xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM, 'u': xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem } })
+	// 2026-11: el servidor solo lee la fila 0; mandar todas pasaba los 1000 campos de PHP (max_input_vars) en mesas grandes,
+	// se perdia 'u' y la anulacion se rechazaba sin aviso
+	_fetchApi.axiosExecute({ type: 'POST', url: '../../bdphp/log.php?op=5011', data: { ArrayPeAnular: xArrayAnularItems.slice(0, 1), xPedidos: xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM, 'u': xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem } })
 	.then((dt_xx) => {
 	// $.ajax({ type: 'POST', url: '../../bdphp/log.php?op=5011', data:{ArrayPeAnular :xArrayAnularItems, xPedidos:xidpedid_txt_change, xMotivo: _motivoAnulacionPedidoCM,'u':xPermisoSupervisor, xisRecuperarStock: _valRecuperarBorrarItem}})
 	// .done( function (dt_xx) {
 		xThisCM.isCheckRecuperarStock = false;
 		xPopupLoad.xclose();
+		// 2026-11: si el servidor rechaza (ej. autorizacion no valida) avisar y no pintar la mesa como libre
+		let _rptAnular = dt_xx;
+		try { if (typeof _rptAnular === 'string') { _rptAnular = JSON.parse(_rptAnular); } } catch (e) { _rptAnular = null; }
+		if (!_rptAnular || _rptAnular.ok !== true) {
+			const _swalErr = { ...paramsSwalAlert, showCancelButton: false, confirmButtonText: 'Entendido' };
+			_swalErr.html = `<div class="p-1"><p class="fw-600 fs-18 text-danger">No se anuló el pedido</p>
+				<p class="fs-14">${(_rptAnular && _rptAnular.error) ? _rptAnular.error : 'El servidor no confirmó la anulación'}. Vuelva a pedir la autorización del supervisor e intente otra vez.</p></div>`;
+			showAlertSwalHtml(_swalErr);
+			return;
+		}
 		xActualizarItems();
 		_cpSocketEmitMesaCambio($(xObj_miPedido).attr('data-nummesa')); // vista anfitrion
 		//xLoadMesas()
@@ -3403,9 +3415,10 @@ function xEliminarItemPedido(isRecuperarStock = null, motivoAnularEstablecido = 
 		// .done( function (e_rpt) {
 		//e_rpt=$.parseJSON(e_rpt):
 		xe_rpt=$.parseJSON(e_rpt);
-		if(!xe_rpt.success){alert(e_rpt.error); return;}
+		if(!xe_rpt.success){xPopupLoad.xclose(); alert(xe_rpt.error || 'No se pudo eliminar el producto'); return;}
 		var xcantidad_remove=parseFloat(xobj_row_item.find('#td_cant').text());
-		var obj_row_mod=xBuscarAttrTbData($('#tb_pedidos'),'data-idpedido',xArrayItemEliminar.idpedido);//importe item
+		// 2026-11: si la fila del pedido ya no esta en la lista devolvia false y .find() rompia todo (item borrado en BD, pantalla congelada)
+		var obj_row_mod=xBuscarAttrTbData($('#tb_pedidos'),'data-idpedido',xArrayItemEliminar.idpedido) || $();//importe item
 		var xtd_importe_row=obj_row_mod.find('#td_importe').text();//importe pedido		
 		var indexRowIem=xobj_row_item.attr('data-i');
 
