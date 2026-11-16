@@ -41,6 +41,12 @@ function xCmRevisar() {
 		st.consultando = false;
 		if (!r || !r.success || !r.data) { return; }
 		xCmPintarMenu(r.data.mostrar === true, parseInt(r.data.pendientes, 10) || 0);
+		// Ningun usuario de la sede tiene "App Mesero caja" y no hay nada que mostrar: no seguir preguntando cada minuto.
+		// El aviso por socket (xCmOnCambio) sigue activo. Si activan el permiso, aplica al volver a abrir la pagina.
+		if (r.data.cobradores === false && r.data.mostrar !== true && st.timer) {
+			clearInterval(st.timer);
+			st.timer = null;
+		}
 	});
 }
 

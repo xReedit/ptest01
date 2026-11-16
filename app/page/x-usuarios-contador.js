@@ -117,7 +117,7 @@ function xCtrSedesHtml(c, id, edita) {
 
 function xCtrPintarAcceso(c) {
 	var nueva = window.xCtrClaveNueva;
-	$('#xct_ac_link').text(location.origin + '/restobar/');
+	$('#xct_ac_link').text(location.origin);
 	$('#xct_ac_usuario').text(c.usuario);
 	$('#xct_ac_clave').html(nueva ? '<b>123456</b> <span class="inv-sub">Al entrar por primera vez el sistema le pedira crear su propia clave.</span>'
 		: '<span class="inv-muted">La que creo en su primer ingreso (la inicial es 123456).</span>' +
@@ -175,7 +175,7 @@ function xCtrTexto(c) {
 		: 'Clave: la que creaste en tu primer ingreso. Si no la recuerdas, avisame para restablecerla.';
 	return 'Hola ' + c.nombre + ', te comparto tu acceso al sistema para revisar y descargar nuestros comprobantes electronicos:\n' +
 		sedes + '\n\n' +
-		'Link: ' + location.origin + '/restobar/\n' +
+		'Link: ' + location.origin + '\n' +
 		'Usuario: ' + c.usuario + '\n' + clave;
 }
 
